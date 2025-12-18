@@ -1,0 +1,116 @@
+name: Release Demo
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-amd64
+            runner: ubuntu-24.04
+            platform: linux
+            arch: amd64
+          - name: linux-arm64
+            runner: ubuntu-24.04-arm64
+            platform: linux
+            arch: arm64
+          - name: macos-amd64
+            runner: macos-13
+            platform: macos
+            arch: amd64
+          - name: macos-arm64
+            runner: macos-13-arm64
+            platform: macos
+            arch: arm64
+          - name: windows-amd64
+            runner: windows-latest
+            platform: windows
+            arch: amd64
+    runs-on: ${{ matrix.runner }}
+    env:
+      ZIP_NAME: sdl3_app-${{ matrix.platform }}-${{ matrix.arch }}.zip
+      BUILD_DIR: build/${{ matrix.platform }}-${{ matrix.arch }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Conan
+        run: pip install 'conan>=2'
+
+      - name: Vendor SDL3/Vulkan
+        run: python scripts/setup_vendor_dependencies.py
+
+      - name: Install Conan dependencies
+        shell: bash
+        run: |
+          if [ -d "$BUILD_DIR" ]; then rm -rf "$BUILD_DIR"; fi
+          conan install . --install-folder "$BUILD_DIR" --build=missing
+
+      - name: Configure CMake
+        shell: bash
+        run: cmake -S . -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build demo
+        shell: bash
+        run: cmake --build "$BUILD_DIR" --config Release
+
+      - name: Package release ZIP
+        env:
+          PLATFORM_NAME: ${{ matrix.platform }}
+        run: |
+          python - <<'PY'
+          import os
+          import shutil
+          from pathlib import Path
+
+          root = Path.cwd()
+          release_dir = root / "release"
+          package_dir = release_dir / "package"
+          if package_dir.exists():
+              shutil.rmtree(package_dir)
+          package_dir.mkdir(parents=True)
+
+          platform_name = os.environ["PLATFORM_NAME"]
+          binary_name = "sdl3_app.exe" if platform_name == "windows" else "sdl3_app"
+          build_dir = root / os.environ["BUILD_DIR"]
+          if platform_name == "windows":
+              binary_source = build_dir / "Release" / binary_name
+          else:
+              binary_source = build_dir / binary_name
+          if not binary_source.exists():
+              raise SystemExit(f"Missing binary at {binary_source}")
+          shutil.copy2(binary_source, package_dir / binary_name)
+
+          for subdir in ("shaders", "scripts"):
+              src = build_dir / subdir
+              if not src.exists():
+                  raise SystemExit(f"Missing {subdir} directory at {src}")
+              shutil.copytree(src, package_dir / subdir)
+
+          shutil.copy2(root / "README.md", package_dir / "README.md")
+
+          zip_name = os.environ["ZIP_NAME"]
+          archive_path = release_dir / zip_name
+          shutil.make_archive(str(archive_path.with_suffix("")), "zip", root_dir=package_dir)
+          print(f"Created {archive_path}")
+          PY
+
+      - name: Publish GitHub release asset
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release/${{ env.ZIP_NAME }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -40,8 +40,18 @@ def build_and_install(source_dir, build_dir, cmake_options=None):
             *cmake_options,
         ]
     )
-    run(["cmake", "--build", str(build_dir), "--", f"-j{max(1, (subprocess.os.cpu_count() or 1))}"])
-    run(["cmake", "--install", str(build_dir)])
+    run(
+        [
+            "cmake",
+            "--build",
+            str(build_dir),
+            "--config",
+            "Release",
+            "--",
+            f"-j{max(1, (subprocess.os.cpu_count() or 1))}",
+        ]
+    )
+    run(["cmake", "--install", str(build_dir), "--config", "Release"])
 
 
 def main():
