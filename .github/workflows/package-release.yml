@@ -6,10 +6,11 @@ on:
 permissions:
   contents: read
   packages: write
-  releases: write
 
 jobs:
   package-release:
+    permissions:
+      releases: write
     strategy:
       fail-fast: false
       matrix:
