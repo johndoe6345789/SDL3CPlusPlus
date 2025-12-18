@@ -35,6 +35,8 @@ local pyramid_indices = {
     4, 5, 2,
 }
 
+local math3d = require("math3d")
+
 local rotation_speeds = {x = 0.5, y = 0.7}
 
 local shader_variants = {
@@ -52,62 +54,26 @@ local shader_variants = {
     },
 }
 
-local function rotation_y(radians)
-    local c = math.cos(radians)
-    local s = math.sin(radians)
-    return {
-        c,  0.0, -s, 0.0,
-        0.0, 1.0, 0.0, 0.0,
-        s,  0.0,  c, 0.0,
-        0.0, 0.0, 0.0, 1.0,
-    }
-end
-
-local function rotation_x(radians)
-    local c = math.cos(radians)
-    local s = math.sin(radians)
-    return {
-        1.0, 0.0, 0.0, 0.0,
-        0.0,  c,  s, 0.0,
-        0.0, -s,  c, 0.0,
-        0.0, 0.0, 0.0, 1.0,
-    }
-end
-
-local function multiply_matrices(a, b)
-    local result = {}
-    for row = 1, 4 do
-        for col = 1, 4 do
-            local sum = 0.0
-            for idx = 1, 4 do
-                sum = sum + a[(idx - 1) * 4 + row] * b[(col - 1) * 4 + idx]
-            end
-            result[(col - 1) * 4 + row] = sum
-        end
-    end
-    return result
-end
-
-local function translation(x, y, z)
-    return {
-        1.0, 0.0, 0.0, 0.0,
-        0.0, 1.0, 0.0, 0.0,
-        0.0, 0.0, 1.0, 0.0,
-        x,   y,   z,   1.0,
-    }
-end
+local camera = {
+    eye = {2.0, 2.0, 2.5},
+    center = {0.0, 0.0, 0.0},
+    up = {0.0, 1.0, 0.0},
+    fov = 0.78,
+    near = 0.1,
+    far = 10.0,
+}
 
 local function build_model(time)
-    local y = rotation_y(time * rotation_speeds.y)
-    local x = rotation_x(time * rotation_speeds.x)
-    return multiply_matrices(y, x)
+    local y = math3d.rotation_y(time * rotation_speeds.y)
+    local x = math3d.rotation_x(time * rotation_speeds.x)
+    return math3d.multiply(y, x)
 end
 
 local function create_cube(position, speed_scale, shader_key)
     local function compute_model_matrix(time)
         local base = build_model(time * speed_scale)
-        local offset = translation(position[1], position[2], position[3])
-        return multiply_matrices(offset, base)
+        local offset = math3d.translation(position[1], position[2], position[3])
+        return math3d.multiply(offset, base)
     end
 
     return {
@@ -121,8 +87,8 @@ end
 local function create_pyramid(position, shader_key)
     local function compute_model_matrix(time)
         local base = build_model(time * 0.6)
-        local offset = translation(position[1], position[2], position[3])
-        return multiply_matrices(offset, base)
+        local offset = math3d.translation(position[1], position[2], position[3])
+        return math3d.multiply(offset, base)
     end
 
     return {
@@ -144,4 +110,10 @@ end
 
 function get_shader_paths()
     return shader_variants
+end
+
+function get_view_projection(aspect)
+    local view = math3d.look_at(camera.eye, camera.center, camera.up)
+    local projection = math3d.perspective(camera.fov, aspect, camera.near, camera.far)
+    return math3d.multiply(projection, view)
 end

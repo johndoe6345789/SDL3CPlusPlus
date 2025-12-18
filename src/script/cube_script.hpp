@@ -9,7 +9,7 @@
 
 #include <lua.hpp>
 
-#include "core/math.hpp"
+#include "core/vertex.hpp"
 
 namespace sdl3cpp::script {
 
@@ -32,6 +32,7 @@ public:
 
     std::vector<SceneObject> LoadSceneObjects();
     std::array<float, 16> ComputeModelMatrix(int functionRef, float time);
+    std::array<float, 16> GetViewProjectionMatrix(float aspect);
     std::unordered_map<std::string, ShaderPaths> LoadShaderPathsMap();
 
 private:

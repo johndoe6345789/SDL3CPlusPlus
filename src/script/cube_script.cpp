@@ -6,11 +6,38 @@
 
 namespace sdl3cpp::script {
 
+namespace {
+
+std::array<float, 16> IdentityMatrix() {
+    return {1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f};
+}
+
+} // namespace
+
 CubeScript::CubeScript(const std::filesystem::path& scriptPath) : L_(luaL_newstate()) {
     if (!L_) {
         throw std::runtime_error("Failed to create Lua state");
     }
     luaL_openlibs(L_);
+    auto scriptDir = scriptPath.parent_path();
+    if (!scriptDir.empty()) {
+        lua_getglobal(L_, "package");
+        if (lua_istable(L_, -1)) {
+            lua_getfield(L_, -1, "path");
+            const char* currentPath = lua_tostring(L_, -1);
+            std::string newPath = scriptDir.string() + "/?.lua;";
+            if (currentPath) {
+                newPath += currentPath;
+            }
+            lua_pop(L_, 1);
+            lua_pushstring(L_, newPath.c_str());
+            lua_setfield(L_, -2, "path");
+        }
+        lua_pop(L_, 1);
+    }
     if (luaL_dofile(L_, scriptPath.string().c_str()) != LUA_OK) {
         std::string message = LuaErrorMessage(L_);
         lua_pop(L_, 1);
@@ -97,7 +124,7 @@ std::array<float, 16> CubeScript::ComputeModelMatrix(int functionRef, float time
         lua_getglobal(L_, "compute_model_matrix");
         if (!lua_isfunction(L_, -1)) {
             lua_pop(L_, 1);
-            return core::IdentityMatrix();
+            return IdentityMatrix();
         }
     } else {
         lua_rawgeti(L_, LUA_REGISTRYINDEX, functionRef);
@@ -114,6 +141,27 @@ std::array<float, 16> CubeScript::ComputeModelMatrix(int functionRef, float time
         throw std::runtime_error("'compute_model_matrix' did not return a table");
     }
 
+    std::array<float, 16> matrix = ReadMatrix(L_, -1);
+    lua_pop(L_, 1);
+    return matrix;
+}
+
+std::array<float, 16> CubeScript::GetViewProjectionMatrix(float aspect) {
+    lua_getglobal(L_, "get_view_projection");
+    if (!lua_isfunction(L_, -1)) {
+        lua_pop(L_, 1);
+        throw std::runtime_error("Lua function 'get_view_projection' is missing");
+    }
+    lua_pushnumber(L_, aspect);
+    if (lua_pcall(L_, 1, 1, 0) != LUA_OK) {
+        std::string message = LuaErrorMessage(L_);
+        lua_pop(L_, 1);
+        throw std::runtime_error("Lua get_view_projection failed: " + message);
+    }
+    if (!lua_istable(L_, -1)) {
+        lua_pop(L_, 1);
+        throw std::runtime_error("'get_view_projection' did not return a table");
+    }
     std::array<float, 16> matrix = ReadMatrix(L_, -1);
     lua_pop(L_, 1);
     return matrix;

@@ -705,11 +705,8 @@ void VulkanCubeApp::DrawFrame(float time) {
         throw std::runtime_error("Failed to acquire swap chain image");
     }
 
-    auto view = core::LookAt({2.0f, 2.0f, 2.5f}, {0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f});
-    auto projection = core::Perspective(0.78f, static_cast<float>(swapChainExtent_.width) /
-                                                   static_cast<float>(swapChainExtent_.height),
-                                      0.1f, 10.0f);
-    auto viewProj = core::MultiplyMatrix(projection, view);
+    float aspect = static_cast<float>(swapChainExtent_.width) / static_cast<float>(swapChainExtent_.height);
+    auto viewProj = cubeScript_.GetViewProjectionMatrix(aspect);
 
     vkResetCommandBuffer(commandBuffers_[imageIndex], 0);
     RecordCommandBuffer(commandBuffers_[imageIndex], imageIndex, time, viewProj);

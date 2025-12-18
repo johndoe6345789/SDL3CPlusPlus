@@ -16,7 +16,7 @@
 #include <SDL3/SDL_vulkan.h>
 #include <vulkan/vulkan.h>
 
-#include "core/math.hpp"
+#include "core/vertex.hpp"
 #include "script/cube_script.hpp"
 
 namespace sdl3cpp::app {
