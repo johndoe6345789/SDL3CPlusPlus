@@ -58,7 +58,7 @@ def main():
     VENDOR_DIR.mkdir(exist_ok=True)
     INSTALL_DIR.mkdir(exist_ok=True)
 
-    fetch_repo("SDL", "https://github.com/libsdl-org/SDL.git", "release-3.0.0")
+    fetch_repo("SDL", "https://github.com/libsdl-org/SDL.git", "release-3.2.x")
     build_and_install(
         VENDOR_DIR / "SDL",
         VENDOR_DIR / "build-sdl",
