@@ -17,8 +17,4 @@ class SDL3CppConan(ConanFile):
     def requirements(self):
         self.requires("lua/5.4.6")
         self.requires("sdl/3.2.20")
-        self.requires("sdl_net/2.2.0")
-        self.requires("sdl_ttf/3.2.2")
-        self.requires("sdl_image/3.2.4")
-        self.requires("sdl_mixer/2.8.0")
         self.requires("vulkan-loader/1.4.313.0")
