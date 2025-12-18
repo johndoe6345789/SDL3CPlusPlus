@@ -13,19 +13,22 @@ jobs:
       matrix:
         include:
           - name: linux-amd64
-            runner: ubuntu-24.04
             platform: linux
             arch: amd64
           - name: linux-arm64
-            runner: ubuntu-24.04-arm64
             platform: linux
             arch: arm64
-    runs-on: ${{ matrix.runner }}
+    runs-on: ubuntu-24.04
     env:
       BUILD_DIR: build/${{ matrix.platform }}-${{ matrix.arch }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: linux/amd64,linux/arm64
 
       - name: Build linux container image
         if: matrix.platform == 'linux'
