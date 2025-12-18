@@ -9,8 +9,6 @@ permissions:
 
 jobs:
   package-release:
-    permissions:
-      releases: write
     strategy:
       fail-fast: false
       matrix:
