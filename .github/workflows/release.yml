@@ -5,6 +5,7 @@ on:
 
 permissions:
   contents: write
+  packages: write
 
 jobs:
   release:
@@ -42,6 +43,21 @@ jobs:
             --build-arg GID=$(id -g) \
             -f .github/workflows/Dockerfile \
             -t sdl3_app:${{ matrix.platform }}-${{ matrix.arch }} .
+
+      - name: Log in to GitHub Container Registry
+        if: matrix.platform == 'linux'
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish build image
+        if: matrix.platform == 'linux'
+        run: |
+          IMAGE=ghcr.io/${{ github.repository_owner }}/sdl3_app:${{ matrix.platform }}-${{ matrix.arch }}
+          docker tag sdl3_app:${{ matrix.platform }}-${{ matrix.arch }} "$IMAGE"
+          docker push "$IMAGE"
 
       - name: Run linux build in container
         if: matrix.platform == 'linux'
