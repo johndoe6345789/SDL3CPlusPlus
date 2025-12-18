@@ -1,6 +1,6 @@
 #include "app/sdl3_app.hpp"
+#include "app/vulkan_api.hpp"
 
-#include <algorithm>
 #include <stdexcept>
 
 namespace sdl3cpp::app {
@@ -10,7 +10,7 @@ void Sdl3App::CreateSwapChain() {
 
     VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(support.formats);
     VkPresentModeKHR presentMode = ChooseSwapPresentMode(support.presentModes);
-    VkExtent2D extent = ChooseSwapExtent(support.capabilities);
+    VkExtent2D extent = vulkan::ChooseSwapExtent(support.capabilities, window_);
 
     uint32_t imageCount = support.capabilities.minImageCount + 1;
     if (support.capabilities.maxImageCount > 0 && imageCount > support.capabilities.maxImageCount) {
@@ -175,18 +175,6 @@ VkPresentModeKHR Sdl3App::ChooseSwapPresentMode(const std::vector<VkPresentModeK
         }
     }
     return VK_PRESENT_MODE_FIFO_KHR;
-}
-
-VkExtent2D Sdl3App::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) {
-    int width, height;
-    SDL_GetWindowSize(window_, &width, &height);
-    VkExtent2D actualExtent = {
-        static_cast<uint32_t>(std::clamp(width, static_cast<int>(capabilities.minImageExtent.width),
-                                          static_cast<int>(capabilities.maxImageExtent.width))),
-        static_cast<uint32_t>(std::clamp(height, static_cast<int>(capabilities.minImageExtent.height),
-                                          static_cast<int>(capabilities.maxImageExtent.height)))
-    };
-    return actualExtent;
 }
 
 } // namespace sdl3cpp::app

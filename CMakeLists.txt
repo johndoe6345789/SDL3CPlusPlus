@@ -32,6 +32,7 @@ if(BUILD_SDL3_APP)
         src/app/sdl3_app_build.cpp
         src/app/sdl3_app_buffers.cpp
         src/app/sdl3_app_render.cpp
+        src/app/vulkan_api.cpp
         src/script/cube_script.cpp
     )
     target_include_directories(sdl3_app PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
