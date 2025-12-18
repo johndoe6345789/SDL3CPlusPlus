@@ -8,88 +8,16 @@ permissions:
   packages: write
 
 jobs:
-  release:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - name: linux-amd64
-            runner: ubuntu-24.04
-            platform: linux
-            arch: amd64
-          - name: linux-arm64
-            runner: ubuntu-24.04-arm64
-            platform: linux
-            arch: arm64
-    runs-on: ${{ matrix.runner }}
-    env:
-      ZIP_NAME: sdl3_app-${{ matrix.platform }}-${{ matrix.arch }}.zip
-      BUILD_DIR: build/${{ matrix.platform }}-${{ matrix.arch }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+  upload-build-artifact:
+    uses: ./.github/workflows/upload-build-artifact.yml
+    secrets: inherit
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
+  package-release:
+    needs: upload-build-artifact
+    uses: ./.github/workflows/package-release.yml
+    secrets: inherit
 
-      - name: Create Python virtual environment
-        run: python -m venv .venv
-
-      - name: Build linux container image
-        if: matrix.platform == 'linux'
-        run: |
-          docker build \
-            --build-arg USERNAME=builder \
-            --build-arg UID=$(id -u) \
-            --build-arg GID=$(id -g) \
-            -f .github/workflows/Dockerfile \
-            -t sdl3_app:${{ matrix.platform }}-${{ matrix.arch }} .
-
-      - name: Log in to GitHub Container Registry
-        if: matrix.platform == 'linux'
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Publish build image
-        if: matrix.platform == 'linux'
-        run: |
-          IMAGE=ghcr.io/${{ github.repository_owner }}/sdl3_app:${{ matrix.platform }}-${{ matrix.arch }}
-          docker tag sdl3_app:${{ matrix.platform }}-${{ matrix.arch }} "$IMAGE"
-          docker push "$IMAGE"
-
-      - name: Run linux build in container
-        if: matrix.platform == 'linux'
-        env:
-          BUILD_DIR: ${{ env.BUILD_DIR }}
-        run: |
-          docker run --rm \
-            -e BUILD_DIR \
-            -w /workspace \
-            -v "${{ github.workspace }}:/workspace" \
-            sdl3_app:${{ matrix.platform }}-${{ matrix.arch }} \
-            bash -c 'set -euo pipefail
-              if [ -d "$BUILD_DIR" ]; then rm -rf "$BUILD_DIR"; fi
-              cp -a /conan_build "$BUILD_DIR"
-              cmake -S . -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release
-              cmake --build "$BUILD_DIR" --config Release'
-
-      - name: Package release ZIP
-        env:
-          PLATFORM_NAME: ${{ matrix.platform }}
-        shell: bash
-        run: |
-          . .venv/bin/activate
-          python scripts/package_release.py
-
-      - name: Publish GitHub release asset
-        if: github.ref != 'refs/tags/local'
-        uses: softprops/action-gh-release@v1
-        with:
-          files: release/${{ env.ZIP_NAME }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  publish-container:
+    needs: upload-build-artifact
+    uses: ./.github/workflows/publish-container.yml
+    secrets: inherit

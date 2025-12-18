@@ -1,0 +1,60 @@
+name: Upload Build Artifacts
+
+on:
+  workflow_call:
+
+permissions:
+  contents: write
+
+jobs:
+  upload-artifact:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-amd64
+            runner: ubuntu-24.04
+            platform: linux
+            arch: amd64
+          - name: linux-arm64
+            runner: ubuntu-24.04-arm64
+            platform: linux
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
+    env:
+      BUILD_DIR: build/${{ matrix.platform }}-${{ matrix.arch }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build linux container image
+        if: matrix.platform == 'linux'
+        run: |
+          docker build \
+            --build-arg USERNAME=builder \
+            --build-arg UID=$(id -u) \
+            --build-arg GID=$(id -g) \
+            -f .github/workflows/Dockerfile \
+            -t sdl3_app:${{ matrix.platform }}-${{ matrix.arch }} .
+
+      - name: Run linux build in container
+        if: matrix.platform == 'linux'
+        env:
+          BUILD_DIR: ${{ env.BUILD_DIR }}
+        run: |
+          docker run --rm \
+            -e BUILD_DIR \
+            -w /workspace \
+            -v "${{ github.workspace }}:/workspace" \
+            sdl3_app:${{ matrix.platform }}-${{ matrix.arch }} \
+            bash -c 'set -euo pipefail
+              if [ -d "$BUILD_DIR" ]; then rm -rf "$BUILD_DIR"; fi
+              cp -a /conan_build "$BUILD_DIR"
+              cmake -S . -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release
+              cmake --build "$BUILD_DIR" --config Release'
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.platform }}-${{ matrix.arch }}
+          path: ${{ env.BUILD_DIR }}

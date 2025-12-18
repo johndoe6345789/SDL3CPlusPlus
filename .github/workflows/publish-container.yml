@@ -1,0 +1,46 @@
+name: Publish Container Image
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish-image:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-amd64
+            runner: ubuntu-24.04
+            platform: linux
+            arch: amd64
+          - name: linux-arm64
+            runner: ubuntu-24.04-arm64
+            platform: linux
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and publish container image
+        run: |
+          docker build \
+            --build-arg USERNAME=builder \
+            --build-arg UID=$(id -u) \
+            --build-arg GID=$(id -g) \
+            -f .github/workflows/Dockerfile \
+            -t sdl3_app:${{ matrix.platform }}-${{ matrix.arch }} .
+          IMAGE=ghcr.io/${{ github.repository_owner }}/sdl3_app:${{ matrix.platform }}-${{ matrix.arch }}
+          docker tag sdl3_app:${{ matrix.platform }}-${{ matrix.arch }} "$IMAGE"
+          docker push "$IMAGE"
