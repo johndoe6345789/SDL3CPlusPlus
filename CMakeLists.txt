@@ -15,7 +15,11 @@ add_library(lua_static STATIC ${LUA_SOURCES})
 target_include_directories(lua_static PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/vendor/lua/src")
 target_compile_features(lua_static PUBLIC c_std_99)
 
-add_executable(spinning_cube src/main.cpp)
+add_executable(spinning_cube
+    src/main.cpp
+    src/app/vulkan_cube_app.cpp
+    src/script/cube_script.cpp
+)
 target_link_libraries(spinning_cube PRIVATE SDL3::SDL3 Vulkan::Vulkan lua_static)
 target_compile_definitions(spinning_cube PRIVATE SDL_MAIN_HANDLED)
 
