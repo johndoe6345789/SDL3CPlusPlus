@@ -40,6 +40,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install Linux system deps
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwayland-dev \
+            libwayland-egl1 \
+            libwayland-cursor-dev \
+            libegl-dev \
+            libxkbcommon-dev
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
