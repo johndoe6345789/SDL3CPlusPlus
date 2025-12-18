@@ -58,10 +58,10 @@ jobs:
           python-version: '3.x'
 
       - name: Install Conan
-        run: pip install 'conan>=2'
+        run: sudo pip install 'conan>=2'
 
       - name: Detect Conan profile
-        run: conan profile detect
+        run: sudo conan profile detect
 
       - name: Install Conan dependencies
         shell: bash
