@@ -4,7 +4,7 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "app/vulkan_cube_app.hpp"
+#include "app/sdl3_app.hpp"
 
 std::filesystem::path FindScriptPath(const char* argv0) {
     std::filesystem::path executable;
@@ -27,7 +27,7 @@ std::filesystem::path FindScriptPath(const char* argv0) {
 int main(int argc, char** argv) {
     try {
         auto scriptPath = FindScriptPath(argc > 0 ? argv[0] : nullptr);
-        sdl3cpp::app::VulkanCubeApp app(scriptPath);
+        sdl3cpp::app::Sdl3App app(scriptPath);
         app.Run();
     } catch (const std::exception& e) {
         std::cerr << "ERROR: " << e.what() << '\n';

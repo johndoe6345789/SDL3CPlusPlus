@@ -1,5 +1,5 @@
-#ifndef SDL3CPP_APP_VULKAN_CUBE_APP_HPP
-#define SDL3CPP_APP_VULKAN_CUBE_APP_HPP
+#ifndef SDL3CPP_APP_SDL3_APP_HPP
+#define SDL3CPP_APP_SDL3_APP_HPP
 
 #ifndef SDL_MAIN_HANDLED
 #define SDL_MAIN_HANDLED
@@ -8,6 +8,7 @@
 #include <array>
 #include <filesystem>
 #include <optional>
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -28,6 +29,8 @@ inline const std::vector<const char*> kDeviceExtensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 };
 
+std::vector<char> ReadFile(const std::string& path);
+
 struct QueueFamilyIndices {
     std::optional<uint32_t> graphicsFamily;
     std::optional<uint32_t> presentFamily;
@@ -43,9 +46,9 @@ struct SwapChainSupportDetails {
     std::vector<VkPresentModeKHR> presentModes;
 };
 
-class VulkanCubeApp {
+class Sdl3App {
 public:
-    explicit VulkanCubeApp(const std::filesystem::path& scriptPath);
+    explicit Sdl3App(const std::filesystem::path& scriptPath);
     void Run();
 
 private:
@@ -74,7 +77,7 @@ private:
     void CreateGraphicsPipeline();
     void CreateFramebuffers();
     void CreateCommandPool();
-    void LoadCubeData();
+    void LoadSceneData();
     void CreateVertexBuffer();
     void CreateIndexBuffer();
     void CreateCommandBuffers();
@@ -130,4 +133,4 @@ private:
 
 } // namespace sdl3cpp::app
 
-#endif // SDL3CPP_APP_VULKAN_CUBE_APP_HPP
+#endif // SDL3CPP_APP_SDL3_APP_HPP
