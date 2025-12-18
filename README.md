@@ -18,6 +18,16 @@ A minimal SDL3 + Vulkan spinning cube demo.
    cmake --build build
    ```
 
+### Vendor SDL3/Vulkan from source
+
+If you cannot install the SDL3/Vulkan headers via the distro packages, run the helper to download and build them into `vendor/install`:
+
+```
+python3 scripts/setup_vendor_dependencies.py
+cmake -S . -B build -DBUILD_SDL3_APP=ON -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+```
+
 Shaders are copied into `build/shaders` during configuration, so the demo can load the precompiled `cube.{vert,frag}.spv`.
 
 ## Run

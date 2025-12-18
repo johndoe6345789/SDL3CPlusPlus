@@ -2,6 +2,12 @@ cmake_minimum_required(VERSION 3.24)
 project(SDL3App LANGUAGES CXX)
 option(BUILD_SDL3_APP "Build the SDL3 Vulkan demo" ON)
 
+set(VENDOR_INSTALL_DIR "${CMAKE_SOURCE_DIR}/vendor/install")
+if(EXISTS "${VENDOR_INSTALL_DIR}")
+    list(APPEND CMAKE_PREFIX_PATH "${VENDOR_INSTALL_DIR}")
+    message(STATUS "Using vendored dependencies from ${VENDOR_INSTALL_DIR}")
+endif()
+
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
