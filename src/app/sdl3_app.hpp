@@ -22,6 +22,8 @@
 
 namespace sdl3cpp::app {
 
+namespace script = sdl3cpp::script;
+
 constexpr uint32_t kWidth = 1024;
 constexpr uint32_t kHeight = 768;
 
@@ -120,10 +122,10 @@ private:
     VkDeviceMemory indexBufferMemory_ = VK_NULL_HANDLE;
     VkSemaphore imageAvailableSemaphore_ = VK_NULL_HANDLE;
     VkSemaphore renderFinishedSemaphore_ = VK_NULL_HANDLE;
-    CubeScript cubeScript_;
+    script::CubeScript cubeScript_;
     std::vector<core::Vertex> vertices_;
     std::vector<uint16_t> indices_;
-    std::unordered_map<std::string, CubeScript::ShaderPaths> shaderPathMap_;
+    std::unordered_map<std::string, script::CubeScript::ShaderPaths> shaderPathMap_;
     std::unordered_map<std::string, VkPipeline> graphicsPipelines_;
     std::string defaultShaderKey_;
     VkFence inFlightFence_ = VK_NULL_HANDLE;

@@ -34,6 +34,7 @@ if(BUILD_SDL3_APP)
         src/app/sdl3_app_render.cpp
         src/script/cube_script.cpp
     )
+    target_include_directories(sdl3_app PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
     target_link_libraries(sdl3_app PRIVATE SDL3::SDL3 Vulkan::Vulkan lua::lua)
     target_compile_definitions(sdl3_app PRIVATE SDL_MAIN_HANDLED)
 

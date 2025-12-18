@@ -65,7 +65,13 @@ def main():
         ["-DSDL_SHARED=OFF", "-DSDL_STATIC=ON", "-DSDL_TEST=OFF", "-DBUILD_SHARED_LIBS=OFF"],
     )
 
-    fetch_repo("Vulkan-Loader", "https://github.com/KhronosGroup/Vulkan-Loader.git", "sdk-1.3.275")
+    fetch_repo("Vulkan-Loader", "https://github.com/KhronosGroup/Vulkan-Loader.git", "sdk-1.3.261.1")
+    fetch_repo("Vulkan-Headers", "https://github.com/KhronosGroup/Vulkan-Headers.git", "sdk-1.3.261.1")
+    build_and_install(
+        VENDOR_DIR / "Vulkan-Headers",
+        VENDOR_DIR / "build-vulkan-headers",
+    )
+
     build_and_install(
         VENDOR_DIR / "Vulkan-Loader",
         VENDOR_DIR / "build-vulkan-loader",

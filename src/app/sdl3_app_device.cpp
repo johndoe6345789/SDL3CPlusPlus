@@ -16,20 +16,18 @@ void Sdl3App::CreateInstance() {
     appInfo.apiVersion = VK_API_VERSION_1_2;
 
     uint32_t extensionCount = 0;
-    if (!SDL_Vulkan_GetInstanceExtensions(window_, &extensionCount, nullptr)) {
+    const char* const* extensions = SDL_Vulkan_GetInstanceExtensions(&extensionCount);
+    if (!extensions) {
         throw std::runtime_error("Failed to query Vulkan extensions from SDL");
     }
 
-    std::vector<const char*> extensions(extensionCount);
-    if (!SDL_Vulkan_GetInstanceExtensions(window_, &extensionCount, extensions.data())) {
-        throw std::runtime_error("Failed to store Vulkan extensions from SDL");
-    }
+    std::vector<const char*> extensionList(extensions, extensions + extensionCount);
 
     VkInstanceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     createInfo.pApplicationInfo = &appInfo;
-    createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
-    createInfo.ppEnabledExtensionNames = extensions.data();
+    createInfo.enabledExtensionCount = static_cast<uint32_t>(extensionList.size());
+    createInfo.ppEnabledExtensionNames = extensionList.data();
 
     if (vkCreateInstance(&createInfo, nullptr, &instance_) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create Vulkan instance");
@@ -37,7 +35,7 @@ void Sdl3App::CreateInstance() {
 }
 
 void Sdl3App::CreateSurface() {
-    if (!SDL_Vulkan_CreateSurface(window_, instance_, &surface_)) {
+    if (!SDL_Vulkan_CreateSurface(window_, instance_, nullptr, &surface_)) {
         throw std::runtime_error("Failed to create Vulkan surface");
     }
 }

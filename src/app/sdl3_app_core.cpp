@@ -32,8 +32,7 @@ void Sdl3App::InitSDL() {
         throw std::runtime_error(std::string("SDL_Init failed: ") + SDL_GetError());
     }
     SDL_Vulkan_LoadLibrary(nullptr);
-    window_ = SDL_CreateWindow("SDL3 Vulkan Demo", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                              kWidth, kHeight, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
+    window_ = SDL_CreateWindow("SDL3 Vulkan Demo", kWidth, kHeight, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
     if (!window_) {
         throw std::runtime_error(std::string("SDL_CreateWindow failed: ") + SDL_GetError());
     }
@@ -65,7 +64,7 @@ void Sdl3App::MainLoop() {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_EVENT_QUIT) {
                 running = false;
-            } else if (event.type == SDL_EVENT_WINDOW_SIZE_CHANGED) {
+            } else if (event.type == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED) {
                 framebufferResized_ = true;
             }
         }

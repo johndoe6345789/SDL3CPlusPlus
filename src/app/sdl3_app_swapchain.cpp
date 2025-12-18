@@ -143,7 +143,7 @@ void Sdl3App::RecreateSwapChain() {
     int width = 0;
     int height = 0;
     while (width == 0 || height == 0) {
-        SDL_Vulkan_GetDrawableSize(window_, &width, &height);
+        SDL_GetWindowSize(window_, &width, &height);
         SDL_Event event;
         SDL_WaitEvent(&event);
     }
@@ -179,7 +179,7 @@ VkPresentModeKHR Sdl3App::ChooseSwapPresentMode(const std::vector<VkPresentModeK
 
 VkExtent2D Sdl3App::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) {
     int width, height;
-    SDL_Vulkan_GetDrawableSize(window_, &width, &height);
+    SDL_GetWindowSize(window_, &width, &height);
     VkExtent2D actualExtent = {
         static_cast<uint32_t>(std::clamp(width, static_cast<int>(capabilities.minImageExtent.width),
                                           static_cast<int>(capabilities.maxImageExtent.width))),
