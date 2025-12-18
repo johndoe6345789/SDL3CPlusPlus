@@ -20,18 +20,6 @@ jobs:
             runner: ubuntu-24.04-arm64
             platform: linux
             arch: arm64
-          - name: macos-amd64
-            runner: macos-13
-            platform: macos
-            arch: amd64
-          - name: macos-arm64
-            runner: macos-13-arm64
-            platform: macos
-            arch: arm64
-          - name: windows-amd64
-            runner: windows-latest
-            platform: windows
-            arch: amd64
     runs-on: ${{ matrix.runner }}
     env:
       ZIP_NAME: sdl3_app-${{ matrix.platform }}-${{ matrix.arch }}.zip
@@ -40,43 +28,36 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Linux system deps
-        if: matrix.platform == 'linux'
-        run: |
-          sudo add-apt-repository -y universe
-          sudo apt-get update
-          sudo apt-get install -y \
-            libwayland-dev \
-            libegl-dev \
-            libxkbcommon-dev \
-            libxrandr-dev \
-            cmake
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
 
-      - name: Install Conan
-        run: sudo pip install 'conan>=2'
-
-      - name: Detect Conan profile
-        run: sudo conan profile detect
-
-      - name: Install Conan dependencies
-        shell: bash
+      - name: Build linux container image
+        if: matrix.platform == 'linux'
         run: |
-          if [ -d "$BUILD_DIR" ]; then rm -rf "$BUILD_DIR"; fi
-          sudo conan install . --output-folder "$BUILD_DIR" --build=missing -c tools.system.package_manager:mode=install
-          sudo chown -R "$USER:$USER" "$BUILD_DIR"
+          docker build \
+            --build-arg USERNAME=builder \
+            --build-arg UID=$(id -u) \
+            --build-arg GID=$(id -g) \
+            -f .github/workflows/Dockerfile \
+            -t sdl3_app:${{ matrix.platform }}-${{ matrix.arch }} .
 
-      - name: Configure CMake
-        shell: bash
-        run: cmake -S . -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release
-
-      - name: Build demo
-        shell: bash
-        run: cmake --build "$BUILD_DIR" --config Release
+      - name: Run linux build in container
+        if: matrix.platform == 'linux'
+        env:
+          BUILD_DIR: ${{ env.BUILD_DIR }}
+        run: |
+          docker run --rm \
+            -e BUILD_DIR \
+            -w /workspace \
+            -v "${{ github.workspace }}:/workspace" \
+            sdl3_app:${{ matrix.platform }}-${{ matrix.arch }} \
+            bash -c 'set -euo pipefail
+              if [ -d "$BUILD_DIR" ]; then rm -rf "$BUILD_DIR"; fi
+              cp -a /conan_build "$BUILD_DIR"
+              cmake -S . -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release
+              cmake --build "$BUILD_DIR" --config Release'
 
       - name: Package release ZIP
         env:
