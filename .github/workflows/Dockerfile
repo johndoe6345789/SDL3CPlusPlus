@@ -2,6 +2,9 @@ ARG USERNAME=builder
 ARG UID=1000
 ARG GID=1000
 FROM ubuntu:24.04
+ARG USERNAME
+ARG UID
+ARG GID
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -32,11 +35,16 @@ ENV PATH="/opt/venv/bin:${PATH}"
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir "conan>=2"
 
-RUN groupadd --gid ${GID} ${USERNAME} && \
-    useradd --uid ${UID} --gid ${GID} -m ${USERNAME}
+RUN if ! getent group "${USERNAME}" >/dev/null 2>&1; then \
+        groupadd --gid "${GID}" -o "${USERNAME}"; \
+    fi && \
+    if ! id -u "${USERNAME}" >/dev/null 2>&1; then \
+        useradd --uid "${UID}" --gid "${GID}" --non-unique -m "${USERNAME}"; \
+    fi
 
 WORKDIR /workspace
 COPY . /workspace
+RUN conan profile detect
 RUN conan install . --output-folder /conan_build --build=missing -c tools.system.package_manager:mode=install
 RUN chown -R ${USERNAME}:${USERNAME} /workspace /conan_build
 
