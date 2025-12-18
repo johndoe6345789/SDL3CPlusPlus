@@ -11,7 +11,6 @@ if(EXISTS "${CMAKE_BINARY_DIR}/conan_toolchain.cmake")
 endif()
 
 if(BUILD_SDL3_APP)
-    find_package(SDL3 CONFIG REQUIRED)
     find_package(Vulkan REQUIRED)
 endif()
 find_package(lua CONFIG REQUIRED)
@@ -30,7 +29,7 @@ if(BUILD_SDL3_APP)
         src/script/cube_script.cpp
     )
     target_include_directories(sdl3_app PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-    target_link_libraries(sdl3_app PRIVATE SDL3::SDL3 Vulkan::Vulkan lua::lua)
+    target_link_libraries(sdl3_app PRIVATE sdl::sdl Vulkan::Vulkan lua::lua)
     target_compile_definitions(sdl3_app PRIVATE SDL_MAIN_HANDLED)
 
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/shaders" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
