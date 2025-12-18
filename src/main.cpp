@@ -11,12 +11,15 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <filesystem>
 #include <limits>
 #include <optional>
 #include <set>
 #include <stdexcept>
 #include <string>
 #include <vector>
+
+#include <lua.hpp>
 
 constexpr uint32_t kWidth = 1024;
 constexpr uint32_t kHeight = 768;
@@ -38,26 +41,6 @@ struct PushConstants {
 };
 
 static_assert(sizeof(PushConstants) == sizeof(float) * 32, "push constant size mismatch");
-
-const std::vector<Vertex> kCubeVertices = {
-    {{-1.0f, -1.0f, -1.0f}, {1.0f, 0.0f, 0.0f}},
-    {{1.0f, -1.0f, -1.0f}, {0.0f, 1.0f, 0.0f}},
-    {{1.0f, 1.0f, -1.0f}, {0.0f, 0.0f, 1.0f}},
-    {{-1.0f, 1.0f, -1.0f}, {1.0f, 1.0f, 0.0f}},
-    {{-1.0f, -1.0f, 1.0f}, {1.0f, 0.0f, 1.0f}},
-    {{1.0f, -1.0f, 1.0f}, {0.0f, 1.0f, 1.0f}},
-    {{1.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}},
-    {{-1.0f, 1.0f, 1.0f}, {0.2f, 0.2f, 0.2f}},
-};
-
-const std::vector<uint16_t> kCubeIndices = {
-    0, 1, 2, 2, 3, 0, // back
-    4, 5, 6, 6, 7, 4, // front
-    0, 4, 7, 7, 3, 0, // left
-    1, 5, 6, 6, 2, 1, // right
-    3, 2, 6, 6, 7, 3, // top
-    0, 1, 5, 5, 4, 0  // bottom
-};
 
 const std::vector<const char*> kDeviceExtensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
@@ -111,24 +94,6 @@ std::array<float, 16> IdentityMatrix() {
             0.0f, 0.0f, 0.0f, 1.0f};
 }
 
-std::array<float, 16> RotationY(float radians) {
-    float c = std::cos(radians);
-    float s = std::sin(radians);
-    return {c, 0.0f, -s, 0.0f,
-            0.0f, 1.0f, 0.0f, 0.0f,
-            s, 0.0f, c, 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f};
-}
-
-std::array<float, 16> RotationX(float radians) {
-    float c = std::cos(radians);
-    float s = std::sin(radians);
-    return {1.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, c, s, 0.0f,
-            0.0f, -s, c, 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f};
-}
-
 Vec3 Normalize(Vec3 v) {
     float len = std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
     if (len == 0.0f) {
@@ -179,8 +144,243 @@ std::array<float, 16> Perspective(float fovRadians, float aspect, float zNear, f
     return result;
 }
 
+class CubeScript {
+public:
+    explicit CubeScript(const std::filesystem::path& scriptPath);
+    ~CubeScript();
+
+    struct ShaderPaths {
+        std::string vertex;
+        std::string fragment;
+    };
+
+    std::vector<Vertex> LoadVertices();
+    std::vector<uint16_t> LoadIndices();
+    std::array<float, 16> ComputeModelMatrix(float time);
+    ShaderPaths LoadShaderPaths();
+
+private:
+    static std::array<float, 3> ReadVector3(lua_State* L, int index);
+    static std::array<float, 16> ReadMatrix(lua_State* L, int index);
+    static std::string LuaErrorMessage(lua_State* L);
+    static ShaderPaths DefaultShaderPaths();
+
+    lua_State* L_ = nullptr;
+};
+
+CubeScript::CubeScript(const std::filesystem::path& scriptPath) : L_(luaL_newstate()) {
+    if (!L_) {
+        throw std::runtime_error("Failed to create Lua state");
+    }
+    luaL_openlibs(L_);
+    if (luaL_dofile(L_, scriptPath.string().c_str()) != LUA_OK) {
+        std::string message = LuaErrorMessage(L_);
+        lua_pop(L_, 1);
+        lua_close(L_);
+        L_ = nullptr;
+        throw std::runtime_error("Failed to load Lua script: " + message);
+    }
+}
+
+CubeScript::~CubeScript() {
+    if (L_) {
+        lua_close(L_);
+    }
+}
+
+std::vector<Vertex> CubeScript::LoadVertices() {
+    lua_getglobal(L_, "get_cube_vertices");
+    if (!lua_isfunction(L_, -1)) {
+        lua_pop(L_, 1);
+        throw std::runtime_error("Lua function 'get_cube_vertices' is missing");
+    }
+    if (lua_pcall(L_, 0, 1, 0) != LUA_OK) {
+        std::string message = LuaErrorMessage(L_);
+        lua_pop(L_, 1);
+        throw std::runtime_error("Lua get_cube_vertices failed: " + message);
+    }
+    if (!lua_istable(L_, -1)) {
+        lua_pop(L_, 1);
+        throw std::runtime_error("'get_cube_vertices' did not return a table");
+    }
+
+    size_t count = lua_rawlen(L_, -1);
+    std::vector<Vertex> vertices;
+    vertices.reserve(count);
+
+    for (size_t i = 1; i <= count; ++i) {
+        lua_rawgeti(L_, -1, static_cast<int>(i));
+        if (!lua_istable(L_, -1)) {
+            lua_pop(L_, 1);
+            throw std::runtime_error("Vertex entry at index " + std::to_string(i) + " is not a table");
+        }
+
+        int vertexIndex = lua_gettop(L_);
+        Vertex vertex{};
+
+        lua_getfield(L_, vertexIndex, "position");
+        vertex.position = ReadVector3(L_, -1);
+        lua_pop(L_, 1);
+
+        lua_getfield(L_, vertexIndex, "color");
+        vertex.color = ReadVector3(L_, -1);
+        lua_pop(L_, 1);
+
+        vertices.push_back(vertex);
+        lua_pop(L_, 1);
+    }
+
+    lua_pop(L_, 1);
+    return vertices;
+}
+
+std::vector<uint16_t> CubeScript::LoadIndices() {
+    lua_getglobal(L_, "get_cube_indices");
+    if (!lua_isfunction(L_, -1)) {
+        lua_pop(L_, 1);
+        throw std::runtime_error("Lua function 'get_cube_indices' is missing");
+    }
+    if (lua_pcall(L_, 0, 1, 0) != LUA_OK) {
+        std::string message = LuaErrorMessage(L_);
+        lua_pop(L_, 1);
+        throw std::runtime_error("Lua get_cube_indices failed: " + message);
+    }
+    if (!lua_istable(L_, -1)) {
+        lua_pop(L_, 1);
+        throw std::runtime_error("'get_cube_indices' did not return a table");
+    }
+
+    size_t count = lua_rawlen(L_, -1);
+    std::vector<uint16_t> indices;
+    indices.reserve(count);
+
+    for (size_t i = 1; i <= count; ++i) {
+        lua_rawgeti(L_, -1, static_cast<int>(i));
+        if (!lua_isinteger(L_, -1)) {
+            lua_pop(L_, 1);
+            throw std::runtime_error("Index entry at position " + std::to_string(i) + " is not an integer");
+        }
+        lua_Integer value = lua_tointeger(L_, -1);
+        lua_pop(L_, 1);
+        if (value < 1) {
+            throw std::runtime_error("Index values must be 1 or greater");
+        }
+        indices.push_back(static_cast<uint16_t>(value - 1));
+    }
+
+    lua_pop(L_, 1);
+    return indices;
+}
+
+std::array<float, 16> CubeScript::ComputeModelMatrix(float time) {
+    lua_getglobal(L_, "compute_model_matrix");
+    if (!lua_isfunction(L_, -1)) {
+        lua_pop(L_, 1);
+        throw std::runtime_error("Lua function 'compute_model_matrix' is missing");
+    }
+    lua_pushnumber(L_, time);
+    if (lua_pcall(L_, 1, 1, 0) != LUA_OK) {
+        std::string message = LuaErrorMessage(L_);
+        lua_pop(L_, 1);
+        throw std::runtime_error("Lua compute_model_matrix failed: " + message);
+    }
+    if (!lua_istable(L_, -1)) {
+        lua_pop(L_, 1);
+        throw std::runtime_error("'compute_model_matrix' did not return a table");
+    }
+
+    std::array<float, 16> matrix = ReadMatrix(L_, -1);
+    lua_pop(L_, 1);
+    return matrix;
+}
+
+CubeScript::ShaderPaths CubeScript::LoadShaderPaths() {
+    lua_getglobal(L_, "get_shader_paths");
+    if (!lua_isfunction(L_, -1)) {
+        lua_pop(L_, 1);
+        return DefaultShaderPaths();
+    }
+    if (lua_pcall(L_, 0, 1, 0) != LUA_OK) {
+        std::string message = LuaErrorMessage(L_);
+        lua_pop(L_, 1);
+        throw std::runtime_error("Lua get_shader_paths failed: " + message);
+    }
+    if (!lua_istable(L_, -1)) {
+        lua_pop(L_, 1);
+        throw std::runtime_error("'get_shader_paths' did not return a table");
+    }
+
+    ShaderPaths paths;
+    lua_getfield(L_, -1, "vertex");
+    if (!lua_isstring(L_, -1)) {
+        lua_pop(L_, 2);
+        throw std::runtime_error("Shader path 'vertex' must be a string");
+    }
+    paths.vertex = lua_tostring(L_, -1);
+    lua_pop(L_, 1);
+
+    lua_getfield(L_, -1, "fragment");
+    if (!lua_isstring(L_, -1)) {
+        lua_pop(L_, 2);
+        throw std::runtime_error("Shader path 'fragment' must be a string");
+    }
+    paths.fragment = lua_tostring(L_, -1);
+    lua_pop(L_, 1);
+
+    lua_pop(L_, 1);
+    return paths;
+}
+
+std::array<float, 3> CubeScript::ReadVector3(lua_State* L, int index) {
+    std::array<float, 3> result{};
+    int absIndex = lua_absindex(L, index);
+    size_t len = lua_rawlen(L, absIndex);
+    if (len != 3) {
+        throw std::runtime_error("Expected vector with 3 components");
+    }
+    for (size_t i = 1; i <= 3; ++i) {
+        lua_rawgeti(L, absIndex, static_cast<int>(i));
+        if (!lua_isnumber(L, -1)) {
+            lua_pop(L, 1);
+            throw std::runtime_error("Vector component is not a number");
+        }
+        result[i - 1] = static_cast<float>(lua_tonumber(L, -1));
+        lua_pop(L, 1);
+    }
+    return result;
+}
+
+std::array<float, 16> CubeScript::ReadMatrix(lua_State* L, int index) {
+    std::array<float, 16> result{};
+    int absIndex = lua_absindex(L, index);
+    size_t len = lua_rawlen(L, absIndex);
+    if (len != 16) {
+        throw std::runtime_error("Expected 4x4 matrix with 16 components");
+    }
+    for (size_t i = 1; i <= 16; ++i) {
+        lua_rawgeti(L, absIndex, static_cast<int>(i));
+        if (!lua_isnumber(L, -1)) {
+            lua_pop(L, 1);
+            throw std::runtime_error("Matrix component is not a number");
+        }
+        result[i - 1] = static_cast<float>(lua_tonumber(L, -1));
+        lua_pop(L, 1);
+    }
+    return result;
+}
+
+std::string CubeScript::LuaErrorMessage(lua_State* L) {
+    const char* message = lua_tostring(L, -1);
+    return message ? message : "unknown lua error";
+}
+
+CubeScript::ShaderPaths CubeScript::DefaultShaderPaths() {
+    return {"shaders/cube.vert.spv", "shaders/cube.frag.spv"};
+}
+
 class VulkanCubeApp {
 public:
+    explicit VulkanCubeApp(const std::filesystem::path& scriptPath);
     void Run() {
         InitSDL();
         InitVulkan();
@@ -212,6 +412,7 @@ private:
         CreateGraphicsPipeline();
         CreateFramebuffers();
         CreateCommandPool();
+        LoadCubeData();
         CreateVertexBuffer();
         CreateIndexBuffer();
         CreateCommandBuffers();
@@ -515,8 +716,9 @@ private:
     }
 
     void CreateGraphicsPipeline() {
-        auto vertShaderCode = ReadFile("shaders/cube.vert.spv");
-        auto fragShaderCode = ReadFile("shaders/cube.frag.spv");
+        auto shaderPaths = cubeScript_.LoadShaderPaths();
+        auto vertShaderCode = ReadFile(shaderPaths.vertex);
+        auto fragShaderCode = ReadFile(shaderPaths.fragment);
 
         VkShaderModule vertShaderModule = CreateShaderModule(vertShaderCode);
         VkShaderModule fragShaderModule = CreateShaderModule(fragShaderCode);
@@ -680,27 +882,35 @@ private:
         }
     }
 
+    void LoadCubeData() {
+        vertices_ = cubeScript_.LoadVertices();
+        indices_ = cubeScript_.LoadIndices();
+        if (vertices_.empty() || indices_.empty()) {
+            throw std::runtime_error("Lua script did not provide cube geometry");
+        }
+    }
+
     void CreateVertexBuffer() {
-        VkDeviceSize bufferSize = sizeof(kCubeVertices[0]) * kCubeVertices.size();
+        VkDeviceSize bufferSize = sizeof(vertices_[0]) * vertices_.size();
         CreateBuffer(bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, vertexBuffer_,
                      vertexBufferMemory_);
 
         void* data;
         vkMapMemory(device_, vertexBufferMemory_, 0, bufferSize, 0, &data);
-        std::memcpy(data, kCubeVertices.data(), static_cast<size_t>(bufferSize));
+        std::memcpy(data, vertices_.data(), static_cast<size_t>(bufferSize));
         vkUnmapMemory(device_, vertexBufferMemory_);
     }
 
     void CreateIndexBuffer() {
-        VkDeviceSize bufferSize = sizeof(kCubeIndices[0]) * kCubeIndices.size();
+        VkDeviceSize bufferSize = sizeof(indices_[0]) * indices_.size();
         CreateBuffer(bufferSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, indexBuffer_,
                      indexBufferMemory_);
 
         void* data;
         vkMapMemory(device_, indexBufferMemory_, 0, bufferSize, 0, &data);
-        std::memcpy(data, kCubeIndices.data(), static_cast<size_t>(bufferSize));
+        std::memcpy(data, indices_.data(), static_cast<size_t>(bufferSize));
         vkUnmapMemory(device_, indexBufferMemory_);
     }
 
@@ -744,7 +954,7 @@ private:
         vkCmdBindIndexBuffer(commandBuffer, indexBuffer_, 0, VK_INDEX_TYPE_UINT16);
         vkCmdPushConstants(commandBuffer, pipelineLayout_, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants),
                            &pushConstants);
-        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(kCubeIndices.size()), 1, 0, 0, 0);
+        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices_.size()), 1, 0, 0, 0);
         vkCmdEndRenderPass(commandBuffer);
         vkEndCommandBuffer(commandBuffer);
     }
@@ -780,7 +990,7 @@ private:
         }
 
         PushConstants pushConstants{};
-        pushConstants.model = MultiplyMatrix(RotationY(time * 0.7f), RotationX(time * 0.5f));
+        pushConstants.model = cubeScript_.ComputeModelMatrix(time);
         auto view = LookAt({2.0f, 2.0f, 2.5f}, {0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f});
         auto projection = Perspective(0.78f, static_cast<float>(swapChainExtent_.width) /
                                                    static_cast<float>(swapChainExtent_.height),
@@ -999,13 +1209,38 @@ private:
     VkDeviceMemory indexBufferMemory_ = VK_NULL_HANDLE;
     VkSemaphore imageAvailableSemaphore_ = VK_NULL_HANDLE;
     VkSemaphore renderFinishedSemaphore_ = VK_NULL_HANDLE;
+    CubeScript cubeScript_;
+    std::vector<Vertex> vertices_;
+    std::vector<uint16_t> indices_;
     VkFence inFlightFence_ = VK_NULL_HANDLE;
     bool framebufferResized_ = false;
 };
 
-int main() {
-    VulkanCubeApp app;
+VulkanCubeApp::VulkanCubeApp(const std::filesystem::path& scriptPath)
+    : cubeScript_(scriptPath) {}
+
+std::filesystem::path FindScriptPath(const char* argv0) {
+    std::filesystem::path executable;
+    if (argv0 && *argv0 != '\0') {
+        executable = std::filesystem::path(argv0);
+        if (executable.is_relative()) {
+            executable = std::filesystem::current_path() / executable;
+        }
+    } else {
+        executable = std::filesystem::current_path();
+    }
+    executable = std::filesystem::weakly_canonical(executable);
+    std::filesystem::path scriptPath = executable.parent_path() / "scripts" / "cube_logic.lua";
+    if (!std::filesystem::exists(scriptPath)) {
+        throw std::runtime_error("Could not find Lua script at " + scriptPath.string());
+    }
+    return scriptPath;
+}
+
+int main(int argc, char** argv) {
     try {
+        auto scriptPath = FindScriptPath(argc > 0 ? argv[0] : nullptr);
+        VulkanCubeApp app(scriptPath);
         app.Run();
     } catch (const std::exception& e) {
         std::cerr << "ERROR: " << e.what() << '\n';
