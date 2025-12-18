@@ -68,7 +68,7 @@ jobs:
         run: |
           if [ -d "$BUILD_DIR" ]; then rm -rf "$BUILD_DIR"; fi
           sudo conan install . --output-folder "$BUILD_DIR" --build=missing -c tools.system.package_manager:mode=install
-          sudo chown -Rv * $USER:$USER
+          sudo chown -R "$USER:$USER" "$BUILD_DIR"
 
       - name: Configure CMake
         shell: bash
