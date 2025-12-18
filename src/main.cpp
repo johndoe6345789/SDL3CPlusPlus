@@ -15,6 +15,7 @@
 #include <limits>
 #include <optional>
 #include <set>
+#include <unordered_map>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -154,16 +155,24 @@ public:
         std::string fragment;
     };
 
-    std::vector<Vertex> LoadVertices();
-    std::vector<uint16_t> LoadIndices();
-    std::array<float, 16> ComputeModelMatrix(float time);
-    ShaderPaths LoadShaderPaths();
+    struct SceneObject {
+        std::vector<Vertex> vertices;
+        std::vector<uint16_t> indices;
+        int computeModelMatrixRef = LUA_REFNIL;
+        std::string shaderKey = "default";
+    };
+
+    std::vector<SceneObject> LoadSceneObjects();
+    std::array<float, 16> ComputeModelMatrix(int functionRef, float time);
+    std::unordered_map<std::string, ShaderPaths> LoadShaderPathsMap();
 
 private:
     static std::array<float, 3> ReadVector3(lua_State* L, int index);
     static std::array<float, 16> ReadMatrix(lua_State* L, int index);
+    static std::vector<Vertex> ReadVertexArray(lua_State* L, int index);
+    static std::vector<uint16_t> ReadIndexArray(lua_State* L, int index);
     static std::string LuaErrorMessage(lua_State* L);
-    static ShaderPaths DefaultShaderPaths();
+    static ShaderPaths ReadShaderPathsTable(lua_State* L, int index);
 
     lua_State* L_ = nullptr;
 };
@@ -188,96 +197,84 @@ CubeScript::~CubeScript() {
     }
 }
 
-std::vector<Vertex> CubeScript::LoadVertices() {
-    lua_getglobal(L_, "get_cube_vertices");
+
+std::vector<CubeScript::SceneObject> CubeScript::LoadSceneObjects() {
+    lua_getglobal(L_, "get_scene_objects");
     if (!lua_isfunction(L_, -1)) {
         lua_pop(L_, 1);
-        throw std::runtime_error("Lua function 'get_cube_vertices' is missing");
+        throw std::runtime_error("Lua function 'get_scene_objects' is missing");
     }
     if (lua_pcall(L_, 0, 1, 0) != LUA_OK) {
         std::string message = LuaErrorMessage(L_);
         lua_pop(L_, 1);
-        throw std::runtime_error("Lua get_cube_vertices failed: " + message);
+        throw std::runtime_error("Lua get_scene_objects failed: " + message);
     }
     if (!lua_istable(L_, -1)) {
         lua_pop(L_, 1);
-        throw std::runtime_error("'get_cube_vertices' did not return a table");
+        throw std::runtime_error("'get_scene_objects' did not return a table");
     }
 
     size_t count = lua_rawlen(L_, -1);
-    std::vector<Vertex> vertices;
-    vertices.reserve(count);
+    std::vector<SceneObject> objects;
+    objects.reserve(count);
 
     for (size_t i = 1; i <= count; ++i) {
         lua_rawgeti(L_, -1, static_cast<int>(i));
         if (!lua_istable(L_, -1)) {
             lua_pop(L_, 1);
-            throw std::runtime_error("Vertex entry at index " + std::to_string(i) + " is not a table");
+            throw std::runtime_error("Scene object at index " + std::to_string(i) + " is not a table");
         }
 
-        int vertexIndex = lua_gettop(L_);
-        Vertex vertex{};
-
-        lua_getfield(L_, vertexIndex, "position");
-        vertex.position = ReadVector3(L_, -1);
+        SceneObject object;
+        lua_getfield(L_, -1, "vertices");
+        object.vertices = ReadVertexArray(L_, -1);
         lua_pop(L_, 1);
-
-        lua_getfield(L_, vertexIndex, "color");
-        vertex.color = ReadVector3(L_, -1);
-        lua_pop(L_, 1);
-
-        vertices.push_back(vertex);
-        lua_pop(L_, 1);
-    }
-
-    lua_pop(L_, 1);
-    return vertices;
-}
-
-std::vector<uint16_t> CubeScript::LoadIndices() {
-    lua_getglobal(L_, "get_cube_indices");
-    if (!lua_isfunction(L_, -1)) {
-        lua_pop(L_, 1);
-        throw std::runtime_error("Lua function 'get_cube_indices' is missing");
-    }
-    if (lua_pcall(L_, 0, 1, 0) != LUA_OK) {
-        std::string message = LuaErrorMessage(L_);
-        lua_pop(L_, 1);
-        throw std::runtime_error("Lua get_cube_indices failed: " + message);
-    }
-    if (!lua_istable(L_, -1)) {
-        lua_pop(L_, 1);
-        throw std::runtime_error("'get_cube_indices' did not return a table");
-    }
-
-    size_t count = lua_rawlen(L_, -1);
-    std::vector<uint16_t> indices;
-    indices.reserve(count);
-
-    for (size_t i = 1; i <= count; ++i) {
-        lua_rawgeti(L_, -1, static_cast<int>(i));
-        if (!lua_isinteger(L_, -1)) {
+        if (object.vertices.empty()) {
             lua_pop(L_, 1);
-            throw std::runtime_error("Index entry at position " + std::to_string(i) + " is not an integer");
+            throw std::runtime_error("Scene object " + std::to_string(i) + " must supply at least one vertex");
         }
-        lua_Integer value = lua_tointeger(L_, -1);
+
+        lua_getfield(L_, -1, "indices");
+        object.indices = ReadIndexArray(L_, -1);
         lua_pop(L_, 1);
-        if (value < 1) {
-            throw std::runtime_error("Index values must be 1 or greater");
+        if (object.indices.empty()) {
+            lua_pop(L_, 1);
+            throw std::runtime_error("Scene object " + std::to_string(i) + " must supply indices");
         }
-        indices.push_back(static_cast<uint16_t>(value - 1));
+
+        lua_getfield(L_, -1, "compute_model_matrix");
+        if (lua_isfunction(L_, -1)) {
+            object.computeModelMatrixRef = luaL_ref(L_, LUA_REGISTRYINDEX);
+        } else {
+            lua_pop(L_, 1);
+            object.computeModelMatrixRef = LUA_REFNIL;
+        }
+
+        lua_getfield(L_, -1, "shader_key");
+        if (lua_isstring(L_, -1)) {
+            object.shaderKey = lua_tostring(L_, -1);
+        }
+        lua_pop(L_, 1);
+
+        objects.push_back(std::move(object));
+        lua_pop(L_, 1);
     }
 
     lua_pop(L_, 1);
-    return indices;
+    return objects;
 }
 
-std::array<float, 16> CubeScript::ComputeModelMatrix(float time) {
-    lua_getglobal(L_, "compute_model_matrix");
-    if (!lua_isfunction(L_, -1)) {
-        lua_pop(L_, 1);
-        throw std::runtime_error("Lua function 'compute_model_matrix' is missing");
+std::array<float, 16> CubeScript::ComputeModelMatrix(int functionRef, float time) {
+    if (functionRef == LUA_REFNIL) {
+        lua_getglobal(L_, "compute_model_matrix");
+        if (!lua_isfunction(L_, -1)) {
+            lua_pop(L_, 1);
+            return IdentityMatrix();
+        }
+    } else {
+        lua_rawgeti(L_, LUA_REGISTRYINDEX, functionRef);
     }
+
     lua_pushnumber(L_, time);
     if (lua_pcall(L_, 1, 1, 0) != LUA_OK) {
         std::string message = LuaErrorMessage(L_);
@@ -294,11 +291,73 @@ std::array<float, 16> CubeScript::ComputeModelMatrix(float time) {
     return matrix;
 }
 
-CubeScript::ShaderPaths CubeScript::LoadShaderPaths() {
+std::vector<Vertex> CubeScript::ReadVertexArray(lua_State* L, int index) {
+    int absIndex = lua_absindex(L, index);
+    if (!lua_istable(L, absIndex)) {
+        throw std::runtime_error("Expected table for vertex data");
+    }
+
+    size_t count = lua_rawlen(L, absIndex);
+    std::vector<Vertex> vertices;
+    vertices.reserve(count);
+
+    for (size_t i = 1; i <= count; ++i) {
+        lua_rawgeti(L, absIndex, static_cast<int>(i));
+        if (!lua_istable(L, -1)) {
+            lua_pop(L, 1);
+            throw std::runtime_error("Vertex entry at index " + std::to_string(i) + " is not a table");
+        }
+
+        int vertexIndex = lua_gettop(L);
+        Vertex vertex{};
+
+        lua_getfield(L, vertexIndex, "position");
+        vertex.position = ReadVector3(L, -1);
+        lua_pop(L, 1);
+
+        lua_getfield(L, vertexIndex, "color");
+        vertex.color = ReadVector3(L, -1);
+        lua_pop(L, 1);
+
+        vertices.push_back(vertex);
+        lua_pop(L, 1);
+    }
+
+    return vertices;
+}
+
+std::vector<uint16_t> CubeScript::ReadIndexArray(lua_State* L, int index) {
+    int absIndex = lua_absindex(L, index);
+    if (!lua_istable(L, absIndex)) {
+        throw std::runtime_error("Expected table for index data");
+    }
+
+    size_t count = lua_rawlen(L, absIndex);
+    std::vector<uint16_t> indices;
+    indices.reserve(count);
+
+    for (size_t i = 1; i <= count; ++i) {
+        lua_rawgeti(L, absIndex, static_cast<int>(i));
+        if (!lua_isinteger(L, -1)) {
+            lua_pop(L, 1);
+            throw std::runtime_error("Index entry at position " + std::to_string(i) + " is not an integer");
+        }
+        lua_Integer value = lua_tointeger(L, -1);
+        lua_pop(L, 1);
+        if (value < 1) {
+            throw std::runtime_error("Index values must be 1 or greater");
+        }
+        indices.push_back(static_cast<uint16_t>(value - 1));
+    }
+
+    return indices;
+}
+
+std::unordered_map<std::string, CubeScript::ShaderPaths> CubeScript::LoadShaderPathsMap() {
     lua_getglobal(L_, "get_shader_paths");
     if (!lua_isfunction(L_, -1)) {
         lua_pop(L_, 1);
-        return DefaultShaderPaths();
+        throw std::runtime_error("Lua function 'get_shader_paths' is missing");
     }
     if (lua_pcall(L_, 0, 1, 0) != LUA_OK) {
         std::string message = LuaErrorMessage(L_);
@@ -310,24 +369,43 @@ CubeScript::ShaderPaths CubeScript::LoadShaderPaths() {
         throw std::runtime_error("'get_shader_paths' did not return a table");
     }
 
+    std::unordered_map<std::string, ShaderPaths> shaderMap;
+    lua_pushnil(L_);
+    while (lua_next(L_, -2) != 0) {
+        if (lua_isstring(L_, -2) && lua_istable(L_, -1)) {
+            std::string key = lua_tostring(L_, -2);
+            shaderMap.emplace(key, ReadShaderPathsTable(L_, -1));
+        }
+        lua_pop(L_, 1);
+    }
+
+    lua_pop(L_, 1);
+    if (shaderMap.empty()) {
+        throw std::runtime_error("'get_shader_paths' did not return any shader variants");
+    }
+    return shaderMap;
+}
+
+CubeScript::ShaderPaths CubeScript::ReadShaderPathsTable(lua_State* L, int index) {
     ShaderPaths paths;
-    lua_getfield(L_, -1, "vertex");
-    if (!lua_isstring(L_, -1)) {
-        lua_pop(L_, 2);
+    int absIndex = lua_absindex(L, index);
+
+    lua_getfield(L, absIndex, "vertex");
+    if (!lua_isstring(L, -1)) {
+        lua_pop(L, 1);
         throw std::runtime_error("Shader path 'vertex' must be a string");
     }
-    paths.vertex = lua_tostring(L_, -1);
-    lua_pop(L_, 1);
+    paths.vertex = lua_tostring(L, -1);
+    lua_pop(L, 1);
 
-    lua_getfield(L_, -1, "fragment");
-    if (!lua_isstring(L_, -1)) {
-        lua_pop(L_, 2);
+    lua_getfield(L, absIndex, "fragment");
+    if (!lua_isstring(L, -1)) {
+        lua_pop(L, 1);
         throw std::runtime_error("Shader path 'fragment' must be a string");
     }
-    paths.fragment = lua_tostring(L_, -1);
-    lua_pop(L_, 1);
+    paths.fragment = lua_tostring(L, -1);
+    lua_pop(L, 1);
 
-    lua_pop(L_, 1);
     return paths;
 }
 
@@ -374,10 +452,6 @@ std::string CubeScript::LuaErrorMessage(lua_State* L) {
     return message ? message : "unknown lua error";
 }
 
-CubeScript::ShaderPaths CubeScript::DefaultShaderPaths() {
-    return {"shaders/cube.vert.spv", "shaders/cube.frag.spv"};
-}
-
 class VulkanCubeApp {
 public:
     explicit VulkanCubeApp(const std::filesystem::path& scriptPath);
@@ -389,6 +463,14 @@ public:
     }
 
 private:
+    struct RenderObject {
+        uint32_t indexOffset = 0;
+        uint32_t indexCount = 0;
+        int32_t vertexOffset = 0;
+        int computeModelMatrixRef = LUA_REFNIL;
+        std::string shaderKey = "default";
+    };
+
     void InitSDL() {
         if (SDL_Init(SDL_INIT_VIDEO) != 0) {
             throw std::runtime_error(std::string("SDL_Init failed: ") + SDL_GetError());
@@ -409,10 +491,10 @@ private:
         CreateSwapChain();
         CreateImageViews();
         CreateRenderPass();
+        LoadCubeData();
         CreateGraphicsPipeline();
         CreateFramebuffers();
         CreateCommandPool();
-        LoadCubeData();
         CreateVertexBuffer();
         CreateIndexBuffer();
         CreateCommandBuffers();
@@ -447,8 +529,14 @@ private:
         }
         vkFreeCommandBuffers(device_, commandPool_,
                              static_cast<uint32_t>(commandBuffers_.size()), commandBuffers_.data());
-        vkDestroyPipeline(device_, graphicsPipeline_, nullptr);
-        vkDestroyPipelineLayout(device_, pipelineLayout_, nullptr);
+        for (auto& entry : graphicsPipelines_) {
+            vkDestroyPipeline(device_, entry.second, nullptr);
+        }
+        graphicsPipelines_.clear();
+        if (pipelineLayout_ != VK_NULL_HANDLE) {
+            vkDestroyPipelineLayout(device_, pipelineLayout_, nullptr);
+            pipelineLayout_ = VK_NULL_HANDLE;
+        }
         vkDestroyRenderPass(device_, renderPass_, nullptr);
         for (auto imageView : swapChainImageViews_) {
             vkDestroyImageView(device_, imageView, nullptr);
@@ -716,27 +804,16 @@ private:
     }
 
     void CreateGraphicsPipeline() {
-        auto shaderPaths = cubeScript_.LoadShaderPaths();
-        auto vertShaderCode = ReadFile(shaderPaths.vertex);
-        auto fragShaderCode = ReadFile(shaderPaths.fragment);
+        if (shaderPathMap_.empty()) {
+            throw std::runtime_error("No shader paths were loaded before pipeline creation");
+        }
 
-        VkShaderModule vertShaderModule = CreateShaderModule(vertShaderCode);
-        VkShaderModule fragShaderModule = CreateShaderModule(fragShaderCode);
+        for (auto& entry : graphicsPipelines_) {
+            vkDestroyPipeline(device_, entry.second, nullptr);
+        }
+        graphicsPipelines_.clear();
 
-        VkPipelineShaderStageCreateInfo vertStageInfo{};
-        vertStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        vertStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-        vertStageInfo.module = vertShaderModule;
-        vertStageInfo.pName = "main";
-
-        VkPipelineShaderStageCreateInfo fragStageInfo{};
-        fragStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        fragStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        fragStageInfo.module = fragShaderModule;
-        fragStageInfo.pName = "main";
-
-        VkPipelineShaderStageCreateInfo shaderStages[] = {vertStageInfo, fragStageInfo};
-
+        VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
         VkVertexInputBindingDescription bindingDescription{};
         bindingDescription.binding = 0;
         bindingDescription.stride = sizeof(Vertex);
@@ -753,12 +830,10 @@ private:
         attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
         attributeDescriptions[1].offset = offsetof(Vertex, color);
 
-        VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
         vertexInputInfo.vertexBindingDescriptionCount = 1;
         vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
-        vertexInputInfo.vertexAttributeDescriptionCount =
-            static_cast<uint32_t>(attributeDescriptions.size());
+        vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
         vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
         VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
@@ -821,14 +896,17 @@ private:
         pipelineLayoutInfo.pushConstantRangeCount = 1;
         pipelineLayoutInfo.pPushConstantRanges = &pushRange;
 
+        if (pipelineLayout_ != VK_NULL_HANDLE) {
+            vkDestroyPipelineLayout(device_, pipelineLayout_, nullptr);
+            pipelineLayout_ = VK_NULL_HANDLE;
+        }
+
         if (vkCreatePipelineLayout(device_, &pipelineLayoutInfo, nullptr, &pipelineLayout_) != VK_SUCCESS) {
             throw std::runtime_error("Failed to create pipeline layout");
         }
 
         VkGraphicsPipelineCreateInfo pipelineInfo{};
         pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-        pipelineInfo.stageCount = 2;
-        pipelineInfo.pStages = shaderStages;
         pipelineInfo.pVertexInputState = &vertexInputInfo;
         pipelineInfo.pInputAssemblyState = &inputAssembly;
         pipelineInfo.pViewportState = &viewportState;
@@ -839,13 +917,43 @@ private:
         pipelineInfo.renderPass = renderPass_;
         pipelineInfo.subpass = 0;
 
-        if (vkCreateGraphicsPipelines(device_, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr,
-                                      &graphicsPipeline_) != VK_SUCCESS) {
-            throw std::runtime_error("Failed to create graphics pipeline");
-        }
+        for (const auto& [key, paths] : shaderPathMap_) {
+            auto vertShaderCode = ReadFile(paths.vertex);
+            auto fragShaderCode = ReadFile(paths.fragment);
 
-        vkDestroyShaderModule(device_, fragShaderModule, nullptr);
-        vkDestroyShaderModule(device_, vertShaderModule, nullptr);
+            VkShaderModule vertShaderModule = CreateShaderModule(vertShaderCode);
+            VkShaderModule fragShaderModule = CreateShaderModule(fragShaderCode);
+
+            VkPipelineShaderStageCreateInfo vertStageInfo{};
+            vertStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+            vertStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+            vertStageInfo.module = vertShaderModule;
+            vertStageInfo.pName = "main";
+
+            VkPipelineShaderStageCreateInfo fragStageInfo{};
+            fragStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+            fragStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+            fragStageInfo.module = fragShaderModule;
+            fragStageInfo.pName = "main";
+
+            VkPipelineShaderStageCreateInfo shaderStages[] = {vertStageInfo, fragStageInfo};
+
+            VkGraphicsPipelineCreateInfo pipelineCreateInfo = pipelineInfo;
+            pipelineCreateInfo.stageCount = 2;
+            pipelineCreateInfo.pStages = shaderStages;
+
+            VkPipeline pipeline;
+            if (vkCreateGraphicsPipelines(device_, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr,
+                                          &pipeline) != VK_SUCCESS) {
+                vkDestroyShaderModule(device_, fragShaderModule, nullptr);
+                vkDestroyShaderModule(device_, vertShaderModule, nullptr);
+                throw std::runtime_error("Failed to create graphics pipeline");
+            }
+            graphicsPipelines_.emplace(key, pipeline);
+
+            vkDestroyShaderModule(device_, fragShaderModule, nullptr);
+            vkDestroyShaderModule(device_, vertShaderModule, nullptr);
+        }
     }
 
     void CreateFramebuffers() {
@@ -883,10 +991,46 @@ private:
     }
 
     void LoadCubeData() {
-        vertices_ = cubeScript_.LoadVertices();
-        indices_ = cubeScript_.LoadIndices();
+        shaderPathMap_ = cubeScript_.LoadShaderPathsMap();
+        if (shaderPathMap_.empty()) {
+            throw std::runtime_error("Lua script did not provide shader paths");
+        }
+        defaultShaderKey_ = shaderPathMap_.count("default") ? "default" : shaderPathMap_.begin()->first;
+
+        auto sceneObjects = cubeScript_.LoadSceneObjects();
+        if (sceneObjects.empty()) {
+            throw std::runtime_error("Lua script did not provide any scene objects");
+        }
+
+        vertices_.clear();
+        indices_.clear();
+        renderObjects_.clear();
+
+        size_t vertexOffset = 0;
+        size_t indexOffset = 0;
+        for (const auto& sceneObject : sceneObjects) {
+            RenderObject renderObject{};
+            renderObject.vertexOffset = static_cast<int32_t>(vertexOffset);
+            renderObject.indexOffset = static_cast<uint32_t>(indexOffset);
+            renderObject.indexCount = static_cast<uint32_t>(sceneObject.indices.size());
+            renderObject.computeModelMatrixRef = sceneObject.computeModelMatrixRef;
+            renderObject.shaderKey = sceneObject.shaderKey;
+            if (shaderPathMap_.find(renderObject.shaderKey) == shaderPathMap_.end()) {
+                renderObject.shaderKey = defaultShaderKey_;
+            }
+            renderObjects_.push_back(renderObject);
+
+            vertices_.insert(vertices_.end(), sceneObject.vertices.begin(), sceneObject.vertices.end());
+            for (uint16_t index : sceneObject.indices) {
+                indices_.push_back(static_cast<uint16_t>(index + vertexOffset));
+            }
+
+            vertexOffset += sceneObject.vertices.size();
+            indexOffset += sceneObject.indices.size();
+        }
+
         if (vertices_.empty() || indices_.empty()) {
-            throw std::runtime_error("Lua script did not provide cube geometry");
+            throw std::runtime_error("Aggregated scene geometry is empty");
         }
     }
 
@@ -928,7 +1072,8 @@ private:
         }
     }
 
-    void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, const PushConstants& pushConstants) {
+    void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, float time,
+                             const std::array<float, 16>& viewProj) {
         VkCommandBufferBeginInfo beginInfo{};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
@@ -946,15 +1091,27 @@ private:
         renderPassInfo.pClearValues = &clearColor;
 
         vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline_);
 
         VkBuffer vertexBuffers[] = {vertexBuffer_};
         VkDeviceSize offsets[] = {0};
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
         vkCmdBindIndexBuffer(commandBuffer, indexBuffer_, 0, VK_INDEX_TYPE_UINT16);
-        vkCmdPushConstants(commandBuffer, pipelineLayout_, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants),
-                           &pushConstants);
-        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices_.size()), 1, 0, 0, 0);
+        PushConstants pushConstants{};
+        pushConstants.viewProj = viewProj;
+        for (const auto& object : renderObjects_) {
+            auto pipelineIt = graphicsPipelines_.find(object.shaderKey);
+            if (pipelineIt == graphicsPipelines_.end()) {
+                pipelineIt = graphicsPipelines_.find(defaultShaderKey_);
+                if (pipelineIt == graphicsPipelines_.end()) {
+                    throw std::runtime_error("Missing pipeline for shader key");
+                }
+            }
+            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineIt->second);
+            pushConstants.model = cubeScript_.ComputeModelMatrix(object.computeModelMatrixRef, time);
+            vkCmdPushConstants(commandBuffer, pipelineLayout_, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants),
+                               &pushConstants);
+            vkCmdDrawIndexed(commandBuffer, object.indexCount, 1, object.indexOffset, object.vertexOffset, 0);
+        }
         vkCmdEndRenderPass(commandBuffer);
         vkEndCommandBuffer(commandBuffer);
     }
@@ -989,16 +1146,14 @@ private:
             throw std::runtime_error("Failed to acquire swap chain image");
         }
 
-        PushConstants pushConstants{};
-        pushConstants.model = cubeScript_.ComputeModelMatrix(time);
         auto view = LookAt({2.0f, 2.0f, 2.5f}, {0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f});
         auto projection = Perspective(0.78f, static_cast<float>(swapChainExtent_.width) /
                                                    static_cast<float>(swapChainExtent_.height),
                                       0.1f, 10.0f);
-        pushConstants.viewProj = MultiplyMatrix(projection, view);
+        auto viewProj = MultiplyMatrix(projection, view);
 
         vkResetCommandBuffer(commandBuffers_[imageIndex], 0);
-        RecordCommandBuffer(commandBuffers_[imageIndex], imageIndex, pushConstants);
+        RecordCommandBuffer(commandBuffers_[imageIndex], imageIndex, time, viewProj);
 
         VkSemaphore waitSemaphores[] = {imageAvailableSemaphore_};
         VkSemaphore signalSemaphores[] = {renderFinishedSemaphore_};
@@ -1199,7 +1354,6 @@ private:
     std::vector<VkImageView> swapChainImageViews_;
     VkRenderPass renderPass_ = VK_NULL_HANDLE;
     VkPipelineLayout pipelineLayout_ = VK_NULL_HANDLE;
-    VkPipeline graphicsPipeline_ = VK_NULL_HANDLE;
     std::vector<VkFramebuffer> swapChainFramebuffers_;
     VkCommandPool commandPool_ = VK_NULL_HANDLE;
     std::vector<VkCommandBuffer> commandBuffers_;
@@ -1212,8 +1366,12 @@ private:
     CubeScript cubeScript_;
     std::vector<Vertex> vertices_;
     std::vector<uint16_t> indices_;
+    std::unordered_map<std::string, CubeScript::ShaderPaths> shaderPathMap_;
+    std::unordered_map<std::string, VkPipeline> graphicsPipelines_;
+    std::string defaultShaderKey_;
     VkFence inFlightFence_ = VK_NULL_HANDLE;
     bool framebufferResized_ = false;
+    std::vector<RenderObject> renderObjects_;
 };
 
 VulkanCubeApp::VulkanCubeApp(const std::filesystem::path& scriptPath)
