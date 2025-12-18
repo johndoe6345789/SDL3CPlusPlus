@@ -63,9 +63,6 @@ jobs:
       - name: Detect Conan profile
         run: conan profile detect
 
-      - name: Vendor SDL3/Vulkan
-        run: python scripts/setup_vendor_dependencies.py
-
       - name: Install Conan dependencies
         shell: bash
         run: |

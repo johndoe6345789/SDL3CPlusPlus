@@ -16,5 +16,6 @@ class SDL3CppConan(ConanFile):
 
     def requirements(self):
         self.requires("lua/5.4.6")
+        self.requires("sdl3/3.2.0")
         if self.options.build_app:
             self.requires("vulkan-loader/1.4.313.0")
