@@ -5,7 +5,8 @@ A minimal SDL3 + Vulkan spinning cube demo.
 
 1. Install or update [Conan 2.x](https://docs.conan.io/en/latest/installation.html) and run
    ```
-   conan install . --install-folder build --build=missing
+   conan profile detect
+   conan install . -of build -b missing -s compiler=msvc -s compiler.version=194 -s compiler.cppstd=17 -c tools.cmake.cmaketoolchain:generator="Visual Studio 17 2022"
    ```
    so that Conan brings in `lua`, SDL3, and the Vulkan loader + headers.
 2. Configure the project with CMake using the generated Conan toolchain:

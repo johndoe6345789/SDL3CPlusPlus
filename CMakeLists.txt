@@ -12,6 +12,7 @@ endif()
 
 if(BUILD_SDL3_APP)
     find_package(Vulkan REQUIRED)
+    find_package(SDL3 CONFIG REQUIRED)
 endif()
 find_package(lua CONFIG REQUIRED)
 
