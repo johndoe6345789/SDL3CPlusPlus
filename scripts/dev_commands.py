@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import argparse
-import shlex
+import os
+import platform
 import subprocess
 
 
@@ -14,6 +15,18 @@ def run_commands(commands: list[str], dry_run: bool) -> None:
             continue
         subprocess.run(cmd, shell=True, check=True)
 
+
+IS_WINDOWS = platform.system() == "Windows"
+DEFAULT_GENERATOR = "ninja-msvc" if IS_WINDOWS else "ninja"
+GENERATOR_DEFAULT_DIR = {
+    "vs": "build",
+    "ninja": "build-ninja",
+    "ninja-msvc": "build-ninja-msvc",
+}
+DEFAULT_BUILD_DIR = GENERATOR_DEFAULT_DIR[DEFAULT_GENERATOR]
+SPINNING_BINARY = os.path.join(
+    DEFAULT_BUILD_DIR, "spinning_cube.exe" if IS_WINDOWS else "spinning_cube"
+)
 
 ALIASES = {
     "conan_detect": "conan profile detect",
@@ -26,7 +39,6 @@ ALIASES = {
         'cmd /c "call \\"C:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Auxiliary\\Build\\vcvarsall.bat\\" x64 '
         "&& cmake --build build-ninja-msvc --config Release\""
     ),
-    "spinning_cube": "./build-ninja/spinning_cube",
 }
 
 
@@ -36,9 +48,9 @@ def dependencies(args: argparse.Namespace) -> None:
 
 
 def configure(args: argparse.Namespace) -> None:
-    defaults = {"vs": "build", "ninja": "build-ninja", "ninja-msvc": "build-ninja-msvc"}
-    build_dir = args.build_dir or defaults.get(args.generator, "build")
-    if args.generator == "vs":
+    generator = args.generator or DEFAULT_GENERATOR
+    build_dir = args.build_dir or GENERATOR_DEFAULT_DIR.get(generator, "build")
+    if generator == "vs":
         cmd = f"cmake -B {build_dir} -S ."
     else:
         cmd = (
@@ -56,6 +68,8 @@ def build(args: argparse.Namespace) -> None:
 
 
 def msvc_quick(args: argparse.Namespace) -> None:
+    if not IS_WINDOWS:
+        raise SystemExit("msvc-quick is only supported on Windows")
     if args.bat_path:
         alias = ALIASES["msvc_quick"].replace(
             r'"C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build\vcvarsall.bat"',
@@ -70,16 +84,14 @@ def msvc_quick(args: argparse.Namespace) -> None:
 
 
 def run_demo(args: argparse.Namespace) -> None:
-    base = ALIASES["spinning_cube"]
-    if args.build_dir:
-        prefix = args.build_dir.rstrip("\\/")
-        alias = base.replace("./build-ninja", prefix)
-    else:
-        alias = base
+    build_dir = args.build_dir or DEFAULT_BUILD_DIR
+    binary = os.path.join(
+        build_dir, "spinning_cube.exe" if IS_WINDOWS else "spinning_cube"
+    )
     if args.dry_run:
-        print("\n> " + alias)
+        print("\n> " + binary)
     else:
-        subprocess.run(alias, shell=True, check=True)
+        subprocess.run(binary, shell=True, check=True)
 
 
 def main() -> int:
@@ -98,8 +110,9 @@ def main() -> int:
     conf.add_argument(
         "--generator",
         choices=["vs", "ninja", "ninja-msvc"],
-        default="ninja",
-        help="which generator to invoke (default: Ninja)",
+        help=(
+            "which generator to invoke (default: Ninja+MSVC on Windows, Ninja elsewhere)"
+        ),
     )
     conf.add_argument(
         "--build-dir",
@@ -114,7 +127,7 @@ def main() -> int:
 
     build_parser = subparsers.add_parser("build", help="run cmake --build")
     build_parser.add_argument(
-        "--build-dir", default="build-ninja", help="which directory to build"
+        "--build-dir", default=DEFAULT_BUILD_DIR, help="which directory to build"
     )
     build_parser.add_argument(
         "--config", default="Release", help="configuration for multi-config builders"
