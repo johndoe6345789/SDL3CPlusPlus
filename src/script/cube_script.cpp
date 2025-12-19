@@ -4,17 +4,134 @@
 #include <assimp/material.h>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
+#include <btBulletDynamicsCommon.h>
 
 #include <array>
 #include <cstring>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <system_error>
+#include <unordered_map>
 #include <utility>
+#include <vector>
 
 namespace sdl3cpp::script {
 
 namespace {
+
+struct PhysicsBridge {
+    struct BodyRecord {
+        std::unique_ptr<btCollisionShape> shape;
+        std::unique_ptr<btMotionState> motionState;
+        std::unique_ptr<btRigidBody> body;
+    };
+
+    PhysicsBridge();
+    ~PhysicsBridge();
+
+    bool addBoxRigidBody(const std::string& name,
+                         const btVector3& halfExtents,
+                         float mass,
+                         const btTransform& transform,
+                         std::string& error);
+    int stepSimulation(float deltaTime);
+    bool getRigidBodyTransform(const std::string& name,
+                               btTransform& outTransform,
+                               std::string& error) const;
+
+private:
+    std::unique_ptr<btDefaultCollisionConfiguration> collisionConfig_;
+    std::unique_ptr<btCollisionDispatcher> dispatcher_;
+    std::unique_ptr<btBroadphaseInterface> broadphase_;
+    std::unique_ptr<btSequentialImpulseConstraintSolver> solver_;
+    std::unique_ptr<btDiscreteDynamicsWorld> world_;
+    std::unordered_map<std::string, BodyRecord> bodies_;
+};
+
+PhysicsBridge::PhysicsBridge()
+    : collisionConfig_(std::make_unique<btDefaultCollisionConfiguration>()),
+      dispatcher_(std::make_unique<btCollisionDispatcher>(collisionConfig_.get())),
+      broadphase_(std::make_unique<btDbvtBroadphase>()),
+      solver_(std::make_unique<btSequentialImpulseConstraintSolver>()),
+      world_(std::make_unique<btDiscreteDynamicsWorld>(
+          dispatcher_.get(),
+          broadphase_.get(),
+          solver_.get(),
+          collisionConfig_.get())) {
+    world_->setGravity(btVector3(0.0f, -9.81f, 0.0f));
+}
+
+PhysicsBridge::~PhysicsBridge() {
+    if (world_) {
+        for (auto& [name, entry] : bodies_) {
+            if (entry.body) {
+                world_->removeRigidBody(entry.body.get());
+            }
+        }
+    }
+}
+
+bool PhysicsBridge::addBoxRigidBody(const std::string& name,
+                                    const btVector3& halfExtents,
+                                    float mass,
+                                    const btTransform& transform,
+                                    std::string& error) {
+    if (name.empty()) {
+        error = "Rigid body name must not be empty";
+        return false;
+    }
+    if (!world_) {
+        error = "Physics world is not initialized";
+        return false;
+    }
+    if (bodies_.count(name)) {
+        error = "Rigid body already exists: " + name;
+        return false;
+    }
+    auto shape = std::make_unique<btBoxShape>(halfExtents);
+    btVector3 inertia(0.0f, 0.0f, 0.0f);
+    if (mass > 0.0f) {
+        shape->calculateLocalInertia(mass, inertia);
+    }
+    auto motionState = std::make_unique<btDefaultMotionState>(transform);
+    btRigidBody::btRigidBodyConstructionInfo constructionInfo(
+        mass,
+        motionState.get(),
+        shape.get(),
+        inertia);
+    auto body = std::make_unique<btRigidBody>(constructionInfo);
+    world_->addRigidBody(body.get());
+    bodies_.emplace(name, BodyRecord{
+        std::move(shape),
+        std::move(motionState),
+        std::move(body),
+    });
+    return true;
+}
+
+int PhysicsBridge::stepSimulation(float deltaTime) {
+    if (!world_) {
+        return 0;
+    }
+    return static_cast<int>(world_->stepSimulation(deltaTime, 10, 1.0f / 60.0f));
+}
+
+bool PhysicsBridge::getRigidBodyTransform(const std::string& name,
+                                          btTransform& outTransform,
+                                          std::string& error) const {
+    auto it = bodies_.find(name);
+    if (it == bodies_.end()) {
+        error = "Rigid body not found: " + name;
+        return false;
+    }
+    if (!it->second.motionState) {
+        error = "Rigid body motion state is missing";
+        return false;
+    }
+    it->second.motionState->getWorldTransform(outTransform);
+    return true;
+}
 
 struct MeshPayload {
     std::vector<std::array<float, 3>> positions;
@@ -153,6 +270,83 @@ int LuaLoadMeshFromFile(lua_State* L) {
     return 2;
 }
 
+int LuaPhysicsCreateBox(lua_State* L) {
+    auto* script = static_cast<CubeScript*>(lua_touserdata(L, lua_upvalueindex(1)));
+    const char* name = luaL_checkstring(L, 1);
+    if (!lua_istable(L, 2) || !lua_istable(L, 4) || !lua_istable(L, 5)) {
+        luaL_error(L, "physics_create_box expects vector tables for half extents, origin, and rotation");
+    }
+    std::array<float, 3> halfExtents = ReadVector3(L, 2);
+    float mass = static_cast<float>(luaL_checknumber(L, 3));
+    std::array<float, 3> origin = ReadVector3(L, 4);
+    std::array<float, 4> rotation = ReadQuaternion(L, 5);
+
+    btTransform transform;
+    transform.setIdentity();
+    transform.setOrigin(btVector3(origin[0], origin[1], origin[2]));
+    transform.setRotation(btQuaternion(rotation[0], rotation[1], rotation[2], rotation[3]));
+
+    std::string error;
+    if (!script->GetPhysicsBridge().addBoxRigidBody(
+            name,
+            btVector3(halfExtents[0], halfExtents[1], halfExtents[2]),
+            mass,
+            transform,
+            error)) {
+        lua_pushnil(L);
+        lua_pushstring(L, error.c_str());
+        return 2;
+    }
+
+    lua_pushboolean(L, 1);
+    return 1;
+}
+
+int LuaPhysicsStepSimulation(lua_State* L) {
+    auto* script = static_cast<CubeScript*>(lua_touserdata(L, lua_upvalueindex(1)));
+    float deltaTime = static_cast<float>(luaL_checknumber(L, 1));
+    int steps = script->GetPhysicsBridge().stepSimulation(deltaTime);
+    lua_pushinteger(L, steps);
+    return 1;
+}
+
+int LuaPhysicsGetTransform(lua_State* L) {
+    auto* script = static_cast<CubeScript*>(lua_touserdata(L, lua_upvalueindex(1)));
+    const char* name = luaL_checkstring(L, 1);
+    btTransform transform;
+    std::string error;
+    if (!script->GetPhysicsBridge().getRigidBodyTransform(name, transform, error)) {
+        lua_pushnil(L);
+        lua_pushstring(L, error.c_str());
+        return 2;
+    }
+
+    lua_newtable(L);
+    lua_newtable(L);
+    const btVector3& origin = transform.getOrigin();
+    lua_pushnumber(L, origin.x());
+    lua_rawseti(L, -2, 1);
+    lua_pushnumber(L, origin.y());
+    lua_rawseti(L, -2, 2);
+    lua_pushnumber(L, origin.z());
+    lua_rawseti(L, -2, 3);
+    lua_setfield(L, -2, "position");
+
+    lua_newtable(L);
+    const btQuaternion& orientation = transform.getRotation();
+    lua_pushnumber(L, orientation.x());
+    lua_rawseti(L, -2, 1);
+    lua_pushnumber(L, orientation.y());
+    lua_rawseti(L, -2, 2);
+    lua_pushnumber(L, orientation.z());
+    lua_rawseti(L, -2, 3);
+    lua_pushnumber(L, orientation.w());
+    lua_rawseti(L, -2, 4);
+    lua_setfield(L, -2, "rotation");
+
+    return 1;
+}
+
 std::array<float, 16> IdentityMatrix() {
     return {1.0f, 0.0f, 0.0f, 0.0f,
             0.0f, 1.0f, 0.0f, 0.0f,
@@ -163,11 +357,26 @@ std::array<float, 16> IdentityMatrix() {
 } // namespace
 
 CubeScript::CubeScript(const std::filesystem::path& scriptPath, bool debugEnabled)
-    : L_(luaL_newstate()), scriptDirectory_(scriptPath.parent_path()), debugEnabled_(debugEnabled) {
+    : L_(luaL_newstate()),
+      scriptDirectory_(scriptPath.parent_path()),
+      debugEnabled_(debugEnabled),
+      physicsBridge_(std::make_unique<PhysicsBridge>()) {
     if (!L_) {
         throw std::runtime_error("Failed to create Lua state");
     }
     luaL_openlibs(L_);
+    lua_pushlightuserdata(L_, this);
+    lua_pushcclosure(L_, &LuaLoadMeshFromFile, 1);
+    lua_setglobal(L_, "load_mesh_from_file");
+    lua_pushlightuserdata(L_, this);
+    lua_pushcclosure(L_, &LuaPhysicsCreateBox, 1);
+    lua_setglobal(L_, "physics_create_box");
+    lua_pushlightuserdata(L_, this);
+    lua_pushcclosure(L_, &LuaPhysicsStepSimulation, 1);
+    lua_setglobal(L_, "physics_step_simulation");
+    lua_pushlightuserdata(L_, this);
+    lua_pushcclosure(L_, &LuaPhysicsGetTransform, 1);
+    lua_setglobal(L_, "physics_get_transform");
     lua_pushlightuserdata(L_, this);
     lua_pushcclosure(L_, &LuaLoadMeshFromFile, 1);
     lua_setglobal(L_, "load_mesh_from_file");
@@ -494,9 +703,32 @@ std::array<float, 16> CubeScript::ReadMatrix(lua_State* L, int index) {
     return result;
 }
 
+std::array<float, 4> CubeScript::ReadQuaternion(lua_State* L, int index) {
+    std::array<float, 4> result{};
+    int absIndex = lua_absindex(L, index);
+    size_t len = lua_rawlen(L, absIndex);
+    if (len != 4) {
+        throw std::runtime_error("Expected quaternion with 4 components");
+    }
+    for (size_t i = 1; i <= 4; ++i) {
+        lua_rawgeti(L, absIndex, static_cast<int>(i));
+        if (!lua_isnumber(L, -1)) {
+            lua_pop(L, 1);
+            throw std::runtime_error("Quaternion component is not a number");
+        }
+        result[i - 1] = static_cast<float>(lua_tonumber(L, -1));
+        lua_pop(L, 1);
+    }
+    return result;
+}
+
 std::string CubeScript::LuaErrorMessage(lua_State* L) {
     const char* message = lua_tostring(L, -1);
     return message ? message : "unknown lua error";
+}
+
+PhysicsBridge& CubeScript::GetPhysicsBridge() {
+    return *physicsBridge_;
 }
 
 std::vector<CubeScript::GuiCommand> CubeScript::LoadGuiCommands() {

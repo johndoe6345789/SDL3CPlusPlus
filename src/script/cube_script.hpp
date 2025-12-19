@@ -3,6 +3,7 @@
 
 #include <array>
 #include <filesystem>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -12,6 +13,8 @@
 #include "core/vertex.hpp"
 
 namespace sdl3cpp::script {
+
+struct PhysicsBridge;
 
 struct GuiInputSnapshot {
     float mouseX = 0.0f;
@@ -91,10 +94,12 @@ public:
     void UpdateGuiInput(const GuiInputSnapshot& input);
     bool HasGuiCommands() const;
     std::filesystem::path GetScriptDirectory() const;
+    PhysicsBridge& GetPhysicsBridge();
 
 private:
     static std::array<float, 3> ReadVector3(lua_State* L, int index);
     static std::array<float, 16> ReadMatrix(lua_State* L, int index);
+    static std::array<float, 4> ReadQuaternion(lua_State* L, int index);
     static std::vector<core::Vertex> ReadVertexArray(lua_State* L, int index);
     static std::vector<uint16_t> ReadIndexArray(lua_State* L, int index);
     static std::string LuaErrorMessage(lua_State* L);
@@ -108,6 +113,7 @@ private:
     int guiCommandsFnRef_ = LUA_REFNIL;
     std::filesystem::path scriptDirectory_;
     bool debugEnabled_ = false;
+    std::unique_ptr<PhysicsBridge> physicsBridge_;
 };
 
 } // namespace sdl3cpp::script

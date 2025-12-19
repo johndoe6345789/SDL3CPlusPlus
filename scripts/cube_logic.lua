@@ -113,9 +113,72 @@ end
 if cube_mesh_info.loaded then
     log_debug("Loaded cube mesh from %s (%d vertices, %d indices)",
         cube_mesh_info.path, cube_mesh_info.vertex_count, cube_mesh_info.index_count)
-else
-    log_debug("Failed to load cube mesh (%s); using fallback cube",
-        cube_mesh_info.error or "unknown")
+end
+
+local cube_body_name = "cube_body"
+local cube_state = {
+    position = {0.0, 0.0, 0.0},
+    rotation = {0.0, 0.0, 0.0, 1.0},
+}
+local physics_last_time = 0.0
+
+local function quaternion_to_matrix(q)
+    local x, y, z, w = q[1], q[2], q[3], q[4]
+    local xx = x * x
+    local yy = y * y
+    local zz = z * z
+    local xy = x * y
+    local xz = x * z
+    local yz = y * z
+    local wx = w * x
+    local wy = w * y
+    local wz = w * z
+    return {
+        1.0 - 2.0 * yy - 2.0 * zz, 2.0 * xy + 2.0 * wz,     2.0 * xz - 2.0 * wy,     0.0,
+        2.0 * xy - 2.0 * wz,     1.0 - 2.0 * xx - 2.0 * zz, 2.0 * yz + 2.0 * wx,     0.0,
+        2.0 * xz + 2.0 * wy,     2.0 * yz - 2.0 * wx,     1.0 - 2.0 * xx - 2.0 * yy, 0.0,
+        0.0,                     0.0,                     0.0,                     1.0,
+    }
+end
+
+local function initialize_physics()
+    if type(physics_create_box) ~= "function" then
+        error("physics_create_box() is unavailable")
+    end
+    local ok, err = physics_create_box(
+        cube_body_name,
+        {1.0, 1.0, 1.0},
+        1.0,
+        {0.0, 2.0, 0.0},
+        {0.0, 0.0, 0.0, 1.0}
+    )
+    if not ok then
+        error("physics_create_box failed: " .. (err or "unknown"))
+    end
+    if type(physics_step_simulation) == "function" then
+        physics_step_simulation(0.0)
+    end
+end
+initialize_physics()
+
+local function sync_physics(time)
+    local dt = time - physics_last_time
+    if dt < 0.0 then
+        dt = 0.0
+    end
+    if dt > 0.0 and type(physics_step_simulation) == "function" then
+        physics_step_simulation(dt)
+    end
+    physics_last_time = time
+    if type(physics_get_transform) ~= "function" then
+        error("physics_get_transform() is unavailable")
+    end
+    local transform, err = physics_get_transform(cube_body_name)
+    if not transform then
+        error("physics_get_transform failed: " .. (err or "unknown"))
+    end
+    cube_state.position = transform.position
+    cube_state.rotation = transform.rotation
 end
 
 local rotation_speeds = {x = 0.5, y = 0.7}
@@ -188,11 +251,31 @@ local function build_model(time)
     return math3d.multiply(y, x)
 end
 
-local function create_cube(position, speed_scale, shader_key)
+local function create_rotating_cube(position, speed_scale, shader_key)
     local function compute_model_matrix(time)
         local base = build_model(time * speed_scale)
         local offset = math3d.translation(position[1], position[2], position[3])
         return math3d.multiply(offset, base)
+    end
+
+    return {
+        vertices = cube_vertices,
+        indices = cube_indices,
+        compute_model_matrix = compute_model_matrix,
+        shader_key = shader_key or "cube",
+    }
+end
+
+local function create_physics_cube(shader_key)
+    local function compute_model_matrix(time)
+        sync_physics(time)
+        local offset = math3d.translation(
+            cube_state.position[1],
+            cube_state.position[2],
+            cube_state.position[3]
+        )
+        local rotation_matrix = quaternion_to_matrix(cube_state.rotation)
+        return math3d.multiply(offset, rotation_matrix)
     end
 
     return {
@@ -220,9 +303,9 @@ end
 
 function get_scene_objects()
     local objects = {
-        create_cube({0.0, 0.0, 0.0}, 1.0, "cube"),
-        create_cube({3.0, 0.0, 0.0}, 0.8, "cube"),
-        create_cube({-3.0, 0.0, 0.0}, 1.2, "cube"),
+        create_physics_cube("cube"),
+        create_rotating_cube({3.0, 0.0, 0.0}, 0.8, "cube"),
+        create_rotating_cube({-3.0, 0.0, 0.0}, 1.2, "cube"),
         create_pyramid({0.0, -0.5, -4.0}, "pyramid"),
     }
     if lua_debug then
