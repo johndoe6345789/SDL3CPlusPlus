@@ -2,7 +2,12 @@
 
 #include <chrono>
 #include <fstream>
+#include <sstream>
 #include <stdexcept>
+
+#ifdef _WIN32
+#    include <windows.h>
+#endif
 
 namespace sdl3cpp::app {
 
@@ -18,6 +23,62 @@ std::vector<char> ReadFile(const std::string& path) {
     return buffer;
 }
 
+namespace {
+
+#ifdef _WIN32
+std::string FormatWin32Error(DWORD errorCode) {
+    if (errorCode == ERROR_SUCCESS) {
+        return "ERROR_SUCCESS";
+    }
+    LPSTR buffer = nullptr;
+    DWORD length = FormatMessageA(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+        nullptr,
+        errorCode,
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        reinterpret_cast<LPSTR>(&buffer),
+        0,
+        nullptr);
+    std::string message;
+    if (length > 0 && buffer) {
+        message.assign(buffer, length);
+        while (!message.empty() && (message.back() == '\r' || message.back() == '\n')) {
+            message.pop_back();
+        }
+        LocalFree(buffer);
+    } else {
+        message = "Unknown Windows error";
+    }
+    return message;
+}
+#endif
+
+std::string BuildSdlErrorMessage(const char* context) {
+    std::ostringstream oss;
+    oss << context;
+    const char* sdlError = SDL_GetError();
+    if (sdlError && *sdlError != '\0') {
+        oss << ": " << sdlError;
+    } else {
+        oss << ": (SDL_GetError returned an empty string)";
+    }
+#ifdef _WIN32
+    DWORD win32Error = ::GetLastError();
+    if (win32Error != ERROR_SUCCESS) {
+        oss << " [Win32 error " << win32Error << ": " << FormatWin32Error(win32Error) << "]";
+    }
+#endif
+    return oss.str();
+}
+
+void ThrowSdlErrorIfFailed(int result, const char* context) {
+    if (result != 0) {
+        throw std::runtime_error(BuildSdlErrorMessage(context));
+    }
+}
+
+} // namespace
+
 Sdl3App::Sdl3App(const std::filesystem::path& scriptPath) : cubeScript_(scriptPath) {}
 
 void Sdl3App::Run() {
@@ -28,13 +89,11 @@ void Sdl3App::Run() {
 }
 
 void Sdl3App::InitSDL() {
-    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-        throw std::runtime_error(std::string("SDL_Init failed: ") + SDL_GetError());
-    }
-    SDL_Vulkan_LoadLibrary(nullptr);
+    ThrowSdlErrorIfFailed(SDL_Init(SDL_INIT_VIDEO), "SDL_Init failed");
+    ThrowSdlErrorIfFailed(SDL_Vulkan_LoadLibrary(nullptr), "SDL_Vulkan_LoadLibrary failed");
     window_ = SDL_CreateWindow("SDL3 Vulkan Demo", kWidth, kHeight, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
     if (!window_) {
-        throw std::runtime_error(std::string("SDL_CreateWindow failed: ") + SDL_GetError());
+        throw std::runtime_error(BuildSdlErrorMessage("SDL_CreateWindow failed"));
     }
     SDL_StartTextInput(window_);
 }
