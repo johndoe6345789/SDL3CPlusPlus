@@ -1,12 +1,18 @@
 {
-  "extends": ["config:base"],
-  "enabledManagers": ["conan"],
+  "extends": [
+    "config:recommended"
+  ],
+  "enabledManagers": [
+    "conan"
+  ],
   "conan": {
     "enabled": true
   },
   "packageRules": [
     {
-      "matchDatasources": ["conan"],
+      "matchDatasources": [
+        "conan"
+      ],
       "groupName": "all Conan dependencies",
       "automerge": true,
       "automergeType": "branch"
