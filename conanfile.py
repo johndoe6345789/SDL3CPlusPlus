@@ -27,3 +27,4 @@ class SDL3CppConan(ConanFile):
         self.requires("cli11/2.6.0")
         self.requires("bullet3/3.25")
         self.requires("box2d/3.1.1")
+        self.requires("assimp/6.0.2")
