@@ -1,13 +1,157 @@
 #include "script/cube_script.hpp"
 
+#include <assimp/Importer.hpp>
+#include <assimp/material.h>
+#include <assimp/postprocess.h>
+#include <assimp/scene.h>
+
+#include <array>
 #include <cstring>
 #include <stdexcept>
 #include <string>
+#include <system_error>
 #include <utility>
 
 namespace sdl3cpp::script {
 
 namespace {
+
+struct MeshPayload {
+    std::vector<std::array<float, 3>> positions;
+    std::vector<std::array<float, 3>> colors;
+    std::vector<uint32_t> indices;
+};
+
+bool TryLoadMeshPayload(const CubeScript* script,
+                        const std::string& requestedPath,
+                        MeshPayload& payload,
+                        std::string& error) {
+    std::filesystem::path resolved(requestedPath);
+    if (!resolved.is_absolute()) {
+        resolved = script->GetScriptDirectory() / resolved;
+    }
+    std::error_code ec;
+    resolved = std::filesystem::weakly_canonical(resolved, ec);
+    if (ec) {
+        error = "Failed to resolve mesh path: " + ec.message();
+        return false;
+    }
+    if (!std::filesystem::exists(resolved)) {
+        error = "Mesh file not found: " + resolved.string();
+        return false;
+    }
+
+    Assimp::Importer importer;
+    const aiScene* scene = importer.ReadFile(
+        resolved.string(),
+        aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_PreTransformVertices);
+    if (!scene) {
+        error = importer.GetErrorString() ? importer.GetErrorString() : "Assimp failed to load mesh";
+        return false;
+    }
+    if (scene->mNumMeshes == 0) {
+        error = "Scene contains no meshes";
+        return false;
+    }
+
+    const aiMesh* mesh = scene->mMeshes[0];
+    if (!mesh->mNumVertices) {
+        error = "Mesh contains no vertices";
+        return false;
+    }
+
+    payload.positions.reserve(mesh->mNumVertices);
+    payload.colors.reserve(mesh->mNumVertices);
+    payload.indices.reserve(mesh->mNumFaces * 3);
+
+    aiColor3D defaultColor(0.6f, 0.8f, 1.0f);
+
+    aiColor3D materialColor = defaultColor;
+    if (mesh->mMaterialIndex < scene->mNumMaterials) {
+        const aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+        aiColor3D diffuse;
+        if (material && material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuse) == AI_SUCCESS) {
+            materialColor = diffuse;
+        }
+    }
+
+    for (unsigned i = 0; i < mesh->mNumVertices; ++i) {
+        const aiVector3D& vertex = mesh->mVertices[i];
+        payload.positions.push_back({vertex.x, vertex.y, vertex.z});
+
+        aiColor3D color = materialColor;
+        if (mesh->HasVertexColors(0) && mesh->mColors[0]) {
+            color = mesh->mColors[0][i];
+        }
+        payload.colors.push_back({color.r, color.g, color.b});
+    }
+
+    for (unsigned faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex) {
+        const aiFace& face = mesh->mFaces[faceIndex];
+        if (face.mNumIndices != 3) {
+            continue;
+        }
+        payload.indices.push_back(face.mIndices[0]);
+        payload.indices.push_back(face.mIndices[1]);
+        payload.indices.push_back(face.mIndices[2]);
+    }
+
+    if (payload.indices.empty()) {
+        error = "Mesh contains no triangle faces";
+        return false;
+    }
+    return true;
+}
+
+int PushMeshToLua(lua_State* L, const MeshPayload& payload) {
+    lua_newtable(L); // mesh
+
+    lua_newtable(L); // vertices table
+    for (size_t vertexIndex = 0; vertexIndex < payload.positions.size(); ++vertexIndex) {
+        lua_newtable(L);
+
+        lua_newtable(L);
+        for (int component = 0; component < 3; ++component) {
+            lua_pushnumber(L, payload.positions[vertexIndex][component]);
+            lua_rawseti(L, -2, component + 1);
+        }
+        lua_setfield(L, -2, "position");
+
+        lua_newtable(L);
+        for (int component = 0; component < 3; ++component) {
+            lua_pushnumber(L, payload.colors[vertexIndex][component]);
+            lua_rawseti(L, -2, component + 1);
+        }
+        lua_setfield(L, -2, "color");
+
+        lua_rawseti(L, -2, static_cast<int>(vertexIndex + 1));
+    }
+    lua_setfield(L, -2, "vertices");
+
+    lua_newtable(L); // indices table
+    for (size_t index = 0; index < payload.indices.size(); ++index) {
+        lua_pushinteger(L, static_cast<lua_Integer>(payload.indices[index]) + 1);
+        lua_rawseti(L, -2, static_cast<int>(index + 1));
+    }
+    lua_setfield(L, -2, "indices");
+
+    return 1;
+}
+
+int LuaLoadMeshFromFile(lua_State* L) {
+    auto* script = static_cast<CubeScript*>(lua_touserdata(L, lua_upvalueindex(1)));
+    const char* path = luaL_checkstring(L, 1);
+    MeshPayload payload;
+    std::string error;
+    if (!TryLoadMeshPayload(script, path, payload, error)) {
+        lua_pushnil(L);
+        lua_pushstring(L, error.c_str());
+        return 2;
+    }
+    PushMeshToLua(L, payload);
+    lua_pushnil(L);
+    return 2;
+}
 
 std::array<float, 16> IdentityMatrix() {
     return {1.0f, 0.0f, 0.0f, 0.0f,
@@ -24,6 +168,9 @@ CubeScript::CubeScript(const std::filesystem::path& scriptPath, bool debugEnable
         throw std::runtime_error("Failed to create Lua state");
     }
     luaL_openlibs(L_);
+    lua_pushlightuserdata(L_, this);
+    lua_pushcclosure(L_, &LuaLoadMeshFromFile, 1);
+    lua_setglobal(L_, "load_mesh_from_file");
     lua_pushboolean(L_, debugEnabled_);
     lua_setglobal(L_, "lua_debug");
     auto scriptDir = scriptPath.parent_path();

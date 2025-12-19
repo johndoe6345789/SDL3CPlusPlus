@@ -15,114 +15,46 @@ local pyramid_indices = {
     4, 5, 2,
 }
 
-local fallback_cube_vertices = {
-    { position = {-1.0, -1.0, -1.0}, color = {1.0, 0.0, 0.0} },
-    { position = {1.0, -1.0, -1.0}, color = {0.0, 1.0, 0.0} },
-    { position = {1.0, 1.0, -1.0}, color = {0.0, 0.0, 1.0} },
-    { position = {-1.0, 1.0, -1.0}, color = {1.0, 1.0, 0.0} },
-    { position = {-1.0, -1.0, 1.0}, color = {1.0, 0.0, 1.0} },
-    { position = {1.0, -1.0, 1.0}, color = {0.0, 1.0, 1.0} },
-    { position = {1.0, 1.0, 1.0}, color = {1.0, 1.0, 1.0} },
-    { position = {-1.0, 1.0, 1.0}, color = {0.2, 0.2, 0.2} },
-}
-
-local fallback_cube_indices = {
-    1, 2, 3, 3, 4, 1, -- back
-    5, 6, 7, 7, 8, 5, -- front
-    1, 5, 8, 8, 4, 1, -- left
-    2, 6, 7, 7, 3, 2, -- right
-    4, 3, 7, 7, 8, 4, -- top
-    1, 2, 6, 6, 5, 1, -- bottom
-}
-
-local function resolve_script_directory()
-    local info = debug.getinfo(1, "S")
-    local source = info and info.source
-    if not source then
-        return "."
-    end
-    if source:sub(1, 1) == "@" then
-        local path = source:sub(2)
-        return path:match("^(.*[\\/])") or "."
-    end
-    return "."
-end
-
-local function combine_paths(first, ...)
-    local parts = {first, ...}
-    local combined = parts[1] or ""
-    for i = 2, #parts do
-        local piece = parts[i]
-        if piece and piece ~= "" then
-            local last = combined:sub(-1)
-            if last ~= "/" and last ~= "\\" then
-                combined = combined .. "/"
-            end
-            combined = combined .. piece
-        end
-    end
-    return combined
-end
-
-local function load_stl_mesh(path)
-    local file, err = io.open(path, "r")
-    if not file then
-        return nil, nil, err
-    end
-    local vertices = {}
-    local indices = {}
-    local color = {0.6, 0.8, 1.0}
-    local vertex_count = 0
-    for line in file:lines() do
-        if line:lower():match("^%s*vertex") then
-            local coords = {}
-            for token in line:gmatch("%S+") do
-                if token:lower() ~= "vertex" then
-                    local value = tonumber(token)
-                    if value then
-                        coords[#coords + 1] = value
-                    end
-                end
-            end
-            if #coords == 3 then
-                vertex_count = vertex_count + 1
-                vertices[vertex_count] = {
-                    position = {coords[1], coords[2], coords[3]},
-                    color = {color[1], color[2], color[3]},
-                }
-                indices[#indices + 1] = vertex_count
-            end
-        end
-    end
-    file:close()
-    if vertex_count == 0 then
-        return nil, nil, "STL did not include any vertex lines"
-    end
-    return vertices, indices, nil
-end
-
-local script_directory = resolve_script_directory()
-local stl_cube_path = combine_paths(script_directory, "models", "cube.stl")
-local stl_vertices, stl_indices, stl_error = load_stl_mesh(stl_cube_path)
-
-local cube_vertices = fallback_cube_vertices
-local cube_indices = fallback_cube_indices
-local stl_debug_info = {
-    path = stl_cube_path,
+local cube_mesh_info = {
+    path = "models/cube.stl",
     loaded = false,
     vertex_count = 0,
     index_count = 0,
-    error = stl_error,
+    error = "load_mesh_from_file() not registered",
 }
 
-if stl_vertices then
-    cube_vertices = stl_vertices
-    cube_indices = stl_indices
-    stl_debug_info.loaded = true
-    stl_debug_info.vertex_count = #stl_vertices
-    stl_debug_info.index_count = #stl_indices
-else
-    stl_debug_info.error = stl_error or "STL file not available"
+local cube_vertices = {}
+local cube_indices = {}
+
+local function load_cube_mesh()
+    if type(load_mesh_from_file) ~= "function" then
+        cube_mesh_info.error = "load_mesh_from_file() is unavailable"
+        return
+    end
+
+    local mesh, err = load_mesh_from_file(cube_mesh_info.path)
+    if not mesh then
+        cube_mesh_info.error = err or "load_mesh_from_file() failed"
+        return
+    end
+
+    if type(mesh.vertices) ~= "table" or type(mesh.indices) ~= "table" then
+        cube_mesh_info.error = "loader returned unexpected structure"
+        return
+    end
+
+    cube_vertices = mesh.vertices
+    cube_indices = mesh.indices
+    cube_mesh_info.loaded = true
+    cube_mesh_info.vertex_count = #mesh.vertices
+    cube_mesh_info.index_count = #mesh.indices
+    cube_mesh_info.error = nil
+end
+
+load_cube_mesh()
+
+if not cube_mesh_info.loaded then
+    error("Unable to load cube mesh: " .. (cube_mesh_info.error or "unknown"))
 end
 
 local math3d = require("math3d")
@@ -178,12 +110,12 @@ local function log_debug(fmt, ...)
     print(string_format(fmt, ...))
 end
 
-if stl_debug_info.loaded then
+if cube_mesh_info.loaded then
     log_debug("Loaded cube mesh from %s (%d vertices, %d indices)",
-        stl_debug_info.path, stl_debug_info.vertex_count, stl_debug_info.index_count)
+        cube_mesh_info.path, cube_mesh_info.vertex_count, cube_mesh_info.index_count)
 else
-    log_debug("Failed to load cube STL (%s); using fallback cube",
-        stl_debug_info.error or "unknown")
+    log_debug("Failed to load cube mesh (%s); using fallback cube",
+        cube_mesh_info.error or "unknown")
 end
 
 local rotation_speeds = {x = 0.5, y = 0.7}
