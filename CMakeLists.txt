@@ -78,6 +78,7 @@ find_package(CLI11 CONFIG REQUIRED)
 find_package(rapidjson CONFIG REQUIRED)
 find_package(assimp CONFIG REQUIRED)
 find_package(Bullet CONFIG REQUIRED)
+find_package(glm CONFIG REQUIRED)
 
 if(BUILD_SDL3_APP)
 add_executable(sdl3_app
@@ -94,7 +95,7 @@ add_executable(sdl3_app
         src/script/cube_script.cpp
     )
     target_include_directories(sdl3_app PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-    target_link_libraries(sdl3_app PRIVATE sdl::sdl Vulkan::Vulkan lua::lua CLI11::CLI11 rapidjson assimp::assimp Bullet::Bullet)
+    target_link_libraries(sdl3_app PRIVATE sdl::sdl Vulkan::Vulkan lua::lua CLI11::CLI11 rapidjson assimp::assimp Bullet::Bullet glm::glm)
     target_compile_definitions(sdl3_app PRIVATE SDL_MAIN_HANDLED)
 
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/shaders" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
@@ -108,5 +109,5 @@ add_executable(cube_script_tests
     src/script/cube_script.cpp
 )
 target_include_directories(cube_script_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_link_libraries(cube_script_tests PRIVATE lua::lua assimp::assimp Bullet::Bullet)
+target_link_libraries(cube_script_tests PRIVATE lua::lua assimp::assimp Bullet::Bullet glm::glm)
 add_test(NAME cube_script_tests COMMAND cube_script_tests)

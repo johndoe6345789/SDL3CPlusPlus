@@ -122,25 +122,6 @@ local cube_state = {
 }
 local physics_last_time = 0.0
 
-local function quaternion_to_matrix(q)
-    local x, y, z, w = q[1], q[2], q[3], q[4]
-    local xx = x * x
-    local yy = y * y
-    local zz = z * z
-    local xy = x * y
-    local xz = x * z
-    local yz = y * z
-    local wx = w * x
-    local wy = w * y
-    local wz = w * z
-    return {
-        1.0 - 2.0 * yy - 2.0 * zz, 2.0 * xy + 2.0 * wz,     2.0 * xz - 2.0 * wy,     0.0,
-        2.0 * xy - 2.0 * wz,     1.0 - 2.0 * xx - 2.0 * zz, 2.0 * yz + 2.0 * wx,     0.0,
-        2.0 * xz + 2.0 * wy,     2.0 * yz - 2.0 * wx,     1.0 - 2.0 * xx - 2.0 * yy, 0.0,
-        0.0,                     0.0,                     0.0,                     1.0,
-    }
-end
-
 local function initialize_physics()
     if type(physics_create_box) ~= "function" then
         error("physics_create_box() is unavailable")
@@ -269,13 +250,7 @@ end
 local function create_physics_cube(shader_key)
     local function compute_model_matrix(time)
         sync_physics(time)
-        local offset = math3d.translation(
-            cube_state.position[1],
-            cube_state.position[2],
-            cube_state.position[3]
-        )
-        local rotation_matrix = quaternion_to_matrix(cube_state.rotation)
-        return math3d.multiply(offset, rotation_matrix)
+        return glm_matrix_from_transform(cube_state.position, cube_state.rotation)
     end
 
     return {
