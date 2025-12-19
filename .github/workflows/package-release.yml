@@ -4,7 +4,7 @@ on:
   workflow_call:
 
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 jobs:
@@ -35,7 +35,6 @@ jobs:
         with:
           name: build-${{ matrix.platform }}-${{ matrix.arch }}
           path: .
-          run-id: ${{ github.run_id }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
