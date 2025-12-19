@@ -3,7 +3,7 @@
   "window_height": 768,
   "lua_script": "scripts/cube_logic.lua",
   "scripts_directory": "scripts",
-  "project_root": ".",
+  "project_root": "../",
   "shaders_directory": "shaders",
   "device_extensions": [
     "VK_KHR_swapchain"

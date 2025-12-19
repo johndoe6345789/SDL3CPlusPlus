@@ -5,6 +5,7 @@
 #include <rapidjson/istreamwrapper.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
+#include <rapidjson/prettywriter.h>
 
 #include <cstdlib>
 #include <filesystem>
@@ -49,7 +50,7 @@ RuntimeConfig GenerateDefaultRuntimeConfig(const char* argv0) {
     return config;
 }
 
-RuntimeConfig LoadRuntimeConfigFromJson(const std::filesystem::path& configPath) {
+RuntimeConfig LoadRuntimeConfigFromJson(const std::filesystem::path& configPath, bool dumpConfig) {
     std::ifstream configStream(configPath);
     if (!configStream) {
         throw std::runtime_error("Failed to open config file: " + configPath.string());
@@ -63,6 +64,15 @@ RuntimeConfig LoadRuntimeConfigFromJson(const std::filesystem::path& configPath)
     }
     if (!document.IsObject()) {
         throw std::runtime_error("JSON config must contain an object at the root");
+    }
+
+    if (dumpConfig) {
+        rapidjson::StringBuffer buffer;
+        rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
+        writer.SetIndent(' ', 2);
+        document.Accept(writer);
+        std::cout << "Loaded runtime config (" << configPath << "):\n"
+                  << buffer.GetString() << '\n';
     }
 
     const char* scriptField = "lua_script";
@@ -101,6 +111,7 @@ RuntimeConfig LoadRuntimeConfigFromJson(const std::filesystem::path& configPath)
 
     config.width = parseDimension("window_width", config.width);
     config.height = parseDimension("window_height", config.height);
+
     return config;
 }
 
@@ -131,12 +142,14 @@ struct AppOptions {
     RuntimeConfig runtimeConfig;
     std::optional<std::filesystem::path> seedOutput;
     bool saveDefaultJson = false;
+    bool dumpRuntimeJson = false;
 };
 
 AppOptions ParseCommandLine(int argc, char** argv) {
     std::string jsonInputText;
     std::string seedOutputText;
     std::string setDefaultJsonPath;
+    bool dumpRuntimeJson = false;
 
     CLI::App app("SDL3 + Vulkan runtime helper");
     app.add_option("-j,--json-file-in", jsonInputText, "Path to a runtime JSON config")
@@ -150,6 +163,7 @@ AppOptions ParseCommandLine(int argc, char** argv) {
     setDefaultJsonOption->type_name("PATH");
     setDefaultJsonOption->type_size(1, 1);
     setDefaultJsonOption->expected(0, 1);
+    app.add_flag("--dump-json", dumpRuntimeJson, "Print the runtime JSON that was loaded");
 
     try {
         app.parse(argc, argv);
@@ -170,12 +184,12 @@ AppOptions ParseCommandLine(int argc, char** argv) {
 
     RuntimeConfig runtimeConfig;
     if (!jsonInputText.empty()) {
-        runtimeConfig = LoadRuntimeConfigFromJson(std::filesystem::absolute(jsonInputText));
+        runtimeConfig = LoadRuntimeConfigFromJson(std::filesystem::absolute(jsonInputText), dumpRuntimeJson);
     } else if (providedDefaultPath) {
-        runtimeConfig = LoadRuntimeConfigFromJson(*providedDefaultPath);
+        runtimeConfig = LoadRuntimeConfigFromJson(*providedDefaultPath, dumpRuntimeJson);
     } else if (auto defaultPath = GetDefaultConfigPath();
                defaultPath && std::filesystem::exists(*defaultPath)) {
-        runtimeConfig = LoadRuntimeConfigFromJson(*defaultPath);
+        runtimeConfig = LoadRuntimeConfigFromJson(*defaultPath, dumpRuntimeJson);
     } else {
         runtimeConfig = GenerateDefaultRuntimeConfig(argc > 0 ? argv[0] : nullptr);
     }
@@ -186,6 +200,7 @@ AppOptions ParseCommandLine(int argc, char** argv) {
         options.seedOutput = std::filesystem::absolute(seedOutputText);
     }
     options.saveDefaultJson = shouldSaveDefault;
+    options.dumpRuntimeJson = dumpRuntimeJson;
     return options;
 }
 

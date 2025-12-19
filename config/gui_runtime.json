@@ -1,12 +1,12 @@
-﻿{
-   window_width: 1024,
-  window_height: 768,
-  lua_script: scripts/gui_demo.lua,
-  scripts_directory: scripts,
-  project_root: .,
-  shaders_directory: shaders,
-  device_extensions: [
-    VK_KHR_swapchain
+{
+  "window_width": 1024,
+  "window_height": 768,
+  "lua_script": "scripts/gui_demo.lua",
+  "scripts_directory": "scripts",
+  "project_root": ".",
+  "shaders_directory": "shaders",
+  "device_extensions": [
+    "VK_KHR_swapchain"
   ],
-  config_file: config/gui_runtime.json
+  "config_file": "config/gui_runtime.json"
 }
