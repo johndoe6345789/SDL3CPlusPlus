@@ -1,4 +1,5 @@
 #include "app/sdl3_app.hpp"
+#include "app/trace.hpp"
 
 #include <set>
 #include <stdexcept>
@@ -7,6 +8,7 @@
 namespace sdl3cpp::app {
 
 void Sdl3App::CreateInstance() {
+    TRACE_FUNCTION();
     VkApplicationInfo appInfo{};
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     appInfo.pApplicationName = "SDL3 Vulkan";
@@ -35,12 +37,14 @@ void Sdl3App::CreateInstance() {
 }
 
 void Sdl3App::CreateSurface() {
+    TRACE_FUNCTION();
     if (!SDL_Vulkan_CreateSurface(window_, instance_, nullptr, &surface_)) {
         throw std::runtime_error("Failed to create Vulkan surface");
     }
 }
 
 void Sdl3App::PickPhysicalDevice() {
+    TRACE_FUNCTION();
     uint32_t deviceCount = 0;
     vkEnumeratePhysicalDevices(instance_, &deviceCount, nullptr);
     if (deviceCount == 0) {
@@ -62,6 +66,7 @@ void Sdl3App::PickPhysicalDevice() {
 }
 
 void Sdl3App::CreateLogicalDevice() {
+    TRACE_FUNCTION();
     QueueFamilyIndices indices = FindQueueFamilies(physicalDevice_);
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
@@ -96,6 +101,7 @@ void Sdl3App::CreateLogicalDevice() {
 }
 
 QueueFamilyIndices Sdl3App::FindQueueFamilies(VkPhysicalDevice device) {
+    TRACE_FUNCTION();
     QueueFamilyIndices indices;
 
     uint32_t queueFamilyCount = 0;
@@ -127,6 +133,7 @@ QueueFamilyIndices Sdl3App::FindQueueFamilies(VkPhysicalDevice device) {
 }
 
 bool Sdl3App::CheckDeviceExtensionSupport(VkPhysicalDevice device) {
+    TRACE_FUNCTION();
     uint32_t extensionCount = 0;
     vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
 
@@ -142,6 +149,7 @@ bool Sdl3App::CheckDeviceExtensionSupport(VkPhysicalDevice device) {
 }
 
 SwapChainSupportDetails Sdl3App::QuerySwapChainSupport(VkPhysicalDevice device) {
+    TRACE_FUNCTION();
     SwapChainSupportDetails details;
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface_, &details.capabilities);
 
@@ -164,6 +172,7 @@ SwapChainSupportDetails Sdl3App::QuerySwapChainSupport(VkPhysicalDevice device) 
 }
 
 bool Sdl3App::IsDeviceSuitable(VkPhysicalDevice device) {
+    TRACE_FUNCTION();
     QueueFamilyIndices indices = FindQueueFamilies(device);
 
     bool extensionsSupported = CheckDeviceExtensionSupport(device);

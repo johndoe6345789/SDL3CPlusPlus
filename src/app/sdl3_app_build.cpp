@@ -1,10 +1,12 @@
 #include "app/sdl3_app.hpp"
+#include "app/trace.hpp"
 
 #include <stdexcept>
 
 namespace sdl3cpp::app {
 
 void Sdl3App::CreateFramebuffers() {
+    TRACE_FUNCTION();
     swapChainFramebuffers_.resize(swapChainImageViews_.size());
     for (size_t i = 0; i < swapChainImageViews_.size(); ++i) {
         VkImageView attachments[] = {swapChainImageViews_[i]};
@@ -26,6 +28,7 @@ void Sdl3App::CreateFramebuffers() {
 }
 
 void Sdl3App::CreateCommandPool() {
+    TRACE_FUNCTION();
     QueueFamilyIndices indices = FindQueueFamilies(physicalDevice_);
 
     VkCommandPoolCreateInfo poolInfo{};
@@ -39,6 +42,7 @@ void Sdl3App::CreateCommandPool() {
 }
 
 void Sdl3App::CreateSyncObjects() {
+    TRACE_FUNCTION();
     VkSemaphoreCreateInfo semaphoreInfo{};
     semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 

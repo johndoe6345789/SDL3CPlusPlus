@@ -14,6 +14,7 @@
 #include <string>
 #include <utility>
 
+#include "app/trace.hpp"
 #include "app/sdl3_app.hpp"
 
 namespace {
@@ -156,6 +157,7 @@ struct AppOptions {
     std::optional<std::filesystem::path> seedOutput;
     bool saveDefaultJson = false;
     bool dumpRuntimeJson = false;
+    bool traceEnabled = false;
 };
 
 AppOptions ParseCommandLine(int argc, char** argv) {
@@ -163,6 +165,7 @@ AppOptions ParseCommandLine(int argc, char** argv) {
     std::string seedOutputText;
     std::string setDefaultJsonPath;
     bool dumpRuntimeJson = false;
+    bool traceRuntime = false;
 
     CLI::App app("SDL3 + Vulkan runtime helper");
     app.add_option("-j,--json-file-in", jsonInputText, "Path to a runtime JSON config")
@@ -177,6 +180,7 @@ AppOptions ParseCommandLine(int argc, char** argv) {
     setDefaultJsonOption->type_size(1, 1);
     setDefaultJsonOption->expected(0, 1);
     app.add_flag("--dump-json", dumpRuntimeJson, "Print the runtime JSON that was loaded");
+    app.add_flag("--trace", traceRuntime, "Emit a log line when key functions/methods run");
 
     try {
         app.parse(argc, argv);
@@ -214,6 +218,7 @@ AppOptions ParseCommandLine(int argc, char** argv) {
     }
     options.saveDefaultJson = shouldSaveDefault;
     options.dumpRuntimeJson = dumpRuntimeJson;
+    options.traceEnabled = traceRuntime;
     return options;
 }
 
@@ -275,6 +280,7 @@ void WriteRuntimeConfigJson(const RuntimeConfig& runtimeConfig,
 int main(int argc, char** argv) {
     try {
         AppOptions options = ParseCommandLine(argc, argv);
+        TraceLogger::SetEnabled(options.traceEnabled);
         if (options.seedOutput) {
             WriteRuntimeConfigJson(options.runtimeConfig, *options.seedOutput);
         }

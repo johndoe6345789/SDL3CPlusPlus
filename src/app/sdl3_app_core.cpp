@@ -1,4 +1,5 @@
 #include "app/sdl3_app.hpp"
+#include "app/trace.hpp"
 
 #include <chrono>
 #include <fstream>
@@ -12,6 +13,7 @@
 namespace sdl3cpp::app {
 
 std::vector<char> ReadFile(const std::string& path) {
+    TRACE_FUNCTION();
     std::ifstream file(path, std::ios::ate | std::ios::binary);
     if (!file) {
         throw std::runtime_error("failed to open file: " + path);
@@ -79,9 +81,12 @@ void ThrowSdlErrorIfFailed(int result, const char* context) {
 
 } // namespace
 
-Sdl3App::Sdl3App(const std::filesystem::path& scriptPath) : cubeScript_(scriptPath) {}
+Sdl3App::Sdl3App(const std::filesystem::path& scriptPath) : cubeScript_(scriptPath) {
+    TRACE_FUNCTION();
+}
 
 void Sdl3App::Run() {
+    TRACE_FUNCTION();
     InitSDL();
     InitVulkan();
     MainLoop();
@@ -89,6 +94,7 @@ void Sdl3App::Run() {
 }
 
 void Sdl3App::InitSDL() {
+    TRACE_FUNCTION();
     ThrowSdlErrorIfFailed(SDL_Init(SDL_INIT_VIDEO), "SDL_Init failed");
     ThrowSdlErrorIfFailed(SDL_Vulkan_LoadLibrary(nullptr), "SDL_Vulkan_LoadLibrary failed");
     window_ = SDL_CreateWindow("SDL3 Vulkan Demo", kWidth, kHeight, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
@@ -99,6 +105,7 @@ void Sdl3App::InitSDL() {
 }
 
 void Sdl3App::InitVulkan() {
+    TRACE_FUNCTION();
     CreateInstance();
     CreateSurface();
     PickPhysicalDevice();
@@ -118,6 +125,7 @@ void Sdl3App::InitVulkan() {
 }
 
 void Sdl3App::MainLoop() {
+    TRACE_FUNCTION();
     bool running = true;
     auto start = std::chrono::steady_clock::now();
     while (running) {
@@ -156,6 +164,7 @@ void Sdl3App::MainLoop() {
 }
 
 void Sdl3App::Cleanup() {
+    TRACE_FUNCTION();
     CleanupSwapChain();
 
     vkDestroyBuffer(device_, vertexBuffer_, nullptr);

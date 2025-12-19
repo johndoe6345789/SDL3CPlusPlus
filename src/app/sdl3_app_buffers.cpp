@@ -1,4 +1,5 @@
 #include "app/sdl3_app.hpp"
+#include "app/trace.hpp"
 
 #include <cstring>
 #include <stdexcept>
@@ -8,6 +9,7 @@
 namespace sdl3cpp::app {
 
 void Sdl3App::LoadSceneData() {
+    TRACE_FUNCTION();
     shaderPathMap_ = cubeScript_.LoadShaderPathsMap();
     if (shaderPathMap_.empty()) {
         throw std::runtime_error("Lua script did not provide shader paths");
@@ -52,6 +54,7 @@ void Sdl3App::LoadSceneData() {
 }
 
 void Sdl3App::CreateVertexBuffer() {
+    TRACE_FUNCTION();
     VkDeviceSize bufferSize = sizeof(vertices_[0]) * vertices_.size();
     vulkan::CreateBuffer(device_, physicalDevice_, bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, vertexBuffer_,
@@ -64,6 +67,7 @@ void Sdl3App::CreateVertexBuffer() {
 }
 
 void Sdl3App::CreateIndexBuffer() {
+    TRACE_FUNCTION();
     VkDeviceSize bufferSize = sizeof(indices_[0]) * indices_.size();
     vulkan::CreateBuffer(device_, physicalDevice_, bufferSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, indexBuffer_,

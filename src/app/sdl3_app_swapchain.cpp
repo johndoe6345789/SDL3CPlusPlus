@@ -1,4 +1,5 @@
 #include "app/sdl3_app.hpp"
+#include "app/trace.hpp"
 #include "app/vulkan_api.hpp"
 
 #include <stdexcept>
@@ -6,6 +7,7 @@
 namespace sdl3cpp::app {
 
 void Sdl3App::CreateSwapChain() {
+    TRACE_FUNCTION();
     SwapChainSupportDetails support = QuerySwapChainSupport(physicalDevice_);
 
     VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(support.formats);
@@ -55,6 +57,7 @@ void Sdl3App::CreateSwapChain() {
 }
 
 void Sdl3App::CreateImageViews() {
+    TRACE_FUNCTION();
     swapChainImageViews_.resize(swapChainImages_.size());
     for (size_t i = 0; i < swapChainImages_.size(); ++i) {
         VkImageViewCreateInfo viewInfo{};
@@ -77,6 +80,7 @@ void Sdl3App::CreateImageViews() {
 }
 
 void Sdl3App::CreateRenderPass() {
+    TRACE_FUNCTION();
     VkAttachmentDescription colorAttachment{};
     colorAttachment.format = swapChainImageFormat_;
     colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -119,6 +123,7 @@ void Sdl3App::CreateRenderPass() {
 }
 
 void Sdl3App::CleanupSwapChain() {
+    TRACE_FUNCTION();
     for (auto framebuffer : swapChainFramebuffers_) {
         vkDestroyFramebuffer(device_, framebuffer, nullptr);
     }
@@ -140,6 +145,7 @@ void Sdl3App::CleanupSwapChain() {
 }
 
 void Sdl3App::RecreateSwapChain() {
+    TRACE_FUNCTION();
     int width = 0;
     int height = 0;
     while (width == 0 || height == 0) {
@@ -160,6 +166,7 @@ void Sdl3App::RecreateSwapChain() {
 }
 
 VkSurfaceFormatKHR Sdl3App::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
+    TRACE_FUNCTION();
     for (const auto& availableFormat : availableFormats) {
         if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB &&
             availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
@@ -170,6 +177,7 @@ VkSurfaceFormatKHR Sdl3App::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceF
 }
 
 VkPresentModeKHR Sdl3App::ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) {
+    TRACE_FUNCTION();
     for (const auto& availablePresentMode : availablePresentModes) {
         if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
             return availablePresentMode;

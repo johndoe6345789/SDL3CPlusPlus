@@ -1,4 +1,5 @@
 #include "app/sdl3_app.hpp"
+#include "app/trace.hpp"
 
 #include <limits>
 #include <stdexcept>
@@ -21,6 +22,7 @@ const std::unordered_map<SDL_Keycode, std::string> kGuiKeyNames = {
 namespace sdl3cpp::app {
 
 void Sdl3App::CreateCommandBuffers() {
+    TRACE_FUNCTION();
     commandBuffers_.resize(swapChainFramebuffers_.size());
 
     VkCommandBufferAllocateInfo allocInfo{};
@@ -36,6 +38,7 @@ void Sdl3App::CreateCommandBuffers() {
 
 void Sdl3App::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, float time,
                                    const std::array<float, 16>& viewProj) {
+    TRACE_FUNCTION();
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
@@ -82,6 +85,7 @@ void Sdl3App::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageI
 }
 
 void Sdl3App::ProcessGuiEvent(const SDL_Event& event) {
+    TRACE_FUNCTION();
     switch (event.type) {
         case SDL_EVENT_MOUSE_MOTION:
             guiInputSnapshot_.mouseX = static_cast<float>(event.motion.x);
@@ -114,6 +118,7 @@ void Sdl3App::ProcessGuiEvent(const SDL_Event& event) {
 }
 
 void Sdl3App::SetupGuiRenderer() {
+    TRACE_FUNCTION();
     guiHasCommands_ = cubeScript_.HasGuiCommands();
     if (!guiHasCommands_) {
         guiRenderer_.reset();
@@ -128,6 +133,7 @@ void Sdl3App::SetupGuiRenderer() {
 }
 
 void Sdl3App::DrawFrame(float time) {
+    TRACE_FUNCTION();
     vkWaitForFences(device_, 1, &inFlightFence_, VK_TRUE, std::numeric_limits<uint64_t>::max());
     vkResetFences(device_, 1, &inFlightFence_);
 

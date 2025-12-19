@@ -1,4 +1,5 @@
 #include "app/sdl3_app.hpp"
+#include "app/trace.hpp"
 
 #include <array>
 #include <stdexcept>
@@ -6,6 +7,7 @@
 namespace sdl3cpp::app {
 
 VkShaderModule Sdl3App::CreateShaderModule(const std::vector<char>& code) {
+    TRACE_FUNCTION();
     VkShaderModuleCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     createInfo.codeSize = code.size();
@@ -19,6 +21,7 @@ VkShaderModule Sdl3App::CreateShaderModule(const std::vector<char>& code) {
 }
 
 void Sdl3App::CreateGraphicsPipeline() {
+    TRACE_FUNCTION();
     if (shaderPathMap_.empty()) {
         throw std::runtime_error("No shader paths were loaded before pipeline creation");
     }
