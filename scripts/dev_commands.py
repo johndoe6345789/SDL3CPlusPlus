@@ -1,101 +1,179 @@
-"""Helper CLI that mirrors the commands documented in README.md."""
+#!/usr/bin/env python3
+"""
+Helper CLI that mirrors the commands documented in README.md.
+
+Design goals:
+- No shell=True for normal commands (reliable quoting, safer).
+- Explicit argv execution throughout.
+- Where practical, allow forwarding extra arguments to underlying tools.
+- Keep Windows/MSVC "one-liner" behavior via cmd.exe only when required.
+"""
 
 from __future__ import annotations
 
 import argparse
 import os
 import platform
-import shlex
 import subprocess
-
-
-def run_commands(commands: list[str], dry_run: bool) -> None:
-    for cmd in commands:
-        print(f"\n> {cmd}")
-        if dry_run:
-            continue
-        subprocess.run(cmd, shell=True, check=True)
+from pathlib import Path
+from typing import Iterable, Sequence
 
 
 IS_WINDOWS = platform.system() == "Windows"
+
+# Generator presets and default build dirs
 DEFAULT_GENERATOR = "ninja-msvc" if IS_WINDOWS else "ninja"
 GENERATOR_DEFAULT_DIR = {
     "vs": "build",
     "ninja": "build-ninja",
     "ninja-msvc": "build-ninja-msvc",
 }
+CMAKE_GENERATOR = {
+    "vs": "Visual Studio 17 2022",
+    "ninja": "Ninja",
+    "ninja-msvc": "Ninja",
+}
+
 DEFAULT_BUILD_DIR = GENERATOR_DEFAULT_DIR[DEFAULT_GENERATOR]
-SPINNING_BINARY = os.path.join(
-    DEFAULT_BUILD_DIR, "spinning_cube.exe" if IS_WINDOWS else "spinning_cube"
+
+DEFAULT_VCVARSALL = (
+    "C:\\Program Files\\Microsoft Visual Studio\\2022\\Professional"
+    "\\VC\\Auxiliary\\Build\\vcvarsall.bat"
 )
 
-ALIASES = {
-    "conan_detect": "conan profile detect -f",
-    "conan_install": (
-        "conan install . -of build -b missing "
-        "-s compiler=msvc -s compiler.version=194 -s compiler.cppstd=17 "
-        '-c tools.cmake.cmaketoolchain:generator="Visual Studio 17 2022"'
-    ),
-    "msvc_quick": (
-        'cmd /c "call \\"C:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\VC\\Auxiliary\\Build\\vcvarsall.bat\\" x64 '
-        "&& cmake --build build-ninja-msvc --config Release\""
-    ),
-}
+
+def _print_cmd(argv: Sequence[str]) -> None:
+    # Use subprocess.list2cmdline for Windows-friendly rendering.
+    if IS_WINDOWS:
+        rendered = subprocess.list2cmdline(list(argv))
+    else:
+        rendered = " ".join(_sh_quote(a) for a in argv)
+    print("\n> " + rendered)
+
+
+def _sh_quote(s: str) -> str:
+    # Minimal POSIX shell quoting for display-only.
+    if not s:
+        return "''"
+    safe = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+               "._-/:@=+")
+    if all(c in safe for c in s):
+        return s
+    return "'" + s.replace("'", "'\"'\"'") + "'"
+
+
+def run_argvs(argvs: Iterable[Sequence[str]], dry_run: bool) -> None:
+    for argv in argvs:
+        _print_cmd(argv)
+        if dry_run:
+            continue
+        subprocess.run(list(argv), check=True)
+
+
+def _as_build_dir(path_str: str | None, fallback: str) -> str:
+    if path_str:
+        return path_str
+    return fallback
 
 
 def dependencies(args: argparse.Namespace) -> None:
-    commands = [ALIASES["conan_detect"], ALIASES["conan_install"]]
-    run_commands(commands, args.dry_run)
+    cmd_detect = ["conan", "profile", "detect", "-f"]
+    cmd_install = ["conan", "install", ".", "-of", "build", "-b", "missing"]
+
+    # Allow forward of arbitrary conan install args (e.g. -s, -o, -c).
+    if args.conan_install_args:
+        cmd_install.extend(args.conan_install_args)
+
+    run_argvs([cmd_detect, cmd_install], args.dry_run)
 
 
 def configure(args: argparse.Namespace) -> None:
     generator = args.generator or DEFAULT_GENERATOR
-    build_dir = args.build_dir or GENERATOR_DEFAULT_DIR.get(generator, "build")
+    build_dir = _as_build_dir(
+        args.build_dir,
+        GENERATOR_DEFAULT_DIR.get(generator, "build"),
+    )
+
+    cmake_args: list[str] = ["cmake", "-B", build_dir, "-S", "."]
+
     if generator == "vs":
-        cmd = f"cmake -B {build_dir} -S ."
+        cmake_args.extend(["-G", CMAKE_GENERATOR["vs"]])
+        # Multi-config generators typically ignore CMAKE_BUILD_TYPE.
     else:
-        cmd = (
-            f'cmake -G Ninja -B {build_dir} -S . -DCMAKE_BUILD_TYPE={args.build_type}'
-        )
-    run_commands([cmd], args.dry_run)
+        cmake_args.extend(["-G", CMAKE_GENERATOR[generator]])
+        cmake_args.append(f"-DCMAKE_BUILD_TYPE={args.build_type}")
+
+    if args.cmake_args:
+        cmake_args.extend(args.cmake_args)
+
+    run_argvs([cmake_args], args.dry_run)
 
 
 def build(args: argparse.Namespace) -> None:
-    cmd = (
-        f"cmake --build {args.build_dir} --config {args.config}"
-        + (f" --target {args.target}" if args.target else "")
-    )
-    run_commands([cmd], args.dry_run)
+    cmd: list[str] = ["cmake", "--build", args.build_dir]
+
+    if args.config:
+        cmd.extend(["--config", args.config])
+
+    if args.target:
+        cmd.extend(["--target", args.target])
+
+    # Forward extra args to the underlying build tool after "--".
+    if args.build_tool_args:
+        cmd.append("--")
+        cmd.extend(args.build_tool_args)
+
+    run_argvs([cmd], args.dry_run)
+
+
+def _cmd_one_liner(call_parts: Sequence[str], then_parts: Sequence[str]) -> list[str]:
+    """
+    Build: cmd.exe /c "call <call_parts...> && <then_parts...>"
+    Uses list2cmdline to safely quote for cmd.exe.
+    """
+    call_str = "call " + subprocess.list2cmdline(list(call_parts))
+    then_str = subprocess.list2cmdline(list(then_parts))
+    inner = f"{call_str} && {then_str}"
+    return ["cmd.exe", "/c", inner]
 
 
 def msvc_quick(args: argparse.Namespace) -> None:
     if not IS_WINDOWS:
         raise SystemExit("msvc-quick is only supported on Windows")
-    if args.bat_path:
-        alias = ALIASES["msvc_quick"].replace(
-            r'"C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build\vcvarsall.bat"',
-            args.bat_path,
-        )
+
+    bat = args.bat_path or DEFAULT_VCVARSALL
+    arch = args.arch or "x64"
+
+    # Default action: build (mirrors the README-style one-liner)
+    # Users can override the "then" command via: msvc-quick -- <command...>
+    if args.then_command:
+        then_cmd = list(args.then_command)
     else:
-        alias = ALIASES["msvc_quick"]
-    if args.dry_run:
-        print("\n> " + alias)
-    else:
-        subprocess.run(alias, shell=True, check=True)
+        build_dir = _as_build_dir(args.build_dir, DEFAULT_BUILD_DIR)
+        then_cmd = ["cmake", "--build", build_dir]
+        if args.config:
+            then_cmd.extend(["--config", args.config])
+        if args.target:
+            then_cmd.extend(["--target", args.target])
+        if args.build_tool_args:
+            then_cmd.append("--")
+            then_cmd.extend(args.build_tool_args)
+
+    cmd = _cmd_one_liner([bat, arch], then_cmd)
+    run_argvs([cmd], args.dry_run)
 
 
 def run_demo(args: argparse.Namespace) -> None:
-    build_dir = args.build_dir or DEFAULT_BUILD_DIR
+    build_dir = _as_build_dir(args.build_dir, DEFAULT_BUILD_DIR)
+
     exe_name = args.target or ("sdl3_app.exe" if IS_WINDOWS else "sdl3_app")
-    binary = os.path.join(build_dir, exe_name)
-    cmd = binary
+    binary = str(Path(build_dir) / exe_name)
+
+    cmd: list[str] = [binary]
     if args.args:
-        extra = " ".join(shlex.quote(arg) for arg in args.args)
-        cmd = f"{cmd} {extra}"
-    if args.dry_run:
-        print("\n> " + cmd)
-    else:
-        subprocess.run(cmd, shell=True, check=True)
+        cmd.extend(args.args)
+
+    run_argvs([cmd], args.dry_run)
 
 
 def main() -> int:
@@ -108,15 +186,21 @@ def main() -> int:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     deps = subparsers.add_parser("dependencies", help="run Conan setup from README")
+    deps.add_argument(
+        "--conan-install-args",
+        nargs=argparse.REMAINDER,
+        help=(
+            "extra arguments forwarded to `conan install` "
+            "(prefix with '--' before conan flags if needed)"
+        ),
+    )
     deps.set_defaults(func=dependencies)
 
-    conf = subparsers.add_parser("configure", help="configure CMake projects")
+    conf = subparsers.add_parser("configure", help="configure CMake project")
     conf.add_argument(
         "--generator",
         choices=["vs", "ninja", "ninja-msvc"],
-        help=(
-            "which generator to invoke (default: Ninja+MSVC on Windows, Ninja elsewhere)"
-        ),
+        help="which generator to invoke (default: Ninja+MSVC on Windows, Ninja elsewhere)",
     )
     conf.add_argument(
         "--build-dir",
@@ -127,54 +211,117 @@ def main() -> int:
         default="Release",
         help="single-config builds need an explicit CMAKE_BUILD_TYPE",
     )
+    conf.add_argument(
+        "--cmake-args",
+        nargs=argparse.REMAINDER,
+        help=(
+            "extra arguments forwarded to `cmake` configure step "
+            "(prefix with '--' before cmake flags if needed)"
+        ),
+    )
     conf.set_defaults(func=configure)
 
-    build_parser = subparsers.add_parser("build", help="run cmake --build")
-    build_parser.add_argument(
-        "--build-dir", default=DEFAULT_BUILD_DIR, help="which directory to build"
+    bld = subparsers.add_parser("build", help="run cmake --build")
+    bld.add_argument(
+        "--build-dir",
+        default=DEFAULT_BUILD_DIR,
+        help="which directory to build",
     )
-    build_parser.add_argument(
-        "--config", default="Release", help="configuration for multi-config builders"
+    bld.add_argument(
+        "--config",
+        default="Release",
+        help="configuration for multi-config generators",
     )
-    build_parser.add_argument(
+    bld.add_argument(
         "--target",
         default="sdl3_app",
-        help="target to build (README mentions sdl3_app and spinning_cube)",
+        help="target to build (e.g. sdl3_app, spinning_cube)",
     )
-    build_parser.set_defaults(func=build)
+    bld.add_argument(
+        "--build-tool-args",
+        nargs=argparse.REMAINDER,
+        help=(
+            "extra args forwarded to the underlying build tool after `--` "
+            "(prefix with '--' before the tool args if needed)"
+        ),
+    )
+    bld.set_defaults(func=build)
 
     msvc = subparsers.add_parser(
-        "msvc-quick", help="run the documented VS Developer Prompt one-liner"
+        "msvc-quick",
+        help="run a VS Developer Prompt call + follow-on command (README one-liner style)",
     )
     msvc.add_argument(
         "--bat-path",
-        help="full path to vcvarsall.bat (defaults to the VS 2022 Professional path from README)",
+        help="full path to vcvarsall.bat",
+    )
+    msvc.add_argument(
+        "--arch",
+        default="x64",
+        help="architecture argument passed to vcvarsall.bat (default: x64)",
+    )
+    msvc.add_argument(
+        "--build-dir",
+        default=DEFAULT_BUILD_DIR,
+        help="build directory (used by default follow-on build command)",
+    )
+    msvc.add_argument(
+        "--config",
+        default="Release",
+        help="configuration for multi-config generators (used by default follow-on build)",
+    )
+    msvc.add_argument(
+        "--target",
+        default="sdl3_app",
+        help="target to build (used by default follow-on build)",
+    )
+    msvc.add_argument(
+        "--build-tool-args",
+        nargs=argparse.REMAINDER,
+        help=(
+            "extra args forwarded to the underlying build tool after `--` "
+            "when using the default follow-on build"
+        ),
+    )
+    msvc.add_argument(
+        "then_command",
+        nargs=argparse.REMAINDER,
+        help=(
+            "optional command to run after vcvarsall (overrides default build). "
+            "Example: msvc-quick -- cmake -B build -S ."
+        ),
     )
     msvc.set_defaults(func=msvc_quick)
 
-    run_parser = subparsers.add_parser(
-        "run", help="execute the spinning_cube binary from the build folder"
+    runp = subparsers.add_parser(
+        "run",
+        help="execute a built binary from the build folder",
     )
-    run_parser.add_argument(
+    runp.add_argument(
         "--build-dir",
-        help="where the binary lives (defaults to the Ninja folder from configure)",
+        help="where the binary lives",
     )
-    run_parser.add_argument(
+    runp.add_argument(
         "--target",
-        help="executable name to run (defaults to `sdl3_app`)",
+        help="executable name to run (defaults to `sdl3_app[.exe]`)",
     )
-    run_parser.add_argument(
-        "--args",
+    runp.add_argument(
+        "args",
         nargs=argparse.REMAINDER,
-        help="arguments to forward to the executable (prefix with '--' before positional args when needed)",
+        help=(
+            "arguments forwarded to the executable "
+            "(prefix with '--' before positional args when needed)"
+        ),
     )
-    run_parser.set_defaults(func=run_demo)
+    runp.set_defaults(func=run_demo)
 
     args = parser.parse_args()
+
     try:
         args.func(args)
     except subprocess.CalledProcessError as exc:
-        return exc.returncode
+        return int(exc.returncode)
+
     return 0
 
 
