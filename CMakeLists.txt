@@ -15,6 +15,8 @@ if(BUILD_SDL3_APP)
     find_package(SDL3 CONFIG REQUIRED)
 endif()
 find_package(lua CONFIG REQUIRED)
+find_package(CLI11 CONFIG REQUIRED)
+find_package(rapidjson CONFIG REQUIRED)
 
 if(BUILD_SDL3_APP)
     add_executable(sdl3_app
@@ -30,7 +32,7 @@ if(BUILD_SDL3_APP)
         src/script/cube_script.cpp
     )
     target_include_directories(sdl3_app PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-    target_link_libraries(sdl3_app PRIVATE sdl::sdl Vulkan::Vulkan lua::lua)
+    target_link_libraries(sdl3_app PRIVATE sdl::sdl Vulkan::Vulkan lua::lua CLI11::CLI11 rapidjson)
     target_compile_definitions(sdl3_app PRIVATE SDL_MAIN_HANDLED)
 
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/shaders" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
