@@ -42,6 +42,7 @@ struct RuntimeConfig {
     uint32_t width = sdl3cpp::app::kWidth;
     uint32_t height = sdl3cpp::app::kHeight;
     std::filesystem::path scriptPath;
+    bool luaDebug = false;
 };
 
 RuntimeConfig GenerateDefaultRuntimeConfig(const char* argv0) {
@@ -126,6 +127,13 @@ RuntimeConfig LoadRuntimeConfigFromJson(const std::filesystem::path& configPath,
 
     config.width = parseDimension("window_width", config.width);
     config.height = parseDimension("window_height", config.height);
+    if (document.HasMember("lua_debug")) {
+        const auto& value = document["lua_debug"];
+        if (!value.IsBool()) {
+            throw std::runtime_error("JSON member 'lua_debug' must be a boolean");
+        }
+        config.luaDebug = value.GetBool();
+    }
 
     return config;
 }
@@ -300,7 +308,7 @@ int main(int argc, char** argv) {
                 throw std::runtime_error("Unable to determine platform config directory");
             }
         }
-        sdl3cpp::app::Sdl3App app(options.runtimeConfig.scriptPath);
+        sdl3cpp::app::Sdl3App app(options.runtimeConfig.scriptPath, options.runtimeConfig.luaDebug);
         app.Run();
     } catch (const std::exception& e) {
         std::cerr << "ERROR: " << e.what() << '\n';

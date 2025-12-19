@@ -68,7 +68,7 @@ public:
     using GuiColor = ::sdl3cpp::script::GuiColor;
 
 public:
-    explicit CubeScript(const std::filesystem::path& scriptPath);
+    explicit CubeScript(const std::filesystem::path& scriptPath, bool debugEnabled = false);
     ~CubeScript();
 
     struct ShaderPaths {
@@ -107,6 +107,7 @@ private:
     int guiInputRef_ = LUA_REFNIL;
     int guiCommandsFnRef_ = LUA_REFNIL;
     std::filesystem::path scriptDirectory_;
+    bool debugEnabled_ = false;
 };
 
 } // namespace sdl3cpp::script

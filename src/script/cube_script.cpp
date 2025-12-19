@@ -18,12 +18,14 @@ std::array<float, 16> IdentityMatrix() {
 
 } // namespace
 
-CubeScript::CubeScript(const std::filesystem::path& scriptPath)
-    : L_(luaL_newstate()), scriptDirectory_(scriptPath.parent_path()) {
+CubeScript::CubeScript(const std::filesystem::path& scriptPath, bool debugEnabled)
+    : L_(luaL_newstate()), scriptDirectory_(scriptPath.parent_path()), debugEnabled_(debugEnabled) {
     if (!L_) {
         throw std::runtime_error("Failed to create Lua state");
     }
     luaL_openlibs(L_);
+    lua_pushboolean(L_, debugEnabled_);
+    lua_setglobal(L_, "lua_debug");
     auto scriptDir = scriptPath.parent_path();
     if (!scriptDir.empty()) {
         lua_getglobal(L_, "package");

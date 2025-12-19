@@ -81,7 +81,8 @@ void ThrowSdlErrorIfFailed(bool success, const char* context) {
 
 } // namespace
 
-Sdl3App::Sdl3App(const std::filesystem::path& scriptPath) : cubeScript_(scriptPath) {
+Sdl3App::Sdl3App(const std::filesystem::path& scriptPath, bool luaDebug)
+    : cubeScript_(scriptPath, luaDebug) {
     TRACE_FUNCTION();
     TRACE_VAR(scriptPath);
 }
@@ -140,25 +141,22 @@ void Sdl3App::MainLoop() {
                 running = false;
             } else if (event.type == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED) {
                 framebufferResized_ = true;
-            } else if (guiHasCommands_) {
-                ProcessGuiEvent(event);
             }
+            ProcessGuiEvent(event);
         }
 
-        if (guiHasCommands_) {
-            float mouseX = 0.0f;
-            float mouseY = 0.0f;
-            SDL_GetMouseState(&mouseX, &mouseY);
-            guiInputSnapshot_.mouseX = mouseX;
-            guiInputSnapshot_.mouseY = mouseY;
-            cubeScript_.UpdateGuiInput(guiInputSnapshot_);
-            if (guiRenderer_) {
-                guiCommands_ = cubeScript_.LoadGuiCommands();
-                guiRenderer_->Prepare(guiCommands_, swapChainExtent_.width, swapChainExtent_.height);
-            }
-            guiInputSnapshot_.wheel = 0.0f;
-            guiInputSnapshot_.textInput.clear();
+        float mouseX = 0.0f;
+        float mouseY = 0.0f;
+        SDL_GetMouseState(&mouseX, &mouseY);
+        guiInputSnapshot_.mouseX = mouseX;
+        guiInputSnapshot_.mouseY = mouseY;
+        cubeScript_.UpdateGuiInput(guiInputSnapshot_);
+        if (guiHasCommands_ && guiRenderer_) {
+            guiCommands_ = cubeScript_.LoadGuiCommands();
+            guiRenderer_->Prepare(guiCommands_, swapChainExtent_.width, swapChainExtent_.height);
         }
+        guiInputSnapshot_.wheel = 0.0f;
+        guiInputSnapshot_.textInput.clear();
 
         auto now = std::chrono::steady_clock::now();
         float time = std::chrono::duration<float>(now - start).count();

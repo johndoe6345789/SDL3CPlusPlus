@@ -36,6 +36,8 @@ local pyramid_indices = {
 }
 
 local math3d = require("math3d")
+local string_format = string.format
+local table_concat = table.concat
 
 local InputState = {}
 InputState.__index = InputState
@@ -78,6 +80,13 @@ function InputState:addTextInput(text)
 end
 
 gui_input = InputState:new()
+
+local function log_debug(fmt, ...)
+    if not lua_debug or not fmt then
+        return
+    end
+    print(string_format(fmt, ...))
+end
 
 local rotation_speeds = {x = 0.5, y = 0.7}
 
@@ -140,6 +149,7 @@ local function update_camera_zoom(delta)
     camera.eye[1] = camera.center[1] + normalizedX * targetDistance
     camera.eye[2] = camera.center[2] + normalizedY * targetDistance
     camera.eye[3] = camera.center[3] + normalizedZ * targetDistance
+    log_debug("zoom delta=%.2f -> distance=%.2f", delta, targetDistance)
 end
 
 local function build_model(time)
@@ -179,20 +189,24 @@ local function create_pyramid(position, shader_key)
 end
 
 function get_scene_objects()
-    return {
+    local objects = {
         create_cube({0.0, 0.0, 0.0}, 1.0, "cube"),
         create_cube({3.0, 0.0, 0.0}, 0.8, "cube"),
         create_cube({-3.0, 0.0, 0.0}, 1.2, "cube"),
         create_pyramid({0.0, -0.5, -4.0}, "pyramid"),
     }
+    if lua_debug then
+        local labels = {}
+        for idx, obj in ipairs(objects) do
+            table.insert(labels, string_format("[%d:%s]", idx, obj.shader_key))
+        end
+        log_debug("get_scene_objects -> %d entries: %s", #objects, table_concat(labels, ", "))
+    end
+    return objects
 end
 
 function get_shader_paths()
     return shader_variants
-end
-
-function get_gui_commands()
-    return {}
 end
 
 function get_view_projection(aspect)
