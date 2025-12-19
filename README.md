@@ -27,6 +27,10 @@ A minimal SDL3 + Vulkan spinning cube demo.
         ```
         cmd /c "call \"%VSINSTALLDIR%VC\Auxiliary\Build\vcvarsall.bat\" x64 && cmake --build build-ninja-msvc --config Release"
         ```
+        When you run the command from PowerShell wrap the `cmd` invocation in single quotes so the embedded double quotes stay intact:
+        ```
+        cmd /c 'call "%VSINSTALLDIR%VC\Auxiliary\Build\vcvarsall.bat" x64 && cmake --build build-ninja-msvc --config Release'
+        ```
    - Optional clang-tidy: add `-DENABLE_CLANG_TIDY=ON`
      * CMake searches both `C:\Program Files\LLVM\bin` and `C:\ProgramData\chocolatey\bin`, so standard LLVM/Chocolatey installs are found automatically.
      * The wrapped clang-tidy binary prints `[clang-tidy] starting .` and `[clang-tidy] finished (exit .)` markers so you can spot linting in verbose logs even when no diagnostics appear.
