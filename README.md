@@ -15,7 +15,7 @@ A minimal SDL3 + Vulkan spinning cube demo.
    ```
 3. Build the demo:
    ```
-   cmake --build build
+   cmake --build build --config Release --target sdl3_app
    ```
 
 Shaders are copied into `build/shaders` during configuration, so the demo can load the precompiled `cube.{vert,frag}.spv`.
