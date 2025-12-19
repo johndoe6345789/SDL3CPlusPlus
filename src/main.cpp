@@ -2,15 +2,18 @@
 
 #include <CLI/CLI.hpp>
 #include <rapidjson/document.h>
+#include <rapidjson/istreamwrapper.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
 
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 #include "app/sdl3_app.hpp"
 
@@ -34,32 +37,115 @@ std::filesystem::path FindScriptPath(const char* argv0) {
     return scriptPath;
 }
 
-struct AppOptions {
+struct RuntimeConfig {
     uint32_t width = sdl3cpp::app::kWidth;
     uint32_t height = sdl3cpp::app::kHeight;
     std::filesystem::path scriptPath;
-    std::optional<std::filesystem::path> configOutput;
+};
+
+RuntimeConfig GenerateDefaultRuntimeConfig(const char* argv0) {
+    RuntimeConfig config;
+    config.scriptPath = FindScriptPath(argv0);
+    return config;
+}
+
+RuntimeConfig LoadRuntimeConfigFromJson(const std::filesystem::path& configPath) {
+    std::ifstream configStream(configPath);
+    if (!configStream) {
+        throw std::runtime_error("Failed to open config file: " + configPath.string());
+    }
+
+    rapidjson::IStreamWrapper inputWrapper(configStream);
+    rapidjson::Document document;
+    document.ParseStream(inputWrapper);
+    if (document.HasParseError()) {
+        throw std::runtime_error("Failed to parse JSON config at " + configPath.string());
+    }
+    if (!document.IsObject()) {
+        throw std::runtime_error("JSON config must contain an object at the root");
+    }
+
+    const char* scriptField = "lua_script";
+    if (!document.HasMember(scriptField) || !document[scriptField].IsString()) {
+        throw std::runtime_error("JSON config requires a string member '" + std::string(scriptField) + "'");
+    }
+
+    RuntimeConfig config;
+    const auto& scriptValue = document[scriptField];
+    std::filesystem::path scriptPath(scriptValue.GetString());
+    if (!scriptPath.is_absolute()) {
+        scriptPath = configPath.parent_path() / scriptPath;
+    }
+    scriptPath = std::filesystem::weakly_canonical(scriptPath);
+    if (!std::filesystem::exists(scriptPath)) {
+        throw std::runtime_error("Lua script not found at " + scriptPath.string());
+    }
+    config.scriptPath = scriptPath;
+
+    auto parseDimension = [&](const char* name, uint32_t defaultValue) -> uint32_t {
+        if (!document.HasMember(name)) {
+            return defaultValue;
+        }
+        const auto& value = document[name];
+        if (value.IsUint()) {
+            return value.GetUint();
+        }
+        if (value.IsInt()) {
+            int maybeValue = value.GetInt();
+            if (maybeValue >= 0) {
+                return static_cast<uint32_t>(maybeValue);
+            }
+        }
+        throw std::runtime_error(std::string("JSON member '") + name + "' must be a non-negative integer");
+    };
+
+    config.width = parseDimension("window_width", config.width);
+    config.height = parseDimension("window_height", config.height);
+    return config;
+}
+
+std::optional<std::filesystem::path> GetUserConfigDirectory() {
+#ifdef _WIN32
+    if (const char* appData = std::getenv("APPDATA")) {
+        return std::filesystem::path(appData) / "sdl3cpp";
+    }
+#else
+    if (const char* xdgConfig = std::getenv("XDG_CONFIG_HOME")) {
+        return std::filesystem::path(xdgConfig) / "sdl3cpp";
+    }
+    if (const char* home = std::getenv("HOME")) {
+        return std::filesystem::path(home) / ".config" / "sdl3cpp";
+    }
+#endif
+    return std::nullopt;
+}
+
+std::optional<std::filesystem::path> GetDefaultConfigPath() {
+    if (auto dir = GetUserConfigDirectory()) {
+        return *dir / "default_runtime.json";
+    }
+    return std::nullopt;
+}
+
+struct AppOptions {
+    RuntimeConfig runtimeConfig;
+    std::optional<std::filesystem::path> seedOutput;
+    bool saveDefaultJson = false;
 };
 
 AppOptions ParseCommandLine(int argc, char** argv) {
-    std::filesystem::path defaultScript = FindScriptPath(argc > 0 ? argv[0] : nullptr);
-    std::string scriptPathText = defaultScript.string();
-    std::string configOutputText;
-    uint32_t width = sdl3cpp::app::kWidth;
-    uint32_t height = sdl3cpp::app::kHeight;
+    std::string jsonInputText;
+    std::string seedOutputText;
+    bool setDefaultJson = false;
 
-    CLI::App app("SDL3 + Vulkan demo CLI");
-    app.add_option("-s,--script", scriptPathText, "Lua script to execute")
-        ->default_str(scriptPathText)
+    CLI::App app("SDL3 + Vulkan runtime helper");
+    app.add_option("-j,--json-file-in", jsonInputText, "Path to a runtime JSON config")
         ->check(CLI::ExistingFile);
-    app.add_option("--width", width, "Window width")
-        ->default_val(std::to_string(width))
-        ->check(CLI::PositiveNumber);
-    app.add_option("--height", height, "Window height")
-        ->default_val(std::to_string(height))
-        ->check(CLI::PositiveNumber);
-    app.add_option("-o,--config-out", configOutputText,
-                   "Write a JSON file describing the runtime variables");
+    app.add_option("-s,--create-seed-json", seedOutputText,
+                   "Write a template runtime JSON file");
+    app.add_flag("--set-default-json", setDefaultJson,
+                 "Persist the runtime JSON to the platform default location (XDG/APPDATA)");
+
     try {
         app.parse(argc, argv);
     } catch (const CLI::ParseError& e) {
@@ -67,37 +153,46 @@ AppOptions ParseCommandLine(int argc, char** argv) {
         throw;
     }
 
-    AppOptions options;
-    options.width = width;
-    options.height = height;
-    options.scriptPath = std::filesystem::absolute(std::filesystem::path(scriptPathText));
-    if (!std::filesystem::exists(options.scriptPath)) {
-        throw std::runtime_error("Lua script not found at " + options.scriptPath.string());
+    RuntimeConfig runtimeConfig;
+    if (!jsonInputText.empty()) {
+        runtimeConfig = LoadRuntimeConfigFromJson(std::filesystem::absolute(jsonInputText));
+    } else if (auto defaultPath = GetDefaultConfigPath();
+               defaultPath && std::filesystem::exists(*defaultPath)) {
+        runtimeConfig = LoadRuntimeConfigFromJson(*defaultPath);
+    } else {
+        runtimeConfig = GenerateDefaultRuntimeConfig(argc > 0 ? argv[0] : nullptr);
     }
 
-    if (!configOutputText.empty()) {
-        options.configOutput = std::filesystem::absolute(std::filesystem::path(configOutputText));
+    AppOptions options;
+    options.runtimeConfig = std::move(runtimeConfig);
+    if (!seedOutputText.empty()) {
+        options.seedOutput = std::filesystem::absolute(seedOutputText);
     }
+    options.saveDefaultJson = setDefaultJson;
     return options;
 }
 
-void WriteRuntimeConfigJson(const AppOptions& options, const std::filesystem::path& configPath) {
+void WriteRuntimeConfigJson(const RuntimeConfig& runtimeConfig,
+                            const std::filesystem::path& configPath) {
     rapidjson::Document document;
     document.SetObject();
     auto& allocator = document.GetAllocator();
 
-    document.AddMember("window_width", options.width, allocator);
-    document.AddMember("window_height", options.height, allocator);
-    document.AddMember("lua_script", rapidjson::Value(options.scriptPath.string().c_str(), allocator), allocator);
+    document.AddMember("window_width", runtimeConfig.width, allocator);
+    document.AddMember("window_height", runtimeConfig.height, allocator);
+    document.AddMember("lua_script",
+                       rapidjson::Value(runtimeConfig.scriptPath.string().c_str(), allocator),
+                       allocator);
 
-    std::filesystem::path scriptsDir = options.scriptPath.parent_path();
+    std::filesystem::path scriptsDir = runtimeConfig.scriptPath.parent_path();
     document.AddMember("scripts_directory",
                        rapidjson::Value(scriptsDir.string().c_str(), allocator), allocator);
 
     std::filesystem::path projectRoot = scriptsDir.parent_path();
     if (!projectRoot.empty()) {
-        document.AddMember("project_root",
-                           rapidjson::Value(projectRoot.string().c_str(), allocator), allocator);
+        document.AddMember(
+            "project_root",
+            rapidjson::Value(projectRoot.string().c_str(), allocator), allocator);
         document.AddMember(
             "shaders_directory",
             rapidjson::Value((projectRoot / "shaders").string().c_str(), allocator), allocator);
@@ -111,8 +206,8 @@ void WriteRuntimeConfigJson(const AppOptions& options, const std::filesystem::pa
         extensionArray.PushBack(rapidjson::Value(extension, allocator), allocator);
     }
     document.AddMember("device_extensions", extensionArray, allocator);
-    document.AddMember("config_file", rapidjson::Value(configPath.string().c_str(), allocator),
-                       allocator);
+    document.AddMember("config_file",
+                       rapidjson::Value(configPath.string().c_str(), allocator), allocator);
 
     rapidjson::StringBuffer buffer;
     rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
@@ -135,10 +230,17 @@ void WriteRuntimeConfigJson(const AppOptions& options, const std::filesystem::pa
 int main(int argc, char** argv) {
     try {
         AppOptions options = ParseCommandLine(argc, argv);
-        if (options.configOutput) {
-            WriteRuntimeConfigJson(options, *options.configOutput);
+        if (options.seedOutput) {
+            WriteRuntimeConfigJson(options.runtimeConfig, *options.seedOutput);
         }
-        sdl3cpp::app::Sdl3App app(options.scriptPath);
+        if (options.saveDefaultJson) {
+            if (auto defaultPath = GetDefaultConfigPath()) {
+                WriteRuntimeConfigJson(options.runtimeConfig, *defaultPath);
+            } else {
+                throw std::runtime_error("Unable to determine platform config directory");
+            }
+        }
+        sdl3cpp::app::Sdl3App app(options.runtimeConfig.scriptPath);
         app.Run();
     } catch (const std::exception& e) {
         std::cerr << "ERROR: " << e.what() << '\n';
