@@ -6,6 +6,8 @@
 #include <rapidjson/prettywriter.h>
 
 #include <cstdlib>
+#include <cstdint>
+#include <exception>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -243,36 +245,34 @@ void WriteRuntimeConfigJson(const RuntimeConfig& runtimeConfig,
     document.SetObject();
     auto& allocator = document.GetAllocator();
 
+    auto addStringMember = [&](const char* name, const std::string& value) {
+        rapidjson::Value nameValue(name, allocator);
+        rapidjson::Value stringValue(value.c_str(), allocator);
+        document.AddMember(nameValue, stringValue, allocator);
+    };
+
     document.AddMember("window_width", runtimeConfig.width, allocator);
     document.AddMember("window_height", runtimeConfig.height, allocator);
-    document.AddMember("lua_script",
-                       rapidjson::Value(runtimeConfig.scriptPath.string().c_str(), allocator),
-                       allocator);
+    addStringMember("lua_script", runtimeConfig.scriptPath.string());
 
     std::filesystem::path scriptsDir = runtimeConfig.scriptPath.parent_path();
-    document.AddMember("scripts_directory",
-                       rapidjson::Value(scriptsDir.string().c_str(), allocator), allocator);
+    addStringMember("scripts_directory", scriptsDir.string());
 
     std::filesystem::path projectRoot = scriptsDir.parent_path();
     if (!projectRoot.empty()) {
-        document.AddMember(
-            "project_root",
-            rapidjson::Value(projectRoot.string().c_str(), allocator), allocator);
-        document.AddMember(
-            "shaders_directory",
-            rapidjson::Value((projectRoot / "shaders").string().c_str(), allocator), allocator);
+        addStringMember("project_root", projectRoot.string());
+        addStringMember("shaders_directory", (projectRoot / "shaders").string());
     } else {
-        document.AddMember("shaders_directory",
-                           rapidjson::Value("shaders", allocator), allocator);
+        addStringMember("shaders_directory", "shaders");
     }
 
     rapidjson::Value extensionArray(rapidjson::kArrayType);
     for (const char* extension : sdl3cpp::app::kDeviceExtensions) {
-        extensionArray.PushBack(rapidjson::Value(extension, allocator), allocator);
+        rapidjson::Value extensionValue(extension, allocator);
+        extensionArray.PushBack(extensionValue, allocator);
     }
     document.AddMember("device_extensions", extensionArray, allocator);
-    document.AddMember("config_file",
-                       rapidjson::Value(configPath.string().c_str(), allocator), allocator);
+    addStringMember("config_file", configPath.string());
 
     rapidjson::StringBuffer buffer;
     rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);

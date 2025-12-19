@@ -5,6 +5,7 @@
     },
     "include": [
         "build/CMakePresets.json",
-        "build-ninja/CMakePresets.json"
+        "build-ninja/CMakePresets.json",
+        "build-ninja-msvc/CMakePresets.json"
     ]
 }
