@@ -15,7 +15,7 @@ class SDL3CppConan(ConanFile):
     generators = "CMakeDeps", "CMakeToolchain", "VirtualRunEnv"
 
     def requirements(self):
-        self.requires("lua/5.4.6")
+        self.requires("lua/5.4.8")
         self.requires("sdl/3.2.20")
         self.requires("vulkan-loader/1.3.243.0")
         self.requires("vulkan-headers/1.3.243.0")
