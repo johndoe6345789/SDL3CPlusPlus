@@ -101,7 +101,8 @@ void Sdl3App::ProcessGuiEvent(const SDL_Event& event) {
             break;
         case SDL_EVENT_KEY_DOWN:
         case SDL_EVENT_KEY_UP: {
-            auto it = kGuiKeyNames.find(event.key.keysym.sym);
+            SDL_Keycode key = event.key.key;
+            auto it = kGuiKeyNames.find(key);
             if (it != kGuiKeyNames.end()) {
                 guiInputSnapshot_.keyStates[it->second] = (event.type == SDL_EVENT_KEY_DOWN);
             }

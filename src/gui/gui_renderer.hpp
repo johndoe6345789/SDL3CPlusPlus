@@ -3,11 +3,12 @@
 
 #include <filesystem>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 #include <vulkan/vulkan.h>
 
-#include  script/cube_script.hpp
+#include "script/cube_script.hpp"
 
 namespace sdl3cpp::gui {
 

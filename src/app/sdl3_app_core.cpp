@@ -36,7 +36,7 @@ void Sdl3App::InitSDL() {
     if (!window_) {
         throw std::runtime_error(std::string("SDL_CreateWindow failed: ") + SDL_GetError());
     }
-    SDL_StartTextInput();
+    SDL_StartTextInput(window_);
 }
 
 void Sdl3App::InitVulkan() {
@@ -74,11 +74,11 @@ void Sdl3App::MainLoop() {
         }
 
         if (guiHasCommands_) {
-            int mouseX = 0;
-            int mouseY = 0;
+            float mouseX = 0.0f;
+            float mouseY = 0.0f;
             SDL_GetMouseState(&mouseX, &mouseY);
-            guiInputSnapshot_.mouseX = static_cast<float>(mouseX);
-            guiInputSnapshot_.mouseY = static_cast<float>(mouseY);
+            guiInputSnapshot_.mouseX = mouseX;
+            guiInputSnapshot_.mouseY = mouseY;
             cubeScript_.UpdateGuiInput(guiInputSnapshot_);
             if (guiRenderer_) {
                 guiCommands_ = cubeScript_.LoadGuiCommands();
@@ -116,7 +116,7 @@ void Sdl3App::Cleanup() {
         window_ = nullptr;
     }
     SDL_Vulkan_UnloadLibrary();
-    SDL_StopTextInput();
+    SDL_StopTextInput(window_);
     SDL_Quit();
 }
 

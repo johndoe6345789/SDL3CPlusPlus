@@ -13,12 +13,18 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include "../../third_party/font8x8_basic.h"
 
 namespace script = sdl3cpp::script;
+namespace vulkan = sdl3cpp::app::vulkan;
 
+namespace sdl3cpp::gui {
 namespace {
+
+using ParsedSvg = sdl3cpp::gui::ParsedSvg;
+using SvgCircle = sdl3cpp::gui::SvgCircle;
 
 bool ExtractAttribute(const std::string& source, const char* name, std::string& outValue) {
     std::string key = name;
@@ -155,7 +161,9 @@ int ClampToRange(int value, int minimum, int maximum) {
     return std::min(std::max(value, minimum), maximum);
 }
 
-class Canvas {
+} // namespace
+
+class GuiRenderer::Canvas {
 public:
     using RectData = script::CubeScript::GuiCommand::RectData;
 
@@ -342,16 +350,13 @@ private:
     std::vector<RectData> clipStack_;
 };
 
-} // namespace
-
-namespace sdl3cpp::gui {
-    GuiRenderer::GuiRenderer(VkDevice device, VkPhysicalDevice physicalDevice, VkFormat swapchainFormat,
-                             const std::filesystem::path& scriptDirectory)
-        : device_(device),
-          physicalDevice_(physicalDevice),
-          swapchainFormat_(swapchainFormat),
-          scriptDirectory_(scriptDirectory),
-          canvas_(std::make_unique<Canvas>()) {}
+GuiRenderer::GuiRenderer(VkDevice device, VkPhysicalDevice physicalDevice, VkFormat swapchainFormat,
+                         const std::filesystem::path& scriptDirectory)
+    : device_(device),
+      physicalDevice_(physicalDevice),
+      swapchainFormat_(swapchainFormat),
+      scriptDirectory_(scriptDirectory),
+      canvas_(std::make_unique<Canvas>()) {}
 
     GuiRenderer::~GuiRenderer() {
         DestroyStagingBuffer();

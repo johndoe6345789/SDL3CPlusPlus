@@ -22,13 +22,6 @@ struct GuiInputSnapshot {
     std::unordered_map<std::string, bool> keyStates;
 };
 
-struct GuiRect {
-    float x = 0;
-    float y = 0;
-    float width = 0;
-    float height = 0;
-};
-
 struct GuiColor {
     float r = 0;
     float g = 0;
@@ -61,8 +54,8 @@ struct GuiCommand {
     RectData clipRect{};
     std::string text;
     float fontSize = 16.0f;
-    std::string alignX = \"left\";
-    std::string alignY = \"center\";
+    std::string alignX = "left";
+    std::string alignY = "center";
     std::string svgPath;
     GuiColor svgTint;
     RectData bounds{};
@@ -70,6 +63,10 @@ struct GuiCommand {
 };
 
 class CubeScript {
+public:
+    using GuiCommand = ::sdl3cpp::script::GuiCommand;
+    using GuiColor = ::sdl3cpp::script::GuiColor;
+
 public:
     explicit CubeScript(const std::filesystem::path& scriptPath);
     ~CubeScript();
@@ -102,7 +99,7 @@ private:
     static std::vector<uint16_t> ReadIndexArray(lua_State* L, int index);
     static std::string LuaErrorMessage(lua_State* L);
     static ShaderPaths ReadShaderPathsTable(lua_State* L, int index);
-    static GuiRect ReadRect(lua_State* L, int index);
+    static GuiCommand::RectData ReadRect(lua_State* L, int index);
     static GuiColor ReadColor(lua_State* L, int index, const GuiColor& defaultColor);
     static bool ReadStringField(lua_State* L, int index, const char* name, std::string& outString);
 

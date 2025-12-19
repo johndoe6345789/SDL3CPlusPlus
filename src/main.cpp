@@ -144,16 +144,22 @@ AppOptions ParseCommandLine(int argc, char** argv) {
     app.add_option("-s,--create-seed-json", seedOutputText,
                    "Write a template runtime JSON file");
     auto* setDefaultJsonOption = app.add_option(
-        "--set-default-json [PATH]", setDefaultJsonPath,
+        "-d,--set-default-json", setDefaultJsonPath,
         "Persist the runtime JSON to the platform default location (XDG/APPDATA); "
-        "optionally pass PATH to copy that JSON");
+        "provide PATH to copy that JSON instead of using the default contents");
     setDefaultJsonOption->type_name("PATH");
-    setDefaultJsonOption->type_size(0, 1);
+    setDefaultJsonOption->type_size(1, 1);
+    setDefaultJsonOption->expected(0, 1);
 
     try {
         app.parse(argc, argv);
-    } catch (const CLI::ParseError& e) {
+    } catch (const CLI::CallForHelp& e) {
         std::exit(app.exit(e));
+    } catch (const CLI::CallForVersion& e) {
+        std::exit(app.exit(e));
+    } catch (const CLI::ParseError& e) {
+        app.exit(e);
+        throw;
     }
 
     bool shouldSaveDefault = setDefaultJsonOption->count() > 0;

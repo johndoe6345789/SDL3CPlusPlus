@@ -495,8 +495,8 @@ std::filesystem::path CubeScript::GetScriptDirectory() const {
     return scriptDirectory_;
 }
 
-GuiRect CubeScript::ReadRect(lua_State* L, int index) {
-    GuiRect rect{};
+CubeScript::GuiCommand::RectData CubeScript::ReadRect(lua_State* L, int index) {
+    GuiCommand::RectData rect{};
     if (!lua_istable(L, index)) {
         return rect;
     }
