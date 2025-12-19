@@ -151,6 +151,7 @@ void Sdl3App::RecreateSwapChain() {
     CleanupSwapChain();
     CreateSwapChain();
     CreateImageViews();
+    SetupGuiRenderer();
     CreateRenderPass();
     CreateGraphicsPipeline();
     CreateFramebuffers();

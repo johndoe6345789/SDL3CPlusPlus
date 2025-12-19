@@ -19,7 +19,7 @@ find_package(CLI11 CONFIG REQUIRED)
 find_package(rapidjson CONFIG REQUIRED)
 
 if(BUILD_SDL3_APP)
-    add_executable(sdl3_app
+add_executable(sdl3_app
         src/main.cpp
         src/app/sdl3_app_core.cpp
         src/app/sdl3_app_device.cpp
@@ -27,6 +27,7 @@ if(BUILD_SDL3_APP)
         src/app/sdl3_app_pipeline.cpp
         src/app/sdl3_app_build.cpp
         src/app/sdl3_app_buffers.cpp
+        src/gui/gui_renderer.cpp
         src/app/sdl3_app_render.cpp
         src/app/vulkan_api.cpp
         src/script/cube_script.cpp

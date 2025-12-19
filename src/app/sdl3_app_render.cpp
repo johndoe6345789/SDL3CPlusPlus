@@ -2,6 +2,21 @@
 
 #include <limits>
 #include <stdexcept>
+#include <unordered_map>
+
+namespace {
+const std::unordered_map<SDL_Keycode, std::string> kGuiKeyNames = {
+    {SDLK_BACKSPACE, "backspace"},
+    {SDLK_DELETE, "delete"},
+    {SDLK_LEFT, "left"},
+    {SDLK_RIGHT, "right"},
+    {SDLK_HOME, "home"},
+    {SDLK_END, "end"},
+    {SDLK_RETURN, "enter"},
+    {SDLK_UP, "up"},
+    {SDLK_DOWN, "down"},
+};
+} // namespace
 
 namespace sdl3cpp::app {
 
@@ -60,7 +75,55 @@ void Sdl3App::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageI
         vkCmdDrawIndexed(commandBuffer, object.indexCount, 1, object.indexOffset, object.vertexOffset, 0);
     }
     vkCmdEndRenderPass(commandBuffer);
+    if (guiRenderer_) {
+        guiRenderer_->BlitToSwapchain(commandBuffer, swapChainImages_[imageIndex]);
+    }
     vkEndCommandBuffer(commandBuffer);
+}
+
+void Sdl3App::ProcessGuiEvent(const SDL_Event& event) {
+    switch (event.type) {
+        case SDL_EVENT_MOUSE_MOTION:
+            guiInputSnapshot_.mouseX = static_cast<float>(event.motion.x);
+            guiInputSnapshot_.mouseY = static_cast<float>(event.motion.y);
+            break;
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
+        case SDL_EVENT_MOUSE_BUTTON_UP:
+            if (event.button.button == SDL_BUTTON_LEFT) {
+                guiInputSnapshot_.mouseDown = (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN);
+            }
+            break;
+        case SDL_EVENT_MOUSE_WHEEL:
+            guiInputSnapshot_.wheel += static_cast<float>(event.wheel.y);
+            break;
+        case SDL_EVENT_TEXT_INPUT:
+            guiInputSnapshot_.textInput.append(event.text.text);
+            break;
+        case SDL_EVENT_KEY_DOWN:
+        case SDL_EVENT_KEY_UP: {
+            auto it = kGuiKeyNames.find(event.key.keysym.sym);
+            if (it != kGuiKeyNames.end()) {
+                guiInputSnapshot_.keyStates[it->second] = (event.type == SDL_EVENT_KEY_DOWN);
+            }
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+void Sdl3App::SetupGuiRenderer() {
+    guiHasCommands_ = cubeScript_.HasGuiCommands();
+    if (!guiHasCommands_) {
+        guiRenderer_.reset();
+        return;
+    }
+    if (!guiRenderer_) {
+        guiRenderer_ =
+            std::make_unique<gui::GuiRenderer>(device_, physicalDevice_, swapChainImageFormat_,
+                                                cubeScript_.GetScriptDirectory());
+    }
+    guiRenderer_->Resize(swapChainExtent_.width, swapChainExtent_.height, swapChainImageFormat_);
 }
 
 void Sdl3App::DrawFrame(float time) {

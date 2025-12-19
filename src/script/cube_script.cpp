@@ -1,5 +1,6 @@
 #include "script/cube_script.hpp"
 
+#include <cstring>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -17,7 +18,8 @@ std::array<float, 16> IdentityMatrix() {
 
 } // namespace
 
-CubeScript::CubeScript(const std::filesystem::path& scriptPath) : L_(luaL_newstate()) {
+CubeScript::CubeScript(const std::filesystem::path& scriptPath)
+    : L_(luaL_newstate()), scriptDirectory_(scriptPath.parent_path()) {
     if (!L_) {
         throw std::runtime_error("Failed to create Lua state");
     }
@@ -45,10 +47,30 @@ CubeScript::CubeScript(const std::filesystem::path& scriptPath) : L_(luaL_newsta
         L_ = nullptr;
         throw std::runtime_error("Failed to load Lua script: " + message);
     }
+
+    lua_getglobal(L_, "gui_input");
+    if (!lua_isnil(L_, -1)) {
+        guiInputRef_ = luaL_ref(L_, LUA_REGISTRYINDEX);
+    } else {
+        lua_pop(L_, 1);
+    }
+
+    lua_getglobal(L_, "get_gui_commands");
+    if (lua_isfunction(L_, -1)) {
+        guiCommandsFnRef_ = luaL_ref(L_, LUA_REGISTRYINDEX);
+    } else {
+        lua_pop(L_, 1);
+    }
 }
 
 CubeScript::~CubeScript() {
     if (L_) {
+        if (guiInputRef_ != LUA_REFNIL) {
+            luaL_unref(L_, LUA_REGISTRYINDEX, guiInputRef_);
+        }
+        if (guiCommandsFnRef_ != LUA_REFNIL) {
+            luaL_unref(L_, LUA_REGISTRYINDEX, guiCommandsFnRef_);
+        }
         lua_close(L_);
     }
 }
@@ -326,6 +348,207 @@ std::array<float, 16> CubeScript::ReadMatrix(lua_State* L, int index) {
 std::string CubeScript::LuaErrorMessage(lua_State* L) {
     const char* message = lua_tostring(L, -1);
     return message ? message : "unknown lua error";
+}
+
+std::vector<CubeScript::GuiCommand> CubeScript::LoadGuiCommands() {
+    std::vector<GuiCommand> commands;
+    if (guiCommandsFnRef_ == LUA_REFNIL) {
+        return commands;
+    }
+    lua_rawgeti(L_, LUA_REGISTRYINDEX, guiCommandsFnRef_);
+    if (lua_pcall(L_, 0, 1, 0) != LUA_OK) {
+        std::string message = LuaErrorMessage(L_);
+        lua_pop(L_, 1);
+        throw std::runtime_error("Lua get_gui_commands failed: " + message);
+    }
+    if (!lua_istable(L_, -1)) {
+        lua_pop(L_, 1);
+        throw std::runtime_error("'get_gui_commands' did not return a table");
+    }
+
+    size_t count = lua_rawlen(L_, -1);
+    commands.reserve(count);
+
+    for (size_t i = 1; i <= count; ++i) {
+        lua_rawgeti(L_, -1, static_cast<int>(i));
+        if (!lua_istable(L_, -1)) {
+            lua_pop(L_, 1);
+            throw std::runtime_error("GUI command at index " + std::to_string(i) + " is not a table");
+        }
+        int commandIndex = lua_gettop(L_);
+        lua_getfield(L_, commandIndex, "type");
+        const char* typeName = lua_tostring(L_, -1);
+        if (!typeName) {
+            lua_pop(L_, 2);
+            throw std::runtime_error("GUI command at index " + std::to_string(i) + " is missing a type");
+        }
+        GuiCommand command{};
+        if (std::strcmp(typeName, "rect") == 0) {
+            command.type = GuiCommand::Type::Rect;
+            command.rect = ReadRect(L_, commandIndex);
+            command.color = ReadColor(L_, commandIndex, GuiColor{0.0f, 0.0f, 0.0f, 1.0f});
+            command.borderColor = ReadColor(L_, commandIndex, GuiColor{0.0f, 0.0f, 0.0f, 0.0f});
+            lua_getfield(L_, commandIndex, "borderWidth");
+            if (lua_isnumber(L_, -1)) {
+                command.borderWidth = static_cast<float>(lua_tonumber(L_, -1));
+            }
+            lua_pop(L_, 1);
+        } else if (std::strcmp(typeName, "text") == 0) {
+            command.type = GuiCommand::Type::Text;
+            ReadStringField(L_, commandIndex, "text", command.text);
+            lua_getfield(L_, commandIndex, "fontSize");
+            if (lua_isnumber(L_, -1)) {
+                command.fontSize = static_cast<float>(lua_tonumber(L_, -1));
+            }
+            lua_pop(L_, 1);
+            std::string align;
+            if (ReadStringField(L_, commandIndex, "alignX", align)) {
+                command.alignX = align;
+            }
+            if (ReadStringField(L_, commandIndex, "alignY", align)) {
+                command.alignY = align;
+            }
+            lua_getfield(L_, commandIndex, "clipRect");
+            if (lua_istable(L_, -1)) {
+                command.clipRect = ReadRect(L_, -1);
+                command.hasClipRect = true;
+            }
+            lua_pop(L_, 1);
+            lua_getfield(L_, commandIndex, "bounds");
+            if (lua_istable(L_, -1)) {
+                command.bounds = ReadRect(L_, -1);
+                command.hasBounds = true;
+            }
+            lua_pop(L_, 1);
+            command.color = ReadColor(L_, commandIndex, GuiColor{1.0f, 1.0f, 1.0f, 1.0f});
+        } else if (std::strcmp(typeName, "clip_push") == 0) {
+            command.type = GuiCommand::Type::ClipPush;
+            command.rect = ReadRect(L_, commandIndex);
+        } else if (std::strcmp(typeName, "clip_pop") == 0) {
+            command.type = GuiCommand::Type::ClipPop;
+        } else if (std::strcmp(typeName, "svg") == 0) {
+            command.type = GuiCommand::Type::Svg;
+            ReadStringField(L_, commandIndex, "path", command.svgPath);
+            command.rect = ReadRect(L_, commandIndex);
+            command.svgTint = ReadColor(L_, commandIndex, GuiColor{1.0f, 1.0f, 1.0f, 0.0f});
+            lua_getfield(L_, commandIndex, "tint");
+            if (lua_istable(L_, -1)) {
+                command.svgTint = ReadColor(L_, -1, command.svgTint);
+            }
+            lua_pop(L_, 1);
+        }
+        lua_pop(L_, 1); // pop type
+        lua_pop(L_, 1); // pop command table
+        commands.push_back(std::move(command));
+    }
+
+    lua_pop(L_, 1);
+    return commands;
+}
+
+void CubeScript::UpdateGuiInput(const GuiInputSnapshot& input) {
+    if (guiInputRef_ == LUA_REFNIL) {
+        return;
+    }
+    lua_rawgeti(L_, LUA_REGISTRYINDEX, guiInputRef_);
+    int stateIndex = lua_gettop(L_);
+
+    lua_getfield(L_, stateIndex, "resetTransient");
+    lua_pushvalue(L_, stateIndex);
+    lua_call(L_, 1, 0);
+
+    lua_getfield(L_, stateIndex, "setMouse");
+    lua_pushvalue(L_, stateIndex);
+    lua_pushnumber(L_, input.mouseX);
+    lua_pushnumber(L_, input.mouseY);
+    lua_pushboolean(L_, input.mouseDown);
+    lua_call(L_, 4, 0);
+
+    lua_getfield(L_, stateIndex, "setWheel");
+    lua_pushvalue(L_, stateIndex);
+    lua_pushnumber(L_, input.wheel);
+    lua_call(L_, 2, 0);
+
+    if (!input.textInput.empty()) {
+        lua_getfield(L_, stateIndex, "addTextInput");
+        lua_pushvalue(L_, stateIndex);
+        lua_pushstring(L_, input.textInput.c_str());
+        lua_call(L_, 2, 0);
+    }
+
+    for (const auto& [key, pressed] : input.keyStates) {
+        lua_getfield(L_, stateIndex, "setKey");
+        lua_pushvalue(L_, stateIndex);
+        lua_pushstring(L_, key.c_str());
+        lua_pushboolean(L_, pressed);
+        lua_call(L_, 3, 0);
+    }
+
+    lua_pop(L_, 1);
+}
+
+bool CubeScript::HasGuiCommands() const {
+    return guiCommandsFnRef_ != LUA_REFNIL;
+}
+
+std::filesystem::path CubeScript::GetScriptDirectory() const {
+    return scriptDirectory_;
+}
+
+GuiRect CubeScript::ReadRect(lua_State* L, int index) {
+    GuiRect rect{};
+    if (!lua_istable(L, index)) {
+        return rect;
+    }
+    int absIndex = lua_absindex(L, index);
+    auto readField = [&](const char* name, float defaultValue) -> float {
+        lua_getfield(L, absIndex, name);
+        float value = defaultValue;
+        if (lua_isnumber(L, -1)) {
+            value = static_cast<float>(lua_tonumber(L, -1));
+        }
+        lua_pop(L, 1);
+        return value;
+    };
+    rect.x = readField("x", rect.x);
+    rect.y = readField("y", rect.y);
+    rect.width = readField("width", rect.width);
+    rect.height = readField("height", rect.height);
+    return rect;
+}
+
+GuiColor CubeScript::ReadColor(lua_State* L, int index, const GuiColor& defaultColor) {
+    GuiColor color = defaultColor;
+    if (!lua_istable(L, index)) {
+        return color;
+    }
+    int absIndex = lua_absindex(L, index);
+    for (int component = 0; component < 4; ++component) {
+        lua_rawgeti(L, absIndex, component + 1);
+        if (lua_isnumber(L, -1)) {
+            float value = static_cast<float>(lua_tonumber(L, -1));
+            switch (component) {
+                case 0: color.r = value; break;
+                case 1: color.g = value; break;
+                case 2: color.b = value; break;
+                case 3: color.a = value; break;
+            }
+        }
+        lua_pop(L, 1);
+    }
+    return color;
+}
+
+bool CubeScript::ReadStringField(lua_State* L, int index, const char* name, std::string& outString) {
+    int absIndex = lua_absindex(L, index);
+    lua_getfield(L, absIndex, name);
+    if (lua_isstring(L, -1)) {
+        outString = lua_tostring(L, -1);
+        lua_pop(L, 1);
+        return true;
+    }
+    lua_pop(L, 1);
+    return false;
 }
 
 } // namespace sdl3cpp::script

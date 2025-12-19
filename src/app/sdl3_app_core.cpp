@@ -36,6 +36,7 @@ void Sdl3App::InitSDL() {
     if (!window_) {
         throw std::runtime_error(std::string("SDL_CreateWindow failed: ") + SDL_GetError());
     }
+    SDL_StartTextInput();
 }
 
 void Sdl3App::InitVulkan() {
@@ -44,6 +45,7 @@ void Sdl3App::InitVulkan() {
     PickPhysicalDevice();
     CreateLogicalDevice();
     CreateSwapChain();
+    SetupGuiRenderer();
     CreateImageViews();
     CreateRenderPass();
     LoadSceneData();
@@ -66,7 +68,24 @@ void Sdl3App::MainLoop() {
                 running = false;
             } else if (event.type == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED) {
                 framebufferResized_ = true;
+            } else if (guiHasCommands_) {
+                ProcessGuiEvent(event);
             }
+        }
+
+        if (guiHasCommands_) {
+            int mouseX = 0;
+            int mouseY = 0;
+            SDL_GetMouseState(&mouseX, &mouseY);
+            guiInputSnapshot_.mouseX = static_cast<float>(mouseX);
+            guiInputSnapshot_.mouseY = static_cast<float>(mouseY);
+            cubeScript_.UpdateGuiInput(guiInputSnapshot_);
+            if (guiRenderer_) {
+                guiCommands_ = cubeScript_.LoadGuiCommands();
+                guiRenderer_->Prepare(guiCommands_, swapChainExtent_.width, swapChainExtent_.height);
+            }
+            guiInputSnapshot_.wheel = 0.0f;
+            guiInputSnapshot_.textInput.clear();
         }
 
         auto now = std::chrono::steady_clock::now();
@@ -97,6 +116,7 @@ void Sdl3App::Cleanup() {
         window_ = nullptr;
     }
     SDL_Vulkan_UnloadLibrary();
+    SDL_StopTextInput();
     SDL_Quit();
 }
 

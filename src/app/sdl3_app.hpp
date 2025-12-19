@@ -7,6 +7,7 @@
 
 #include <array>
 #include <filesystem>
+#include <memory>
 #include <optional>
 #include <set>
 #include <string>
@@ -19,6 +20,7 @@
 
 #include "core/vertex.hpp"
 #include "script/cube_script.hpp"
+#include "gui/gui_renderer.hpp"
 
 namespace sdl3cpp::app {
 
@@ -87,6 +89,8 @@ private:
                              const std::array<float, 16>& viewProj);
     void CreateSyncObjects();
     void DrawFrame(float time);
+    void SetupGuiRenderer();
+    void ProcessGuiEvent(const SDL_Event& event);
 
     QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
     bool CheckDeviceExtensionSupport(VkPhysicalDevice device);
@@ -126,6 +130,10 @@ private:
     std::string defaultShaderKey_;
     VkFence inFlightFence_ = VK_NULL_HANDLE;
     bool framebufferResized_ = false;
+    script::GuiInputSnapshot guiInputSnapshot_;
+    std::vector<script::CubeScript::GuiCommand> guiCommands_;
+    std::unique_ptr<gui::GuiRenderer> guiRenderer_;
+    bool guiHasCommands_ = false;
     std::vector<RenderObject> renderObjects_;
 };
 

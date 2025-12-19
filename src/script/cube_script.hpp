@@ -13,6 +13,62 @@
 
 namespace sdl3cpp::script {
 
+struct GuiInputSnapshot {
+    float mouseX = 0.0f;
+    float mouseY = 0.0f;
+    bool mouseDown = false;
+    float wheel = 0.0f;
+    std::string textInput;
+    std::unordered_map<std::string, bool> keyStates;
+};
+
+struct GuiRect {
+    float x = 0;
+    float y = 0;
+    float width = 0;
+    float height = 0;
+};
+
+struct GuiColor {
+    float r = 0;
+    float g = 0;
+    float b = 0;
+    float a = 1.0f;
+};
+
+struct GuiCommand {
+    enum class Type {
+        Rect,
+        Text,
+        ClipPush,
+        ClipPop,
+        Svg,
+    };
+
+    struct RectData {
+        float x = 0;
+        float y = 0;
+        float width = 0;
+        float height = 0;
+    };
+
+    Type type = Type::Rect;
+    RectData rect;
+    GuiColor color;
+    GuiColor borderColor;
+    float borderWidth = 0.0f;
+    bool hasClipRect = false;
+    RectData clipRect{};
+    std::string text;
+    float fontSize = 16.0f;
+    std::string alignX = \"left\";
+    std::string alignY = \"center\";
+    std::string svgPath;
+    GuiColor svgTint;
+    RectData bounds{};
+    bool hasBounds = false;
+};
+
 class CubeScript {
 public:
     explicit CubeScript(const std::filesystem::path& scriptPath);
@@ -34,6 +90,10 @@ public:
     std::array<float, 16> ComputeModelMatrix(int functionRef, float time);
     std::array<float, 16> GetViewProjectionMatrix(float aspect);
     std::unordered_map<std::string, ShaderPaths> LoadShaderPathsMap();
+    std::vector<GuiCommand> LoadGuiCommands();
+    void UpdateGuiInput(const GuiInputSnapshot& input);
+    bool HasGuiCommands() const;
+    std::filesystem::path GetScriptDirectory() const;
 
 private:
     static std::array<float, 3> ReadVector3(lua_State* L, int index);
@@ -42,8 +102,14 @@ private:
     static std::vector<uint16_t> ReadIndexArray(lua_State* L, int index);
     static std::string LuaErrorMessage(lua_State* L);
     static ShaderPaths ReadShaderPathsTable(lua_State* L, int index);
+    static GuiRect ReadRect(lua_State* L, int index);
+    static GuiColor ReadColor(lua_State* L, int index, const GuiColor& defaultColor);
+    static bool ReadStringField(lua_State* L, int index, const char* name, std::string& outString);
 
     lua_State* L_ = nullptr;
+    int guiInputRef_ = LUA_REFNIL;
+    int guiCommandsFnRef_ = LUA_REFNIL;
+    std::filesystem::path scriptDirectory_;
 };
 
 } // namespace sdl3cpp::script
