@@ -40,7 +40,6 @@ void Sdl3App::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageI
                                    const std::array<float, 16>& viewProj) {
     TRACE_FUNCTION();
     TRACE_VAR(imageIndex);
-    TRACE_FUNCTION();
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
