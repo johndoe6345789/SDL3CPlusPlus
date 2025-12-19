@@ -45,3 +45,12 @@ venv/
 env/
 vendor/
 build/
+build-*/
+dist/
+*.egg-info/
+.eggs/
+.pytest_cache/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd

@@ -1,0 +1,14 @@
+Checks: >
+  clang-analyzer-*,
+  bugprone-*,
+  performance-*,
+  readability-*,
+  modernize-*,
+  misc-*,
+  -modernize-use-trailing-return-type
+WarningsAsErrors: ''
+HeaderFilterRegex: 'src/.*'
+FormatStyle: file
+CheckOptions:
+  - key: modernize-use-override.ForceOverride
+    value: 1

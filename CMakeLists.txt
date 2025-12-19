@@ -1,5 +1,47 @@
 cmake_minimum_required(VERSION 3.24)
 project(SDL3App LANGUAGES CXX)
+list(APPEND CMAKE_PROGRAM_PATH "C:/ProgramData/chocolatey/bin")
+if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build configuration for single-config generators" FORCE)
+endif()
+option(ENABLE_CLANG_TIDY "Automatically run clang-tidy on every target when configuring via CMake" OFF)
+
+if(ENABLE_CLANG_TIDY)
+    find_program(CLANG_TIDY_EXE
+        NAMES clang-tidy clang-tidy.exe
+        HINTS "C:/Program Files/LLVM/bin" "C:/ProgramData/chocolatey/bin"
+    )
+    if(CLANG_TIDY_EXE)
+        if(WIN32)
+            set(CLANG_TIDY_WRAPPER "${CMAKE_CURRENT_BINARY_DIR}/clang_tidy_wrapper.bat")
+            file(WRITE ${CLANG_TIDY_WRAPPER}
+                "@echo off\n"
+                "setlocal\n"
+                "set \"CLANG_TIDY_EXE=${CLANG_TIDY_EXE}\"\n"
+                "echo [clang-tidy] starting %*\n"
+                "\"%CLANG_TIDY_EXE%\" %*\n"
+                "set RET=%ERRORLEVEL%\n"
+                "echo [clang-tidy] finished (exit %RET%)\n"
+                "exit /b %RET%\n"
+            )
+        else()
+            set(CLANG_TIDY_WRAPPER "${CMAKE_CURRENT_BINARY_DIR}/clang_tidy_wrapper.sh")
+            file(WRITE ${CLANG_TIDY_WRAPPER}
+                "#!/bin/sh\n"
+                "echo \"[clang-tidy] starting $@\"\n"
+                "\"${CLANG_TIDY_EXE}\" \"$@\"\n"
+                "ret=$?\n"
+                "echo \"[clang-tidy] finished (exit $ret)\"\n"
+                "exit $ret\n"
+            )
+            execute_process(COMMAND ${CMAKE_COMMAND} -E chmod +x ${CLANG_TIDY_WRAPPER})
+        endif()
+        set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES ${CLANG_TIDY_WRAPPER})
+        set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_WRAPPER}")
+    else()
+        message(WARNING "clang-tidy requested but not found on the PATH; disabling lint step")
+    endif()
+endif()
 option(BUILD_SDL3_APP "Build the SDL3 Vulkan demo" ON)
 
 set(CMAKE_CXX_STANDARD 23)
