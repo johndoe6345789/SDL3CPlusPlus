@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import os
 import platform
+import shlex
 import subprocess
 
 
@@ -85,13 +86,16 @@ def msvc_quick(args: argparse.Namespace) -> None:
 
 def run_demo(args: argparse.Namespace) -> None:
     build_dir = args.build_dir or DEFAULT_BUILD_DIR
-    binary = os.path.join(
-        build_dir, "spinning_cube.exe" if IS_WINDOWS else "spinning_cube"
-    )
+    exe_name = args.target or ("sdl3_app.exe" if IS_WINDOWS else "sdl3_app")
+    binary = os.path.join(build_dir, exe_name)
+    cmd = binary
+    if args.args:
+        extra = " ".join(shlex.quote(arg) for arg in args.args)
+        cmd = f"{cmd} {extra}"
     if args.dry_run:
-        print("\n> " + binary)
+        print("\n> " + cmd)
     else:
-        subprocess.run(binary, shell=True, check=True)
+        subprocess.run(cmd, shell=True, check=True)
 
 
 def main() -> int:
@@ -154,6 +158,15 @@ def main() -> int:
     run_parser.add_argument(
         "--build-dir",
         help="where the binary lives (defaults to the Ninja folder from configure)",
+    )
+    run_parser.add_argument(
+        "--target",
+        help="executable name to run (defaults to `sdl3_app`)",
+    )
+    run_parser.add_argument(
+        "--args",
+        nargs=argparse.REMAINDER,
+        help="arguments to forward to the executable (prefix with '--' before positional args when needed)",
     )
     run_parser.set_defaults(func=run_demo)
 
