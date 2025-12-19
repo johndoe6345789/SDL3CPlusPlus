@@ -24,6 +24,8 @@ void Sdl3App::CreateInstance() {
     }
 
     std::vector<const char*> extensionList(extensions, extensions + extensionCount);
+    TRACE_VAR(extensionCount);
+    TRACE_VAR(extensionList.size());
 
     VkInstanceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;

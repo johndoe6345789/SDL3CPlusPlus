@@ -3,6 +3,7 @@
 
 #include <atomic>
 #include <iostream>
+#include <sstream>
 
 namespace sdl3cpp::app {
 
@@ -22,6 +23,16 @@ public:
         }
     }
 
+    template <typename T>
+    static void LogVariable(const char* name, const T& value) {
+        if (!Enabled()) {
+            return;
+        }
+        std::ostringstream oss;
+        oss << "[TRACE] " << name << " = " << value;
+        std::cout << oss.str() << '\n';
+    }
+
 private:
     static inline std::atomic_bool enabled_{false};
 };
@@ -39,5 +50,6 @@ private:
 } // namespace sdl3cpp::app
 
 #define TRACE_FUNCTION() sdl3cpp::app::TraceScope traceScope##__COUNTER__{__func__}
+#define TRACE_VAR(var) sdl3cpp::app::TraceLogger::LogVariable(#var, var)
 
 #endif // SDL3CPP_APP_TRACE_HPP

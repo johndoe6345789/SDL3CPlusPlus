@@ -39,6 +39,8 @@ void Sdl3App::CreateCommandBuffers() {
 void Sdl3App::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, float time,
                                    const std::array<float, 16>& viewProj) {
     TRACE_FUNCTION();
+    TRACE_VAR(imageIndex);
+    TRACE_FUNCTION();
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
@@ -147,6 +149,7 @@ void Sdl3App::DrawFrame(float time) {
     } else if (result != VK_SUCCESS) {
         throw std::runtime_error("Failed to acquire swap chain image");
     }
+    TRACE_VAR(imageIndex);
 
     float aspect = static_cast<float>(swapChainExtent_.width) / static_cast<float>(swapChainExtent_.height);
     auto viewProj = cubeScript_.GetViewProjectionMatrix(aspect);

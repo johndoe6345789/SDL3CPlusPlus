@@ -83,6 +83,7 @@ void ThrowSdlErrorIfFailed(int result, const char* context) {
 
 Sdl3App::Sdl3App(const std::filesystem::path& scriptPath) : cubeScript_(scriptPath) {
     TRACE_FUNCTION();
+    TRACE_VAR(scriptPath);
 }
 
 void Sdl3App::Run() {
@@ -95,12 +96,15 @@ void Sdl3App::Run() {
 
 void Sdl3App::InitSDL() {
     TRACE_FUNCTION();
+    TRACE_VAR(kWidth);
+    TRACE_VAR(kHeight);
     ThrowSdlErrorIfFailed(SDL_Init(SDL_INIT_VIDEO), "SDL_Init failed");
     ThrowSdlErrorIfFailed(SDL_Vulkan_LoadLibrary(nullptr), "SDL_Vulkan_LoadLibrary failed");
     window_ = SDL_CreateWindow("SDL3 Vulkan Demo", kWidth, kHeight, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
     if (!window_) {
         throw std::runtime_error(BuildSdlErrorMessage("SDL_CreateWindow failed"));
     }
+    TRACE_VAR(window_);
     SDL_StartTextInput(window_);
 }
 
@@ -126,6 +130,7 @@ void Sdl3App::InitVulkan() {
 
 void Sdl3App::MainLoop() {
     TRACE_FUNCTION();
+    TRACE_VAR(guiHasCommands_);
     bool running = true;
     auto start = std::chrono::steady_clock::now();
     while (running) {

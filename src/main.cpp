@@ -222,6 +222,12 @@ AppOptions ParseCommandLine(int argc, char** argv) {
     return options;
 }
 
+void LogRuntimeConfig(const RuntimeConfig& config) {
+    TRACE_VAR(config.width);
+    TRACE_VAR(config.height);
+    TRACE_VAR(config.scriptPath);
+}
+
 void WriteRuntimeConfigJson(const RuntimeConfig& runtimeConfig,
                             const std::filesystem::path& configPath) {
     rapidjson::Document document;
@@ -281,6 +287,7 @@ int main(int argc, char** argv) {
     try {
         AppOptions options = ParseCommandLine(argc, argv);
         sdl3cpp::app::TraceLogger::SetEnabled(options.traceEnabled);
+        LogRuntimeConfig(options.runtimeConfig);
         if (options.seedOutput) {
             WriteRuntimeConfigJson(options.runtimeConfig, *options.seedOutput);
         }
