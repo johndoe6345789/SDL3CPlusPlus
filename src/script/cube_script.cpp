@@ -22,8 +22,6 @@
 
 namespace sdl3cpp::script {
 
-namespace {
-
 struct PhysicsBridge {
     struct BodyRecord {
         std::unique_ptr<btCollisionShape> shape;
@@ -137,6 +135,69 @@ bool PhysicsBridge::getRigidBodyTransform(const std::string& name,
     return true;
 }
 
+namespace detail {
+
+std::array<float, 3> ReadVector3(lua_State* L, int index) {
+    std::array<float, 3> result{};
+    int absIndex = lua_absindex(L, index);
+    size_t len = lua_rawlen(L, absIndex);
+    if (len != 3) {
+        throw std::runtime_error("Expected vector with 3 components");
+    }
+    for (size_t i = 1; i <= 3; ++i) {
+        lua_rawgeti(L, absIndex, static_cast<int>(i));
+        if (!lua_isnumber(L, -1)) {
+            lua_pop(L, 1);
+            throw std::runtime_error("Vector component is not a number");
+        }
+        result[i - 1] = static_cast<float>(lua_tonumber(L, -1));
+        lua_pop(L, 1);
+    }
+    return result;
+}
+
+std::array<float, 16> ReadMatrix(lua_State* L, int index) {
+    std::array<float, 16> result{};
+    int absIndex = lua_absindex(L, index);
+    size_t len = lua_rawlen(L, absIndex);
+    if (len != 16) {
+        throw std::runtime_error("Expected 4x4 matrix with 16 components");
+    }
+    for (size_t i = 1; i <= 16; ++i) {
+        lua_rawgeti(L, absIndex, static_cast<int>(i));
+        if (!lua_isnumber(L, -1)) {
+            lua_pop(L, 1);
+            throw std::runtime_error("Matrix component is not a number");
+        }
+        result[i - 1] = static_cast<float>(lua_tonumber(L, -1));
+        lua_pop(L, 1);
+    }
+    return result;
+}
+
+std::array<float, 4> ReadQuaternion(lua_State* L, int index) {
+    std::array<float, 4> result{};
+    int absIndex = lua_absindex(L, index);
+    size_t len = lua_rawlen(L, absIndex);
+    if (len != 4) {
+        throw std::runtime_error("Expected quaternion with 4 components");
+    }
+    for (size_t i = 1; i <= 4; ++i) {
+        lua_rawgeti(L, absIndex, static_cast<int>(i));
+        if (!lua_isnumber(L, -1)) {
+            lua_pop(L, 1);
+            throw std::runtime_error("Quaternion component is not a number");
+        }
+        result[i - 1] = static_cast<float>(lua_tonumber(L, -1));
+        lua_pop(L, 1);
+    }
+    return result;
+}
+
+} // namespace detail
+
+namespace {
+
 struct MeshPayload {
     std::vector<std::array<float, 3>> positions;
     std::vector<std::array<float, 3>> colors;
@@ -190,9 +251,9 @@ bool TryLoadMeshPayload(const CubeScript* script,
     aiColor3D materialColor = defaultColor;
     if (mesh->mMaterialIndex < scene->mNumMaterials) {
         const aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-        aiColor3D diffuse;
+        aiColor4D diffuse;
         if (material && material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuse) == AI_SUCCESS) {
-            materialColor = diffuse;
+            materialColor = aiColor3D(diffuse.r, diffuse.g, diffuse.b);
         }
     }
 
@@ -202,7 +263,8 @@ bool TryLoadMeshPayload(const CubeScript* script,
 
         aiColor3D color = materialColor;
         if (mesh->HasVertexColors(0) && mesh->mColors[0]) {
-            color = mesh->mColors[0][i];
+            const aiColor4D& vertexColor = mesh->mColors[0][i];
+            color = aiColor3D(vertexColor.r, vertexColor.g, vertexColor.b);
         }
         payload.colors.push_back({color.r, color.g, color.b});
     }
@@ -298,10 +360,10 @@ int LuaPhysicsCreateBox(lua_State* L) {
     if (!lua_istable(L, 2) || !lua_istable(L, 4) || !lua_istable(L, 5)) {
         luaL_error(L, "physics_create_box expects vector tables for half extents, origin, and rotation");
     }
-    std::array<float, 3> halfExtents = ReadVector3(L, 2);
+    std::array<float, 3> halfExtents = detail::ReadVector3(L, 2);
     float mass = static_cast<float>(luaL_checknumber(L, 3));
-    std::array<float, 3> origin = ReadVector3(L, 4);
-    std::array<float, 4> rotation = ReadQuaternion(L, 5);
+    std::array<float, 3> origin = detail::ReadVector3(L, 4);
+    std::array<float, 4> rotation = detail::ReadQuaternion(L, 5);
 
     btTransform transform;
     transform.setIdentity();
@@ -370,8 +432,8 @@ int LuaPhysicsGetTransform(lua_State* L) {
 }
 
 int LuaGlmMatrixFromTransform(lua_State* L) {
-    std::array<float, 3> translation = CubeScript::ReadVector3(L, 1);
-    std::array<float, 4> rotation = CubeScript::ReadQuaternion(L, 2);
+    std::array<float, 3> translation = detail::ReadVector3(L, 1);
+    std::array<float, 4> rotation = detail::ReadQuaternion(L, 2);
     glm::vec3 pos = ToVec3(translation);
     glm::quat quat = ToQuat(rotation);
     glm::mat4 matrix = glm::translate(glm::mat4(1.0f), pos) * glm::mat4_cast(quat);
@@ -553,7 +615,7 @@ std::array<float, 16> CubeScript::ComputeModelMatrix(int functionRef, float time
         throw std::runtime_error("'compute_model_matrix' did not return a table");
     }
 
-    std::array<float, 16> matrix = ReadMatrix(L_, -1);
+    std::array<float, 16> matrix = detail::ReadMatrix(L_, -1);
     lua_pop(L_, 1);
     return matrix;
 }
@@ -574,7 +636,7 @@ std::array<float, 16> CubeScript::GetViewProjectionMatrix(float aspect) {
         lua_pop(L_, 1);
         throw std::runtime_error("'get_view_projection' did not return a table");
     }
-    std::array<float, 16> matrix = ReadMatrix(L_, -1);
+    std::array<float, 16> matrix = detail::ReadMatrix(L_, -1);
     lua_pop(L_, 1);
     return matrix;
 }
@@ -600,11 +662,11 @@ std::vector<core::Vertex> CubeScript::ReadVertexArray(lua_State* L, int index) {
         core::Vertex vertex{};
 
         lua_getfield(L, vertexIndex, "position");
-        vertex.position = ReadVector3(L, -1);
+        vertex.position = detail::ReadVector3(L, -1);
         lua_pop(L, 1);
 
         lua_getfield(L, vertexIndex, "color");
-        vertex.color = ReadVector3(L, -1);
+        vertex.color = detail::ReadVector3(L, -1);
         lua_pop(L, 1);
 
         lua_pop(L, 1);
@@ -695,63 +757,6 @@ CubeScript::ShaderPaths CubeScript::ReadShaderPathsTable(lua_State* L, int index
     lua_pop(L, 1);
 
     return paths;
-}
-
-std::array<float, 3> CubeScript::ReadVector3(lua_State* L, int index) {
-    std::array<float, 3> result{};
-    int absIndex = lua_absindex(L, index);
-    size_t len = lua_rawlen(L, absIndex);
-    if (len != 3) {
-        throw std::runtime_error("Expected vector with 3 components");
-    }
-    for (size_t i = 1; i <= 3; ++i) {
-        lua_rawgeti(L, absIndex, static_cast<int>(i));
-        if (!lua_isnumber(L, -1)) {
-            lua_pop(L, 1);
-            throw std::runtime_error("Vector component is not a number");
-        }
-        result[i - 1] = static_cast<float>(lua_tonumber(L, -1));
-        lua_pop(L, 1);
-    }
-    return result;
-}
-
-std::array<float, 16> CubeScript::ReadMatrix(lua_State* L, int index) {
-    std::array<float, 16> result{};
-    int absIndex = lua_absindex(L, index);
-    size_t len = lua_rawlen(L, absIndex);
-    if (len != 16) {
-        throw std::runtime_error("Expected 4x4 matrix with 16 components");
-    }
-    for (size_t i = 1; i <= 16; ++i) {
-        lua_rawgeti(L, absIndex, static_cast<int>(i));
-        if (!lua_isnumber(L, -1)) {
-            lua_pop(L, 1);
-            throw std::runtime_error("Matrix component is not a number");
-        }
-        result[i - 1] = static_cast<float>(lua_tonumber(L, -1));
-        lua_pop(L, 1);
-    }
-    return result;
-}
-
-std::array<float, 4> CubeScript::ReadQuaternion(lua_State* L, int index) {
-    std::array<float, 4> result{};
-    int absIndex = lua_absindex(L, index);
-    size_t len = lua_rawlen(L, absIndex);
-    if (len != 4) {
-        throw std::runtime_error("Expected quaternion with 4 components");
-    }
-    for (size_t i = 1; i <= 4; ++i) {
-        lua_rawgeti(L, absIndex, static_cast<int>(i));
-        if (!lua_isnumber(L, -1)) {
-            lua_pop(L, 1);
-            throw std::runtime_error("Quaternion component is not a number");
-        }
-        result[i - 1] = static_cast<float>(lua_tonumber(L, -1));
-        lua_pop(L, 1);
-    }
-    return result;
 }
 
 std::string CubeScript::LuaErrorMessage(lua_State* L) {

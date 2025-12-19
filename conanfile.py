@@ -28,3 +28,4 @@ class SDL3CppConan(ConanFile):
         self.requires("box2d/3.1.1")
         self.requires("assimp/6.0.2")
         self.requires("glm/1.0.1")
+        self.requires("vorbis/1.3.7")

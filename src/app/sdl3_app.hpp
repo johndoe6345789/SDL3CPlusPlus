@@ -18,9 +18,14 @@
 #include <SDL3/SDL_vulkan.h>
 #include <vulkan/vulkan.h>
 
+#include "app/audio_player.hpp"
 #include "core/vertex.hpp"
 #include "script/cube_script.hpp"
 #include "gui/gui_renderer.hpp"
+
+namespace sdl3cpp::app {
+class AudioPlayer;
+}
 
 namespace sdl3cpp::app {
 
@@ -135,6 +140,8 @@ private:
     std::unique_ptr<gui::GuiRenderer> guiRenderer_;
     bool guiHasCommands_ = false;
     std::vector<RenderObject> renderObjects_;
+    std::filesystem::path scriptDirectory_;
+    std::unique_ptr<AudioPlayer> audioPlayer_;
 };
 
 } // namespace sdl3cpp::app

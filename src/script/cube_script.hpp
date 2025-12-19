@@ -97,9 +97,6 @@ public:
     PhysicsBridge& GetPhysicsBridge();
 
 private:
-    static std::array<float, 3> ReadVector3(lua_State* L, int index);
-    static std::array<float, 16> ReadMatrix(lua_State* L, int index);
-    static std::array<float, 4> ReadQuaternion(lua_State* L, int index);
     static std::vector<core::Vertex> ReadVertexArray(lua_State* L, int index);
     static std::vector<uint16_t> ReadIndexArray(lua_State* L, int index);
     static std::string LuaErrorMessage(lua_State* L);

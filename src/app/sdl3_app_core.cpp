@@ -1,8 +1,10 @@
+#include "app/audio_player.hpp"
 #include "app/sdl3_app.hpp"
 #include "app/trace.hpp"
 
 #include <chrono>
 #include <fstream>
+#include <iostream>
 #include <sstream>
 #include <stdexcept>
 
@@ -82,7 +84,8 @@ void ThrowSdlErrorIfFailed(bool success, const char* context) {
 } // namespace
 
 Sdl3App::Sdl3App(const std::filesystem::path& scriptPath, bool luaDebug)
-    : cubeScript_(scriptPath, luaDebug) {
+    : cubeScript_(scriptPath, luaDebug),
+      scriptDirectory_(scriptPath.parent_path()) {
     TRACE_FUNCTION();
     TRACE_VAR(scriptPath);
 }
@@ -99,7 +102,7 @@ void Sdl3App::InitSDL() {
     TRACE_FUNCTION();
     TRACE_VAR(kWidth);
     TRACE_VAR(kHeight);
-    ThrowSdlErrorIfFailed(SDL_Init(SDL_INIT_VIDEO), "SDL_Init failed");
+    ThrowSdlErrorIfFailed(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO), "SDL_Init failed");
     ThrowSdlErrorIfFailed(SDL_Vulkan_LoadLibrary(nullptr), "SDL_Vulkan_LoadLibrary failed");
     window_ = SDL_CreateWindow("SDL3 Vulkan Demo", kWidth, kHeight, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
     if (!window_) {
@@ -107,6 +110,11 @@ void Sdl3App::InitSDL() {
     }
     TRACE_VAR(window_);
     SDL_StartTextInput(window_);
+    try {
+        audioPlayer_ = std::make_unique<AudioPlayer>(scriptDirectory_ / "modmusic.ogg");
+    } catch (const std::exception& exc) {
+        std::cerr << "AudioPlayer: " << exc.what() << '\n';
+    }
 }
 
 void Sdl3App::InitVulkan() {
@@ -188,6 +196,7 @@ void Sdl3App::Cleanup() {
     }
     SDL_Vulkan_UnloadLibrary();
     SDL_StopTextInput(window_);
+    audioPlayer_.reset();
     SDL_Quit();
 }
 
