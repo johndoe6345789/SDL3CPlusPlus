@@ -1,5 +1,3 @@
-#define SDL_MAIN_HANDLED
-
 #include <CLI/CLI.hpp>
 #include <rapidjson/document.h>
 #include <rapidjson/istreamwrapper.h>
@@ -80,11 +78,26 @@ RuntimeConfig LoadRuntimeConfigFromJson(const std::filesystem::path& configPath,
         throw std::runtime_error("JSON config requires a string member '" + std::string(scriptField) + "'");
     }
 
+    std::optional<std::filesystem::path> projectRoot;
+    const char* projectRootField = "project_root";
+    if (document.HasMember(projectRootField) && document[projectRootField].IsString()) {
+        std::filesystem::path candidate(document[projectRootField].GetString());
+        if (candidate.is_absolute()) {
+            projectRoot = std::filesystem::weakly_canonical(candidate);
+        } else {
+            projectRoot = std::filesystem::weakly_canonical(configPath.parent_path() / candidate);
+        }
+    }
+
     RuntimeConfig config;
     const auto& scriptValue = document[scriptField];
     std::filesystem::path scriptPath(scriptValue.GetString());
     if (!scriptPath.is_absolute()) {
-        scriptPath = configPath.parent_path() / scriptPath;
+        if (projectRoot) {
+            scriptPath = *projectRoot / scriptPath;
+        } else {
+            scriptPath = configPath.parent_path() / scriptPath;
+        }
     }
     scriptPath = std::filesystem::weakly_canonical(scriptPath);
     if (!std::filesystem::exists(scriptPath)) {
