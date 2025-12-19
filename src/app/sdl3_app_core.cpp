@@ -73,8 +73,8 @@ std::string BuildSdlErrorMessage(const char* context) {
     return oss.str();
 }
 
-void ThrowSdlErrorIfFailed(int result, const char* context) {
-    if (result != 0) {
+void ThrowSdlErrorIfFailed(bool success, const char* context) {
+    if (!success) {
         throw std::runtime_error(BuildSdlErrorMessage(context));
     }
 }

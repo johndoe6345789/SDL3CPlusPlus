@@ -16,6 +16,7 @@
 
 #include "app/trace.hpp"
 #include "app/sdl3_app.hpp"
+#include <SDL3/SDL_main.h>
 
 namespace {
 
@@ -284,6 +285,7 @@ void WriteRuntimeConfigJson(const RuntimeConfig& runtimeConfig,
 } // namespace
 
 int main(int argc, char** argv) {
+    SDL_SetMainReady();
     try {
         AppOptions options = ParseCommandLine(argc, argv);
         sdl3cpp::app::TraceLogger::SetEnabled(options.traceEnabled);
