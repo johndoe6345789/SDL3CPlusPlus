@@ -27,3 +27,7 @@ cmake --build build --target spinning_cube
 ```
 
 If you need the Conan runtime environment (e.g., because dependencies set env vars), source `build/conanrun.sh` before launching the binary on Linux/macOS or run `build\\conanrun.bat` on Windows.
+
+## Dependency automation
+
+This project ships a `renovate.json` configuration so Renovate can open PRs that bump the Conan packages listed in `conanfile.py`. Either install Renovate locally (`npm install -g renovate` or `npx renovate`) and run it from the repo root, or enable the Renovate bot on your GitHub/GitLab install to pick up the configuration automatically.
