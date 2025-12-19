@@ -280,7 +280,7 @@ void WriteRuntimeConfigJson(const RuntimeConfig& runtimeConfig,
 int main(int argc, char** argv) {
     try {
         AppOptions options = ParseCommandLine(argc, argv);
-        TraceLogger::SetEnabled(options.traceEnabled);
+        sdl3cpp::app::TraceLogger::SetEnabled(options.traceEnabled);
         if (options.seedOutput) {
             WriteRuntimeConfigJson(options.runtimeConfig, *options.seedOutput);
         }
