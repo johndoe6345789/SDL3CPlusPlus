@@ -111,7 +111,8 @@ void Sdl3App::InitSDL() {
     TRACE_VAR(window_);
     SDL_StartTextInput(window_);
     try {
-        audioPlayer_ = std::make_unique<AudioPlayer>(scriptDirectory_ / "modmusic.ogg");
+        audioPlayer_ = std::make_unique<AudioPlayer>();
+        cubeScript_.SetAudioPlayer(audioPlayer_.get());
     } catch (const std::exception& exc) {
         std::cerr << "AudioPlayer: " << exc.what() << '\n';
     }

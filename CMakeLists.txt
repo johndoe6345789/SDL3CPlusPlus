@@ -109,7 +109,8 @@ enable_testing()
 add_executable(cube_script_tests
     tests/test_cube_script.cpp
     src/script/cube_script.cpp
+    src/app/audio_player.cpp
 )
 target_include_directories(cube_script_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_link_libraries(cube_script_tests PRIVATE lua::lua assimp::assimp Bullet::Bullet glm::glm Vorbis::vorbisfile Vorbis::vorbis)
+target_link_libraries(cube_script_tests PRIVATE sdl::sdl lua::lua assimp::assimp Bullet::Bullet glm::glm Vorbis::vorbisfile Vorbis::vorbis)
 add_test(NAME cube_script_tests COMMAND cube_script_tests)

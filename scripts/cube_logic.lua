@@ -53,6 +53,14 @@ end
 
 load_cube_mesh()
 
+local function init_audio()
+    if type(audio_play_background) == "function" then
+        audio_play_background("modmusic.ogg", true)
+    end
+end
+
+init_audio()
+
 if not cube_mesh_info.loaded then
     error("Unable to load cube mesh: " .. (cube_mesh_info.error or "unknown"))
 end
@@ -188,6 +196,23 @@ local camera = {
     far = 10.0,
 }
 
+local effect_key = "space"
+local effect_active = false
+
+local function update_audio_controls()
+    if type(audio_play_sound) ~= "function" then
+        return
+    end
+    if gui_input.keyStates[effect_key] then
+        if not effect_active then
+            audio_play_sound("modmusic.ogg", false)
+            effect_active = true
+        end
+    else
+        effect_active = false
+    end
+end
+
 local zoom_settings = {
     min_distance = 2.0,
     max_distance = 12.0,
@@ -301,6 +326,7 @@ function get_view_projection(aspect)
     if gui_input then
         update_camera_zoom(gui_input.wheel)
     end
+    update_audio_controls()
     local view = math3d.look_at(camera.eye, camera.center, camera.up)
     local projection = math3d.perspective(camera.fov, aspect, camera.near, camera.far)
     return math3d.multiply(projection, view)

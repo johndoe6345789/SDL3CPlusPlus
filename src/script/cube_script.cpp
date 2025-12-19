@@ -1,4 +1,5 @@
 #include "script/cube_script.hpp"
+#include "app/audio_player.hpp"
 
 #include <assimp/Importer.hpp>
 #include <assimp/material.h>
@@ -12,6 +13,7 @@
 
 #include <array>
 #include <cstring>
+#include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -426,8 +428,42 @@ int LuaPhysicsGetTransform(lua_State* L) {
     lua_rawseti(L, -2, 3);
     lua_pushnumber(L, orientation.w());
     lua_rawseti(L, -2, 4);
-    lua_setfield(L, -2, "rotation");
+        lua_setfield(L, -2, "rotation");
 
+    return 1;
+}
+
+int LuaAudioPlayBackground(lua_State* L) {
+    auto* script = static_cast<CubeScript*>(lua_touserdata(L, lua_upvalueindex(1)));
+    const char* path = luaL_checkstring(L, 1);
+    bool loop = true;
+    if (lua_gettop(L) >= 2 && lua_isboolean(L, 2)) {
+        loop = lua_toboolean(L, 2);
+    }
+    std::string error;
+    if (!script->QueueAudioCommand(CubeScript::AudioCommandType::Background, path, loop, error)) {
+        lua_pushnil(L);
+        lua_pushstring(L, error.c_str());
+        return 2;
+    }
+    lua_pushboolean(L, 1);
+    return 1;
+}
+
+int LuaAudioPlaySound(lua_State* L) {
+    auto* script = static_cast<CubeScript*>(lua_touserdata(L, lua_upvalueindex(1)));
+    const char* path = luaL_checkstring(L, 1);
+    bool loop = false;
+    if (lua_gettop(L) >= 2 && lua_isboolean(L, 2)) {
+        loop = lua_toboolean(L, 2);
+    }
+    std::string error;
+    if (!script->QueueAudioCommand(CubeScript::AudioCommandType::Effect, path, loop, error)) {
+        lua_pushnil(L);
+        lua_pushstring(L, error.c_str());
+        return 2;
+    }
+    lua_pushboolean(L, 1);
     return 1;
 }
 
@@ -474,6 +510,12 @@ CubeScript::CubeScript(const std::filesystem::path& scriptPath, bool debugEnable
     lua_pushlightuserdata(L_, this);
     lua_pushcclosure(L_, &LuaGlmMatrixFromTransform, 1);
     lua_setglobal(L_, "glm_matrix_from_transform");
+    lua_pushlightuserdata(L_, this);
+    lua_pushcclosure(L_, &LuaAudioPlayBackground, 1);
+    lua_setglobal(L_, "audio_play_background");
+    lua_pushlightuserdata(L_, this);
+    lua_pushcclosure(L_, &LuaAudioPlaySound, 1);
+    lua_setglobal(L_, "audio_play_sound");
     lua_pushboolean(L_, debugEnabled_);
     lua_setglobal(L_, "lua_debug");
     auto scriptDir = scriptPath.parent_path();
@@ -967,6 +1009,64 @@ bool CubeScript::ReadStringField(lua_State* L, int index, const char* name, std:
     }
     lua_pop(L, 1);
     return false;
+}
+
+void CubeScript::SetAudioPlayer(app::AudioPlayer* audioPlayer) {
+    audioPlayer_ = audioPlayer;
+    if (!audioPlayer_) {
+        return;
+    }
+    for (const auto& command : pendingAudioCommands_) {
+        try {
+            ExecuteAudioCommand(audioPlayer_, command);
+        } catch (const std::exception& exc) {
+            std::cerr << "AudioPlayer: " << exc.what() << '\n';
+        }
+    }
+    pendingAudioCommands_.clear();
+}
+
+bool CubeScript::QueueAudioCommand(AudioCommandType type, std::string path, bool loop, std::string& error) {
+    if (audioPlayer_) {
+        try {
+            AudioCommand command{type, std::move(path), loop};
+            ExecuteAudioCommand(audioPlayer_, command);
+            return true;
+        } catch (const std::exception& exc) {
+            error = exc.what();
+            return false;
+        }
+    }
+    pendingAudioCommands_.push_back(AudioCommand{type, std::move(path), loop});
+    return true;
+}
+
+void CubeScript::ExecuteAudioCommand(app::AudioPlayer* player, const AudioCommand& command) {
+    auto resolved = ResolveScriptPath(command.path);
+    if (!std::filesystem::exists(resolved)) {
+        throw std::runtime_error("Audio file not found: " + resolved.string());
+    }
+    switch (command.type) {
+        case AudioCommandType::Background:
+            player->PlayBackground(resolved, command.loop);
+            break;
+        case AudioCommandType::Effect:
+            player->PlayEffect(resolved, command.loop);
+            break;
+    }
+}
+
+std::filesystem::path CubeScript::ResolveScriptPath(const std::string& requested) const {
+    std::filesystem::path resolved(requested);
+    if (!resolved.is_absolute()) {
+        resolved = scriptDirectory_ / resolved;
+    }
+    std::error_code ec;
+    auto canonical = std::filesystem::weakly_canonical(resolved, ec);
+    if (!ec) {
+        resolved = canonical;
+    }
+    return resolved;
 }
 
 } // namespace sdl3cpp::script

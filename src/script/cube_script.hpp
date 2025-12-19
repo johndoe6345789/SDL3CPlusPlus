@@ -12,6 +12,10 @@
 
 #include "core/vertex.hpp"
 
+namespace sdl3cpp::app {
+class AudioPlayer;
+}
+
 namespace sdl3cpp::script {
 
 struct PhysicsBridge;
@@ -86,6 +90,11 @@ public:
         std::string shaderKey = "default";
     };
 
+    enum class AudioCommandType {
+        Background,
+        Effect,
+    };
+
     std::vector<SceneObject> LoadSceneObjects();
     std::array<float, 16> ComputeModelMatrix(int functionRef, float time);
     std::array<float, 16> GetViewProjectionMatrix(float aspect);
@@ -95,8 +104,19 @@ public:
     bool HasGuiCommands() const;
     std::filesystem::path GetScriptDirectory() const;
     PhysicsBridge& GetPhysicsBridge();
+    void SetAudioPlayer(app::AudioPlayer* audioPlayer);
+    bool QueueAudioCommand(AudioCommandType type, std::string path, bool loop, std::string& error);
 
 private:
+    struct AudioCommand {
+        AudioCommandType type = AudioCommandType::Background;
+        std::string path;
+        bool loop = false;
+    };
+
+    void ExecuteAudioCommand(app::AudioPlayer* player, const AudioCommand& command);
+    std::filesystem::path ResolveScriptPath(const std::string& requested) const;
+
     static std::vector<core::Vertex> ReadVertexArray(lua_State* L, int index);
     static std::vector<uint16_t> ReadIndexArray(lua_State* L, int index);
     static std::string LuaErrorMessage(lua_State* L);
@@ -111,6 +131,8 @@ private:
     std::filesystem::path scriptDirectory_;
     bool debugEnabled_ = false;
     std::unique_ptr<PhysicsBridge> physicsBridge_;
+    app::AudioPlayer* audioPlayer_ = nullptr;
+    std::vector<AudioCommand> pendingAudioCommands_;
 };
 
 } // namespace sdl3cpp::script
