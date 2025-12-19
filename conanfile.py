@@ -23,7 +23,6 @@ class SDL3CppConan(ConanFile):
         self.requires("vulkan-validationlayers/1.3.243.0")
         self.requires("ogg/1.3.5")
         self.requires("theora/1.1.1")
-        self.requires("rapidjson/1.1.0")
         self.requires("cli11/2.6.0")
         self.requires("bullet3/3.25")
         self.requires("box2d/3.1.1")

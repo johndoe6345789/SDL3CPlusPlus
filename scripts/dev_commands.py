@@ -30,7 +30,7 @@ SPINNING_BINARY = os.path.join(
 )
 
 ALIASES = {
-    "conan_detect": "conan profile detect",
+    "conan_detect": "conan profile detect -f",
     "conan_install": (
         "conan install . -of build -b missing "
         "-s compiler=msvc -s compiler.version=194 -s compiler.cppstd=17 "
