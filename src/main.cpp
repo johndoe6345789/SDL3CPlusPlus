@@ -136,15 +136,19 @@ struct AppOptions {
 AppOptions ParseCommandLine(int argc, char** argv) {
     std::string jsonInputText;
     std::string seedOutputText;
-    bool setDefaultJson = false;
+    std::string setDefaultJsonPath;
 
     CLI::App app("SDL3 + Vulkan runtime helper");
     app.add_option("-j,--json-file-in", jsonInputText, "Path to a runtime JSON config")
         ->check(CLI::ExistingFile);
     app.add_option("-s,--create-seed-json", seedOutputText,
                    "Write a template runtime JSON file");
-    app.add_flag("--set-default-json", setDefaultJson,
-                 "Persist the runtime JSON to the platform default location (XDG/APPDATA)");
+    auto* setDefaultJsonOption = app.add_option(
+        "--set-default-json", setDefaultJsonPath,
+        "Persist the runtime JSON to the platform default location (XDG/APPDATA); "
+        "pass a path to copy that JSON");
+    setDefaultJsonOption->type_name("PATH");
+    setDefaultJsonOption->type_size(0, 1);
 
     try {
         app.parse(argc, argv);
@@ -153,9 +157,17 @@ AppOptions ParseCommandLine(int argc, char** argv) {
         throw;
     }
 
+    bool shouldSaveDefault = setDefaultJsonOption->count() > 0;
+    std::optional<std::filesystem::path> providedDefaultPath;
+    if (shouldSaveDefault && !setDefaultJsonPath.empty()) {
+        providedDefaultPath = std::filesystem::absolute(setDefaultJsonPath);
+    }
+
     RuntimeConfig runtimeConfig;
     if (!jsonInputText.empty()) {
         runtimeConfig = LoadRuntimeConfigFromJson(std::filesystem::absolute(jsonInputText));
+    } else if (providedDefaultPath) {
+        runtimeConfig = LoadRuntimeConfigFromJson(*providedDefaultPath);
     } else if (auto defaultPath = GetDefaultConfigPath();
                defaultPath && std::filesystem::exists(*defaultPath)) {
         runtimeConfig = LoadRuntimeConfigFromJson(*defaultPath);
@@ -168,7 +180,7 @@ AppOptions ParseCommandLine(int argc, char** argv) {
     if (!seedOutputText.empty()) {
         options.seedOutput = std::filesystem::absolute(seedOutputText);
     }
-    options.saveDefaultJson = setDefaultJson;
+    options.saveDefaultJson = shouldSaveDefault;
     return options;
 }
 

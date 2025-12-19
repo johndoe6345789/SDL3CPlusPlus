@@ -31,7 +31,7 @@ If you need the Conan runtime environment (e.g., because dependencies set env va
 
 ## Runtime configuration
 
-`main.cpp` now uses a JSON-driven entrypoint. Use `sdl3_app --json-file-in <path>` to load a configuration that points at the Lua script and captures window dimensions, or run `sdl3_app --create-seed-json config/seed_runtime.json` to write a starter JSON file (based on the executable’s `scripts/cube_logic.lua` location). You can also use `sdl3_app --set-default-json` to store the current runtime JSON in the platform default directory (APPDATA on Windows, `XDG_CONFIG_HOME`/`$HOME/.config` elsewhere); when that default file exists, the app will pick it up automatically when launched without extra CLI options. If no JSON input is provided and no default exists, the app falls back to discovering `scripts/cube_logic.lua` next to the binary.
+`main.cpp` now uses a JSON-driven entrypoint. Use `sdl3_app --json-file-in <path>` to load a configuration that points at the Lua script and captures window dimensions, or run `sdl3_app --create-seed-json config/seed_runtime.json` to write a starter JSON file (based on the executable’s `scripts/cube_logic.lua` location). You can also use `sdl3_app --set-default-json` (optionally followed by an existing JSON path) to copy the runtime JSON to the platform default directory (APPDATA on Windows, `XDG_CONFIG_HOME`/`$HOME/.config` elsewhere); when that default file exists, the app picks it up automatically when launched without extra CLI options. If no JSON input is provided and no default exists, the app falls back to discovering `scripts/cube_logic.lua` next to the binary.
 
 ## Dependency automation
 
