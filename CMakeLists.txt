@@ -51,6 +51,7 @@ if(ENABLE_CLANG_TIDY)
     endif()
 endif()
 option(BUILD_SDL3_APP "Build the SDL3 Vulkan demo" ON)
+option(USE_SDL3 "Use SDL3 instead of SDL2" ON)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -71,8 +72,16 @@ endif()
 
 if(BUILD_SDL3_APP)
     find_package(Vulkan REQUIRED)
-    find_package(SDL3 CONFIG REQUIRED)
 endif()
+
+if(USE_SDL3)
+    find_package(SDL3 CONFIG REQUIRED)
+    set(SDL_TARGET SDL3::SDL3)
+else()
+    find_package(SDL2 CONFIG REQUIRED)
+    set(SDL_TARGET SDL2::SDL2)
+endif()
+
 find_package(lua CONFIG REQUIRED)
 find_package(CLI11 CONFIG REQUIRED)
 find_package(rapidjson CONFIG REQUIRED)
@@ -97,7 +106,7 @@ add_executable(sdl3_app
         src/script/cube_script.cpp
     )
     target_include_directories(sdl3_app PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-    target_link_libraries(sdl3_app PRIVATE SDL3::SDL3 Vulkan::Vulkan lua::lua CLI11::CLI11 rapidjson assimp::assimp Bullet::Bullet glm::glm Vorbis::vorbisfile Vorbis::vorbis)
+    target_link_libraries(sdl3_app PRIVATE ${SDL_TARGET} Vulkan::Vulkan lua::lua CLI11::CLI11 rapidjson assimp::assimp Bullet::Bullet glm::glm Vorbis::vorbisfile Vorbis::vorbis)
     target_compile_definitions(sdl3_app PRIVATE SDL_MAIN_HANDLED)
 
     file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/shaders" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
@@ -112,5 +121,5 @@ add_executable(cube_script_tests
     src/app/audio_player.cpp
 )
 target_include_directories(cube_script_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_link_libraries(cube_script_tests PRIVATE SDL3::SDL3 lua::lua assimp::assimp Bullet::Bullet glm::glm Vorbis::vorbisfile Vorbis::vorbis)
+target_link_libraries(cube_script_tests PRIVATE ${SDL_TARGET} lua::lua assimp::assimp Bullet::Bullet glm::glm Vorbis::vorbisfile Vorbis::vorbis)
 add_test(NAME cube_script_tests COMMAND cube_script_tests)
