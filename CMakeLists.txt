@@ -95,20 +95,20 @@ find_package(Vorbis CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 
 if(BUILD_SDL3_APP)
-add_executable(sdl3_app
-        src/main.cpp
-        src/app/sdl3_app_core.cpp
-        src/app/audio_player.cpp
-        src/app/sdl3_app_device.cpp
-        src/app/sdl3_app_swapchain.cpp
-        src/app/sdl3_app_pipeline.cpp
-        src/app/sdl3_app_build.cpp
-        src/app/sdl3_app_buffers.cpp
-        src/gui/gui_renderer.cpp
-        src/app/sdl3_app_render.cpp
-        src/app/vulkan_api.cpp
-        src/script/cube_script.cpp
-    )
+    add_executable(sdl3_app
+            src/main.cpp
+            src/app/sdl3_app_core.cpp
+            src/app/audio_player.cpp
+            src/app/sdl3_app_device.cpp
+            src/app/sdl3_app_swapchain.cpp
+            src/app/sdl3_app_pipeline.cpp
+            src/app/sdl3_app_build.cpp
+            src/app/sdl3_app_buffers.cpp
+            src/gui/gui_renderer.cpp
+            src/app/sdl3_app_render.cpp
+            src/app/vulkan_api.cpp
+            src/script/cube_script.cpp
+        )
     target_include_directories(sdl3_app PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
     target_link_libraries(sdl3_app PRIVATE ${SDL_TARGET} Vulkan::Vulkan lua::lua CLI11::CLI11 rapidjson assimp::assimp Bullet::Bullet glm::glm Vorbis::vorbisfile Vorbis::vorbis)
     target_compile_definitions(sdl3_app PRIVATE SDL_MAIN_HANDLED)
