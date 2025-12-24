@@ -82,20 +82,20 @@ find_package(Vorbis CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 
 if(BUILD_SDL3_APP)
-add_executable(sdl3_app
-        src/main.cpp
-        src/app/sdl3_app_core.cpp
-        src/app/audio_player.cpp
-        src/app/sdl3_app_device.cpp
-        src/app/sdl3_app_swapchain.cpp
-        src/app/sdl3_app_pipeline.cpp
-        src/app/sdl3_app_build.cpp
-        src/app/sdl3_app_buffers.cpp
-        src/gui/gui_renderer.cpp
-        src/app/sdl3_app_render.cpp
-        src/app/vulkan_api.cpp
-        src/script/cube_script.cpp
-    )
+    add_executable(sdl3_app
+            src/main.cpp
+            src/app/sdl3_app_core.cpp
+            src/app/audio_player.cpp
+            src/app/sdl3_app_device.cpp
+            src/app/sdl3_app_swapchain.cpp
+            src/app/sdl3_app_pipeline.cpp
+            src/app/sdl3_app_build.cpp
+            src/app/sdl3_app_buffers.cpp
+            src/gui/gui_renderer.cpp
+            src/app/sdl3_app_render.cpp
+            src/app/vulkan_api.cpp
+            src/script/cube_script.cpp
+        )
     target_include_directories(sdl3_app PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
     target_link_libraries(sdl3_app PRIVATE sdl::sdl Vulkan::Vulkan lua::lua CLI11::CLI11 rapidjson assimp::assimp Bullet::Bullet glm::glm Vorbis::vorbisfile Vorbis::vorbis)
     target_compile_definitions(sdl3_app PRIVATE SDL_MAIN_HANDLED)
@@ -106,11 +106,13 @@ endif()
 
 enable_testing()
 
-add_executable(cube_script_tests
-    tests/test_cube_script.cpp
-    src/script/cube_script.cpp
-    src/app/audio_player.cpp
-)
-target_include_directories(cube_script_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_link_libraries(cube_script_tests PRIVATE sdl::sdl lua::lua assimp::assimp Bullet::Bullet glm::glm Vorbis::vorbisfile Vorbis::vorbis)
-add_test(NAME cube_script_tests COMMAND cube_script_tests)
+if(BUILD_SDL3_APP)
+    add_executable(cube_script_tests
+        tests/test_cube_script.cpp
+        src/script/cube_script.cpp
+        src/app/audio_player.cpp
+    )
+    target_include_directories(cube_script_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+    target_link_libraries(cube_script_tests PRIVATE sdl::sdl lua::lua assimp::assimp Bullet::Bullet glm::glm Vorbis::vorbisfile Vorbis::vorbis)
+    add_test(NAME cube_script_tests COMMAND cube_script_tests)
+endif()
