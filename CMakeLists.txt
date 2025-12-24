@@ -118,8 +118,13 @@ if(BUILD_SDL3_APP)
     target_link_libraries(sdl3_app PRIVATE ${SDL_TARGET} Vulkan::Vulkan lua::lua CLI11::CLI11 rapidjson assimp::assimp Bullet::Bullet glm::glm Vorbis::vorbisfile Vorbis::vorbis)
     target_compile_definitions(sdl3_app PRIVATE SDL_MAIN_HANDLED)
 
-    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/shaders" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
-    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/scripts" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/shaders")
+        file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/shaders" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+    endif()
+
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/scripts")
+        file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/scripts" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+    endif()
 endif()
 
 enable_testing()
