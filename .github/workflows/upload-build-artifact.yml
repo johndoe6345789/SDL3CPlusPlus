@@ -12,15 +12,25 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: linux-amd64
+          - name: linux-amd64-sdl3
             platform: linux
             arch: amd64
-          - name: linux-arm64
+            sdl_version: SDL3
+          - name: linux-arm64-sdl3
             platform: linux
             arch: arm64
+            sdl_version: SDL3
+          - name: linux-amd64-sdl
+            platform: linux
+            arch: amd64
+            sdl_version: sdl
+          - name: linux-arm64-sdl
+            platform: linux
+            arch: arm64
+            sdl_version: sdl
     runs-on: ubuntu-24.04
     env:
-      BUILD_DIR: build/${{ matrix.platform }}-${{ matrix.arch }}
+      BUILD_DIR: build/${{ matrix.platform }}-${{ matrix.arch }}-${{ matrix.sdl_version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -49,20 +59,22 @@ jobs:
         if: matrix.platform == 'linux'
         env:
           BUILD_DIR: ${{ env.BUILD_DIR }}
+          SDL_VERSION: ${{ matrix.sdl_version }}
         run: |
           docker run --rm \
             -e BUILD_DIR \
+            -e SDL_VERSION \
             -w /workspace \
             -v "${{ github.workspace }}:/workspace" \
             sdl3_app:${{ matrix.platform }}-${{ matrix.arch }} \
             bash -c 'set -euo pipefail
               if [ -d "$BUILD_DIR" ]; then rm -rf "$BUILD_DIR"; fi
               cp -a /conan_build "$BUILD_DIR"
-              cmake -S . -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release
+              cmake -S . -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release -DSDL_VERSION="$SDL_VERSION"
               cmake --build "$BUILD_DIR" --config Release'
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: build-${{ matrix.platform }}-${{ matrix.arch }}
+          name: build-${{ matrix.platform }}-${{ matrix.arch }}-${{ matrix.sdl_version }}
           path: ${{ env.BUILD_DIR }}
