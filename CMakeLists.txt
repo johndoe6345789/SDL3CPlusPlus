@@ -54,6 +54,11 @@ option(BUILD_SDL3_APP "Build the SDL3 Vulkan demo" ON)
 set(SDL_VERSION "SDL3" CACHE STRING "SDL version to use: SDL3 or sdl")
 set_property(CACHE SDL_VERSION PROPERTY STRINGS "SDL3" "sdl")
 
+if(BUILD_SDL3_APP AND NOT SDL_VERSION STREQUAL "SDL3")
+    message(STATUS "Disabling BUILD_SDL3_APP because SDL_VERSION is set to '${SDL_VERSION}' instead of SDL3")
+    set(BUILD_SDL3_APP OFF CACHE BOOL "Build the SDL3 Vulkan demo" FORCE)
+endif()
+
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
