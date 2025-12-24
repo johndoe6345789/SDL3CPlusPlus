@@ -28,6 +28,10 @@ python -m piper.download_voices en_US-lessac-medium --download-dir scripts/asset
 
 Running the generator recreates procedural effects under `scripts/assets/audio/sfx/` and voice clips under `scripts/assets/audio/tts/`. Use `--force` to rebuild every file and `--skip-sfx` / `--skip-tts` if you only need one subset; add `--verbose` to see the internal logging as the files are created. Override the voice files with `--piper-voice-model <path>` and (optionally) `--piper-voice-config <path>` if you downloaded a different voice or location. Pass `--download-voice` to have the script invoke `piper.download_voices` automatically before rendering (requires `piper-tts` and network access).
 
+### GitHub Actions workflow diagnostics
+- `python -m pip install pyyaml` installs the YAML dependency for the workflow analyzer.
+- `python scripts/workflow_doctor.py [--workflows-dir .github/workflows]` inspects workflows for missing permissions, floating action references, and other reproducibility/security hints.
+
 ## Runtime configuration
 1. `sdl3_app --json-file-in <path>` loads JSON configs (script path, window size, `lua_debug`, etc.).
 2. `sdl3_app --create-seed-json config/seed_runtime.json` writes a starter file assuming `scripts/cube_logic.lua` sits beside the binary.
