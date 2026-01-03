@@ -114,6 +114,9 @@ if(BUILD_SDL3_APP)
             src/app/vulkan_api.cpp
             src/script/script_engine.cpp
             src/script/physics_bridge.cpp
+            src/script/lua_helpers.cpp
+            src/script/lua_bindings.cpp
+            src/script/mesh_loader.cpp
         )
     target_include_directories(sdl3_app PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
     target_link_libraries(sdl3_app PRIVATE ${SDL_TARGET} Vulkan::Vulkan lua::lua CLI11::CLI11 rapidjson assimp::assimp Bullet::Bullet glm::glm Vorbis::vorbisfile Vorbis::vorbis)
@@ -138,6 +141,9 @@ add_executable(script_engine_tests
     tests/test_cube_script.cpp
     src/script/script_engine.cpp
     src/script/physics_bridge.cpp
+    src/script/lua_helpers.cpp
+    src/script/lua_bindings.cpp
+    src/script/mesh_loader.cpp
     src/app/audio_player.cpp
 )
 target_include_directories(script_engine_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
