@@ -93,7 +93,7 @@ endif()
 
 find_package(lua CONFIG REQUIRED)
 find_package(CLI11 CONFIG REQUIRED)
-find_package(rapidjson CONFIG REQUIRED)
+find_package(RapidJSON CONFIG REQUIRED)
 find_package(assimp CONFIG REQUIRED)
 find_package(Bullet CONFIG REQUIRED)
 find_package(Vorbis CONFIG REQUIRED)

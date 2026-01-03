@@ -33,3 +33,4 @@ class SDL3CppConan(ConanFile):
         self.requires("assimp/6.0.2")
         self.requires("glm/1.0.1")
         self.requires("vorbis/1.3.7")
+        self.requires("rapidjson/cci.20230929")
