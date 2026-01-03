@@ -34,7 +34,17 @@ void Sdl3App::CreateInstance() {
     createInfo.ppEnabledExtensionNames = extensionList.data();
 
     if (vkCreateInstance(&createInfo, nullptr, &instance_) != VK_SUCCESS) {
-        throw std::runtime_error("Failed to create Vulkan instance");
+        std::string errorMsg = "Failed to create Vulkan instance. This may be due to:\n";
+        errorMsg += "- Missing or outdated Vulkan drivers\n";
+        errorMsg += "- Incompatible GPU\n";
+        errorMsg += "- Missing required Vulkan extensions\n\n";
+        errorMsg += "Required extensions (" + std::to_string(extensionList.size()) + "):\n";
+        for (const auto* ext : extensionList) {
+            errorMsg += "  - ";
+            errorMsg += ext;
+            errorMsg += "\n";
+        }
+        throw std::runtime_error(errorMsg);
     }
 }
 
@@ -50,20 +60,35 @@ void Sdl3App::PickPhysicalDevice() {
     uint32_t deviceCount = 0;
     vkEnumeratePhysicalDevices(instance_, &deviceCount, nullptr);
     if (deviceCount == 0) {
-        throw std::runtime_error("Failed to find GPUs with Vulkan support");
+        throw std::runtime_error("Failed to find GPUs with Vulkan support.\n\nPlease ensure:\n- You have a compatible GPU\n- Vulkan drivers are properly installed\n- Your GPU supports Vulkan 1.2 or higher");
     }
     std::vector<VkPhysicalDevice> devices(deviceCount);
     vkEnumeratePhysicalDevices(instance_, &deviceCount, devices.data());
 
-    for (const auto& device : devices) {
-        if (IsDeviceSuitable(device)) {
-            physicalDevice_ = device;
+    std::string deviceInfo;
+    for (size_t i = 0; i < devices.size(); ++i) {
+        VkPhysicalDeviceProperties props;
+        vkGetPhysicalDeviceProperties(devices[i], &props);
+        deviceInfo += "\nGPU " + std::to_string(i) + ": " + props.deviceName;
+        if (IsDeviceSuitable(devices[i])) {
+            physicalDevice_ = devices[i];
+            deviceInfo += " [SELECTED]";
             break;
+        } else {
+            deviceInfo += " [UNSUITABLE]";
         }
     }
 
     if (physicalDevice_ == VK_NULL_HANDLE) {
-        throw std::runtime_error("Failed to find a suitable GPU");
+        std::string errorMsg = "Failed to find a suitable GPU.\n\n";
+        errorMsg += "Found " + std::to_string(deviceCount) + " GPU(s), but none meet the requirements.";
+        errorMsg += deviceInfo;
+        errorMsg += "\n\nRequired features:\n";
+        errorMsg += "- Graphics queue support\n";
+        errorMsg += "- Present queue support\n";
+        errorMsg += "- Swapchain extension support (VK_KHR_swapchain)\n";
+        errorMsg += "- Adequate swapchain formats and present modes\n";
+        throw std::runtime_error(errorMsg);
     }
 }
 
@@ -143,8 +168,16 @@ bool Sdl3App::CheckDeviceExtensionSupport(VkPhysicalDevice device) {
     vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
 
     std::set<std::string> requiredExtensions(kDeviceExtensions.begin(), kDeviceExtensions.end());
+    
     for (const auto& extension : availableExtensions) {
         requiredExtensions.erase(extension.extensionName);
+    }
+    
+    if (!requiredExtensions.empty()) {
+        std::cerr << "Missing required device extensions:\n";
+        for (const auto& missing : requiredExtensions) {
+            std::cerr << "  - " << missing << "\n";
+        }
     }
 
     return requiredExtensions.empty();

@@ -312,6 +312,12 @@ int main(int argc, char** argv) {
         app.Run();
     } catch (const std::exception& e) {
         std::cerr << "ERROR: " << e.what() << '\n';
+        // Show error dialog if SDL is available
+        SDL_ShowSimpleMessageBox(
+            SDL_MESSAGEBOX_ERROR,
+            "Application Error",
+            e.what(),
+            nullptr);
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;

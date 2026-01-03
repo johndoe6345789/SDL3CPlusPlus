@@ -16,14 +16,32 @@ namespace sdl3cpp::app {
 
 std::vector<char> ReadFile(const std::string& path) {
     TRACE_FUNCTION();
+    
+    // Validate file exists before attempting to open
+    if (!std::filesystem::exists(path)) {
+        throw std::runtime_error("File not found: " + path + 
+            "\n\nPlease ensure the file exists at this location.");
+    }
+    
+    if (!std::filesystem::is_regular_file(path)) {
+        throw std::runtime_error("Path is not a regular file: " + path);
+    }
+    
     std::ifstream file(path, std::ios::ate | std::ios::binary);
     if (!file) {
-        throw std::runtime_error("failed to open file: " + path);
+        throw std::runtime_error("Failed to open file: " + path + 
+            "\n\nThe file exists but cannot be opened. Check file permissions.");
     }
     size_t size = static_cast<size_t>(file.tellg());
+    if (size == 0) {
+        throw std::runtime_error("File is empty: " + path);
+    }
     std::vector<char> buffer(size);
     file.seekg(0);
     file.read(buffer.data(), buffer.size());
+    if (!file) {
+        throw std::runtime_error("Failed to read file contents: " + path);
+    }
     return buffer;
 }
 
@@ -81,6 +99,14 @@ void ThrowSdlErrorIfFailed(bool success, const char* context) {
     }
 }
 
+void ShowErrorDialog(const char* title, const std::string& message) {
+    SDL_ShowSimpleMessageBox(
+        SDL_MESSAGEBOX_ERROR,
+        title,
+        message.c_str(),
+        nullptr);
+}
+
 } // namespace
 
 Sdl3App::Sdl3App(const std::filesystem::path& scriptPath, bool luaDebug)
@@ -102,11 +128,29 @@ void Sdl3App::InitSDL() {
     TRACE_FUNCTION();
     TRACE_VAR(kWidth);
     TRACE_VAR(kHeight);
-    ThrowSdlErrorIfFailed(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO), "SDL_Init failed");
-    ThrowSdlErrorIfFailed(SDL_Vulkan_LoadLibrary(nullptr), "SDL_Vulkan_LoadLibrary failed");
+    
+    try {
+        ThrowSdlErrorIfFailed(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO), "SDL_Init failed");
+    } catch (const std::exception& e) {
+        ShowErrorDialog("SDL Initialization Failed", 
+            std::string("Failed to initialize SDL subsystems.\n\nError: ") + e.what());
+        throw;
+    }
+    
+    try {
+        ThrowSdlErrorIfFailed(SDL_Vulkan_LoadLibrary(nullptr), "SDL_Vulkan_LoadLibrary failed");
+    } catch (const std::exception& e) {
+        ShowErrorDialog("Vulkan Library Load Failed", 
+            std::string("Failed to load Vulkan library. Make sure Vulkan drivers are installed.\n\nError: ") + e.what());
+        throw;
+    }
+    
     window_ = SDL_CreateWindow("SDL3 Vulkan Demo", kWidth, kHeight, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
     if (!window_) {
-        throw std::runtime_error(BuildSdlErrorMessage("SDL_CreateWindow failed"));
+        std::string errorMsg = BuildSdlErrorMessage("SDL_CreateWindow failed");
+        ShowErrorDialog("Window Creation Failed", 
+            std::string("Failed to create application window.\n\nError: ") + errorMsg);
+        throw std::runtime_error(errorMsg);
     }
     TRACE_VAR(window_);
     SDL_StartTextInput(window_);
@@ -120,22 +164,53 @@ void Sdl3App::InitSDL() {
 
 void Sdl3App::InitVulkan() {
     TRACE_FUNCTION();
-    CreateInstance();
-    CreateSurface();
-    PickPhysicalDevice();
-    CreateLogicalDevice();
-    CreateSwapChain();
-    SetupGuiRenderer();
-    CreateImageViews();
-    CreateRenderPass();
-    LoadSceneData();
-    CreateGraphicsPipeline();
-    CreateFramebuffers();
-    CreateCommandPool();
-    CreateVertexBuffer();
-    CreateIndexBuffer();
-    CreateCommandBuffers();
-    CreateSyncObjects();
+    try {
+        CreateInstance();
+    } catch (const std::exception& e) {
+        ShowErrorDialog("Vulkan Instance Creation Failed", e.what());
+        throw;
+    }
+    
+    try {
+        CreateSurface();
+    } catch (const std::exception& e) {
+        ShowErrorDialog("Vulkan Surface Creation Failed", e.what());
+        throw;
+    }
+    
+    try {
+        PickPhysicalDevice();
+    } catch (const std::exception& e) {
+        ShowErrorDialog("GPU Selection Failed", e.what());
+        throw;
+    }
+    
+    try {
+        CreateLogicalDevice();
+    } catch (const std::exception& e) {
+        ShowErrorDialog("Logical Device Creation Failed", e.what());
+        throw;
+    }
+    
+    try {
+        CreateSwapChain();
+        SetupGuiRenderer();
+        CreateImageViews();
+        CreateRenderPass();
+        LoadSceneData();
+        CreateGraphicsPipeline();
+        CreateFramebuffers();
+        CreateCommandPool();
+        CreateVertexBuffer();
+        CreateIndexBuffer();
+        CreateCommandBuffers();
+        CreateSyncObjects();
+    } catch (const std::exception& e) {
+        std::string errorMsg = "Vulkan initialization failed during resource setup:\n\n";
+        errorMsg += e.what();
+        ShowErrorDialog("Vulkan Resource Setup Failed", errorMsg);
+        throw;
+    }
 }
 
 void Sdl3App::MainLoop() {

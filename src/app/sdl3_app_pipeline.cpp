@@ -136,6 +136,20 @@ void Sdl3App::CreateGraphicsPipeline() {
     pipelineInfo.subpass = 0;
 
     for (const auto& [key, paths] : shaderPathMap_) {
+        // Validate shader files exist before attempting to load
+        if (!std::filesystem::exists(paths.vertex)) {
+            throw std::runtime_error(
+                "Vertex shader not found: " + paths.vertex + 
+                "\n\nShader key: " + key +
+                "\n\nPlease ensure shader files are compiled and present in the shaders directory.");
+        }
+        if (!std::filesystem::exists(paths.fragment)) {
+            throw std::runtime_error(
+                "Fragment shader not found: " + paths.fragment + 
+                "\n\nShader key: " + key +
+                "\n\nPlease ensure shader files are compiled and present in the shaders directory.");
+        }
+        
         auto vertShaderCode = ReadFile(paths.vertex);
         auto fragShaderCode = ReadFile(paths.fragment);
 
