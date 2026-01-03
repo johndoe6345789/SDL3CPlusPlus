@@ -97,6 +97,7 @@ private:
     void DrawFrame(float time);
     void SetupGuiRenderer();
     void ProcessGuiEvent(const SDL_Event& event);
+    void PrintGpuDiagnostics(const std::string& errorContext);
 
     QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
     bool CheckDeviceExtensionSupport(VkPhysicalDevice device);
