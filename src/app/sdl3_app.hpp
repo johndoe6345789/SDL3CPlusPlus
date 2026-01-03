@@ -59,6 +59,7 @@ class Sdl3App {
 public:
     explicit Sdl3App(const std::filesystem::path& scriptPath, bool luaDebug = false);
     void Run();
+    static bool ShouldStop();
 
 private:
     struct RenderObject {

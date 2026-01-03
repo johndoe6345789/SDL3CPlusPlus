@@ -2,7 +2,9 @@
 #include "app/sdl3_app.hpp"
 #include "app/trace.hpp"
 
+#include <atomic>
 #include <chrono>
+#include <csignal>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -13,6 +15,8 @@
 #endif
 
 namespace sdl3cpp::app {
+
+extern std::atomic<bool> g_signalReceived;
 
 std::vector<char> ReadFile(const std::string& path) {
     TRACE_FUNCTION();
@@ -114,6 +118,10 @@ Sdl3App::Sdl3App(const std::filesystem::path& scriptPath, bool luaDebug)
       scriptDirectory_(scriptPath.parent_path()) {
     TRACE_FUNCTION();
     TRACE_VAR(scriptPath);
+}
+
+bool Sdl3App::ShouldStop() {
+    return g_signalReceived.load();
 }
 
 void Sdl3App::Run() {
@@ -219,6 +227,10 @@ void Sdl3App::MainLoop() {
     bool running = true;
     auto start = std::chrono::steady_clock::now();
     while (running) {
+        if (ShouldStop()) {
+            running = false;
+            break;
+        }
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_EVENT_QUIT) {

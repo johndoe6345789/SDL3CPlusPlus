@@ -5,6 +5,8 @@
 #include <rapidjson/writer.h>
 #include <rapidjson/prettywriter.h>
 
+#include <atomic>
+#include <csignal>
 #include <cstdlib>
 #include <cstdint>
 #include <exception>
@@ -20,7 +22,22 @@
 #include "app/sdl3_app.hpp"
 #include <SDL3/SDL_main.h>
 
+namespace sdl3cpp::app {
+std::atomic<bool> g_signalReceived{false};
+}
+
 namespace {
+
+void SignalHandler(int signal) {
+    if (signal == SIGINT || signal == SIGTERM) {
+        sdl3cpp::app::g_signalReceived.store(true);
+    }
+}
+
+void SetupSignalHandlers() {
+    std::signal(SIGINT, SignalHandler);
+    std::signal(SIGTERM, SignalHandler);
+}
 
 std::filesystem::path FindScriptPath(const char* argv0) {
     std::filesystem::path executable;
@@ -294,6 +311,7 @@ void WriteRuntimeConfigJson(const RuntimeConfig& runtimeConfig,
 
 int main(int argc, char** argv) {
     SDL_SetMainReady();
+    SetupSignalHandlers();
     try {
         AppOptions options = ParseCommandLine(argc, argv);
         sdl3cpp::app::TraceLogger::SetEnabled(options.traceEnabled);
