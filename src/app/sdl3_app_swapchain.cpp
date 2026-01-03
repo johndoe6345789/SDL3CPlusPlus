@@ -179,11 +179,43 @@ void Sdl3App::RecreateSwapChain() {
     TRACE_FUNCTION();
     int width = 0;
     int height = 0;
+    
+    // Escape hatch: Maximum 100 attempts (10 seconds at 100ms/iteration)
+    constexpr int kMaxAttempts = 100;
+    int attempts = 0;
+    
     while (width == 0 || height == 0) {
+        // Escape hatch 1: Check for signal (Ctrl+C)
+        if (ShouldStop()) {
+            std::cerr << "Received stop signal while waiting for valid window dimensions\n";
+            throw std::runtime_error("Application shutdown requested");
+        }
+        
+        // Escape hatch 2: Timeout after maximum attempts
+        if (attempts >= kMaxAttempts) {
+            std::cerr << "Timeout waiting for valid window dimensions after " << attempts << " attempts\n";
+            std::cerr << "Window size stuck at: " << width << "x" << height << "\n";
+            throw std::runtime_error("Window resize timeout: dimensions remain 0x0");
+        }
+        
         SDL_GetWindowSize(window_, &width, &height);
-        SDL_Event event;
-        SDL_WaitEvent(&event);
+        
+        if (width == 0 || height == 0) {
+            // Use SDL_WaitEventTimeout instead of SDL_WaitEvent to avoid blocking indefinitely
+            SDL_Event event;
+            SDL_WaitEventTimeout(&event, 100); // 100ms timeout
+            attempts++;
+            
+            // Log periodically for debugging
+            if (attempts % 10 == 0) {
+                std::cerr << "Still waiting for valid window dimensions (attempt " 
+                         << attempts << "/" << kMaxAttempts << "): " 
+                         << width << "x" << height << "\n";
+            }
+        }
     }
+    
+    std::cout << "Window resize resolved: " << width << "x" << height << "\n";
     vkDeviceWaitIdle(device_);
     CleanupSwapChain();
     CreateSwapChain();
