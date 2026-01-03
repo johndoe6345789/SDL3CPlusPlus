@@ -1,4 +1,5 @@
 from conan import ConanFile
+from conan.tools.cmake import cmake_layout
 
 class SDL3CppConan(ConanFile):
     name = "sdl3cpp"
@@ -13,6 +14,9 @@ class SDL3CppConan(ConanFile):
         "lua/*:with_tools": False,
     }
     generators = "CMakeDeps", "CMakeToolchain", "VirtualRunEnv"
+
+    def layout(self):
+        cmake_layout(self)
 
     def requirements(self):
         self.requires("lua/5.4.8")
