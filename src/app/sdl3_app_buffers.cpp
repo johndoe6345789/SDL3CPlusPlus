@@ -55,8 +55,15 @@ void Sdl3App::LoadSceneData() {
 
 void Sdl3App::CreateVertexBuffer() {
     TRACE_FUNCTION();
+    if (vertices_.empty()) {
+        throw std::runtime_error("Cannot create vertex buffer: no vertices loaded");
+    }
     VkDeviceSize bufferSize = sizeof(vertices_[0]) * vertices_.size();
     TRACE_VAR(bufferSize);
+    std::cout << "Creating vertex buffer: " << vertices_.size() << " vertices (" 
+              << (bufferSize / 1024) << " KB)\n";
+    std::cout.flush();
+    
     vulkan::CreateBuffer(device_, physicalDevice_, bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, vertexBuffer_,
                          vertexBufferMemory_);
@@ -69,8 +76,15 @@ void Sdl3App::CreateVertexBuffer() {
 
 void Sdl3App::CreateIndexBuffer() {
     TRACE_FUNCTION();
+    if (indices_.empty()) {
+        throw std::runtime_error("Cannot create index buffer: no indices loaded");
+    }
     VkDeviceSize bufferSize = sizeof(indices_[0]) * indices_.size();
     TRACE_VAR(bufferSize);
+    std::cout << "Creating index buffer: " << indices_.size() << " indices (" 
+              << (bufferSize / 1024) << " KB)\n";
+    std::cout.flush();
+    
     vulkan::CreateBuffer(device_, physicalDevice_, bufferSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, indexBuffer_,
                          indexBufferMemory_);

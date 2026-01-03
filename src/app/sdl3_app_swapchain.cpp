@@ -9,6 +9,36 @@ namespace sdl3cpp::app {
 void Sdl3App::CreateSwapChain() {
     TRACE_FUNCTION();
     SwapChainSupportDetails support = QuerySwapChainSupport(physicalDevice_);
+    
+    // Validate swap chain support
+    if (support.formats.empty()) {
+        throw std::runtime_error("No surface formats available for swap chain.\n"
+            "This may indicate GPU driver issues or incompatible surface.");
+    }
+    if (support.presentModes.empty()) {
+        throw std::runtime_error("No present modes available for swap chain.\n"
+            "This may indicate GPU driver issues or incompatible surface.");
+    }
+    
+    // Validate window dimensions
+    int windowWidth = 0, windowHeight = 0;
+    SDL_GetWindowSize(window_, &windowWidth, &windowHeight);
+    std::cout << "Window size: " << windowWidth << "x" << windowHeight << "\n";
+    
+    if (windowWidth == 0 || windowHeight == 0) {
+        throw std::runtime_error("Invalid window dimensions (" + 
+            std::to_string(windowWidth) + "x" + std::to_string(windowHeight) + ").\n" +
+            "Window may be minimized or invalid.");
+    }
+    
+    std::cout << "Surface capabilities:\n";
+    std::cout << "  Min extent: " << support.capabilities.minImageExtent.width 
+              << "x" << support.capabilities.minImageExtent.height << "\n";
+    std::cout << "  Max extent: " << support.capabilities.maxImageExtent.width 
+              << "x" << support.capabilities.maxImageExtent.height << "\n";
+    std::cout << "  Min images: " << support.capabilities.minImageCount << "\n";
+    std::cout << "  Max images: " << support.capabilities.maxImageCount << "\n";
+    std::cout.flush();
 
     VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(support.formats);
     VkPresentModeKHR presentMode = ChooseSwapPresentMode(support.presentModes);

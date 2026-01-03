@@ -9,6 +9,36 @@ namespace sdl3cpp::app {
 
 void Sdl3App::CreateInstance() {
     TRACE_FUNCTION();
+    
+    // Early validation: Check if Vulkan is available
+    uint32_t apiVersion = 0;
+    VkResult enumResult = vkEnumerateInstanceVersion(&apiVersion);
+    if (enumResult != VK_SUCCESS) {
+        std::string errorMsg = "Vulkan is not available on this system.\n\n";
+        errorMsg += "Please install Vulkan drivers:\n";
+        errorMsg += "- Ubuntu/Debian: sudo apt install vulkan-tools libvulkan1\n";
+        errorMsg += "- Fedora: sudo dnf install vulkan-tools vulkan-loader\n";
+        errorMsg += "- Arch: sudo pacman -S vulkan-tools vulkan-icd-loader\n";
+        errorMsg += "\nFor NVIDIA GPUs, install: nvidia-vulkan-icd\n";
+        errorMsg += "For AMD GPUs, install: mesa-vulkan-drivers\n";
+        throw std::runtime_error(errorMsg);
+    }
+    
+    uint32_t major = VK_API_VERSION_MAJOR(apiVersion);
+    uint32_t minor = VK_API_VERSION_MINOR(apiVersion);
+    uint32_t patch = VK_API_VERSION_PATCH(apiVersion);
+    std::cout << "Vulkan Version: " << major << "." << minor << "." << patch << "\n";
+    std::cout.flush();
+    
+    if (apiVersion < VK_API_VERSION_1_2) {
+        std::string errorMsg = "Vulkan version is too old.\n";
+        errorMsg += "Required: 1.2 or higher\n";
+        errorMsg += "Found: " + std::to_string(major) + "." + std::to_string(minor);
+        errorMsg += "." + std::to_string(patch) + "\n\n";
+        errorMsg += "Please update your GPU drivers.";
+        throw std::runtime_error(errorMsg);
+    }
+    
     VkApplicationInfo appInfo{};
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     appInfo.pApplicationName = "SDL3 Vulkan";
@@ -58,7 +88,11 @@ void Sdl3App::CreateSurface() {
 void Sdl3App::PickPhysicalDevice() {
     TRACE_FUNCTION();
     uint32_t deviceCount = 0;
-    vkEnumeratePhysicalDevices(instance_, &deviceCount, nullptr);
+    VkResult enumResult = vkEnumeratePhysicalDevices(instance_, &deviceCount, nullptr);
+    if (enumResult != VK_SUCCESS) {
+        throw std::runtime_error("Failed to enumerate physical devices (error code: " + 
+            std::to_string(enumResult) + ")");
+    }
     if (deviceCount == 0) {
         throw std::runtime_error("Failed to find GPUs with Vulkan support.\n\nPlease ensure:\n- You have a compatible GPU\n- Vulkan drivers are properly installed\n- Your GPU supports Vulkan 1.2 or higher");
     }
@@ -66,18 +100,38 @@ void Sdl3App::PickPhysicalDevice() {
     vkEnumeratePhysicalDevices(instance_, &deviceCount, devices.data());
 
     std::string deviceInfo;
+    std::cout << "\n=== GPU Detection ===\n";
     for (size_t i = 0; i < devices.size(); ++i) {
         VkPhysicalDeviceProperties props;
         vkGetPhysicalDeviceProperties(devices[i], &props);
+        
+        VkPhysicalDeviceMemoryProperties memProps;
+        vkGetPhysicalDeviceMemoryProperties(devices[i], &memProps);
+        
+        uint64_t totalMemory = 0;
+        for (uint32_t j = 0; j < memProps.memoryHeapCount; ++j) {
+            if (memProps.memoryHeaps[j].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT) {
+                totalMemory += memProps.memoryHeaps[j].size;
+            }
+        }
+        
         deviceInfo += "\nGPU " + std::to_string(i) + ": " + props.deviceName;
+        deviceInfo += " (VRAM: " + std::to_string(totalMemory / (1024 * 1024)) + " MB)";
+        std::cout << "GPU " << i << ": " << props.deviceName 
+                  << " (VRAM: " << (totalMemory / (1024 * 1024)) << " MB)\n";
+        
         if (IsDeviceSuitable(devices[i])) {
             physicalDevice_ = devices[i];
             deviceInfo += " [SELECTED]";
+            std::cout << "  -> SELECTED\n";
             break;
         } else {
             deviceInfo += " [UNSUITABLE]";
+            std::cout << "  -> UNSUITABLE (missing required features)\n";
         }
     }
+    std::cout << "==================\n\n";
+    std::cout.flush();
 
     if (physicalDevice_ == VK_NULL_HANDLE) {
         std::string errorMsg = "Failed to find a suitable GPU.\n\n";
