@@ -125,6 +125,10 @@ if(BUILD_SDL3_APP)
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/scripts")
         file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/scripts" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
     endif()
+
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/config")
+        file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/config" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+    endif()
 endif()
 
 enable_testing()
