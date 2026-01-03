@@ -226,7 +226,43 @@ void Sdl3App::MainLoop() {
     TRACE_VAR(guiHasCommands_);
     bool running = true;
     auto start = std::chrono::steady_clock::now();
+    auto lastProgressTime = start;
+    
+    // Launch timeout: app must complete first frame within this time
+    constexpr auto kLaunchTimeout = std::chrono::seconds(5);
+    
     while (running) {
+        auto now = std::chrono::steady_clock::now();
+        
+        // Check for launch timeout if first frame hasn't completed
+        if (!firstFrameCompleted_) {
+            auto elapsed = now - start;
+            if (elapsed > kLaunchTimeout) {
+                std::cerr << "\n=== LAUNCH TIMEOUT ===";
+                std::cerr << "\nApplication failed to render first frame within "
+                          << std::chrono::duration_cast<std::chrono::seconds>(kLaunchTimeout).count()
+                          << " seconds.\n";
+                std::cerr << "This typically indicates:\n";
+                std::cerr << "  - GPU driver issue or incompatibility\n";
+                std::cerr << "  - Window manager/compositor problem\n";
+                std::cerr << "  - Vulkan swapchain configuration mismatch\n";
+                std::cerr << "\nTroubleshooting suggestions:\n";
+                std::cerr << "  - Update GPU drivers\n";
+                std::cerr << "  - Try disabling compositor (if using X11/Wayland)\n";
+                std::cerr << "  - Check dmesg/journalctl for GPU errors\n";
+                std::cerr << "  - Run with VK_LOADER_DEBUG=all for detailed Vulkan logs\n";
+                std::cerr << "======================\n" << std::flush;
+                throw std::runtime_error("Launch timeout: First frame did not complete");
+            }
+            
+            // Print progress indicator every second during launch
+            if (now - lastProgressTime > std::chrono::seconds(1)) {
+                auto waitTime = std::chrono::duration_cast<std::chrono::seconds>(elapsed).count();
+                std::cout << "Waiting for first frame... (" << waitTime << "s)\n" << std::flush;
+                lastProgressTime = now;
+            }
+        }
+        
         if (ShouldStop()) {
             running = false;
             break;
@@ -254,7 +290,6 @@ void Sdl3App::MainLoop() {
         guiInputSnapshot_.wheel = 0.0f;
         guiInputSnapshot_.textInput.clear();
 
-        auto now = std::chrono::steady_clock::now();
         float time = std::chrono::duration<float>(now - start).count();
         DrawFrame(time);
     }

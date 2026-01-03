@@ -328,9 +328,35 @@ int main(int argc, char** argv) {
         }
         sdl3cpp::app::Sdl3App app(options.runtimeConfig.scriptPath, options.runtimeConfig.luaDebug);
         app.Run();
+    } catch (const std::runtime_error& e) {
+        std::string errorMsg = e.what();
+        std::cerr << "\nERROR: " << errorMsg << '\n';
+        
+        // Check if this is a timeout/hang error - show simpler message for these
+        bool isTimeoutError = errorMsg.find("timeout") != std::string::npos ||
+                             errorMsg.find("Launch timeout") != std::string::npos ||
+                             errorMsg.find("Swapchain recreation loop") != std::string::npos;
+        
+        if (!isTimeoutError) {
+            // For non-timeout errors, show full error dialog
+            SDL_ShowSimpleMessageBox(
+                SDL_MESSAGEBOX_ERROR,
+                "Application Error",
+                errorMsg.c_str(),
+                nullptr);
+        } else {
+            // For timeout errors, the console output already has diagnostic info
+            // Just show a brief dialog
+            std::string briefMsg = "Application failed to launch. Check console output for details.";
+            SDL_ShowSimpleMessageBox(
+                SDL_MESSAGEBOX_ERROR,
+                "Launch Failed",
+                briefMsg.c_str(),
+                nullptr);
+        }
+        return EXIT_FAILURE;
     } catch (const std::exception& e) {
-        std::cerr << "ERROR: " << e.what() << '\n';
-        // Show error dialog if SDL is available
+        std::cerr << "\nERROR: " << e.what() << '\n';
         SDL_ShowSimpleMessageBox(
             SDL_MESSAGEBOX_ERROR,
             "Application Error",

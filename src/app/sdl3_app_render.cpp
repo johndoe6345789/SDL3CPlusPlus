@@ -135,16 +135,47 @@ void Sdl3App::SetupGuiRenderer() {
 
 void Sdl3App::DrawFrame(float time) {
     TRACE_FUNCTION();
-    vkWaitForFences(device_, 1, &inFlightFence_, VK_TRUE, std::numeric_limits<uint64_t>::max());
+    
+    // Use reasonable timeout instead of infinite wait (5 seconds)
+    constexpr uint64_t kFenceTimeout = 5000000000ULL; // 5 seconds in nanoseconds
+    VkResult fenceResult = vkWaitForFences(device_, 1, &inFlightFence_, VK_TRUE, kFenceTimeout);
+    if (fenceResult == VK_TIMEOUT) {
+        throw std::runtime_error("Fence wait timeout: GPU appears to be hung");
+    } else if (fenceResult != VK_SUCCESS) {
+        throw std::runtime_error("Fence wait failed");
+    }
     vkResetFences(device_, 1, &inFlightFence_);
 
     uint32_t imageIndex;
-    VkResult result = vkAcquireNextImageKHR(device_, swapChain_, std::numeric_limits<uint64_t>::max(),
+    // Use reasonable timeout for image acquisition (5 seconds)
+    VkResult result = vkAcquireNextImageKHR(device_, swapChain_, kFenceTimeout,
                                             imageAvailableSemaphore_, VK_NULL_HANDLE, &imageIndex);
 
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized_) {
+        consecutiveSwapchainRecreations_++;
+        std::cout << "Swapchain recreation triggered (attempt " << consecutiveSwapchainRecreations_ << ")";
+        if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+            std::cout << " - OUT_OF_DATE";
+        } else if (result == VK_SUBOPTIMAL_KHR) {
+            std::cout << " - SUBOPTIMAL";
+        } else if (framebufferResized_) {
+            std::cout << " - RESIZE_EVENT";
+        }
+        std::cout << "\n";
+        
+        // Detect infinite swapchain recreation loop
+        constexpr int kMaxConsecutiveRecreations = 10;
+        if (consecutiveSwapchainRecreations_ > kMaxConsecutiveRecreations) {
+            throw std::runtime_error(
+                "Swapchain recreation loop detected: " + std::to_string(consecutiveSwapchainRecreations_) +
+                " consecutive recreations. This may indicate a driver issue or window manager problem.\n"
+                "Try running with a different window manager or updating your GPU drivers.");
+        }
+        
         RecreateSwapChain();
         return;
+    } else if (result == VK_TIMEOUT) {
+        throw std::runtime_error("Image acquisition timeout: GPU appears to be hung");
     } else if (result != VK_SUCCESS) {
         throw std::runtime_error("Failed to acquire swap chain image");
     }
@@ -184,9 +215,31 @@ void Sdl3App::DrawFrame(float time) {
 
     result = vkQueuePresentKHR(presentQueue_, &presentInfo);
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized_) {
+        consecutiveSwapchainRecreations_++;
+        std::cout << "Swapchain recreation after present (attempt " << consecutiveSwapchainRecreations_ << ")\n";
+        
+        constexpr int kMaxConsecutiveRecreations = 10;
+        if (consecutiveSwapchainRecreations_ > kMaxConsecutiveRecreations) {
+            throw std::runtime_error(
+                "Swapchain recreation loop detected after present: " + std::to_string(consecutiveSwapchainRecreations_) +
+                " consecutive recreations.");
+        }
+        
         RecreateSwapChain();
     } else if (result != VK_SUCCESS) {
         throw std::runtime_error("Failed to present swap chain image");
+    } else {
+        // Successfully presented a frame - reset counter
+        if (consecutiveSwapchainRecreations_ > 0) {
+            std::cout << "Frame presented successfully after " << consecutiveSwapchainRecreations_ 
+                      << " swapchain recreation(s)\n";
+        }
+        consecutiveSwapchainRecreations_ = 0;
+        
+        if (!firstFrameCompleted_) {
+            firstFrameCompleted_ = true;
+            std::cout << "First frame completed successfully\n";
+        }
     }
 }
 

@@ -136,6 +136,8 @@ private:
     std::string defaultShaderKey_;
     VkFence inFlightFence_ = VK_NULL_HANDLE;
     bool framebufferResized_ = false;
+    int consecutiveSwapchainRecreations_ = 0;
+    bool firstFrameCompleted_ = false;
     script::GuiInputSnapshot guiInputSnapshot_;
     std::vector<script::CubeScript::GuiCommand> guiCommands_;
     std::unique_ptr<gui::GuiRenderer> guiRenderer_;
