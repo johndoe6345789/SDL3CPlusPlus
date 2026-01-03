@@ -114,7 +114,7 @@ void ShowErrorDialog(const char* title, const std::string& message) {
 } // namespace
 
 Sdl3App::Sdl3App(const std::filesystem::path& scriptPath, bool luaDebug)
-    : cubeScript_(scriptPath, luaDebug),
+    : scriptEngine_(scriptPath, luaDebug),
       scriptDirectory_(scriptPath.parent_path()) {
     TRACE_FUNCTION();
     TRACE_VAR(scriptPath);
@@ -164,7 +164,7 @@ void Sdl3App::InitSDL() {
     SDL_StartTextInput(window_);
     try {
         audioPlayer_ = std::make_unique<AudioPlayer>();
-        cubeScript_.SetAudioPlayer(audioPlayer_.get());
+        scriptEngine_.SetAudioPlayer(audioPlayer_.get());
     } catch (const std::exception& exc) {
         std::cerr << "AudioPlayer: " << exc.what() << '\n';
     }
@@ -282,9 +282,9 @@ void Sdl3App::MainLoop() {
         SDL_GetMouseState(&mouseX, &mouseY);
         guiInputSnapshot_.mouseX = mouseX;
         guiInputSnapshot_.mouseY = mouseY;
-        cubeScript_.UpdateGuiInput(guiInputSnapshot_);
+        scriptEngine_.UpdateGuiInput(guiInputSnapshot_);
         if (guiHasCommands_ && guiRenderer_) {
-            guiCommands_ = cubeScript_.LoadGuiCommands();
+            guiCommands_ = scriptEngine_.LoadGuiCommands();
             guiRenderer_->Prepare(guiCommands_, swapChainExtent_.width, swapChainExtent_.height);
         }
         guiInputSnapshot_.wheel = 0.0f;

@@ -8,7 +8,7 @@
 
 #include <vulkan/vulkan.h>
 
-#include "script/cube_script.hpp"
+#include "script/gui_types.hpp"
 
 namespace sdl3cpp::gui {
 
@@ -34,7 +34,7 @@ public:
     GuiRenderer(const GuiRenderer&) = delete;
     GuiRenderer& operator=(const GuiRenderer&) = delete;
 
-    void Prepare(const std::vector<script::CubeScript::GuiCommand>& commands, uint32_t width,
+    void Prepare(const std::vector<script::GuiCommand>& commands, uint32_t width,
                  uint32_t height);
     void BlitToSwapchain(VkCommandBuffer commandBuffer, VkImage image);
     void Resize(uint32_t width, uint32_t height, VkFormat format);

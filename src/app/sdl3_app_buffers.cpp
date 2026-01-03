@@ -10,13 +10,13 @@ namespace sdl3cpp::app {
 
 void Sdl3App::LoadSceneData() {
     TRACE_FUNCTION();
-    shaderPathMap_ = cubeScript_.LoadShaderPathsMap();
+    shaderPathMap_ = scriptEngine_.LoadShaderPathsMap();
     if (shaderPathMap_.empty()) {
         throw std::runtime_error("Lua script did not provide shader paths");
     }
     defaultShaderKey_ = shaderPathMap_.count("default") ? "default" : shaderPathMap_.begin()->first;
 
-    auto sceneObjects = cubeScript_.LoadSceneObjects();
+    auto sceneObjects = scriptEngine_.LoadSceneObjects();
     if (sceneObjects.empty()) {
         throw std::runtime_error("Lua script did not provide any scene objects");
     }

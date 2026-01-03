@@ -1,5 +1,5 @@
-#ifndef SDL3CPP_SCRIPT_CUBE_SCRIPT_HPP
-#define SDL3CPP_SCRIPT_CUBE_SCRIPT_HPP
+#ifndef SDL3CPP_SCRIPT_SCRIPT_ENGINE_HPP
+#define SDL3CPP_SCRIPT_SCRIPT_ENGINE_HPP
 
 #include <array>
 #include <filesystem>
@@ -11,6 +11,8 @@
 #include <lua.hpp>
 
 #include "core/vertex.hpp"
+#include "script/gui_types.hpp"
+#include "script/physics_bridge.hpp"
 
 namespace sdl3cpp::app {
 class AudioPlayer;
@@ -18,65 +20,13 @@ class AudioPlayer;
 
 namespace sdl3cpp::script {
 
-struct PhysicsBridge;
-
-struct GuiInputSnapshot {
-    float mouseX = 0.0f;
-    float mouseY = 0.0f;
-    bool mouseDown = false;
-    float wheel = 0.0f;
-    std::string textInput;
-    std::unordered_map<std::string, bool> keyStates;
-};
-
-struct GuiColor {
-    float r = 0;
-    float g = 0;
-    float b = 0;
-    float a = 1.0f;
-};
-
-struct GuiCommand {
-    enum class Type {
-        Rect,
-        Text,
-        ClipPush,
-        ClipPop,
-        Svg,
-    };
-
-    struct RectData {
-        float x = 0;
-        float y = 0;
-        float width = 0;
-        float height = 0;
-    };
-
-    Type type = Type::Rect;
-    RectData rect;
-    GuiColor color;
-    GuiColor borderColor;
-    float borderWidth = 0.0f;
-    bool hasClipRect = false;
-    RectData clipRect{};
-    std::string text;
-    float fontSize = 16.0f;
-    std::string alignX = "left";
-    std::string alignY = "center";
-    std::string svgPath;
-    GuiColor svgTint;
-    RectData bounds{};
-    bool hasBounds = false;
-};
-
-class CubeScript {
+class ScriptEngine {
 public:
-    using GuiCommand = ::sdl3cpp::script::GuiCommand;
-    using GuiColor = ::sdl3cpp::script::GuiColor;
+    explicit ScriptEngine(const std::filesystem::path& scriptPath, bool debugEnabled = false);
+    ~ScriptEngine();
 
-public:
-    explicit CubeScript(const std::filesystem::path& scriptPath, bool debugEnabled = false);
-    ~CubeScript();
+    ScriptEngine(const ScriptEngine&) = delete;
+    ScriptEngine& operator=(const ScriptEngine&) = delete;
 
     struct ShaderPaths {
         std::string vertex;
@@ -137,4 +87,4 @@ private:
 
 } // namespace sdl3cpp::script
 
-#endif // SDL3CPP_SCRIPT_CUBE_SCRIPT_HPP
+#endif // SDL3CPP_SCRIPT_SCRIPT_ENGINE_HPP

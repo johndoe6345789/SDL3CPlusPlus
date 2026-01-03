@@ -20,7 +20,7 @@
 
 #include "app/audio_player.hpp"
 #include "core/vertex.hpp"
-#include "script/cube_script.hpp"
+#include "script/script_engine.hpp"
 #include "gui/gui_renderer.hpp"
 
 namespace sdl3cpp::app {
@@ -129,10 +129,10 @@ private:
     VkDeviceMemory indexBufferMemory_ = VK_NULL_HANDLE;
     VkSemaphore imageAvailableSemaphore_ = VK_NULL_HANDLE;
     VkSemaphore renderFinishedSemaphore_ = VK_NULL_HANDLE;
-    script::CubeScript cubeScript_;
+    script::ScriptEngine scriptEngine_;
     std::vector<core::Vertex> vertices_;
     std::vector<uint16_t> indices_;
-    std::unordered_map<std::string, script::CubeScript::ShaderPaths> shaderPathMap_;
+    std::unordered_map<std::string, script::ScriptEngine::ShaderPaths> shaderPathMap_;
     std::unordered_map<std::string, VkPipeline> graphicsPipelines_;
     std::string defaultShaderKey_;
     VkFence inFlightFence_ = VK_NULL_HANDLE;
@@ -140,7 +140,7 @@ private:
     int consecutiveSwapchainRecreations_ = 0;
     bool firstFrameCompleted_ = false;
     script::GuiInputSnapshot guiInputSnapshot_;
-    std::vector<script::CubeScript::GuiCommand> guiCommands_;
+    std::vector<script::GuiCommand> guiCommands_;
     std::unique_ptr<gui::GuiRenderer> guiRenderer_;
     bool guiHasCommands_ = false;
     std::vector<RenderObject> renderObjects_;

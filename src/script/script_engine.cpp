@@ -1,4 +1,4 @@
-#include "script/cube_script.hpp"
+#include "script/script_engine.hpp"
 #include "app/audio_player.hpp"
 
 #include <assimp/Importer.hpp>
@@ -14,128 +14,11 @@
 #include <array>
 #include <cstring>
 #include <iostream>
-#include <memory>
 #include <stdexcept>
-#include <string>
 #include <system_error>
-#include <unordered_map>
 #include <utility>
-#include <vector>
 
 namespace sdl3cpp::script {
-
-struct PhysicsBridge {
-    struct BodyRecord {
-        std::unique_ptr<btCollisionShape> shape;
-        std::unique_ptr<btMotionState> motionState;
-        std::unique_ptr<btRigidBody> body;
-    };
-
-    PhysicsBridge();
-    ~PhysicsBridge();
-
-    bool addBoxRigidBody(const std::string& name,
-                         const btVector3& halfExtents,
-                         float mass,
-                         const btTransform& transform,
-                         std::string& error);
-    int stepSimulation(float deltaTime);
-    bool getRigidBodyTransform(const std::string& name,
-                               btTransform& outTransform,
-                               std::string& error) const;
-
-private:
-    std::unique_ptr<btDefaultCollisionConfiguration> collisionConfig_;
-    std::unique_ptr<btCollisionDispatcher> dispatcher_;
-    std::unique_ptr<btBroadphaseInterface> broadphase_;
-    std::unique_ptr<btSequentialImpulseConstraintSolver> solver_;
-    std::unique_ptr<btDiscreteDynamicsWorld> world_;
-    std::unordered_map<std::string, BodyRecord> bodies_;
-};
-
-PhysicsBridge::PhysicsBridge()
-    : collisionConfig_(std::make_unique<btDefaultCollisionConfiguration>()),
-      dispatcher_(std::make_unique<btCollisionDispatcher>(collisionConfig_.get())),
-      broadphase_(std::make_unique<btDbvtBroadphase>()),
-      solver_(std::make_unique<btSequentialImpulseConstraintSolver>()),
-      world_(std::make_unique<btDiscreteDynamicsWorld>(
-          dispatcher_.get(),
-          broadphase_.get(),
-          solver_.get(),
-          collisionConfig_.get())) {
-    world_->setGravity(btVector3(0.0f, -9.81f, 0.0f));
-}
-
-PhysicsBridge::~PhysicsBridge() {
-    if (world_) {
-        for (auto& [name, entry] : bodies_) {
-            if (entry.body) {
-                world_->removeRigidBody(entry.body.get());
-            }
-        }
-    }
-}
-
-bool PhysicsBridge::addBoxRigidBody(const std::string& name,
-                                    const btVector3& halfExtents,
-                                    float mass,
-                                    const btTransform& transform,
-                                    std::string& error) {
-    if (name.empty()) {
-        error = "Rigid body name must not be empty";
-        return false;
-    }
-    if (!world_) {
-        error = "Physics world is not initialized";
-        return false;
-    }
-    if (bodies_.count(name)) {
-        error = "Rigid body already exists: " + name;
-        return false;
-    }
-    auto shape = std::make_unique<btBoxShape>(halfExtents);
-    btVector3 inertia(0.0f, 0.0f, 0.0f);
-    if (mass > 0.0f) {
-        shape->calculateLocalInertia(mass, inertia);
-    }
-    auto motionState = std::make_unique<btDefaultMotionState>(transform);
-    btRigidBody::btRigidBodyConstructionInfo constructionInfo(
-        mass,
-        motionState.get(),
-        shape.get(),
-        inertia);
-    auto body = std::make_unique<btRigidBody>(constructionInfo);
-    world_->addRigidBody(body.get());
-    bodies_.emplace(name, BodyRecord{
-        std::move(shape),
-        std::move(motionState),
-        std::move(body),
-    });
-    return true;
-}
-
-int PhysicsBridge::stepSimulation(float deltaTime) {
-    if (!world_) {
-        return 0;
-    }
-    return static_cast<int>(world_->stepSimulation(deltaTime, 10, 1.0f / 60.0f));
-}
-
-bool PhysicsBridge::getRigidBodyTransform(const std::string& name,
-                                          btTransform& outTransform,
-                                          std::string& error) const {
-    auto it = bodies_.find(name);
-    if (it == bodies_.end()) {
-        error = "Rigid body not found: " + name;
-        return false;
-    }
-    if (!it->second.motionState) {
-        error = "Rigid body motion state is missing";
-        return false;
-    }
-    it->second.motionState->getWorldTransform(outTransform);
-    return true;
-}
 
 namespace detail {
 
@@ -206,7 +89,7 @@ struct MeshPayload {
     std::vector<uint32_t> indices;
 };
 
-bool TryLoadMeshPayload(const CubeScript* script,
+bool TryLoadMeshPayload(const ScriptEngine* script,
                         const std::string& requestedPath,
                         MeshPayload& payload,
                         std::string& error) {
@@ -293,7 +176,6 @@ glm::vec3 ToVec3(const std::array<float, 3>& value) {
 }
 
 glm::quat ToQuat(const std::array<float, 4>& value) {
-    // Lua exposes {x, y, z, w}
     return glm::quat(value[3], value[0], value[1], value[2]);
 }
 
@@ -307,9 +189,9 @@ void PushMatrix(lua_State* L, const glm::mat4& matrix) {
 }
 
 int PushMeshToLua(lua_State* L, const MeshPayload& payload) {
-    lua_newtable(L); // mesh
+    lua_newtable(L);
 
-    lua_newtable(L); // vertices table
+    lua_newtable(L);
     for (size_t vertexIndex = 0; vertexIndex < payload.positions.size(); ++vertexIndex) {
         lua_newtable(L);
 
@@ -331,7 +213,7 @@ int PushMeshToLua(lua_State* L, const MeshPayload& payload) {
     }
     lua_setfield(L, -2, "vertices");
 
-    lua_newtable(L); // indices table
+    lua_newtable(L);
     for (size_t index = 0; index < payload.indices.size(); ++index) {
         lua_pushinteger(L, static_cast<lua_Integer>(payload.indices[index]) + 1);
         lua_rawseti(L, -2, static_cast<int>(index + 1));
@@ -342,7 +224,7 @@ int PushMeshToLua(lua_State* L, const MeshPayload& payload) {
 }
 
 int LuaLoadMeshFromFile(lua_State* L) {
-    auto* script = static_cast<CubeScript*>(lua_touserdata(L, lua_upvalueindex(1)));
+    auto* script = static_cast<ScriptEngine*>(lua_touserdata(L, lua_upvalueindex(1)));
     const char* path = luaL_checkstring(L, 1);
     MeshPayload payload;
     std::string error;
@@ -357,7 +239,7 @@ int LuaLoadMeshFromFile(lua_State* L) {
 }
 
 int LuaPhysicsCreateBox(lua_State* L) {
-    auto* script = static_cast<CubeScript*>(lua_touserdata(L, lua_upvalueindex(1)));
+    auto* script = static_cast<ScriptEngine*>(lua_touserdata(L, lua_upvalueindex(1)));
     const char* name = luaL_checkstring(L, 1);
     if (!lua_istable(L, 2) || !lua_istable(L, 4) || !lua_istable(L, 5)) {
         luaL_error(L, "physics_create_box expects vector tables for half extents, origin, and rotation");
@@ -389,7 +271,7 @@ int LuaPhysicsCreateBox(lua_State* L) {
 }
 
 int LuaPhysicsStepSimulation(lua_State* L) {
-    auto* script = static_cast<CubeScript*>(lua_touserdata(L, lua_upvalueindex(1)));
+    auto* script = static_cast<ScriptEngine*>(lua_touserdata(L, lua_upvalueindex(1)));
     float deltaTime = static_cast<float>(luaL_checknumber(L, 1));
     int steps = script->GetPhysicsBridge().stepSimulation(deltaTime);
     lua_pushinteger(L, steps);
@@ -397,7 +279,7 @@ int LuaPhysicsStepSimulation(lua_State* L) {
 }
 
 int LuaPhysicsGetTransform(lua_State* L) {
-    auto* script = static_cast<CubeScript*>(lua_touserdata(L, lua_upvalueindex(1)));
+    auto* script = static_cast<ScriptEngine*>(lua_touserdata(L, lua_upvalueindex(1)));
     const char* name = luaL_checkstring(L, 1);
     btTransform transform;
     std::string error;
@@ -428,20 +310,20 @@ int LuaPhysicsGetTransform(lua_State* L) {
     lua_rawseti(L, -2, 3);
     lua_pushnumber(L, orientation.w());
     lua_rawseti(L, -2, 4);
-        lua_setfield(L, -2, "rotation");
+    lua_setfield(L, -2, "rotation");
 
     return 1;
 }
 
 int LuaAudioPlayBackground(lua_State* L) {
-    auto* script = static_cast<CubeScript*>(lua_touserdata(L, lua_upvalueindex(1)));
+    auto* script = static_cast<ScriptEngine*>(lua_touserdata(L, lua_upvalueindex(1)));
     const char* path = luaL_checkstring(L, 1);
     bool loop = true;
     if (lua_gettop(L) >= 2 && lua_isboolean(L, 2)) {
         loop = lua_toboolean(L, 2);
     }
     std::string error;
-    if (!script->QueueAudioCommand(CubeScript::AudioCommandType::Background, path, loop, error)) {
+    if (!script->QueueAudioCommand(ScriptEngine::AudioCommandType::Background, path, loop, error)) {
         lua_pushnil(L);
         lua_pushstring(L, error.c_str());
         return 2;
@@ -451,14 +333,14 @@ int LuaAudioPlayBackground(lua_State* L) {
 }
 
 int LuaAudioPlaySound(lua_State* L) {
-    auto* script = static_cast<CubeScript*>(lua_touserdata(L, lua_upvalueindex(1)));
+    auto* script = static_cast<ScriptEngine*>(lua_touserdata(L, lua_upvalueindex(1)));
     const char* path = luaL_checkstring(L, 1);
     bool loop = false;
     if (lua_gettop(L) >= 2 && lua_isboolean(L, 2)) {
         loop = lua_toboolean(L, 2);
     }
     std::string error;
-    if (!script->QueueAudioCommand(CubeScript::AudioCommandType::Effect, path, loop, error)) {
+    if (!script->QueueAudioCommand(ScriptEngine::AudioCommandType::Effect, path, loop, error)) {
         lua_pushnil(L);
         lua_pushstring(L, error.c_str());
         return 2;
@@ -486,7 +368,7 @@ std::array<float, 16> IdentityMatrix() {
 
 } // namespace
 
-CubeScript::CubeScript(const std::filesystem::path& scriptPath, bool debugEnabled)
+ScriptEngine::ScriptEngine(const std::filesystem::path& scriptPath, bool debugEnabled)
     : L_(luaL_newstate()),
       scriptDirectory_(scriptPath.parent_path()),
       debugEnabled_(debugEnabled),
@@ -557,7 +439,7 @@ CubeScript::CubeScript(const std::filesystem::path& scriptPath, bool debugEnable
     }
 }
 
-CubeScript::~CubeScript() {
+ScriptEngine::~ScriptEngine() {
     if (L_) {
         if (guiInputRef_ != LUA_REFNIL) {
             luaL_unref(L_, LUA_REGISTRYINDEX, guiInputRef_);
@@ -569,7 +451,7 @@ CubeScript::~CubeScript() {
     }
 }
 
-std::vector<CubeScript::SceneObject> CubeScript::LoadSceneObjects() {
+std::vector<ScriptEngine::SceneObject> ScriptEngine::LoadSceneObjects() {
     lua_getglobal(L_, "get_scene_objects");
     if (!lua_isfunction(L_, -1)) {
         lua_pop(L_, 1);
@@ -635,7 +517,7 @@ std::vector<CubeScript::SceneObject> CubeScript::LoadSceneObjects() {
     return objects;
 }
 
-std::array<float, 16> CubeScript::ComputeModelMatrix(int functionRef, float time) {
+std::array<float, 16> ScriptEngine::ComputeModelMatrix(int functionRef, float time) {
     if (functionRef == LUA_REFNIL) {
         lua_getglobal(L_, "compute_model_matrix");
         if (!lua_isfunction(L_, -1)) {
@@ -662,7 +544,7 @@ std::array<float, 16> CubeScript::ComputeModelMatrix(int functionRef, float time
     return matrix;
 }
 
-std::array<float, 16> CubeScript::GetViewProjectionMatrix(float aspect) {
+std::array<float, 16> ScriptEngine::GetViewProjectionMatrix(float aspect) {
     lua_getglobal(L_, "get_view_projection");
     if (!lua_isfunction(L_, -1)) {
         lua_pop(L_, 1);
@@ -683,7 +565,7 @@ std::array<float, 16> CubeScript::GetViewProjectionMatrix(float aspect) {
     return matrix;
 }
 
-std::vector<core::Vertex> CubeScript::ReadVertexArray(lua_State* L, int index) {
+std::vector<core::Vertex> ScriptEngine::ReadVertexArray(lua_State* L, int index) {
     int absIndex = lua_absindex(L, index);
     if (!lua_istable(L, absIndex)) {
         throw std::runtime_error("Expected table for vertex data");
@@ -718,7 +600,7 @@ std::vector<core::Vertex> CubeScript::ReadVertexArray(lua_State* L, int index) {
     return vertices;
 }
 
-std::vector<uint16_t> CubeScript::ReadIndexArray(lua_State* L, int index) {
+std::vector<uint16_t> ScriptEngine::ReadIndexArray(lua_State* L, int index) {
     int absIndex = lua_absindex(L, index);
     if (!lua_istable(L, absIndex)) {
         throw std::runtime_error("Expected table for index data");
@@ -745,7 +627,7 @@ std::vector<uint16_t> CubeScript::ReadIndexArray(lua_State* L, int index) {
     return indices;
 }
 
-std::unordered_map<std::string, CubeScript::ShaderPaths> CubeScript::LoadShaderPathsMap() {
+std::unordered_map<std::string, ScriptEngine::ShaderPaths> ScriptEngine::LoadShaderPathsMap() {
     lua_getglobal(L_, "get_shader_paths");
     if (!lua_isfunction(L_, -1)) {
         lua_pop(L_, 1);
@@ -778,7 +660,7 @@ std::unordered_map<std::string, CubeScript::ShaderPaths> CubeScript::LoadShaderP
     return shaderMap;
 }
 
-CubeScript::ShaderPaths CubeScript::ReadShaderPathsTable(lua_State* L, int index) {
+ScriptEngine::ShaderPaths ScriptEngine::ReadShaderPathsTable(lua_State* L, int index) {
     ShaderPaths paths;
     int absIndex = lua_absindex(L, index);
 
@@ -801,16 +683,16 @@ CubeScript::ShaderPaths CubeScript::ReadShaderPathsTable(lua_State* L, int index
     return paths;
 }
 
-std::string CubeScript::LuaErrorMessage(lua_State* L) {
+std::string ScriptEngine::LuaErrorMessage(lua_State* L) {
     const char* message = lua_tostring(L, -1);
     return message ? message : "unknown lua error";
 }
 
-PhysicsBridge& CubeScript::GetPhysicsBridge() {
+PhysicsBridge& ScriptEngine::GetPhysicsBridge() {
     return *physicsBridge_;
 }
 
-std::vector<CubeScript::GuiCommand> CubeScript::LoadGuiCommands() {
+std::vector<GuiCommand> ScriptEngine::LoadGuiCommands() {
     std::vector<GuiCommand> commands;
     if (guiCommandsFnRef_ == LUA_REFNIL) {
         return commands;
@@ -897,8 +779,8 @@ std::vector<CubeScript::GuiCommand> CubeScript::LoadGuiCommands() {
             }
             lua_pop(L_, 1);
         }
-        lua_pop(L_, 1); // pop type
-        lua_pop(L_, 1); // pop command table
+        lua_pop(L_, 1);
+        lua_pop(L_, 1);
         commands.push_back(std::move(command));
     }
 
@@ -906,7 +788,7 @@ std::vector<CubeScript::GuiCommand> CubeScript::LoadGuiCommands() {
     return commands;
 }
 
-void CubeScript::UpdateGuiInput(const GuiInputSnapshot& input) {
+void ScriptEngine::UpdateGuiInput(const GuiInputSnapshot& input) {
     if (guiInputRef_ == LUA_REFNIL) {
         return;
     }
@@ -947,15 +829,15 @@ void CubeScript::UpdateGuiInput(const GuiInputSnapshot& input) {
     lua_pop(L_, 1);
 }
 
-bool CubeScript::HasGuiCommands() const {
+bool ScriptEngine::HasGuiCommands() const {
     return guiCommandsFnRef_ != LUA_REFNIL;
 }
 
-std::filesystem::path CubeScript::GetScriptDirectory() const {
+std::filesystem::path ScriptEngine::GetScriptDirectory() const {
     return scriptDirectory_;
 }
 
-CubeScript::GuiCommand::RectData CubeScript::ReadRect(lua_State* L, int index) {
+GuiCommand::RectData ScriptEngine::ReadRect(lua_State* L, int index) {
     GuiCommand::RectData rect{};
     if (!lua_istable(L, index)) {
         return rect;
@@ -977,7 +859,7 @@ CubeScript::GuiCommand::RectData CubeScript::ReadRect(lua_State* L, int index) {
     return rect;
 }
 
-GuiColor CubeScript::ReadColor(lua_State* L, int index, const GuiColor& defaultColor) {
+GuiColor ScriptEngine::ReadColor(lua_State* L, int index, const GuiColor& defaultColor) {
     GuiColor color = defaultColor;
     if (!lua_istable(L, index)) {
         return color;
@@ -999,7 +881,7 @@ GuiColor CubeScript::ReadColor(lua_State* L, int index, const GuiColor& defaultC
     return color;
 }
 
-bool CubeScript::ReadStringField(lua_State* L, int index, const char* name, std::string& outString) {
+bool ScriptEngine::ReadStringField(lua_State* L, int index, const char* name, std::string& outString) {
     int absIndex = lua_absindex(L, index);
     lua_getfield(L, absIndex, name);
     if (lua_isstring(L, -1)) {
@@ -1011,7 +893,7 @@ bool CubeScript::ReadStringField(lua_State* L, int index, const char* name, std:
     return false;
 }
 
-void CubeScript::SetAudioPlayer(app::AudioPlayer* audioPlayer) {
+void ScriptEngine::SetAudioPlayer(app::AudioPlayer* audioPlayer) {
     audioPlayer_ = audioPlayer;
     if (!audioPlayer_) {
         return;
@@ -1026,7 +908,7 @@ void CubeScript::SetAudioPlayer(app::AudioPlayer* audioPlayer) {
     pendingAudioCommands_.clear();
 }
 
-bool CubeScript::QueueAudioCommand(AudioCommandType type, std::string path, bool loop, std::string& error) {
+bool ScriptEngine::QueueAudioCommand(AudioCommandType type, std::string path, bool loop, std::string& error) {
     if (audioPlayer_) {
         try {
             AudioCommand command{type, std::move(path), loop};
@@ -1041,7 +923,7 @@ bool CubeScript::QueueAudioCommand(AudioCommandType type, std::string path, bool
     return true;
 }
 
-void CubeScript::ExecuteAudioCommand(app::AudioPlayer* player, const AudioCommand& command) {
+void ScriptEngine::ExecuteAudioCommand(app::AudioPlayer* player, const AudioCommand& command) {
     auto resolved = ResolveScriptPath(command.path);
     if (!std::filesystem::exists(resolved)) {
         throw std::runtime_error("Audio file not found: " + resolved.string());
@@ -1056,7 +938,7 @@ void CubeScript::ExecuteAudioCommand(app::AudioPlayer* player, const AudioComman
     }
 }
 
-std::filesystem::path CubeScript::ResolveScriptPath(const std::string& requested) const {
+std::filesystem::path ScriptEngine::ResolveScriptPath(const std::string& requested) const {
     std::filesystem::path resolved(requested);
     if (!resolved.is_absolute()) {
         resolved = scriptDirectory_ / resolved;

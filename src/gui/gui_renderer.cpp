@@ -145,9 +145,9 @@ ParsedSvg ParseSvgFile(const std::filesystem::path& path) {
     return result;
 }
 
-script::CubeScript::GuiCommand::RectData IntersectRect(const script::CubeScript::GuiCommand::RectData& a,
-                                                     const script::CubeScript::GuiCommand::RectData& b) {
-    script::CubeScript::GuiCommand::RectData result;
+script::GuiCommand::RectData IntersectRect(const script::GuiCommand::RectData& a,
+                                                     const script::GuiCommand::RectData& b) {
+    script::GuiCommand::RectData result;
     result.x = std::max(a.x, b.x);
     result.y = std::max(a.y, b.y);
     float right = std::min(a.x + a.width, b.x + b.width);
@@ -165,7 +165,7 @@ int ClampToRange(int value, int minimum, int maximum) {
 
 class GuiRenderer::Canvas {
 public:
-    using RectData = script::CubeScript::GuiCommand::RectData;
+    using RectData = script::GuiCommand::RectData;
 
     void Resize(uint32_t width, uint32_t height) {
         width_ = width;
@@ -366,7 +366,7 @@ GuiRenderer::GuiRenderer(VkDevice device, VkPhysicalDevice physicalDevice, VkFor
         return canvasWidth_ > 0 && canvasHeight_ > 0 && stagingBuffer_ != VK_NULL_HANDLE;
     }
 
-    void GuiRenderer::Prepare(const std::vector<script::CubeScript::GuiCommand>& commands, uint32_t width,
+    void GuiRenderer::Prepare(const std::vector<script::GuiCommand>& commands, uint32_t width,
                               uint32_t height) {
         if (width == 0 || height == 0 || !canvas_) {
             return;
@@ -375,10 +375,10 @@ GuiRenderer::GuiRenderer(VkDevice device, VkPhysicalDevice physicalDevice, VkFor
         canvas_->Clear();
         for (const auto& command : commands) {
             switch (command.type) {
-                case script::CubeScript::GuiCommand::Type::Rect:
+                case script::GuiCommand::Type::Rect:
                     canvas_->FillRect(command.rect, command.color, command.borderColor, command.borderWidth);
                     break;
-                case script::CubeScript::GuiCommand::Type::Text: {
+                case script::GuiCommand::Type::Text: {
                     if (command.hasClipRect) {
                         canvas_->PushClip(command.clipRect);
                     }
@@ -386,7 +386,7 @@ GuiRenderer::GuiRenderer(VkDevice device, VkPhysicalDevice physicalDevice, VkFor
                         canvas_->DrawText(command.text, command.color, command.bounds, command.alignX,
                                           command.alignY, command.fontSize);
                     } else {
-                        script::CubeScript::GuiCommand::RectData fallback{
+                        script::GuiCommand::RectData fallback{
                             command.rect.x, command.rect.y,
                             command.fontSize * static_cast<float>(std::max<size_t>(1, command.text.size())), command.fontSize};
                         canvas_->DrawText(command.text, command.color, fallback, command.alignX,
@@ -397,13 +397,13 @@ GuiRenderer::GuiRenderer(VkDevice device, VkPhysicalDevice physicalDevice, VkFor
                     }
                     break;
                 }
-                case script::CubeScript::GuiCommand::Type::ClipPush:
+                case script::GuiCommand::Type::ClipPush:
                     canvas_->PushClip(command.rect);
                     break;
-                case script::CubeScript::GuiCommand::Type::ClipPop:
+                case script::GuiCommand::Type::ClipPop:
                     canvas_->PopClip();
                     break;
-                case script::CubeScript::GuiCommand::Type::Svg:
+                case script::GuiCommand::Type::Svg:
                     if (command.svgPath.empty()) {
                         break;
                     }

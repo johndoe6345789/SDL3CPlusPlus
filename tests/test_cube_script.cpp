@@ -1,4 +1,4 @@
-#include "script/cube_script.hpp"
+#include "script/script_engine.hpp"
 
 #include <array>
 #include <cmath>
@@ -50,8 +50,8 @@ int main() {
     std::cout << "Loading Lua fixture: " << scriptPath << '\n';
 
     try {
-        sdl3cpp::script::CubeScript cubeScript(scriptPath);
-        auto objects = cubeScript.LoadSceneObjects();
+        sdl3cpp::script::ScriptEngine scriptEngine(scriptPath);
+        auto objects = scriptEngine.LoadSceneObjects();
         Assert(objects.size() == 1, "expected exactly one scene object", failures);
         if (!objects.empty()) {
             const auto& object = objects.front();
@@ -63,17 +63,17 @@ int main() {
             Assert(object.computeModelMatrixRef != LUA_REFNIL,
                    "vertex object must keep a Lua reference", failures);
 
-            auto objectMatrix = cubeScript.ComputeModelMatrix(object.computeModelMatrixRef, 0.5f);
+            auto objectMatrix = scriptEngine.ComputeModelMatrix(object.computeModelMatrixRef, 0.5f);
             ExpectIdentity(objectMatrix, "object compute_model_matrix", failures);
         }
 
-        auto fallbackMatrix = cubeScript.ComputeModelMatrix(LUA_REFNIL, 1.0f);
+        auto fallbackMatrix = scriptEngine.ComputeModelMatrix(LUA_REFNIL, 1.0f);
         ExpectIdentity(fallbackMatrix, "global compute_model_matrix", failures);
 
-        auto viewProjection = cubeScript.GetViewProjectionMatrix(1.33f);
+        auto viewProjection = scriptEngine.GetViewProjectionMatrix(1.33f);
         ExpectIdentity(viewProjection, "view_projection matrix", failures);
 
-        auto shaderMap = cubeScript.LoadShaderPathsMap();
+        auto shaderMap = scriptEngine.LoadShaderPathsMap();
         Assert(shaderMap.size() == 1, "expected a single shader variant", failures);
         auto testEntry = shaderMap.find("test");
         Assert(testEntry != shaderMap.end(), "shader map missing "
@@ -88,9 +88,9 @@ int main() {
     }
 
     if (failures == 0) {
-        std::cout << "cube_script_tests: PASSED\n";
+        std::cout << "script_engine_tests: PASSED\n";
     } else {
-        std::cerr << "cube_script_tests: FAILED (" << failures << " errors)\n";
+        std::cerr << "script_engine_tests: FAILED (" << failures << " errors)\n";
     }
 
     return failures;

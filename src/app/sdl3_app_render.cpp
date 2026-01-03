@@ -178,7 +178,7 @@ void Sdl3App::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageI
             }
         }
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineIt->second);
-        pushConstants.model = cubeScript_.ComputeModelMatrix(object.computeModelMatrixRef, time);
+        pushConstants.model = scriptEngine_.ComputeModelMatrix(object.computeModelMatrixRef, time);
         vkCmdPushConstants(commandBuffer, pipelineLayout_, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(core::PushConstants),
                            &pushConstants);
         vkCmdDrawIndexed(commandBuffer, object.indexCount, 1, object.indexOffset, object.vertexOffset, 0);
@@ -225,7 +225,7 @@ void Sdl3App::ProcessGuiEvent(const SDL_Event& event) {
 
 void Sdl3App::SetupGuiRenderer() {
     TRACE_FUNCTION();
-    guiHasCommands_ = cubeScript_.HasGuiCommands();
+    guiHasCommands_ = scriptEngine_.HasGuiCommands();
     if (!guiHasCommands_) {
         guiRenderer_.reset();
         return;
@@ -233,7 +233,7 @@ void Sdl3App::SetupGuiRenderer() {
     if (!guiRenderer_) {
         guiRenderer_ =
             std::make_unique<gui::GuiRenderer>(device_, physicalDevice_, swapChainImageFormat_,
-                                                cubeScript_.GetScriptDirectory());
+                                                scriptEngine_.GetScriptDirectory());
     }
     guiRenderer_->Resize(swapChainExtent_.width, swapChainExtent_.height, swapChainImageFormat_);
 }
@@ -293,7 +293,7 @@ void Sdl3App::DrawFrame(float time) {
     TRACE_VAR(imageIndex);
 
     float aspect = static_cast<float>(swapChainExtent_.width) / static_cast<float>(swapChainExtent_.height);
-    auto viewProj = cubeScript_.GetViewProjectionMatrix(aspect);
+    auto viewProj = scriptEngine_.GetViewProjectionMatrix(aspect);
 
     vkResetCommandBuffer(commandBuffers_[imageIndex], 0);
     RecordCommandBuffer(commandBuffers_[imageIndex], imageIndex, time, viewProj);

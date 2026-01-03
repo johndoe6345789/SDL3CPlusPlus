@@ -112,7 +112,8 @@ if(BUILD_SDL3_APP)
             src/gui/gui_renderer.cpp
             src/app/sdl3_app_render.cpp
             src/app/vulkan_api.cpp
-            src/script/cube_script.cpp
+            src/script/script_engine.cpp
+            src/script/physics_bridge.cpp
         )
     target_include_directories(sdl3_app PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
     target_link_libraries(sdl3_app PRIVATE ${SDL_TARGET} Vulkan::Vulkan lua::lua CLI11::CLI11 rapidjson assimp::assimp Bullet::Bullet glm::glm Vorbis::vorbisfile Vorbis::vorbis)
@@ -133,11 +134,12 @@ endif()
 
 enable_testing()
 
-add_executable(cube_script_tests
+add_executable(script_engine_tests
     tests/test_cube_script.cpp
-    src/script/cube_script.cpp
+    src/script/script_engine.cpp
+    src/script/physics_bridge.cpp
     src/app/audio_player.cpp
 )
-target_include_directories(cube_script_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_link_libraries(cube_script_tests PRIVATE ${SDL_TARGET} lua::lua assimp::assimp Bullet::Bullet glm::glm Vorbis::vorbisfile Vorbis::vorbis)
-add_test(NAME cube_script_tests COMMAND cube_script_tests)
+target_include_directories(script_engine_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_link_libraries(script_engine_tests PRIVATE ${SDL_TARGET} lua::lua assimp::assimp Bullet::Bullet glm::glm Vorbis::vorbisfile Vorbis::vorbis)
+add_test(NAME script_engine_tests COMMAND script_engine_tests)
