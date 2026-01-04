@@ -72,7 +72,7 @@ void SdlAudioService::StopBackground() {
 }
 
 void SdlAudioService::StopAll() {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     if (!audioPlayer_) {
         return;

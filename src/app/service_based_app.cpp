@@ -232,7 +232,8 @@ void ServiceBasedApp::RegisterServices() {
         registry_.GetService<services::ILogger>());
 
     // Audio service
-    registry_.RegisterService<services::IAudioService, services::impl::SdlAudioService>();
+    registry_.RegisterService<services::IAudioService, services::impl::SdlAudioService>(
+        registry_.GetService<services::ILogger>());
 
     // GUI service
     registry_.RegisterService<services::IGuiService, services::impl::VulkanGuiService>(
