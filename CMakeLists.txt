@@ -144,6 +144,7 @@ enable_testing()
 
 add_executable(script_engine_tests
     tests/test_cube_script.cpp
+    src/logging/logger.cpp
     src/script/script_engine.cpp
     src/script/physics_bridge.cpp
     src/script/scene_manager.cpp
