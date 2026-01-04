@@ -8,15 +8,17 @@ GraphicsService::GraphicsService(std::shared_ptr<IVulkanDeviceService> deviceSer
                                  std::shared_ptr<ISwapchainService> swapchainService,
                                  std::shared_ptr<IPipelineService> pipelineService,
                                  std::shared_ptr<IBufferService> bufferService,
-                                 std::shared_ptr<IRenderCommandService> renderCommandService)
+                                 std::shared_ptr<IRenderCommandService> renderCommandService,
+                                 std::shared_ptr<IWindowService> windowService)
     : deviceService_(deviceService),
       swapchainService_(swapchainService),
       pipelineService_(pipelineService),
       bufferService_(bufferService),
-      renderCommandService_(renderCommandService) {
+      renderCommandService_(renderCommandService),
+      windowService_(windowService) {
     logging::TraceGuard trace("GraphicsService::GraphicsService");
 
-    if (!deviceService_ || !swapchainService_ || !pipelineService_ || !bufferService_ || !renderCommandService_) {
+    if (!deviceService_ || !swapchainService_ || !pipelineService_ || !bufferService_ || !renderCommandService_ || !windowService_) {
         throw std::invalid_argument("All graphics services must be provided");
     }
 }
@@ -66,8 +68,9 @@ void GraphicsService::InitializeSwapchain() {
         throw std::runtime_error("Graphics service not initialized");
     }
 
-    // Swapchain service handles swapchain initialization
-    swapchainService_->Initialize();
+    // Get window size and create swapchain
+    auto [width, height] = windowService_->GetSize();
+    swapchainService_->CreateSwapchain(width, height);
 }
 
 void GraphicsService::RecreateSwapchain() {
@@ -77,7 +80,9 @@ void GraphicsService::RecreateSwapchain() {
         throw std::runtime_error("Graphics service not initialized");
     }
 
-    swapchainService_->RecreateSwapchain();
+    // Get current window size and recreate swapchain
+    auto [width, height] = windowService_->GetSize();
+    swapchainService_->RecreateSwapchain(width, height);
 }
 
 void GraphicsService::LoadShaders(const std::unordered_map<std::string, ShaderPaths>& shaders) {
@@ -91,7 +96,7 @@ void GraphicsService::LoadShaders(const std::unordered_map<std::string, ShaderPa
     for (const auto& [key, paths] : shaders) {
         pipelineService_->RegisterShader(key, paths);
     }
-    pipelineService_->CompileAll(swapchainService_->GetRenderPass(), swapchainService_->GetExtent());
+    pipelineService_->CompileAll(swapchainService_->GetRenderPass(), swapchainService_->GetSwapchainExtent());
 }
 
 void GraphicsService::UploadVertexData(const std::vector<core::Vertex>& vertices) {
@@ -121,7 +126,7 @@ bool GraphicsService::BeginFrame() {
         return false;
     }
 
-    return renderCommandService_->BeginFrame();
+    return renderCommandService_->BeginFrame(currentImageIndex_);
 }
 
 void GraphicsService::RenderScene(const std::vector<RenderCommand>& commands,
@@ -132,7 +137,7 @@ void GraphicsService::RenderScene(const std::vector<RenderCommand>& commands,
         return;
     }
 
-    renderCommandService_->RecordCommands(commands, viewProj);
+    renderCommandService_->RecordCommands(currentImageIndex_, commands, viewProj);
 }
 
 bool GraphicsService::EndFrame() {
@@ -142,7 +147,7 @@ bool GraphicsService::EndFrame() {
         return false;
     }
 
-    return renderCommandService_->EndFrame();
+    return renderCommandService_->EndFrame(currentImageIndex_);
 }
 
 void GraphicsService::WaitIdle() {
@@ -182,17 +187,7 @@ VkExtent2D GraphicsService::GetSwapchainExtent() const {
         return {0, 0};
     }
 
-    return swapchainService_->GetExtent();
-}
-
-uint32_t GraphicsService::GetSwapchainImageCount() const {
-    logging::TraceGuard trace("GraphicsService::GetSwapchainImageCount");
-
-    if (!initialized_) {
-        return 0;
-    }
-
-    return swapchainService_->GetImageCount();
+    return swapchainService_->GetSwapchainExtent();
 }
 
 VkFormat GraphicsService::GetSwapchainFormat() const {
@@ -202,7 +197,7 @@ VkFormat GraphicsService::GetSwapchainFormat() const {
         return VK_FORMAT_UNDEFINED;
     }
 
-    return swapchainService_->GetFormat();
+    return swapchainService_->GetSwapchainImageFormat();
 }
 
 VkCommandBuffer GraphicsService::GetCurrentCommandBuffer() const {

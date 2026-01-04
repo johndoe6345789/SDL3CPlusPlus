@@ -29,7 +29,7 @@ std::unordered_map<std::string, sdl3cpp::services::ShaderPaths> ShaderManager::L
         throw std::runtime_error("'get_shader_paths' did not return a table");
     }
 
-    std::unordered_map<std::string, ShaderPaths> shaderMap;
+    std::unordered_map<std::string, sdl3cpp::services::ShaderPaths> shaderMap;
     lua_pushnil(L_);
     while (lua_next(L_, -2) != 0) {
         if (lua_isstring(L_, -2) && lua_istable(L_, -1)) {
@@ -47,7 +47,7 @@ std::unordered_map<std::string, sdl3cpp::services::ShaderPaths> ShaderManager::L
 }
 
 sdl3cpp::services::ShaderPaths ShaderManager::ReadShaderPathsTable(int index) {
-    ShaderPaths paths;
+    sdl3cpp::services::ShaderPaths paths;
     int absIndex = lua_absindex(L_, index);
 
     lua_getfield(L_, absIndex, "vertex");

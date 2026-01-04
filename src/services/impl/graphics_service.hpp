@@ -6,6 +6,7 @@
 #include "../interfaces/i_pipeline_service.hpp"
 #include "../interfaces/i_buffer_service.hpp"
 #include "../interfaces/i_render_command_service.hpp"
+#include "../interfaces/i_window_service.hpp"
 #include "../../di/lifecycle.hpp"
 #include <memory>
 
@@ -25,7 +26,8 @@ public:
                     std::shared_ptr<ISwapchainService> swapchainService,
                     std::shared_ptr<IPipelineService> pipelineService,
                     std::shared_ptr<IBufferService> bufferService,
-                    std::shared_ptr<IRenderCommandService> renderCommandService);
+                    std::shared_ptr<IRenderCommandService> renderCommandService,
+                    std::shared_ptr<IWindowService> windowService);
     ~GraphicsService() override;
 
     // IInitializable interface
@@ -49,7 +51,6 @@ public:
     VkDevice GetDevice() const override;
     VkPhysicalDevice GetPhysicalDevice() const override;
     VkExtent2D GetSwapchainExtent() const override;
-    uint32_t GetSwapchainImageCount() const override;
     VkFormat GetSwapchainFormat() const override;
     VkCommandBuffer GetCurrentCommandBuffer() const override;
     VkQueue GetGraphicsQueue() const override;
@@ -60,7 +61,9 @@ private:
     std::shared_ptr<IPipelineService> pipelineService_;
     std::shared_ptr<IBufferService> bufferService_;
     std::shared_ptr<IRenderCommandService> renderCommandService_;
+    std::shared_ptr<IWindowService> windowService_;
     bool initialized_ = false;
+    uint32_t currentImageIndex_ = 0;
 };
 
 }  // namespace sdl3cpp::services::impl

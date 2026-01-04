@@ -117,8 +117,7 @@ void ServiceBasedApp::RegisterServices() {
     logging::TraceGuard trace("ServiceBasedApp::RegisterServices");
 
     // Event bus (needed by window service)
-    auto eventBus = std::make_shared<events::EventBus>();
-    registry_.RegisterService<events::EventBus>(eventBus);
+    registry_.RegisterService<events::EventBus, events::EventBus>();
 
     // Configuration service
     services::impl::RuntimeConfig runtimeConfig;
@@ -126,10 +125,12 @@ void ServiceBasedApp::RegisterServices() {
     registry_.RegisterService<services::IConfigService, services::impl::JsonConfigService>(runtimeConfig);
 
     // Window service
-    registry_.RegisterService<services::IWindowService, services::impl::SdlWindowService>(eventBus);
+    registry_.RegisterService<services::IWindowService, services::impl::SdlWindowService>(
+        registry_.GetService<events::EventBus>());
 
     // Input service
-    registry_.RegisterService<services::IInputService, services::impl::SdlInputService>(eventBus);
+    registry_.RegisterService<services::IInputService, services::impl::SdlInputService>(
+        registry_.GetService<events::EventBus>());
 
     // Vulkan device service
     registry_.RegisterService<services::IVulkanDeviceService, services::impl::VulkanDeviceService>();
@@ -151,13 +152,14 @@ void ServiceBasedApp::RegisterServices() {
         registry_.GetService<services::IVulkanDeviceService>(),
         registry_.GetService<services::ISwapchainService>());
 
-    // Graphics service (facade) - temporarily disabled
-    // registry_.RegisterService<services::IGraphicsService, services::impl::GraphicsService>(
-    //     registry_.GetService<services::IVulkanDeviceService>(),
-    //     registry_.GetService<services::ISwapchainService>(),
-    //     registry_.GetService<services::IPipelineService>(),
-    //     registry_.GetService<services::IBufferService>(),
-    //     registry_.GetService<services::IRenderCommandService>());
+    // Graphics service (facade)
+    registry_.RegisterService<services::IGraphicsService, services::impl::GraphicsService>(
+        registry_.GetService<services::IVulkanDeviceService>(),
+        registry_.GetService<services::ISwapchainService>(),
+        registry_.GetService<services::IPipelineService>(),
+        registry_.GetService<services::IBufferService>(),
+        registry_.GetService<services::IRenderCommandService>(),
+        registry_.GetService<services::IWindowService>());
 
     // Script service
     registry_.RegisterService<services::IScriptService, services::impl::LuaScriptService>(scriptPath_);

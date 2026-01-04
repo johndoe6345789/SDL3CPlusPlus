@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../di/lifecycle.hpp"
 #include "event_listener.hpp"
 #include "event_types.hpp"
 #include <mutex>
@@ -39,7 +40,7 @@ namespace sdl3cpp::events {
  * eventBus.ProcessQueue();  // Call once per frame
  * @endcode
  */
-class EventBus {
+class EventBus : public di::IInitializable, public di::IShutdownable {
 public:
     EventBus() = default;
     ~EventBus() = default;
@@ -128,6 +129,12 @@ public:
      * @return The number of listeners subscribed to all events
      */
     size_t GetGlobalListenerCount() const;
+
+    // IInitializable interface
+    void Initialize() override {}
+
+    // IShutdownable interface  
+    void Shutdown() noexcept override {}
 
 private:
     // Event type -> list of listeners
