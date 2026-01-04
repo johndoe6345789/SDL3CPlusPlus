@@ -26,9 +26,19 @@ void ApplicationController::Run() {
 
     running_ = true;
     auto lastTime = std::chrono::high_resolution_clock::now();
+    auto startTime = lastTime;
+    const auto timeout = std::chrono::seconds(5);  // Exit after 5 seconds for testing
 
     while (running_) {
         auto currentTime = std::chrono::high_resolution_clock::now();
+        
+        // Exit after timeout for headless testing
+        if (currentTime - startTime > timeout) {
+            logging::Logger::GetInstance().Info("Application timeout reached, exiting");
+            running_ = false;
+            break;
+        }
+        
         float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
         lastTime = currentTime;
 
