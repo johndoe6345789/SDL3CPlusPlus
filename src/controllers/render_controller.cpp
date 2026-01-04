@@ -9,11 +9,11 @@ namespace sdl3cpp::controllers {
 
 RenderController::RenderController(di::ServiceRegistry& registry)
     : registry_(registry), logger_(registry.GetService<services::ILogger>()) {
-    logger_->Trace("RenderController::RenderController: Created");
+    logger_->Trace("RenderController", "RenderController", "", "Created");
 }
 
 RenderController::~RenderController() {
-    logger_->Trace("RenderController::~RenderController: Destroyed");
+    logger_->Trace("RenderController", "~RenderController", "", "Destroyed");
 }
 
 void RenderController::RenderFrame(float time) {

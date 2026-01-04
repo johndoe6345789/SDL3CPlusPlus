@@ -21,7 +21,7 @@ ApplicationController::~ApplicationController() {
 }
 
 void ApplicationController::Run() {
-    logger_->Trace("ApplicationController::Run: Entering");
+    logger_->Trace("ApplicationController", "Run", "", "Entering");
     logger_->Info("ApplicationController::Run: ApplicationController::Run starting");
     logger_->Info("ApplicationController::Run: Application starting main loop");
 
@@ -48,7 +48,7 @@ void ApplicationController::Run() {
     }
 
     logger_->Info("ApplicationController::Run: Application exiting main loop");
-    logger_->Trace("ApplicationController::Run: Exiting");
+    logger_->Trace("ApplicationController", "Run", "", "Exiting");
 }
 
 void ApplicationController::HandleEvents() {
@@ -72,7 +72,7 @@ void ApplicationController::HandleEvents() {
 }
 
 void ApplicationController::ProcessFrame(float deltaTime) {
-    logger_->Trace("ApplicationController::ProcessFrame: Entering");
+    logger_->Trace("ApplicationController", "ProcessFrame", "deltaTime=" + std::to_string(deltaTime), "Entering");
 
     // Update physics
     auto physicsService = registry_.GetService<services::IPhysicsService>();
@@ -92,7 +92,7 @@ void ApplicationController::ProcessFrame(float deltaTime) {
     // renderController->RenderFrame(static_cast<float>(std::chrono::duration_cast<std::chrono::milliseconds>(
     //     std::chrono::high_resolution_clock::now().time_since_epoch()).count()) / 1000.0f);
 
-    logger_->Trace("ApplicationController::ProcessFrame: Exiting");
+    logger_->Trace("ApplicationController", "ProcessFrame", "", "Exiting");
 }
 
 }  // namespace sdl3cpp::controllers
