@@ -2,6 +2,7 @@
 #include "logging/logger.hpp"
 
 #include <cstring>
+#include <iostream>
 #include <stdexcept>
 
 #include "app/vulkan_api.hpp"
@@ -59,7 +60,7 @@ void Sdl3App::CreateVertexBuffer() {
         throw std::runtime_error("Cannot create vertex buffer: no vertices loaded");
     }
     VkDeviceSize bufferSize = sizeof(vertices_[0]) * vertices_.size();
-    sdl3cpp::logging::Logger::GetInstance().TraceVariable("bufferSize", bufferSize);
+    sdl3cpp::logging::Logger::GetInstance().TraceVariable("bufferSize", static_cast<size_t>(bufferSize));
     std::cout << "Creating vertex buffer: " << vertices_.size() << " vertices (" 
               << (bufferSize / 1024) << " KB)\n";
     std::cout.flush();
@@ -80,7 +81,7 @@ void Sdl3App::CreateIndexBuffer() {
         throw std::runtime_error("Cannot create index buffer: no indices loaded");
     }
     VkDeviceSize bufferSize = sizeof(indices_[0]) * indices_.size();
-    sdl3cpp::logging::Logger::GetInstance().TraceVariable("bufferSize", bufferSize);
+    sdl3cpp::logging::Logger::GetInstance().TraceVariable("bufferSize", static_cast<size_t>(bufferSize));
     std::cout << "Creating index buffer: " << indices_.size() << " indices (" 
               << (bufferSize / 1024) << " KB)\n";
     std::cout.flush();

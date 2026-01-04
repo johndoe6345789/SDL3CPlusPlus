@@ -105,8 +105,8 @@ void Sdl3App::Run() {
 void Sdl3App::InitSDL() {
     sdl3cpp::logging::TraceGuard trace;
     auto& logger = sdl3cpp::logging::Logger::GetInstance();
-    logger.TraceVariable("kWidth", kWidth);
-    logger.TraceVariable("kHeight", kHeight);
+    logger.TraceVariable("kWidth", static_cast<int>(kWidth));
+    logger.TraceVariable("kHeight", static_cast<int>(kHeight));
     
     try {
         ThrowSdlErrorIfFailed(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO), "SDL_Init failed");

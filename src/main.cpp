@@ -240,8 +240,8 @@ AppOptions ParseCommandLine(int argc, char** argv) {
 
 void LogRuntimeConfig(const RuntimeConfig& config) {
     auto& logger = sdl3cpp::logging::Logger::GetInstance();
-    logger.TraceVariable("config.width", config.width);
-    logger.TraceVariable("config.height", config.height);
+    logger.TraceVariable("config.width", static_cast<int>(config.width));
+    logger.TraceVariable("config.height", static_cast<int>(config.height));
     logger.TraceVariable("config.scriptPath", config.scriptPath.string());
 }
 

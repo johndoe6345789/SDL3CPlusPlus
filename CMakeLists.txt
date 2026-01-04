@@ -63,6 +63,22 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Enforce "no macros" culture mechanically
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    add_compile_options(
+        -Wmacro-redefined
+        -Wreserved-id-macro
+    )
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    add_compile_options(
+        -Wbuiltin-macro-redefined
+    )
+endif()
+if(MSVC)
+    # MSVC equivalent warnings
+    add_compile_options(/we4005)  # macro redefinition
+endif()
+
 if(EXISTS "${CMAKE_BINARY_DIR}/conan_toolchain.cmake")
     include("${CMAKE_BINARY_DIR}/conan_toolchain.cmake")
 endif()

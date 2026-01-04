@@ -45,7 +45,7 @@ void Sdl3App::CreateSwapChain() {
     if (support.capabilities.maxImageCount > 0 && imageCount > support.capabilities.maxImageCount) {
         imageCount = support.capabilities.maxImageCount;
     }
-    sdl3cpp::logging::Logger::GetInstance().TraceVariable("imageCount", imageCount);
+    sdl3cpp::logging::Logger::GetInstance().TraceVariable("imageCount", static_cast<int>(imageCount));
 
     VkSwapchainCreateInfoKHR createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;

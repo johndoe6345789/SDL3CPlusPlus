@@ -30,8 +30,10 @@ std::string ToString(const void* value) {
     return oss.str();
 }
 
+#if !defined(__LP64__) || defined(_WIN64)
 std::string ToString(unsigned long value) {
     return std::to_string(value);
 }
+#endif
 
 } // namespace sdl3cpp::logging

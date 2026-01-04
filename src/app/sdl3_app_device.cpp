@@ -1,6 +1,7 @@
 #include "app/sdl3_app.hpp"
 #include "logging/logger.hpp"
 
+#include <iostream>
 #include <set>
 #include <stdexcept>
 #include <vector>
@@ -54,7 +55,7 @@ void Sdl3App::CreateInstance() {
     }
 
     std::vector<const char*> extensionList(extensions, extensions + extensionCount);
-    sdl3cpp::logging::Logger::GetInstance().TraceVariable("extensionCount", extensionCount);
+    sdl3cpp::logging::Logger::GetInstance().TraceVariable("extensionCount", static_cast<int>(extensionCount));
     sdl3cpp::logging::Logger::GetInstance().TraceVariable("extensionList.size(", extensionList.size());
 
     // Enable validation layers if available

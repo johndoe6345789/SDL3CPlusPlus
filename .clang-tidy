@@ -5,10 +5,15 @@ Checks: >
   readability-*,
   modernize-*,
   misc-*,
+  cppcoreguidelines-macro-usage,
   -modernize-use-trailing-return-type
 WarningsAsErrors: ''
 HeaderFilterRegex: 'src/.*'
 FormatStyle: file
 CheckOptions:
   - key: modernize-use-override.ForceOverride
+    value: 1
+  - key: cppcoreguidelines-macro-usage.AllowedRegexp
+    value: '^SDL3CPP_.*_HPP$|^SDL_MAIN_HANDLED$'
+  - key: cppcoreguidelines-macro-usage.CheckCapsOnly
     value: 1

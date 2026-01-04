@@ -1,6 +1,7 @@
 #include "app/sdl3_app.hpp"
 #include "logging/logger.hpp"
 
+#include <iostream>
 #include <limits>
 #include <sstream>
 #include <stdexcept>
@@ -149,7 +150,7 @@ void Sdl3App::CreateCommandBuffers() {
 void Sdl3App::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, float time,
                                    const std::array<float, 16>& viewProj) {
     sdl3cpp::logging::TraceGuard trace;;
-    sdl3cpp::logging::Logger::GetInstance().TraceVariable("imageIndex", imageIndex);
+    sdl3cpp::logging::Logger::GetInstance().TraceVariable("imageIndex", static_cast<int>(imageIndex));
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
@@ -302,7 +303,7 @@ void Sdl3App::DrawFrame(float time) {
     } else if (result != VK_SUCCESS) {
         throw std::runtime_error("Failed to acquire swap chain image");
     }
-    sdl3cpp::logging::Logger::GetInstance().TraceVariable("imageIndex", imageIndex);
+    sdl3cpp::logging::Logger::GetInstance().TraceVariable("imageIndex", static_cast<int>(imageIndex));
 
     float aspect = static_cast<float>(swapChainExtent_.width) / static_cast<float>(swapChainExtent_.height);
     auto viewProj = scriptEngine_.GetViewProjectionMatrix(aspect);

@@ -35,6 +35,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Enforce macro policy
+        run: ./scripts/check_macros.sh
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
