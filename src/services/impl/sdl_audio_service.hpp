@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../interfaces/i_audio_service.hpp"
+#include "../interfaces/i_logger.hpp"
 #include "../../app/audio_player.hpp"
 #include "../../di/lifecycle.hpp"
 #include <memory>
@@ -17,7 +18,7 @@ class SdlAudioService : public IAudioService,
                         public di::IInitializable,
                         public di::IShutdownable {
 public:
-    SdlAudioService();
+    explicit SdlAudioService(std::shared_ptr<ILogger> logger);
     ~SdlAudioService() override;
 
     // IAudioService interface
@@ -34,6 +35,7 @@ public:
     bool IsBackgroundPlaying() const override;
 
 private:
+    std::shared_ptr<ILogger> logger_;
     std::unique_ptr<app::AudioPlayer> audioPlayer_;
     float volume_ = 1.0f;
     bool initialized_ = false;

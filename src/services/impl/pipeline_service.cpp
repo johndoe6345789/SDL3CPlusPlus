@@ -57,6 +57,7 @@ void PipelineService::Cleanup() {
 }
 
 void PipelineService::Shutdown() noexcept {
+    logger_->TraceFunction(__func__);
     Cleanup();
 }
 
@@ -304,7 +305,7 @@ std::vector<char> PipelineService::ReadShaderFile(const std::string& path) {
     file.read(buffer.data(), static_cast<std::streamsize>(fileSize));
     file.close();
 
-    logging::Logger::GetInstance().Debug("Read shader file: " + path + " (" + std::to_string(fileSize) + " bytes)");
+    logger_->Debug("Read shader file: " + path + " (" + std::to_string(fileSize) + " bytes)");
 
     return buffer;
 }

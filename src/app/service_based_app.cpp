@@ -194,7 +194,8 @@ void ServiceBasedApp::RegisterServices() {
 
     // Pipeline service
     registry_.RegisterService<services::IPipelineService, services::impl::PipelineService>(
-        registry_.GetService<services::IVulkanDeviceService>());
+        registry_.GetService<services::IVulkanDeviceService>(),
+        registry_.GetService<services::ILogger>());
 
     // Buffer service
     registry_.RegisterService<services::IBufferService, services::impl::BufferService>(

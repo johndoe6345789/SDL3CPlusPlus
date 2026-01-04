@@ -1,10 +1,10 @@
 #include "sdl_audio_service.hpp"
-#include "../../logging/logger.hpp"
 #include <stdexcept>
 
 namespace sdl3cpp::services::impl {
 
-SdlAudioService::SdlAudioService() = default;
+SdlAudioService::SdlAudioService(std::shared_ptr<ILogger> logger)
+    : logger_(logger) {}
 
 SdlAudioService::~SdlAudioService() {
     if (initialized_) {
@@ -13,7 +13,7 @@ SdlAudioService::~SdlAudioService() {
 }
 
 void SdlAudioService::Initialize() {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     if (initialized_) {
         return;
@@ -22,11 +22,11 @@ void SdlAudioService::Initialize() {
     audioPlayer_ = std::make_unique<app::AudioPlayer>();
     initialized_ = true;
 
-    logging::Logger::GetInstance().Info("Audio service initialized");
+    logger_->Info("Audio service initialized");
 }
 
 void SdlAudioService::Shutdown() noexcept {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     if (!initialized_) {
         return;
@@ -35,11 +35,11 @@ void SdlAudioService::Shutdown() noexcept {
     audioPlayer_.reset();
     initialized_ = false;
 
-    logging::Logger::GetInstance().Info("Audio service shutdown");
+    logger_->Info("Audio service shutdown");
 }
 
 void SdlAudioService::PlayBackground(const std::filesystem::path& path, bool loop) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     if (!audioPlayer_) {
         throw std::runtime_error("Audio service not initialized");
@@ -49,7 +49,7 @@ void SdlAudioService::PlayBackground(const std::filesystem::path& path, bool loo
 }
 
 void SdlAudioService::PlayEffect(const std::filesystem::path& path, bool loop) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     if (!audioPlayer_) {
         throw std::runtime_error("Audio service not initialized");
@@ -59,7 +59,7 @@ void SdlAudioService::PlayEffect(const std::filesystem::path& path, bool loop) {
 }
 
 void SdlAudioService::StopBackground() {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     if (!audioPlayer_) {
         return;
