@@ -14,9 +14,8 @@ VulkanDeviceService::~VulkanDeviceService() {
     }
 }
 
-void VulkanDeviceService::Initialize(SDL_Window* window,
-                                     const std::vector<const char*>& deviceExtensions,
-                                     bool enableValidationLayers) {
+void VulkanDeviceService::Initialize(const std::vector<const char*>& deviceExtensions,
+                                    bool enableValidationLayers) {
     logging::TraceGuard trace;
 
     deviceExtensions_ = deviceExtensions;
@@ -32,8 +31,17 @@ void VulkanDeviceService::Initialize(SDL_Window* window,
     std::vector<const char*> requiredExtensions(extensions, extensions + extensionCount);
 
     CreateInstance(requiredExtensions);
-    CreateSurface(window);
     PickPhysicalDevice();
+}
+
+void VulkanDeviceService::CreateSurface(SDL_Window* window) {
+    logging::TraceGuard trace;
+
+    if (!window) {
+        throw std::invalid_argument("Window cannot be null");
+    }
+
+    CreateSurfaceInternal(window);
 }
 
 void VulkanDeviceService::CreateInstance(const std::vector<const char*>& requiredExtensions) {

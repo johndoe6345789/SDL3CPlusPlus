@@ -35,14 +35,22 @@ public:
     /**
      * @brief Initialize Vulkan instance and select physical device.
      *
-     * @param window SDL window for surface creation
      * @param deviceExtensions Required device extensions
      * @param enableValidationLayers Whether to enable validation layers
      * @throws std::runtime_error if initialization fails
      */
-    virtual void Initialize(SDL_Window* window,
-                           const std::vector<const char*>& deviceExtensions,
+    virtual void Initialize(const std::vector<const char*>& deviceExtensions,
                            bool enableValidationLayers = false) = 0;
+
+    /**
+     * @brief Create Vulkan surface for the given window.
+     *
+     * Must be called after Initialize() and after window is created.
+     *
+     * @param window SDL window for surface creation
+     * @throws std::runtime_error if surface creation fails
+     */
+    virtual void CreateSurface(SDL_Window* window) = 0;
 
     /**
      * @brief Create the logical device and retrieve queues.

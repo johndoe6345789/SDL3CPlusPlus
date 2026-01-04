@@ -20,9 +20,9 @@ public:
     ~VulkanDeviceService() override;
 
     // IVulkanDeviceService interface
-    void Initialize(SDL_Window* window,
-                   const std::vector<const char*>& deviceExtensions,
-                   bool enableValidationLayers) override;
+    void Initialize(const std::vector<const char*>& deviceExtensions,
+                   bool enableValidationLayers = false) override;
+    void CreateSurface(SDL_Window* window) override;
     void CreateLogicalDevice() override;
     void Shutdown() noexcept override;
     void WaitIdle() override;
