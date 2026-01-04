@@ -358,7 +358,7 @@ GuiRenderer::GuiRenderer(VkDevice device, VkPhysicalDevice physicalDevice, VkFor
       swapchainFormat_(swapchainFormat),
       scriptDirectory_(scriptDirectory),
       canvas_(std::make_unique<Canvas>()) {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);
+    sdl3cpp::logging::TraceGuard trace;
 }
 
     GuiRenderer::~GuiRenderer() {

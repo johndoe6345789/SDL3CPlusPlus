@@ -1,4 +1,5 @@
 #include "script/mesh_loader.hpp"
+#include "logging/logger.hpp"
 #include "script/script_engine.hpp"
 
 #include <assimp/Importer.hpp>

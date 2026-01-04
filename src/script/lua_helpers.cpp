@@ -1,4 +1,5 @@
 #include "script/lua_helpers.hpp"
+#include "logging/logger.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -10,6 +11,7 @@
 namespace sdl3cpp::script {
 
 std::array<float, 3> ReadVector3(lua_State* L, int index) {
+    sdl3cpp::logging::Logger::GetInstance().TraceFunctionWithArgs(static_cast<void*>(L), index);
     std::array<float, 3> result{};
     int absIndex = lua_absindex(L, index);
     size_t len = lua_rawlen(L, absIndex);
@@ -29,6 +31,7 @@ std::array<float, 3> ReadVector3(lua_State* L, int index) {
 }
 
 std::array<float, 4> ReadQuaternion(lua_State* L, int index) {
+    sdl3cpp::logging::Logger::GetInstance().TraceFunctionWithArgs(static_cast<void*>(L), index);
     std::array<float, 4> result{};
     int absIndex = lua_absindex(L, index);
     size_t len = lua_rawlen(L, absIndex);
@@ -48,6 +51,7 @@ std::array<float, 4> ReadQuaternion(lua_State* L, int index) {
 }
 
 std::array<float, 16> ReadMatrix(lua_State* L, int index) {
+    sdl3cpp::logging::Logger::GetInstance().TraceFunctionWithArgs(static_cast<void*>(L), index);
     std::array<float, 16> result{};
     int absIndex = lua_absindex(L, index);
     size_t len = lua_rawlen(L, absIndex);
@@ -67,11 +71,13 @@ std::array<float, 16> ReadMatrix(lua_State* L, int index) {
 }
 
 std::string GetLuaError(lua_State* L) {
+    sdl3cpp::logging::Logger::GetInstance().TraceFunctionWithArgs(static_cast<void*>(L));
     const char* message = lua_tostring(L, -1);
     return message ? message : "unknown lua error";
 }
 
 std::array<float, 16> IdentityMatrix() {
+    sdl3cpp::logging::TraceGuard trace;
     return {1.0f, 0.0f, 0.0f, 0.0f,
             0.0f, 1.0f, 0.0f, 0.0f,
             0.0f, 0.0f, 1.0f, 0.0f,
@@ -79,14 +85,17 @@ std::array<float, 16> IdentityMatrix() {
 }
 
 glm::vec3 ToVec3(const std::array<float, 3>& value) {
+    sdl3cpp::logging::Logger::GetInstance().TraceFunctionWithArgs(value[0], value[1], value[2]);
     return glm::vec3(value[0], value[1], value[2]);
 }
 
 glm::quat ToQuat(const std::array<float, 4>& value) {
+    sdl3cpp::logging::Logger::GetInstance().TraceFunctionWithArgs(value[0], value[1], value[2], value[3]);
     return glm::quat(value[3], value[0], value[1], value[2]);
 }
 
 void PushMatrix(lua_State* L, const glm::mat4& matrix) {
+    sdl3cpp::logging::Logger::GetInstance().TraceFunctionWithArgs(static_cast<void*>(L));
     lua_newtable(L);
     const float* ptr = glm::value_ptr(matrix);
     for (int i = 0; i < 16; ++i) {
@@ -96,6 +105,7 @@ void PushMatrix(lua_State* L, const glm::mat4& matrix) {
 }
 
 int LuaGlmMatrixFromTransform(lua_State* L) {
+    sdl3cpp::logging::Logger::GetInstance().TraceFunctionWithArgs(static_cast<void*>(L));
     std::array<float, 3> translation = ReadVector3(L, 1);
     std::array<float, 4> rotation = ReadQuaternion(L, 2);
     glm::vec3 pos = ToVec3(translation);

@@ -10,7 +10,7 @@
 namespace sdl3cpp::script {
 
 void LuaBindings::RegisterBindings(lua_State* L, ScriptEngine* engine) {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::TraceGuard trace;;
     lua_pushlightuserdata(L, engine);
     lua_pushcclosure(L, &LoadMeshFromFile, 1);
     lua_setglobal(L, "load_mesh_from_file");
@@ -41,7 +41,7 @@ void LuaBindings::RegisterBindings(lua_State* L, ScriptEngine* engine) {
 }
 
 int LuaBindings::LoadMeshFromFile(lua_State* L) {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::TraceGuard trace;;
     auto* engine = static_cast<ScriptEngine*>(lua_touserdata(L, lua_upvalueindex(1)));
     const char* path = luaL_checkstring(L, 1);
     sdl3cpp::logging::Logger::GetInstance().TraceVariable("path", path);
@@ -60,7 +60,7 @@ int LuaBindings::LoadMeshFromFile(lua_State* L) {
 }
 
 int LuaBindings::PhysicsCreateBox(lua_State* L) {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::TraceGuard trace;;
     auto* engine = static_cast<ScriptEngine*>(lua_touserdata(L, lua_upvalueindex(1)));
     const char* name = luaL_checkstring(L, 1);
     sdl3cpp::logging::Logger::GetInstance().TraceVariable("name", name);

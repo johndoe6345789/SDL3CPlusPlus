@@ -132,7 +132,7 @@ void Sdl3App::PrintGpuDiagnostics(const std::string& errorContext) {
 }
 
 void Sdl3App::CreateCommandBuffers() {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::TraceGuard trace;;
     commandBuffers_.resize(swapChainFramebuffers_.size());
 
     VkCommandBufferAllocateInfo allocInfo{};
@@ -148,7 +148,7 @@ void Sdl3App::CreateCommandBuffers() {
 
 void Sdl3App::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, float time,
                                    const std::array<float, 16>& viewProj) {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::TraceGuard trace;;
     sdl3cpp::logging::Logger::GetInstance().TraceVariable("imageIndex", imageIndex);
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -202,7 +202,7 @@ void Sdl3App::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageI
 }
 
 void Sdl3App::ProcessGuiEvent(const SDL_Event& event) {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::TraceGuard trace;;
     switch (event.type) {
         case SDL_EVENT_MOUSE_MOTION:
             guiInputSnapshot_.mouseX = static_cast<float>(event.motion.x);
@@ -235,7 +235,7 @@ void Sdl3App::ProcessGuiEvent(const SDL_Event& event) {
 }
 
 void Sdl3App::SetupGuiRenderer() {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::TraceGuard trace;;
     guiHasCommands_ = scriptEngine_.HasGuiCommands();
     if (!guiHasCommands_) {
         guiRenderer_.reset();
@@ -250,7 +250,7 @@ void Sdl3App::SetupGuiRenderer() {
 }
 
 void Sdl3App::DrawFrame(float time) {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::TraceGuard trace;;
     sdl3cpp::logging::Logger::GetInstance().Debug("Drawing frame at time " + std::to_string(time));
     
     // Use reasonable timeout instead of infinite wait (5 seconds)

@@ -10,7 +10,7 @@
 namespace sdl3cpp::script {
 
 ShaderManager::ShaderManager(lua_State* L) : L_(L) {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);
+    sdl3cpp::logging::TraceGuard trace;
 }
 
 std::unordered_map<std::string, ShaderManager::ShaderPaths> ShaderManager::LoadShaderPathsMap() {

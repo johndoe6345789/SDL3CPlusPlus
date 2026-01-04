@@ -7,7 +7,7 @@
 namespace sdl3cpp::app {
 
 void Sdl3App::CreateSwapChain() {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::TraceGuard trace;;
     SwapChainSupportDetails support = QuerySwapChainSupport(physicalDevice_);
     
     // Validate swap chain support
@@ -85,7 +85,7 @@ void Sdl3App::CreateSwapChain() {
 }
 
 void Sdl3App::CreateImageViews() {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::TraceGuard trace;;
     swapChainImageViews_.resize(swapChainImages_.size());
     for (size_t i = 0; i < swapChainImages_.size(); ++i) {
         VkImageViewCreateInfo viewInfo{};
@@ -108,7 +108,7 @@ void Sdl3App::CreateImageViews() {
 }
 
 void Sdl3App::CreateRenderPass() {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::TraceGuard trace;;
     VkAttachmentDescription colorAttachment{};
     colorAttachment.format = swapChainImageFormat_;
     colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -151,7 +151,7 @@ void Sdl3App::CreateRenderPass() {
 }
 
 void Sdl3App::CleanupSwapChain() {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::TraceGuard trace;;
     for (auto framebuffer : swapChainFramebuffers_) {
         vkDestroyFramebuffer(device_, framebuffer, nullptr);
     }
@@ -173,7 +173,7 @@ void Sdl3App::CleanupSwapChain() {
 }
 
 void Sdl3App::RecreateSwapChain() {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::TraceGuard trace;;
     int width = 0;
     int height = 0;
     
@@ -223,7 +223,7 @@ void Sdl3App::RecreateSwapChain() {
 }
 
 VkSurfaceFormatKHR Sdl3App::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::TraceGuard trace;;
     for (const auto& availableFormat : availableFormats) {
         if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB &&
             availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
@@ -234,7 +234,7 @@ VkSurfaceFormatKHR Sdl3App::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceF
 }
 
 VkPresentModeKHR Sdl3App::ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::TraceGuard trace;;
     for (const auto& availablePresentMode : availablePresentModes) {
         if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
             return availablePresentMode;

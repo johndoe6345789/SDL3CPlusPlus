@@ -6,7 +6,7 @@
 namespace sdl3cpp::app {
 
 void Sdl3App::CreateFramebuffers() {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::TraceGuard trace;;
     swapChainFramebuffers_.resize(swapChainImageViews_.size());
     for (size_t i = 0; i < swapChainImageViews_.size(); ++i) {
         VkImageView attachments[] = {swapChainImageViews_[i]};
@@ -28,7 +28,7 @@ void Sdl3App::CreateFramebuffers() {
 }
 
 void Sdl3App::CreateCommandPool() {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::TraceGuard trace;;
     QueueFamilyIndices indices = FindQueueFamilies(physicalDevice_);
 
     VkCommandPoolCreateInfo poolInfo{};
@@ -42,7 +42,7 @@ void Sdl3App::CreateCommandPool() {
 }
 
 void Sdl3App::CreateSyncObjects() {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::TraceGuard trace;;
     VkSemaphoreCreateInfo semaphoreInfo{};
     semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 

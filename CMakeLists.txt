@@ -103,6 +103,7 @@ if(BUILD_SDL3_APP)
     add_executable(sdl3_app
             src/main.cpp
             src/logging/logger.cpp
+            src/core/platform.cpp
             src/app/sdl3_app_core.cpp
             src/app/audio_player.cpp
             src/app/sdl3_app_device.cpp
@@ -145,6 +146,7 @@ enable_testing()
 add_executable(script_engine_tests
     tests/test_cube_script.cpp
     src/logging/logger.cpp
+    src/core/platform.cpp
     src/script/script_engine.cpp
     src/script/physics_bridge.cpp
     src/script/scene_manager.cpp

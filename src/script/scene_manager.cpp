@@ -10,7 +10,7 @@
 namespace sdl3cpp::script {
 
 SceneManager::SceneManager(lua_State* L) : L_(L) {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);
+    sdl3cpp::logging::TraceGuard trace;
 }
 
 std::vector<SceneManager::SceneObject> SceneManager::LoadSceneObjects() {

@@ -8,7 +8,7 @@
 namespace sdl3cpp::app {
 
 void Sdl3App::CreateInstance() {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::TraceGuard trace;;
     
     // Early validation: Check if Vulkan is available
     uint32_t apiVersion = 0;
@@ -104,14 +104,14 @@ void Sdl3App::CreateInstance() {
 }
 
 void Sdl3App::CreateSurface() {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::TraceGuard trace;;
     if (!SDL_Vulkan_CreateSurface(window_, instance_, nullptr, &surface_)) {
         throw std::runtime_error("Failed to create Vulkan surface");
     }
 }
 
 void Sdl3App::PickPhysicalDevice() {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::TraceGuard trace;;
     uint32_t deviceCount = 0;
     VkResult enumResult = vkEnumeratePhysicalDevices(instance_, &deviceCount, nullptr);
     if (enumResult != VK_SUCCESS) {
@@ -172,7 +172,7 @@ void Sdl3App::PickPhysicalDevice() {
 }
 
 void Sdl3App::CreateLogicalDevice() {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::TraceGuard trace;;
     QueueFamilyIndices indices = FindQueueFamilies(physicalDevice_);
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
@@ -209,7 +209,7 @@ void Sdl3App::CreateLogicalDevice() {
 }
 
 QueueFamilyIndices Sdl3App::FindQueueFamilies(VkPhysicalDevice device) {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::TraceGuard trace;;
     QueueFamilyIndices indices;
 
     uint32_t queueFamilyCount = 0;
@@ -241,7 +241,7 @@ QueueFamilyIndices Sdl3App::FindQueueFamilies(VkPhysicalDevice device) {
 }
 
 bool Sdl3App::CheckDeviceExtensionSupport(VkPhysicalDevice device) {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::TraceGuard trace;;
     uint32_t extensionCount = 0;
     vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
 
@@ -266,7 +266,7 @@ bool Sdl3App::CheckDeviceExtensionSupport(VkPhysicalDevice device) {
 }
 
 SwapChainSupportDetails Sdl3App::QuerySwapChainSupport(VkPhysicalDevice device) {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::TraceGuard trace;;
     SwapChainSupportDetails details;
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface_, &details.capabilities);
 
@@ -289,7 +289,7 @@ SwapChainSupportDetails Sdl3App::QuerySwapChainSupport(VkPhysicalDevice device) 
 }
 
 bool Sdl3App::IsDeviceSuitable(VkPhysicalDevice device) {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::TraceGuard trace;;
     QueueFamilyIndices indices = FindQueueFamilies(device);
 
     bool extensionsSupported = CheckDeviceExtensionSupport(device);

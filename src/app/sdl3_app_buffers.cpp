@@ -9,7 +9,7 @@
 namespace sdl3cpp::app {
 
 void Sdl3App::LoadSceneData() {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);
+    sdl3cpp::logging::TraceGuard trace;
     shaderPathMap_ = scriptEngine_.LoadShaderPathsMap();
     if (shaderPathMap_.empty()) {
         throw std::runtime_error("Lua script did not provide shader paths");
@@ -54,7 +54,7 @@ void Sdl3App::LoadSceneData() {
 }
 
 void Sdl3App::CreateVertexBuffer() {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);
+    sdl3cpp::logging::TraceGuard trace;
     if (vertices_.empty()) {
         throw std::runtime_error("Cannot create vertex buffer: no vertices loaded");
     }
@@ -75,7 +75,7 @@ void Sdl3App::CreateVertexBuffer() {
 }
 
 void Sdl3App::CreateIndexBuffer() {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);
+    sdl3cpp::logging::TraceGuard trace;
     if (indices_.empty()) {
         throw std::runtime_error("Cannot create index buffer: no indices loaded");
     }

@@ -1,6 +1,7 @@
 #include "app/audio_player.hpp"
 #include "app/sdl3_app.hpp"
 #include "logging/logger.hpp"
+#include "core/platform.hpp"
 
 #include <atomic>
 #include <chrono>
@@ -10,16 +11,12 @@
 #include <sstream>
 #include <stdexcept>
 
-#ifdef _WIN32
-#    include <windows.h>
-#endif
-
 namespace sdl3cpp::app {
 
 extern std::atomic<bool> g_signalReceived;
 
 std::vector<char> ReadFile(const std::string& path) {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::TraceGuard trace;;
     
     // Validate file exists before attempting to open
     if (!std::filesystem::exists(path)) {
@@ -51,34 +48,6 @@ std::vector<char> ReadFile(const std::string& path) {
 
 namespace {
 
-#ifdef _WIN32
-std::string FormatWin32Error(DWORD errorCode) {
-    if (errorCode == ERROR_SUCCESS) {
-        return "ERROR_SUCCESS";
-    }
-    LPSTR buffer = nullptr;
-    DWORD length = FormatMessageA(
-        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-        nullptr,
-        errorCode,
-        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        reinterpret_cast<LPSTR>(&buffer),
-        0,
-        nullptr);
-    std::string message;
-    if (length > 0 && buffer) {
-        message.assign(buffer, length);
-        while (!message.empty() && (message.back() == '\r' || message.back() == '\n')) {
-            message.pop_back();
-        }
-        LocalFree(buffer);
-    } else {
-        message = "Unknown Windows error";
-    }
-    return message;
-}
-#endif
-
 std::string BuildSdlErrorMessage(const char* context) {
     std::ostringstream oss;
     oss << context;
@@ -88,12 +57,12 @@ std::string BuildSdlErrorMessage(const char* context) {
     } else {
         oss << ": (SDL_GetError returned an empty string)";
     }
-#ifdef _WIN32
-    DWORD win32Error = ::GetLastError();
-    if (win32Error != ERROR_SUCCESS) {
-        oss << " [Win32 error " << win32Error << ": " << FormatWin32Error(win32Error) << "]";
+
+    std::string platformError = sdl3cpp::platform::GetPlatformError();
+    if (!platformError.empty() && platformError != "No platform error") {
+        oss << " [" << platformError << "]";
     }
-#endif
+
     return oss.str();
 }
 
@@ -116,7 +85,7 @@ void ShowErrorDialog(const char* title, const std::string& message) {
 Sdl3App::Sdl3App(const std::filesystem::path& scriptPath, bool luaDebug)
     : scriptEngine_(scriptPath, luaDebug),
       scriptDirectory_(scriptPath.parent_path()) {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::TraceGuard trace;;
     sdl3cpp::logging::Logger::GetInstance().TraceVariable("scriptPath", scriptPath);
 }
 
@@ -125,7 +94,7 @@ bool Sdl3App::ShouldStop() {
 }
 
 void Sdl3App::Run() {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::TraceGuard trace;;
     InitSDL();
     InitVulkan();
     MainLoop();
@@ -133,7 +102,7 @@ void Sdl3App::Run() {
 }
 
 void Sdl3App::InitSDL() {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::TraceGuard trace;;
     sdl3cpp::logging::Logger::GetInstance().TraceVariable("kWidth", kWidth);
     sdl3cpp::logging::Logger::GetInstance().TraceVariable("kHeight", kHeight);
     
@@ -171,7 +140,7 @@ void Sdl3App::InitSDL() {
 }
 
 void Sdl3App::InitVulkan() {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::TraceGuard trace;;
     try {
         CreateInstance();
     } catch (const std::exception& e) {
@@ -222,7 +191,7 @@ void Sdl3App::InitVulkan() {
 }
 
 void Sdl3App::MainLoop() {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::TraceGuard trace;;
     sdl3cpp::logging::Logger::GetInstance().TraceVariable("guiHasCommands_", guiHasCommands_);
     bool running = true;
     auto start = std::chrono::steady_clock::now();
@@ -285,7 +254,7 @@ void Sdl3App::MainLoop() {
 }
 
 void Sdl3App::Cleanup() {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::TraceGuard trace;;
     CleanupSwapChain();
 
     vkDestroyBuffer(device_, vertexBuffer_, nullptr);

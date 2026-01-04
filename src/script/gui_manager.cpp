@@ -11,7 +11,7 @@
 namespace sdl3cpp::script {
 
 GuiManager::GuiManager(lua_State* L) : L_(L) {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);
+    sdl3cpp::logging::TraceGuard trace;
     lua_getglobal(L_, "gui_input");
     if (!lua_isnil(L_, -1)) {
         guiInputRef_ = luaL_ref(L_, LUA_REGISTRYINDEX);

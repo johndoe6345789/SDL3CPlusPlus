@@ -11,7 +11,7 @@ namespace sdl3cpp::script {
 
 AudioManager::AudioManager(const std::filesystem::path& scriptDirectory)
     : scriptDirectory_(scriptDirectory) {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);
+    sdl3cpp::logging::TraceGuard trace;
 }
 
 void AudioManager::SetAudioPlayer(app::AudioPlayer* audioPlayer) {

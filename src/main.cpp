@@ -21,6 +21,7 @@
 #include "app/sdl3_app.hpp"
 #include <SDL3/SDL_main.h>
 #include "logging/logger.hpp"
+#include "core/platform.hpp"
 
 namespace sdl3cpp::app {
 std::atomic<bool> g_signalReceived{false};
@@ -71,7 +72,7 @@ RuntimeConfig GenerateDefaultRuntimeConfig(const char* argv0) {
 }
 
 RuntimeConfig LoadRuntimeConfigFromJson(const std::filesystem::path& configPath, bool dumpConfig) {
-    sdl3cpp::logging::Logger::GetInstance().TraceFunctionWithArgs(__PRETTY_FUNCTION__, configPath.string(), dumpConfig);
+    sdl3cpp::logging::Logger::GetInstance().TraceFunctionWithArgs(configPath.string(), dumpConfig);
     std::ifstream configStream(configPath);
     if (!configStream) {
         throw std::runtime_error("Failed to open config file: " + configPath.string());
@@ -158,24 +159,8 @@ RuntimeConfig LoadRuntimeConfigFromJson(const std::filesystem::path& configPath,
     return config;
 }
 
-std::optional<std::filesystem::path> GetUserConfigDirectory() {
-#ifdef _WIN32
-    if (const char* appData = std::getenv("APPDATA")) {
-        return std::filesystem::path(appData) / "sdl3cpp";
-    }
-#else
-    if (const char* xdgConfig = std::getenv("XDG_CONFIG_HOME")) {
-        return std::filesystem::path(xdgConfig) / "sdl3cpp";
-    }
-    if (const char* home = std::getenv("HOME")) {
-        return std::filesystem::path(home) / ".config" / "sdl3cpp";
-    }
-#endif
-    return std::nullopt;
-}
-
 std::optional<std::filesystem::path> GetDefaultConfigPath() {
-    if (auto dir = GetUserConfigDirectory()) {
+    if (auto dir = sdl3cpp::platform::GetUserConfigDirectory()) {
         return *dir / "default_runtime.json";
     }
     return std::nullopt;

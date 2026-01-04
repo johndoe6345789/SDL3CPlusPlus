@@ -15,7 +15,7 @@ PhysicsBridge::PhysicsBridge()
           broadphase_.get(),
           solver_.get(),
           collisionConfig_.get())) {
-    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);
+    sdl3cpp::logging::TraceGuard trace;
     world_->setGravity(btVector3(0.0f, -9.81f, 0.0f));
 }
 

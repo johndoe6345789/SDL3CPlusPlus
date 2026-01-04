@@ -8,6 +8,7 @@
 #include <mutex>
 #include <fstream>
 #include <memory>
+#include <source_location>
 
 namespace sdl3cpp::logging {
 
@@ -57,10 +58,10 @@ public:
     }
 
     template <typename... Args>
-    void TraceFunctionWithArgs(const std::string& funcName, const Args&... args) {
+    void TraceFunctionWithArgs(const Args&... args, const std::source_location& location = std::source_location::current()) {
         if (GetLevel() <= LogLevel::TRACE) {
             std::ostringstream oss;
-            oss << "Entering " << funcName << " with args: ";
+            oss << "Entering " << location.function_name() << " with args: ";
             ((oss << args << " "), ...);
             Trace(oss.str());
         }
@@ -86,7 +87,8 @@ private:
 
 class TraceGuard {
 public:
-    TraceGuard(const std::string& funcName) : funcName_(funcName) {
+    explicit TraceGuard(const std::source_location& location = std::source_location::current())
+        : funcName_(location.function_name()) {
         Logger::GetInstance().Trace("Entering " + funcName_);
     }
     ~TraceGuard() {
