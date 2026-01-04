@@ -66,15 +66,15 @@ bool BulletPhysicsService::AddSphereRigidBody(const std::string& name,
 }
 
 bool BulletPhysicsService::RemoveRigidBody(const std::string& name) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     // PhysicsBridge doesn't support removing bodies in current implementation
-    logging::Logger::GetInstance().Warn("RemoveRigidBody not supported by PhysicsBridge");
+    logger_->Warn("RemoveRigidBody not supported by PhysicsBridge");
     return false;
 }
 
 void BulletPhysicsService::StepSimulation(float deltaTime, int maxSubSteps) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     if (!physicsBridge_) {
         throw std::runtime_error("Physics service not initialized");
