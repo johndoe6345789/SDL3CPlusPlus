@@ -185,7 +185,8 @@ void ServiceBasedApp::RegisterServices() {
         registry_.GetService<events::EventBus>());
 
     // Vulkan device service
-    registry_.RegisterService<services::IVulkanDeviceService, services::impl::VulkanDeviceService>();
+    registry_.RegisterService<services::IVulkanDeviceService, services::impl::VulkanDeviceService>(
+        registry_.GetService<services::ILogger>());
 
     // Swapchain service
     registry_.RegisterService<services::ISwapchainService, services::impl::SwapchainService>(

@@ -37,7 +37,7 @@ void VulkanDeviceService::Initialize(const std::vector<const char*>& deviceExten
 }
 
 void VulkanDeviceService::CreateSurface(SDL_Window* window) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     if (!window) {
         throw std::invalid_argument("Window cannot be null");
@@ -49,7 +49,7 @@ void VulkanDeviceService::CreateSurface(SDL_Window* window) {
 }
 
 void VulkanDeviceService::CreateInstance(const std::vector<const char*>& requiredExtensions) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     // Check Vulkan availability
     uint32_t apiVersion = 0;
@@ -112,7 +112,7 @@ void VulkanDeviceService::CreateInstance(const std::vector<const char*>& require
 }
 
 void VulkanDeviceService::PickPhysicalDevice() {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     uint32_t deviceCount = 0;
     VkResult enumResult = vkEnumeratePhysicalDevices(instance_, &deviceCount, nullptr);
@@ -212,7 +212,7 @@ bool VulkanDeviceService::CheckDeviceExtensionSupport(VkPhysicalDevice device) c
 }
 
 void VulkanDeviceService::CreateLogicalDevice() {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     QueueFamilyIndices indices = FindQueueFamilies(physicalDevice_);
 
@@ -243,7 +243,7 @@ void VulkanDeviceService::CreateLogicalDevice() {
         throw std::runtime_error("Failed to create logical device");
     }
 
-    logging::Logger::GetInstance().Info("Logical device created successfully");
+    logger_->Info("Logical device created successfully");
     vkGetDeviceQueue(device_, indices.graphicsFamily, 0, &graphicsQueue_);
     vkGetDeviceQueue(device_, indices.presentFamily, 0, &presentQueue_);
 }
