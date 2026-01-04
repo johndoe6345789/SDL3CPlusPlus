@@ -5,6 +5,7 @@
 #include "script/audio_manager.hpp"
 #include "script/lua_bindings.hpp"
 #include "app/audio_player.hpp"
+#include "logging/logger.hpp"
 
 #include <lua.hpp>
 
@@ -25,9 +26,11 @@ ScriptEngine::ScriptEngine(const std::filesystem::path& scriptPath, bool debugEn
       guiManager_(std::make_unique<GuiManager>(L_)),
       audioManager_(std::make_unique<AudioManager>(scriptDirectory_)) {
     if (!L_) {
+        LOG_ERROR("Failed to create Lua state");
         throw std::runtime_error("Failed to create Lua state");
     }
     
+    LOG_DEBUG("Lua state created successfully");
     luaL_openlibs(L_);
     
     LuaBindings::RegisterBindings(L_, this);
@@ -57,8 +60,11 @@ ScriptEngine::ScriptEngine(const std::filesystem::path& scriptPath, bool debugEn
         lua_pop(L_, 1);
         lua_close(L_);
         L_ = nullptr;
+        LOG_ERROR("Failed to load Lua script: " + message);
         throw std::runtime_error("Failed to load Lua script: " + message);
     }
+
+    LOG_INFO("Lua script loaded successfully: " + scriptPath.string());
 }
 
 ScriptEngine::~ScriptEngine() {

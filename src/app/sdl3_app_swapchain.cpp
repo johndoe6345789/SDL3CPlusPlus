@@ -24,22 +24,19 @@ void Sdl3App::CreateSwapChain() {
     // Validate window dimensions
     int windowWidth = 0, windowHeight = 0;
     SDL_GetWindowSize(window_, &windowWidth, &windowHeight);
-    std::cout << "Window size: " << windowWidth << "x" << windowHeight << "\n";
+    LOG_INFO("Window size: " + std::to_string(windowWidth) + "x" + std::to_string(windowHeight));
     
     if (windowWidth == 0 || windowHeight == 0) {
+        LOG_ERROR("Invalid window dimensions (" + std::to_string(windowWidth) + "x" + std::to_string(windowHeight) + "). Window may be minimized or invalid.");
         throw std::runtime_error("Invalid window dimensions (" + 
             std::to_string(windowWidth) + "x" + std::to_string(windowHeight) + ").\n" +
             "Window may be minimized or invalid.");
     }
     
-    std::cout << "Surface capabilities:\n";
-    std::cout << "  Min extent: " << support.capabilities.minImageExtent.width 
-              << "x" << support.capabilities.minImageExtent.height << "\n";
-    std::cout << "  Max extent: " << support.capabilities.maxImageExtent.width 
-              << "x" << support.capabilities.maxImageExtent.height << "\n";
-    std::cout << "  Min images: " << support.capabilities.minImageCount << "\n";
-    std::cout << "  Max images: " << support.capabilities.maxImageCount << "\n";
-    std::cout.flush();
+    LOG_DEBUG("Surface capabilities - Min extent: " + std::to_string(support.capabilities.minImageExtent.width) + "x" + std::to_string(support.capabilities.minImageExtent.height) +
+              ", Max extent: " + std::to_string(support.capabilities.maxImageExtent.width) + "x" + std::to_string(support.capabilities.maxImageExtent.height) +
+              ", Min images: " + std::to_string(support.capabilities.minImageCount) +
+              ", Max images: " + std::to_string(support.capabilities.maxImageCount));
 
     VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(support.formats);
     VkPresentModeKHR presentMode = ChooseSwapPresentMode(support.presentModes);

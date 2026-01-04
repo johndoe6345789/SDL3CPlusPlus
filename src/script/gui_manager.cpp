@@ -1,4 +1,5 @@
 #include "script/gui_manager.hpp"
+#include "logging/logger.hpp"
 
 #include <lua.hpp>
 
@@ -34,10 +35,12 @@ std::vector<GuiCommand> GuiManager::LoadGuiCommands() {
     if (lua_pcall(L_, 0, 1, 0) != LUA_OK) {
         std::string message = GetLuaError();
         lua_pop(L_, 1);
+        LOG_ERROR("Lua get_gui_commands failed: " + message);
         throw std::runtime_error("Lua get_gui_commands failed: " + message);
     }
     if (!lua_istable(L_, -1)) {
         lua_pop(L_, 1);
+        LOG_ERROR("'get_gui_commands' did not return a table");
         throw std::runtime_error("'get_gui_commands' did not return a table");
     }
 
@@ -48,6 +51,7 @@ std::vector<GuiCommand> GuiManager::LoadGuiCommands() {
         lua_rawgeti(L_, -1, static_cast<int>(i));
         if (!lua_istable(L_, -1)) {
             lua_pop(L_, 1);
+            LOG_ERROR("GUI command at index " + std::to_string(i) + " is not a table");
             throw std::runtime_error("GUI command at index " + std::to_string(i) + " is not a table");
         }
         int commandIndex = lua_gettop(L_);
@@ -55,6 +59,7 @@ std::vector<GuiCommand> GuiManager::LoadGuiCommands() {
         const char* typeName = lua_tostring(L_, -1);
         if (!typeName) {
             lua_pop(L_, 2);
+            LOG_ERROR("GUI command at index " + std::to_string(i) + " is missing a type");
             throw std::runtime_error("GUI command at index " + std::to_string(i) + " is missing a type");
         }
         GuiCommand command{};

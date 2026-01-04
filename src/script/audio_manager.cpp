@@ -1,5 +1,6 @@
 #include "script/audio_manager.hpp"
 #include "app/audio_player.hpp"
+#include "logging/logger.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -20,7 +21,7 @@ void AudioManager::SetAudioPlayer(app::AudioPlayer* audioPlayer) {
         try {
             ExecuteAudioCommand(audioPlayer_, command);
         } catch (const std::exception& exc) {
-            std::cerr << "AudioPlayer: " << exc.what() << '\n';
+            LOG_ERROR("AudioPlayer command execution failed: " + std::string(exc.what()));
         }
     }
     pendingAudioCommands_.clear();
