@@ -25,6 +25,8 @@
 
 using namespace sdl3cpp::services;
 
+using namespace sdl3cpp::services;
+
 namespace sdl3cpp::app {
 std::atomic<bool> g_signalReceived{false};
 
@@ -242,7 +244,7 @@ AppOptions ParseCommandLine(int argc, char** argv) {
     return options;
 }
 
-void LogRuntimeConfig(const RuntimeConfig& config, std::shared_ptr<services::ILogger> logger) {
+void LogRuntimeConfig(const RuntimeConfig& config, std::shared_ptr<sdl3cpp::services::ILogger> logger) {
     if (logger) {
         logger->TraceVariable("config.width", config.width);
         logger->TraceVariable("config.height", config.height);
