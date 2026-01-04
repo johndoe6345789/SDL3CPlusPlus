@@ -127,6 +127,8 @@ if(BUILD_SDL3_APP)
             src/services/impl/sdl_window_service.cpp
             src/services/impl/sdl_input_service.cpp
             src/services/impl/vulkan_device_service.cpp
+            src/services/impl/swapchain_service.cpp
+            src/services/impl/pipeline_service.cpp
             src/app/sdl3_app_core.cpp
             src/app/audio_player.cpp
             src/app/sdl3_app_device.cpp
