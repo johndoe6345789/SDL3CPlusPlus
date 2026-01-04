@@ -29,6 +29,15 @@ public:
      */
     void Run();
 
+    /**
+     * @brief Configure the logger service.
+     *
+     * @param level The logging level
+     * @param enableConsole Whether to enable console output
+     * @param outputFile Path to the log file (optional)
+     */
+    void ConfigureLogging(services::LogLevel level, bool enableConsole, const std::string& outputFile = "");
+
 private:
     void RegisterServices();
     void SetupSDL();
