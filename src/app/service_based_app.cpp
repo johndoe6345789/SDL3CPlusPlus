@@ -130,7 +130,7 @@ void ServiceBasedApp::RegisterServices() {
     registry_.RegisterService<services::IWindowService>(windowService);
 
     // Input service
-    auto inputService = std::make_shared<services::impl::SdlInputService>();
+    auto inputService = std::make_shared<services::impl::SdlInputService>(eventBus);
     registry_.RegisterService<services::IInputService>(inputService);
 
     // Vulkan device service
@@ -138,7 +138,7 @@ void ServiceBasedApp::RegisterServices() {
     registry_.RegisterService<services::IVulkanDeviceService>(deviceService);
 
     // Swapchain service
-    auto swapchainService = std::make_shared<services::impl::SwapchainService>(deviceService);
+    auto swapchainService = std::make_shared<services::impl::SwapchainService>(deviceService, eventBus);
     registry_.RegisterService<services::ISwapchainService>(swapchainService);
 
     // Pipeline service
@@ -151,7 +151,7 @@ void ServiceBasedApp::RegisterServices() {
 
     // Render command service
     auto renderCommandService = std::make_shared<services::impl::RenderCommandService>(
-        deviceService, swapchainService, pipelineService, bufferService);
+        deviceService, swapchainService);
     registry_.RegisterService<services::IRenderCommandService>(renderCommandService);
 
     // Graphics service (facade)
