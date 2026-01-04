@@ -182,7 +182,8 @@ void ServiceBasedApp::RegisterServices() {
 
     // Input service
     registry_.RegisterService<services::IInputService, services::impl::SdlInputService>(
-        registry_.GetService<events::EventBus>());
+        registry_.GetService<events::EventBus>(),
+        registry_.GetService<services::ILogger>());
 
     // Vulkan device service
     registry_.RegisterService<services::IVulkanDeviceService, services::impl::VulkanDeviceService>(
@@ -219,7 +220,8 @@ void ServiceBasedApp::RegisterServices() {
         registry_.GetService<services::IWindowService>());
 
     // Script service
-    registry_.RegisterService<services::IScriptService, services::impl::LuaScriptService>(scriptPath_);
+    registry_.RegisterService<services::IScriptService, services::impl::LuaScriptService>(
+        scriptPath_, registry_.GetService<services::ILogger>());
 
     // Connect input service to script service for GUI input processing
     auto inputService = registry_.GetService<services::IInputService>();

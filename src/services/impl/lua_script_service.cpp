@@ -1,11 +1,10 @@
 #include "lua_script_service.hpp"
-#include "../../logging/logger.hpp"
 #include <stdexcept>
 
 namespace sdl3cpp::services::impl {
 
-LuaScriptService::LuaScriptService(const std::filesystem::path& scriptPath, bool debugEnabled)
-    : scriptPath_(scriptPath), debugEnabled_(debugEnabled) {
+LuaScriptService::LuaScriptService(const std::filesystem::path& scriptPath, std::shared_ptr<ILogger> logger, bool debugEnabled)
+    : scriptPath_(scriptPath), logger_(logger), debugEnabled_(debugEnabled) {
 }
 
 LuaScriptService::~LuaScriptService() {
@@ -15,7 +14,7 @@ LuaScriptService::~LuaScriptService() {
 }
 
 void LuaScriptService::Initialize() {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     if (initialized_) {
         return;
@@ -24,11 +23,11 @@ void LuaScriptService::Initialize() {
     engine_ = std::make_unique<script::ScriptEngine>(scriptPath_, debugEnabled_);
     initialized_ = true;
 
-    logging::Logger::GetInstance().Info("Script service initialized");
+    logger_->Info("Script service initialized");
 }
 
 void LuaScriptService::Shutdown() noexcept {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     if (!initialized_) {
         return;
@@ -37,11 +36,11 @@ void LuaScriptService::Shutdown() noexcept {
     engine_.reset();
     initialized_ = false;
 
-    logging::Logger::GetInstance().Info("Script service shutdown");
+    logger_->Info("Script service shutdown");
 }
 
 std::vector<script::SceneManager::SceneObject> LuaScriptService::LoadSceneObjects() {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     if (!engine_) {
         throw std::runtime_error("Script service not initialized");
@@ -67,7 +66,7 @@ std::array<float, 16> LuaScriptService::GetViewProjectionMatrix(float aspect) {
 }
 
 std::unordered_map<std::string, sdl3cpp::services::ShaderPaths> LuaScriptService::LoadShaderPathsMap() {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     if (!engine_) {
         throw std::runtime_error("Script service not initialized");

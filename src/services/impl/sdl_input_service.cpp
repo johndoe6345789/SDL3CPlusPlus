@@ -1,6 +1,5 @@
 #include "sdl_input_service.hpp"
 #include "../interfaces/i_script_service.hpp"
-#include "../../logging/logger.hpp"
 
 namespace sdl3cpp::services::impl {
 
@@ -14,8 +13,8 @@ const std::unordered_map<SDL_Keycode, std::string> SdlInputService::kGuiKeyNames
     {SDLK_RALT, "ralt"}
 };
 
-SdlInputService::SdlInputService(std::shared_ptr<events::EventBus> eventBus)
-    : eventBus_(std::move(eventBus)) {
+SdlInputService::SdlInputService(std::shared_ptr<events::EventBus> eventBus, std::shared_ptr<ILogger> logger)
+    : eventBus_(std::move(eventBus)), logger_(logger) {
 
     // Subscribe to input events
     eventBus_->Subscribe(events::EventType::KeyPressed, [this](const events::Event& e) {
