@@ -39,8 +39,6 @@ public:
 
     script::PhysicsBridge& GetPhysicsBridge() override;
 
-    void SetAudioPlayer(app::AudioPlayer* audioPlayer) override;
-
     std::filesystem::path GetScriptDirectory() const override;
     std::string GetLuaError() override;
 

@@ -210,6 +210,49 @@ void ServiceBasedApp::RegisterServices() {
         registry_.GetService<events::EventBus>(),
         registry_.GetService<services::ILogger>());
 
+    // Audio service (needed before script bindings execute)
+    registry_.RegisterService<services::IAudioService, services::impl::SdlAudioService>(
+        registry_.GetService<services::ILogger>());
+
+    // Script bridge services
+    registry_.RegisterService<services::IMeshService, services::impl::MeshService>(
+        registry_.GetService<services::IConfigService>());
+    registry_.RegisterService<services::IPhysicsBridgeService, services::impl::PhysicsBridgeService>(
+        registry_.GetService<services::ILogger>());
+    registry_.RegisterService<services::IAudioCommandService, services::impl::AudioCommandService>(
+        registry_.GetService<services::IConfigService>(),
+        registry_.GetService<services::IAudioService>(),
+        registry_.GetService<services::ILogger>());
+
+    // Script engine service (shared Lua runtime)
+    registry_.RegisterService<services::IScriptEngineService, services::impl::ScriptEngineService>(
+        scriptPath_,
+        registry_.GetService<services::ILogger>(),
+        registry_.GetService<services::IMeshService>(),
+        registry_.GetService<services::IAudioCommandService>(),
+        registry_.GetService<services::IPhysicsBridgeService>(),
+        runtimeConfig.luaDebug);
+
+    // Script-facing services
+    registry_.RegisterService<services::ISceneScriptService, services::impl::SceneScriptService>(
+        registry_.GetService<services::IScriptEngineService>());
+    registry_.RegisterService<services::IShaderScriptService, services::impl::ShaderScriptService>(
+        registry_.GetService<services::IScriptEngineService>());
+    registry_.RegisterService<services::IGuiScriptService, services::impl::GuiScriptService>(
+        registry_.GetService<services::IScriptEngineService>());
+
+    // Script service (facade)
+    registry_.RegisterService<services::IScriptService, services::impl::LuaScriptService>(
+        registry_.GetService<services::IScriptEngineService>(),
+        registry_.GetService<services::ILogger>());
+
+    // Connect input service to GUI script service for GUI input processing
+    auto inputService = registry_.GetService<services::IInputService>();
+    auto guiScriptService = registry_.GetService<services::IGuiScriptService>();
+    if (inputService && guiScriptService) {
+        inputService->SetGuiScriptService(guiScriptService.get());
+    }
+
     // Vulkan device service
     registry_.RegisterService<services::IVulkanDeviceService, services::impl::VulkanDeviceService>(
         registry_.GetService<services::ILogger>());
@@ -246,45 +289,9 @@ void ServiceBasedApp::RegisterServices() {
         registry_.GetService<services::IRenderCommandService>(),
         registry_.GetService<services::IWindowService>());
 
-    // Script engine service (shared Lua runtime)
-    registry_.RegisterService<services::IScriptEngineService, services::impl::ScriptEngineService>(
-        scriptPath_,
-        registry_.GetService<services::ILogger>(),
-        runtimeConfig.luaDebug);
-
-    // Script-facing services
-    registry_.RegisterService<services::ISceneScriptService, services::impl::SceneScriptService>(
-        registry_.GetService<services::IScriptEngineService>());
-    registry_.RegisterService<services::IShaderScriptService, services::impl::ShaderScriptService>(
-        registry_.GetService<services::IScriptEngineService>());
-    registry_.RegisterService<services::IGuiScriptService, services::impl::GuiScriptService>(
-        registry_.GetService<services::IScriptEngineService>());
-    registry_.RegisterService<services::IAudioCommandService, services::impl::AudioCommandService>(
-        registry_.GetService<services::IScriptEngineService>());
-    registry_.RegisterService<services::IPhysicsBridgeService, services::impl::PhysicsBridgeService>(
-        registry_.GetService<services::IScriptEngineService>());
-    registry_.RegisterService<services::IMeshService, services::impl::MeshService>(
-        registry_.GetService<services::IScriptEngineService>());
-
-    // Script service (facade)
-    registry_.RegisterService<services::IScriptService, services::impl::LuaScriptService>(
-        registry_.GetService<services::IScriptEngineService>(),
-        registry_.GetService<services::ILogger>());
-
-    // Connect input service to script service for GUI input processing
-    auto inputService = registry_.GetService<services::IInputService>();
-    auto scriptService = registry_.GetService<services::IScriptService>();
-    if (inputService && scriptService) {
-        inputService->SetScriptService(scriptService.get());
-    }
-
     // Scene service
     registry_.RegisterService<services::ISceneService, services::impl::SceneService>(
         registry_.GetService<services::ISceneScriptService>(),
-        registry_.GetService<services::ILogger>());
-
-    // Audio service
-    registry_.RegisterService<services::IAudioService, services::impl::SdlAudioService>(
         registry_.GetService<services::ILogger>());
 
     // GUI service

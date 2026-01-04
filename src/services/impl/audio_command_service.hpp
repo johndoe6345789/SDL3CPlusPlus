@@ -1,7 +1,9 @@
 #pragma once
 
 #include "../interfaces/i_audio_command_service.hpp"
-#include "../interfaces/i_script_engine_service.hpp"
+#include "../interfaces/i_audio_service.hpp"
+#include "../interfaces/i_config_service.hpp"
+#include "../interfaces/i_logger.hpp"
 #include <memory>
 
 namespace sdl3cpp::services::impl {
@@ -11,15 +13,19 @@ namespace sdl3cpp::services::impl {
  */
 class AudioCommandService : public IAudioCommandService {
 public:
-    explicit AudioCommandService(std::shared_ptr<IScriptEngineService> engineService);
+    AudioCommandService(std::shared_ptr<IConfigService> configService,
+                        std::shared_ptr<IAudioService> audioService,
+                        std::shared_ptr<ILogger> logger);
 
-    bool QueueAudioCommand(script::AudioManager::AudioCommandType type,
+    bool QueueAudioCommand(AudioCommandType type,
                            const std::string& path,
                            bool loop,
                            std::string& error) override;
 
 private:
-    std::shared_ptr<IScriptEngineService> engineService_;
+    std::shared_ptr<IConfigService> configService_;
+    std::shared_ptr<IAudioService> audioService_;
+    std::shared_ptr<ILogger> logger_;
 };
 
 }  // namespace sdl3cpp::services::impl

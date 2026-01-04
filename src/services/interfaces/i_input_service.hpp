@@ -8,7 +8,7 @@
 namespace sdl3cpp::services {
 
 // Forward declaration
-class IScriptService;
+class IGuiScriptService;
 
 /**
  * @brief Input state snapshot for a single frame.
@@ -83,14 +83,14 @@ public:
     virtual std::pair<float, float> GetMousePosition() const = 0;
 
     /**
-     * @brief Set the script service for GUI input processing.
+     * @brief Set the GUI script service for GUI input processing.
      *
      * The input service will update GUI input state to the script service
      * when events are processed.
      *
-     * @param scriptService Pointer to the script service, or nullptr to disable
+     * @param guiScriptService Pointer to the GUI script service, or nullptr to disable
      */
-    virtual void SetScriptService(IScriptService* scriptService) = 0;
+    virtual void SetGuiScriptService(IGuiScriptService* guiScriptService) = 0;
 
     /**
      * @brief Update GUI input state to the script service.

@@ -1,7 +1,8 @@
 #pragma once
 
 #include "../interfaces/i_physics_bridge_service.hpp"
-#include "../interfaces/i_script_engine_service.hpp"
+#include "../interfaces/i_logger.hpp"
+#include "../../script/physics_bridge.hpp"
 #include <memory>
 
 namespace sdl3cpp::services::impl {
@@ -11,7 +12,7 @@ namespace sdl3cpp::services::impl {
  */
 class PhysicsBridgeService : public IPhysicsBridgeService {
 public:
-    explicit PhysicsBridgeService(std::shared_ptr<IScriptEngineService> engineService);
+    explicit PhysicsBridgeService(std::shared_ptr<ILogger> logger);
 
     bool AddBoxRigidBody(const std::string& name,
                          const btVector3& halfExtents,
@@ -24,7 +25,8 @@ public:
                                std::string& error) const override;
 
 private:
-    std::shared_ptr<IScriptEngineService> engineService_;
+    std::shared_ptr<ILogger> logger_;
+    std::unique_ptr<script::PhysicsBridge> bridge_;
 };
 
 }  // namespace sdl3cpp::services::impl

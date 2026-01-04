@@ -1,5 +1,4 @@
 #include "sdl_input_service.hpp"
-#include "../interfaces/i_script_service.hpp"
 
 namespace sdl3cpp::services::impl {
 
@@ -174,13 +173,13 @@ void SdlInputService::OnTextInput(const events::Event& event) {
     state_.textInput += textEvent.text;
 }
 
-void SdlInputService::SetScriptService(IScriptService* scriptService) {
-    scriptService_ = scriptService;
+void SdlInputService::SetGuiScriptService(IGuiScriptService* guiScriptService) {
+    guiScriptService_ = guiScriptService;
 }
 
 void SdlInputService::UpdateGuiInput() {
-    if (scriptService_) {
-        scriptService_->UpdateGuiInput(guiInputSnapshot_);
+    if (guiScriptService_) {
+        guiScriptService_->UpdateGuiInput(guiInputSnapshot_);
     }
 }
 

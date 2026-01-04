@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../interfaces/i_mesh_service.hpp"
-#include "../interfaces/i_script_engine_service.hpp"
+#include "../interfaces/i_config_service.hpp"
 #include <memory>
 
 namespace sdl3cpp::services::impl {
@@ -11,7 +11,7 @@ namespace sdl3cpp::services::impl {
  */
 class MeshService : public IMeshService {
 public:
-    explicit MeshService(std::shared_ptr<IScriptEngineService> engineService);
+    explicit MeshService(std::shared_ptr<IConfigService> configService);
 
     bool LoadFromFile(const std::string& requestedPath,
                       script::MeshPayload& outPayload,
@@ -19,7 +19,7 @@ public:
     void PushMeshToLua(lua_State* L, const script::MeshPayload& payload) override;
 
 private:
-    std::shared_ptr<IScriptEngineService> engineService_;
+    std::shared_ptr<IConfigService> configService_;
 };
 
 }  // namespace sdl3cpp::services::impl

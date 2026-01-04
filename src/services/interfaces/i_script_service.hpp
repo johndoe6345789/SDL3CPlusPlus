@@ -10,10 +10,6 @@
 #include <array>
 #include <string>
 
-namespace sdl3cpp::app {
-class AudioPlayer;
-}
-
 namespace sdl3cpp::services {
 
 /**
@@ -40,9 +36,6 @@ public:
 
     // Physics bridge access
     virtual script::PhysicsBridge& GetPhysicsBridge() = 0;
-
-    // Audio integration
-    virtual void SetAudioPlayer(app::AudioPlayer* audioPlayer) = 0;
 
     // Utility
     virtual std::filesystem::path GetScriptDirectory() const = 0;

@@ -2,7 +2,6 @@
 #include "script/scene_manager.hpp"
 #include "script/shader_manager.hpp"
 #include "script/gui_manager.hpp"
-#include "script/audio_manager.hpp"
 #include "script/lua_bindings.hpp"
 #include "logging/logger.hpp"
 
@@ -16,14 +15,17 @@
 namespace sdl3cpp::script {
 
 ScriptEngine::ScriptEngine(const std::filesystem::path& scriptPath, bool debugEnabled)
+    : ScriptEngine(scriptPath, nullptr, debugEnabled) {
+}
+
+ScriptEngine::ScriptEngine(const std::filesystem::path& scriptPath, LuaBindingContext* bindingContext, bool debugEnabled)
     : L_(luaL_newstate()),
       scriptDirectory_(scriptPath.parent_path()),
       debugEnabled_(debugEnabled),
       physicsBridge_(std::make_unique<PhysicsBridge>()),
       sceneManager_(std::make_unique<SceneManager>(L_)),
       shaderManager_(std::make_unique<ShaderManager>(L_)),
-      guiManager_(std::make_unique<GuiManager>(L_)),
-      audioManager_(std::make_unique<AudioManager>(scriptDirectory_)) {
+      guiManager_(std::make_unique<GuiManager>(L_)) {
     sdl3cpp::logging::TraceGuard trace;;
     if (!L_) {
         sdl3cpp::logging::Logger::GetInstance().Error("Failed to create Lua state");
@@ -33,7 +35,11 @@ ScriptEngine::ScriptEngine(const std::filesystem::path& scriptPath, bool debugEn
     sdl3cpp::logging::Logger::GetInstance().Debug("Lua state created successfully");
     luaL_openlibs(L_);
     
-    LuaBindings::RegisterBindings(L_, this);
+    if (bindingContext) {
+        LuaBindings::RegisterBindings(L_, bindingContext);
+    } else {
+        LuaBindings::RegisterBindings(L_, this);
+    }
     
     lua_pushboolean(L_, debugEnabled_);
     lua_setglobal(L_, "lua_debug");
@@ -107,10 +113,6 @@ bool ScriptEngine::HasGuiCommands() const {
 
 std::filesystem::path ScriptEngine::GetScriptDirectory() const {
     return scriptDirectory_;
-}
-
-bool ScriptEngine::QueueAudioCommand(AudioManager::AudioCommandType type, std::string path, bool loop, std::string& error) {
-    return audioManager_->QueueAudioCommand(type, path, loop, error);
 }
 
 std::string ScriptEngine::GetLuaError() {

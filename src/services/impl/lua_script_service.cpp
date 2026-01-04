@@ -110,11 +110,6 @@ script::PhysicsBridge& LuaScriptService::GetPhysicsBridge() {
     return engineService_->GetEngine().GetPhysicsBridge();
 }
 
-void LuaScriptService::SetAudioPlayer(app::AudioPlayer* audioPlayer) {
-    // Stub - audio functionality now handled through services
-    logger_->Trace("LuaScriptService::SetAudioPlayer: Stub implementation - using services now");
-}
-
 std::filesystem::path LuaScriptService::GetScriptDirectory() const {
     if (!engineService_ || !engineService_->IsInitialized()) {
         return {};

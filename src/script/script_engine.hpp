@@ -16,17 +16,15 @@
 #include "script/scene_manager.hpp"
 #include "script/shader_manager.hpp"
 #include "script/gui_manager.hpp"
-#include "script/audio_manager.hpp"
-
-namespace sdl3cpp::app {
-class AudioPlayer;
-}
 
 namespace sdl3cpp::script {
+
+struct LuaBindingContext;
 
 class ScriptEngine {
 public:
     explicit ScriptEngine(const std::filesystem::path& scriptPath, bool debugEnabled = false);
+    ScriptEngine(const std::filesystem::path& scriptPath, LuaBindingContext* bindingContext, bool debugEnabled = false);
     ~ScriptEngine();
 
     ScriptEngine(const ScriptEngine&) = delete;
@@ -41,12 +39,9 @@ public:
     bool HasGuiCommands() const;
     std::filesystem::path GetScriptDirectory() const;
     PhysicsBridge& GetPhysicsBridge();
-    // void SetAudioPlayer(app::AudioPlayer* audioPlayer); // Removed - using services now
-    bool QueueAudioCommand(AudioManager::AudioCommandType type, std::string path, bool loop, std::string& error);
     std::string GetLuaError();
 
 private:
-    void ExecuteAudioCommand(const AudioManager::AudioCommand& command); // Updated to not take AudioPlayer
     std::filesystem::path ResolveScriptPath(const std::string& requested) const;
 
     static std::vector<core::Vertex> ReadVertexArray(lua_State* L, int index);
@@ -62,12 +57,9 @@ private:
     std::filesystem::path scriptDirectory_;
     bool debugEnabled_ = false;
     std::unique_ptr<PhysicsBridge> physicsBridge_;
-    app::AudioPlayer* audioPlayer_ = nullptr;
-    std::vector<AudioManager::AudioCommand> pendingAudioCommands_;
     std::unique_ptr<SceneManager> sceneManager_;
     std::unique_ptr<ShaderManager> shaderManager_;
     std::unique_ptr<GuiManager> guiManager_;
-    std::unique_ptr<AudioManager> audioManager_;
 };
 
 } // namespace sdl3cpp::script

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../interfaces/i_input_service.hpp"
+#include "../interfaces/i_gui_script_service.hpp"
 #include "../interfaces/i_logger.hpp"
 #include "../../events/event_bus.hpp"
 #include <memory>
@@ -31,7 +32,7 @@ public:
     bool IsKeyPressed(SDL_Keycode key) const override;
     bool IsMouseButtonPressed(uint8_t button) const override;
     std::pair<float, float> GetMousePosition() const override;
-    void SetScriptService(IScriptService* scriptService) override;
+    void SetGuiScriptService(IGuiScriptService* guiScriptService) override;
     void UpdateGuiInput() override;
 
 private:
@@ -39,7 +40,7 @@ private:
     std::shared_ptr<ILogger> logger_;
     InputState state_;
     script::GuiInputSnapshot guiInputSnapshot_;
-    IScriptService* scriptService_ = nullptr;
+    IGuiScriptService* guiScriptService_ = nullptr;
 
     // Event bus listeners
     void OnKeyPressed(const events::Event& event);

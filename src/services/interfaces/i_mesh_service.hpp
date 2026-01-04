@@ -1,7 +1,9 @@
 #pragma once
 
-#include "../../script/mesh_loader.hpp"
+#include "../../script/mesh_payload.hpp"
 #include <string>
+
+struct lua_State;
 
 namespace sdl3cpp::services {
 
