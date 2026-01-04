@@ -23,21 +23,21 @@ namespace sdl3cpp::app {
 
 ServiceBasedApp::ServiceBasedApp(const std::filesystem::path& scriptPath)
     : scriptPath_(scriptPath) {
-    logging::Logger::GetInstance().Info("ServiceBasedApp constructor starting");
+    logging::Logger::GetInstance().Info("ServiceBasedApp::ServiceBasedApp: constructor starting");
 
     try {
-        logging::Logger::GetInstance().Info("Setting up SDL");
+        logging::Logger::GetInstance().Info("ServiceBasedApp::ServiceBasedApp: Setting up SDL");
         SetupSDL();
-        logging::Logger::GetInstance().Info("Registering services");
+        logging::Logger::GetInstance().Info("ServiceBasedApp::ServiceBasedApp: Registering services");
         RegisterServices();
-        logging::Logger::GetInstance().Info("Creating controllers");
+        logging::Logger::GetInstance().Info("ServiceBasedApp::ServiceBasedApp: Creating controllers");
 
         lifecycleController_ = std::make_unique<controllers::LifecycleController>(registry_);
         applicationController_ = std::make_unique<controllers::ApplicationController>(registry_);
         
-        logging::Logger::GetInstance().Info("ServiceBasedApp constructor completed");
+        logging::Logger::GetInstance().Info("ServiceBasedApp::ServiceBasedApp: constructor completed");
     } catch (const std::exception& e) {
-        logging::Logger::GetInstance().Error("Failed to initialize ServiceBasedApp: " + std::string(e.what()));
+        logging::Logger::GetInstance().Error("ServiceBasedApp::ServiceBasedApp: Failed to initialize ServiceBasedApp: " + std::string(e.what()));
         throw;
     }
 }
@@ -50,7 +50,7 @@ ServiceBasedApp::~ServiceBasedApp() {
 }
 
 void ServiceBasedApp::Run() {
-    logging::TraceGuard trace("ServiceBasedApp::Run");
+    logging::Logger::GetInstance().Trace("ServiceBasedApp::Run: Entering");
 
     try {
         // Initialize all services
@@ -97,21 +97,25 @@ void ServiceBasedApp::Run() {
         // Shutdown all services
         lifecycleController_->ShutdownAll();
 
+        logging::Logger::GetInstance().Trace("ServiceBasedApp::Run: Exiting");
+
     } catch (const std::exception& e) {
-        logging::Logger::GetInstance().Error("Application error: " + std::string(e.what()));
+        logging::Logger::GetInstance().Error("ServiceBasedApp::Run: Application error: " + std::string(e.what()));
         throw;
     }
 }
 
 void ServiceBasedApp::SetupSDL() {
-    logging::TraceGuard trace("ServiceBasedApp::SetupSDL");
+    logging::Logger::GetInstance().Trace("ServiceBasedApp::SetupSDL: Entering");
 
     // SDL initialization is handled by the window service
     // Don't initialize SDL here to avoid double initialization
+
+    logging::Logger::GetInstance().Trace("ServiceBasedApp::SetupSDL: Exiting");
 }
 
 void ServiceBasedApp::RegisterServices() {
-    logging::TraceGuard trace("ServiceBasedApp::RegisterServices");
+    logging::Logger::GetInstance().Trace("ServiceBasedApp::RegisterServices: Entering");
 
     // Event bus (needed by window service)
     registry_.RegisterService<events::EventBus, events::EventBus>();
@@ -174,6 +178,8 @@ void ServiceBasedApp::RegisterServices() {
 
     // Physics service
     registry_.RegisterService<services::IPhysicsService, services::impl::BulletPhysicsService>();
+
+    logging::Logger::GetInstance().Trace("ServiceBasedApp::RegisterServices: Exiting");
 }
 
 }  // namespace sdl3cpp::app

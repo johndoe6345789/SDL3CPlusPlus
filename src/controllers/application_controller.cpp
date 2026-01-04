@@ -13,17 +13,17 @@ namespace sdl3cpp::controllers {
 
 ApplicationController::ApplicationController(di::ServiceRegistry& registry)
     : registry_(registry), running_(false) {
-    logging::TraceGuard trace;
+    logging::Logger::GetInstance().Trace("ApplicationController::ApplicationController: Created");
 }
 
 ApplicationController::~ApplicationController() {
-    logging::TraceGuard trace;
+    logging::Logger::GetInstance().Trace("ApplicationController::~ApplicationController: Destroyed");
 }
 
 void ApplicationController::Run() {
-    logging::Logger::GetInstance().Info("ApplicationController::Run starting");
-    logging::TraceGuard trace;
-    logging::Logger::GetInstance().Info("Application starting main loop");
+    logging::Logger::GetInstance().Trace("ApplicationController::Run: Entering");
+    logging::Logger::GetInstance().Info("ApplicationController::Run: ApplicationController::Run starting");
+    logging::Logger::GetInstance().Info("ApplicationController::Run: Application starting main loop");
 
     running_ = true;
     auto lastTime = std::chrono::high_resolution_clock::now();
@@ -47,7 +47,8 @@ void ApplicationController::Run() {
         ProcessFrame(deltaTime);
     }
 
-    logging::Logger::GetInstance().Info("Application exiting main loop");
+    logging::Logger::GetInstance().Info("ApplicationController::Run: Application exiting main loop");
+    logging::Logger::GetInstance().Trace("ApplicationController::Run: Exiting");
 }
 
 void ApplicationController::HandleEvents() {

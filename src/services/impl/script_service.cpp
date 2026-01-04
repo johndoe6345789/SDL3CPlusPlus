@@ -7,18 +7,18 @@ namespace sdl3cpp::services::impl {
 
 ScriptService::ScriptService(const std::filesystem::path& scriptPath)
     : scriptPath_(scriptPath) {
-    logging::TraceGuard trace("ScriptService::ScriptService");
+    logging::Logger::GetInstance().Trace("ScriptService::ScriptService: Created");
 }
 
 ScriptService::~ScriptService() {
-    logging::TraceGuard trace("ScriptService::~ScriptService");
+    logging::Logger::GetInstance().Trace("ScriptService::~ScriptService: Destroyed");
     if (initialized_) {
         Shutdown();
     }
 }
 
 void ScriptService::Initialize() {
-    logging::TraceGuard trace("ScriptService::Initialize");
+    logging::Logger::GetInstance().Trace("ScriptService::Initialize: Entering");
 
     if (initialized_) {
         throw std::runtime_error("Script service already initialized");
@@ -27,28 +27,34 @@ void ScriptService::Initialize() {
     try {
         scriptEngine_ = std::make_unique<script::ScriptEngine>(scriptPath_);
         initialized_ = true;
+        logging::Logger::GetInstance().Trace("ScriptService::Initialize: Exiting");
     } catch (const std::exception& e) {
+        logging::Logger::GetInstance().Trace("ScriptService::Initialize: Exiting with error");
         throw std::runtime_error(std::string("Failed to initialize script engine: ") + e.what());
     }
 }
 
 void ScriptService::Shutdown() noexcept {
-    logging::TraceGuard trace("ScriptService::Shutdown");
+    logging::Logger::GetInstance().Trace("ScriptService::Shutdown: Entering");
 
     if (scriptEngine_) {
         scriptEngine_.reset();
     }
     initialized_ = false;
+
+    logging::Logger::GetInstance().Trace("ScriptService::Shutdown: Exiting");
 }
 
 std::vector<script::SceneManager::SceneObject> ScriptService::LoadSceneObjects() {
-    logging::TraceGuard trace("ScriptService::LoadSceneObjects");
+    logging::Logger::GetInstance().Trace("ScriptService::LoadSceneObjects: Entering");
 
     if (!initialized_) {
         throw std::runtime_error("Script service not initialized");
     }
 
-    return scriptEngine_->LoadSceneObjects();
+    auto result = scriptEngine_->LoadSceneObjects();
+    logging::Logger::GetInstance().Trace("ScriptService::LoadSceneObjects: Exiting");
+    return result;
 }
 
 std::array<float, 16> ScriptService::ComputeModelMatrix(int functionRef, float time) {
@@ -62,13 +68,15 @@ std::array<float, 16> ScriptService::ComputeModelMatrix(int functionRef, float t
 }
 
 std::array<float, 16> ScriptService::GetViewProjectionMatrix(float aspect) {
-    logging::TraceGuard trace("ScriptService::GetViewProjectionMatrix");
+    logging::Logger::GetInstance().Trace("ScriptService::GetViewProjectionMatrix: Entering");
 
     if (!initialized_) {
         throw std::runtime_error("Script service not initialized");
     }
 
-    return scriptEngine_->GetViewProjectionMatrix(aspect);
+    auto result = scriptEngine_->GetViewProjectionMatrix(aspect);
+    logging::Logger::GetInstance().Trace("ScriptService::GetViewProjectionMatrix: Exiting");
+    return result;
 }
 
 std::unordered_map<std::string, script::ShaderManager::ShaderPaths> ScriptService::LoadShaderPathsMap() {

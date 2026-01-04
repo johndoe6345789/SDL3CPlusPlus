@@ -9,15 +9,15 @@ namespace sdl3cpp::controllers {
 
 RenderController::RenderController(di::ServiceRegistry& registry)
     : registry_(registry) {
-    logging::TraceGuard trace;
+    logging::Logger::GetInstance().Trace("RenderController::RenderController: Created");
 }
 
 RenderController::~RenderController() {
-    logging::TraceGuard trace;
+    logging::Logger::GetInstance().Trace("RenderController::~RenderController: Destroyed");
 }
 
 void RenderController::RenderFrame(float time) {
-    logging::TraceGuard trace;
+    logging::Logger::GetInstance().Trace("RenderController::RenderFrame: Entering");
 
     // Get required services
     auto graphicsService = registry_.GetService<services::IGraphicsService>();
@@ -26,7 +26,8 @@ void RenderController::RenderFrame(float time) {
     auto sceneService = registry_.GetService<services::ISceneService>();
 
     if (!graphicsService) {
-        logging::Logger::GetInstance().Error("Graphics service not available");
+        logging::Logger::GetInstance().Error("RenderController::RenderFrame: Graphics service not available");
+        logging::Logger::GetInstance().Trace("RenderController::RenderFrame: Exiting");
         return;
     }
 
@@ -59,6 +60,8 @@ void RenderController::RenderFrame(float time) {
 
     // End frame and present
     graphicsService->EndFrame();
+
+    logging::Logger::GetInstance().Trace("RenderController::RenderFrame: Exiting");
 }
 
 }  // namespace sdl3cpp::controllers
