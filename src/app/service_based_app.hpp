@@ -38,6 +38,13 @@ public:
      */
     void ConfigureLogging(services::LogLevel level, bool enableConsole, const std::string& outputFile = "");
 
+    /**
+     * @brief Get the logger service for external configuration.
+     *
+     * @return Shared pointer to the logger service
+     */
+    std::shared_ptr<services::ILogger> GetLogger() const { return logger_; }
+
 private:
     void RegisterServices();
     void SetupSDL();

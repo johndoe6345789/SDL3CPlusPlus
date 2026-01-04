@@ -148,6 +148,16 @@ void ServiceBasedApp::Run() {
     }
 }
 
+void ServiceBasedApp::ConfigureLogging(services::LogLevel level, bool enableConsole, const std::string& outputFile) {
+    if (logger_) {
+        logger_->SetLevel(level);
+        logger_->EnableConsoleOutput(enableConsole);
+        if (!outputFile.empty()) {
+            logger_->SetOutputFile(outputFile);
+        }
+    }
+}
+
 void ServiceBasedApp::SetupSDL() {
     logger_->Trace("ServiceBasedApp", "SetupSDL", "", "Entering");
 

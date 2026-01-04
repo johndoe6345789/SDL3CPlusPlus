@@ -308,17 +308,19 @@ int main(int argc, char** argv) {
     SetupSignalHandlers();
     try {
         AppOptions options = ParseCommandLine(argc, argv);
-        // Initialize logger
-        auto& logger = sdl3cpp::logging::Logger::GetInstance();
-        if (options.traceEnabled) {
-            logger.SetLevel(sdl3cpp::logging::LogLevel::TRACE);
-        } else {
-            logger.SetLevel(sdl3cpp::logging::LogLevel::INFO);
+        
+        sdl3cpp::app::ServiceBasedApp app(options.runtimeConfig.scriptPath);
+        
+        // Configure logging
+        services::LogLevel logLevel = options.traceEnabled ? services::LogLevel::TRACE : services::LogLevel::INFO;
+        app.ConfigureLogging(logLevel, true, "sdl3_app.log");
+        
+        // Log startup information using service-based logging
+        auto logger = app.GetLogger(); // We'll need to add this method
+        if (logger) {
+            logger->Info("Application starting");
+            LogRuntimeConfig(options.runtimeConfig);
         }
-        logger.EnableConsoleOutput(true);
-        logger.SetOutputFile("sdl3_app.log");
-        sdl3cpp::logging::Logger::GetInstance().Info("Application starting");
-        LogRuntimeConfig(options.runtimeConfig);
         if (options.seedOutput) {
             WriteRuntimeConfigJson(options.runtimeConfig, *options.seedOutput);
         }
