@@ -2,6 +2,7 @@
 
 #include "../interfaces/i_buffer_service.hpp"
 #include "../interfaces/i_vulkan_device_service.hpp"
+#include "../interfaces/i_logger.hpp"
 #include "../../di/lifecycle.hpp"
 #include <memory>
 
@@ -16,7 +17,7 @@ namespace sdl3cpp::services::impl {
 class BufferService : public IBufferService,
                       public di::IShutdownable {
 public:
-    explicit BufferService(std::shared_ptr<IVulkanDeviceService> deviceService);
+    explicit BufferService(std::shared_ptr<IVulkanDeviceService> deviceService, std::shared_ptr<ILogger> logger);
     ~BufferService() override;
 
     // IBufferService interface
@@ -38,6 +39,7 @@ public:
 
 private:
     std::shared_ptr<IVulkanDeviceService> deviceService_;
+    std::shared_ptr<ILogger> logger_;
 
     VkBuffer vertexBuffer_ = VK_NULL_HANDLE;
     VkDeviceMemory vertexBufferMemory_ = VK_NULL_HANDLE;
