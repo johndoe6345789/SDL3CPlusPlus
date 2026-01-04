@@ -118,7 +118,6 @@ find_package(glm CONFIG REQUIRED)
 if(BUILD_SDL3_APP)
     add_executable(sdl3_app
             src/main.cpp
-            src/logging/logger.cpp
             src/logging/string_utils.cpp
             src/core/platform.cpp
             src/di/service_registry.cpp
@@ -176,7 +175,6 @@ enable_testing()
 
 add_executable(script_engine_tests
     tests/test_cube_script.cpp
-    src/logging/logger.cpp
     src/logging/string_utils.cpp
     src/core/platform.cpp
     src/script/script_engine.cpp

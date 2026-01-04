@@ -5,6 +5,11 @@
 #include "../../di/lifecycle.hpp"
 #include <memory>
 #include <SDL3/SDL.h>
+#include <vorbis/vorbisfile.h>
+#include <filesystem>
+#include <vector>
+#include <atomic>
+#include <mutex>
 
 namespace sdl3cpp::services::impl {
 
