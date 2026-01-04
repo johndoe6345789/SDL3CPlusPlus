@@ -28,10 +28,10 @@ public:
 
 private:
     std::filesystem::path scriptDirectory_;
-    app::AudioPlayer* audioPlayer_ = nullptr;
+    // app::AudioPlayer* audioPlayer_ = nullptr; // Removed - using services now
     std::vector<AudioCommand> pendingAudioCommands_;
 
-    void ExecuteAudioCommand(app::AudioPlayer* player, const AudioCommand& command);
+    // void ExecuteAudioCommand(app::AudioPlayer* player, const AudioCommand& command); // Removed - using services now
     std::filesystem::path ResolveScriptPath(const std::string& requested) const;
 };
 

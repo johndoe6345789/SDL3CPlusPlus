@@ -1,5 +1,4 @@
 #include "script/audio_manager.hpp"
-#include "app/audio_player.hpp"
 #include "logging/logger.hpp"
 
 #include <iostream>
@@ -15,18 +14,8 @@ AudioManager::AudioManager(const std::filesystem::path& scriptDirectory)
 }
 
 void AudioManager::SetAudioPlayer(app::AudioPlayer* audioPlayer) {
-    audioPlayer_ = audioPlayer;
-    if (!audioPlayer_) {
-        return;
-    }
-    for (const auto& command : pendingAudioCommands_) {
-        try {
-            ExecuteAudioCommand(audioPlayer_, command);
-        } catch (const std::exception& exc) {
-            sdl3cpp::logging::Logger::GetInstance().Error("AudioPlayer command execution failed: " + std::string(exc.what()));
-        }
-    }
-    pendingAudioCommands_.clear();
+    // Stub - audio functionality now handled through services
+    sdl3cpp::logging::Logger::GetInstance().Trace("AudioManager::SetAudioPlayer: Stub implementation - using services now");
 }
 
 bool AudioManager::QueueAudioCommand(AudioCommandType type, std::string path, bool loop, std::string& error) {
