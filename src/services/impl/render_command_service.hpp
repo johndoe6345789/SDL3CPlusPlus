@@ -3,6 +3,7 @@
 #include "../interfaces/i_render_command_service.hpp"
 #include "../interfaces/i_vulkan_device_service.hpp"
 #include "../interfaces/i_swapchain_service.hpp"
+#include "../interfaces/i_logger.hpp"
 #include "../../di/lifecycle.hpp"
 #include <memory>
 #include <vector>
@@ -19,7 +20,8 @@ class RenderCommandService : public IRenderCommandService,
                               public di::IShutdownable {
 public:
     explicit RenderCommandService(std::shared_ptr<IVulkanDeviceService> deviceService,
-                                  std::shared_ptr<ISwapchainService> swapchainService);
+                                  std::shared_ptr<ISwapchainService> swapchainService,
+                                  std::shared_ptr<ILogger> logger);
     ~RenderCommandService() override;
 
     // IRenderCommandService interface
@@ -41,6 +43,7 @@ public:
 private:
     std::shared_ptr<IVulkanDeviceService> deviceService_;
     std::shared_ptr<ISwapchainService> swapchainService_;
+    std::shared_ptr<ILogger> logger_;
 
     VkCommandPool commandPool_ = VK_NULL_HANDLE;
     std::vector<VkCommandBuffer> commandBuffers_;

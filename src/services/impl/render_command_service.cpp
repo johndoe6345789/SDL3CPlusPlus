@@ -1,14 +1,15 @@
 #include "render_command_service.hpp"
 #include "../../core/vertex.hpp"
-#include "../../logging/logger.hpp"
 #include <stdexcept>
 
 namespace sdl3cpp::services::impl {
 
 RenderCommandService::RenderCommandService(std::shared_ptr<IVulkanDeviceService> deviceService,
-                                           std::shared_ptr<ISwapchainService> swapchainService)
+                                           std::shared_ptr<ISwapchainService> swapchainService,
+                                           std::shared_ptr<ILogger> logger)
     : deviceService_(std::move(deviceService)),
-      swapchainService_(std::move(swapchainService)) {}
+      swapchainService_(std::move(swapchainService)),
+      logger_(logger) {}
 
 RenderCommandService::~RenderCommandService() {
     if (commandPool_ != VK_NULL_HANDLE || imageAvailableSemaphore_ != VK_NULL_HANDLE) {
