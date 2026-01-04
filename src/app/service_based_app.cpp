@@ -21,6 +21,7 @@
 #include "services/impl/physics_bridge_service.hpp"
 #include "services/impl/mesh_service.hpp"
 #include "services/impl/scene_service.hpp"
+#include "services/impl/gui_renderer_service.hpp"
 #include "services/impl/sdl_audio_service.hpp"
 #include "services/impl/vulkan_gui_service.hpp"
 #include "services/impl/bullet_physics_service.hpp"
@@ -280,9 +281,13 @@ void ServiceBasedApp::RegisterServices() {
         registry_.GetService<services::ILogger>());
 
     // GUI service
-    registry_.RegisterService<services::IGuiService, services::impl::VulkanGuiService>(
+    registry_.RegisterService<services::IGuiRendererService, services::impl::GuiRendererService>(
         registry_.GetService<services::ILogger>(),
         registry_.GetService<services::IBufferService>());
+
+    registry_.RegisterService<services::IGuiService, services::impl::VulkanGuiService>(
+        registry_.GetService<services::ILogger>(),
+        registry_.GetService<services::IGuiRendererService>());
 
     // Physics service
     registry_.RegisterService<services::IPhysicsService, services::impl::BulletPhysicsService>(

@@ -139,6 +139,7 @@ if(BUILD_SDL3_APP)
             src/services/impl/render_command_service.cpp
             src/services/impl/sdl_audio_service.cpp
             src/services/impl/crash_recovery_service.cpp
+            src/services/impl/gui_renderer_service.cpp
             src/services/impl/vulkan_gui_service.cpp
             src/services/impl/bullet_physics_service.cpp
             src/services/impl/scene_service.cpp

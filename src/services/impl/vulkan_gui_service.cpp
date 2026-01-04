@@ -5,9 +5,9 @@
 namespace sdl3cpp::services::impl {
 
 VulkanGuiService::VulkanGuiService(std::shared_ptr<ILogger> logger,
-                                   std::shared_ptr<IBufferService> bufferService)
+                                   std::shared_ptr<IGuiRendererService> rendererService)
     : logger_(std::move(logger)),
-      bufferService_(std::move(bufferService)) {
+      rendererService_(std::move(rendererService)) {
 }
 
 VulkanGuiService::~VulkanGuiService() {
@@ -26,7 +26,10 @@ void VulkanGuiService::Initialize(VkDevice device,
         return;
     }
 
-    renderer_ = std::make_unique<gui::GuiRenderer>(device, physicalDevice, format, resourcePath, bufferService_);
+    if (!rendererService_) {
+        throw std::runtime_error("GUI renderer service not available");
+    }
+    rendererService_->Initialize(device, physicalDevice, format, resourcePath);
     initialized_ = true;
 
     logger_->Info("GUI service initialized");
@@ -37,32 +40,28 @@ void VulkanGuiService::PrepareFrame(const std::vector<GuiCommand>& commands,
                                    uint32_t height) {
     logger_->TraceFunction(__func__);
 
-    if (!renderer_) {
-        throw std::runtime_error("GUI service not initialized");
+    if (!rendererService_) {
+        throw std::runtime_error("GUI renderer service not available");
     }
-
-    // GuiRenderer doesn't have a PrepareFrame method in the current implementation
-    // Commands would be processed during RenderToSwapchain
+    rendererService_->PrepareFrame(commands, width, height);
 }
 
 void VulkanGuiService::RenderToSwapchain(VkCommandBuffer commandBuffer, VkImage image) {
     logger_->TraceFunction(__func__);
 
-    if (!renderer_) {
-        throw std::runtime_error("GUI service not initialized");
+    if (!rendererService_) {
+        throw std::runtime_error("GUI renderer service not available");
     }
 
-    renderer_->BlitToSwapchain(commandBuffer, image);
+    rendererService_->RenderToSwapchain(commandBuffer, image);
 }
 
 void VulkanGuiService::Resize(uint32_t width, uint32_t height, VkFormat format) {
     logger_->TraceFunction(__func__);
 
-    if (!renderer_) {
-        return;
+    if (rendererService_) {
+        rendererService_->Resize(width, height, format);
     }
-
-    renderer_->Resize(width, height, format);
 }
 
 void VulkanGuiService::Shutdown() noexcept {
@@ -72,7 +71,9 @@ void VulkanGuiService::Shutdown() noexcept {
         return;
     }
 
-    renderer_.reset();
+    if (rendererService_) {
+        rendererService_->Shutdown();
+    }
     initialized_ = false;
 
     logger_->Info("GUI service shutdown");
