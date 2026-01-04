@@ -121,7 +121,9 @@ void ServiceBasedApp::RegisterServices() {
     registry_.RegisterService<events::EventBus>(eventBus);
 
     // Configuration service
-    registry_.RegisterService<services::IConfigService, services::impl::JsonConfigService>();
+    services::impl::RuntimeConfig runtimeConfig;
+    runtimeConfig.scriptPath = scriptPath_;
+    registry_.RegisterService<services::IConfigService, services::impl::JsonConfigService>(runtimeConfig);
 
     // Window service
     registry_.RegisterService<services::IWindowService, services::impl::SdlWindowService>(eventBus);
