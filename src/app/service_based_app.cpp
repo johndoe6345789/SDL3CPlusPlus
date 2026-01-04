@@ -23,14 +23,19 @@ namespace sdl3cpp::app {
 
 ServiceBasedApp::ServiceBasedApp(const std::filesystem::path& scriptPath)
     : scriptPath_(scriptPath) {
-    logging::TraceGuard trace("ServiceBasedApp::ServiceBasedApp");
+    logging::Logger::GetInstance().Info("ServiceBasedApp constructor starting");
 
     try {
+        logging::Logger::GetInstance().Info("Setting up SDL");
         SetupSDL();
+        logging::Logger::GetInstance().Info("Registering services");
         RegisterServices();
+        logging::Logger::GetInstance().Info("Creating controllers");
 
         lifecycleController_ = std::make_unique<controllers::LifecycleController>(registry_);
         applicationController_ = std::make_unique<controllers::ApplicationController>(registry_);
+        
+        logging::Logger::GetInstance().Info("ServiceBasedApp constructor completed");
     } catch (const std::exception& e) {
         logging::Logger::GetInstance().Error("Failed to initialize ServiceBasedApp: " + std::string(e.what()));
         throw;
