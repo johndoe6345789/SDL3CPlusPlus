@@ -52,6 +52,8 @@ public:
     VkExtent2D GetSwapchainExtent() const override;
     uint32_t GetSwapchainImageCount() const override;
     VkFormat GetSwapchainFormat() const override;
+    VkCommandBuffer GetCurrentCommandBuffer() const override;
+    VkQueue GetGraphicsQueue() const override;
 
 private:
     std::shared_ptr<IVulkanDeviceService> deviceService_;
