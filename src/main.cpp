@@ -246,8 +246,8 @@ AppOptions ParseCommandLine(int argc, char** argv) {
 
 void LogRuntimeConfig(const RuntimeConfig& config, std::shared_ptr<sdl3cpp::services::ILogger> logger) {
     if (logger) {
-        logger->TraceVariable("config.width", config.width);
-        logger->TraceVariable("config.height", config.height);
+        logger->TraceVariable("config.width", static_cast<int>(config.width));
+        logger->TraceVariable("config.height", static_cast<int>(config.height));
         logger->TraceVariable("config.scriptPath", config.scriptPath.string());
     }
 }
@@ -314,7 +314,7 @@ int main(int argc, char** argv) {
         sdl3cpp::app::ServiceBasedApp app(options.runtimeConfig.scriptPath);
         
         // Configure logging
-        services::LogLevel logLevel = options.traceEnabled ? services::LogLevel::TRACE : services::LogLevel::INFO;
+        sdl3cpp::services::LogLevel logLevel = options.traceEnabled ? sdl3cpp::services::LogLevel::TRACE : sdl3cpp::services::LogLevel::INFO;
         app.ConfigureLogging(logLevel, true, "sdl3_app.log");
         
         // Log startup information using service-based logging
