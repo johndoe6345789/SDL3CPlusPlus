@@ -233,7 +233,8 @@ void ServiceBasedApp::RegisterServices() {
     registry_.RegisterService<services::IAudioService, services::impl::SdlAudioService>();
 
     // GUI service
-    registry_.RegisterService<services::IGuiService, services::impl::VulkanGuiService>();
+    registry_.RegisterService<services::IGuiService, services::impl::VulkanGuiService>(
+        registry_.GetService<services::ILogger>());
 
     // Physics service
     registry_.RegisterService<services::IPhysicsService, services::impl::BulletPhysicsService>(
