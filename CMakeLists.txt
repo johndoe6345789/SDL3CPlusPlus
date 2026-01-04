@@ -131,6 +131,10 @@ if(BUILD_SDL3_APP)
             src/services/impl/pipeline_service.cpp
             src/services/impl/buffer_service.cpp
             src/services/impl/render_command_service.cpp
+            src/services/impl/sdl_audio_service.cpp
+            src/services/impl/vulkan_gui_service.cpp
+            src/services/impl/bullet_physics_service.cpp
+            src/services/impl/lua_script_service.cpp
             src/app/sdl3_app_core.cpp
             src/app/audio_player.cpp
             src/app/sdl3_app_device.cpp
