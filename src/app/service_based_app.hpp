@@ -7,6 +7,7 @@
 #include "controllers/lifecycle_controller.hpp"
 #include "controllers/application_controller.hpp"
 #include "services/interfaces/i_logger.hpp"
+#include "services/interfaces/i_crash_recovery_service.hpp"
 
 namespace sdl3cpp::app {
 
@@ -37,6 +38,7 @@ private:
     std::unique_ptr<controllers::LifecycleController> lifecycleController_;
     std::unique_ptr<controllers::ApplicationController> applicationController_;
     std::shared_ptr<services::ILogger> logger_;
+    std::shared_ptr<services::ICrashRecoveryService> crashRecoveryService_;
 };
 
 }  // namespace sdl3cpp::app

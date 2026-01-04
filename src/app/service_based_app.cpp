@@ -17,6 +17,7 @@
 #include "services/impl/sdl_audio_service.hpp"
 #include "services/impl/vulkan_gui_service.hpp"
 #include "services/impl/bullet_physics_service.hpp"
+#include "services/impl/crash_recovery_service.hpp"
 #include "services/impl/logger_service.hpp"
 #include <stdexcept>
 
@@ -24,16 +25,23 @@ namespace sdl3cpp::app {
 
 ServiceBasedApp::ServiceBasedApp(const std::filesystem::path& scriptPath)
     : scriptPath_(scriptPath) {
-    logging::Logger::GetInstance().Trace("ServiceBasedApp::ServiceBasedApp: constructor starting");
+    // Register logger service first
+    registry_.RegisterService<services::ILogger, services::impl::LoggerService>();
+    logger_ = registry_.GetService<services::ILogger>();
+    
+    logger_->Trace("ServiceBasedApp", "ServiceBasedApp", "scriptPath=" + scriptPath_.string(), "constructor starting");
 
     try {
-        logging::Logger::GetInstance().Info("ServiceBasedApp::ServiceBasedApp: Setting up SDL");
+        logger_->Info("ServiceBasedApp::ServiceBasedApp: Setting up SDL");
         SetupSDL();
-        logging::Logger::GetInstance().Info("ServiceBasedApp::ServiceBasedApp: Registering services");
+        logger_->Info("ServiceBasedApp::ServiceBasedApp: Registering services");
         RegisterServices();
         
-        // Get the logger service after registration
-        logger_ = registry_.GetService<services::ILogger>();
+        // Get and initialize crash recovery service
+        crashRecoveryService_ = registry_.GetService<services::ICrashRecoveryService>();
+        if (crashRecoveryService_) {
+            crashRecoveryService_->Initialize();
+        }
         
         logger_->Info("ServiceBasedApp::ServiceBasedApp: Creating controllers");
 
@@ -49,6 +57,11 @@ ServiceBasedApp::ServiceBasedApp(const std::filesystem::path& scriptPath)
 
 ServiceBasedApp::~ServiceBasedApp() {
     logger_->Trace("ServiceBasedApp", "~ServiceBasedApp", "", "Entering");
+
+    // Shutdown crash recovery service
+    if (crashRecoveryService_) {
+        crashRecoveryService_->Shutdown();
+    }
 
     applicationController_.reset();
     lifecycleController_.reset();
@@ -98,8 +111,25 @@ void ServiceBasedApp::Run() {
             }
         }
 
-        // Run the main application loop
-        applicationController_->Run();
+        // Run the main application loop with crash recovery
+        if (crashRecoveryService_) {
+            bool success = crashRecoveryService_->ExecuteWithTimeout(
+                [this]() { applicationController_->Run(); },
+                30000, // 30 second timeout for the main loop
+                "Main Application Loop"
+            );
+
+            if (!success) {
+                logger_->Warn("ServiceBasedApp::Run: Main loop timed out, attempting recovery");
+                if (crashRecoveryService_->AttemptRecovery()) {
+                    logger_->Info("ServiceBasedApp::Run: Recovery successful, restarting main loop");
+                    applicationController_->Run(); // Try again
+                }
+            }
+        } else {
+            // Fallback if no crash recovery service
+            applicationController_->Run();
+        }
 
         // Shutdown all services
         lifecycleController_->ShutdownAll();
@@ -108,7 +138,13 @@ void ServiceBasedApp::Run() {
 
     } catch (const std::exception& e) {
         logger_->Error("ServiceBasedApp::Run: Application error: " + std::string(e.what()));
-        throw;
+        
+        // Attempt recovery on exception
+        if (crashRecoveryService_ && crashRecoveryService_->AttemptRecovery()) {
+            logger_->Info("ServiceBasedApp::Run: Recovered from exception");
+        } else {
+            throw;
+        }
     }
 }
 
@@ -124,8 +160,11 @@ void ServiceBasedApp::SetupSDL() {
 void ServiceBasedApp::RegisterServices() {
     logger_->Trace("ServiceBasedApp", "RegisterServices", "", "Entering");
 
-    // Logger service (needed by all other services)
-    registry_.RegisterService<services::ILogger, services::impl::LoggerService>();
+    // Logger service already registered in constructor
+
+    // Crash recovery service (needed early for crash detection)
+    registry_.RegisterService<services::ICrashRecoveryService, services::impl::CrashRecoveryService>(
+        registry_.GetService<services::ILogger>());
 
     // Event bus (needed by window service)
     registry_.RegisterService<events::EventBus, events::EventBus>();
