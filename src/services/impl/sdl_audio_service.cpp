@@ -151,7 +151,7 @@ float SdlAudioService::GetVolume() const {
 }
 
 bool SdlAudioService::IsBackgroundPlaying() const {
-    std::lock_guard<std::mutex> lock(audioMutex_);
+    std::lock_guard<std::mutex> lock(const_cast<std::mutex&>(audioMutex_));
     return backgroundAudio_ != nullptr;
 }
 

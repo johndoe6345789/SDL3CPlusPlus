@@ -5,6 +5,8 @@
 #include "../services/interfaces/i_input_service.hpp"
 #include "../services/interfaces/i_physics_service.hpp"
 #include "../services/interfaces/i_scene_service.hpp"
+#include "../services/interfaces/i_audio_service.hpp"
+#include "../services/impl/sdl_audio_service.hpp"
 #include "../events/event_bus.hpp"
 #include "../events/event_types.hpp"
 #include <chrono>

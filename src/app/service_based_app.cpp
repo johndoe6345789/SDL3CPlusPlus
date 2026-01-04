@@ -18,6 +18,7 @@
 #include "services/impl/bullet_physics_service.hpp"
 #include "services/impl/crash_recovery_service.hpp"
 #include "services/impl/logger_service.hpp"
+#include "logging/logger.hpp"
 #include <stdexcept>
 
 namespace sdl3cpp::app {
@@ -27,6 +28,9 @@ ServiceBasedApp::ServiceBasedApp(const std::filesystem::path& scriptPath)
     // Register logger service first
     registry_.RegisterService<services::ILogger, services::impl::LoggerService>();
     logger_ = registry_.GetService<services::ILogger>();
+    
+    // Set global logger for legacy compatibility
+    g_logger = logger_;
     
     logger_->Trace("ServiceBasedApp", "ServiceBasedApp", "scriptPath=" + scriptPath_.string(), "constructor starting");
 
