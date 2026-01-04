@@ -62,12 +62,17 @@ void SdlWindowService::Initialize() {
         throw std::runtime_error("SdlWindowService already initialized");
     }
 
-    try {
-        ThrowSdlErrorIfFailed(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO), "SDL_Init failed");
-    } catch (const std::exception& e) {
-        ShowErrorDialog("SDL Initialization Failed",
-            std::string("Failed to initialize SDL subsystems.\n\nError: ") + e.what());
-        throw;
+    // Check if SDL is already initialized
+    if (SDL_WasInit(0) == 0) {
+        try {
+            ThrowSdlErrorIfFailed(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO), "SDL_Init failed");
+        } catch (const std::exception& e) {
+            ShowErrorDialog("SDL Initialization Failed",
+                std::string("Failed to initialize SDL subsystems.\n\nError: ") + e.what());
+            throw;
+        }
+    } else {
+        logging::Logger::GetInstance().Info("SDL already initialized, skipping SDL_Init");
     }
 
     try {
