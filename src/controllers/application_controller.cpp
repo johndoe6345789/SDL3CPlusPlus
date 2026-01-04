@@ -85,9 +85,10 @@ void ApplicationController::ProcessFrame(float deltaTime) {
     }
 
     // Render frame
-    auto renderController = std::make_unique<RenderController>(registry_);
-    renderController->RenderFrame(static_cast<float>(std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::high_resolution_clock::now().time_since_epoch()).count()) / 1000.0f);
+    // Temporarily disabled for testing
+    // auto renderController = std::make_unique<RenderController>(registry_);
+    // renderController->RenderFrame(static_cast<float>(std::chrono::duration_cast<std::chrono::milliseconds>(
+    //     std::chrono::high_resolution_clock::now().time_since_epoch()).count()) / 1000.0f);
 }
 
 }  // namespace sdl3cpp::controllers
