@@ -4,7 +4,7 @@
 #include "../interfaces/i_gui_renderer_service.hpp"
 #include "../interfaces/i_logger.hpp"
 #include "../../di/lifecycle.hpp"
-#include "../../gui/gui_renderer.hpp"
+#include "gui_renderer.hpp"
 #include <memory>
 
 namespace sdl3cpp::services::impl {
@@ -35,7 +35,7 @@ public:
 private:
     std::shared_ptr<ILogger> logger_;
     std::shared_ptr<IBufferService> bufferService_;
-    std::unique_ptr<sdl3cpp::gui::GuiRenderer> renderer_;
+    std::unique_ptr<GuiRenderer> renderer_;
 };
 
 }  // namespace sdl3cpp::services::impl

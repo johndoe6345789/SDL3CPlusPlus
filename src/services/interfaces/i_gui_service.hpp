@@ -14,7 +14,7 @@ struct GuiCommand;
  * @brief GUI rendering service interface.
  *
  * Handles 2D GUI overlay rendering using Vulkan.
- * Wraps the GuiRenderer class with support for SVG, text, and shapes.
+ * Delegates low-level draw work to the GUI renderer service.
  */
 class IGuiService {
 public:

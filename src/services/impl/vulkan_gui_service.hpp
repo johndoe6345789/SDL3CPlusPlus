@@ -11,7 +11,7 @@ namespace sdl3cpp::services::impl {
 /**
  * @brief Vulkan GUI service implementation.
  *
- * Small wrapper service (~60 lines) around GuiRenderer.
+ * Small wrapper service (~60 lines) around the GUI renderer service.
  * Provides 2D GUI overlay rendering for SVG, text, and shapes.
  */
 class VulkanGuiService : public IGuiService,

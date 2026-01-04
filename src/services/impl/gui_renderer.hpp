@@ -1,5 +1,5 @@
-﻿#ifndef SDL3CPP_GUI_GUI_RENDERER_HPP
-#define SDL3CPP_GUI_GUI_RENDERER_HPP
+#ifndef SDL3CPP_SERVICES_GUI_RENDERER_HPP
+#define SDL3CPP_SERVICES_GUI_RENDERER_HPP
 
 #include <filesystem>
 #include <memory>
@@ -11,13 +11,13 @@
 #include "services/interfaces/gui_types.hpp"
 #include "services/interfaces/i_buffer_service.hpp"
 
-namespace sdl3cpp::gui {
+namespace sdl3cpp::services::impl {
 
 struct SvgCircle {
     float cx = 0.0f;
     float cy = 0.0f;
     float r = 0.0f;
-    services::GuiColor color{1.0f, 1.0f, 1.0f, 1.0f};
+    GuiColor color{1.0f, 1.0f, 1.0f, 1.0f};
 };
 
 struct ParsedSvg {
@@ -30,13 +30,13 @@ class GuiRenderer {
 public:
     GuiRenderer(VkDevice device, VkPhysicalDevice physicalDevice, VkFormat swapchainFormat,
                 const std::filesystem::path& scriptDirectory,
-                std::shared_ptr<services::IBufferService> bufferService);
+                std::shared_ptr<IBufferService> bufferService);
     ~GuiRenderer();
 
     GuiRenderer(const GuiRenderer&) = delete;
     GuiRenderer& operator=(const GuiRenderer&) = delete;
 
-    void Prepare(const std::vector<services::GuiCommand>& commands, uint32_t width,
+    void Prepare(const std::vector<GuiCommand>& commands, uint32_t width,
                  uint32_t height);
     void BlitToSwapchain(VkCommandBuffer commandBuffer, VkImage image);
     void Resize(uint32_t width, uint32_t height, VkFormat format);
@@ -65,9 +65,9 @@ private:
     uint32_t canvasHeight_ = 0;
     std::unique_ptr<Canvas> canvas_;
     std::unordered_map<std::string, ParsedSvg> svgCache_;
-    std::shared_ptr<services::IBufferService> bufferService_;
+    std::shared_ptr<IBufferService> bufferService_;
 };
 
-} // namespace sdl3cpp::gui
+} // namespace sdl3cpp::services::impl
 
-#endif // SDL3CPP_GUI_GUI_RENDERER_HPP
+#endif // SDL3CPP_SERVICES_GUI_RENDERER_HPP

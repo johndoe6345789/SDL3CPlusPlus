@@ -18,7 +18,7 @@ void GuiRendererService::Initialize(VkDevice device,
     if (logger_) {
         logger_->TraceFunction(__func__);
     }
-    renderer_ = std::make_unique<sdl3cpp::gui::GuiRenderer>(
+    renderer_ = std::make_unique<GuiRenderer>(
         device, physicalDevice, format, resourcePath, bufferService_);
 }
 

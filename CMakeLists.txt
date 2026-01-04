@@ -152,7 +152,7 @@ if(BUILD_SDL3_APP)
             src/services/impl/scene_service.cpp
             src/services/impl/graphics_service.cpp
             src/app/service_based_app.cpp
-            src/gui/gui_renderer.cpp
+            src/services/impl/gui_renderer.cpp
         )
     target_include_directories(sdl3_app PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
     target_link_libraries(sdl3_app PRIVATE ${SDL_TARGET} Vulkan::Vulkan lua::lua CLI11::CLI11 rapidjson assimp::assimp Bullet::Bullet glm::glm Vorbis::vorbisfile Vorbis::vorbis)
