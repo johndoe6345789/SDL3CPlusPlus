@@ -46,6 +46,13 @@ void GraphicsService::Shutdown() noexcept {
     initialized_ = false;
 }
 
+void GraphicsService::Shutdown() {
+    logging::TraceGuard trace("GraphicsService::Shutdown (IGraphicsService)");
+
+    // Services are shutdown individually by the registry
+    initialized_ = false;
+}
+
 void GraphicsService::InitializeDevice(SDL_Window* window, const GraphicsConfig& config) {
     logging::TraceGuard trace("GraphicsService::InitializeDevice");
 

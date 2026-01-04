@@ -1,5 +1,6 @@
 #pragma once
 
+#include "graphics_types.hpp"
 #include <array>
 #include <cstdint>
 #include <string>
@@ -7,17 +8,6 @@
 #include <vulkan/vulkan.h>
 
 namespace sdl3cpp::services {
-
-/**
- * @brief Render command for a single draw call.
- */
-struct RenderCommand {
-    uint32_t indexOffset;
-    uint32_t indexCount;
-    int32_t vertexOffset;
-    std::string shaderKey;
-    std::array<float, 16> modelMatrix;
-};
 
 /**
  * @brief Render command service interface.

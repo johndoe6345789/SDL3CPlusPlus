@@ -1,5 +1,6 @@
 #pragma once
 
+#include "graphics_types.hpp"
 #include <cstdint>
 #include <string>
 #include <unordered_map>
@@ -7,17 +8,6 @@
 #include <vulkan/vulkan.h>
 
 namespace sdl3cpp::services {
-
-/**
- * @brief Shader file paths for a pipeline.
- */
-struct ShaderPaths {
-    std::string vertex;
-    std::string fragment;
-};
-
-/**
- * @brief Pipeline service interface.
  *
  * Manages Vulkan graphics pipelines and shader compilation.
  * Small, focused service (~200 lines) for pipeline management.
