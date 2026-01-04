@@ -100,7 +100,7 @@ void BufferService::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
 }
 
 void BufferService::CleanupBuffers() {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     auto device = deviceService_->GetDevice();
 
@@ -126,6 +126,11 @@ void BufferService::CleanupBuffers() {
 
     vertexCount_ = 0;
     indexCount_ = 0;
+}
+
+void BufferService::Shutdown() noexcept {
+    logger_->TraceFunction(__func__);
+    CleanupBuffers();
 }
 
 }  // namespace sdl3cpp::services::impl

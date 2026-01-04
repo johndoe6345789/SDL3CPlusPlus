@@ -199,7 +199,8 @@ void ServiceBasedApp::RegisterServices() {
 
     // Buffer service
     registry_.RegisterService<services::IBufferService, services::impl::BufferService>(
-        registry_.GetService<services::IVulkanDeviceService>());
+        registry_.GetService<services::IVulkanDeviceService>(),
+        registry_.GetService<services::ILogger>());
 
     // Render command service
     registry_.RegisterService<services::IRenderCommandService, services::impl::RenderCommandService>(
