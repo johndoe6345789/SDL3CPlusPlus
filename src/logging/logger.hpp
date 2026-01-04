@@ -1,14 +1,7 @@
 #ifndef SDL3CPP_LOGGING_LOGGER_HPP
 #define SDL3CPP_LOGGING_LOGGER_HPP
 
-#include <atomic>
-#include <iostream>
-#include <sstream>
 #include <string>
-#include <mutex>
-#include <fstream>
-#include <memory>
-#include <source_location>
 
 namespace sdl3cpp::logging {
 
@@ -20,6 +13,9 @@ enum class LogLevel {
     ERROR = 4,
     OFF = 5
 };
+
+// Forward declaration to hide implementation details
+class LoggerImpl;
 
 class Logger {
 public:
@@ -35,67 +31,48 @@ public:
     void Log(LogLevel level, const char* message);
 
     // Convenience methods
-    void Trace(const std::string& message) { Log(LogLevel::TRACE, message); }
-    void Debug(const std::string& message) { Log(LogLevel::DEBUG, message); }
-    void Info(const std::string& message) { Log(LogLevel::INFO, message); }
-    void Warn(const std::string& message) { Log(LogLevel::WARN, message); }
-    void Error(const std::string& message) { Log(LogLevel::ERROR, message); }
+    void Trace(const std::string& message);
+    void Debug(const std::string& message);
+    void Info(const std::string& message);
+    void Warn(const std::string& message);
+    void Error(const std::string& message);
 
     // Tracing methods
-    void TraceFunction(const std::string& funcName) {
-        if (GetLevel() <= LogLevel::TRACE) {
-            Trace(std::string("Entering ") + funcName);
-        }
-    }
+    void TraceFunction(const std::string& funcName);
 
-    template <typename T>
-    void TraceVariable(const std::string& name, const T& value) {
-        if (GetLevel() <= LogLevel::TRACE) {
-            std::ostringstream oss;
-            oss << name << " = " << value;
-            Trace(oss.str());
-        }
-    }
+    // TraceVariable overloads for common types
+    void TraceVariable(const std::string& name, const std::string& value);
+    void TraceVariable(const std::string& name, int value);
+    void TraceVariable(const std::string& name, size_t value);
+    void TraceVariable(const std::string& name, bool value);
+    void TraceVariable(const std::string& name, float value);
+    void TraceVariable(const std::string& name, double value);
 
-    template <typename... Args>
-    void TraceFunctionWithArgs(const Args&... args, const std::source_location& location = std::source_location::current()) {
-        if (GetLevel() <= LogLevel::TRACE) {
-            std::ostringstream oss;
-            oss << "Entering " << location.function_name() << " with args: ";
-            ((oss << args << " "), ...);
-            Trace(oss.str());
-        }
-    }
+    void TraceFunctionWithArgs(const std::string& description, const std::string& args);
 
 private:
     Logger();
     ~Logger();
 
-    Logger(const Logger&) = delete;
-    Logger& operator=(const Logger&) = delete;
+    // Non-copyable (Java final class pattern)
+    Logger(const Logger&);
+    Logger& operator=(const Logger&);
 
     std::string LevelToString(LogLevel level) const;
     std::string FormatMessage(LogLevel level, const std::string& message);
     void WriteToConsole(LogLevel level, const std::string& message);
     void WriteToFile(const std::string& message);
 
-    std::atomic<LogLevel> level_;
-    bool consoleEnabled_;
-    std::unique_ptr<std::ofstream> fileStream_;
-    std::mutex mutex_;
+    LoggerImpl* impl_;
 };
 
 class TraceGuard {
 public:
-    explicit TraceGuard(const std::source_location& location = std::source_location::current())
-        : funcName_(location.function_name()) {
-        Logger::GetInstance().Trace("Entering " + funcName_);
-    }
-    ~TraceGuard() {
-        Logger::GetInstance().Trace("Exiting " + funcName_);
-    }
+    explicit TraceGuard(const std::string& funcName = "");
+    void End();
 private:
     std::string funcName_;
+    bool ended_;
 };
 
 } // namespace sdl3cpp::logging

@@ -85,8 +85,9 @@ void ShowErrorDialog(const char* title, const std::string& message) {
 Sdl3App::Sdl3App(const std::filesystem::path& scriptPath, bool luaDebug)
     : scriptEngine_(scriptPath, luaDebug),
       scriptDirectory_(scriptPath.parent_path()) {
-    sdl3cpp::logging::TraceGuard trace;;
-    sdl3cpp::logging::Logger::GetInstance().TraceVariable("scriptPath", scriptPath);
+    sdl3cpp::logging::TraceGuard trace;
+    auto& logger = sdl3cpp::logging::Logger::GetInstance();
+    logger.TraceVariable("scriptPath", scriptPath.string());
 }
 
 bool Sdl3App::ShouldStop() {
@@ -102,9 +103,10 @@ void Sdl3App::Run() {
 }
 
 void Sdl3App::InitSDL() {
-    sdl3cpp::logging::TraceGuard trace;;
-    sdl3cpp::logging::Logger::GetInstance().TraceVariable("kWidth", kWidth);
-    sdl3cpp::logging::Logger::GetInstance().TraceVariable("kHeight", kHeight);
+    sdl3cpp::logging::TraceGuard trace;
+    auto& logger = sdl3cpp::logging::Logger::GetInstance();
+    logger.TraceVariable("kWidth", kWidth);
+    logger.TraceVariable("kHeight", kHeight);
     
     try {
         ThrowSdlErrorIfFailed(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO), "SDL_Init failed");

@@ -1,47 +1,68 @@
 #include "logging/logger.hpp"
 
+#include <atomic>
 #include <chrono>
+#include <fstream>
 #include <iomanip>
+#include <iostream>
+#include <memory>
+#include <mutex>
+#include <sstream>
 #include <thread>
 
 namespace sdl3cpp::logging {
+
+// Implementation class that holds all the C++ magic
+class LoggerImpl {
+public:
+    std::atomic<LogLevel> level_;
+    bool consoleEnabled_;
+    std::unique_ptr<std::ofstream> fileStream_;
+    std::mutex mutex_;
+
+    LoggerImpl() : level_(LogLevel::INFO), consoleEnabled_(true) {}
+
+    ~LoggerImpl() {
+        if (fileStream_) {
+            fileStream_->close();
+        }
+    }
+};
 
 Logger& Logger::GetInstance() {
     static Logger instance;
     return instance;
 }
 
-Logger::Logger() : level_(LogLevel::INFO), consoleEnabled_(true) {}
+Logger::Logger() : impl_(new LoggerImpl()) {}
 
 Logger::~Logger() {
-    if (fileStream_) {
-        fileStream_->close();
-    }
+    delete impl_;
 }
 
 void Logger::SetLevel(LogLevel level) {
-    level_.store(level, std::memory_order_relaxed);
+    impl_->level_.store(level, std::memory_order_relaxed);
 }
 
 LogLevel Logger::GetLevel() const {
-    return level_.load(std::memory_order_relaxed);
+    return impl_->level_.load(std::memory_order_relaxed);
 }
 
 void Logger::SetOutputFile(const std::string& filename) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (fileStream_) {
-        fileStream_->close();
+    std::lock_guard<std::mutex> lock(impl_->mutex_);
+    if (impl_->fileStream_) {
+        impl_->fileStream_->close();
     }
-    fileStream_ = std::make_unique<std::ofstream>(filename, std::ios::app);
-    if (!fileStream_->is_open()) {
+    impl_->fileStream_ = std::make_unique<std::ofstream>(filename, std::ios::app);
+    if (!impl_->fileStream_->is_open()) {
         // Fallback to console if file can't be opened
         std::cerr << "Failed to open log file: " << filename << std::endl;
-        fileStream_.reset();
+        impl_->fileStream_.reset();
     }
 }
 
 void Logger::EnableConsoleOutput(bool enable) {
-    consoleEnabled_ = enable;
+    impl_->consoleEnabled_ = enable;
 }
 
 void Logger::Log(LogLevel level, const std::string& message) {
@@ -49,14 +70,14 @@ void Logger::Log(LogLevel level, const std::string& message) {
         return;
     }
 
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(impl_->mutex_);
     std::string formattedMessage = FormatMessage(level, message);
 
-    if (consoleEnabled_) {
+    if (impl_->consoleEnabled_) {
         WriteToConsole(level, formattedMessage);
     }
 
-    if (fileStream_) {
+    if (impl_->fileStream_) {
         WriteToFile(formattedMessage);
     }
 }
@@ -85,9 +106,9 @@ void Logger::WriteToConsole(LogLevel level, const std::string& message) {
 }
 
 void Logger::WriteToFile(const std::string& message) {
-    if (fileStream_) {
-        *fileStream_ << message << std::endl;
-        fileStream_->flush();
+    if (impl_->fileStream_) {
+        *impl_->fileStream_ << message << std::endl;
+        impl_->fileStream_->flush();
     }
 }
 
@@ -103,6 +124,78 @@ std::string Logger::FormatMessage(LogLevel level, const std::string& message) {
         << " [" << LevelToString(level) << "] "
         << message;
     return oss.str();
+}
+
+void Logger::Trace(const std::string& message) {
+    Log(LogLevel::TRACE, message);
+}
+
+void Logger::Debug(const std::string& message) {
+    Log(LogLevel::DEBUG, message);
+}
+
+void Logger::Info(const std::string& message) {
+    Log(LogLevel::INFO, message);
+}
+
+void Logger::Warn(const std::string& message) {
+    Log(LogLevel::WARN, message);
+}
+
+void Logger::Error(const std::string& message) {
+    Log(LogLevel::ERROR, message);
+}
+
+void Logger::TraceFunction(const std::string& funcName) {
+    if (GetLevel() <= LogLevel::TRACE) {
+        Trace("Entering " + funcName);
+    }
+}
+
+void Logger::TraceVariable(const std::string& name, const std::string& value) {
+    if (GetLevel() <= LogLevel::TRACE) {
+        Trace(name + " = " + value);
+    }
+}
+
+void Logger::TraceVariable(const std::string& name, int value) {
+    TraceVariable(name, std::to_string(value));
+}
+
+void Logger::TraceVariable(const std::string& name, size_t value) {
+    TraceVariable(name, std::to_string(value));
+}
+
+void Logger::TraceVariable(const std::string& name, bool value) {
+    TraceVariable(name, value ? "true" : "false");
+}
+
+void Logger::TraceVariable(const std::string& name, float value) {
+    TraceVariable(name, std::to_string(value));
+}
+
+void Logger::TraceVariable(const std::string& name, double value) {
+    TraceVariable(name, std::to_string(value));
+}
+
+void Logger::TraceFunctionWithArgs(const std::string& description, const std::string& args) {
+    if (GetLevel() <= LogLevel::TRACE) {
+        Trace(description + ": " + args);
+    }
+}
+
+TraceGuard::TraceGuard(const std::string& funcName)
+    : funcName_(funcName), ended_(false) {
+    if (!funcName_.empty()) {
+        Logger::GetInstance().Trace("Entering " + funcName_);
+    }
+}
+
+void TraceGuard::End() {
+    if (!ended_ && !funcName_.empty()) {
+        Logger::GetInstance().Trace("Exiting " + funcName_);
+        ended_ = true;
+    }
 }
 
 } // namespace sdl3cpp::logging

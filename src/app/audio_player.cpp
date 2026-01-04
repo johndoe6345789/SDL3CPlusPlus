@@ -23,7 +23,8 @@ struct DecodedAudio {
 };
 
 DecodedAudio DecodeOgg(const std::filesystem::path& path) {
-    sdl3cpp::logging::Logger::GetInstance().TraceFunctionWithArgs(path.string());
+    using sdl3cpp::logging::ToString;
+    sdl3cpp::logging::Logger::GetInstance().TraceFunctionWithArgs("DecodeOgg", path.string());
     FILE* file = std::fopen(path.string().c_str(), "rb");
     if (!file) {
         throw std::runtime_error("Failed to open audio file: " + path.string());
@@ -84,7 +85,8 @@ AudioPlayer::~AudioPlayer() {
 }
 
 void AudioPlayer::PlayBackground(const std::filesystem::path& path, bool loop) {
-    sdl3cpp::logging::Logger::GetInstance().TraceFunctionWithArgs(path.string(), loop);
+    using sdl3cpp::logging::ToString;
+    sdl3cpp::logging::Logger::GetInstance().TraceFunctionWithArgs("PlayBackground", path.string() + " " + ToString(loop));
     DecodedAudio clip = DecodeOgg(path);
     EnsureStream(clip.sampleRate, clip.channels);
     std::scoped_lock lock(voicesMutex_);
@@ -92,7 +94,8 @@ void AudioPlayer::PlayBackground(const std::filesystem::path& path, bool loop) {
 }
 
 void AudioPlayer::PlayEffect(const std::filesystem::path& path, bool loop) {
-    sdl3cpp::logging::Logger::GetInstance().TraceFunctionWithArgs(path.string(), loop);
+    using sdl3cpp::logging::ToString;
+    sdl3cpp::logging::Logger::GetInstance().TraceFunctionWithArgs("PlayEffect", path.string() + " " + ToString(loop));
     DecodedAudio clip = DecodeOgg(path);
     EnsureStream(clip.sampleRate, clip.channels);
     std::scoped_lock lock(voicesMutex_);
@@ -105,7 +108,8 @@ void AudioPlayer::AudioStreamCallback(void* userdata, SDL_AudioStream* stream, i
 }
 
 void AudioPlayer::FeedStream(SDL_AudioStream* stream, int totalAmount) {
-    sdl3cpp::logging::Logger::GetInstance().TraceFunctionWithArgs(static_cast<void*>(stream), totalAmount);
+    using sdl3cpp::logging::ToString;
+    sdl3cpp::logging::Logger::GetInstance().TraceFunctionWithArgs("FeedStream", ToString(static_cast<const void*>(stream)) + " " + ToString(totalAmount));
     if (totalAmount <= 0 || !stream_) {
         return;
     }
@@ -147,7 +151,8 @@ void AudioPlayer::FeedStream(SDL_AudioStream* stream, int totalAmount) {
 }
 
 void AudioPlayer::EnsureStream(int sampleRate, int channels) {
-    sdl3cpp::logging::Logger::GetInstance().TraceFunctionWithArgs(sampleRate, channels);
+    using sdl3cpp::logging::ToString;
+    sdl3cpp::logging::Logger::GetInstance().TraceFunctionWithArgs("EnsureStream", ToString(sampleRate) + " " + ToString(channels));
     if (sampleRate <= 0 || channels <= 0) {
         throw std::runtime_error("Audio format is invalid");
     }
@@ -178,7 +183,8 @@ void AudioPlayer::EnsureStream(int sampleRate, int channels) {
 }
 
 void AudioPlayer::AddVoiceSamples(AudioVoice& voice, std::vector<int32_t>& mixBuffer, size_t sampleCount) {
-    sdl3cpp::logging::Logger::GetInstance().TraceFunctionWithArgs(voice.data.size(), mixBuffer.size(), sampleCount);
+    using sdl3cpp::logging::ToString;
+    sdl3cpp::logging::Logger::GetInstance().TraceFunctionWithArgs("AddVoiceSamples", ToString(voice.data.size()) + " " + ToString(mixBuffer.size()) + " " + ToString(sampleCount));
     if (voice.data.empty()) {
         voice.active = false;
         return;

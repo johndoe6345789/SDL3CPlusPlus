@@ -72,7 +72,8 @@ RuntimeConfig GenerateDefaultRuntimeConfig(const char* argv0) {
 }
 
 RuntimeConfig LoadRuntimeConfigFromJson(const std::filesystem::path& configPath, bool dumpConfig) {
-    sdl3cpp::logging::Logger::GetInstance().TraceFunctionWithArgs(configPath.string(), dumpConfig);
+    using sdl3cpp::logging::ToString;
+    sdl3cpp::logging::Logger::GetInstance().TraceFunctionWithArgs("LoadRuntimeConfigFromJson", configPath.string() + " " + ToString(dumpConfig));
     std::ifstream configStream(configPath);
     if (!configStream) {
         throw std::runtime_error("Failed to open config file: " + configPath.string());
@@ -237,9 +238,10 @@ AppOptions ParseCommandLine(int argc, char** argv) {
 }
 
 void LogRuntimeConfig(const RuntimeConfig& config) {
-    sdl3cpp::logging::Logger::GetInstance().TraceVariable("config.width", config.width);
-    sdl3cpp::logging::Logger::GetInstance().TraceVariable("config.height", config.height);
-    sdl3cpp::logging::Logger::GetInstance().TraceVariable("config.scriptPath", config.scriptPath);
+    auto& logger = sdl3cpp::logging::Logger::GetInstance();
+    logger.TraceVariable("config.width", config.width);
+    logger.TraceVariable("config.height", config.height);
+    logger.TraceVariable("config.scriptPath", config.scriptPath.string());
 }
 
 void WriteRuntimeConfigJson(const RuntimeConfig& runtimeConfig,

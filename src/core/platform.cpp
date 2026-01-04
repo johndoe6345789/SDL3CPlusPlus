@@ -29,7 +29,8 @@ std::optional<std::filesystem::path> GetUserConfigDirectory() {
 #ifdef _WIN32
 namespace {
 std::string FormatWin32Error(DWORD errorCode) {
-    sdl3cpp::logging::Logger::GetInstance().TraceFunctionWithArgs(errorCode);
+    using sdl3cpp::logging::ToString;
+    sdl3cpp::logging::Logger::GetInstance().TraceFunctionWithArgs("FormatWin32Error", ToString(static_cast<unsigned long>(errorCode)));
     if (errorCode == ERROR_SUCCESS) {
         return "ERROR_SUCCESS";
     }
