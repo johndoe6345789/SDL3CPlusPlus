@@ -16,7 +16,6 @@ namespace sdl3cpp::services::impl {
  * Handles command buffer recording and frame synchronization.
  */
 class RenderCommandService : public IRenderCommandService,
-                              public di::IInitializable,
                               public di::IShutdownable {
 public:
     explicit RenderCommandService(std::shared_ptr<IVulkanDeviceService> deviceService,
@@ -24,7 +23,6 @@ public:
     ~RenderCommandService() override;
 
     // IRenderCommandService interface
-    void Initialize() override;
     void Cleanup() override;
 
     bool BeginFrame(uint32_t& imageIndex) override;

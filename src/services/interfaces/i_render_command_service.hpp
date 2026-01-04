@@ -20,13 +20,6 @@ public:
     virtual ~IRenderCommandService() = default;
 
     /**
-     * @brief Initialize command pools and buffers.
-     *
-     * @throws std::runtime_error if initialization fails
-     */
-    virtual void Initialize() = 0;
-
-    /**
      * @brief Cleanup command pools and buffers.
      */
     virtual void Cleanup() = 0;

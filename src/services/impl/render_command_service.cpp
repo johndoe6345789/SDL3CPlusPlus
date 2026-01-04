@@ -16,16 +16,6 @@ RenderCommandService::~RenderCommandService() {
     }
 }
 
-void RenderCommandService::Initialize() {
-    logging::TraceGuard trace;
-
-    CreateCommandPool();
-    CreateCommandBuffers();
-    CreateSyncObjects();
-
-    logging::Logger::GetInstance().Info("RenderCommandService initialized");
-}
-
 void RenderCommandService::Cleanup() {
     CleanupCommandResources();
     CleanupSyncObjects();
@@ -37,6 +27,14 @@ void RenderCommandService::Shutdown() noexcept {
 
 bool RenderCommandService::BeginFrame(uint32_t& imageIndex) {
     logging::TraceGuard trace;
+
+    // Lazy initialization
+    if (commandPool_ == VK_NULL_HANDLE) {
+        CreateCommandPool();
+        CreateCommandBuffers();
+        CreateSyncObjects();
+        logging::Logger::GetInstance().Info("RenderCommandService initialized lazily");
+    }
 
     auto device = deviceService_->GetDevice();
 
