@@ -5,6 +5,7 @@
 #include "../../di/lifecycle.hpp"
 #include <vector>
 #include <optional>
+#include <memory>
 
 namespace sdl3cpp::services::impl {
 
