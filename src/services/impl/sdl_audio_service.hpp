@@ -40,10 +40,27 @@ public:
     bool IsBackgroundPlaying() const override;
 
 private:
+    struct AudioData {
+        std::vector<char> buffer;
+        size_t position = 0;
+        bool loop = false;
+        OggVorbis_File vorbisFile;
+        bool isOpen = false;
+    };
+
+    static void AudioCallback(void* userdata, Uint8* stream, int len);
+    bool LoadAudioFile(const std::filesystem::path& path, AudioData& audioData);
+    void CleanupAudioData(AudioData& audioData);
+
     std::shared_ptr<ILogger> logger_;
     float volume_ = 1.0f;
     bool initialized_ = false;
-    // SDL audio structures would go here
+
+    SDL_AudioSpec audioSpec_;
+    SDL_AudioDeviceID audioDevice_ = 0;
+
+    std::unique_ptr<AudioData> backgroundAudio_;
+    std::mutex audioMutex_;
 };
 
 }  // namespace sdl3cpp::services::impl
