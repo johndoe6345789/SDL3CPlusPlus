@@ -20,7 +20,7 @@
 
 #include "app/service_based_app.hpp"
 #include <SDL3/SDL_main.h>
-#include "logging/logger.hpp"
+#include "services/interfaces/i_logger.hpp"
 #include "logging/string_utils.hpp"
 #include "core/platform.hpp"
 
@@ -243,11 +243,12 @@ AppOptions ParseCommandLine(int argc, char** argv) {
     return options;
 }
 
-void LogRuntimeConfig(const RuntimeConfig& config) {
-    auto& logger = sdl3cpp::logging::Logger::GetInstance();
-    logger.TraceVariable("config.width", static_cast<int>(config.width));
-    logger.TraceVariable("config.height", static_cast<int>(config.height));
-    logger.TraceVariable("config.scriptPath", config.scriptPath.string());
+void LogRuntimeConfig(const RuntimeConfig& config, std::shared_ptr<services::ILogger> logger) {
+    if (logger) {
+        logger->TraceVariable("config.width", static_cast<int>(config.width));
+        logger->TraceVariable("config.height", static_cast<int>(config.height));
+        logger->TraceVariable("config.scriptPath", config.scriptPath.string());
+    }
 }
 
 void WriteRuntimeConfigJson(const RuntimeConfig& runtimeConfig,
@@ -316,10 +317,10 @@ int main(int argc, char** argv) {
         app.ConfigureLogging(logLevel, true, "sdl3_app.log");
         
         // Log startup information using service-based logging
-        auto logger = app.GetLogger(); // We'll need to add this method
+        auto logger = app.GetLogger();
         if (logger) {
             logger->Info("Application starting");
-            LogRuntimeConfig(options.runtimeConfig);
+            LogRuntimeConfig(options.runtimeConfig, logger);
         }
         if (options.seedOutput) {
             WriteRuntimeConfigJson(options.runtimeConfig, *options.seedOutput);
