@@ -135,6 +135,9 @@ if(BUILD_SDL3_APP)
             src/services/impl/vulkan_gui_service.cpp
             src/services/impl/bullet_physics_service.cpp
             src/services/impl/lua_script_service.cpp
+            src/controllers/application_controller.cpp
+            src/controllers/render_controller.cpp
+            src/controllers/lifecycle_controller.cpp
             src/app/sdl3_app_core.cpp
             src/app/audio_player.cpp
             src/app/sdl3_app_device.cpp
