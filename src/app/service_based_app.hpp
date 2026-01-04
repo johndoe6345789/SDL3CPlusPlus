@@ -1,6 +1,5 @@
 #pragma once
 
-#include <filesystem>
 #include <memory>
 #include <SDL3/SDL.h>
 #include "di/service_registry.hpp"
@@ -10,6 +9,7 @@
 #include "services/interfaces/i_application_service.hpp"
 #include "services/interfaces/i_logger.hpp"
 #include "services/interfaces/i_crash_recovery_service.hpp"
+#include "services/interfaces/config_types.hpp"
 
 namespace sdl3cpp::app {
 
@@ -20,7 +20,7 @@ namespace sdl3cpp::app {
  */
 class ServiceBasedApp : public services::IApplicationService {
 public:
-    explicit ServiceBasedApp(const std::filesystem::path& scriptPath);
+    explicit ServiceBasedApp(services::RuntimeConfig runtimeConfig);
     ~ServiceBasedApp();
 
     ServiceBasedApp(const ServiceBasedApp&) = delete;
@@ -51,7 +51,7 @@ private:
     void RegisterServices();
     void SetupSDL();
 
-    std::filesystem::path scriptPath_;
+    services::RuntimeConfig runtimeConfig_;
     di::ServiceRegistry registry_;
     std::shared_ptr<services::ILifecycleService> lifecycleService_;
     std::shared_ptr<services::IApplicationLoopService> applicationLoopService_;

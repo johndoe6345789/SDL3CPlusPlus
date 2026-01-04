@@ -2,23 +2,13 @@
 
 #include "../interfaces/i_config_service.hpp"
 #include "../interfaces/i_logger.hpp"
+#include "../interfaces/config_types.hpp"
 #include <cstdint>
 #include <filesystem>
 #include <string>
 #include <vector>
 
 namespace sdl3cpp::services::impl {
-
-/**
- * @brief Runtime configuration structure.
- */
-struct RuntimeConfig {
-    uint32_t width = 1024;
-    uint32_t height = 768;
-    std::filesystem::path scriptPath;
-    bool luaDebug = false;
-    std::string windowTitle = "SDL3 Vulkan Demo";
-};
 
 /**
  * @brief JSON-based configuration service implementation.

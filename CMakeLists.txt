@@ -121,6 +121,8 @@ if(BUILD_SDL3_APP)
             src/di/service_registry.cpp
             src/events/event_bus.cpp
             src/services/impl/json_config_service.cpp
+            src/services/impl/command_line_service.cpp
+            src/services/impl/json_config_writer_service.cpp
             src/services/impl/logger_service.cpp
             src/services/impl/platform_service.cpp
             src/services/impl/script_engine_service.cpp

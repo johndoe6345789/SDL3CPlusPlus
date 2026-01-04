@@ -35,16 +35,17 @@
 #include "services/interfaces/i_platform_service.hpp"
 #include <iostream>
 #include <stdexcept>
+#include <utility>
 
 namespace sdl3cpp::app {
 
-ServiceBasedApp::ServiceBasedApp(const std::filesystem::path& scriptPath)
-    : scriptPath_(scriptPath) {
+ServiceBasedApp::ServiceBasedApp(services::RuntimeConfig runtimeConfig)
+    : runtimeConfig_(std::move(runtimeConfig)) {
     // Register logger service first
     registry_.RegisterService<services::ILogger, services::impl::LoggerService>();
     logger_ = registry_.GetService<services::ILogger>();
     
-    logger_->Trace("ServiceBasedApp", "ServiceBasedApp", "scriptPath=" + scriptPath_.string(), "constructor starting");
+    logger_->Trace("ServiceBasedApp", "ServiceBasedApp", "scriptPath=" + runtimeConfig_.scriptPath.string(), "constructor starting");
 
     try {
         logger_->Info("ServiceBasedApp::ServiceBasedApp: Setting up SDL");
@@ -100,11 +101,18 @@ void ServiceBasedApp::Run() {
 
         // Create the window
         auto windowService = registry_.GetService<services::IWindowService>();
+        auto configService = registry_.GetService<services::IConfigService>();
         if (windowService) {
             services::WindowConfig config;
-            config.width = 1024;
-            config.height = 768;
-            config.title = "SDL3 + Vulkan Application";
+            if (configService) {
+                config.width = configService->GetWindowWidth();
+                config.height = configService->GetWindowHeight();
+                config.title = configService->GetWindowTitle();
+            } else {
+                config.width = runtimeConfig_.width;
+                config.height = runtimeConfig_.height;
+                config.title = runtimeConfig_.windowTitle;
+            }
             config.resizable = true;
             windowService->CreateWindow(config);
         }
@@ -113,7 +121,11 @@ void ServiceBasedApp::Run() {
         auto graphicsService = registry_.GetService<services::IGraphicsService>();
         if (graphicsService && windowService) {
             services::GraphicsConfig graphicsConfig;
-            graphicsConfig.deviceExtensions = {"VK_KHR_swapchain"};
+            if (configService) {
+                graphicsConfig.deviceExtensions = configService->GetDeviceExtensions();
+            } else {
+                graphicsConfig.deviceExtensions = {"VK_KHR_swapchain"};
+            }
             graphicsConfig.enableValidationLayers = false;
             graphicsService->InitializeDevice(windowService->GetNativeHandle(), graphicsConfig);
             graphicsService->InitializeSwapchain();
@@ -197,10 +209,8 @@ void ServiceBasedApp::RegisterServices() {
     registry_.RegisterService<events::IEventBus, events::EventBus>();
 
     // Configuration service
-    services::impl::RuntimeConfig runtimeConfig;
-    runtimeConfig.scriptPath = scriptPath_;
     registry_.RegisterService<services::IConfigService, services::impl::JsonConfigService>(
-        registry_.GetService<services::ILogger>(), runtimeConfig);
+        registry_.GetService<services::ILogger>(), runtimeConfig_);
 
     // Window service
     registry_.RegisterService<services::IWindowService, services::impl::SdlWindowService>(
@@ -229,12 +239,12 @@ void ServiceBasedApp::RegisterServices() {
 
     // Script engine service (shared Lua runtime)
     registry_.RegisterService<services::IScriptEngineService, services::impl::ScriptEngineService>(
-        scriptPath_,
+        runtimeConfig_.scriptPath,
         registry_.GetService<services::ILogger>(),
         registry_.GetService<services::IMeshService>(),
         registry_.GetService<services::IAudioCommandService>(),
         registry_.GetService<services::IPhysicsBridgeService>(),
-        runtimeConfig.luaDebug);
+        runtimeConfig_.luaDebug);
 
     // Script-facing services
     registry_.RegisterService<services::ISceneScriptService, services::impl::SceneScriptService>(
