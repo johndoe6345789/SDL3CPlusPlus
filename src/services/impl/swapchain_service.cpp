@@ -114,7 +114,7 @@ void SwapchainService::CreateSwapchain(uint32_t width, uint32_t height) {
 void SwapchainService::RecreateSwapchain(uint32_t width, uint32_t height) {
     logger_->TraceFunction(__func__);
 
-    logging::Logger::GetInstance().Info("Recreating swapchain: " + std::to_string(width) + "x" + std::to_string(height));
+    logger_->.Info("Recreating swapchain: " + std::to_string(width) + "x" + std::to_string(height));
 
     deviceService_->WaitIdle();
     CleanupSwapchainInternal();
@@ -332,7 +332,7 @@ VkExtent2D SwapchainService::ChooseExtent(const VkSurfaceCapabilitiesKHR& capabi
 
 void SwapchainService::OnWindowResized(const events::Event& event) {
     logger_->TraceFunction(__func__);
-    logging::Logger::GetInstance().Info("Window resized event received, swapchain recreation needed");
+    logger_->.Info("Window resized event received, swapchain recreation needed");
 }
 
 }  // namespace sdl3cpp::services::impl
