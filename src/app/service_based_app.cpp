@@ -54,7 +54,8 @@ void ServiceBasedApp::Run() {
 
     try {
         // Initialize all services
-        lifecycleController_->InitializeAll();
+        // Temporarily disabled for testing
+        // lifecycleController_->InitializeAll();
 
         // Create the window
         auto windowService = registry_.GetService<services::IWindowService>();

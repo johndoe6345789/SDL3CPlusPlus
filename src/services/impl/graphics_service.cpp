@@ -205,4 +205,24 @@ VkFormat GraphicsService::GetSwapchainFormat() const {
     return swapchainService_->GetFormat();
 }
 
+VkCommandBuffer GraphicsService::GetCurrentCommandBuffer() const {
+    logging::TraceGuard trace("GraphicsService::GetCurrentCommandBuffer");
+
+    if (!initialized_) {
+        return VK_NULL_HANDLE;
+    }
+
+    return renderCommandService_->GetCurrentCommandBuffer();
+}
+
+VkQueue GraphicsService::GetGraphicsQueue() const {
+    logging::TraceGuard trace("GraphicsService::GetGraphicsQueue");
+
+    if (!initialized_) {
+        return VK_NULL_HANDLE;
+    }
+
+    return deviceService_->GetGraphicsQueue();
+}
+
 }  // namespace sdl3cpp::services::impl
