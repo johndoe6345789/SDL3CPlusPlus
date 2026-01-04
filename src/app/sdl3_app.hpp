@@ -1,9 +1,7 @@
 #ifndef SDL3CPP_APP_SDL3_APP_HPP
 #define SDL3CPP_APP_SDL3_APP_HPP
 
-#ifndef SDL_MAIN_HANDLED
-#define SDL_MAIN_HANDLED
-#endif
+#include "sdl_macros.hpp"
 
 #include <array>
 #include <filesystem>

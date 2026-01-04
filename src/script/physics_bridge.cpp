@@ -1,4 +1,5 @@
 #include "script/physics_bridge.hpp"
+#include "logging/logger.hpp"
 
 #include <btBulletDynamicsCommon.h>
 
@@ -14,6 +15,7 @@ PhysicsBridge::PhysicsBridge()
           broadphase_.get(),
           solver_.get(),
           collisionConfig_.get())) {
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);
     world_->setGravity(btVector3(0.0f, -9.81f, 0.0f));
 }
 

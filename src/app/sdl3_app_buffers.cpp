@@ -9,7 +9,7 @@
 namespace sdl3cpp::app {
 
 void Sdl3App::LoadSceneData() {
-    TRACE_FUNCTION();
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);
     shaderPathMap_ = scriptEngine_.LoadShaderPathsMap();
     if (shaderPathMap_.empty()) {
         throw std::runtime_error("Lua script did not provide shader paths");
@@ -54,12 +54,12 @@ void Sdl3App::LoadSceneData() {
 }
 
 void Sdl3App::CreateVertexBuffer() {
-    TRACE_FUNCTION();
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);
     if (vertices_.empty()) {
         throw std::runtime_error("Cannot create vertex buffer: no vertices loaded");
     }
     VkDeviceSize bufferSize = sizeof(vertices_[0]) * vertices_.size();
-    TRACE_VAR(bufferSize);
+    sdl3cpp::logging::Logger::GetInstance().TraceVariable("bufferSize", bufferSize);
     std::cout << "Creating vertex buffer: " << vertices_.size() << " vertices (" 
               << (bufferSize / 1024) << " KB)\n";
     std::cout.flush();
@@ -75,12 +75,12 @@ void Sdl3App::CreateVertexBuffer() {
 }
 
 void Sdl3App::CreateIndexBuffer() {
-    TRACE_FUNCTION();
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);
     if (indices_.empty()) {
         throw std::runtime_error("Cannot create index buffer: no indices loaded");
     }
     VkDeviceSize bufferSize = sizeof(indices_[0]) * indices_.size();
-    TRACE_VAR(bufferSize);
+    sdl3cpp::logging::Logger::GetInstance().TraceVariable("bufferSize", bufferSize);
     std::cout << "Creating index buffer: " << indices_.size() << " indices (" 
               << (bufferSize / 1024) << " KB)\n";
     std::cout.flush();

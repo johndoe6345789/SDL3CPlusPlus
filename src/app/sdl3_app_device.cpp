@@ -8,7 +8,7 @@
 namespace sdl3cpp::app {
 
 void Sdl3App::CreateInstance() {
-    TRACE_FUNCTION();
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
     
     // Early validation: Check if Vulkan is available
     uint32_t apiVersion = 0;
@@ -54,8 +54,8 @@ void Sdl3App::CreateInstance() {
     }
 
     std::vector<const char*> extensionList(extensions, extensions + extensionCount);
-    TRACE_VAR(extensionCount);
-    TRACE_VAR(extensionList.size());
+    sdl3cpp::logging::Logger::GetInstance().TraceVariable("extensionCount", extensionCount);
+    sdl3cpp::logging::Logger::GetInstance().TraceVariable("extensionList.size(", extensionList.size());
 
     // Enable validation layers if available
     std::vector<const char*> layerList;
@@ -104,14 +104,14 @@ void Sdl3App::CreateInstance() {
 }
 
 void Sdl3App::CreateSurface() {
-    TRACE_FUNCTION();
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
     if (!SDL_Vulkan_CreateSurface(window_, instance_, nullptr, &surface_)) {
         throw std::runtime_error("Failed to create Vulkan surface");
     }
 }
 
 void Sdl3App::PickPhysicalDevice() {
-    TRACE_FUNCTION();
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
     uint32_t deviceCount = 0;
     VkResult enumResult = vkEnumeratePhysicalDevices(instance_, &deviceCount, nullptr);
     if (enumResult != VK_SUCCESS) {
@@ -172,7 +172,7 @@ void Sdl3App::PickPhysicalDevice() {
 }
 
 void Sdl3App::CreateLogicalDevice() {
-    TRACE_FUNCTION();
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
     QueueFamilyIndices indices = FindQueueFamilies(physicalDevice_);
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
@@ -199,17 +199,17 @@ void Sdl3App::CreateLogicalDevice() {
     createInfo.ppEnabledExtensionNames = kDeviceExtensions.data();
 
     if (vkCreateDevice(physicalDevice_, &createInfo, nullptr, &device_) != VK_SUCCESS) {
-        LOG_ERROR("Failed to create logical device");
+        sdl3cpp::logging::Logger::GetInstance().Error("Failed to create logical device");
         throw std::runtime_error("Failed to create logical device");
     }
 
-    LOG_INFO("Logical device created successfully");
+    sdl3cpp::logging::Logger::GetInstance().Info("Logical device created successfully");
     vkGetDeviceQueue(device_, *indices.graphicsFamily, 0, &graphicsQueue_);
     vkGetDeviceQueue(device_, *indices.presentFamily, 0, &presentQueue_);
 }
 
 QueueFamilyIndices Sdl3App::FindQueueFamilies(VkPhysicalDevice device) {
-    TRACE_FUNCTION();
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
     QueueFamilyIndices indices;
 
     uint32_t queueFamilyCount = 0;
@@ -241,7 +241,7 @@ QueueFamilyIndices Sdl3App::FindQueueFamilies(VkPhysicalDevice device) {
 }
 
 bool Sdl3App::CheckDeviceExtensionSupport(VkPhysicalDevice device) {
-    TRACE_FUNCTION();
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
     uint32_t extensionCount = 0;
     vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
 
@@ -259,14 +259,14 @@ bool Sdl3App::CheckDeviceExtensionSupport(VkPhysicalDevice device) {
         for (const auto& missing : requiredExtensions) {
             missingList += "  - " + missing + "\n";
         }
-        LOG_ERROR("Missing required device extensions:\n" + missingList);
+        sdl3cpp::logging::Logger::GetInstance().Error("Missing required device extensions:\n" + missingList);
     }
 
     return requiredExtensions.empty();
 }
 
 SwapChainSupportDetails Sdl3App::QuerySwapChainSupport(VkPhysicalDevice device) {
-    TRACE_FUNCTION();
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
     SwapChainSupportDetails details;
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface_, &details.capabilities);
 
@@ -289,7 +289,7 @@ SwapChainSupportDetails Sdl3App::QuerySwapChainSupport(VkPhysicalDevice device) 
 }
 
 bool Sdl3App::IsDeviceSuitable(VkPhysicalDevice device) {
-    TRACE_FUNCTION();
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
     QueueFamilyIndices indices = FindQueueFamilies(device);
 
     bool extensionsSupported = CheckDeviceExtensionSupport(device);

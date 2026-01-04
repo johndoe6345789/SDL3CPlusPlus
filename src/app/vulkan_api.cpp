@@ -15,12 +15,12 @@ uint32_t FindMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, Vk
     for (uint32_t i = 0; i < memProperties.memoryTypeCount; ++i) {
         if ((typeFilter & (1 << i)) &&
             (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
-            LOG_DEBUG("Found suitable memory type: " + std::to_string(i));
+            sdl3cpp::logging::Logger::GetInstance().Debug("Found suitable memory type: " + std::to_string(i));
             return i;
         }
     }
 
-    LOG_ERROR("Failed to find suitable memory type");
+    sdl3cpp::logging::Logger::GetInstance().Error("Failed to find suitable memory type");
     throw std::runtime_error("Failed to find suitable memory type");
 }
 
@@ -41,10 +41,10 @@ VkExtent2D ChooseSwapExtent(VkSurfaceCapabilitiesKHR capabilities, SDL_Window* w
 
 void CreateBuffer(VkDevice device, VkPhysicalDevice physicalDevice, VkDeviceSize size, VkBufferUsageFlags usage,
                   VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
-    LOG_DEBUG("Creating buffer with size " + std::to_string(size) + " bytes");
+    sdl3cpp::logging::Logger::GetInstance().Debug("Creating buffer with size " + std::to_string(size) + " bytes");
     // Validate buffer size
     if (size == 0) {
-        LOG_ERROR("Cannot create buffer with size 0");
+        sdl3cpp::logging::Logger::GetInstance().Error("Cannot create buffer with size 0");
         throw std::runtime_error("Cannot create buffer with size 0");
     }
     

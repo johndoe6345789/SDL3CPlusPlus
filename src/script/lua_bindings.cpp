@@ -10,7 +10,7 @@
 namespace sdl3cpp::script {
 
 void LuaBindings::RegisterBindings(lua_State* L, ScriptEngine* engine) {
-    TRACE_FUNCTION();
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
     lua_pushlightuserdata(L, engine);
     lua_pushcclosure(L, &LoadMeshFromFile, 1);
     lua_setglobal(L, "load_mesh_from_file");
@@ -41,10 +41,10 @@ void LuaBindings::RegisterBindings(lua_State* L, ScriptEngine* engine) {
 }
 
 int LuaBindings::LoadMeshFromFile(lua_State* L) {
-    TRACE_FUNCTION();
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
     auto* engine = static_cast<ScriptEngine*>(lua_touserdata(L, lua_upvalueindex(1)));
     const char* path = luaL_checkstring(L, 1);
-    TRACE_VAR(path);
+    sdl3cpp::logging::Logger::GetInstance().TraceVariable("path", path);
     
     MeshPayload payload;
     std::string error;
@@ -60,10 +60,10 @@ int LuaBindings::LoadMeshFromFile(lua_State* L) {
 }
 
 int LuaBindings::PhysicsCreateBox(lua_State* L) {
-    TRACE_FUNCTION();
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
     auto* engine = static_cast<ScriptEngine*>(lua_touserdata(L, lua_upvalueindex(1)));
     const char* name = luaL_checkstring(L, 1);
-    TRACE_VAR(name);
+    sdl3cpp::logging::Logger::GetInstance().TraceVariable("name", name);
     
     if (!lua_istable(L, 2) || !lua_istable(L, 4) || !lua_istable(L, 5)) {
         luaL_error(L, "physics_create_box expects vector tables for half extents, origin, and rotation");

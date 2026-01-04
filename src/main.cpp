@@ -71,6 +71,7 @@ RuntimeConfig GenerateDefaultRuntimeConfig(const char* argv0) {
 }
 
 RuntimeConfig LoadRuntimeConfigFromJson(const std::filesystem::path& configPath, bool dumpConfig) {
+    sdl3cpp::logging::Logger::GetInstance().TraceFunctionWithArgs(__PRETTY_FUNCTION__, configPath.string(), dumpConfig);
     std::ifstream configStream(configPath);
     if (!configStream) {
         throw std::runtime_error("Failed to open config file: " + configPath.string());
@@ -251,9 +252,9 @@ AppOptions ParseCommandLine(int argc, char** argv) {
 }
 
 void LogRuntimeConfig(const RuntimeConfig& config) {
-    TRACE_VAR(config.width);
-    TRACE_VAR(config.height);
-    TRACE_VAR(config.scriptPath);
+    sdl3cpp::logging::Logger::GetInstance().TraceVariable("config.width", config.width);
+    sdl3cpp::logging::Logger::GetInstance().TraceVariable("config.height", config.height);
+    sdl3cpp::logging::Logger::GetInstance().TraceVariable("config.scriptPath", config.scriptPath);
 }
 
 void WriteRuntimeConfigJson(const RuntimeConfig& runtimeConfig,
@@ -323,7 +324,7 @@ int main(int argc, char** argv) {
         }
         logger.EnableConsoleOutput(true);
         logger.SetOutputFile("sdl3_app.log");
-        LOG_INFO("Application starting");
+        sdl3cpp::logging::Logger::GetInstance().Info("Application starting");
         LogRuntimeConfig(options.runtimeConfig);
         if (options.seedOutput) {
             WriteRuntimeConfigJson(options.runtimeConfig, *options.seedOutput);
@@ -339,7 +340,7 @@ int main(int argc, char** argv) {
         app.Run();
     } catch (const std::runtime_error& e) {
         std::string errorMsg = e.what();
-        LOG_ERROR("Runtime error: " + errorMsg);
+        sdl3cpp::logging::Logger::GetInstance().Error("Runtime error: " + errorMsg);
         
         // Check if this is a timeout/hang error - show simpler message for these
         bool isTimeoutError = errorMsg.find("timeout") != std::string::npos ||
@@ -365,7 +366,7 @@ int main(int argc, char** argv) {
         }
         return EXIT_FAILURE;
     } catch (const std::exception& e) {
-        LOG_ERROR("Exception: " + std::string(e.what()));
+        sdl3cpp::logging::Logger::GetInstance().Error("Exception: " + std::string(e.what()));
         SDL_ShowSimpleMessageBox(
             SDL_MESSAGEBOX_ERROR,
             "Application Error",

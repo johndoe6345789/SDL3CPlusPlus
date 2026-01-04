@@ -1,4 +1,5 @@
 #include "script/shader_manager.hpp"
+#include "logging/logger.hpp"
 
 #include <lua.hpp>
 
@@ -8,7 +9,9 @@
 
 namespace sdl3cpp::script {
 
-ShaderManager::ShaderManager(lua_State* L) : L_(L) {}
+ShaderManager::ShaderManager(lua_State* L) : L_(L) {
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);
+}
 
 std::unordered_map<std::string, ShaderManager::ShaderPaths> ShaderManager::LoadShaderPathsMap() {
     lua_getglobal(L_, "get_shader_paths");

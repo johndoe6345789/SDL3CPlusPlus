@@ -19,7 +19,7 @@ namespace sdl3cpp::app {
 extern std::atomic<bool> g_signalReceived;
 
 std::vector<char> ReadFile(const std::string& path) {
-    TRACE_FUNCTION();
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
     
     // Validate file exists before attempting to open
     if (!std::filesystem::exists(path)) {
@@ -116,8 +116,8 @@ void ShowErrorDialog(const char* title, const std::string& message) {
 Sdl3App::Sdl3App(const std::filesystem::path& scriptPath, bool luaDebug)
     : scriptEngine_(scriptPath, luaDebug),
       scriptDirectory_(scriptPath.parent_path()) {
-    TRACE_FUNCTION();
-    TRACE_VAR(scriptPath);
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::Logger::GetInstance().TraceVariable("scriptPath", scriptPath);
 }
 
 bool Sdl3App::ShouldStop() {
@@ -125,7 +125,7 @@ bool Sdl3App::ShouldStop() {
 }
 
 void Sdl3App::Run() {
-    TRACE_FUNCTION();
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
     InitSDL();
     InitVulkan();
     MainLoop();
@@ -133,9 +133,9 @@ void Sdl3App::Run() {
 }
 
 void Sdl3App::InitSDL() {
-    TRACE_FUNCTION();
-    TRACE_VAR(kWidth);
-    TRACE_VAR(kHeight);
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::Logger::GetInstance().TraceVariable("kWidth", kWidth);
+    sdl3cpp::logging::Logger::GetInstance().TraceVariable("kHeight", kHeight);
     
     try {
         ThrowSdlErrorIfFailed(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO), "SDL_Init failed");
@@ -160,18 +160,18 @@ void Sdl3App::InitSDL() {
             std::string("Failed to create application window.\n\nError: ") + errorMsg);
         throw std::runtime_error(errorMsg);
     }
-    TRACE_VAR(window_);
+    sdl3cpp::logging::Logger::GetInstance().TraceVariable("window_", window_);
     SDL_StartTextInput(window_);
     try {
         audioPlayer_ = std::make_unique<AudioPlayer>();
         scriptEngine_.SetAudioPlayer(audioPlayer_.get());
     } catch (const std::exception& exc) {
-        LOG_WARN("AudioPlayer initialization failed: " + std::string(exc.what()));
+        sdl3cpp::logging::Logger::GetInstance().Warn("AudioPlayer initialization failed: " + std::string(exc.what()));
     }
 }
 
 void Sdl3App::InitVulkan() {
-    TRACE_FUNCTION();
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
     try {
         CreateInstance();
     } catch (const std::exception& e) {
@@ -222,8 +222,8 @@ void Sdl3App::InitVulkan() {
 }
 
 void Sdl3App::MainLoop() {
-    TRACE_FUNCTION();
-    TRACE_VAR(guiHasCommands_);
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::Logger::GetInstance().TraceVariable("guiHasCommands_", guiHasCommands_);
     bool running = true;
     auto start = std::chrono::steady_clock::now();
     auto lastProgressTime = start;
@@ -238,14 +238,14 @@ void Sdl3App::MainLoop() {
         if (!firstFrameCompleted_) {
             auto elapsed = now - start;
             if (elapsed > kLaunchTimeout) {
-                LOG_ERROR("Launch timeout: Application failed to render first frame within " + std::to_string(std::chrono::duration_cast<std::chrono::seconds>(kLaunchTimeout).count()) + " seconds. This typically indicates GPU driver issue, window manager problem, or Vulkan swapchain configuration mismatch.");
+                sdl3cpp::logging::Logger::GetInstance().Error("Launch timeout: Application failed to render first frame within " + std::to_string(std::chrono::duration_cast<std::chrono::seconds>(kLaunchTimeout).count()) + " seconds. This typically indicates GPU driver issue, window manager problem, or Vulkan swapchain configuration mismatch.");
                 throw std::runtime_error("Launch timeout: First frame did not complete");
             }
             
             // Print progress indicator every second during launch
             if (now - lastProgressTime > std::chrono::seconds(1)) {
                 auto waitTime = std::chrono::duration_cast<std::chrono::seconds>(elapsed).count();
-                LOG_INFO("Waiting for first frame... (" + std::to_string(waitTime) + "s)");
+                sdl3cpp::logging::Logger::GetInstance().Info("Waiting for first frame... (" + std::to_string(waitTime) + "s)");
                 lastProgressTime = now;
             }
         }
@@ -285,7 +285,7 @@ void Sdl3App::MainLoop() {
 }
 
 void Sdl3App::Cleanup() {
-    TRACE_FUNCTION();
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
     CleanupSwapChain();
 
     vkDestroyBuffer(device_, vertexBuffer_, nullptr);

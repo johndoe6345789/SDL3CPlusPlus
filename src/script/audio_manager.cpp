@@ -10,7 +10,9 @@
 namespace sdl3cpp::script {
 
 AudioManager::AudioManager(const std::filesystem::path& scriptDirectory)
-    : scriptDirectory_(scriptDirectory) {}
+    : scriptDirectory_(scriptDirectory) {
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);
+}
 
 void AudioManager::SetAudioPlayer(app::AudioPlayer* audioPlayer) {
     audioPlayer_ = audioPlayer;
@@ -21,7 +23,7 @@ void AudioManager::SetAudioPlayer(app::AudioPlayer* audioPlayer) {
         try {
             ExecuteAudioCommand(audioPlayer_, command);
         } catch (const std::exception& exc) {
-            LOG_ERROR("AudioPlayer command execution failed: " + std::string(exc.what()));
+            sdl3cpp::logging::Logger::GetInstance().Error("AudioPlayer command execution failed: " + std::string(exc.what()));
         }
     }
     pendingAudioCommands_.clear();

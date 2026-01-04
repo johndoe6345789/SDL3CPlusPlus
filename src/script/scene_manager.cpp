@@ -1,4 +1,5 @@
 #include "script/scene_manager.hpp"
+#include "logging/logger.hpp"
 
 #include <lua.hpp>
 
@@ -8,7 +9,9 @@
 
 namespace sdl3cpp::script {
 
-SceneManager::SceneManager(lua_State* L) : L_(L) {}
+SceneManager::SceneManager(lua_State* L) : L_(L) {
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);
+}
 
 std::vector<SceneManager::SceneObject> SceneManager::LoadSceneObjects() {
     lua_getglobal(L_, "get_scene_objects");

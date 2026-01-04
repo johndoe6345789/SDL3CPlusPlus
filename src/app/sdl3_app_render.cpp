@@ -127,12 +127,12 @@ void Sdl3App::PrintGpuDiagnostics(const std::string& errorContext) {
     ss << "5. Try with different Vulkan settings or validation layers\n";
     ss << "========================================\n";
     
-    // LOG_ERROR(ss.str());
+    // sdl3cpp::logging::Logger::GetInstance().Error(ss.str());
     std::cerr << ss.str() << std::endl;
 }
 
 void Sdl3App::CreateCommandBuffers() {
-    TRACE_FUNCTION();
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
     commandBuffers_.resize(swapChainFramebuffers_.size());
 
     VkCommandBufferAllocateInfo allocInfo{};
@@ -148,8 +148,8 @@ void Sdl3App::CreateCommandBuffers() {
 
 void Sdl3App::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, float time,
                                    const std::array<float, 16>& viewProj) {
-    TRACE_FUNCTION();
-    TRACE_VAR(imageIndex);
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::Logger::GetInstance().TraceVariable("imageIndex", imageIndex);
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
@@ -192,14 +192,17 @@ void Sdl3App::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageI
     }
     */
     vkCmdEndRenderPass(commandBuffer);
+    // Temporarily disable GUI rendering to test if it's causing the GPU hang
+    /*
     if (guiRenderer_) {
         guiRenderer_->BlitToSwapchain(commandBuffer, swapChainImages_[imageIndex]);
     }
+    */
     vkEndCommandBuffer(commandBuffer);
 }
 
 void Sdl3App::ProcessGuiEvent(const SDL_Event& event) {
-    TRACE_FUNCTION();
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
     switch (event.type) {
         case SDL_EVENT_MOUSE_MOTION:
             guiInputSnapshot_.mouseX = static_cast<float>(event.motion.x);
@@ -232,7 +235,7 @@ void Sdl3App::ProcessGuiEvent(const SDL_Event& event) {
 }
 
 void Sdl3App::SetupGuiRenderer() {
-    TRACE_FUNCTION();
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
     guiHasCommands_ = scriptEngine_.HasGuiCommands();
     if (!guiHasCommands_) {
         guiRenderer_.reset();
@@ -247,18 +250,18 @@ void Sdl3App::SetupGuiRenderer() {
 }
 
 void Sdl3App::DrawFrame(float time) {
-    TRACE_FUNCTION();
-    LOG_DEBUG("Drawing frame at time " + std::to_string(time));
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
+    sdl3cpp::logging::Logger::GetInstance().Debug("Drawing frame at time " + std::to_string(time));
     
     // Use reasonable timeout instead of infinite wait (5 seconds)
     constexpr uint64_t kFenceTimeout = 5000000000ULL; // 5 seconds in nanoseconds
     VkResult fenceResult = vkWaitForFences(device_, 1, &inFlightFence_, VK_TRUE, kFenceTimeout);
     if (fenceResult == VK_TIMEOUT) {
-        LOG_ERROR("Fence wait timeout: GPU appears to be hung");
+        sdl3cpp::logging::Logger::GetInstance().Error("Fence wait timeout: GPU appears to be hung");
         PrintGpuDiagnostics("Fence wait timeout after 5 seconds");
         throw std::runtime_error("Fence wait timeout: GPU appears to be hung");
     } else if (fenceResult != VK_SUCCESS) {
-        LOG_ERROR("Fence wait failed with code: " + std::to_string(fenceResult));
+        sdl3cpp::logging::Logger::GetInstance().Error("Fence wait failed with code: " + std::to_string(fenceResult));
         PrintGpuDiagnostics("Fence wait failed with error code " + std::to_string(fenceResult));
         throw std::runtime_error("Fence wait failed");
     }
@@ -279,7 +282,7 @@ void Sdl3App::DrawFrame(float time) {
         } else if (framebufferResized_) {
             logMsg += " - RESIZE_EVENT";
         }
-        LOG_INFO(logMsg);
+        sdl3cpp::logging::Logger::GetInstance().Info(logMsg);
         
         // Detect infinite swapchain recreation loop
         constexpr int kMaxConsecutiveRecreations = 10;
@@ -299,7 +302,7 @@ void Sdl3App::DrawFrame(float time) {
     } else if (result != VK_SUCCESS) {
         throw std::runtime_error("Failed to acquire swap chain image");
     }
-    TRACE_VAR(imageIndex);
+    sdl3cpp::logging::Logger::GetInstance().TraceVariable("imageIndex", imageIndex);
 
     float aspect = static_cast<float>(swapChainExtent_.width) / static_cast<float>(swapChainExtent_.height);
     auto viewProj = scriptEngine_.GetViewProjectionMatrix(aspect);

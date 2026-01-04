@@ -84,15 +84,17 @@ private:
     std::mutex mutex_;
 };
 
-#define LOG_TRACE(msg) sdl3cpp::logging::Logger::GetInstance().Trace(msg)
-#define LOG_DEBUG(msg) sdl3cpp::logging::Logger::GetInstance().Debug(msg)
-#define LOG_INFO(msg) sdl3cpp::logging::Logger::GetInstance().Info(msg)
-#define LOG_WARN(msg) sdl3cpp::logging::Logger::GetInstance().Warn(msg)
-#define LOG_ERROR(msg) sdl3cpp::logging::Logger::GetInstance().Error(msg)
-
-#define TRACE_FUNCTION() sdl3cpp::logging::Logger::GetInstance().TraceFunction(__func__)
-#define TRACE_VAR(var) sdl3cpp::logging::Logger::GetInstance().TraceVariable(#var, var)
-#define TRACE_FUNCTION_ARGS(...) sdl3cpp::logging::Logger::GetInstance().TraceFunctionWithArgs(__func__, __VA_ARGS__)
+class TraceGuard {
+public:
+    TraceGuard(const std::string& funcName) : funcName_(funcName) {
+        Logger::GetInstance().Trace("Entering " + funcName_);
+    }
+    ~TraceGuard() {
+        Logger::GetInstance().Trace("Exiting " + funcName_);
+    }
+private:
+    std::string funcName_;
+};
 
 } // namespace sdl3cpp::logging
 

@@ -25,13 +25,13 @@ ScriptEngine::ScriptEngine(const std::filesystem::path& scriptPath, bool debugEn
       shaderManager_(std::make_unique<ShaderManager>(L_)),
       guiManager_(std::make_unique<GuiManager>(L_)),
       audioManager_(std::make_unique<AudioManager>(scriptDirectory_)) {
-    TRACE_FUNCTION();
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
     if (!L_) {
-        LOG_ERROR("Failed to create Lua state");
+        sdl3cpp::logging::Logger::GetInstance().Error("Failed to create Lua state");
         throw std::runtime_error("Failed to create Lua state");
     }
     
-    LOG_DEBUG("Lua state created successfully");
+    sdl3cpp::logging::Logger::GetInstance().Debug("Lua state created successfully");
     luaL_openlibs(L_);
     
     LuaBindings::RegisterBindings(L_, this);
@@ -61,11 +61,11 @@ ScriptEngine::ScriptEngine(const std::filesystem::path& scriptPath, bool debugEn
         lua_pop(L_, 1);
         lua_close(L_);
         L_ = nullptr;
-        LOG_ERROR("Failed to load Lua script: " + message);
+        sdl3cpp::logging::Logger::GetInstance().Error("Failed to load Lua script: " + message);
         throw std::runtime_error("Failed to load Lua script: " + message);
     }
 
-    LOG_INFO("Lua script loaded successfully: " + scriptPath.string());
+    sdl3cpp::logging::Logger::GetInstance().Info("Lua script loaded successfully: " + scriptPath.string());
 }
 
 ScriptEngine::~ScriptEngine() {

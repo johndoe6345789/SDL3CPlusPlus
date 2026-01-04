@@ -7,7 +7,7 @@
 namespace sdl3cpp::app {
 
 void Sdl3App::CreateSwapChain() {
-    TRACE_FUNCTION();
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
     SwapChainSupportDetails support = QuerySwapChainSupport(physicalDevice_);
     
     // Validate swap chain support
@@ -23,16 +23,16 @@ void Sdl3App::CreateSwapChain() {
     // Validate window dimensions
     int windowWidth = 0, windowHeight = 0;
     SDL_GetWindowSize(window_, &windowWidth, &windowHeight);
-    LOG_INFO("Window size: " + std::to_string(windowWidth) + "x" + std::to_string(windowHeight));
+    sdl3cpp::logging::Logger::GetInstance().Info("Window size: " + std::to_string(windowWidth) + "x" + std::to_string(windowHeight));
     
     if (windowWidth == 0 || windowHeight == 0) {
-        LOG_ERROR("Invalid window dimensions (" + std::to_string(windowWidth) + "x" + std::to_string(windowHeight) + "). Window may be minimized or invalid.");
+        sdl3cpp::logging::Logger::GetInstance().Error("Invalid window dimensions (" + std::to_string(windowWidth) + "x" + std::to_string(windowHeight) + "). Window may be minimized or invalid.");
         throw std::runtime_error("Invalid window dimensions (" + 
             std::to_string(windowWidth) + "x" + std::to_string(windowHeight) + ").\n" +
             "Window may be minimized or invalid.");
     }
     
-    LOG_DEBUG("Surface capabilities - Min extent: " + std::to_string(support.capabilities.minImageExtent.width) + "x" + std::to_string(support.capabilities.minImageExtent.height) +
+    sdl3cpp::logging::Logger::GetInstance().Debug("Surface capabilities - Min extent: " + std::to_string(support.capabilities.minImageExtent.width) + "x" + std::to_string(support.capabilities.minImageExtent.height) +
               ", Max extent: " + std::to_string(support.capabilities.maxImageExtent.width) + "x" + std::to_string(support.capabilities.maxImageExtent.height) +
               ", Min images: " + std::to_string(support.capabilities.minImageCount) +
               ", Max images: " + std::to_string(support.capabilities.maxImageCount));
@@ -45,7 +45,7 @@ void Sdl3App::CreateSwapChain() {
     if (support.capabilities.maxImageCount > 0 && imageCount > support.capabilities.maxImageCount) {
         imageCount = support.capabilities.maxImageCount;
     }
-    TRACE_VAR(imageCount);
+    sdl3cpp::logging::Logger::GetInstance().TraceVariable("imageCount", imageCount);
 
     VkSwapchainCreateInfoKHR createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -85,7 +85,7 @@ void Sdl3App::CreateSwapChain() {
 }
 
 void Sdl3App::CreateImageViews() {
-    TRACE_FUNCTION();
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
     swapChainImageViews_.resize(swapChainImages_.size());
     for (size_t i = 0; i < swapChainImages_.size(); ++i) {
         VkImageViewCreateInfo viewInfo{};
@@ -108,7 +108,7 @@ void Sdl3App::CreateImageViews() {
 }
 
 void Sdl3App::CreateRenderPass() {
-    TRACE_FUNCTION();
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
     VkAttachmentDescription colorAttachment{};
     colorAttachment.format = swapChainImageFormat_;
     colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -151,7 +151,7 @@ void Sdl3App::CreateRenderPass() {
 }
 
 void Sdl3App::CleanupSwapChain() {
-    TRACE_FUNCTION();
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
     for (auto framebuffer : swapChainFramebuffers_) {
         vkDestroyFramebuffer(device_, framebuffer, nullptr);
     }
@@ -173,7 +173,7 @@ void Sdl3App::CleanupSwapChain() {
 }
 
 void Sdl3App::RecreateSwapChain() {
-    TRACE_FUNCTION();
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
     int width = 0;
     int height = 0;
     
@@ -184,13 +184,13 @@ void Sdl3App::RecreateSwapChain() {
     while (width == 0 || height == 0) {
         // Escape hatch 1: Check for signal (Ctrl+C)
         if (ShouldStop()) {
-            LOG_WARN("Received stop signal while waiting for valid window dimensions");
+            sdl3cpp::logging::Logger::GetInstance().Warn("Received stop signal while waiting for valid window dimensions");
             throw std::runtime_error("Application shutdown requested");
         }
         
         // Escape hatch 2: Timeout after maximum attempts
         if (attempts >= kMaxAttempts) {
-            LOG_ERROR("Timeout waiting for valid window dimensions after " + std::to_string(attempts) + " attempts. Window size stuck at: " + std::to_string(width) + "x" + std::to_string(height));
+            sdl3cpp::logging::Logger::GetInstance().Error("Timeout waiting for valid window dimensions after " + std::to_string(attempts) + " attempts. Window size stuck at: " + std::to_string(width) + "x" + std::to_string(height));
             throw std::runtime_error("Window resize timeout: dimensions remain 0x0");
         }
         
@@ -204,12 +204,12 @@ void Sdl3App::RecreateSwapChain() {
             
             // Log periodically for debugging
             if (attempts % 10 == 0) {
-                LOG_DEBUG("Still waiting for valid window dimensions (attempt " + std::to_string(attempts) + "/" + std::to_string(kMaxAttempts) + "): " + std::to_string(width) + "x" + std::to_string(height));
+                sdl3cpp::logging::Logger::GetInstance().Debug("Still waiting for valid window dimensions (attempt " + std::to_string(attempts) + "/" + std::to_string(kMaxAttempts) + "): " + std::to_string(width) + "x" + std::to_string(height));
             }
         }
     }
     
-    LOG_INFO("Window resize resolved: " + std::to_string(width) + "x" + std::to_string(height));
+    sdl3cpp::logging::Logger::GetInstance().Info("Window resize resolved: " + std::to_string(width) + "x" + std::to_string(height));
     vkDeviceWaitIdle(device_);
     CleanupSwapChain();
     CreateSwapChain();
@@ -223,7 +223,7 @@ void Sdl3App::RecreateSwapChain() {
 }
 
 VkSurfaceFormatKHR Sdl3App::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
-    TRACE_FUNCTION();
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
     for (const auto& availableFormat : availableFormats) {
         if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB &&
             availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
@@ -234,7 +234,7 @@ VkSurfaceFormatKHR Sdl3App::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceF
 }
 
 VkPresentModeKHR Sdl3App::ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) {
-    TRACE_FUNCTION();
+    sdl3cpp::logging::TraceGuard trace(__PRETTY_FUNCTION__);;
     for (const auto& availablePresentMode : availablePresentModes) {
         if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
             return availablePresentMode;
