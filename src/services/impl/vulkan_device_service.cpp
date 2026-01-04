@@ -109,14 +109,6 @@ void VulkanDeviceService::CreateInstance(const std::vector<const char*>& require
     }
 }
 
-void VulkanDeviceService::CreateSurface(SDL_Window* window) {
-    logging::TraceGuard trace;
-
-    if (!SDL_Vulkan_CreateSurface(window, instance_, nullptr, &surface_)) {
-        throw std::runtime_error("Failed to create Vulkan surface");
-    }
-}
-
 void VulkanDeviceService::PickPhysicalDevice() {
     logging::TraceGuard trace;
 
