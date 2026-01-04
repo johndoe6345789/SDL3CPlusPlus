@@ -48,7 +48,7 @@ void BufferService::UploadVertexData(const std::vector<core::Vertex>& vertices) 
 }
 
 void BufferService::UploadIndexData(const std::vector<uint16_t>& indices) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     if (indices.empty()) {
         throw std::runtime_error("Cannot upload index data: empty index array");
@@ -64,7 +64,7 @@ void BufferService::UploadIndexData(const std::vector<uint16_t>& indices) {
     }
 
     VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
-    logging::Logger::GetInstance().Info("Uploading index buffer: " + std::to_string(indices.size()) +
+    logger_->Info("Uploading index buffer: " + std::to_string(indices.size()) +
                                        " indices (" + std::to_string(bufferSize / 1024) + " KB)");
 
     CreateBuffer(bufferSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
@@ -91,7 +91,7 @@ void BufferService::Shutdown() noexcept {
 void BufferService::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
                                  VkMemoryPropertyFlags properties,
                                  VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     auto device = deviceService_->GetDevice();
     auto physicalDevice = deviceService_->GetPhysicalDevice();
