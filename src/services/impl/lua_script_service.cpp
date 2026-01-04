@@ -102,14 +102,6 @@ bool LuaScriptService::HasGuiCommands() const {
     return engineService_->GetEngine().HasGuiCommands();
 }
 
-script::PhysicsBridge& LuaScriptService::GetPhysicsBridge() {
-    if (!engineService_ || !engineService_->IsInitialized()) {
-        throw std::runtime_error("Script service not initialized");
-    }
-
-    return engineService_->GetEngine().GetPhysicsBridge();
-}
-
 std::filesystem::path LuaScriptService::GetScriptDirectory() const {
     if (!engineService_ || !engineService_->IsInitialized()) {
         return {};

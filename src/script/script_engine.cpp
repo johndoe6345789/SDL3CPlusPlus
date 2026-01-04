@@ -22,7 +22,6 @@ ScriptEngine::ScriptEngine(const std::filesystem::path& scriptPath, LuaBindingCo
     : L_(luaL_newstate()),
       scriptDirectory_(scriptPath.parent_path()),
       debugEnabled_(debugEnabled),
-      physicsBridge_(std::make_unique<PhysicsBridge>()),
       sceneManager_(std::make_unique<SceneManager>(L_)),
       shaderManager_(std::make_unique<ShaderManager>(L_)),
       guiManager_(std::make_unique<GuiManager>(L_)) {
@@ -93,10 +92,6 @@ std::array<float, 16> ScriptEngine::GetViewProjectionMatrix(float aspect) {
 
 std::unordered_map<std::string, sdl3cpp::services::ShaderPaths> ScriptEngine::LoadShaderPathsMap() {
     return shaderManager_->LoadShaderPathsMap();
-}
-
-PhysicsBridge& ScriptEngine::GetPhysicsBridge() {
-    return *physicsBridge_;
 }
 
 std::vector<GuiCommand> ScriptEngine::LoadGuiCommands() {

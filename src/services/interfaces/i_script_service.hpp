@@ -3,7 +3,6 @@
 #include "../../script/scene_manager.hpp"
 #include "../../script/shader_manager.hpp"
 #include "../../script/gui_types.hpp"
-#include "../../script/physics_bridge.hpp"
 #include <filesystem>
 #include <unordered_map>
 #include <vector>
@@ -15,7 +14,7 @@ namespace sdl3cpp::services {
 /**
  * @brief Script service interface.
  *
- * Provides Lua script execution and integration with scene, shaders, GUI, physics, and audio.
+ * Provides Lua script execution and integration with scene, shaders, and GUI.
  */
 class IScriptService {
 public:
@@ -33,9 +32,6 @@ public:
     virtual std::vector<script::GuiCommand> LoadGuiCommands() = 0;
     virtual void UpdateGuiInput(const script::GuiInputSnapshot& input) = 0;
     virtual bool HasGuiCommands() const = 0;
-
-    // Physics bridge access
-    virtual script::PhysicsBridge& GetPhysicsBridge() = 0;
 
     // Utility
     virtual std::filesystem::path GetScriptDirectory() const = 0;

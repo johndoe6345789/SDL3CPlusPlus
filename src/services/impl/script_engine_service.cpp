@@ -51,6 +51,7 @@ void ScriptEngineService::Shutdown() noexcept {
     logger_->TraceFunction(__func__);
 
     engine_.reset();
+    bindingContext_.reset();
     initialized_ = false;
 
     logger_->Info("Script engine service shutdown");

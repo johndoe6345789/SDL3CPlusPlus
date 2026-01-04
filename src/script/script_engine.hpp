@@ -12,7 +12,6 @@
 
 #include "core/vertex.hpp"
 #include "script/gui_types.hpp"
-#include "script/physics_bridge.hpp"
 #include "script/scene_manager.hpp"
 #include "script/shader_manager.hpp"
 #include "script/gui_manager.hpp"
@@ -38,12 +37,9 @@ public:
     void UpdateGuiInput(const GuiInputSnapshot& input);
     bool HasGuiCommands() const;
     std::filesystem::path GetScriptDirectory() const;
-    PhysicsBridge& GetPhysicsBridge();
     std::string GetLuaError();
 
 private:
-    std::filesystem::path ResolveScriptPath(const std::string& requested) const;
-
     static std::vector<core::Vertex> ReadVertexArray(lua_State* L, int index);
     static std::vector<uint16_t> ReadIndexArray(lua_State* L, int index);
     static std::string LuaErrorMessage(lua_State* L);
@@ -56,7 +52,6 @@ private:
     int guiCommandsFnRef_ = LUA_REFNIL;
     std::filesystem::path scriptDirectory_;
     bool debugEnabled_ = false;
-    std::unique_ptr<PhysicsBridge> physicsBridge_;
     std::unique_ptr<SceneManager> sceneManager_;
     std::unique_ptr<ShaderManager> shaderManager_;
     std::unique_ptr<GuiManager> guiManager_;

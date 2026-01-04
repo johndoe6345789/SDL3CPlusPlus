@@ -37,8 +37,6 @@ public:
     void UpdateGuiInput(const script::GuiInputSnapshot& input) override;
     bool HasGuiCommands() const override;
 
-    script::PhysicsBridge& GetPhysicsBridge() override;
-
     std::filesystem::path GetScriptDirectory() const override;
     std::string GetLuaError() override;
 

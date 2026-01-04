@@ -1,5 +1,6 @@
 #include "audio_command_service.hpp"
 #include <filesystem>
+#include <system_error>
 #include <utility>
 
 namespace sdl3cpp::services::impl {
