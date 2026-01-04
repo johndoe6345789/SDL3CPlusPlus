@@ -21,6 +21,7 @@
 #include "app/trace.hpp"
 #include "app/sdl3_app.hpp"
 #include <SDL3/SDL_main.h>
+#include "logging/logger.hpp"
 
 namespace sdl3cpp::app {
 std::atomic<bool> g_signalReceived{false};
@@ -315,6 +316,15 @@ int main(int argc, char** argv) {
     try {
         AppOptions options = ParseCommandLine(argc, argv);
         sdl3cpp::app::TraceLogger::SetEnabled(options.traceEnabled);
+        // Initialize logger
+        auto& logger = sdl3cpp::logging::Logger::GetInstance();
+        if (options.traceEnabled) {
+            logger.SetLevel(sdl3cpp::logging::LogLevel::TRACE);
+        } else {
+            logger.SetLevel(sdl3cpp::logging::LogLevel::INFO);
+        }
+        logger.EnableConsoleOutput(true);
+        LOG_INFO("Application starting");
         LogRuntimeConfig(options.runtimeConfig);
         if (options.seedOutput) {
             WriteRuntimeConfigJson(options.runtimeConfig, *options.seedOutput);
@@ -330,7 +340,7 @@ int main(int argc, char** argv) {
         app.Run();
     } catch (const std::runtime_error& e) {
         std::string errorMsg = e.what();
-        std::cerr << "\nERROR: " << errorMsg << '\n';
+        LOG_ERROR("Runtime error: " + errorMsg);
         
         // Check if this is a timeout/hang error - show simpler message for these
         bool isTimeoutError = errorMsg.find("timeout") != std::string::npos ||
@@ -356,7 +366,7 @@ int main(int argc, char** argv) {
         }
         return EXIT_FAILURE;
     } catch (const std::exception& e) {
-        std::cerr << "\nERROR: " << e.what() << '\n';
+        LOG_ERROR("Exception: " + std::string(e.what()));
         SDL_ShowSimpleMessageBox(
             SDL_MESSAGEBOX_ERROR,
             "Application Error",

@@ -1,5 +1,6 @@
 #include "app/sdl3_app.hpp"
 #include "app/trace.hpp"
+#include "logging/logger.hpp"
 
 #include <set>
 #include <stdexcept>
@@ -174,9 +175,11 @@ void Sdl3App::CreateLogicalDevice() {
     createInfo.ppEnabledExtensionNames = kDeviceExtensions.data();
 
     if (vkCreateDevice(physicalDevice_, &createInfo, nullptr, &device_) != VK_SUCCESS) {
+        LOG_ERROR("Failed to create logical device");
         throw std::runtime_error("Failed to create logical device");
     }
 
+    LOG_INFO("Logical device created successfully");
     vkGetDeviceQueue(device_, *indices.graphicsFamily, 0, &graphicsQueue_);
     vkGetDeviceQueue(device_, *indices.presentFamily, 0, &presentQueue_);
 }
@@ -228,10 +231,11 @@ bool Sdl3App::CheckDeviceExtensionSupport(VkPhysicalDevice device) {
     }
     
     if (!requiredExtensions.empty()) {
-        std::cerr << "Missing required device extensions:\n";
+        std::string missingList;
         for (const auto& missing : requiredExtensions) {
-            std::cerr << "  - " << missing << "\n";
+            missingList += "  - " + missing + "\n";
         }
+        LOG_ERROR("Missing required device extensions:\n" + missingList);
     }
 
     return requiredExtensions.empty();

@@ -1,5 +1,6 @@
 #include "app/sdl3_app.hpp"
 #include "app/trace.hpp"
+#include "logging/logger.hpp"
 
 #include <limits>
 #include <stdexcept>
@@ -240,16 +241,17 @@ void Sdl3App::SetupGuiRenderer() {
 
 void Sdl3App::DrawFrame(float time) {
     TRACE_FUNCTION();
+    LOG_DEBUG("Drawing frame at time " + std::to_string(time));
     
     // Use reasonable timeout instead of infinite wait (5 seconds)
     constexpr uint64_t kFenceTimeout = 5000000000ULL; // 5 seconds in nanoseconds
     VkResult fenceResult = vkWaitForFences(device_, 1, &inFlightFence_, VK_TRUE, kFenceTimeout);
     if (fenceResult == VK_TIMEOUT) {
-        std::cerr << "\nERROR: Fence wait timeout: GPU appears to be hung\n";
+        LOG_ERROR("Fence wait timeout: GPU appears to be hung");
         PrintGpuDiagnostics("Fence wait timeout after 5 seconds");
         throw std::runtime_error("Fence wait timeout: GPU appears to be hung");
     } else if (fenceResult != VK_SUCCESS) {
-        std::cerr << "\nERROR: Fence wait failed with code: " << fenceResult << "\n";
+        LOG_ERROR("Fence wait failed with code: " + std::to_string(fenceResult));
         PrintGpuDiagnostics("Fence wait failed with error code " + std::to_string(fenceResult));
         throw std::runtime_error("Fence wait failed");
     }
@@ -262,15 +264,15 @@ void Sdl3App::DrawFrame(float time) {
 
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized_) {
         consecutiveSwapchainRecreations_++;
-        std::cout << "Swapchain recreation triggered (attempt " << consecutiveSwapchainRecreations_ << ")";
+        std::string logMsg = "Swapchain recreation triggered (attempt " + std::to_string(consecutiveSwapchainRecreations_) + ")";
         if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-            std::cout << " - OUT_OF_DATE";
+            logMsg += " - OUT_OF_DATE";
         } else if (result == VK_SUBOPTIMAL_KHR) {
-            std::cout << " - SUBOPTIMAL";
+            logMsg += " - SUBOPTIMAL";
         } else if (framebufferResized_) {
-            std::cout << " - RESIZE_EVENT";
+            logMsg += " - RESIZE_EVENT";
         }
-        std::cout << "\n";
+        LOG_INFO(logMsg);
         
         // Detect infinite swapchain recreation loop
         constexpr int kMaxConsecutiveRecreations = 10;

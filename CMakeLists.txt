@@ -102,6 +102,7 @@ find_package(glm CONFIG REQUIRED)
 if(BUILD_SDL3_APP)
     add_executable(sdl3_app
             src/main.cpp
+            src/logging/logger.cpp
             src/app/sdl3_app_core.cpp
             src/app/audio_player.cpp
             src/app/sdl3_app_device.cpp
@@ -114,13 +115,13 @@ if(BUILD_SDL3_APP)
             src/app/vulkan_api.cpp
             src/script/script_engine.cpp
             src/script/physics_bridge.cpp
+            src/script/lua_helpers.cpp
+            src/script/lua_bindings.cpp
+            src/script/mesh_loader.cpp
             src/script/scene_manager.cpp
             src/script/shader_manager.cpp
             src/script/gui_manager.cpp
             src/script/audio_manager.cpp
-            src/script/lua_helpers.cpp
-            src/script/lua_bindings.cpp
-            src/script/mesh_loader.cpp
         )
     target_include_directories(sdl3_app PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
     target_link_libraries(sdl3_app PRIVATE ${SDL_TARGET} Vulkan::Vulkan lua::lua CLI11::CLI11 rapidjson assimp::assimp Bullet::Bullet glm::glm Vorbis::vorbisfile Vorbis::vorbis)

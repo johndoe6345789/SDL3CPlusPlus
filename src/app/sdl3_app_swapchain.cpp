@@ -1,6 +1,7 @@
 #include "app/sdl3_app.hpp"
 #include "app/trace.hpp"
 #include "app/vulkan_api.hpp"
+#include "logging/logger.hpp"
 
 #include <stdexcept>
 
@@ -187,14 +188,13 @@ void Sdl3App::RecreateSwapChain() {
     while (width == 0 || height == 0) {
         // Escape hatch 1: Check for signal (Ctrl+C)
         if (ShouldStop()) {
-            std::cerr << "Received stop signal while waiting for valid window dimensions\n";
+            LOG_WARN("Received stop signal while waiting for valid window dimensions");
             throw std::runtime_error("Application shutdown requested");
         }
         
         // Escape hatch 2: Timeout after maximum attempts
         if (attempts >= kMaxAttempts) {
-            std::cerr << "Timeout waiting for valid window dimensions after " << attempts << " attempts\n";
-            std::cerr << "Window size stuck at: " << width << "x" << height << "\n";
+            LOG_ERROR("Timeout waiting for valid window dimensions after " + std::to_string(attempts) + " attempts. Window size stuck at: " + std::to_string(width) + "x" + std::to_string(height));
             throw std::runtime_error("Window resize timeout: dimensions remain 0x0");
         }
         
@@ -208,14 +208,12 @@ void Sdl3App::RecreateSwapChain() {
             
             // Log periodically for debugging
             if (attempts % 10 == 0) {
-                std::cerr << "Still waiting for valid window dimensions (attempt " 
-                         << attempts << "/" << kMaxAttempts << "): " 
-                         << width << "x" << height << "\n";
+                LOG_DEBUG("Still waiting for valid window dimensions (attempt " + std::to_string(attempts) + "/" + std::to_string(kMaxAttempts) + "): " + std::to_string(width) + "x" + std::to_string(height));
             }
         }
     }
     
-    std::cout << "Window resize resolved: " << width << "x" << height << "\n";
+    LOG_INFO("Window resize resolved: " + std::to_string(width) + "x" + std::to_string(height));
     vkDeviceWaitIdle(device_);
     CleanupSwapChain();
     CreateSwapChain();

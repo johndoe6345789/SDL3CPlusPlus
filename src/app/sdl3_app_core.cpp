@@ -1,6 +1,7 @@
 #include "app/audio_player.hpp"
 #include "app/sdl3_app.hpp"
 #include "app/trace.hpp"
+#include "logging/logger.hpp"
 
 #include <atomic>
 #include <chrono>
@@ -166,7 +167,7 @@ void Sdl3App::InitSDL() {
         audioPlayer_ = std::make_unique<AudioPlayer>();
         scriptEngine_.SetAudioPlayer(audioPlayer_.get());
     } catch (const std::exception& exc) {
-        std::cerr << "AudioPlayer: " << exc.what() << '\n';
+        LOG_WARN("AudioPlayer initialization failed: " + std::string(exc.what()));
     }
 }
 
@@ -238,27 +239,14 @@ void Sdl3App::MainLoop() {
         if (!firstFrameCompleted_) {
             auto elapsed = now - start;
             if (elapsed > kLaunchTimeout) {
-                std::cerr << "\n=== LAUNCH TIMEOUT ===";
-                std::cerr << "\nApplication failed to render first frame within "
-                          << std::chrono::duration_cast<std::chrono::seconds>(kLaunchTimeout).count()
-                          << " seconds.\n";
-                std::cerr << "This typically indicates:\n";
-                std::cerr << "  - GPU driver issue or incompatibility\n";
-                std::cerr << "  - Window manager/compositor problem\n";
-                std::cerr << "  - Vulkan swapchain configuration mismatch\n";
-                std::cerr << "\nTroubleshooting suggestions:\n";
-                std::cerr << "  - Update GPU drivers\n";
-                std::cerr << "  - Try disabling compositor (if using X11/Wayland)\n";
-                std::cerr << "  - Check dmesg/journalctl for GPU errors\n";
-                std::cerr << "  - Run with VK_LOADER_DEBUG=all for detailed Vulkan logs\n";
-                std::cerr << "======================\n" << std::flush;
+                LOG_ERROR("Launch timeout: Application failed to render first frame within " + std::to_string(std::chrono::duration_cast<std::chrono::seconds>(kLaunchTimeout).count()) + " seconds. This typically indicates GPU driver issue, window manager problem, or Vulkan swapchain configuration mismatch.");
                 throw std::runtime_error("Launch timeout: First frame did not complete");
             }
             
             // Print progress indicator every second during launch
             if (now - lastProgressTime > std::chrono::seconds(1)) {
                 auto waitTime = std::chrono::duration_cast<std::chrono::seconds>(elapsed).count();
-                std::cout << "Waiting for first frame... (" << waitTime << "s)\n" << std::flush;
+                LOG_INFO("Waiting for first frame... (" + std::to_string(waitTime) + "s)");
                 lastProgressTime = now;
             }
         }
