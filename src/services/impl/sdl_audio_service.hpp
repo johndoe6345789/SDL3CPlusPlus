@@ -39,16 +39,17 @@ public:
     float GetVolume() const override;
     bool IsBackgroundPlaying() const override;
 
+    // Update method to be called regularly (e.g., from main loop)
+    void Update();
+
 private:
     struct AudioData {
-        std::vector<char> buffer;
-        size_t position = 0;
-        bool loop = false;
         OggVorbis_File vorbisFile;
         bool isOpen = false;
+        bool loop = false;
+        size_t position = 0;
     };
 
-    static void AudioCallback(void* userdata, Uint8* stream, int len);
     bool LoadAudioFile(const std::filesystem::path& path, AudioData& audioData);
     void CleanupAudioData(AudioData& audioData);
 
@@ -56,8 +57,7 @@ private:
     float volume_ = 1.0f;
     bool initialized_ = false;
 
-    SDL_AudioSpec audioSpec_;
-    SDL_AudioDeviceID audioDevice_ = 0;
+    SDL_AudioStream* audioStream_ = nullptr;
 
     std::unique_ptr<AudioData> backgroundAudio_;
     std::mutex audioMutex_;

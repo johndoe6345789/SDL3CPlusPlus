@@ -92,6 +92,16 @@ void ApplicationController::ProcessFrame(float deltaTime) {
         sceneService->UpdateScene(deltaTime);
     }
 
+    // Update audio
+    auto audioService = registry_.GetService<services::IAudioService>();
+    if (audioService) {
+        // Cast to implementation to access Update method
+        auto audioServiceImpl = std::dynamic_pointer_cast<services::impl::SdlAudioService>(audioService);
+        if (audioServiceImpl) {
+            audioServiceImpl->Update();
+        }
+    }
+
     // Update GUI input to script service
     if (inputService) {
         inputService->UpdateGuiInput();
