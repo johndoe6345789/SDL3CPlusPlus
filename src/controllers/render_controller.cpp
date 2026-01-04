@@ -17,7 +17,7 @@ RenderController::~RenderController() {
 }
 
 void RenderController::RenderFrame(float time) {
-    logger_->Trace("RenderController::RenderFrame: Entering");
+    logger_->Trace("RenderController", "RenderFrame", "time=" + std::to_string(time), "Entering");
 
     // Get required services
     auto graphicsService = registry_.GetService<services::IGraphicsService>();
@@ -27,7 +27,7 @@ void RenderController::RenderFrame(float time) {
 
     if (!graphicsService) {
         logger_->Error("RenderController::RenderFrame: Graphics service not available");
-        logger_->Trace("RenderController::RenderFrame: Exiting");
+        logger_->Trace("RenderController", "RenderFrame", "", "Exiting");
         return;
     }
 
@@ -61,7 +61,7 @@ void RenderController::RenderFrame(float time) {
     // End frame and present
     graphicsService->EndFrame();
 
-    logger_->Trace("RenderController::RenderFrame: Exiting");
+    logger_->Trace("RenderController", "RenderFrame", "", "Exiting");
 }
 
 }  // namespace sdl3cpp::controllers
