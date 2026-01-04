@@ -37,14 +37,14 @@ void BulletPhysicsService::Shutdown() noexcept {
     physicsBridge_.reset();
     initialized_ = false;
 
-    logging::Logger::GetInstance().Info("Physics service shutdown");
+    logger_->Info("Physics service shutdown");
 }
 
 bool BulletPhysicsService::AddBoxRigidBody(const std::string& name,
                                           const btVector3& halfExtents,
                                           float mass,
                                           const btTransform& transform) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     if (!physicsBridge_) {
         throw std::runtime_error("Physics service not initialized");
@@ -58,10 +58,10 @@ bool BulletPhysicsService::AddSphereRigidBody(const std::string& name,
                                              float radius,
                                              float mass,
                                              const btTransform& transform) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     // PhysicsBridge doesn't support sphere rigid bodies in current implementation
-    logging::Logger::GetInstance().Warn("AddSphereRigidBody not supported by PhysicsBridge");
+    logger_->Warn("AddSphereRigidBody not supported by PhysicsBridge");
     return false;
 }
 
