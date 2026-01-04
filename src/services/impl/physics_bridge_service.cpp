@@ -4,7 +4,7 @@
 namespace sdl3cpp::services::impl {
 
 PhysicsBridgeService::PhysicsBridgeService(std::shared_ptr<ILogger> logger)
-    : bridge_(std::make_unique<script::PhysicsBridge>(logger)),
+    : bridge_(std::make_unique<PhysicsBridge>(logger)),
       logger_(std::move(logger)) {
     if (logger_) {
         logger_->Trace("PhysicsBridgeService", "PhysicsBridgeService");

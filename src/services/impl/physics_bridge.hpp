@@ -1,5 +1,4 @@
-#ifndef SDL3CPP_SCRIPT_PHYSICS_BRIDGE_HPP
-#define SDL3CPP_SCRIPT_PHYSICS_BRIDGE_HPP
+#pragma once
 
 #include <memory>
 #include <string>
@@ -20,7 +19,7 @@ class btBroadphaseInterface;
 class btSequentialImpulseConstraintSolver;
 class btDiscreteDynamicsWorld;
 
-namespace sdl3cpp::script {
+namespace sdl3cpp::services::impl {
 
 class PhysicsBridge {
 public:
@@ -56,6 +55,4 @@ private:
     std::shared_ptr<services::ILogger> logger_;
 };
 
-} // namespace sdl3cpp::script
-
-#endif // SDL3CPP_SCRIPT_PHYSICS_BRIDGE_HPP
+} // namespace sdl3cpp::services::impl

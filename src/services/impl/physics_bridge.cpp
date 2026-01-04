@@ -1,9 +1,9 @@
-#include "script/physics_bridge.hpp"
-#include "services/interfaces/i_logger.hpp"
+#include "physics_bridge.hpp"
+#include "../interfaces/i_logger.hpp"
 
 #include <btBulletDynamicsCommon.h>
 
-namespace sdl3cpp::script {
+namespace sdl3cpp::services::impl {
 
 PhysicsBridge::PhysicsBridge(std::shared_ptr<services::ILogger> logger)
     : collisionConfig_(std::make_unique<btDefaultCollisionConfiguration>()),
@@ -15,7 +15,7 @@ PhysicsBridge::PhysicsBridge(std::shared_ptr<services::ILogger> logger)
           broadphase_.get(),
           solver_.get(),
           collisionConfig_.get())),
-      logger_(logger) {
+      logger_(std::move(logger)) {
     if (logger_) {
         logger_->Trace("PhysicsBridge", "PhysicsBridge");
     }
@@ -102,4 +102,4 @@ bool PhysicsBridge::getRigidBodyTransform(const std::string& name,
     return true;
 }
 
-} // namespace sdl3cpp::script
+} // namespace sdl3cpp::services::impl

@@ -2,7 +2,7 @@
 
 #include "../interfaces/i_physics_service.hpp"
 #include "../interfaces/i_logger.hpp"
-#include "../../script/physics_bridge.hpp"
+#include "physics_bridge.hpp"
 #include "../../di/lifecycle.hpp"
 #include <memory>
 
@@ -54,7 +54,7 @@ public:
 
 private:
     std::shared_ptr<ILogger> logger_;
-    std::unique_ptr<script::PhysicsBridge> physicsBridge_;
+    std::unique_ptr<PhysicsBridge> physicsBridge_;
     bool initialized_ = false;
 };
 

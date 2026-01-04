@@ -148,11 +148,11 @@ if(BUILD_SDL3_APP)
             src/services/impl/gui_renderer_service.cpp
             src/services/impl/vulkan_gui_service.cpp
             src/services/impl/bullet_physics_service.cpp
+            src/services/impl/physics_bridge.cpp
             src/services/impl/scene_service.cpp
             src/services/impl/graphics_service.cpp
             src/app/service_based_app.cpp
             src/gui/gui_renderer.cpp
-            src/script/physics_bridge.cpp
         )
     target_include_directories(sdl3_app PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
     target_link_libraries(sdl3_app PRIVATE ${SDL_TARGET} Vulkan::Vulkan lua::lua CLI11::CLI11 rapidjson assimp::assimp Bullet::Bullet glm::glm Vorbis::vorbisfile Vorbis::vorbis)
@@ -180,7 +180,6 @@ add_executable(script_engine_tests
     src/services/impl/lua_helpers.cpp
     src/services/impl/scene_script_service.cpp
     src/services/impl/shader_script_service.cpp
-    src/script/physics_bridge.cpp
 )
 target_include_directories(script_engine_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(script_engine_tests PRIVATE ${SDL_TARGET} lua::lua assimp::assimp Bullet::Bullet glm::glm Vorbis::vorbisfile Vorbis::vorbis)

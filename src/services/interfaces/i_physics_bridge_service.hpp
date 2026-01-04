@@ -1,7 +1,9 @@
 #pragma once
 
-#include "../../script/physics_bridge.hpp"
 #include <string>
+
+class btVector3;
+class btTransform;
 
 namespace sdl3cpp::services {
 
