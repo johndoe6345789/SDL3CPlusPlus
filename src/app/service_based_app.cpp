@@ -151,13 +151,13 @@ void ServiceBasedApp::RegisterServices() {
         registry_.GetService<services::IVulkanDeviceService>(),
         registry_.GetService<services::ISwapchainService>());
 
-    // Graphics service (facade)
-    registry_.RegisterService<services::IGraphicsService, services::impl::GraphicsService>(
-        registry_.GetService<services::IVulkanDeviceService>(),
-        registry_.GetService<services::ISwapchainService>(),
-        registry_.GetService<services::IPipelineService>(),
-        registry_.GetService<services::IBufferService>(),
-        registry_.GetService<services::IRenderCommandService>());
+    // Graphics service (facade) - temporarily disabled
+    // registry_.RegisterService<services::IGraphicsService, services::impl::GraphicsService>(
+    //     registry_.GetService<services::IVulkanDeviceService>(),
+    //     registry_.GetService<services::ISwapchainService>(),
+    //     registry_.GetService<services::IPipelineService>(),
+    //     registry_.GetService<services::IBufferService>(),
+    //     registry_.GetService<services::IRenderCommandService>());
 
     // Script service
     registry_.RegisterService<services::IScriptService, services::impl::LuaScriptService>(scriptPath_);

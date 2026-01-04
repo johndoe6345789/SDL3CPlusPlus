@@ -98,6 +98,25 @@ void SdlWindowService::CreateWindow(const WindowConfig& config) {
         throw std::runtime_error("Window already created");
     }
 
+    // Initialize SDL here if not already initialized
+    if (SDL_WasInit(0) == 0) {
+        try {
+            ThrowSdlErrorIfFailed(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO), "SDL_Init failed");
+        } catch (const std::exception& e) {
+            ShowErrorDialog("SDL Initialization Failed",
+                std::string("Failed to initialize SDL subsystems.\n\nError: ") + e.what());
+            throw;
+        }
+
+        try {
+            ThrowSdlErrorIfFailed(SDL_Vulkan_LoadLibrary(nullptr), "SDL_Vulkan_LoadLibrary failed");
+        } catch (const std::exception& e) {
+            ShowErrorDialog("Vulkan Library Load Failed",
+                std::string("Failed to load Vulkan library. Make sure Vulkan drivers are installed.\n\nError: ") + e.what());
+            throw;
+        }
+    }
+
     uint32_t flags = SDL_WINDOW_VULKAN;
     if (config.resizable) {
         flags |= SDL_WINDOW_RESIZABLE;
