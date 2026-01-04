@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../services/interfaces/graphics_types.hpp"
 #include <lua.hpp>
 
 #include <string>
@@ -9,19 +10,14 @@ namespace sdl3cpp::script {
 
 class ShaderManager {
 public:
-    struct ShaderPaths {
-        std::string vertex;
-        std::string fragment;
-    };
-
     explicit ShaderManager(lua_State* L);
 
-    std::unordered_map<std::string, ShaderPaths> LoadShaderPathsMap();
+    std::unordered_map<std::string, services::ShaderPaths> LoadShaderPathsMap();
 
 private:
     lua_State* L_;
 
-    ShaderPaths ReadShaderPathsTable(int index);
+    services::ShaderPaths ReadShaderPathsTable(int index);
     std::string GetLuaError();
 };
 
