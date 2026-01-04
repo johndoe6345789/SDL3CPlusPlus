@@ -38,7 +38,6 @@ public:
     void InitializeDevice(SDL_Window* window, const GraphicsConfig& config) override;
     void InitializeSwapchain() override;
     void RecreateSwapchain() override;
-    void Shutdown() noexcept override;
     void LoadShaders(const std::unordered_map<std::string, ShaderPaths>& shaders) override;
     void UploadVertexData(const std::vector<core::Vertex>& vertices) override;
     void UploadIndexData(const std::vector<uint16_t>& indices) override;
