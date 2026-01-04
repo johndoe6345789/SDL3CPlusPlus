@@ -1,5 +1,5 @@
 #include "render_controller.hpp"
-#include "../logging/logger.hpp"
+#include "../services/interfaces/i_logger.hpp"
 #include "../services/interfaces/i_graphics_service.hpp"
 #include "../services/interfaces/i_script_service.hpp"
 #include "../services/interfaces/i_gui_service.hpp"
@@ -8,16 +8,16 @@
 namespace sdl3cpp::controllers {
 
 RenderController::RenderController(di::ServiceRegistry& registry)
-    : registry_(registry) {
-    logging::Logger::GetInstance().Trace("RenderController::RenderController: Created");
+    : registry_(registry), logger_(registry.GetService<services::ILogger>()) {
+    logger_->Trace("RenderController::RenderController: Created");
 }
 
 RenderController::~RenderController() {
-    logging::Logger::GetInstance().Trace("RenderController::~RenderController: Destroyed");
+    logger_->Trace("RenderController::~RenderController: Destroyed");
 }
 
 void RenderController::RenderFrame(float time) {
-    logging::Logger::GetInstance().Trace("RenderController::RenderFrame: Entering");
+    logger_->Trace("RenderController::RenderFrame: Entering");
 
     // Get required services
     auto graphicsService = registry_.GetService<services::IGraphicsService>();
@@ -26,8 +26,8 @@ void RenderController::RenderFrame(float time) {
     auto sceneService = registry_.GetService<services::ISceneService>();
 
     if (!graphicsService) {
-        logging::Logger::GetInstance().Error("RenderController::RenderFrame: Graphics service not available");
-        logging::Logger::GetInstance().Trace("RenderController::RenderFrame: Exiting");
+        logger_->Error("RenderController::RenderFrame: Graphics service not available");
+        logger_->Trace("RenderController::RenderFrame: Exiting");
         return;
     }
 
@@ -61,7 +61,7 @@ void RenderController::RenderFrame(float time) {
     // End frame and present
     graphicsService->EndFrame();
 
-    logging::Logger::GetInstance().Trace("RenderController::RenderFrame: Exiting");
+    logger_->Trace("RenderController::RenderFrame: Exiting");
 }
 
 }  // namespace sdl3cpp::controllers

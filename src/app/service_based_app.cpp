@@ -17,25 +17,30 @@
 #include "services/impl/sdl_audio_service.hpp"
 #include "services/impl/vulkan_gui_service.hpp"
 #include "services/impl/bullet_physics_service.hpp"
+#include "services/impl/logger_service.hpp"
 #include <stdexcept>
 
 namespace sdl3cpp::app {
 
 ServiceBasedApp::ServiceBasedApp(const std::filesystem::path& scriptPath)
     : scriptPath_(scriptPath) {
-    logging::Logger::GetInstance().Info("ServiceBasedApp::ServiceBasedApp: constructor starting");
+    logging::Logger::GetInstance().Trace("ServiceBasedApp::ServiceBasedApp: constructor starting");
 
     try {
         logging::Logger::GetInstance().Info("ServiceBasedApp::ServiceBasedApp: Setting up SDL");
         SetupSDL();
         logging::Logger::GetInstance().Info("ServiceBasedApp::ServiceBasedApp: Registering services");
         RegisterServices();
-        logging::Logger::GetInstance().Info("ServiceBasedApp::ServiceBasedApp: Creating controllers");
+        
+        // Get the logger service after registration
+        logger_ = registry_.GetService<services::ILogger>();
+        
+        logger_->Info("ServiceBasedApp::ServiceBasedApp: Creating controllers");
 
         lifecycleController_ = std::make_unique<controllers::LifecycleController>(registry_);
         applicationController_ = std::make_unique<controllers::ApplicationController>(registry_);
         
-        logging::Logger::GetInstance().Info("ServiceBasedApp::ServiceBasedApp: constructor completed");
+        logger_->Info("ServiceBasedApp::ServiceBasedApp: constructor completed");
     } catch (const std::exception& e) {
         logging::Logger::GetInstance().Error("ServiceBasedApp::ServiceBasedApp: Failed to initialize ServiceBasedApp: " + std::string(e.what()));
         throw;
@@ -43,14 +48,16 @@ ServiceBasedApp::ServiceBasedApp(const std::filesystem::path& scriptPath)
 }
 
 ServiceBasedApp::~ServiceBasedApp() {
-    logging::TraceGuard trace("ServiceBasedApp::~ServiceBasedApp");
+    logger_->Trace("ServiceBasedApp", "~ServiceBasedApp", "", "Entering");
 
     applicationController_.reset();
     lifecycleController_.reset();
+
+    logger_->Trace("ServiceBasedApp", "~ServiceBasedApp", "", "Exiting");
 }
 
 void ServiceBasedApp::Run() {
-    logging::Logger::GetInstance().Trace("ServiceBasedApp::Run: Entering");
+    logger_->Trace("ServiceBasedApp", "Run", "", "Entering");
 
     try {
         // Initialize all services
@@ -97,25 +104,28 @@ void ServiceBasedApp::Run() {
         // Shutdown all services
         lifecycleController_->ShutdownAll();
 
-        logging::Logger::GetInstance().Trace("ServiceBasedApp::Run: Exiting");
+        logger_->Trace("ServiceBasedApp", "Run", "", "Exiting");
 
     } catch (const std::exception& e) {
-        logging::Logger::GetInstance().Error("ServiceBasedApp::Run: Application error: " + std::string(e.what()));
+        logger_->Error("ServiceBasedApp::Run: Application error: " + std::string(e.what()));
         throw;
     }
 }
 
 void ServiceBasedApp::SetupSDL() {
-    logging::Logger::GetInstance().Trace("ServiceBasedApp::SetupSDL: Entering");
+    logger_->Trace("ServiceBasedApp", "SetupSDL", "", "Entering");
 
     // SDL initialization is handled by the window service
     // Don't initialize SDL here to avoid double initialization
 
-    logging::Logger::GetInstance().Trace("ServiceBasedApp::SetupSDL: Exiting");
+    logger_->Trace("ServiceBasedApp", "SetupSDL", "", "Exiting");
 }
 
 void ServiceBasedApp::RegisterServices() {
-    logging::Logger::GetInstance().Trace("ServiceBasedApp::RegisterServices: Entering");
+    logger_->Trace("ServiceBasedApp", "RegisterServices", "", "Entering");
+
+    // Logger service (needed by all other services)
+    registry_.RegisterService<services::ILogger, services::impl::LoggerService>();
 
     // Event bus (needed by window service)
     registry_.RegisterService<events::EventBus, events::EventBus>();
@@ -179,7 +189,7 @@ void ServiceBasedApp::RegisterServices() {
     // Physics service
     registry_.RegisterService<services::IPhysicsService, services::impl::BulletPhysicsService>();
 
-    logging::Logger::GetInstance().Trace("ServiceBasedApp::RegisterServices: Exiting");
+    logger_->Trace("ServiceBasedApp", "RegisterServices", "", "Exiting");
 }
 
 }  // namespace sdl3cpp::app

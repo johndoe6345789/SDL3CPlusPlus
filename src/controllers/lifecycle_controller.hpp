@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../di/service_registry.hpp"
+#include "../services/interfaces/i_logger.hpp"
 
 namespace sdl3cpp::controllers {
 
@@ -30,6 +31,7 @@ public:
 
 private:
     di::ServiceRegistry& registry_;
+    std::shared_ptr<services::ILogger> logger_;
 };
 
 }  // namespace sdl3cpp::controllers

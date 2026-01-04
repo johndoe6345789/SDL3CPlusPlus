@@ -1,6 +1,6 @@
 #include "application_controller.hpp"
 #include "render_controller.hpp"
-#include "../logging/logger.hpp"
+#include "../services/interfaces/i_logger.hpp"
 #include "../services/interfaces/i_window_service.hpp"
 #include "../services/interfaces/i_input_service.hpp"
 #include "../services/interfaces/i_physics_service.hpp"
@@ -12,18 +12,18 @@
 namespace sdl3cpp::controllers {
 
 ApplicationController::ApplicationController(di::ServiceRegistry& registry)
-    : registry_(registry), running_(false) {
-    logging::Logger::GetInstance().Trace("ApplicationController::ApplicationController: Created");
+    : registry_(registry), logger_(registry.GetService<services::ILogger>()), running_(false) {
+    logger_->Trace("ApplicationController", "ApplicationController", "", "Created");
 }
 
 ApplicationController::~ApplicationController() {
-    logging::Logger::GetInstance().Trace("ApplicationController::~ApplicationController: Destroyed");
+    logger_->Trace("ApplicationController", "~ApplicationController", "", "Destroyed");
 }
 
 void ApplicationController::Run() {
-    logging::Logger::GetInstance().Trace("ApplicationController::Run: Entering");
-    logging::Logger::GetInstance().Info("ApplicationController::Run: ApplicationController::Run starting");
-    logging::Logger::GetInstance().Info("ApplicationController::Run: Application starting main loop");
+    logger_->Trace("ApplicationController::Run: Entering");
+    logger_->Info("ApplicationController::Run: ApplicationController::Run starting");
+    logger_->Info("ApplicationController::Run: Application starting main loop");
 
     running_ = true;
     auto lastTime = std::chrono::high_resolution_clock::now();
@@ -35,7 +35,7 @@ void ApplicationController::Run() {
         
         // Exit after timeout for headless testing
         if (currentTime - startTime > timeout) {
-            logging::Logger::GetInstance().Info("Application timeout reached, exiting");
+            logger_->Info("ApplicationController::Run: Application timeout reached, exiting");
             running_ = false;
             break;
         }
@@ -47,8 +47,8 @@ void ApplicationController::Run() {
         ProcessFrame(deltaTime);
     }
 
-    logging::Logger::GetInstance().Info("ApplicationController::Run: Application exiting main loop");
-    logging::Logger::GetInstance().Trace("ApplicationController::Run: Exiting");
+    logger_->Info("ApplicationController::Run: Application exiting main loop");
+    logger_->Trace("ApplicationController::Run: Exiting");
 }
 
 void ApplicationController::HandleEvents() {
@@ -72,7 +72,7 @@ void ApplicationController::HandleEvents() {
 }
 
 void ApplicationController::ProcessFrame(float deltaTime) {
-    logging::TraceGuard trace;
+    logger_->Trace("ApplicationController::ProcessFrame: Entering");
 
     // Update physics
     auto physicsService = registry_.GetService<services::IPhysicsService>();
@@ -91,6 +91,8 @@ void ApplicationController::ProcessFrame(float deltaTime) {
     // auto renderController = std::make_unique<RenderController>(registry_);
     // renderController->RenderFrame(static_cast<float>(std::chrono::duration_cast<std::chrono::milliseconds>(
     //     std::chrono::high_resolution_clock::now().time_since_epoch()).count()) / 1000.0f);
+
+    logger_->Trace("ApplicationController::ProcessFrame: Exiting");
 }
 
 }  // namespace sdl3cpp::controllers

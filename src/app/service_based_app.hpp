@@ -6,6 +6,7 @@
 #include "di/service_registry.hpp"
 #include "controllers/lifecycle_controller.hpp"
 #include "controllers/application_controller.hpp"
+#include "services/interfaces/i_logger.hpp"
 
 namespace sdl3cpp::app {
 
@@ -35,6 +36,7 @@ private:
     di::ServiceRegistry registry_;
     std::unique_ptr<controllers::LifecycleController> lifecycleController_;
     std::unique_ptr<controllers::ApplicationController> applicationController_;
+    std::shared_ptr<services::ILogger> logger_;
 };
 
 }  // namespace sdl3cpp::app
