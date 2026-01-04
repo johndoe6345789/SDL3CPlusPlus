@@ -124,6 +124,8 @@ if(BUILD_SDL3_APP)
             src/di/service_registry.cpp
             src/events/event_bus.cpp
             src/services/impl/json_config_service.cpp
+            src/services/impl/sdl_window_service.cpp
+            src/services/impl/sdl_input_service.cpp
             src/app/sdl3_app_core.cpp
             src/app/audio_player.cpp
             src/app/sdl3_app_device.cpp
