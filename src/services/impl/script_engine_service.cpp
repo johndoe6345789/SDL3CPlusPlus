@@ -37,6 +37,7 @@ void ScriptEngineService::Initialize() {
     bindingContext_->meshService = meshService_;
     bindingContext_->audioCommandService = audioCommandService_;
     bindingContext_->physicsBridgeService = physicsBridgeService_;
+    bindingContext_->logger = logger_;
 
     engine_ = std::make_unique<script::ScriptEngine>(scriptPath_, bindingContext_.get(), debugEnabled_);
     initialized_ = true;

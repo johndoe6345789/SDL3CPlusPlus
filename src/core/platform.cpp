@@ -1,6 +1,4 @@
 #include "core/platform.hpp"
-#include "logging/logger.hpp"
-#include "logging/string_utils.hpp"
 
 #include <cstdlib>
 
@@ -11,7 +9,6 @@
 namespace sdl3cpp::platform {
 
 std::optional<std::filesystem::path> GetUserConfigDirectory() {
-    sdl3cpp::logging::TraceGuard trace;
 #ifdef _WIN32
     if (const char* appData = std::getenv("APPDATA")) {
         return std::filesystem::path(appData) / "sdl3cpp";
@@ -30,8 +27,6 @@ std::optional<std::filesystem::path> GetUserConfigDirectory() {
 #ifdef _WIN32
 namespace {
 std::string FormatWin32Error(DWORD errorCode) {
-    using sdl3cpp::logging::ToString;
-    sdl3cpp::logging::Logger::GetInstance().TraceFunctionWithArgs("FormatWin32Error", ToString(static_cast<unsigned long>(errorCode)));
     if (errorCode == ERROR_SUCCESS) {
         return "ERROR_SUCCESS";
     }
@@ -63,7 +58,6 @@ std::string FormatWin32Error(DWORD errorCode) {
 #endif
 
 std::string GetPlatformError() {
-    sdl3cpp::logging::TraceGuard trace;
 #ifdef _WIN32
     DWORD win32Error = ::GetLastError();
     if (win32Error != ERROR_SUCCESS) {

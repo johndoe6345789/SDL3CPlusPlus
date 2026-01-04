@@ -1,6 +1,5 @@
 #include "json_config_service.hpp"
 #include "../interfaces/i_logger.hpp"
-#include "../../logging/string_utils.hpp"
 #include <rapidjson/document.h>
 #include <rapidjson/istreamwrapper.h>
 #include <rapidjson/stringbuffer.h>
@@ -57,8 +56,8 @@ std::filesystem::path JsonConfigService::FindScriptPath(const char* argv0) {
 }
 
 RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger, const std::filesystem::path& configPath, bool dumpConfig) {
-    using logging::ToString;
-    logger->Trace("JsonConfigService::LoadFromJson", "LoadFromJson", configPath.string() + " " + ToString(dumpConfig), "");
+    std::string args = configPath.string() + " dumpConfig=" + (dumpConfig ? "true" : "false");
+    logger->Trace("JsonConfigService", "LoadFromJson", args);
 
     std::ifstream configStream(configPath);
     if (!configStream) {

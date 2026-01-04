@@ -1,5 +1,5 @@
 #include "script/scene_manager.hpp"
-#include "logging/logger.hpp"
+#include "services/interfaces/i_logger.hpp"
 
 #include <lua.hpp>
 
@@ -9,23 +9,38 @@
 
 namespace sdl3cpp::script {
 
-SceneManager::SceneManager(lua_State* L) : L_(L) {
-    sdl3cpp::logging::TraceGuard trace;
+SceneManager::SceneManager(lua_State* L, std::shared_ptr<services::ILogger> logger)
+    : L_(L), logger_(logger) {
+    if (logger_) {
+        logger_->Trace("SceneManager", "SceneManager");
+    }
 }
 
 std::vector<SceneManager::SceneObject> SceneManager::LoadSceneObjects() {
+    if (logger_) {
+        logger_->Trace("SceneManager", "LoadSceneObjects");
+    }
     lua_getglobal(L_, "get_scene_objects");
     if (!lua_isfunction(L_, -1)) {
         lua_pop(L_, 1);
+        if (logger_) {
+            logger_->Error("Lua function 'get_scene_objects' is missing");
+        }
         throw std::runtime_error("Lua function 'get_scene_objects' is missing");
     }
     if (lua_pcall(L_, 0, 1, 0) != LUA_OK) {
         std::string message = GetLuaError();
         lua_pop(L_, 1);
+        if (logger_) {
+            logger_->Error("Lua get_scene_objects failed: " + message);
+        }
         throw std::runtime_error("Lua get_scene_objects failed: " + message);
     }
     if (!lua_istable(L_, -1)) {
         lua_pop(L_, 1);
+        if (logger_) {
+            logger_->Error("'get_scene_objects' did not return a table");
+        }
         throw std::runtime_error("'get_scene_objects' did not return a table");
     }
 
@@ -37,6 +52,9 @@ std::vector<SceneManager::SceneObject> SceneManager::LoadSceneObjects() {
         lua_rawgeti(L_, -1, static_cast<int>(i));
         if (!lua_istable(L_, -1)) {
             lua_pop(L_, 1);
+            if (logger_) {
+                logger_->Error("Scene object at index " + std::to_string(i) + " is not a table");
+            }
             throw std::runtime_error("Scene object at index " + std::to_string(i) + " is not a table");
         }
 
@@ -46,6 +64,9 @@ std::vector<SceneManager::SceneObject> SceneManager::LoadSceneObjects() {
         lua_pop(L_, 1);
         if (object.vertices.empty()) {
             lua_pop(L_, 1);
+            if (logger_) {
+                logger_->Error("Scene object " + std::to_string(i) + " must supply at least one vertex");
+            }
             throw std::runtime_error("Scene object " + std::to_string(i) + " must supply at least one vertex");
         }
 
@@ -54,6 +75,9 @@ std::vector<SceneManager::SceneObject> SceneManager::LoadSceneObjects() {
         lua_pop(L_, 1);
         if (object.indices.empty()) {
             lua_pop(L_, 1);
+            if (logger_) {
+                logger_->Error("Scene object " + std::to_string(i) + " must supply indices");
+            }
             throw std::runtime_error("Scene object " + std::to_string(i) + " must supply indices");
         }
 
@@ -80,6 +104,9 @@ std::vector<SceneManager::SceneObject> SceneManager::LoadSceneObjects() {
 }
 
 std::array<float, 16> SceneManager::ComputeModelMatrix(int functionRef, float time) {
+    if (logger_) {
+        logger_->Trace("SceneManager", "ComputeModelMatrix", "time=" + std::to_string(time));
+    }
     if (functionRef == LUA_REFNIL) {
         lua_getglobal(L_, "compute_model_matrix");
         if (!lua_isfunction(L_, -1)) {
@@ -94,10 +121,16 @@ std::array<float, 16> SceneManager::ComputeModelMatrix(int functionRef, float ti
     if (lua_pcall(L_, 1, 1, 0) != LUA_OK) {
         std::string message = GetLuaError();
         lua_pop(L_, 1);
+        if (logger_) {
+            logger_->Error("Lua compute_model_matrix failed: " + message);
+        }
         throw std::runtime_error("Lua compute_model_matrix failed: " + message);
     }
     if (!lua_istable(L_, -1)) {
         lua_pop(L_, 1);
+        if (logger_) {
+            logger_->Error("'compute_model_matrix' did not return a table");
+        }
         throw std::runtime_error("'compute_model_matrix' did not return a table");
     }
 
@@ -107,19 +140,31 @@ std::array<float, 16> SceneManager::ComputeModelMatrix(int functionRef, float ti
 }
 
 std::array<float, 16> SceneManager::GetViewProjectionMatrix(float aspect) {
+    if (logger_) {
+        logger_->Trace("SceneManager", "GetViewProjectionMatrix", "aspect=" + std::to_string(aspect));
+    }
     lua_getglobal(L_, "get_view_projection");
     if (!lua_isfunction(L_, -1)) {
         lua_pop(L_, 1);
+        if (logger_) {
+            logger_->Error("Lua function 'get_view_projection' is missing");
+        }
         throw std::runtime_error("Lua function 'get_view_projection' is missing");
     }
     lua_pushnumber(L_, aspect);
     if (lua_pcall(L_, 1, 1, 0) != LUA_OK) {
         std::string message = GetLuaError();
         lua_pop(L_, 1);
+        if (logger_) {
+            logger_->Error("Lua get_view_projection failed: " + message);
+        }
         throw std::runtime_error("Lua get_view_projection failed: " + message);
     }
     if (!lua_istable(L_, -1)) {
         lua_pop(L_, 1);
+        if (logger_) {
+            logger_->Error("'get_view_projection' did not return a table");
+        }
         throw std::runtime_error("'get_view_projection' did not return a table");
     }
     std::array<float, 16> matrix = ReadMatrix(L_, -1);
@@ -130,6 +175,9 @@ std::array<float, 16> SceneManager::GetViewProjectionMatrix(float aspect) {
 std::vector<core::Vertex> SceneManager::ReadVertexArray(int index) {
     int absIndex = lua_absindex(L_, index);
     if (!lua_istable(L_, absIndex)) {
+        if (logger_) {
+            logger_->Error("Expected table for vertex data");
+        }
         throw std::runtime_error("Expected table for vertex data");
     }
 
@@ -141,6 +189,9 @@ std::vector<core::Vertex> SceneManager::ReadVertexArray(int index) {
         lua_rawgeti(L_, absIndex, static_cast<int>(i));
         if (!lua_istable(L_, -1)) {
             lua_pop(L_, 1);
+            if (logger_) {
+                logger_->Error("Vertex entry at index " + std::to_string(i) + " is not a table");
+            }
             throw std::runtime_error("Vertex entry at index " + std::to_string(i) + " is not a table");
         }
 
@@ -165,6 +216,9 @@ std::vector<core::Vertex> SceneManager::ReadVertexArray(int index) {
 std::vector<uint16_t> SceneManager::ReadIndexArray(int index) {
     int absIndex = lua_absindex(L_, index);
     if (!lua_istable(L_, absIndex)) {
+        if (logger_) {
+            logger_->Error("Expected table for index data");
+        }
         throw std::runtime_error("Expected table for index data");
     }
 
@@ -176,11 +230,17 @@ std::vector<uint16_t> SceneManager::ReadIndexArray(int index) {
         lua_rawgeti(L_, absIndex, static_cast<int>(i));
         if (!lua_isinteger(L_, -1)) {
             lua_pop(L_, 1);
+            if (logger_) {
+                logger_->Error("Index entry at position " + std::to_string(i) + " is not an integer");
+            }
             throw std::runtime_error("Index entry at position " + std::to_string(i) + " is not an integer");
         }
         lua_Integer value = lua_tointeger(L_, -1);
         lua_pop(L_, 1);
         if (value < 1) {
+            if (logger_) {
+                logger_->Error("Index values must be 1 or greater");
+            }
             throw std::runtime_error("Index values must be 1 or greater");
         }
         indices.push_back(static_cast<uint16_t>(value - 1));

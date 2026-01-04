@@ -79,6 +79,13 @@ public:
      * @return true if playing, false otherwise
      */
     virtual bool IsBackgroundPlaying() const = 0;
+
+    /**
+     * @brief Update streaming audio buffers.
+     *
+     * Call regularly from the main loop to feed audio data.
+     */
+    virtual void Update() = 0;
 };
 
 }  // namespace sdl3cpp::services

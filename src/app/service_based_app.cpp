@@ -12,7 +12,6 @@
 #include "services/impl/render_command_service.hpp"
 #include "services/impl/graphics_service.hpp"
 #include "services/impl/script_engine_service.hpp"
-#include "services/impl/lua_script_service.hpp"
 #include "services/impl/scene_script_service.hpp"
 #include "services/impl/shader_script_service.hpp"
 #include "services/impl/gui_script_service.hpp"
@@ -25,7 +24,7 @@
 #include "services/impl/bullet_physics_service.hpp"
 #include "services/impl/crash_recovery_service.hpp"
 #include "services/impl/logger_service.hpp"
-#include "logging/logger.hpp"
+#include <iostream>
 #include <stdexcept>
 
 namespace sdl3cpp::app {
@@ -35,9 +34,6 @@ ServiceBasedApp::ServiceBasedApp(const std::filesystem::path& scriptPath)
     // Register logger service first
     registry_.RegisterService<services::ILogger, services::impl::LoggerService>();
     logger_ = registry_.GetService<services::ILogger>();
-    
-    // Set global logger for legacy compatibility
-    g_logger = logger_;
     
     logger_->Trace("ServiceBasedApp", "ServiceBasedApp", "scriptPath=" + scriptPath_.string(), "constructor starting");
 
@@ -110,20 +106,6 @@ void ServiceBasedApp::Run() {
             graphicsConfig.enableValidationLayers = false;
             graphicsService->InitializeDevice(windowService->GetNativeHandle(), graphicsConfig);
             graphicsService->InitializeSwapchain();
-        }
-
-        // Connect services that depend on each other
-        auto scriptService = registry_.GetService<services::IScriptService>();
-        auto audioService = registry_.GetService<services::IAudioService>();
-        if (scriptService && audioService) {
-            // The script service needs access to the audio player for Lua audio commands
-            // This is a bit of a hack - ideally the audio service would provide an interface
-            // But for now, we'll get the audio player from the impl
-            auto audioServiceImpl = std::dynamic_pointer_cast<services::impl::SdlAudioService>(audioService);
-            if (audioServiceImpl) {
-                // We need to access the private audioPlayer_ - this is not ideal
-                // TODO: Refactor to provide proper interface
-            }
         }
 
         // Run the main application loop with crash recovery
@@ -240,11 +222,6 @@ void ServiceBasedApp::RegisterServices() {
         registry_.GetService<services::IScriptEngineService>());
     registry_.RegisterService<services::IGuiScriptService, services::impl::GuiScriptService>(
         registry_.GetService<services::IScriptEngineService>());
-
-    // Script service (facade)
-    registry_.RegisterService<services::IScriptService, services::impl::LuaScriptService>(
-        registry_.GetService<services::IScriptEngineService>(),
-        registry_.GetService<services::ILogger>());
 
     // Connect input service to GUI script service for GUI input processing
     auto inputService = registry_.GetService<services::IInputService>();

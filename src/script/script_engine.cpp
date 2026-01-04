@@ -3,14 +3,11 @@
 #include "script/shader_manager.hpp"
 #include "script/gui_manager.hpp"
 #include "script/lua_bindings.hpp"
-#include "logging/logger.hpp"
+#include "services/interfaces/i_logger.hpp"
 
 #include <lua.hpp>
 
-#include <cstring>
-#include <iostream>
 #include <stdexcept>
-#include <utility>
 
 namespace sdl3cpp::script {
 
@@ -21,28 +18,35 @@ ScriptEngine::ScriptEngine(const std::filesystem::path& scriptPath, bool debugEn
 ScriptEngine::ScriptEngine(const std::filesystem::path& scriptPath, LuaBindingContext* bindingContext, bool debugEnabled)
     : L_(luaL_newstate()),
       scriptDirectory_(scriptPath.parent_path()),
-      debugEnabled_(debugEnabled),
-      sceneManager_(std::make_unique<SceneManager>(L_)),
-      shaderManager_(std::make_unique<ShaderManager>(L_)),
-      guiManager_(std::make_unique<GuiManager>(L_)) {
-    sdl3cpp::logging::TraceGuard trace;;
+      debugEnabled_(debugEnabled) {
+    LuaBindingContext* resolvedContext = bindingContext;
+    if (!resolvedContext) {
+        ownedBindingContext_ = std::make_unique<LuaBindingContext>();
+        resolvedContext = ownedBindingContext_.get();
+    }
+    if (resolvedContext) {
+        logger_ = resolvedContext->logger;
+    }
+    if (logger_) {
+        logger_->Trace("ScriptEngine", "ScriptEngine");
+    }
     if (!L_) {
-        sdl3cpp::logging::Logger::GetInstance().Error("Failed to create Lua state");
+        if (logger_) {
+            logger_->Error("Failed to create Lua state");
+        }
         throw std::runtime_error("Failed to create Lua state");
     }
-    
-    sdl3cpp::logging::Logger::GetInstance().Debug("Lua state created successfully");
-    luaL_openlibs(L_);
-    
-    if (bindingContext) {
-        LuaBindings::RegisterBindings(L_, bindingContext);
-    } else {
-        LuaBindings::RegisterBindings(L_, this);
+
+    if (logger_) {
+        logger_->Debug("Lua state created successfully");
     }
-    
+    luaL_openlibs(L_);
+
+    LuaBindings::RegisterBindings(L_, resolvedContext);
+
     lua_pushboolean(L_, debugEnabled_);
     lua_setglobal(L_, "lua_debug");
-    
+
     auto scriptDir = scriptPath.parent_path();
     if (!scriptDir.empty()) {
         lua_getglobal(L_, "package");
@@ -59,17 +63,25 @@ ScriptEngine::ScriptEngine(const std::filesystem::path& scriptPath, LuaBindingCo
         }
         lua_pop(L_, 1);
     }
-    
+
     if (luaL_dofile(L_, scriptPath.string().c_str()) != LUA_OK) {
         std::string message = sdl3cpp::script::GetLuaError(L_);
         lua_pop(L_, 1);
         lua_close(L_);
         L_ = nullptr;
-        sdl3cpp::logging::Logger::GetInstance().Error("Failed to load Lua script: " + message);
+        if (logger_) {
+            logger_->Error("Failed to load Lua script: " + message);
+        }
         throw std::runtime_error("Failed to load Lua script: " + message);
     }
 
-    sdl3cpp::logging::Logger::GetInstance().Info("Lua script loaded successfully: " + scriptPath.string());
+    if (logger_) {
+        logger_->Info("Lua script loaded successfully: " + scriptPath.string());
+    }
+
+    sceneManager_ = std::make_unique<SceneManager>(L_, logger_);
+    shaderManager_ = std::make_unique<ShaderManager>(L_, logger_);
+    guiManager_ = std::make_unique<GuiManager>(L_, logger_);
 }
 
 ScriptEngine::~ScriptEngine() {
@@ -79,30 +91,51 @@ ScriptEngine::~ScriptEngine() {
 }
 
 std::vector<SceneManager::SceneObject> ScriptEngine::LoadSceneObjects() {
+    if (!sceneManager_) {
+        throw std::runtime_error("Scene manager not initialized");
+    }
     return sceneManager_->LoadSceneObjects();
 }
 
 std::array<float, 16> ScriptEngine::ComputeModelMatrix(int functionRef, float time) {
+    if (!sceneManager_) {
+        throw std::runtime_error("Scene manager not initialized");
+    }
     return sceneManager_->ComputeModelMatrix(functionRef, time);
 }
 
 std::array<float, 16> ScriptEngine::GetViewProjectionMatrix(float aspect) {
+    if (!sceneManager_) {
+        throw std::runtime_error("Scene manager not initialized");
+    }
     return sceneManager_->GetViewProjectionMatrix(aspect);
 }
 
 std::unordered_map<std::string, sdl3cpp::services::ShaderPaths> ScriptEngine::LoadShaderPathsMap() {
+    if (!shaderManager_) {
+        throw std::runtime_error("Shader manager not initialized");
+    }
     return shaderManager_->LoadShaderPathsMap();
 }
 
 std::vector<GuiCommand> ScriptEngine::LoadGuiCommands() {
+    if (!guiManager_) {
+        throw std::runtime_error("Gui manager not initialized");
+    }
     return guiManager_->LoadGuiCommands();
 }
 
 void ScriptEngine::UpdateGuiInput(const GuiInputSnapshot& input) {
+    if (!guiManager_) {
+        throw std::runtime_error("Gui manager not initialized");
+    }
     guiManager_->UpdateGuiInput(input);
 }
 
 bool ScriptEngine::HasGuiCommands() const {
+    if (!guiManager_) {
+        return false;
+    }
     return guiManager_->HasGuiCommands();
 }
 

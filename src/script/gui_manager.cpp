@@ -1,5 +1,5 @@
 #include "script/gui_manager.hpp"
-#include "logging/logger.hpp"
+#include "services/interfaces/i_logger.hpp"
 
 #include <lua.hpp>
 
@@ -10,8 +10,11 @@
 
 namespace sdl3cpp::script {
 
-GuiManager::GuiManager(lua_State* L) : L_(L) {
-    sdl3cpp::logging::TraceGuard trace;
+GuiManager::GuiManager(lua_State* L, std::shared_ptr<services::ILogger> logger)
+    : L_(L), logger_(logger) {
+    if (logger_) {
+        logger_->Trace("GuiManager", "GuiManager");
+    }
     lua_getglobal(L_, "gui_input");
     if (!lua_isnil(L_, -1)) {
         guiInputRef_ = luaL_ref(L_, LUA_REGISTRYINDEX);
@@ -28,6 +31,9 @@ GuiManager::GuiManager(lua_State* L) : L_(L) {
 }
 
 std::vector<GuiCommand> GuiManager::LoadGuiCommands() {
+    if (logger_) {
+        logger_->Trace("GuiManager", "LoadGuiCommands");
+    }
     std::vector<GuiCommand> commands;
     if (guiCommandsFnRef_ == LUA_REFNIL) {
         return commands;
@@ -36,12 +42,16 @@ std::vector<GuiCommand> GuiManager::LoadGuiCommands() {
     if (lua_pcall(L_, 0, 1, 0) != LUA_OK) {
         std::string message = GetLuaError();
         lua_pop(L_, 1);
-        sdl3cpp::logging::Logger::GetInstance().Error("Lua get_gui_commands failed: " + message);
+        if (logger_) {
+            logger_->Error("Lua get_gui_commands failed: " + message);
+        }
         throw std::runtime_error("Lua get_gui_commands failed: " + message);
     }
     if (!lua_istable(L_, -1)) {
         lua_pop(L_, 1);
-        sdl3cpp::logging::Logger::GetInstance().Error("'get_gui_commands' did not return a table");
+        if (logger_) {
+            logger_->Error("'get_gui_commands' did not return a table");
+        }
         throw std::runtime_error("'get_gui_commands' did not return a table");
     }
 
@@ -52,7 +62,9 @@ std::vector<GuiCommand> GuiManager::LoadGuiCommands() {
         lua_rawgeti(L_, -1, static_cast<int>(i));
         if (!lua_istable(L_, -1)) {
             lua_pop(L_, 1);
-            sdl3cpp::logging::Logger::GetInstance().Error("GUI command at index " + std::to_string(i) + " is not a table");
+            if (logger_) {
+                logger_->Error("GUI command at index " + std::to_string(i) + " is not a table");
+            }
             throw std::runtime_error("GUI command at index " + std::to_string(i) + " is not a table");
         }
         int commandIndex = lua_gettop(L_);
@@ -60,7 +72,9 @@ std::vector<GuiCommand> GuiManager::LoadGuiCommands() {
         const char* typeName = lua_tostring(L_, -1);
         if (!typeName) {
             lua_pop(L_, 2);
-            sdl3cpp::logging::Logger::GetInstance().Error("GUI command at index " + std::to_string(i) + " is missing a type");
+            if (logger_) {
+                logger_->Error("GUI command at index " + std::to_string(i) + " is missing a type");
+            }
             throw std::runtime_error("GUI command at index " + std::to_string(i) + " is missing a type");
         }
         GuiCommand command{};
@@ -128,6 +142,9 @@ std::vector<GuiCommand> GuiManager::LoadGuiCommands() {
 }
 
 void GuiManager::UpdateGuiInput(const GuiInputSnapshot& input) {
+    if (logger_) {
+        logger_->Trace("GuiManager", "UpdateGuiInput");
+    }
     if (guiInputRef_ == LUA_REFNIL) {
         return;
     }

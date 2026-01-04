@@ -1,8 +1,6 @@
-
 #include "gui/gui_renderer.hpp"
 
 #include "../core/vulkan_utils.hpp"
-#include "logging/logger.hpp"
 
 #include <algorithm>
 #include <array>
@@ -358,7 +356,6 @@ GuiRenderer::GuiRenderer(VkDevice device, VkPhysicalDevice physicalDevice, VkFor
       swapchainFormat_(swapchainFormat),
       scriptDirectory_(scriptDirectory),
       canvas_(std::make_unique<Canvas>()) {
-    sdl3cpp::logging::TraceGuard trace;
 }
 
     GuiRenderer::~GuiRenderer() {

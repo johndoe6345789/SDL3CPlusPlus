@@ -7,6 +7,7 @@
 #include <SDL3/SDL.h>
 #include <vorbis/vorbisfile.h>
 #include <filesystem>
+#include <cstdint>
 #include <vector>
 #include <atomic>
 #include <mutex>
@@ -40,27 +41,35 @@ public:
     bool IsBackgroundPlaying() const override;
 
     // Update method to be called regularly (e.g., from main loop)
-    void Update();
+    void Update() override;
 
 private:
     struct AudioData {
-        OggVorbis_File vorbisFile;
+        OggVorbis_File vorbisFile{};
+        SDL_AudioStream* convertStream = nullptr;
+        SDL_AudioSpec sourceSpec{};
         bool isOpen = false;
         bool loop = false;
-        size_t position = 0;
+        bool finished = false;
     };
 
     bool LoadAudioFile(const std::filesystem::path& path, AudioData& audioData);
     void CleanupAudioData(AudioData& audioData);
+    int ReadStreamSamples(AudioData& audioData, std::vector<int16_t>& output, int frames);
 
     std::shared_ptr<ILogger> logger_;
     float volume_ = 1.0f;
     bool initialized_ = false;
 
     SDL_AudioStream* audioStream_ = nullptr;
+    SDL_AudioSpec mixSpec_{};
 
     std::unique_ptr<AudioData> backgroundAudio_;
+    std::vector<std::unique_ptr<AudioData>> effectAudio_;
     std::mutex audioMutex_;
+    std::vector<int32_t> mixBuffer_;
+    std::vector<int16_t> tempBuffer_;
+    std::vector<int16_t> outputBuffer_;
 };
 
 }  // namespace sdl3cpp::services::impl

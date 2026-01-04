@@ -5,6 +5,10 @@
 #include <string>
 #include <unordered_map>
 
+namespace sdl3cpp::services {
+class ILogger;
+}
+
 class btVector3;
 class btTransform;
 class btCollisionShape;
@@ -20,7 +24,7 @@ namespace sdl3cpp::script {
 
 class PhysicsBridge {
 public:
-    PhysicsBridge();
+    explicit PhysicsBridge(std::shared_ptr<services::ILogger> logger);
     ~PhysicsBridge();
 
     PhysicsBridge(const PhysicsBridge&) = delete;
@@ -49,6 +53,7 @@ private:
     std::unique_ptr<btSequentialImpulseConstraintSolver> solver_;
     std::unique_ptr<btDiscreteDynamicsWorld> world_;
     std::unordered_map<std::string, BodyRecord> bodies_;
+    std::shared_ptr<services::ILogger> logger_;
 };
 
 } // namespace sdl3cpp::script

@@ -6,7 +6,6 @@
 #include "../services/interfaces/i_physics_service.hpp"
 #include "../services/interfaces/i_scene_service.hpp"
 #include "../services/interfaces/i_audio_service.hpp"
-#include "../services/impl/sdl_audio_service.hpp"
 #include "../events/event_bus.hpp"
 #include "../events/event_types.hpp"
 #include <chrono>
@@ -97,11 +96,7 @@ void ApplicationController::ProcessFrame(float deltaTime) {
     // Update audio
     auto audioService = registry_.GetService<services::IAudioService>();
     if (audioService) {
-        // Cast to implementation to access Update method
-        auto audioServiceImpl = std::dynamic_pointer_cast<services::impl::SdlAudioService>(audioService);
-        if (audioServiceImpl) {
-            audioServiceImpl->Update();
-        }
+        audioService->Update();
     }
 
     // Update GUI input to script service

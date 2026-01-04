@@ -25,8 +25,8 @@ public:
                                std::string& error) const override;
 
 private:
-    std::shared_ptr<ILogger> logger_;
     std::unique_ptr<script::PhysicsBridge> bridge_;
+    std::shared_ptr<ILogger> logger_;
 };
 
 }  // namespace sdl3cpp::services::impl

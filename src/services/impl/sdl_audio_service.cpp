@@ -1,9 +1,15 @@
 #include "sdl_audio_service.hpp"
-#include <stdexcept>
-#include <cstring>
+
 #include <algorithm>
+#include <stdexcept>
+#include <string>
 
 namespace sdl3cpp::services::impl {
+
+namespace {
+constexpr int kDecodeChunkSize = 4096;
+constexpr int kMixFrames = 1024;
+}  // namespace
 
 SdlAudioService::SdlAudioService(std::shared_ptr<ILogger> logger)
     : logger_(logger) {}
@@ -15,7 +21,9 @@ SdlAudioService::~SdlAudioService() {
 }
 
 void SdlAudioService::Initialize() {
-    logger_->TraceFunction(__func__);
+    if (logger_) {
+        logger_->TraceFunction(__func__);
+    }
 
     if (initialized_) {
         return;
@@ -27,8 +35,7 @@ void SdlAudioService::Initialize() {
     }
 
     // Set up desired audio spec
-    SDL_AudioSpec desiredSpec;
-    SDL_zero(desiredSpec);
+    SDL_AudioSpec desiredSpec{};
     desiredSpec.format = SDL_AUDIO_S16;
     desiredSpec.channels = 2;
     desiredSpec.freq = 44100;
@@ -40,6 +47,12 @@ void SdlAudioService::Initialize() {
         throw std::runtime_error("Failed to open audio device stream: " + std::string(SDL_GetError()));
     }
 
+    mixSpec_ = desiredSpec;
+    SDL_AudioSpec inputSpec{};
+    if (SDL_GetAudioStreamFormat(audioStream_, &inputSpec, nullptr)) {
+        mixSpec_ = inputSpec;
+    }
+
     // Start the audio stream
     if (!SDL_ResumeAudioStreamDevice(audioStream_)) {
         SDL_DestroyAudioStream(audioStream_);
@@ -48,11 +61,15 @@ void SdlAudioService::Initialize() {
     }
 
     initialized_ = true;
-    logger_->Info("SDL audio service initialized successfully");
+    if (logger_) {
+        logger_->Info("SDL audio service initialized successfully");
+    }
 }
 
 void SdlAudioService::Shutdown() noexcept {
-    logger_->TraceFunction(__func__);
+    if (logger_) {
+        logger_->TraceFunction(__func__);
+    }
 
     if (!initialized_) {
         return;
@@ -65,21 +82,30 @@ void SdlAudioService::Shutdown() noexcept {
         audioStream_ = nullptr;
     }
 
-    {
-        std::lock_guard<std::mutex> lock(audioMutex_);
-        if (backgroundAudio_) {
-            CleanupAudioData(*backgroundAudio_);
-            backgroundAudio_.reset();
-        }
+    std::lock_guard<std::mutex> lock(audioMutex_);
+    if (backgroundAudio_) {
+        CleanupAudioData(*backgroundAudio_);
+        backgroundAudio_.reset();
     }
+    for (auto& effect : effectAudio_) {
+        CleanupAudioData(*effect);
+    }
+    effectAudio_.clear();
+    mixBuffer_.clear();
+    tempBuffer_.clear();
+    outputBuffer_.clear();
 
     SDL_QuitSubSystem(SDL_INIT_AUDIO);
     initialized_ = false;
-    logger_->Info("SDL audio service shutdown");
+    if (logger_) {
+        logger_->Info("SDL audio service shutdown");
+    }
 }
 
 void SdlAudioService::PlayBackground(const std::filesystem::path& path, bool loop) {
-    logger_->TraceFunction(__func__);
+    if (logger_) {
+        logger_->TraceFunction(__func__);
+    }
 
     if (!initialized_) {
         throw std::runtime_error("Audio service not initialized");
@@ -101,24 +127,40 @@ void SdlAudioService::PlayBackground(const std::filesystem::path& path, bool loo
     }
 
     backgroundAudio_->loop = loop;
-    backgroundAudio_->position = 0;
+    backgroundAudio_->finished = false;
 
-    logger_->Info("Playing background audio: " + path.string() + " (loop: " + std::to_string(loop) + ")");
+    if (logger_) {
+        logger_->Info("Playing background audio: " + path.string() + " (loop: " + std::to_string(loop) + ")");
+    }
 }
 
 void SdlAudioService::PlayEffect(const std::filesystem::path& path, bool loop) {
-    logger_->TraceFunction(__func__);
+    if (logger_) {
+        logger_->TraceFunction(__func__);
+    }
 
     if (!initialized_) {
         throw std::runtime_error("Audio service not initialized");
     }
 
-    // For now, effects are not implemented - could be added later
-    logger_->Info("Playing effect audio: " + path.string() + " (loop: " + std::to_string(loop) + ") - NOT IMPLEMENTED");
+    std::lock_guard<std::mutex> lock(audioMutex_);
+    auto effect = std::make_unique<AudioData>();
+    if (!LoadAudioFile(path, *effect)) {
+        throw std::runtime_error("Failed to load audio file: " + path.string());
+    }
+    effect->loop = loop;
+    effect->finished = false;
+    effectAudio_.push_back(std::move(effect));
+
+    if (logger_) {
+        logger_->Info("Playing effect audio: " + path.string() + " (loop: " + std::to_string(loop) + ")");
+    }
 }
 
 void SdlAudioService::StopBackground() {
-    logger_->TraceFunction(__func__);
+    if (logger_) {
+        logger_->TraceFunction(__func__);
+    }
 
     if (!initialized_) {
         return;
@@ -130,29 +172,51 @@ void SdlAudioService::StopBackground() {
         backgroundAudio_.reset();
     }
 
-    logger_->Info("Stopped background audio");
+    if (logger_) {
+        logger_->Info("Stopped background audio");
+    }
 }
 
 void SdlAudioService::StopAll() {
-    logger_->TraceFunction(__func__);
+    if (logger_) {
+        logger_->TraceFunction(__func__);
+    }
 
-    StopBackground();
-    // Effects would be stopped here too
-    logger_->Info("Stopped all audio");
+    if (!initialized_) {
+        return;
+    }
+
+    std::lock_guard<std::mutex> lock(audioMutex_);
+    if (backgroundAudio_) {
+        CleanupAudioData(*backgroundAudio_);
+        backgroundAudio_.reset();
+    }
+    for (auto& effect : effectAudio_) {
+        CleanupAudioData(*effect);
+    }
+    effectAudio_.clear();
+
+    if (logger_) {
+        logger_->Info("Stopped all audio");
+    }
 }
 
 void SdlAudioService::SetVolume(float volume) {
+    std::lock_guard<std::mutex> lock(audioMutex_);
     volume_ = std::clamp(volume, 0.0f, 1.0f);
-    logger_->TraceVariable("volume", volume_);
+    if (logger_) {
+        logger_->TraceVariable("volume", volume_);
+    }
 }
 
 float SdlAudioService::GetVolume() const {
+    std::lock_guard<std::mutex> lock(const_cast<std::mutex&>(audioMutex_));
     return volume_;
 }
 
 bool SdlAudioService::IsBackgroundPlaying() const {
     std::lock_guard<std::mutex> lock(const_cast<std::mutex&>(audioMutex_));
-    return backgroundAudio_ != nullptr;
+    return backgroundAudio_ && backgroundAudio_->isOpen && !backgroundAudio_->finished;
 }
 
 void SdlAudioService::Update() {
@@ -162,66 +226,214 @@ void SdlAudioService::Update() {
 
     std::lock_guard<std::mutex> lock(audioMutex_);
 
-    if (!backgroundAudio_ || !backgroundAudio_->isOpen) {
+    if (!backgroundAudio_ && effectAudio_.empty()) {
         return;
     }
 
-    // Check if we need more audio data
-    if (SDL_GetAudioStreamQueued(audioStream_) < 4096) {
-        // Read audio data from vorbis file
-        char buffer[4096];
-        int bytesRead = 0;
-        int totalBytesRead = 0;
+    const int bytesPerFrame = SDL_AUDIO_FRAMESIZE(mixSpec_);
+    if (bytesPerFrame <= 0) {
+        return;
+    }
 
-        while (totalBytesRead < 4096) {
-            bytesRead = ov_read(&backgroundAudio_->vorbisFile, buffer + totalBytesRead, 4096 - totalBytesRead, 0, 2, 1, nullptr);
-            if (bytesRead <= 0) {
-                // End of file
-                if (backgroundAudio_->loop) {
-                    // Loop back to beginning
-                    ov_pcm_seek(&backgroundAudio_->vorbisFile, 0);
-                    continue;
-                } else {
-                    // Stop playback
-                    CleanupAudioData(*backgroundAudio_);
-                    backgroundAudio_.reset();
-                    break;
-                }
-            }
-            totalBytesRead += bytesRead;
+    int queuedBytes = SDL_GetAudioStreamQueued(audioStream_);
+    if (queuedBytes < 0) {
+        if (logger_) {
+            logger_->Error("Failed to query audio queue: " + std::string(SDL_GetError()));
         }
+        return;
+    }
 
-        if (totalBytesRead > 0) {
-            // Queue the audio data to the stream
-            if (SDL_PutAudioStreamData(audioStream_, buffer, totalBytesRead) < 0) {
-                logger_->Error("Failed to queue audio data: " + std::string(SDL_GetError()));
+    if (queuedBytes >= bytesPerFrame * kMixFrames) {
+        return;
+    }
+
+    const int frames = kMixFrames;
+    const int channels = mixSpec_.channels;
+    const size_t sampleCount = static_cast<size_t>(frames * channels);
+
+    mixBuffer_.assign(sampleCount, 0);
+    bool hasAudio = false;
+
+    if (backgroundAudio_ && backgroundAudio_->isOpen) {
+        int bytesRead = ReadStreamSamples(*backgroundAudio_, tempBuffer_, frames);
+        if (bytesRead > 0) {
+            size_t samplesRead = static_cast<size_t>(bytesRead / static_cast<int>(sizeof(int16_t)));
+            for (size_t i = 0; i < samplesRead; ++i) {
+                mixBuffer_[i] += tempBuffer_[i];
             }
+            hasAudio = true;
+        }
+        if (backgroundAudio_->finished &&
+            backgroundAudio_->convertStream &&
+            SDL_GetAudioStreamAvailable(backgroundAudio_->convertStream) == 0) {
+            CleanupAudioData(*backgroundAudio_);
+            backgroundAudio_.reset();
+        }
+    }
+
+    for (auto it = effectAudio_.begin(); it != effectAudio_.end(); ) {
+        AudioData& effect = *(*it);
+        int bytesRead = ReadStreamSamples(effect, tempBuffer_, frames);
+        if (bytesRead > 0) {
+            size_t samplesRead = static_cast<size_t>(bytesRead / static_cast<int>(sizeof(int16_t)));
+            for (size_t i = 0; i < samplesRead; ++i) {
+                mixBuffer_[i] += tempBuffer_[i];
+            }
+            hasAudio = true;
+        }
+        bool drained = effect.finished && effect.convertStream &&
+                       SDL_GetAudioStreamAvailable(effect.convertStream) == 0;
+        if (!effect.isOpen || drained) {
+            CleanupAudioData(effect);
+            it = effectAudio_.erase(it);
+        } else {
+            ++it;
+        }
+    }
+
+    if (!hasAudio) {
+        return;
+    }
+
+    outputBuffer_.assign(sampleCount, 0);
+    const float volume = volume_;
+    for (size_t i = 0; i < sampleCount; ++i) {
+        int32_t value = static_cast<int32_t>(mixBuffer_[i] * volume);
+        value = std::clamp(value, -32768, 32767);
+        outputBuffer_[i] = static_cast<int16_t>(value);
+    }
+
+    int bytesToQueue = static_cast<int>(sampleCount * sizeof(int16_t));
+    if (!SDL_PutAudioStreamData(audioStream_, outputBuffer_.data(), bytesToQueue)) {
+        if (logger_) {
+            logger_->Error("Failed to queue audio data: " + std::string(SDL_GetError()));
         }
     }
 }
 
 bool SdlAudioService::LoadAudioFile(const std::filesystem::path& path, AudioData& audioData) {
-    FILE* file = fopen(path.c_str(), "rb");
+    std::string pathText = path.string();
+    FILE* file = fopen(pathText.c_str(), "rb");
     if (!file) {
-        logger_->Error("Failed to open audio file: " + path.string());
+        if (logger_) {
+            logger_->Error("Failed to open audio file: " + path.string());
+        }
         return false;
     }
 
     if (ov_open(file, &audioData.vorbisFile, nullptr, 0) < 0) {
         fclose(file);
-        logger_->Error("Failed to open vorbis file: " + path.string());
+        if (logger_) {
+            logger_->Error("Failed to open vorbis file: " + path.string());
+        }
+        return false;
+    }
+
+    const vorbis_info* info = ov_info(&audioData.vorbisFile, -1);
+    if (!info) {
+        ov_clear(&audioData.vorbisFile);
+        if (logger_) {
+            logger_->Error("Failed to read vorbis info: " + path.string());
+        }
+        return false;
+    }
+
+    audioData.sourceSpec.format = SDL_AUDIO_S16;
+    audioData.sourceSpec.channels = info->channels;
+    audioData.sourceSpec.freq = info->rate;
+    audioData.convertStream = SDL_CreateAudioStream(&audioData.sourceSpec, &mixSpec_);
+    if (!audioData.convertStream) {
+        ov_clear(&audioData.vorbisFile);
+        if (logger_) {
+            logger_->Error("Failed to create audio stream: " + std::string(SDL_GetError()));
+        }
         return false;
     }
 
     audioData.isOpen = true;
+    audioData.finished = false;
     return true;
 }
 
 void SdlAudioService::CleanupAudioData(AudioData& audioData) {
+    if (audioData.convertStream) {
+        SDL_DestroyAudioStream(audioData.convertStream);
+        audioData.convertStream = nullptr;
+    }
     if (audioData.isOpen) {
         ov_clear(&audioData.vorbisFile);
         audioData.isOpen = false;
     }
+    audioData.finished = false;
+}
+
+int SdlAudioService::ReadStreamSamples(AudioData& audioData, std::vector<int16_t>& output, int frames) {
+    if (!audioData.isOpen || !audioData.convertStream) {
+        return 0;
+    }
+
+    const int bytesPerFrame = SDL_AUDIO_FRAMESIZE(mixSpec_);
+    const int bytesNeeded = frames * bytesPerFrame;
+    const size_t sampleCount = static_cast<size_t>(bytesNeeded / static_cast<int>(sizeof(int16_t)));
+    output.assign(sampleCount, 0);
+
+    while (!audioData.finished) {
+        int available = SDL_GetAudioStreamAvailable(audioData.convertStream);
+        if (available < 0) {
+            if (logger_) {
+                logger_->Error("Failed to query audio stream: " + std::string(SDL_GetError()));
+            }
+            audioData.finished = true;
+            break;
+        }
+        if (available >= bytesNeeded) {
+            break;
+        }
+
+        char decodeBuffer[kDecodeChunkSize];
+        int bytesRead = ov_read(&audioData.vorbisFile, decodeBuffer, kDecodeChunkSize, 0, 2, 1, nullptr);
+        if (bytesRead > 0) {
+            if (!SDL_PutAudioStreamData(audioData.convertStream, decodeBuffer, bytesRead)) {
+                if (logger_) {
+                    logger_->Error("Failed to queue decoded audio: " + std::string(SDL_GetError()));
+                }
+                audioData.finished = true;
+                break;
+            }
+        } else if (bytesRead == 0) {
+            if (audioData.loop) {
+                ov_pcm_seek(&audioData.vorbisFile, 0);
+                continue;
+            }
+            audioData.finished = true;
+            SDL_FlushAudioStream(audioData.convertStream);
+            break;
+        } else {
+            if (logger_) {
+                logger_->Error("Vorbis decode error");
+            }
+            audioData.finished = true;
+            break;
+        }
+    }
+
+    int bytesRead = SDL_GetAudioStreamData(audioData.convertStream, output.data(), bytesNeeded);
+    if (bytesRead < 0) {
+        if (logger_) {
+            logger_->Error("Failed to read audio stream data: " + std::string(SDL_GetError()));
+        }
+        audioData.finished = true;
+        return 0;
+    }
+
+    if (bytesRead < bytesNeeded) {
+        const size_t samplesRead = static_cast<size_t>(bytesRead / static_cast<int>(sizeof(int16_t)));
+        if (samplesRead < output.size()) {
+            std::fill(output.begin() + samplesRead, output.end(), 0);
+        }
+    }
+
+    return bytesRead;
 }
 
 }  // namespace sdl3cpp::services::impl

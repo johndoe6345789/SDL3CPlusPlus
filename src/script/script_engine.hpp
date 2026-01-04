@@ -10,7 +10,6 @@
 
 #include <lua.hpp>
 
-#include "core/vertex.hpp"
 #include "script/gui_types.hpp"
 #include "script/scene_manager.hpp"
 #include "script/shader_manager.hpp"
@@ -19,6 +18,14 @@
 namespace sdl3cpp::script {
 
 struct LuaBindingContext;
+
+}
+
+namespace sdl3cpp::services {
+class ILogger;
+}
+
+namespace sdl3cpp::script {
 
 class ScriptEngine {
 public:
@@ -40,21 +47,14 @@ public:
     std::string GetLuaError();
 
 private:
-    static std::vector<core::Vertex> ReadVertexArray(lua_State* L, int index);
-    static std::vector<uint16_t> ReadIndexArray(lua_State* L, int index);
-    static std::string LuaErrorMessage(lua_State* L);
-    static GuiCommand::RectData ReadRect(lua_State* L, int index);
-    static GuiColor ReadColor(lua_State* L, int index, const GuiColor& defaultColor);
-    static bool ReadStringField(lua_State* L, int index, const char* name, std::string& outString);
-
     lua_State* L_ = nullptr;
-    int guiInputRef_ = LUA_REFNIL;
-    int guiCommandsFnRef_ = LUA_REFNIL;
     std::filesystem::path scriptDirectory_;
     bool debugEnabled_ = false;
+    std::unique_ptr<LuaBindingContext> ownedBindingContext_;
     std::unique_ptr<SceneManager> sceneManager_;
     std::unique_ptr<ShaderManager> shaderManager_;
     std::unique_ptr<GuiManager> guiManager_;
+    std::shared_ptr<services::ILogger> logger_;
 };
 
 } // namespace sdl3cpp::script

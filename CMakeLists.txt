@@ -118,8 +118,6 @@ find_package(glm CONFIG REQUIRED)
 if(BUILD_SDL3_APP)
     add_executable(sdl3_app
             src/main.cpp
-            src/logging/logger.cpp
-            src/logging/string_utils.cpp
             src/core/platform.cpp
             src/di/service_registry.cpp
             src/events/event_bus.cpp
@@ -145,7 +143,6 @@ if(BUILD_SDL3_APP)
             src/services/impl/bullet_physics_service.cpp
             src/services/impl/scene_service.cpp
             src/services/impl/graphics_service.cpp
-            src/services/impl/lua_script_service.cpp
             src/controllers/application_controller.cpp
             src/controllers/render_controller.cpp
             src/controllers/lifecycle_controller.cpp
@@ -181,8 +178,6 @@ enable_testing()
 
 add_executable(script_engine_tests
     tests/test_cube_script.cpp
-    src/logging/logger.cpp
-    src/logging/string_utils.cpp
     src/core/platform.cpp
     src/script/script_engine.cpp
     src/script/physics_bridge.cpp

@@ -5,13 +5,18 @@
 
 #include <lua.hpp>
 
+#include <memory>
 #include <vector>
+
+namespace sdl3cpp::services {
+class ILogger;
+}
 
 namespace sdl3cpp::script {
 
 class GuiManager {
 public:
-    explicit GuiManager(lua_State* L);
+    GuiManager(lua_State* L, std::shared_ptr<services::ILogger> logger);
 
     std::vector<GuiCommand> LoadGuiCommands();
     void UpdateGuiInput(const GuiInputSnapshot& input);
@@ -21,6 +26,7 @@ private:
     lua_State* L_;
     int guiInputRef_ = LUA_REFNIL;
     int guiCommandsFnRef_ = LUA_REFNIL;
+    std::shared_ptr<services::ILogger> logger_;
 
     GuiCommand::RectData ReadRect(int index);
     GuiColor ReadColor(int index, const GuiColor& defaultColor);

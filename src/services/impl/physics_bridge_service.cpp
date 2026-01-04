@@ -4,8 +4,11 @@
 namespace sdl3cpp::services::impl {
 
 PhysicsBridgeService::PhysicsBridgeService(std::shared_ptr<ILogger> logger)
-    : logger_(std::move(logger)),
-      bridge_(std::make_unique<script::PhysicsBridge>()) {
+    : bridge_(std::make_unique<script::PhysicsBridge>(logger)),
+      logger_(std::move(logger)) {
+    if (logger_) {
+        logger_->Trace("PhysicsBridgeService", "PhysicsBridgeService");
+    }
 }
 
 bool PhysicsBridgeService::AddBoxRigidBody(const std::string& name,
@@ -13,6 +16,9 @@ bool PhysicsBridgeService::AddBoxRigidBody(const std::string& name,
                                            float mass,
                                            const btTransform& transform,
                                            std::string& error) {
+    if (logger_) {
+        logger_->Trace("PhysicsBridgeService", "AddBoxRigidBody", "name=" + name);
+    }
     if (!bridge_) {
         error = "Physics bridge not initialized";
         return false;
@@ -21,6 +27,9 @@ bool PhysicsBridgeService::AddBoxRigidBody(const std::string& name,
 }
 
 int PhysicsBridgeService::StepSimulation(float deltaTime) {
+    if (logger_) {
+        logger_->Trace("PhysicsBridgeService", "StepSimulation", "deltaTime=" + std::to_string(deltaTime));
+    }
     if (!bridge_) {
         return 0;
     }
@@ -30,6 +39,9 @@ int PhysicsBridgeService::StepSimulation(float deltaTime) {
 bool PhysicsBridgeService::GetRigidBodyTransform(const std::string& name,
                                                  btTransform& outTransform,
                                                  std::string& error) const {
+    if (logger_) {
+        logger_->Trace("PhysicsBridgeService", "GetRigidBodyTransform", "name=" + name);
+    }
     if (!bridge_) {
         error = "Physics bridge not initialized";
         return false;

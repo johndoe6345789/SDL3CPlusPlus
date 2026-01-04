@@ -7,8 +7,13 @@
 
 #include <array>
 #include <filesystem>
+#include <memory>
 #include <string>
 #include <vector>
+
+namespace sdl3cpp::services {
+class ILogger;
+}
 
 namespace sdl3cpp::script {
 
@@ -21,7 +26,7 @@ public:
         std::string shaderKey = "default";
     };
 
-    explicit SceneManager(lua_State* L);
+    SceneManager(lua_State* L, std::shared_ptr<services::ILogger> logger);
 
     std::vector<SceneObject> LoadSceneObjects();
     std::array<float, 16> ComputeModelMatrix(int functionRef, float time);
@@ -33,6 +38,8 @@ private:
     std::vector<core::Vertex> ReadVertexArray(int index);
     std::vector<uint16_t> ReadIndexArray(int index);
     std::string GetLuaError();
+
+    std::shared_ptr<services::ILogger> logger_;
 };
 
 } // namespace sdl3cpp::script

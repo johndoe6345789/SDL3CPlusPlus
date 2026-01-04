@@ -1,7 +1,7 @@
 #pragma once
 
 #include "i_graphics_service.hpp"
-#include "i_script_service.hpp"
+#include "../../script/scene_manager.hpp"
 #include <vector>
 
 namespace sdl3cpp::services {

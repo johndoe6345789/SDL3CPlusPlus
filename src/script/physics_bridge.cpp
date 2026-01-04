@@ -1,11 +1,11 @@
 #include "script/physics_bridge.hpp"
-#include "logging/logger.hpp"
+#include "services/interfaces/i_logger.hpp"
 
 #include <btBulletDynamicsCommon.h>
 
 namespace sdl3cpp::script {
 
-PhysicsBridge::PhysicsBridge()
+PhysicsBridge::PhysicsBridge(std::shared_ptr<services::ILogger> logger)
     : collisionConfig_(std::make_unique<btDefaultCollisionConfiguration>()),
       dispatcher_(std::make_unique<btCollisionDispatcher>(collisionConfig_.get())),
       broadphase_(std::make_unique<btDbvtBroadphase>()),
@@ -14,8 +14,11 @@ PhysicsBridge::PhysicsBridge()
           dispatcher_.get(),
           broadphase_.get(),
           solver_.get(),
-          collisionConfig_.get())) {
-    sdl3cpp::logging::TraceGuard trace;
+          collisionConfig_.get())),
+      logger_(logger) {
+    if (logger_) {
+        logger_->Trace("PhysicsBridge", "PhysicsBridge");
+    }
     world_->setGravity(btVector3(0.0f, -9.81f, 0.0f));
 }
 
@@ -34,6 +37,9 @@ bool PhysicsBridge::addBoxRigidBody(const std::string& name,
                                     float mass,
                                     const btTransform& transform,
                                     std::string& error) {
+    if (logger_) {
+        logger_->Trace("PhysicsBridge", "addBoxRigidBody", "name=" + name);
+    }
     if (name.empty()) {
         error = "Rigid body name must not be empty";
         return false;
@@ -68,6 +74,9 @@ bool PhysicsBridge::addBoxRigidBody(const std::string& name,
 }
 
 int PhysicsBridge::stepSimulation(float deltaTime) {
+    if (logger_) {
+        logger_->Trace("PhysicsBridge", "stepSimulation", "deltaTime=" + std::to_string(deltaTime));
+    }
     if (!world_) {
         return 0;
     }
@@ -77,6 +86,9 @@ int PhysicsBridge::stepSimulation(float deltaTime) {
 bool PhysicsBridge::getRigidBodyTransform(const std::string& name,
                                           btTransform& outTransform,
                                           std::string& error) const {
+    if (logger_) {
+        logger_->Trace("PhysicsBridge", "getRigidBodyTransform", "name=" + name);
+    }
     auto it = bodies_.find(name);
     if (it == bodies_.end()) {
         error = "Rigid body not found: " + name;
