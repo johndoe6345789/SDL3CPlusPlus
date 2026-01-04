@@ -236,7 +236,8 @@ void ServiceBasedApp::RegisterServices() {
     registry_.RegisterService<services::IGuiService, services::impl::VulkanGuiService>();
 
     // Physics service
-    registry_.RegisterService<services::IPhysicsService, services::impl::BulletPhysicsService>();
+    registry_.RegisterService<services::IPhysicsService, services::impl::BulletPhysicsService>(
+        registry_.GetService<services::ILogger>());
 
     logger_->Trace("ServiceBasedApp", "RegisterServices", "", "Exiting");
 }

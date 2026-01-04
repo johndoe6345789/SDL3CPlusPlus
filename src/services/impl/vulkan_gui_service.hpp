@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../interfaces/i_gui_service.hpp"
+#include "../interfaces/i_logger.hpp"
 #include "../../gui/gui_renderer.hpp"
 #include "../../di/lifecycle.hpp"
 #include <memory>
@@ -16,7 +17,7 @@ namespace sdl3cpp::services::impl {
 class VulkanGuiService : public IGuiService,
                          public di::IShutdownable {
 public:
-    VulkanGuiService() = default;
+    explicit VulkanGuiService(std::shared_ptr<ILogger> logger);
     ~VulkanGuiService() override;
 
     // IGuiService interface
@@ -36,6 +37,7 @@ public:
     void Shutdown() noexcept override;
 
 private:
+    std::shared_ptr<ILogger> logger_;
     std::unique_ptr<gui::GuiRenderer> renderer_;
     bool initialized_ = false;
 };

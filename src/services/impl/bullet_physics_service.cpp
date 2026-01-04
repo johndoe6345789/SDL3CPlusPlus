@@ -93,34 +93,34 @@ bool BulletPhysicsService::GetTransform(const std::string& name, btTransform& ou
 }
 
 bool BulletPhysicsService::SetTransform(const std::string& name, const btTransform& transform) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     // PhysicsBridge doesn't support setting transforms in current implementation
-    logging::Logger::GetInstance().Warn("SetTransform not supported by PhysicsBridge");
+    logger_->Warn("SetTransform not supported by PhysicsBridge");
     return false;
 }
 
 bool BulletPhysicsService::ApplyForce(const std::string& name, const btVector3& force) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     // PhysicsBridge doesn't support applying forces in current implementation
-    logging::Logger::GetInstance().Warn("ApplyForce not supported by PhysicsBridge");
+    logger_->Warn("ApplyForce not supported by PhysicsBridge");
     return false;
 }
 
 bool BulletPhysicsService::ApplyImpulse(const std::string& name, const btVector3& impulse) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     // PhysicsBridge doesn't support applying impulses in current implementation
-    logging::Logger::GetInstance().Warn("ApplyImpulse not supported by PhysicsBridge");
+    logger_->Warn("ApplyImpulse not supported by PhysicsBridge");
     return false;
 }
 
 bool BulletPhysicsService::SetLinearVelocity(const std::string& name, const btVector3& velocity) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     // PhysicsBridge doesn't support setting velocity in current implementation
-    logging::Logger::GetInstance().Warn("SetLinearVelocity not supported by PhysicsBridge");
+    logger_->Warn("SetLinearVelocity not supported by PhysicsBridge");
     return false;
 }
 
@@ -131,7 +131,7 @@ size_t BulletPhysicsService::GetBodyCount() const {
 }
 
 void BulletPhysicsService::Clear() {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     if (!physicsBridge_) {
         return;

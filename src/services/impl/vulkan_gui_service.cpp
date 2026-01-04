@@ -1,8 +1,12 @@
 #include "vulkan_gui_service.hpp"
-#include "../../logging/logger.hpp"
+#include "../interfaces/i_logger.hpp"
 #include <stdexcept>
 
 namespace sdl3cpp::services::impl {
+
+VulkanGuiService::VulkanGuiService(std::shared_ptr<ILogger> logger)
+    : logger_(std::move(logger)) {
+}
 
 VulkanGuiService::~VulkanGuiService() {
     if (initialized_) {
@@ -14,7 +18,7 @@ void VulkanGuiService::Initialize(VkDevice device,
                                   VkPhysicalDevice physicalDevice,
                                   VkFormat format,
                                   const std::filesystem::path& resourcePath) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     if (initialized_) {
         return;
@@ -23,7 +27,7 @@ void VulkanGuiService::Initialize(VkDevice device,
     renderer_ = std::make_unique<gui::GuiRenderer>(device, physicalDevice, format, resourcePath);
     initialized_ = true;
 
-    logging::Logger::GetInstance().Info("GUI service initialized");
+    logger_->Info("GUI service initialized");
 }
 
 void VulkanGuiService::PrepareFrame(const std::vector<GuiCommand>& commands,
