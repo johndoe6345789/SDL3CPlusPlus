@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../interfaces/i_vulkan_device_service.hpp"
+#include "../interfaces/i_logger.hpp"
 #include "../../di/lifecycle.hpp"
 #include <vector>
 #include <optional>
@@ -16,7 +17,7 @@ namespace sdl3cpp::services::impl {
 class VulkanDeviceService : public IVulkanDeviceService,
                             public di::IShutdownable {
 public:
-    VulkanDeviceService() = default;
+    explicit VulkanDeviceService(std::shared_ptr<ILogger> logger);
     ~VulkanDeviceService() override;
 
     // IVulkanDeviceService interface
@@ -39,6 +40,8 @@ public:
                            VkMemoryPropertyFlags properties) const override;
 
 private:
+    std::shared_ptr<ILogger> logger_;
+
     VkInstance instance_ = VK_NULL_HANDLE;
     VkSurfaceKHR surface_ = VK_NULL_HANDLE;
     VkPhysicalDevice physicalDevice_ = VK_NULL_HANDLE;

@@ -1,5 +1,4 @@
 #include "vulkan_device_service.hpp"
-#include "../../logging/logger.hpp"
 #include <SDL3/SDL_vulkan.h>
 #include <iostream>
 #include <set>
@@ -7,6 +6,9 @@
 #include <cstring>
 
 namespace sdl3cpp::services::impl {
+
+VulkanDeviceService::VulkanDeviceService(std::shared_ptr<ILogger> logger)
+    : logger_(logger) {}
 
 VulkanDeviceService::~VulkanDeviceService() {
     if (device_ != VK_NULL_HANDLE) {
@@ -16,7 +18,7 @@ VulkanDeviceService::~VulkanDeviceService() {
 
 void VulkanDeviceService::Initialize(const std::vector<const char*>& deviceExtensions,
                                     bool enableValidationLayers) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     deviceExtensions_ = deviceExtensions;
     validationLayersEnabled_ = enableValidationLayers;

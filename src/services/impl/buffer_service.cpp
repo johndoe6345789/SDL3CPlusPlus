@@ -85,6 +85,7 @@ void BufferService::Cleanup() {
 }
 
 void BufferService::Shutdown() noexcept {
+    logger_->TraceFunction(__func__);
     CleanupBuffers();
 }
 
@@ -126,11 +127,6 @@ void BufferService::CleanupBuffers() {
 
     vertexCount_ = 0;
     indexCount_ = 0;
-}
-
-void BufferService::Shutdown() noexcept {
-    logger_->TraceFunction(__func__);
-    CleanupBuffers();
 }
 
 }  // namespace sdl3cpp::services::impl
