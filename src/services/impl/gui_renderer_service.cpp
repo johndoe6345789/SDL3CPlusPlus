@@ -22,7 +22,7 @@ void GuiRendererService::Initialize(VkDevice device,
         device, physicalDevice, format, resourcePath, bufferService_);
 }
 
-void GuiRendererService::PrepareFrame(const std::vector<script::GuiCommand>& commands,
+void GuiRendererService::PrepareFrame(const std::vector<GuiCommand>& commands,
                                       uint32_t width,
                                       uint32_t height) {
     if (logger_) {

@@ -2,7 +2,10 @@
 
 #include "../interfaces/i_scene_script_service.hpp"
 #include "../interfaces/i_script_engine_service.hpp"
+#include "../interfaces/i_logger.hpp"
 #include <memory>
+
+struct lua_State;
 
 namespace sdl3cpp::services::impl {
 
@@ -11,14 +14,18 @@ namespace sdl3cpp::services::impl {
  */
 class SceneScriptService : public ISceneScriptService {
 public:
-    explicit SceneScriptService(std::shared_ptr<IScriptEngineService> engineService);
+    SceneScriptService(std::shared_ptr<IScriptEngineService> engineService,
+                       std::shared_ptr<ILogger> logger);
 
-    std::vector<script::SceneManager::SceneObject> LoadSceneObjects() override;
+    std::vector<SceneObject> LoadSceneObjects() override;
     std::array<float, 16> ComputeModelMatrix(int functionRef, float time) override;
     std::array<float, 16> GetViewProjectionMatrix(float aspect) override;
 
 private:
+    lua_State* GetLuaState() const;
+
     std::shared_ptr<IScriptEngineService> engineService_;
+    std::shared_ptr<ILogger> logger_;
 };
 
 }  // namespace sdl3cpp::services::impl

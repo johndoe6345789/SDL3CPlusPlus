@@ -1,11 +1,10 @@
-#ifndef SDL3CPP_SCRIPT_MESH_PAYLOAD_HPP
-#define SDL3CPP_SCRIPT_MESH_PAYLOAD_HPP
+#pragma once
 
 #include <array>
 #include <cstdint>
 #include <vector>
 
-namespace sdl3cpp::script {
+namespace sdl3cpp::services {
 
 struct MeshPayload {
     std::vector<std::array<float, 3>> positions;
@@ -13,6 +12,4 @@ struct MeshPayload {
     std::vector<uint32_t> indices;
 };
 
-}  // namespace sdl3cpp::script
-
-#endif  // SDL3CPP_SCRIPT_MESH_PAYLOAD_HPP
+}  // namespace sdl3cpp::services

@@ -21,7 +21,7 @@ void BulletPhysicsService::Initialize(const btVector3& gravity) {
         return;
     }
 
-    physicsBridge_ = std::make_unique<script::PhysicsBridge>();
+    physicsBridge_ = std::make_unique<script::PhysicsBridge>(logger_);
     initialized_ = true;
 
     logger_->Info("Physics service initialized");
@@ -140,7 +140,7 @@ void BulletPhysicsService::Clear() {
     // PhysicsBridge doesn't expose Clear in current implementation
     // Shutdown and reinitialize to clear all bodies
     physicsBridge_.reset();
-    physicsBridge_ = std::make_unique<script::PhysicsBridge>();
+    physicsBridge_ = std::make_unique<script::PhysicsBridge>(logger_);
 }
 
 }  // namespace sdl3cpp::services::impl

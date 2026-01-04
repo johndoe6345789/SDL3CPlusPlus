@@ -14,9 +14,9 @@ public:
     explicit MeshService(std::shared_ptr<IConfigService> configService);
 
     bool LoadFromFile(const std::string& requestedPath,
-                      script::MeshPayload& outPayload,
+                      MeshPayload& outPayload,
                       std::string& outError) override;
-    void PushMeshToLua(lua_State* L, const script::MeshPayload& payload) override;
+    void PushMeshToLua(lua_State* L, const MeshPayload& payload) override;
 
 private:
     std::shared_ptr<IConfigService> configService_;

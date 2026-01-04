@@ -2,9 +2,7 @@
 
 #include <filesystem>
 
-namespace sdl3cpp::script {
-class ScriptEngine;
-}
+struct lua_State;
 
 namespace sdl3cpp::services {
 
@@ -15,7 +13,7 @@ class IScriptEngineService {
 public:
     virtual ~IScriptEngineService() = default;
 
-    virtual script::ScriptEngine& GetEngine() = 0;
+    virtual lua_State* GetLuaState() const = 0;
     virtual std::filesystem::path GetScriptDirectory() const = 0;
     virtual bool IsInitialized() const = 0;
 };

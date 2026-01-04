@@ -248,11 +248,14 @@ void ServiceBasedApp::RegisterServices() {
 
     // Script-facing services
     registry_.RegisterService<services::ISceneScriptService, services::impl::SceneScriptService>(
-        registry_.GetService<services::IScriptEngineService>());
+        registry_.GetService<services::IScriptEngineService>(),
+        registry_.GetService<services::ILogger>());
     registry_.RegisterService<services::IShaderScriptService, services::impl::ShaderScriptService>(
-        registry_.GetService<services::IScriptEngineService>());
+        registry_.GetService<services::IScriptEngineService>(),
+        registry_.GetService<services::ILogger>());
     registry_.RegisterService<services::IGuiScriptService, services::impl::GuiScriptService>(
-        registry_.GetService<services::IScriptEngineService>());
+        registry_.GetService<services::IScriptEngineService>(),
+        registry_.GetService<services::ILogger>());
 
     // Connect input service to GUI script service for GUI input processing
     auto inputService = registry_.GetService<services::IInputService>();

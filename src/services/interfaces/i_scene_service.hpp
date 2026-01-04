@@ -1,13 +1,10 @@
 #pragma once
 
 #include "i_graphics_service.hpp"
-#include "../../script/scene_manager.hpp"
+#include "scene_types.hpp"
 #include <vector>
 
 namespace sdl3cpp::services {
-
-// Forward declare or use the type from script
-using SceneObject = script::SceneManager::SceneObject;
 
 /**
  * @brief Scene management service interface.

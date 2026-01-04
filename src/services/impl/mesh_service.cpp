@@ -16,7 +16,7 @@ MeshService::MeshService(std::shared_ptr<IConfigService> configService)
 }
 
 bool MeshService::LoadFromFile(const std::string& requestedPath,
-                               script::MeshPayload& outPayload,
+                               MeshPayload& outPayload,
                                std::string& outError) {
     if (!configService_) {
         outError = "Config service not available";
@@ -109,7 +109,7 @@ bool MeshService::LoadFromFile(const std::string& requestedPath,
     return true;
 }
 
-void MeshService::PushMeshToLua(lua_State* L, const script::MeshPayload& payload) {
+void MeshService::PushMeshToLua(lua_State* L, const MeshPayload& payload) {
     lua_newtable(L);
 
     lua_newtable(L);

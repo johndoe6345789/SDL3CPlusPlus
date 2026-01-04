@@ -8,7 +8,7 @@
 
 #include <vulkan/vulkan.h>
 
-#include "script/gui_types.hpp"
+#include "services/interfaces/gui_types.hpp"
 #include "services/interfaces/i_buffer_service.hpp"
 
 namespace sdl3cpp::gui {
@@ -17,7 +17,7 @@ struct SvgCircle {
     float cx = 0.0f;
     float cy = 0.0f;
     float r = 0.0f;
-    script::GuiColor color{1.0f, 1.0f, 1.0f, 1.0f};
+    services::GuiColor color{1.0f, 1.0f, 1.0f, 1.0f};
 };
 
 struct ParsedSvg {
@@ -36,7 +36,7 @@ public:
     GuiRenderer(const GuiRenderer&) = delete;
     GuiRenderer& operator=(const GuiRenderer&) = delete;
 
-    void Prepare(const std::vector<script::GuiCommand>& commands, uint32_t width,
+    void Prepare(const std::vector<services::GuiCommand>& commands, uint32_t width,
                  uint32_t height);
     void BlitToSwapchain(VkCommandBuffer commandBuffer, VkImage image);
     void Resize(uint32_t width, uint32_t height, VkFormat format);

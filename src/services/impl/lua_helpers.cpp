@@ -1,4 +1,4 @@
-#include "script/lua_helpers.hpp"
+#include "lua_helpers.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -7,7 +7,7 @@
 #include <lua.hpp>
 #include <stdexcept>
 
-namespace sdl3cpp::script {
+namespace sdl3cpp::services::impl::lua {
 
 std::array<float, 3> ReadVector3(lua_State* L, int index) {
     std::array<float, 3> result{};
@@ -78,6 +78,8 @@ std::array<float, 16> IdentityMatrix() {
             0.0f, 0.0f, 0.0f, 1.0f};
 }
 
+namespace {
+
 glm::vec3 ToVec3(const std::array<float, 3>& value) {
     return glm::vec3(value[0], value[1], value[2]);
 }
@@ -95,6 +97,8 @@ void PushMatrix(lua_State* L, const glm::mat4& matrix) {
     }
 }
 
+}  // namespace
+
 int LuaGlmMatrixFromTransform(lua_State* L) {
     std::array<float, 3> translation = ReadVector3(L, 1);
     std::array<float, 4> rotation = ReadQuaternion(L, 2);
@@ -105,4 +109,4 @@ int LuaGlmMatrixFromTransform(lua_State* L) {
     return 1;
 }
 
-} // namespace sdl3cpp::script
+}  // namespace sdl3cpp::services::impl::lua

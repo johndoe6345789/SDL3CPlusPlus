@@ -126,6 +126,7 @@ if(BUILD_SDL3_APP)
             src/services/impl/logger_service.cpp
             src/services/impl/platform_service.cpp
             src/services/impl/script_engine_service.cpp
+            src/services/impl/lua_helpers.cpp
             src/services/impl/scene_script_service.cpp
             src/services/impl/shader_script_service.cpp
             src/services/impl/gui_script_service.cpp
@@ -151,13 +152,7 @@ if(BUILD_SDL3_APP)
             src/services/impl/graphics_service.cpp
             src/app/service_based_app.cpp
             src/gui/gui_renderer.cpp
-            src/script/script_engine.cpp
             src/script/physics_bridge.cpp
-            src/script/lua_helpers.cpp
-            src/script/lua_bindings.cpp
-            src/script/scene_manager.cpp
-            src/script/shader_manager.cpp
-            src/script/gui_manager.cpp
         )
     target_include_directories(sdl3_app PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
     target_link_libraries(sdl3_app PRIVATE ${SDL_TARGET} Vulkan::Vulkan lua::lua CLI11::CLI11 rapidjson assimp::assimp Bullet::Bullet glm::glm Vorbis::vorbisfile Vorbis::vorbis)
@@ -180,14 +175,12 @@ enable_testing()
 
 add_executable(script_engine_tests
     tests/test_cube_script.cpp
-    src/services/impl/platform_service.cpp
-    src/script/script_engine.cpp
+    src/services/impl/logger_service.cpp
+    src/services/impl/script_engine_service.cpp
+    src/services/impl/lua_helpers.cpp
+    src/services/impl/scene_script_service.cpp
+    src/services/impl/shader_script_service.cpp
     src/script/physics_bridge.cpp
-    src/script/scene_manager.cpp
-    src/script/shader_manager.cpp
-    src/script/gui_manager.cpp
-    src/script/lua_helpers.cpp
-    src/script/lua_bindings.cpp
 )
 target_include_directories(script_engine_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(script_engine_tests PRIVATE ${SDL_TARGET} lua::lua assimp::assimp Bullet::Bullet glm::glm Vorbis::vorbisfile Vorbis::vorbis)

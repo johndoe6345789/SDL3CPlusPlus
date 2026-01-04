@@ -1,10 +1,9 @@
-#ifndef SDL3CPP_SCRIPT_GUI_TYPES_HPP
-#define SDL3CPP_SCRIPT_GUI_TYPES_HPP
+#pragma once
 
 #include <string>
 #include <unordered_map>
 
-namespace sdl3cpp::script {
+namespace sdl3cpp::services {
 
 struct GuiInputSnapshot {
     float mouseX = 0.0f;
@@ -16,9 +15,9 @@ struct GuiInputSnapshot {
 };
 
 struct GuiColor {
-    float r = 0;
-    float g = 0;
-    float b = 0;
+    float r = 0.0f;
+    float g = 0.0f;
+    float b = 0.0f;
     float a = 1.0f;
 };
 
@@ -32,10 +31,10 @@ struct GuiCommand {
     };
 
     struct RectData {
-        float x = 0;
-        float y = 0;
-        float width = 0;
-        float height = 0;
+        float x = 0.0f;
+        float y = 0.0f;
+        float width = 0.0f;
+        float height = 0.0f;
     };
 
     Type type = Type::Rect;
@@ -55,6 +54,4 @@ struct GuiCommand {
     bool hasBounds = false;
 };
 
-} // namespace sdl3cpp::script
-
-#endif // SDL3CPP_SCRIPT_GUI_TYPES_HPP
+}  // namespace sdl3cpp::services

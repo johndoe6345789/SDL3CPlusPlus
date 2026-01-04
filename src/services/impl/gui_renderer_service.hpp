@@ -20,7 +20,7 @@ public:
                     VkFormat format,
                     const std::filesystem::path& resourcePath) override;
 
-    void PrepareFrame(const std::vector<script::GuiCommand>& commands,
+    void PrepareFrame(const std::vector<GuiCommand>& commands,
                       uint32_t width,
                       uint32_t height) override;
 

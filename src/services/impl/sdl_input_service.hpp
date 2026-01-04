@@ -39,7 +39,7 @@ private:
     std::shared_ptr<events::IEventBus> eventBus_;
     std::shared_ptr<ILogger> logger_;
     InputState state_;
-    script::GuiInputSnapshot guiInputSnapshot_;
+    GuiInputSnapshot guiInputSnapshot_;
     IGuiScriptService* guiScriptService_ = nullptr;
 
     // Event bus listeners

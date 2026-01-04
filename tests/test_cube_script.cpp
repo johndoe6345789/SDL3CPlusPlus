@@ -1,9 +1,13 @@
-#include "script/script_engine.hpp"
+#include "services/impl/logger_service.hpp"
+#include "services/impl/script_engine_service.hpp"
+#include "services/impl/scene_script_service.hpp"
+#include "services/impl/shader_script_service.hpp"
 
 #include <array>
 #include <cmath>
 #include <filesystem>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -50,8 +54,20 @@ int main() {
     std::cout << "Loading Lua fixture: " << scriptPath << '\n';
 
     try {
-        sdl3cpp::script::ScriptEngine scriptEngine(scriptPath);
-        auto objects = scriptEngine.LoadSceneObjects();
+        auto logger = std::make_shared<sdl3cpp::services::impl::LoggerService>();
+        auto engineService = std::make_shared<sdl3cpp::services::impl::ScriptEngineService>(
+            scriptPath,
+            logger,
+            nullptr,
+            nullptr,
+            nullptr,
+            false);
+        engineService->Initialize();
+
+        sdl3cpp::services::impl::SceneScriptService sceneService(engineService, logger);
+        sdl3cpp::services::impl::ShaderScriptService shaderService(engineService, logger);
+
+        auto objects = sceneService.LoadSceneObjects();
         Assert(objects.size() == 1, "expected exactly one scene object", failures);
         if (!objects.empty()) {
             const auto& object = objects.front();
@@ -60,24 +76,23 @@ int main() {
             Assert(object.shaderKey == "test", "shader key should match fixture", failures);
             const std::vector<uint16_t> expectedIndices{0, 1, 2};
             Assert(object.indices == expectedIndices, "indices should be zero-based", failures);
-            Assert(object.computeModelMatrixRef != LUA_REFNIL,
+            Assert(object.computeModelMatrixRef >= 0,
                    "vertex object must keep a Lua reference", failures);
 
-            auto objectMatrix = scriptEngine.ComputeModelMatrix(object.computeModelMatrixRef, 0.5f);
+            auto objectMatrix = sceneService.ComputeModelMatrix(object.computeModelMatrixRef, 0.5f);
             ExpectIdentity(objectMatrix, "object compute_model_matrix", failures);
         }
 
-        auto fallbackMatrix = scriptEngine.ComputeModelMatrix(LUA_REFNIL, 1.0f);
+        auto fallbackMatrix = sceneService.ComputeModelMatrix(-1, 1.0f);
         ExpectIdentity(fallbackMatrix, "global compute_model_matrix", failures);
 
-        auto viewProjection = scriptEngine.GetViewProjectionMatrix(1.33f);
+        auto viewProjection = sceneService.GetViewProjectionMatrix(1.33f);
         ExpectIdentity(viewProjection, "view_projection matrix", failures);
 
-        auto shaderMap = scriptEngine.LoadShaderPathsMap();
+        auto shaderMap = shaderService.LoadShaderPathsMap();
         Assert(shaderMap.size() == 1, "expected a single shader variant", failures);
         auto testEntry = shaderMap.find("test");
-        Assert(testEntry != shaderMap.end(), "shader map missing "
-               "test entry", failures);
+        Assert(testEntry != shaderMap.end(), "shader map missing test entry", failures);
         if (testEntry != shaderMap.end()) {
             Assert(testEntry->second.vertex == "shaders/test.vert.spv", "vertex shader path", failures);
             Assert(testEntry->second.fragment == "shaders/test.frag.spv", "fragment shader path", failures);

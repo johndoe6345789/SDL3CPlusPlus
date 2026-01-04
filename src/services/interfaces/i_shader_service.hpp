@@ -11,7 +11,7 @@ namespace sdl3cpp::services {
  * @brief Shader management service interface.
  *
  * Handles shader compilation, pipeline creation, and shader program management.
- * Wraps the ShaderManager from the script module.
+ * Consumes shader paths from the shader script service.
  */
 class IShaderService {
 public:

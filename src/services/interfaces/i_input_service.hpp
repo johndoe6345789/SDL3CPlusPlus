@@ -3,7 +3,6 @@
 #include <string>
 #include <unordered_set>
 #include <SDL3/SDL.h>
-#include "../../script/gui_types.hpp"
 
 namespace sdl3cpp::services {
 

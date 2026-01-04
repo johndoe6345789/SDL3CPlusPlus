@@ -14,7 +14,7 @@
 
 #include "../../third_party/font8x8_basic.h"
 
-namespace script = sdl3cpp::script;
+namespace services = sdl3cpp::services;
 
 namespace sdl3cpp::gui {
 namespace {
@@ -61,7 +61,7 @@ float ParseFloatValue(const std::string& text) {
     }
 }
 
-script::GuiColor ParseColorString(const std::string& text, const script::GuiColor& fallback) {
+services::GuiColor ParseColorString(const std::string& text, const services::GuiColor& fallback) {
     if (text.empty() || text[0] != '#') {
         return fallback;
     }
@@ -141,9 +141,9 @@ ParsedSvg ParseSvgFile(const std::filesystem::path& path) {
     return result;
 }
 
-script::GuiCommand::RectData IntersectRect(const script::GuiCommand::RectData& a,
-                                                     const script::GuiCommand::RectData& b) {
-    script::GuiCommand::RectData result;
+services::GuiCommand::RectData IntersectRect(const services::GuiCommand::RectData& a,
+                                                     const services::GuiCommand::RectData& b) {
+    services::GuiCommand::RectData result;
     result.x = std::max(a.x, b.x);
     result.y = std::max(a.y, b.y);
     float right = std::min(a.x + a.width, b.x + b.width);
@@ -161,7 +161,7 @@ int ClampToRange(int value, int minimum, int maximum) {
 
 class GuiRenderer::Canvas {
 public:
-    using RectData = script::GuiCommand::RectData;
+    using RectData = services::GuiCommand::RectData;
 
     void Resize(uint32_t width, uint32_t height) {
         width_ = width;
@@ -187,8 +187,8 @@ public:
         }
     }
 
-    void FillRect(const RectData& rect, const script::GuiColor& fillColor,
-                  const script::GuiColor& borderColor, float borderWidth) {
+    void FillRect(const RectData& rect, const services::GuiColor& fillColor,
+                  const services::GuiColor& borderColor, float borderWidth) {
         DrawFilledRect(rect, fillColor);
         if (borderWidth > 0.0f && borderColor.a > 0.0f) {
             DrawFilledRect({rect.x, rect.y, rect.width, borderWidth}, borderColor);
@@ -199,7 +199,7 @@ public:
         }
     }
 
-    void DrawText(const std::string& text, const script::GuiColor& color, const RectData& bounds,
+    void DrawText(const std::string& text, const services::GuiColor& color, const RectData& bounds,
                   const std::string& alignX, const std::string& alignY, float fontSize) {
         if (text.empty() || width_ == 0 || height_ == 0) {
             return;
@@ -244,7 +244,7 @@ public:
         }
     }
 
-    void DrawSvg(const ParsedSvg& svg, const RectData& target, const script::GuiColor& tint) {
+    void DrawSvg(const ParsedSvg& svg, const RectData& target, const services::GuiColor& tint) {
         if (svg.circles.empty() || svg.viewWidth <= 0.0f || svg.viewHeight <= 0.0f || width_ == 0 ||
             height_ == 0) {
             return;
@@ -260,7 +260,7 @@ public:
             float cx = clipped.x + circle.cx * scaleX;
             float cy = clipped.y + circle.cy * scaleY;
             float radius = circle.r * scale;
-            script::GuiColor color = circle.color;
+            services::GuiColor color = circle.color;
             if (tint.a > 0.0f) {
                 color.r *= tint.r;
                 color.g *= tint.g;
@@ -300,7 +300,7 @@ private:
         return clipped;
     }
 
-    void DrawFilledRect(const RectData& rect, const script::GuiColor& color) {
+    void DrawFilledRect(const RectData& rect, const services::GuiColor& color) {
         if (rect.width <= 0.0f || rect.height <= 0.0f) {
             return;
         }
@@ -319,7 +319,7 @@ private:
         }
     }
 
-    void BlendPixel(int x, int y, const script::GuiColor& color) {
+    void BlendPixel(int x, int y, const services::GuiColor& color) {
         size_t index = (static_cast<size_t>(y) * width_ + static_cast<size_t>(x)) * 4;
         auto clampByte = [](float value) -> uint8_t {
             return static_cast<uint8_t>(std::clamp(value, 0.0f, 1.0f) * 255.0f);
@@ -365,7 +365,7 @@ GuiRenderer::GuiRenderer(VkDevice device, VkPhysicalDevice physicalDevice, VkFor
         return canvasWidth_ > 0 && canvasHeight_ > 0 && stagingBuffer_ != VK_NULL_HANDLE;
     }
 
-    void GuiRenderer::Prepare(const std::vector<script::GuiCommand>& commands, uint32_t width,
+    void GuiRenderer::Prepare(const std::vector<services::GuiCommand>& commands, uint32_t width,
                               uint32_t height) {
         if (width == 0 || height == 0 || !canvas_) {
             return;
@@ -374,10 +374,10 @@ GuiRenderer::GuiRenderer(VkDevice device, VkPhysicalDevice physicalDevice, VkFor
         canvas_->Clear();
         for (const auto& command : commands) {
             switch (command.type) {
-                case script::GuiCommand::Type::Rect:
+                case services::GuiCommand::Type::Rect:
                     canvas_->FillRect(command.rect, command.color, command.borderColor, command.borderWidth);
                     break;
-                case script::GuiCommand::Type::Text: {
+                case services::GuiCommand::Type::Text: {
                     if (command.hasClipRect) {
                         canvas_->PushClip(command.clipRect);
                     }
@@ -385,7 +385,7 @@ GuiRenderer::GuiRenderer(VkDevice device, VkPhysicalDevice physicalDevice, VkFor
                         canvas_->DrawText(command.text, command.color, command.bounds, command.alignX,
                                           command.alignY, command.fontSize);
                     } else {
-                        script::GuiCommand::RectData fallback{
+                        services::GuiCommand::RectData fallback{
                             command.rect.x, command.rect.y,
                             command.fontSize * static_cast<float>(std::max<size_t>(1, command.text.size())), command.fontSize};
                         canvas_->DrawText(command.text, command.color, fallback, command.alignX,
@@ -396,13 +396,13 @@ GuiRenderer::GuiRenderer(VkDevice device, VkPhysicalDevice physicalDevice, VkFor
                     }
                     break;
                 }
-                case script::GuiCommand::Type::ClipPush:
+                case services::GuiCommand::Type::ClipPush:
                     canvas_->PushClip(command.rect);
                     break;
-                case script::GuiCommand::Type::ClipPop:
+                case services::GuiCommand::Type::ClipPop:
                     canvas_->PopClip();
                     break;
-                case script::GuiCommand::Type::Svg:
+                case services::GuiCommand::Type::Svg:
                     if (command.svgPath.empty()) {
                         break;
                     }

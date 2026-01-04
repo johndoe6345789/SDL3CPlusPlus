@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../script/gui_types.hpp"
+#include "gui_types.hpp"
 #include <vector>
 
 namespace sdl3cpp::services {
@@ -12,8 +12,8 @@ class IGuiScriptService {
 public:
     virtual ~IGuiScriptService() = default;
 
-    virtual std::vector<script::GuiCommand> LoadGuiCommands() = 0;
-    virtual void UpdateGuiInput(const script::GuiInputSnapshot& input) = 0;
+    virtual std::vector<GuiCommand> LoadGuiCommands() = 0;
+    virtual void UpdateGuiInput(const GuiInputSnapshot& input) = 0;
     virtual bool HasGuiCommands() const = 0;
 };
 

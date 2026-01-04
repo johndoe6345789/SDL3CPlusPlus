@@ -9,14 +9,12 @@
 #include <filesystem>
 #include <memory>
 
-namespace sdl3cpp::script {
-struct LuaBindingContext;
-}
+struct lua_State;
 
 namespace sdl3cpp::services::impl {
 
 /**
- * @brief Service wrapper around ScriptEngine.
+ * @brief Service that owns the Lua runtime and script bindings.
  */
 class ScriptEngineService : public IScriptEngineService,
                             public di::IInitializable,
@@ -35,20 +33,37 @@ public:
     void Shutdown() noexcept override;
 
     // IScriptEngineService interface
-    script::ScriptEngine& GetEngine() override;
+    lua_State* GetLuaState() const override;
     std::filesystem::path GetScriptDirectory() const override;
     bool IsInitialized() const override { return initialized_; }
 
 private:
+    struct LuaBindingContext {
+        std::shared_ptr<IMeshService> meshService;
+        std::shared_ptr<IAudioCommandService> audioCommandService;
+        std::shared_ptr<IPhysicsBridgeService> physicsBridgeService;
+        std::shared_ptr<ILogger> logger;
+    };
+
+    void RegisterBindings(lua_State* L);
+    static int LoadMeshFromFile(lua_State* L);
+    static int PhysicsCreateBox(lua_State* L);
+    static int PhysicsStepSimulation(lua_State* L);
+    static int PhysicsGetTransform(lua_State* L);
+    static int AudioPlayBackground(lua_State* L);
+    static int AudioPlaySound(lua_State* L);
+    static int GlmMatrixFromTransform(lua_State* L);
+
     std::shared_ptr<ILogger> logger_;
     std::shared_ptr<IMeshService> meshService_;
     std::shared_ptr<IAudioCommandService> audioCommandService_;
     std::shared_ptr<IPhysicsBridgeService> physicsBridgeService_;
     std::filesystem::path scriptPath_;
+    std::filesystem::path scriptDirectory_;
     bool debugEnabled_ = false;
     bool initialized_ = false;
-    std::unique_ptr<script::ScriptEngine> engine_;
-    std::shared_ptr<script::LuaBindingContext> bindingContext_;
+    lua_State* luaState_ = nullptr;
+    std::shared_ptr<LuaBindingContext> bindingContext_;
 };
 
 }  // namespace sdl3cpp::services::impl
