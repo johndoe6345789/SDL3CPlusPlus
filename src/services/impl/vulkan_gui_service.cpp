@@ -54,7 +54,7 @@ void VulkanGuiService::RenderToSwapchain(VkCommandBuffer commandBuffer, VkImage 
 }
 
 void VulkanGuiService::Resize(uint32_t width, uint32_t height, VkFormat format) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     if (!renderer_) {
         return;
@@ -64,7 +64,7 @@ void VulkanGuiService::Resize(uint32_t width, uint32_t height, VkFormat format) 
 }
 
 void VulkanGuiService::Shutdown() noexcept {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     if (!initialized_) {
         return;
@@ -73,7 +73,7 @@ void VulkanGuiService::Shutdown() noexcept {
     renderer_.reset();
     initialized_ = false;
 
-    logging::Logger::GetInstance().Info("GUI service shutdown");
+    logger_->Info("GUI service shutdown");
 }
 
 }  // namespace sdl3cpp::services::impl
