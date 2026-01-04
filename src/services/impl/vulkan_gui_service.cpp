@@ -33,7 +33,7 @@ void VulkanGuiService::Initialize(VkDevice device,
 void VulkanGuiService::PrepareFrame(const std::vector<GuiCommand>& commands,
                                    uint32_t width,
                                    uint32_t height) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     if (!renderer_) {
         throw std::runtime_error("GUI service not initialized");
@@ -44,7 +44,7 @@ void VulkanGuiService::PrepareFrame(const std::vector<GuiCommand>& commands,
 }
 
 void VulkanGuiService::RenderToSwapchain(VkCommandBuffer commandBuffer, VkImage image) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     if (!renderer_) {
         throw std::runtime_error("GUI service not initialized");
