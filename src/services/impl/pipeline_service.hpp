@@ -2,6 +2,7 @@
 
 #include "../interfaces/i_pipeline_service.hpp"
 #include "../interfaces/i_vulkan_device_service.hpp"
+#include "../interfaces/i_logger.hpp"
 #include "../../di/lifecycle.hpp"
 #include <memory>
 #include <unordered_map>
@@ -18,7 +19,7 @@ namespace sdl3cpp::services::impl {
 class PipelineService : public IPipelineService,
                         public di::IShutdownable {
 public:
-    explicit PipelineService(std::shared_ptr<IVulkanDeviceService> deviceService);
+    explicit PipelineService(std::shared_ptr<IVulkanDeviceService> deviceService, std::shared_ptr<ILogger> logger);
     ~PipelineService() override;
 
     // IPipelineService interface
@@ -37,6 +38,7 @@ public:
 
 private:
     std::shared_ptr<IVulkanDeviceService> deviceService_;
+    std::shared_ptr<ILogger> logger_;
 
     VkPipelineLayout pipelineLayout_ = VK_NULL_HANDLE;
     std::unordered_map<std::string, ShaderPaths> shaderPathMap_;

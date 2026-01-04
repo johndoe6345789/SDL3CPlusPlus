@@ -2,6 +2,7 @@
 
 #include "../interfaces/i_scene_service.hpp"
 #include "../interfaces/i_script_service.hpp"
+#include "../interfaces/i_logger.hpp"
 #include "../../di/lifecycle.hpp"
 #include <vector>
 #include <memory>
@@ -17,7 +18,7 @@ namespace sdl3cpp::services::impl {
 class SceneService : public ISceneService,
                      public di::IShutdownable {
 public:
-    explicit SceneService(std::shared_ptr<IScriptService> scriptService);
+    explicit SceneService(std::shared_ptr<IScriptService> scriptService, std::shared_ptr<ILogger> logger);
     ~SceneService() override;
 
     // ISceneService interface
@@ -32,6 +33,7 @@ public:
 
 private:
     std::shared_ptr<IScriptService> scriptService_;
+    std::shared_ptr<ILogger> logger_;
     std::vector<SceneObject> sceneObjects_;
     bool initialized_ = false;
 };

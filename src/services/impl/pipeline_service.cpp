@@ -1,6 +1,5 @@
 #include "pipeline_service.hpp"
 #include "../../core/vertex.hpp"
-#include "../../logging/logger.hpp"
 #include <array>
 #include <filesystem>
 #include <fstream>
@@ -8,8 +7,8 @@
 
 namespace sdl3cpp::services::impl {
 
-PipelineService::PipelineService(std::shared_ptr<IVulkanDeviceService> deviceService)
-    : deviceService_(std::move(deviceService)) {}
+PipelineService::PipelineService(std::shared_ptr<IVulkanDeviceService> deviceService, std::shared_ptr<ILogger> logger)
+    : deviceService_(std::move(deviceService)), logger_(logger) {}
 
 PipelineService::~PipelineService() {
     if (pipelineLayout_ != VK_NULL_HANDLE || !pipelines_.empty()) {
@@ -18,13 +17,13 @@ PipelineService::~PipelineService() {
 }
 
 void PipelineService::RegisterShader(const std::string& key, const ShaderPaths& paths) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
     shaderPathMap_[key] = paths;
-    logging::Logger::GetInstance().Debug("Registered shader: " + key);
+    logger_->Debug("Registered shader: " + key);
 }
 
 void PipelineService::CompileAll(VkRenderPass renderPass, VkExtent2D extent) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     if (shaderPathMap_.empty()) {
         throw std::runtime_error("No shader paths were registered before pipeline creation");
@@ -33,17 +32,17 @@ void PipelineService::CompileAll(VkRenderPass renderPass, VkExtent2D extent) {
     CreatePipelineLayout();
     CreatePipelinesInternal(renderPass, extent);
 
-    logging::Logger::GetInstance().Info("Compiled " + std::to_string(pipelines_.size()) + " pipeline(s)");
+    logger_->Info("Compiled " + std::to_string(pipelines_.size()) + " pipeline(s)");
 }
 
 void PipelineService::RecreatePipelines(VkRenderPass renderPass, VkExtent2D extent) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     CleanupPipelines();
     CreatePipelineLayout();
     CreatePipelinesInternal(renderPass, extent);
 
-    logging::Logger::GetInstance().Info("Recreated " + std::to_string(pipelines_.size()) + " pipeline(s)");
+    logger_->Info("Recreated " + std::to_string(pipelines_.size()) + " pipeline(s)");
 }
 
 void PipelineService::Cleanup() {
@@ -74,7 +73,7 @@ bool PipelineService::HasShader(const std::string& key) const {
 }
 
 void PipelineService::CreatePipelineLayout() {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     auto device = deviceService_->GetDevice();
 
@@ -99,7 +98,7 @@ void PipelineService::CreatePipelineLayout() {
 }
 
 void PipelineService::CreatePipelinesInternal(VkRenderPass renderPass, VkExtent2D extent) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     auto device = deviceService_->GetDevice();
 
@@ -248,12 +247,12 @@ void PipelineService::CreatePipelinesInternal(VkRenderPass renderPass, VkExtent2
         vkDestroyShaderModule(device, fragShaderModule, nullptr);
         vkDestroyShaderModule(device, vertShaderModule, nullptr);
 
-        logging::Logger::GetInstance().Debug("Created pipeline: " + key);
+        logger_->Debug("Created pipeline: " + key);
     }
 }
 
 void PipelineService::CleanupPipelines() {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     auto device = deviceService_->GetDevice();
 
@@ -264,7 +263,7 @@ void PipelineService::CleanupPipelines() {
 }
 
 VkShaderModule PipelineService::CreateShaderModule(const std::vector<char>& code) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     auto device = deviceService_->GetDevice();
 
@@ -281,7 +280,7 @@ VkShaderModule PipelineService::CreateShaderModule(const std::vector<char>& code
 }
 
 std::vector<char> PipelineService::ReadShaderFile(const std::string& path) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     if (!std::filesystem::exists(path)) {
         throw std::runtime_error("Shader file not found: " + path +

@@ -227,7 +227,8 @@ void ServiceBasedApp::RegisterServices() {
 
     // Scene service
     registry_.RegisterService<services::ISceneService, services::impl::SceneService>(
-        registry_.GetService<services::IScriptService>());
+        registry_.GetService<services::IScriptService>(),
+        registry_.GetService<services::ILogger>());
 
     // Audio service
     registry_.RegisterService<services::IAudioService, services::impl::SdlAudioService>();

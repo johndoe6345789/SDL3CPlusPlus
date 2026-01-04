@@ -1,12 +1,11 @@
 #include "scene_service.hpp"
-#include "../../logging/logger.hpp"
 #include <stdexcept>
 
 namespace sdl3cpp::services::impl {
 
-SceneService::SceneService(std::shared_ptr<IScriptService> scriptService)
-    : scriptService_(scriptService) {
-    logging::TraceGuard trace("SceneService::SceneService");
+SceneService::SceneService(std::shared_ptr<IScriptService> scriptService, std::shared_ptr<ILogger> logger)
+    : scriptService_(scriptService), logger_(logger) {
+    logger_->TraceFunction(__func__);
 
     if (!scriptService_) {
         throw std::invalid_argument("Script service cannot be null");
@@ -14,21 +13,21 @@ SceneService::SceneService(std::shared_ptr<IScriptService> scriptService)
 }
 
 SceneService::~SceneService() {
-    logging::TraceGuard trace("SceneService::~SceneService");
+    logger_->TraceFunction(__func__);
     if (initialized_) {
         Shutdown();
     }
 }
 
 void SceneService::LoadScene(const std::vector<SceneObject>& objects) {
-    logging::TraceGuard trace("SceneService::LoadScene");
+    logger_->TraceFunction(__func__);
 
     sceneObjects_ = objects;
     initialized_ = true;
 }
 
 void SceneService::UpdateScene(float deltaTime) {
-    logging::TraceGuard trace("SceneService::UpdateScene");
+    logger_->TraceFunction(__func__);
 
     // Scene updates would go here (animations, physics, etc.)
     // For now, this is a placeholder
@@ -36,7 +35,7 @@ void SceneService::UpdateScene(float deltaTime) {
 }
 
 std::vector<RenderCommand> SceneService::GetRenderCommands(float time) const {
-    logging::TraceGuard trace("SceneService::GetRenderCommands");
+    logger_->TraceFunction(__func__);
 
     if (!initialized_) {
         return {};
@@ -59,20 +58,20 @@ std::vector<RenderCommand> SceneService::GetRenderCommands(float time) const {
 }
 
 void SceneService::Clear() {
-    logging::TraceGuard trace("SceneService::Clear");
+    logger_->TraceFunction(__func__);
 
     sceneObjects_.clear();
     initialized_ = false;
 }
 
 size_t SceneService::GetObjectCount() const {
-    logging::TraceGuard trace("SceneService::GetObjectCount");
+    logger_->TraceFunction(__func__);
 
     return sceneObjects_.size();
 }
 
 void SceneService::Shutdown() noexcept {
-    logging::TraceGuard trace("SceneService::Shutdown");
+    logger_->TraceFunction(__func__);
 
     Clear();
 }
