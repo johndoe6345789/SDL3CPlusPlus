@@ -142,7 +142,6 @@ if(BUILD_SDL3_APP)
             src/controllers/application_controller.cpp
             src/controllers/render_controller.cpp
             src/controllers/lifecycle_controller.cpp
-            src/app/audio_player.cpp
             src/app/service_based_app.cpp
             src/gui/gui_renderer.cpp
             src/core/vulkan_utils.cpp
@@ -189,7 +188,6 @@ add_executable(script_engine_tests
     src/script/lua_helpers.cpp
     src/script/lua_bindings.cpp
     src/script/mesh_loader.cpp
-    src/app/audio_player.cpp
 )
 target_include_directories(script_engine_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(script_engine_tests PRIVATE ${SDL_TARGET} lua::lua assimp::assimp Bullet::Bullet glm::glm Vorbis::vorbisfile Vorbis::vorbis)

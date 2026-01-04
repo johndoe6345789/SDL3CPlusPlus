@@ -4,7 +4,6 @@
 #include "script/gui_manager.hpp"
 #include "script/audio_manager.hpp"
 #include "script/lua_bindings.hpp"
-#include "app/audio_player.hpp"
 #include "logging/logger.hpp"
 
 #include <lua.hpp>
@@ -111,7 +110,8 @@ std::filesystem::path ScriptEngine::GetScriptDirectory() const {
 }
 
 void ScriptEngine::SetAudioPlayer(app::AudioPlayer* audioPlayer) {
-    audioManager_->SetAudioPlayer(audioPlayer);
+    // Stub - audio functionality now handled through services
+    sdl3cpp::logging::Logger::GetInstance().Trace("ScriptEngine::SetAudioPlayer: Stub implementation - using services now");
 }
 
 bool ScriptEngine::QueueAudioCommand(AudioManager::AudioCommandType type, std::string path, bool loop, std::string& error) {

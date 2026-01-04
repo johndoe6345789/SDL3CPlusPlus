@@ -21,8 +21,9 @@
 #include "app/service_based_app.hpp"
 #include <SDL3/SDL_main.h>
 #include "services/interfaces/i_logger.hpp"
-#include "logging/string_utils.hpp"
 #include "core/platform.hpp"
+
+using namespace sdl3cpp::services;
 
 namespace sdl3cpp::app {
 std::atomic<bool> g_signalReceived{false};
@@ -78,8 +79,6 @@ RuntimeConfig GenerateDefaultRuntimeConfig(const char* argv0) {
 }
 
 RuntimeConfig LoadRuntimeConfigFromJson(const std::filesystem::path& configPath, bool dumpConfig) {
-    using sdl3cpp::logging::ToString;
-    sdl3cpp::logging::Logger::GetInstance().TraceFunctionWithArgs("LoadRuntimeConfigFromJson", configPath.string() + " " + ToString(dumpConfig));
     std::ifstream configStream(configPath);
     if (!configStream) {
         throw std::runtime_error("Failed to open config file: " + configPath.string());
@@ -245,8 +244,8 @@ AppOptions ParseCommandLine(int argc, char** argv) {
 
 void LogRuntimeConfig(const RuntimeConfig& config, std::shared_ptr<services::ILogger> logger) {
     if (logger) {
-        logger->TraceVariable("config.width", static_cast<int>(config.width));
-        logger->TraceVariable("config.height", static_cast<int>(config.height));
+        logger->TraceVariable("config.width", config.width);
+        logger->TraceVariable("config.height", config.height);
         logger->TraceVariable("config.scriptPath", config.scriptPath.string());
     }
 }

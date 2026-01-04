@@ -6,10 +6,6 @@
 #include <string>
 #include <vector>
 
-namespace sdl3cpp::app {
-class AudioPlayer;
-}
-
 namespace sdl3cpp::script {
 
 class AudioManager {
@@ -27,7 +23,7 @@ public:
 
     explicit AudioManager(const std::filesystem::path& scriptDirectory);
 
-    void SetAudioPlayer(app::AudioPlayer* audioPlayer);
+    // void SetAudioPlayer(app::AudioPlayer* audioPlayer); // Removed - using services now
     bool QueueAudioCommand(AudioCommandType type, std::string path, bool loop, std::string& error);
 
 private:

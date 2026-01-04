@@ -41,13 +41,12 @@ public:
     bool HasGuiCommands() const;
     std::filesystem::path GetScriptDirectory() const;
     PhysicsBridge& GetPhysicsBridge();
-    void SetAudioPlayer(app::AudioPlayer* audioPlayer);
+    // void SetAudioPlayer(app::AudioPlayer* audioPlayer); // Removed - using services now
     bool QueueAudioCommand(AudioManager::AudioCommandType type, std::string path, bool loop, std::string& error);
     std::string GetLuaError();
 
 private:
-private:
-    void ExecuteAudioCommand(app::AudioPlayer* player, const AudioManager::AudioCommand& command);
+    void ExecuteAudioCommand(const AudioManager::AudioCommand& command); // Updated to not take AudioPlayer
     std::filesystem::path ResolveScriptPath(const std::string& requested) const;
 
     static std::vector<core::Vertex> ReadVertexArray(lua_State* L, int index);

@@ -2,9 +2,9 @@
 
 #include "../interfaces/i_audio_service.hpp"
 #include "../interfaces/i_logger.hpp"
-#include "../../app/audio_player.hpp"
 #include "../../di/lifecycle.hpp"
 #include <memory>
+#include <SDL3/SDL.h>
 
 namespace sdl3cpp::services::impl {
 
@@ -36,9 +36,9 @@ public:
 
 private:
     std::shared_ptr<ILogger> logger_;
-    std::unique_ptr<app::AudioPlayer> audioPlayer_;
     float volume_ = 1.0f;
     bool initialized_ = false;
+    // SDL audio structures would go here
 };
 
 }  // namespace sdl3cpp::services::impl
