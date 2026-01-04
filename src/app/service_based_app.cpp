@@ -121,62 +121,57 @@ void ServiceBasedApp::RegisterServices() {
     registry_.RegisterService<events::EventBus>(eventBus);
 
     // Configuration service
-    auto configService = std::make_shared<services::impl::JsonConfigService>();
-    registry_.RegisterService<services::IConfigService>(configService);
+    registry_.RegisterService<services::IConfigService, services::impl::JsonConfigService>();
 
     // Window service
-    auto windowService = std::make_shared<services::impl::SdlWindowService>(eventBus);
-    registry_.RegisterService<services::IWindowService>(windowService);
+    registry_.RegisterService<services::IWindowService, services::impl::SdlWindowService>(eventBus);
 
     // Input service
-    auto inputService = std::make_shared<services::impl::SdlInputService>(eventBus);
-    registry_.RegisterService<services::IInputService>(inputService);
+    registry_.RegisterService<services::IInputService, services::impl::SdlInputService>(eventBus);
 
     // Vulkan device service
-    auto deviceService = std::make_shared<services::impl::VulkanDeviceService>();
-    registry_.RegisterService<services::IVulkanDeviceService>(deviceService);
+    registry_.RegisterService<services::IVulkanDeviceService, services::impl::VulkanDeviceService>();
 
     // Swapchain service
-    auto swapchainService = std::make_shared<services::impl::SwapchainService>(deviceService, eventBus);
-    registry_.RegisterService<services::ISwapchainService>(swapchainService);
+    registry_.RegisterService<services::ISwapchainService, services::impl::SwapchainService>(
+        registry_.GetService<services::IVulkanDeviceService>(), eventBus);
 
     // Pipeline service
-    auto pipelineService = std::make_shared<services::impl::PipelineService>(deviceService);
-    registry_.RegisterService<services::IPipelineService>(pipelineService);
+    registry_.RegisterService<services::IPipelineService, services::impl::PipelineService>(
+        registry_.GetService<services::IVulkanDeviceService>());
 
     // Buffer service
-    auto bufferService = std::make_shared<services::impl::BufferService>(deviceService);
-    registry_.RegisterService<services::IBufferService>(bufferService);
+    registry_.RegisterService<services::IBufferService, services::impl::BufferService>(
+        registry_.GetService<services::IVulkanDeviceService>());
 
     // Render command service
-    auto renderCommandService = std::make_shared<services::impl::RenderCommandService>(
-        deviceService, swapchainService);
-    registry_.RegisterService<services::IRenderCommandService>(renderCommandService);
+    registry_.RegisterService<services::IRenderCommandService, services::impl::RenderCommandService>(
+        registry_.GetService<services::IVulkanDeviceService>(),
+        registry_.GetService<services::ISwapchainService>());
 
     // Graphics service (facade)
-    auto graphicsService = std::make_shared<services::impl::GraphicsService>(
-        deviceService, swapchainService, pipelineService, bufferService, renderCommandService);
-    registry_.RegisterService<services::IGraphicsService>(graphicsService);
+    registry_.RegisterService<services::IGraphicsService, services::impl::GraphicsService>(
+        registry_.GetService<services::IVulkanDeviceService>(),
+        registry_.GetService<services::ISwapchainService>(),
+        registry_.GetService<services::IPipelineService>(),
+        registry_.GetService<services::IBufferService>(),
+        registry_.GetService<services::IRenderCommandService>());
 
     // Script service
-    auto scriptService = std::make_shared<services::impl::LuaScriptService>(scriptPath_);
-    registry_.RegisterService<services::IScriptService>(scriptService);
+    registry_.RegisterService<services::IScriptService, services::impl::LuaScriptService>(scriptPath_);
 
     // Scene service
-    auto sceneService = std::make_shared<services::impl::SceneService>(scriptService);
-    registry_.RegisterService<services::ISceneService>(sceneService);
+    registry_.RegisterService<services::ISceneService, services::impl::SceneService>(
+        registry_.GetService<services::IScriptService>());
 
     // Audio service
-    auto audioService = std::make_shared<services::impl::SdlAudioService>();
-    registry_.RegisterService<services::IAudioService>(audioService);
+    registry_.RegisterService<services::IAudioService, services::impl::SdlAudioService>();
 
     // GUI service
-    auto guiService = std::make_shared<services::impl::VulkanGuiService>();
-    registry_.RegisterService<services::IGuiService>(guiService);
+    registry_.RegisterService<services::IGuiService, services::impl::VulkanGuiService>();
 
     // Physics service
-    auto physicsService = std::make_shared<services::impl::BulletPhysicsService>();
-    registry_.RegisterService<services::IPhysicsService>(physicsService);
+    registry_.RegisterService<services::IPhysicsService, services::impl::BulletPhysicsService>();
 }
 
 }  // namespace sdl3cpp::app
