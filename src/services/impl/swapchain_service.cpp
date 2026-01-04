@@ -1,13 +1,13 @@
 #include "swapchain_service.hpp"
-#include "../../logging/logger.hpp"
 #include <algorithm>
 #include <stdexcept>
 
 namespace sdl3cpp::services::impl {
 
 SwapchainService::SwapchainService(std::shared_ptr<IVulkanDeviceService> deviceService,
-                                   std::shared_ptr<events::EventBus> eventBus)
-    : deviceService_(std::move(deviceService)), eventBus_(std::move(eventBus)) {
+                                   std::shared_ptr<events::EventBus> eventBus,
+                                   std::shared_ptr<ILogger> logger)
+    : deviceService_(std::move(deviceService)), eventBus_(std::move(eventBus)), logger_(logger) {
     // Subscribe to window resize events
     eventBus_->Subscribe(events::EventType::WindowResized,
                         [this](const events::Event& event) { OnWindowResized(event); });
@@ -20,7 +20,7 @@ SwapchainService::~SwapchainService() {
 }
 
 void SwapchainService::Initialize() {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
     // Initialization happens in CreateSwapchain()
 }
 
