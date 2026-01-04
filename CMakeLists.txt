@@ -114,6 +114,10 @@ if(BUILD_SDL3_APP)
             src/app/vulkan_api.cpp
             src/script/script_engine.cpp
             src/script/physics_bridge.cpp
+            src/script/scene_manager.cpp
+            src/script/shader_manager.cpp
+            src/script/gui_manager.cpp
+            src/script/audio_manager.cpp
             src/script/lua_helpers.cpp
             src/script/lua_bindings.cpp
             src/script/mesh_loader.cpp
@@ -141,6 +145,10 @@ add_executable(script_engine_tests
     tests/test_cube_script.cpp
     src/script/script_engine.cpp
     src/script/physics_bridge.cpp
+    src/script/scene_manager.cpp
+    src/script/shader_manager.cpp
+    src/script/gui_manager.cpp
+    src/script/audio_manager.cpp
     src/script/lua_helpers.cpp
     src/script/lua_bindings.cpp
     src/script/mesh_loader.cpp

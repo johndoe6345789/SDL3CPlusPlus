@@ -1,19 +1,19 @@
-﻿local Gui = require(\ gui\)
-local math3d = require(\math3d\)
+﻿local Gui = require('gui')
+local math3d = require('math3d')
 
 local ctx = Gui.newContext()
 local input = Gui.newInputState()
-local textState = Gui.newTextState(\\)
+local textState = Gui.newTextState('')
 local listState = Gui.newListState()
 local items = {
-    \Dashboard Setup\,
-    \Input Streams\,
-    \Telemetry\,
-    \Power Profile\,
-    \Diagnostics\,
-    \Release Notes\,
+    'Dashboard Setup',
+    'Input Streams',
+    'Telemetry',
+    'Power Profile',
+    'Diagnostics',
+    'Release Notes',
 }
-local statusMessage = \Idle\
+local statusMessage = 'Idle'
 local selectedItem = items[1]
 local rotationSpeeds = {x = 0.45, y = 0.65}
 
@@ -39,8 +39,8 @@ local cubeIndices = {
 
 local shaderVariants = {
     default = {
-        vertex = \shaders/cube.vert.spv\,
-        fragment = \shaders/cube.frag.spv\,
+        vertex = 'shaders/cube.vert.spv',
+        fragment = 'shaders/cube.frag.spv',
     },
 }
 
@@ -69,7 +69,7 @@ local function createCube(position)
         vertices = cubeVertices,
         indices = cubeIndices,
         compute_model_matrix = computeModel,
-        shader_key = \default\,
+        shader_key = 'default',
     }
 end
 
@@ -102,9 +102,9 @@ local function drawPanel()
     })
     Gui.svg(ctx, {x = 320, y = 30, width = 120, height = 120}, \assets/logo.svg\)
     textState = Gui.textbox(ctx, \search_field\, {x = 30, y = 80, width = 420, height = 40}, textState, {
-        placeholder = \Filter modules...\,
+        placeholder = 'Filter modules...',
         onSubmit = function(text)
-            statusMessage = \Searching for: \ .. (text ~= \\ and text or \anything\)
+            statusMessage = 'Searching for: ' .. (text ~= '' and text or 'anything')
         end,
     })
 

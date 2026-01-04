@@ -4,34 +4,9 @@
 #include "script/mesh_loader.hpp"
 
 #include <btBulletDynamicsCommon.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/quaternion.hpp>
-#include <glm/gtc/type_ptr.hpp>
 #include <lua.hpp>
 
 namespace sdl3cpp::script {
-
-namespace {
-
-glm::vec3 ToVec3(const std::array<float, 3>& value) {
-    return glm::vec3(value[0], value[1], value[2]);
-}
-
-glm::quat ToQuat(const std::array<float, 4>& value) {
-    return glm::quat(value[3], value[0], value[1], value[2]);
-}
-
-void PushMatrix(lua_State* L, const glm::mat4& matrix) {
-    lua_newtable(L);
-    const float* ptr = glm::value_ptr(matrix);
-    for (int i = 0; i < 16; ++i) {
-        lua_pushnumber(L, ptr[i]);
-        lua_rawseti(L, -2, i + 1);
-    }
-}
-
-} // namespace
 
 void LuaBindings::RegisterBindings(lua_State* L, ScriptEngine* engine) {
     lua_pushlightuserdata(L, engine);
@@ -169,7 +144,7 @@ int LuaBindings::AudioPlayBackground(lua_State* L) {
     }
     
     std::string error;
-    if (!engine->QueueAudioCommand(ScriptEngine::AudioCommandType::Background, path, loop, error)) {
+    if (!engine->QueueAudioCommand(AudioManager::AudioCommandType::Background, path, loop, error)) {
         lua_pushnil(L);
         lua_pushstring(L, error.c_str());
         return 2;
@@ -188,7 +163,7 @@ int LuaBindings::AudioPlaySound(lua_State* L) {
     }
     
     std::string error;
-    if (!engine->QueueAudioCommand(ScriptEngine::AudioCommandType::Effect, path, loop, error)) {
+    if (!engine->QueueAudioCommand(AudioManager::AudioCommandType::Effect, path, loop, error)) {
         lua_pushnil(L);
         lua_pushstring(L, error.c_str());
         return 2;
@@ -199,13 +174,7 @@ int LuaBindings::AudioPlaySound(lua_State* L) {
 }
 
 int LuaBindings::GlmMatrixFromTransform(lua_State* L) {
-    std::array<float, 3> translation = ReadVector3(L, 1);
-    std::array<float, 4> rotation = ReadQuaternion(L, 2);
-    glm::vec3 pos = ToVec3(translation);
-    glm::quat quat = ToQuat(rotation);
-    glm::mat4 matrix = glm::translate(glm::mat4(1.0f), pos) * glm::mat4_cast(quat);
-    PushMatrix(L, matrix);
-    return 1;
+    return LuaGlmMatrixFromTransform(L);
 }
 
 } // namespace sdl3cpp::script

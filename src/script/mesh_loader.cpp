@@ -1,4 +1,5 @@
 #include "script/mesh_loader.hpp"
+#include "script/script_engine.hpp"
 
 #include <assimp/Importer.hpp>
 #include <assimp/material.h>
@@ -130,6 +131,21 @@ int MeshLoader::PushMeshToLua(lua_State* L, const MeshPayload& payload) {
     lua_setfield(L, -2, "indices");
 
     return 1;
+}
+
+int MeshLoader::LuaLoadMeshFromFile(lua_State* L) {
+    auto* script = static_cast<sdl3cpp::script::ScriptEngine*>(lua_touserdata(L, lua_upvalueindex(1)));
+    const char* path = luaL_checkstring(L, 1);
+    MeshPayload payload;
+    std::string error;
+    if (!LoadFromFile(script->GetScriptDirectory(), path, payload, error)) {
+        lua_pushnil(L);
+        lua_pushstring(L, error.c_str());
+        return 2;
+    }
+    PushMeshToLua(L, payload);
+    lua_pushnil(L);
+    return 2;
 }
 
 } // namespace sdl3cpp::script

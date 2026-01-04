@@ -24,6 +24,7 @@ public:
                             std::string& outError);
 
     static int PushMeshToLua(lua_State* L, const MeshPayload& payload);
+    static int LuaLoadMeshFromFile(lua_State* L);
 };
 
 } // namespace sdl3cpp::script

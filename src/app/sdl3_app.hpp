@@ -21,6 +21,7 @@
 #include "app/audio_player.hpp"
 #include "core/vertex.hpp"
 #include "script/script_engine.hpp"
+#include "script/shader_manager.hpp"
 #include "gui/gui_renderer.hpp"
 
 namespace sdl3cpp::app {
@@ -132,7 +133,7 @@ private:
     script::ScriptEngine scriptEngine_;
     std::vector<core::Vertex> vertices_;
     std::vector<uint16_t> indices_;
-    std::unordered_map<std::string, script::ScriptEngine::ShaderPaths> shaderPathMap_;
+    std::unordered_map<std::string, script::ShaderManager::ShaderPaths> shaderPathMap_;
     std::unordered_map<std::string, VkPipeline> graphicsPipelines_;
     std::string defaultShaderKey_;
     VkFence inFlightFence_ = VK_NULL_HANDLE;

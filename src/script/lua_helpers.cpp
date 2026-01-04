@@ -1,5 +1,9 @@
 #include "script/lua_helpers.hpp"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <lua.hpp>
 #include <stdexcept>
 
@@ -72,6 +76,33 @@ std::array<float, 16> IdentityMatrix() {
             0.0f, 1.0f, 0.0f, 0.0f,
             0.0f, 0.0f, 1.0f, 0.0f,
             0.0f, 0.0f, 0.0f, 1.0f};
+}
+
+glm::vec3 ToVec3(const std::array<float, 3>& value) {
+    return glm::vec3(value[0], value[1], value[2]);
+}
+
+glm::quat ToQuat(const std::array<float, 4>& value) {
+    return glm::quat(value[3], value[0], value[1], value[2]);
+}
+
+void PushMatrix(lua_State* L, const glm::mat4& matrix) {
+    lua_newtable(L);
+    const float* ptr = glm::value_ptr(matrix);
+    for (int i = 0; i < 16; ++i) {
+        lua_pushnumber(L, ptr[i]);
+        lua_rawseti(L, -2, i + 1);
+    }
+}
+
+int LuaGlmMatrixFromTransform(lua_State* L) {
+    std::array<float, 3> translation = ReadVector3(L, 1);
+    std::array<float, 4> rotation = ReadQuaternion(L, 2);
+    glm::vec3 pos = ToVec3(translation);
+    glm::quat quat = ToQuat(rotation);
+    glm::mat4 matrix = glm::translate(glm::mat4(1.0f), pos) * glm::mat4_cast(quat);
+    PushMatrix(L, matrix);
+    return 1;
 }
 
 } // namespace sdl3cpp::script
