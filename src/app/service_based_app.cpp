@@ -137,7 +137,8 @@ void ServiceBasedApp::RegisterServices() {
 
     // Swapchain service
     registry_.RegisterService<services::ISwapchainService, services::impl::SwapchainService>(
-        registry_.GetService<services::IVulkanDeviceService>(), eventBus);
+        registry_.GetService<services::IVulkanDeviceService>(),
+        registry_.GetService<events::EventBus>());
 
     // Pipeline service
     registry_.RegisterService<services::IPipelineService, services::impl::PipelineService>(
