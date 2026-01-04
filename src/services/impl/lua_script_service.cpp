@@ -1,10 +1,11 @@
 #include "lua_script_service.hpp"
 #include <stdexcept>
+#include <utility>
 
 namespace sdl3cpp::services::impl {
 
-LuaScriptService::LuaScriptService(const std::filesystem::path& scriptPath, std::shared_ptr<ILogger> logger, bool debugEnabled)
-    : scriptPath_(scriptPath), logger_(logger), debugEnabled_(debugEnabled) {
+LuaScriptService::LuaScriptService(std::shared_ptr<IScriptEngineService> engineService, std::shared_ptr<ILogger> logger)
+    : engineService_(std::move(engineService)), logger_(std::move(logger)) {
 }
 
 LuaScriptService::~LuaScriptService() {
@@ -20,7 +21,10 @@ void LuaScriptService::Initialize() {
         return;
     }
 
-    engine_ = std::make_unique<script::ScriptEngine>(scriptPath_, debugEnabled_);
+    if (!engineService_ || !engineService_->IsInitialized()) {
+        throw std::runtime_error("Script engine service not initialized");
+    }
+
     initialized_ = true;
 
     logger_->Info("Script service initialized");
@@ -33,7 +37,6 @@ void LuaScriptService::Shutdown() noexcept {
         return;
     }
 
-    engine_.reset();
     initialized_ = false;
 
     logger_->Info("Script service shutdown");
@@ -42,69 +45,69 @@ void LuaScriptService::Shutdown() noexcept {
 std::vector<script::SceneManager::SceneObject> LuaScriptService::LoadSceneObjects() {
     logger_->TraceFunction(__func__);
 
-    if (!engine_) {
+    if (!engineService_ || !engineService_->IsInitialized()) {
         throw std::runtime_error("Script service not initialized");
     }
 
-    return engine_->LoadSceneObjects();
+    return engineService_->GetEngine().LoadSceneObjects();
 }
 
 std::array<float, 16> LuaScriptService::ComputeModelMatrix(int functionRef, float time) {
-    if (!engine_) {
+    if (!engineService_ || !engineService_->IsInitialized()) {
         throw std::runtime_error("Script service not initialized");
     }
 
-    return engine_->ComputeModelMatrix(functionRef, time);
+    return engineService_->GetEngine().ComputeModelMatrix(functionRef, time);
 }
 
 std::array<float, 16> LuaScriptService::GetViewProjectionMatrix(float aspect) {
-    if (!engine_) {
+    if (!engineService_ || !engineService_->IsInitialized()) {
         throw std::runtime_error("Script service not initialized");
     }
 
-    return engine_->GetViewProjectionMatrix(aspect);
+    return engineService_->GetEngine().GetViewProjectionMatrix(aspect);
 }
 
 std::unordered_map<std::string, sdl3cpp::services::ShaderPaths> LuaScriptService::LoadShaderPathsMap() {
     logger_->TraceFunction(__func__);
 
-    if (!engine_) {
+    if (!engineService_ || !engineService_->IsInitialized()) {
         throw std::runtime_error("Script service not initialized");
     }
 
-    return engine_->LoadShaderPathsMap();
+    return engineService_->GetEngine().LoadShaderPathsMap();
 }
 
 std::vector<script::GuiCommand> LuaScriptService::LoadGuiCommands() {
-    if (!engine_) {
+    if (!engineService_ || !engineService_->IsInitialized()) {
         return {};
     }
 
-    return engine_->LoadGuiCommands();
+    return engineService_->GetEngine().LoadGuiCommands();
 }
 
 void LuaScriptService::UpdateGuiInput(const script::GuiInputSnapshot& input) {
-    if (!engine_) {
+    if (!engineService_ || !engineService_->IsInitialized()) {
         return;
     }
 
-    engine_->UpdateGuiInput(input);
+    engineService_->GetEngine().UpdateGuiInput(input);
 }
 
 bool LuaScriptService::HasGuiCommands() const {
-    if (!engine_) {
+    if (!engineService_ || !engineService_->IsInitialized()) {
         return false;
     }
 
-    return engine_->HasGuiCommands();
+    return engineService_->GetEngine().HasGuiCommands();
 }
 
 script::PhysicsBridge& LuaScriptService::GetPhysicsBridge() {
-    if (!engine_) {
+    if (!engineService_ || !engineService_->IsInitialized()) {
         throw std::runtime_error("Script service not initialized");
     }
 
-    return engine_->GetPhysicsBridge();
+    return engineService_->GetEngine().GetPhysicsBridge();
 }
 
 void LuaScriptService::SetAudioPlayer(app::AudioPlayer* audioPlayer) {
@@ -113,19 +116,19 @@ void LuaScriptService::SetAudioPlayer(app::AudioPlayer* audioPlayer) {
 }
 
 std::filesystem::path LuaScriptService::GetScriptDirectory() const {
-    if (!engine_) {
+    if (!engineService_ || !engineService_->IsInitialized()) {
         return {};
     }
 
-    return engine_->GetScriptDirectory();
+    return engineService_->GetEngine().GetScriptDirectory();
 }
 
 std::string LuaScriptService::GetLuaError() {
-    if (!engine_) {
+    if (!engineService_ || !engineService_->IsInitialized()) {
         return "Script service not initialized";
     }
 
-    return engine_->GetLuaError();
+    return engineService_->GetEngine().GetLuaError();
 }
 
 }  // namespace sdl3cpp::services::impl

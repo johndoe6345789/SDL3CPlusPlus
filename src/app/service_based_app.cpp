@@ -11,7 +11,14 @@
 #include "services/impl/buffer_service.hpp"
 #include "services/impl/render_command_service.hpp"
 #include "services/impl/graphics_service.hpp"
+#include "services/impl/script_engine_service.hpp"
 #include "services/impl/lua_script_service.hpp"
+#include "services/impl/scene_script_service.hpp"
+#include "services/impl/shader_script_service.hpp"
+#include "services/impl/gui_script_service.hpp"
+#include "services/impl/audio_command_service.hpp"
+#include "services/impl/physics_bridge_service.hpp"
+#include "services/impl/mesh_service.hpp"
 #include "services/impl/scene_service.hpp"
 #include "services/impl/sdl_audio_service.hpp"
 #include "services/impl/vulkan_gui_service.hpp"
@@ -239,9 +246,30 @@ void ServiceBasedApp::RegisterServices() {
         registry_.GetService<services::IRenderCommandService>(),
         registry_.GetService<services::IWindowService>());
 
-    // Script service
+    // Script engine service (shared Lua runtime)
+    registry_.RegisterService<services::IScriptEngineService, services::impl::ScriptEngineService>(
+        scriptPath_,
+        registry_.GetService<services::ILogger>(),
+        runtimeConfig.luaDebug);
+
+    // Script-facing services
+    registry_.RegisterService<services::ISceneScriptService, services::impl::SceneScriptService>(
+        registry_.GetService<services::IScriptEngineService>());
+    registry_.RegisterService<services::IShaderScriptService, services::impl::ShaderScriptService>(
+        registry_.GetService<services::IScriptEngineService>());
+    registry_.RegisterService<services::IGuiScriptService, services::impl::GuiScriptService>(
+        registry_.GetService<services::IScriptEngineService>());
+    registry_.RegisterService<services::IAudioCommandService, services::impl::AudioCommandService>(
+        registry_.GetService<services::IScriptEngineService>());
+    registry_.RegisterService<services::IPhysicsBridgeService, services::impl::PhysicsBridgeService>(
+        registry_.GetService<services::IScriptEngineService>());
+    registry_.RegisterService<services::IMeshService, services::impl::MeshService>(
+        registry_.GetService<services::IScriptEngineService>());
+
+    // Script service (facade)
     registry_.RegisterService<services::IScriptService, services::impl::LuaScriptService>(
-        scriptPath_, registry_.GetService<services::ILogger>());
+        registry_.GetService<services::IScriptEngineService>(),
+        registry_.GetService<services::ILogger>());
 
     // Connect input service to script service for GUI input processing
     auto inputService = registry_.GetService<services::IInputService>();
@@ -252,7 +280,7 @@ void ServiceBasedApp::RegisterServices() {
 
     // Scene service
     registry_.RegisterService<services::ISceneService, services::impl::SceneService>(
-        registry_.GetService<services::IScriptService>(),
+        registry_.GetService<services::ISceneScriptService>(),
         registry_.GetService<services::ILogger>());
 
     // Audio service

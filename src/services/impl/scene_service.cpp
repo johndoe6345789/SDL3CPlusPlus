@@ -3,12 +3,12 @@
 
 namespace sdl3cpp::services::impl {
 
-SceneService::SceneService(std::shared_ptr<IScriptService> scriptService, std::shared_ptr<ILogger> logger)
+SceneService::SceneService(std::shared_ptr<ISceneScriptService> scriptService, std::shared_ptr<ILogger> logger)
     : scriptService_(scriptService), logger_(logger) {
     logger_->TraceFunction(__func__);
 
     if (!scriptService_) {
-        throw std::invalid_argument("Script service cannot be null");
+        throw std::invalid_argument("Scene script service cannot be null");
     }
 }
 

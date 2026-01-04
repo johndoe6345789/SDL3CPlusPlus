@@ -125,6 +125,13 @@ if(BUILD_SDL3_APP)
             src/events/event_bus.cpp
             src/services/impl/json_config_service.cpp
             src/services/impl/logger_service.cpp
+            src/services/impl/script_engine_service.cpp
+            src/services/impl/scene_script_service.cpp
+            src/services/impl/shader_script_service.cpp
+            src/services/impl/gui_script_service.cpp
+            src/services/impl/audio_command_service.cpp
+            src/services/impl/physics_bridge_service.cpp
+            src/services/impl/mesh_service.cpp
             src/services/impl/sdl_window_service.cpp
             src/services/impl/sdl_input_service.cpp
             src/services/impl/vulkan_device_service.cpp

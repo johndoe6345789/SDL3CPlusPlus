@@ -1,7 +1,8 @@
 #include "render_controller.hpp"
 #include "../services/interfaces/i_logger.hpp"
 #include "../services/interfaces/i_graphics_service.hpp"
-#include "../services/interfaces/i_script_service.hpp"
+#include "../services/interfaces/i_scene_script_service.hpp"
+#include "../services/interfaces/i_gui_script_service.hpp"
 #include "../services/interfaces/i_gui_service.hpp"
 #include "../services/interfaces/i_scene_service.hpp"
 
@@ -21,7 +22,8 @@ void RenderController::RenderFrame(float time) {
 
     // Get required services
     auto graphicsService = registry_.GetService<services::IGraphicsService>();
-    auto scriptService = registry_.GetService<services::IScriptService>();
+    auto sceneScriptService = registry_.GetService<services::ISceneScriptService>();
+    auto guiScriptService = registry_.GetService<services::IGuiScriptService>();
     auto guiService = registry_.GetService<services::IGuiService>();
     auto sceneService = registry_.GetService<services::ISceneService>();
 
@@ -35,9 +37,9 @@ void RenderController::RenderFrame(float time) {
     graphicsService->BeginFrame();
 
     // Load scene and render
-    if (scriptService && sceneService) {
+    if (sceneScriptService && sceneService) {
         // Load scene objects from script
-        auto sceneObjects = scriptService->LoadSceneObjects();
+        auto sceneObjects = sceneScriptService->LoadSceneObjects();
         sceneService->LoadScene(sceneObjects);
         
         // Get render commands from scene service
@@ -45,15 +47,15 @@ void RenderController::RenderFrame(float time) {
 
         // Get view-projection matrix
         float aspect = 1920.0f / 1080.0f;  // TODO: Get from window service
-        auto viewProj = scriptService->GetViewProjectionMatrix(aspect);
+        auto viewProj = sceneScriptService->GetViewProjectionMatrix(aspect);
 
         // Render scene
         graphicsService->RenderScene(renderCommands, viewProj);
     }
 
     // Render GUI overlay
-    if (guiService && scriptService && scriptService->HasGuiCommands()) {
-        auto guiCommands = scriptService->LoadGuiCommands();
+    if (guiService && guiScriptService && guiScriptService->HasGuiCommands()) {
+        auto guiCommands = guiScriptService->LoadGuiCommands();
         // guiService->PrepareFrame(guiCommands, width, height);
         // guiService->RenderToSwapchain(commandBuffer, swapchainImage);
     }
