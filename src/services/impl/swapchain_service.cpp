@@ -25,7 +25,7 @@ void SwapchainService::Initialize() {
 }
 
 void SwapchainService::CreateSwapchain(uint32_t width, uint32_t height) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     currentWidth_ = width;
     currentHeight_ = height;
@@ -46,16 +46,16 @@ void SwapchainService::CreateSwapchain(uint32_t width, uint32_t height) {
             "This may indicate GPU driver issues or incompatible surface.");
     }
 
-    logging::Logger::GetInstance().Info("Creating swapchain with size: " + std::to_string(width) + "x" + std::to_string(height));
+    logger_->Info("Creating swapchain with size: " + std::to_string(width) + "x" + std::to_string(height));
 
     if (width == 0 || height == 0) {
-        logging::Logger::GetInstance().Error("Invalid dimensions (" + std::to_string(width) + "x" + std::to_string(height) + ").");
+        logger_->Error("Invalid dimensions (" + std::to_string(width) + "x" + std::to_string(height) + ").");
         throw std::runtime_error("Invalid dimensions (" +
             std::to_string(width) + "x" + std::to_string(height) + ").\n" +
             "Window may be minimized or invalid.");
     }
 
-    logging::Logger::GetInstance().Debug("Surface capabilities - Min extent: " + std::to_string(support.capabilities.minImageExtent.width) + "x" + std::to_string(support.capabilities.minImageExtent.height) +
+    logger_->Debug("Surface capabilities - Min extent: " + std::to_string(support.capabilities.minImageExtent.width) + "x" + std::to_string(support.capabilities.minImageExtent.height) +
               ", Max extent: " + std::to_string(support.capabilities.maxImageExtent.width) + "x" + std::to_string(support.capabilities.maxImageExtent.height) +
               ", Min images: " + std::to_string(support.capabilities.minImageCount) +
               ", Max images: " + std::to_string(support.capabilities.maxImageCount));
@@ -68,7 +68,7 @@ void SwapchainService::CreateSwapchain(uint32_t width, uint32_t height) {
     if (support.capabilities.maxImageCount > 0 && imageCount > support.capabilities.maxImageCount) {
         imageCount = support.capabilities.maxImageCount;
     }
-    logging::Logger::GetInstance().TraceVariable("imageCount", static_cast<int>(imageCount));
+    logger_->TraceVariable("imageCount", static_cast<int>(imageCount));
 
     VkSwapchainCreateInfoKHR createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -112,7 +112,7 @@ void SwapchainService::CreateSwapchain(uint32_t width, uint32_t height) {
 }
 
 void SwapchainService::RecreateSwapchain(uint32_t width, uint32_t height) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     logging::Logger::GetInstance().Info("Recreating swapchain: " + std::to_string(width) + "x" + std::to_string(height));
 
@@ -143,7 +143,7 @@ VkResult SwapchainService::Present(const std::vector<VkSemaphore>& waitSemaphore
 }
 
 void SwapchainService::CreateImageViews() {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     auto device = deviceService_->GetDevice();
 
@@ -169,7 +169,7 @@ void SwapchainService::CreateImageViews() {
 }
 
 void SwapchainService::CreateRenderPass() {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     auto device = deviceService_->GetDevice();
 
@@ -215,7 +215,7 @@ void SwapchainService::CreateRenderPass() {
 }
 
 void SwapchainService::CreateFramebuffers() {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     auto device = deviceService_->GetDevice();
 
@@ -239,7 +239,7 @@ void SwapchainService::CreateFramebuffers() {
 }
 
 void SwapchainService::CleanupSwapchainInternal() {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     auto device = deviceService_->GetDevice();
 
@@ -274,7 +274,7 @@ void SwapchainService::Shutdown() noexcept {
 
 SwapchainService::SwapchainSupportDetails SwapchainService::QuerySwapchainSupport(
     VkPhysicalDevice device, VkSurfaceKHR surface) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     SwapchainSupportDetails details;
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
@@ -299,7 +299,7 @@ SwapchainService::SwapchainSupportDetails SwapchainService::QuerySwapchainSuppor
 
 VkSurfaceFormatKHR SwapchainService::ChooseSurfaceFormat(
     const std::vector<VkSurfaceFormatKHR>& availableFormats) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     for (const auto& availableFormat : availableFormats) {
         if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB &&
@@ -312,7 +312,7 @@ VkSurfaceFormatKHR SwapchainService::ChooseSurfaceFormat(
 
 VkPresentModeKHR SwapchainService::ChoosePresentMode(
     const std::vector<VkPresentModeKHR>& availablePresentModes) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     for (const auto& availablePresentMode : availablePresentModes) {
         if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
@@ -331,7 +331,7 @@ VkExtent2D SwapchainService::ChooseExtent(const VkSurfaceCapabilitiesKHR& capabi
 }
 
 void SwapchainService::OnWindowResized(const events::Event& event) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
     logging::Logger::GetInstance().Info("Window resized event received, swapchain recreation needed");
 }
 
