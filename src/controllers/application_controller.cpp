@@ -21,6 +21,7 @@ ApplicationController::~ApplicationController() {
 }
 
 void ApplicationController::Run() {
+    logging::Logger::GetInstance().Info("ApplicationController::Run starting");
     logging::TraceGuard trace;
     logging::Logger::GetInstance().Info("Application starting main loop");
 
