@@ -207,7 +207,8 @@ void ServiceBasedApp::RegisterServices() {
     // Render command service
     registry_.RegisterService<services::IRenderCommandService, services::impl::RenderCommandService>(
         registry_.GetService<services::IVulkanDeviceService>(),
-        registry_.GetService<services::ISwapchainService>());
+        registry_.GetService<services::ISwapchainService>(),
+        registry_.GetService<services::ILogger>());
 
     // Graphics service (facade)
     registry_.RegisterService<services::IGraphicsService, services::impl::GraphicsService>(

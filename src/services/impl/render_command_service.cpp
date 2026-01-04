@@ -214,7 +214,7 @@ void RenderCommandService::CreateSyncObjects() {
 }
 
 void RenderCommandService::CleanupCommandResources() {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     auto device = deviceService_->GetDevice();
 
@@ -232,7 +232,7 @@ void RenderCommandService::CleanupCommandResources() {
 }
 
 void RenderCommandService::CleanupSyncObjects() {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     auto device = deviceService_->GetDevice();
 
