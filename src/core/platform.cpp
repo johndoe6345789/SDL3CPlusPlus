@@ -1,5 +1,6 @@
 #include "core/platform.hpp"
 #include "logging/logger.hpp"
+#include "logging/string_utils.hpp"
 
 #include <cstdlib>
 

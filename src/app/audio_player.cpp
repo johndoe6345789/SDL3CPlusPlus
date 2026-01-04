@@ -1,5 +1,6 @@
 #include "app/audio_player.hpp"
 #include "logging/logger.hpp"
+#include "logging/string_utils.hpp"
 
 #include <SDL3/SDL.h>
 #include <vorbis/vorbisfile.h>

@@ -21,6 +21,7 @@
 #include "app/sdl3_app.hpp"
 #include <SDL3/SDL_main.h>
 #include "logging/logger.hpp"
+#include "logging/string_utils.hpp"
 #include "core/platform.hpp"
 
 namespace sdl3cpp::app {
