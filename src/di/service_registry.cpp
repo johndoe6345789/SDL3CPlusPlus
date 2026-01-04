@@ -1,5 +1,4 @@
 #include "service_registry.hpp"
-#include "../logging/logger.hpp"
 #include <algorithm>
 
 namespace sdl3cpp::di {
@@ -10,9 +9,8 @@ void ServiceRegistry::InitializeAll() {
     }
 
     // Call all initialization functions in registration order
-    for (size_t i = 0; i < initFunctions_.size(); ++i) {
-        logging::Logger::GetInstance().Info("Initializing service " + std::to_string(i + 1) + " of " + std::to_string(initFunctions_.size()));
-        initFunctions_[i]();
+    for (const auto& initFunc : initFunctions_) {
+        initFunc();
     }
 
     initialized_ = true;
