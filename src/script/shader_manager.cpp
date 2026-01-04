@@ -13,7 +13,7 @@ ShaderManager::ShaderManager(lua_State* L) : L_(L) {
     sdl3cpp::logging::TraceGuard trace;
 }
 
-std::unordered_map<std::string, services::ShaderPaths> ShaderManager::LoadShaderPathsMap() {
+std::unordered_map<std::string, sdl3cpp::services::ShaderPaths> ShaderManager::LoadShaderPathsMap() {
     lua_getglobal(L_, "get_shader_paths");
     if (!lua_isfunction(L_, -1)) {
         lua_pop(L_, 1);
@@ -46,7 +46,7 @@ std::unordered_map<std::string, services::ShaderPaths> ShaderManager::LoadShader
     return shaderMap;
 }
 
-services::ShaderPaths ShaderManager::ReadShaderPathsTable(int index) {
+sdl3cpp::services::ShaderPaths ShaderManager::ReadShaderPathsTable(int index) {
     ShaderPaths paths;
     int absIndex = lua_absindex(L_, index);
 

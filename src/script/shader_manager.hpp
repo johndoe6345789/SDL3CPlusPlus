@@ -12,12 +12,12 @@ class ShaderManager {
 public:
     explicit ShaderManager(lua_State* L);
 
-    std::unordered_map<std::string, services::ShaderPaths> LoadShaderPathsMap();
+    std::unordered_map<std::string, sdl3cpp::services::ShaderPaths> LoadShaderPathsMap();
 
 private:
     lua_State* L_;
 
-    services::ShaderPaths ReadShaderPathsTable(int index);
+    sdl3cpp::services::ShaderPaths ReadShaderPathsTable(int index);
     std::string GetLuaError();
 };
 

@@ -3,7 +3,7 @@
 #include <string>
 #include <array>
 
-namespace sdl3cpp {
+namespace sdl3cpp::services {
 
 /**
  * @brief Shader file paths for a shader program.
@@ -24,4 +24,4 @@ struct RenderCommand {
     std::array<float, 16> modelMatrix;
 };
 
-} // namespace sdl3cpp
+} // namespace sdl3cpp::services
