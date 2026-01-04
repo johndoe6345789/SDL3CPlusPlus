@@ -13,11 +13,6 @@ AudioManager::AudioManager(const std::filesystem::path& scriptDirectory)
     sdl3cpp::logging::TraceGuard trace;
 }
 
-void AudioManager::SetAudioPlayer(app::AudioPlayer* audioPlayer) {
-    // Stub - audio functionality now handled through services
-    sdl3cpp::logging::Logger::GetInstance().Trace("AudioManager::SetAudioPlayer: Stub implementation - using services now");
-}
-
 bool AudioManager::QueueAudioCommand(AudioCommandType type, std::string path, bool loop, std::string& error) {
     // Stub implementation - audio functionality now handled through services
     sdl3cpp::logging::Logger::GetInstance().Trace("AudioManager::QueueAudioCommand: Stub - " + path + " (type: " + 
