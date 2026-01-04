@@ -25,21 +25,6 @@ bool AudioManager::QueueAudioCommand(AudioCommandType type, std::string path, bo
     return true;
 }
 
-void AudioManager::ExecuteAudioCommand(app::AudioPlayer* player, const AudioCommand& command) {
-    auto resolved = ResolveScriptPath(command.path);
-    if (!std::filesystem::exists(resolved)) {
-        throw std::runtime_error("Audio file not found: " + resolved.string());
-    }
-    switch (command.type) {
-        case AudioCommandType::Background:
-            player->PlayBackground(resolved, command.loop);
-            break;
-        case AudioCommandType::Effect:
-            player->PlayEffect(resolved, command.loop);
-            break;
-    }
-}
-
 std::filesystem::path AudioManager::ResolveScriptPath(const std::string& requested) const {
     std::filesystem::path resolved(requested);
     if (!resolved.is_absolute()) {
