@@ -66,7 +66,7 @@ std::array<float, 16> LuaScriptService::GetViewProjectionMatrix(float aspect) {
     return engine_->GetViewProjectionMatrix(aspect);
 }
 
-std::unordered_map<std::string, script::ShaderManager::ShaderPaths> LuaScriptService::LoadShaderPathsMap() {
+std::unordered_map<std::string, sdl3cpp::services::ShaderPaths> LuaScriptService::LoadShaderPathsMap() {
     logging::TraceGuard trace;
 
     if (!engine_) {

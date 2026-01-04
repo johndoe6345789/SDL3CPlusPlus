@@ -64,7 +64,7 @@ public:
     /**
      * @brief Shutdown and release all Vulkan resources.
      */
-    virtual void Shutdown() = 0;
+    virtual void Shutdown() noexcept = 0;
 
     /**
      * @brief Load and compile shader programs.

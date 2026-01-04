@@ -30,7 +30,7 @@ public:
     std::array<float, 16> ComputeModelMatrix(int functionRef, float time) override;
     std::array<float, 16> GetViewProjectionMatrix(float aspect) override;
 
-    std::unordered_map<std::string, script::ShaderManager::ShaderPaths> LoadShaderPathsMap() override;
+    std::unordered_map<std::string, sdl3cpp::services::ShaderPaths> LoadShaderPathsMap() override;
 
     std::vector<script::GuiCommand> LoadGuiCommands() override;
     void UpdateGuiInput(const script::GuiInputSnapshot& input) override;

@@ -51,7 +51,6 @@ private:
 
     // Helper methods
     void CreateInstance(const std::vector<const char*>& requiredExtensions);
-    void CreateSurface(SDL_Window* window);
     void PickPhysicalDevice();
     bool IsDeviceSuitable(VkPhysicalDevice device) const;
     QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device) const;

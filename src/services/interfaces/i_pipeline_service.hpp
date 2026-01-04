@@ -8,6 +8,9 @@
 #include <vulkan/vulkan.h>
 
 namespace sdl3cpp::services {
+
+/**
+ * @brief Pipeline service interface.
  *
  * Manages Vulkan graphics pipelines and shader compilation.
  * Small, focused service (~200 lines) for pipeline management.
