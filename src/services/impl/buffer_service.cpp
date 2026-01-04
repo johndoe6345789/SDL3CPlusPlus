@@ -1,13 +1,12 @@
 #include "buffer_service.hpp"
-#include "../../logging/logger.hpp"
 #include "../../core/vulkan_utils.hpp"
 #include <cstring>
 #include <stdexcept>
 
 namespace sdl3cpp::services::impl {
 
-BufferService::BufferService(std::shared_ptr<IVulkanDeviceService> deviceService)
-    : deviceService_(std::move(deviceService)) {}
+BufferService::BufferService(std::shared_ptr<IVulkanDeviceService> deviceService, std::shared_ptr<ILogger> logger)
+    : deviceService_(std::move(deviceService)), logger_(logger) {}
 
 BufferService::~BufferService() {
     if (vertexBuffer_ != VK_NULL_HANDLE || indexBuffer_ != VK_NULL_HANDLE) {
@@ -16,7 +15,7 @@ BufferService::~BufferService() {
 }
 
 void BufferService::UploadVertexData(const std::vector<core::Vertex>& vertices) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     if (vertices.empty()) {
         throw std::runtime_error("Cannot upload vertex data: empty vertex array");
@@ -32,7 +31,7 @@ void BufferService::UploadVertexData(const std::vector<core::Vertex>& vertices) 
     }
 
     VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
-    logging::Logger::GetInstance().Info("Uploading vertex buffer: " + std::to_string(vertices.size()) +
+    logger_->Info("Uploading vertex buffer: " + std::to_string(vertices.size()) +
                                        " vertices (" + std::to_string(bufferSize / 1024) + " KB)");
 
     CreateBuffer(bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
