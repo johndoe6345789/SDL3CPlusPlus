@@ -1,22 +1,24 @@
 #include "graphics_service.hpp"
-#include "../../logging/logger.hpp"
+#include "../interfaces/i_logger.hpp"
 #include <stdexcept>
 
 namespace sdl3cpp::services::impl {
 
-GraphicsService::GraphicsService(std::shared_ptr<IVulkanDeviceService> deviceService,
+GraphicsService::GraphicsService(std::shared_ptr<ILogger> logger,
+                                 std::shared_ptr<IVulkanDeviceService> deviceService,
                                  std::shared_ptr<ISwapchainService> swapchainService,
                                  std::shared_ptr<IPipelineService> pipelineService,
                                  std::shared_ptr<IBufferService> bufferService,
                                  std::shared_ptr<IRenderCommandService> renderCommandService,
                                  std::shared_ptr<IWindowService> windowService)
-    : deviceService_(deviceService),
+    : logger_(std::move(logger)),
+      deviceService_(deviceService),
       swapchainService_(swapchainService),
       pipelineService_(pipelineService),
       bufferService_(bufferService),
       renderCommandService_(renderCommandService),
       windowService_(windowService) {
-    logging::TraceGuard trace("GraphicsService::GraphicsService");
+    logger_->TraceFunction(__func__);
 
     if (!deviceService_ || !swapchainService_ || !pipelineService_ || !bufferService_ || !renderCommandService_ || !windowService_) {
         throw std::invalid_argument("All graphics services must be provided");
@@ -24,14 +26,14 @@ GraphicsService::GraphicsService(std::shared_ptr<IVulkanDeviceService> deviceSer
 }
 
 GraphicsService::~GraphicsService() {
-    logging::TraceGuard trace("GraphicsService::~GraphicsService");
+    logger_->TraceFunction(__func__);
     if (initialized_) {
         Shutdown();
     }
 }
 
 void GraphicsService::Initialize() {
-    logging::TraceGuard trace("GraphicsService::Initialize");
+    logger_->TraceFunction(__func__);
 
     if (initialized_) {
         throw std::runtime_error("Graphics service already initialized");
@@ -42,14 +44,14 @@ void GraphicsService::Initialize() {
 }
 
 void GraphicsService::Shutdown() noexcept {
-    logging::TraceGuard trace("GraphicsService::Shutdown");
+    logger_->TraceFunction(__func__);
 
     // Services are shutdown individually by the registry
     initialized_ = false;
 }
 
 void GraphicsService::InitializeDevice(SDL_Window* window, const GraphicsConfig& config) {
-    logging::TraceGuard trace("GraphicsService::InitializeDevice");
+    logger_->TraceFunction(__func__);
 
     if (!initialized_) {
         throw std::runtime_error("Graphics service not initialized");
@@ -62,7 +64,7 @@ void GraphicsService::InitializeDevice(SDL_Window* window, const GraphicsConfig&
 }
 
 void GraphicsService::InitializeSwapchain() {
-    logging::TraceGuard trace("GraphicsService::InitializeSwapchain");
+    logger_->TraceFunction(__func__);
 
     if (!initialized_) {
         throw std::runtime_error("Graphics service not initialized");
@@ -74,7 +76,7 @@ void GraphicsService::InitializeSwapchain() {
 }
 
 void GraphicsService::RecreateSwapchain() {
-    logging::TraceGuard trace("GraphicsService::RecreateSwapchain");
+    logger_->TraceFunction(__func__);
 
     if (!initialized_) {
         throw std::runtime_error("Graphics service not initialized");
@@ -86,7 +88,7 @@ void GraphicsService::RecreateSwapchain() {
 }
 
 void GraphicsService::LoadShaders(const std::unordered_map<std::string, ShaderPaths>& shaders) {
-    logging::TraceGuard trace("GraphicsService::LoadShaders");
+    logger_->TraceFunction(__func__);
 
     if (!initialized_) {
         throw std::runtime_error("Graphics service not initialized");
@@ -100,7 +102,7 @@ void GraphicsService::LoadShaders(const std::unordered_map<std::string, ShaderPa
 }
 
 void GraphicsService::UploadVertexData(const std::vector<core::Vertex>& vertices) {
-    logging::TraceGuard trace("GraphicsService::UploadVertexData");
+    logger_->TraceFunction(__func__);
 
     if (!initialized_) {
         throw std::runtime_error("Graphics service not initialized");
@@ -110,7 +112,7 @@ void GraphicsService::UploadVertexData(const std::vector<core::Vertex>& vertices
 }
 
 void GraphicsService::UploadIndexData(const std::vector<uint16_t>& indices) {
-    logging::TraceGuard trace("GraphicsService::UploadIndexData");
+    logger_->TraceFunction(__func__);
 
     if (!initialized_) {
         throw std::runtime_error("Graphics service not initialized");
@@ -120,7 +122,7 @@ void GraphicsService::UploadIndexData(const std::vector<uint16_t>& indices) {
 }
 
 bool GraphicsService::BeginFrame() {
-    logging::TraceGuard trace("GraphicsService::BeginFrame");
+    logger_->TraceFunction(__func__);
 
     if (!initialized_) {
         return false;
@@ -131,7 +133,7 @@ bool GraphicsService::BeginFrame() {
 
 void GraphicsService::RenderScene(const std::vector<RenderCommand>& commands,
                                  const std::array<float, 16>& viewProj) {
-    logging::TraceGuard trace("GraphicsService::RenderScene");
+    logger_->TraceFunction(__func__);
 
     if (!initialized_) {
         return;
@@ -141,7 +143,7 @@ void GraphicsService::RenderScene(const std::vector<RenderCommand>& commands,
 }
 
 bool GraphicsService::EndFrame() {
-    logging::TraceGuard trace("GraphicsService::EndFrame");
+    logger_->TraceFunction(__func__);
 
     if (!initialized_) {
         return false;
@@ -151,7 +153,7 @@ bool GraphicsService::EndFrame() {
 }
 
 void GraphicsService::WaitIdle() {
-    logging::TraceGuard trace("GraphicsService::WaitIdle");
+    logger_->TraceFunction(__func__);
 
     if (!initialized_) {
         return;
@@ -161,7 +163,7 @@ void GraphicsService::WaitIdle() {
 }
 
 VkDevice GraphicsService::GetDevice() const {
-    logging::TraceGuard trace("GraphicsService::GetDevice");
+    logger_->TraceFunction(__func__);
 
     if (!initialized_) {
         return VK_NULL_HANDLE;
@@ -171,7 +173,7 @@ VkDevice GraphicsService::GetDevice() const {
 }
 
 VkPhysicalDevice GraphicsService::GetPhysicalDevice() const {
-    logging::TraceGuard trace("GraphicsService::GetPhysicalDevice");
+    logger_->TraceFunction(__func__);
 
     if (!initialized_) {
         return VK_NULL_HANDLE;
@@ -181,7 +183,7 @@ VkPhysicalDevice GraphicsService::GetPhysicalDevice() const {
 }
 
 VkExtent2D GraphicsService::GetSwapchainExtent() const {
-    logging::TraceGuard trace("GraphicsService::GetSwapchainExtent");
+    logger_->TraceFunction(__func__);
 
     if (!initialized_) {
         return {0, 0};
@@ -191,7 +193,7 @@ VkExtent2D GraphicsService::GetSwapchainExtent() const {
 }
 
 VkFormat GraphicsService::GetSwapchainFormat() const {
-    logging::TraceGuard trace("GraphicsService::GetSwapchainFormat");
+    logger_->TraceFunction(__func__);
 
     if (!initialized_) {
         return VK_FORMAT_UNDEFINED;
@@ -201,7 +203,7 @@ VkFormat GraphicsService::GetSwapchainFormat() const {
 }
 
 VkCommandBuffer GraphicsService::GetCurrentCommandBuffer() const {
-    logging::TraceGuard trace("GraphicsService::GetCurrentCommandBuffer");
+    logger_->TraceFunction(__func__);
 
     if (!initialized_) {
         return VK_NULL_HANDLE;
@@ -211,7 +213,7 @@ VkCommandBuffer GraphicsService::GetCurrentCommandBuffer() const {
 }
 
 VkQueue GraphicsService::GetGraphicsQueue() const {
-    logging::TraceGuard trace("GraphicsService::GetGraphicsQueue");
+    logger_->TraceFunction(__func__);
 
     if (!initialized_) {
         return VK_NULL_HANDLE;

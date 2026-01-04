@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../interfaces/i_physics_service.hpp"
+#include "../interfaces/i_logger.hpp"
 #include "../../script/physics_bridge.hpp"
 #include "../../di/lifecycle.hpp"
 #include <memory>
@@ -17,7 +18,7 @@ class BulletPhysicsService : public IPhysicsService,
                              public di::IInitializable,
                              public di::IShutdownable {
 public:
-    BulletPhysicsService() = default;
+    explicit BulletPhysicsService(std::shared_ptr<ILogger> logger);
     ~BulletPhysicsService() override;
 
     // IInitializable interface
@@ -52,6 +53,7 @@ public:
     void Clear() override;
 
 private:
+    std::shared_ptr<ILogger> logger_;
     std::unique_ptr<script::PhysicsBridge> physicsBridge_;
     bool initialized_ = false;
 };

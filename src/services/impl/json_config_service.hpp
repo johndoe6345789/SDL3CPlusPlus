@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../interfaces/i_config_service.hpp"
+#include "../interfaces/i_logger.hpp"
 #include <cstdint>
 #include <filesystem>
 #include <string>
@@ -30,25 +31,28 @@ public:
     /**
      * @brief Construct with default configuration.
      *
+     * @param logger Logger service for logging
      * @param argv0 First command-line argument (for finding default script path)
      */
-    explicit JsonConfigService(const char* argv0);
+    JsonConfigService(std::shared_ptr<ILogger> logger, const char* argv0);
 
     /**
      * @brief Construct by loading configuration from JSON.
      *
+     * @param logger Logger service for logging
      * @param configPath Path to JSON configuration file
      * @param dumpConfig Whether to print loaded config to stdout
      * @throws std::runtime_error if config file cannot be loaded or is invalid
      */
-    JsonConfigService(const std::filesystem::path& configPath, bool dumpConfig);
+    JsonConfigService(std::shared_ptr<ILogger> logger, const std::filesystem::path& configPath, bool dumpConfig);
 
     /**
      * @brief Construct with explicit configuration.
      *
+     * @param logger Logger service for logging
      * @param config Runtime configuration to use
      */
-    explicit JsonConfigService(const RuntimeConfig& config);
+    JsonConfigService(std::shared_ptr<ILogger> logger, const RuntimeConfig& config);
 
     // IConfigService interface implementation
     uint32_t GetWindowWidth() const override { return config_.width; }
@@ -66,11 +70,12 @@ public:
     const RuntimeConfig& GetConfig() const { return config_; }
 
 private:
+    std::shared_ptr<ILogger> logger_;
     RuntimeConfig config_;
 
     // Helper methods moved from main.cpp
     static std::filesystem::path FindScriptPath(const char* argv0);
-    static RuntimeConfig LoadFromJson(const std::filesystem::path& configPath, bool dumpConfig);
+    static RuntimeConfig LoadFromJson(std::shared_ptr<ILogger> logger, const std::filesystem::path& configPath, bool dumpConfig);
 };
 
 }  // namespace sdl3cpp::services::impl

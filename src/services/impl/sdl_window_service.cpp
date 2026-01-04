@@ -1,5 +1,5 @@
 #include "sdl_window_service.hpp"
-#include "../../logging/logger.hpp"
+#include "../interfaces/i_logger.hpp"
 #include "../../core/platform.hpp"
 #include <SDL3/SDL_vulkan.h>
 #include <chrono>
@@ -45,8 +45,8 @@ void ShowErrorDialog(const char* title, const std::string& message) {
 
 }  // namespace
 
-SdlWindowService::SdlWindowService(std::shared_ptr<events::EventBus> eventBus)
-    : eventBus_(std::move(eventBus)) {
+SdlWindowService::SdlWindowService(std::shared_ptr<ILogger> logger, std::shared_ptr<events::EventBus> eventBus)
+    : logger_(std::move(logger)), eventBus_(std::move(eventBus)) {
 }
 
 SdlWindowService::~SdlWindowService() {
@@ -56,7 +56,7 @@ SdlWindowService::~SdlWindowService() {
 }
 
 void SdlWindowService::Initialize() {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     if (initialized_) {
         throw std::runtime_error("SdlWindowService already initialized");
@@ -88,7 +88,7 @@ void SdlWindowService::Shutdown() noexcept {
 }
 
 void SdlWindowService::CreateWindow(const WindowConfig& config) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     if (!initialized_) {
         throw std::runtime_error("SdlWindowService not initialized");
@@ -138,9 +138,9 @@ void SdlWindowService::CreateWindow(const WindowConfig& config) {
 
     SDL_StartTextInput(window_);
 
-    logging::Logger::GetInstance().TraceVariable("window_", window_);
-    logging::Logger::GetInstance().TraceVariable("width", static_cast<int>(config.width));
-    logging::Logger::GetInstance().TraceVariable("height", static_cast<int>(config.height));
+    logger_->TraceVariable("window_", reinterpret_cast<void*>(window_));
+    logger_->TraceVariable("width", static_cast<int>(config.width));
+    logger_->TraceVariable("height", static_cast<int>(config.height));
 }
 
 void SdlWindowService::DestroyWindow() {

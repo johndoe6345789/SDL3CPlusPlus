@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../interfaces/i_window_service.hpp"
+#include "../interfaces/i_logger.hpp"
 #include "../../di/lifecycle.hpp"
 #include "../../events/event_bus.hpp"
 #include <memory>
@@ -21,9 +22,10 @@ public:
     /**
      * @brief Construct with event bus dependency.
      *
+     * @param logger Logger service for logging
      * @param eventBus Event bus for publishing window/input events
      */
-    explicit SdlWindowService(std::shared_ptr<events::EventBus> eventBus);
+    SdlWindowService(std::shared_ptr<ILogger> logger, std::shared_ptr<events::EventBus> eventBus);
 
     ~SdlWindowService() override;
 
@@ -44,6 +46,7 @@ public:
     bool IsMinimized() const override;
 
 private:
+    std::shared_ptr<ILogger> logger_;
     std::shared_ptr<events::EventBus> eventBus_;
     SDL_Window* window_ = nullptr;
     bool shouldClose_ = false;

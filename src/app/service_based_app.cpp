@@ -172,10 +172,12 @@ void ServiceBasedApp::RegisterServices() {
     // Configuration service
     services::impl::RuntimeConfig runtimeConfig;
     runtimeConfig.scriptPath = scriptPath_;
-    registry_.RegisterService<services::IConfigService, services::impl::JsonConfigService>(runtimeConfig);
+    registry_.RegisterService<services::IConfigService, services::impl::JsonConfigService>(
+        registry_.GetService<services::ILogger>(), runtimeConfig);
 
     // Window service
     registry_.RegisterService<services::IWindowService, services::impl::SdlWindowService>(
+        registry_.GetService<services::ILogger>(),
         registry_.GetService<events::EventBus>());
 
     // Input service
@@ -205,6 +207,7 @@ void ServiceBasedApp::RegisterServices() {
 
     // Graphics service (facade)
     registry_.RegisterService<services::IGraphicsService, services::impl::GraphicsService>(
+        registry_.GetService<services::ILogger>(),
         registry_.GetService<services::IVulkanDeviceService>(),
         registry_.GetService<services::ISwapchainService>(),
         registry_.GetService<services::IPipelineService>(),

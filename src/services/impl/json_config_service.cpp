@@ -1,5 +1,5 @@
 #include "json_config_service.hpp"
-#include "../../logging/logger.hpp"
+#include "../interfaces/i_logger.hpp"
 #include "../../logging/string_utils.hpp"
 #include <rapidjson/document.h>
 #include <rapidjson/istreamwrapper.h>
@@ -18,16 +18,20 @@ static const std::vector<const char*> kDeviceExtensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 };
 
-JsonConfigService::JsonConfigService(const char* argv0) {
+JsonConfigService::JsonConfigService(std::shared_ptr<ILogger> logger, const char* argv0)
+    : logger_(std::move(logger)), config_(RuntimeConfig{}) {
     config_.scriptPath = FindScriptPath(argv0);
+    logger_->Info("JsonConfigService initialized with default configuration");
 }
 
-JsonConfigService::JsonConfigService(const std::filesystem::path& configPath, bool dumpConfig) {
-    config_ = LoadFromJson(configPath, dumpConfig);
+JsonConfigService::JsonConfigService(std::shared_ptr<ILogger> logger, const std::filesystem::path& configPath, bool dumpConfig)
+    : logger_(std::move(logger)), config_(LoadFromJson(logger_, configPath, dumpConfig)) {
+    logger_->Info("JsonConfigService initialized from config file: " + configPath.string());
 }
 
-JsonConfigService::JsonConfigService(const RuntimeConfig& config)
-    : config_(config) {
+JsonConfigService::JsonConfigService(std::shared_ptr<ILogger> logger, const RuntimeConfig& config)
+    : logger_(std::move(logger)), config_(config) {
+    logger_->Info("JsonConfigService initialized with explicit configuration");
 }
 
 std::vector<const char*> JsonConfigService::GetDeviceExtensions() const {
@@ -52,12 +56,9 @@ std::filesystem::path JsonConfigService::FindScriptPath(const char* argv0) {
     return scriptPath;
 }
 
-RuntimeConfig JsonConfigService::LoadFromJson(const std::filesystem::path& configPath, bool dumpConfig) {
+RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger, const std::filesystem::path& configPath, bool dumpConfig) {
     using logging::ToString;
-    logging::Logger::GetInstance().TraceFunctionWithArgs(
-        "JsonConfigService::LoadFromJson",
-        configPath.string() + " " + ToString(dumpConfig)
-    );
+    logger->Trace("JsonConfigService::LoadFromJson", "LoadFromJson", configPath.string() + " " + ToString(dumpConfig), "");
 
     std::ifstream configStream(configPath);
     if (!configStream) {

@@ -124,6 +124,7 @@ if(BUILD_SDL3_APP)
             src/di/service_registry.cpp
             src/events/event_bus.cpp
             src/services/impl/json_config_service.cpp
+            src/services/impl/logger_service.cpp
             src/services/impl/sdl_window_service.cpp
             src/services/impl/sdl_input_service.cpp
             src/services/impl/vulkan_device_service.cpp

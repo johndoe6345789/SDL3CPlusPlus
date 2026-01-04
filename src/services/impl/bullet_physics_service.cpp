@@ -1,8 +1,12 @@
 #include "bullet_physics_service.hpp"
-#include "../../logging/logger.hpp"
+#include "../interfaces/i_logger.hpp"
 #include <stdexcept>
 
 namespace sdl3cpp::services::impl {
+
+BulletPhysicsService::BulletPhysicsService(std::shared_ptr<ILogger> logger)
+    : logger_(std::move(logger)) {
+}
 
 BulletPhysicsService::~BulletPhysicsService() {
     if (initialized_) {
@@ -11,7 +15,7 @@ BulletPhysicsService::~BulletPhysicsService() {
 }
 
 void BulletPhysicsService::Initialize(const btVector3& gravity) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     if (initialized_) {
         return;
@@ -20,11 +24,11 @@ void BulletPhysicsService::Initialize(const btVector3& gravity) {
     physicsBridge_ = std::make_unique<script::PhysicsBridge>();
     initialized_ = true;
 
-    logging::Logger::GetInstance().Info("Physics service initialized");
+    logger_->Info("Physics service initialized");
 }
 
 void BulletPhysicsService::Shutdown() noexcept {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     if (!initialized_) {
         return;

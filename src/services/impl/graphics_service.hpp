@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../interfaces/i_graphics_service.hpp"
+#include "../interfaces/i_logger.hpp"
 #include "../interfaces/i_vulkan_device_service.hpp"
 #include "../interfaces/i_swapchain_service.hpp"
 #include "../interfaces/i_pipeline_service.hpp"
@@ -22,7 +23,8 @@ class GraphicsService : public IGraphicsService,
                         public di::IInitializable,
                         public di::IShutdownable {
 public:
-    GraphicsService(std::shared_ptr<IVulkanDeviceService> deviceService,
+    GraphicsService(std::shared_ptr<ILogger> logger,
+                    std::shared_ptr<IVulkanDeviceService> deviceService,
                     std::shared_ptr<ISwapchainService> swapchainService,
                     std::shared_ptr<IPipelineService> pipelineService,
                     std::shared_ptr<IBufferService> bufferService,
@@ -56,6 +58,7 @@ public:
     VkQueue GetGraphicsQueue() const override;
 
 private:
+    std::shared_ptr<ILogger> logger_;
     std::shared_ptr<IVulkanDeviceService> deviceService_;
     std::shared_ptr<ISwapchainService> swapchainService_;
     std::shared_ptr<IPipelineService> pipelineService_;
