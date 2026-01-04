@@ -4,7 +4,7 @@
 #include "../interfaces/i_vulkan_device_service.hpp"
 #include "../interfaces/i_logger.hpp"
 #include "../../di/lifecycle.hpp"
-#include "../../events/event_bus.hpp"
+#include "../../events/i_event_bus.hpp"
 #include <memory>
 #include <vector>
 
@@ -21,7 +21,7 @@ class SwapchainService : public ISwapchainService,
                          public di::IShutdownable {
 public:
     explicit SwapchainService(std::shared_ptr<IVulkanDeviceService> deviceService,
-                             std::shared_ptr<events::EventBus> eventBus,
+                             std::shared_ptr<events::IEventBus> eventBus,
                              std::shared_ptr<ILogger> logger);
     ~SwapchainService() override;
 
@@ -50,7 +50,7 @@ public:
 
 private:
     std::shared_ptr<IVulkanDeviceService> deviceService_;
-    std::shared_ptr<events::EventBus> eventBus_;
+    std::shared_ptr<events::IEventBus> eventBus_;
     std::shared_ptr<ILogger> logger_;
 
     VkSwapchainKHR swapchain_ = VK_NULL_HANDLE;

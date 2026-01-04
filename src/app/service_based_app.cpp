@@ -1,8 +1,10 @@
 #include "service_based_app.hpp"
 #include "events/event_bus.hpp"
+#include "events/i_event_bus.hpp"
 #include "services/interfaces/i_window_service.hpp"
 #include "services/interfaces/i_graphics_service.hpp"
 #include "services/impl/json_config_service.hpp"
+#include "services/impl/platform_service.hpp"
 #include "services/impl/sdl_window_service.hpp"
 #include "services/impl/sdl_input_service.hpp"
 #include "services/impl/vulkan_device_service.hpp"
@@ -24,6 +26,7 @@
 #include "services/impl/bullet_physics_service.hpp"
 #include "services/impl/crash_recovery_service.hpp"
 #include "services/impl/logger_service.hpp"
+#include "services/interfaces/i_platform_service.hpp"
 #include <iostream>
 #include <stdexcept>
 
@@ -173,8 +176,12 @@ void ServiceBasedApp::RegisterServices() {
     registry_.RegisterService<services::ICrashRecoveryService, services::impl::CrashRecoveryService>(
         registry_.GetService<services::ILogger>());
 
+    // Platform service (needed for SDL error enrichment)
+    registry_.RegisterService<services::IPlatformService, services::impl::PlatformService>(
+        registry_.GetService<services::ILogger>());
+
     // Event bus (needed by window service)
-    registry_.RegisterService<events::EventBus, events::EventBus>();
+    registry_.RegisterService<events::IEventBus, events::EventBus>();
 
     // Configuration service
     services::impl::RuntimeConfig runtimeConfig;
@@ -185,11 +192,12 @@ void ServiceBasedApp::RegisterServices() {
     // Window service
     registry_.RegisterService<services::IWindowService, services::impl::SdlWindowService>(
         registry_.GetService<services::ILogger>(),
-        registry_.GetService<events::EventBus>());
+        registry_.GetService<services::IPlatformService>(),
+        registry_.GetService<events::IEventBus>());
 
     // Input service
     registry_.RegisterService<services::IInputService, services::impl::SdlInputService>(
-        registry_.GetService<events::EventBus>(),
+        registry_.GetService<events::IEventBus>(),
         registry_.GetService<services::ILogger>());
 
     // Audio service (needed before script bindings execute)
@@ -237,7 +245,7 @@ void ServiceBasedApp::RegisterServices() {
     // Swapchain service
     registry_.RegisterService<services::ISwapchainService, services::impl::SwapchainService>(
         registry_.GetService<services::IVulkanDeviceService>(),
-        registry_.GetService<events::EventBus>(),
+        registry_.GetService<events::IEventBus>(),
         registry_.GetService<services::ILogger>());
 
     // Pipeline service
@@ -273,7 +281,8 @@ void ServiceBasedApp::RegisterServices() {
 
     // GUI service
     registry_.RegisterService<services::IGuiService, services::impl::VulkanGuiService>(
-        registry_.GetService<services::ILogger>());
+        registry_.GetService<services::ILogger>(),
+        registry_.GetService<services::IBufferService>());
 
     // Physics service
     registry_.RegisterService<services::IPhysicsService, services::impl::BulletPhysicsService>(

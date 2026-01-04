@@ -1,7 +1,7 @@
 #include "buffer_service.hpp"
-#include "../../core/vulkan_utils.hpp"
 #include <cstring>
 #include <stdexcept>
+#include <string>
 
 namespace sdl3cpp::services::impl {
 
@@ -97,7 +97,94 @@ void BufferService::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
     auto device = deviceService_->GetDevice();
     auto physicalDevice = deviceService_->GetPhysicalDevice();
 
-    vulkan::utils::CreateBuffer(device, physicalDevice, size, usage, properties, buffer, bufferMemory);
+    if (logger_) {
+        logger_->Debug("Creating buffer with size " + std::to_string(size) + " bytes");
+    }
+
+    if (size == 0) {
+        if (logger_) {
+            logger_->Error("Cannot create buffer with size 0");
+        }
+        throw std::runtime_error("Cannot create buffer with size 0");
+    }
+
+    VkPhysicalDeviceMemoryProperties memProps;
+    vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProps);
+
+    uint64_t totalAvailable = 0;
+    for (uint32_t i = 0; i < memProps.memoryHeapCount; ++i) {
+        if (memProps.memoryHeaps[i].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT) {
+            totalAvailable += memProps.memoryHeaps[i].size;
+        }
+    }
+
+    if (size > totalAvailable) {
+        throw std::runtime_error("Requested buffer size (" +
+            std::to_string(size / (1024 * 1024)) + " MB) exceeds available GPU memory (" +
+            std::to_string(totalAvailable / (1024 * 1024)) + " MB)");
+    }
+
+    VkBufferCreateInfo bufferInfo{};
+    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bufferInfo.size = size;
+    bufferInfo.usage = usage;
+    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+    VkResult createResult = vkCreateBuffer(device, &bufferInfo, nullptr, &buffer);
+    if (createResult != VK_SUCCESS) {
+        throw std::runtime_error("Failed to create buffer (error code: " +
+            std::to_string(createResult) + ", size: " +
+            std::to_string(size / 1024) + " KB)");
+    }
+
+    VkMemoryRequirements memRequirements;
+    vkGetBufferMemoryRequirements(device, buffer, &memRequirements);
+
+    VkMemoryAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memRequirements.size;
+
+    bool foundType = false;
+    for (uint32_t i = 0; i < memProps.memoryTypeCount; ++i) {
+        if ((memRequirements.memoryTypeBits & (1 << i)) &&
+            (memProps.memoryTypes[i].propertyFlags & properties) == properties) {
+            allocInfo.memoryTypeIndex = i;
+            foundType = true;
+            if (logger_) {
+                logger_->Debug("Found suitable memory type: " + std::to_string(i));
+            }
+            break;
+        }
+    }
+
+    if (!foundType) {
+        vkDestroyBuffer(device, buffer, nullptr);
+        if (logger_) {
+            logger_->Error("Failed to find suitable memory type");
+        }
+        throw std::runtime_error("Failed to find suitable memory type");
+    }
+
+    VkResult allocResult = vkAllocateMemory(device, &allocInfo, nullptr, &bufferMemory);
+    if (allocResult != VK_SUCCESS) {
+        vkDestroyBuffer(device, buffer, nullptr);
+        std::string errorMsg = "Failed to allocate buffer memory.\n";
+        errorMsg += "Requested: " + std::to_string(memRequirements.size / (1024 * 1024)) + " MB\n";
+        errorMsg += "Error code: " + std::to_string(allocResult) + "\n";
+        if (allocResult == VK_ERROR_OUT_OF_DEVICE_MEMORY) {
+            errorMsg += "\nOut of GPU memory. Try:\n";
+            errorMsg += "- Closing other GPU-intensive applications\n";
+            errorMsg += "- Reducing window resolution\n";
+            errorMsg += "- Upgrading GPU or system memory";
+        } else if (allocResult == VK_ERROR_OUT_OF_HOST_MEMORY) {
+            errorMsg += "\nOut of system memory. Try:\n";
+            errorMsg += "- Closing other applications\n";
+            errorMsg += "- Adding more RAM to your system";
+        }
+        throw std::runtime_error(errorMsg);
+    }
+
+    vkBindBufferMemory(device, buffer, bufferMemory, 0);
 }
 
 void BufferService::CleanupBuffers() {

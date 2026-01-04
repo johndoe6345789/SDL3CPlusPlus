@@ -3,6 +3,7 @@
 #include "../di/lifecycle.hpp"
 #include "event_listener.hpp"
 #include "event_types.hpp"
+#include "i_event_bus.hpp"
 #include <mutex>
 #include <queue>
 #include <unordered_map>
@@ -40,7 +41,7 @@ namespace sdl3cpp::events {
  * eventBus.ProcessQueue();  // Call once per frame
  * @endcode
  */
-class EventBus : public di::IInitializable, public di::IShutdownable {
+class EventBus : public IEventBus, public di::IInitializable, public di::IShutdownable {
 public:
     EventBus() = default;
     ~EventBus() = default;
@@ -60,7 +61,7 @@ public:
      * @param type The event type to subscribe to
      * @param listener The callback function to invoke
      */
-    void Subscribe(EventType type, EventListener listener);
+    void Subscribe(EventType type, EventListener listener) override;
 
     /**
      * @brief Subscribe to all event types.
@@ -70,7 +71,7 @@ public:
      *
      * @param listener The callback function to invoke for all events
      */
-    void SubscribeAll(EventListener listener);
+    void SubscribeAll(EventListener listener) override;
 
     /**
      * @brief Publish an event synchronously.
@@ -83,7 +84,7 @@ public:
      *
      * @param event The event to publish
      */
-    void Publish(const Event& event);
+    void Publish(const Event& event) override;
 
     /**
      * @brief Publish an event asynchronously.
@@ -96,7 +97,7 @@ public:
      *
      * @param event The event to publish
      */
-    void PublishAsync(const Event& event);
+    void PublishAsync(const Event& event) override;
 
     /**
      * @brief Process all queued asynchronous events.
@@ -106,14 +107,14 @@ public:
      *
      * Thread-safe: Can be called while other threads are calling PublishAsync().
      */
-    void ProcessQueue();
+    void ProcessQueue() override;
 
     /**
      * @brief Remove all event listeners.
      *
      * Useful for testing or resetting the event bus state.
      */
-    void ClearListeners();
+    void ClearListeners() override;
 
     /**
      * @brief Get the number of listeners for a specific event type.
@@ -121,14 +122,14 @@ public:
      * @param type The event type to query
      * @return The number of listeners subscribed to this event type
      */
-    size_t GetListenerCount(EventType type) const;
+    size_t GetListenerCount(EventType type) const override;
 
     /**
      * @brief Get the number of global listeners.
      *
      * @return The number of listeners subscribed to all events
      */
-    size_t GetGlobalListenerCount() const;
+    size_t GetGlobalListenerCount() const override;
 
     // IInitializable interface
     void Initialize() override {}

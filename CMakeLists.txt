@@ -118,11 +118,11 @@ find_package(glm CONFIG REQUIRED)
 if(BUILD_SDL3_APP)
     add_executable(sdl3_app
             src/main.cpp
-            src/core/platform.cpp
             src/di/service_registry.cpp
             src/events/event_bus.cpp
             src/services/impl/json_config_service.cpp
             src/services/impl/logger_service.cpp
+            src/services/impl/platform_service.cpp
             src/services/impl/script_engine_service.cpp
             src/services/impl/scene_script_service.cpp
             src/services/impl/shader_script_service.cpp
@@ -148,7 +148,6 @@ if(BUILD_SDL3_APP)
             src/controllers/lifecycle_controller.cpp
             src/app/service_based_app.cpp
             src/gui/gui_renderer.cpp
-            src/core/vulkan_utils.cpp
             src/script/script_engine.cpp
             src/script/physics_bridge.cpp
             src/script/lua_helpers.cpp
@@ -178,7 +177,7 @@ enable_testing()
 
 add_executable(script_engine_tests
     tests/test_cube_script.cpp
-    src/core/platform.cpp
+    src/services/impl/platform_service.cpp
     src/script/script_engine.cpp
     src/script/physics_bridge.cpp
     src/script/scene_manager.cpp

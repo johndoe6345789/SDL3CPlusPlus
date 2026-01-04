@@ -3,7 +3,7 @@
 #include "../interfaces/i_input_service.hpp"
 #include "../interfaces/i_gui_script_service.hpp"
 #include "../interfaces/i_logger.hpp"
-#include "../../events/event_bus.hpp"
+#include "../../events/i_event_bus.hpp"
 #include <memory>
 
 namespace sdl3cpp::services::impl {
@@ -23,7 +23,7 @@ public:
      *
      * @param eventBus Event bus to subscribe to
      */
-    explicit SdlInputService(std::shared_ptr<events::EventBus> eventBus, std::shared_ptr<ILogger> logger);
+    explicit SdlInputService(std::shared_ptr<events::IEventBus> eventBus, std::shared_ptr<ILogger> logger);
 
     // IInputService interface
     void ProcessEvent(const SDL_Event& event) override;
@@ -36,7 +36,7 @@ public:
     void UpdateGuiInput() override;
 
 private:
-    std::shared_ptr<events::EventBus> eventBus_;
+    std::shared_ptr<events::IEventBus> eventBus_;
     std::shared_ptr<ILogger> logger_;
     InputState state_;
     script::GuiInputSnapshot guiInputSnapshot_;

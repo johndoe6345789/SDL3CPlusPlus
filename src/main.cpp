@@ -21,7 +21,7 @@
 #include "app/service_based_app.hpp"
 #include <SDL3/SDL_main.h>
 #include "services/interfaces/i_logger.hpp"
-#include "core/platform.hpp"
+#include "services/impl/platform_service.hpp"
 
 using namespace sdl3cpp::services;
 
@@ -168,7 +168,8 @@ RuntimeConfig LoadRuntimeConfigFromJson(const std::filesystem::path& configPath,
 }
 
 std::optional<std::filesystem::path> GetDefaultConfigPath() {
-    if (auto dir = sdl3cpp::platform::GetUserConfigDirectory()) {
+    sdl3cpp::services::impl::PlatformService platformService;
+    if (auto dir = platformService.GetUserConfigDirectory()) {
         return *dir / "default_runtime.json";
     }
     return std::nullopt;

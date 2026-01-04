@@ -5,7 +5,7 @@
 namespace sdl3cpp::services::impl {
 
 SwapchainService::SwapchainService(std::shared_ptr<IVulkanDeviceService> deviceService,
-                                   std::shared_ptr<events::EventBus> eventBus,
+                                   std::shared_ptr<events::IEventBus> eventBus,
                                    std::shared_ptr<ILogger> logger)
     : deviceService_(std::move(deviceService)), eventBus_(std::move(eventBus)), logger_(logger) {
     // Subscribe to window resize events

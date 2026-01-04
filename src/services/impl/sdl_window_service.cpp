@@ -1,6 +1,5 @@
 #include "sdl_window_service.hpp"
 #include "../interfaces/i_logger.hpp"
-#include "../../core/platform.hpp"
 #include <SDL3/SDL_vulkan.h>
 #include <chrono>
 #include <sstream>
@@ -10,7 +9,7 @@ namespace sdl3cpp::services::impl {
 
 namespace {
 
-std::string BuildSdlErrorMessage(const char* context) {
+std::string BuildSdlErrorMessage(const char* context, const std::shared_ptr<IPlatformService>& platformService) {
     std::ostringstream oss;
     oss << context;
     const char* sdlError = SDL_GetError();
@@ -20,17 +19,19 @@ std::string BuildSdlErrorMessage(const char* context) {
         oss << ": (SDL_GetError returned an empty string)";
     }
 
-    std::string platformError = sdl3cpp::platform::GetPlatformError();
-    if (!platformError.empty() && platformError != "No platform error") {
-        oss << " [" << platformError << "]";
+    if (platformService) {
+        std::string platformError = platformService->GetPlatformError();
+        if (!platformError.empty() && platformError != "No platform error") {
+            oss << " [" << platformError << "]";
+        }
     }
 
     return oss.str();
 }
 
-void ThrowSdlErrorIfFailed(bool success, const char* context) {
+void ThrowSdlErrorIfFailed(bool success, const char* context, const std::shared_ptr<IPlatformService>& platformService) {
     if (!success) {
-        throw std::runtime_error(BuildSdlErrorMessage(context));
+        throw std::runtime_error(BuildSdlErrorMessage(context, platformService));
     }
 }
 
@@ -45,8 +46,12 @@ void ShowErrorDialog(const char* title, const std::string& message) {
 
 }  // namespace
 
-SdlWindowService::SdlWindowService(std::shared_ptr<ILogger> logger, std::shared_ptr<events::EventBus> eventBus)
-    : logger_(std::move(logger)), eventBus_(std::move(eventBus)) {
+SdlWindowService::SdlWindowService(std::shared_ptr<ILogger> logger,
+                                   std::shared_ptr<IPlatformService> platformService,
+                                   std::shared_ptr<events::IEventBus> eventBus)
+    : logger_(std::move(logger)),
+      platformService_(std::move(platformService)),
+      eventBus_(std::move(eventBus)) {
 }
 
 SdlWindowService::~SdlWindowService() {
@@ -101,7 +106,7 @@ void SdlWindowService::CreateWindow(const WindowConfig& config) {
     // Initialize SDL here if not already initialized
     if (SDL_WasInit(0) == 0) {
         try {
-            ThrowSdlErrorIfFailed(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO), "SDL_Init failed");
+            ThrowSdlErrorIfFailed(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO), "SDL_Init failed", platformService_);
         } catch (const std::exception& e) {
             ShowErrorDialog("SDL Initialization Failed",
                 std::string("Failed to initialize SDL subsystems.\n\nError: ") + e.what());
@@ -109,7 +114,7 @@ void SdlWindowService::CreateWindow(const WindowConfig& config) {
         }
 
         try {
-            ThrowSdlErrorIfFailed(SDL_Vulkan_LoadLibrary(nullptr), "SDL_Vulkan_LoadLibrary failed");
+            ThrowSdlErrorIfFailed(SDL_Vulkan_LoadLibrary(nullptr), "SDL_Vulkan_LoadLibrary failed", platformService_);
         } catch (const std::exception& e) {
             ShowErrorDialog("Vulkan Library Load Failed",
                 std::string("Failed to load Vulkan library. Make sure Vulkan drivers are installed.\n\nError: ") + e.what());
@@ -130,7 +135,7 @@ void SdlWindowService::CreateWindow(const WindowConfig& config) {
     );
 
     if (!window_) {
-        std::string errorMsg = BuildSdlErrorMessage("SDL_CreateWindow failed");
+        std::string errorMsg = BuildSdlErrorMessage("SDL_CreateWindow failed", platformService_);
         ShowErrorDialog("Window Creation Failed",
             std::string("Failed to create application window.\n\nError: ") + errorMsg);
         throw std::runtime_error(errorMsg);

@@ -2,8 +2,9 @@
 
 #include "../interfaces/i_window_service.hpp"
 #include "../interfaces/i_logger.hpp"
+#include "../interfaces/i_platform_service.hpp"
 #include "../../di/lifecycle.hpp"
-#include "../../events/event_bus.hpp"
+#include "../../events/i_event_bus.hpp"
 #include <memory>
 #include <SDL3/SDL.h>
 
@@ -25,7 +26,9 @@ public:
      * @param logger Logger service for logging
      * @param eventBus Event bus for publishing window/input events
      */
-    SdlWindowService(std::shared_ptr<ILogger> logger, std::shared_ptr<events::EventBus> eventBus);
+    SdlWindowService(std::shared_ptr<ILogger> logger,
+                     std::shared_ptr<IPlatformService> platformService,
+                     std::shared_ptr<events::IEventBus> eventBus);
 
     ~SdlWindowService() override;
 
@@ -47,7 +50,8 @@ public:
 
 private:
     std::shared_ptr<ILogger> logger_;
-    std::shared_ptr<events::EventBus> eventBus_;
+    std::shared_ptr<IPlatformService> platformService_;
+    std::shared_ptr<events::IEventBus> eventBus_;
     SDL_Window* window_ = nullptr;
     bool shouldClose_ = false;
     bool initialized_ = false;

@@ -6,7 +6,7 @@
 #include "../services/interfaces/i_physics_service.hpp"
 #include "../services/interfaces/i_scene_service.hpp"
 #include "../services/interfaces/i_audio_service.hpp"
-#include "../events/event_bus.hpp"
+#include "../events/i_event_bus.hpp"
 #include "../events/event_types.hpp"
 #include <chrono>
 
@@ -60,7 +60,7 @@ void ApplicationController::HandleEvents() {
     }
 
     // Check for quit events
-    auto eventBus = registry_.GetService<events::EventBus>();
+    auto eventBus = registry_.GetService<events::IEventBus>();
     if (eventBus) {
         // Process queued events
         eventBus->ProcessQueue();

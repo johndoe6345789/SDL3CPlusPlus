@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../interfaces/i_gui_service.hpp"
+#include "../interfaces/i_buffer_service.hpp"
 #include "../interfaces/i_logger.hpp"
 #include "../../gui/gui_renderer.hpp"
 #include "../../di/lifecycle.hpp"
@@ -17,7 +18,8 @@ namespace sdl3cpp::services::impl {
 class VulkanGuiService : public IGuiService,
                          public di::IShutdownable {
 public:
-    explicit VulkanGuiService(std::shared_ptr<ILogger> logger);
+    VulkanGuiService(std::shared_ptr<ILogger> logger,
+                     std::shared_ptr<IBufferService> bufferService);
     ~VulkanGuiService() override;
 
     // IGuiService interface
@@ -38,6 +40,7 @@ public:
 
 private:
     std::shared_ptr<ILogger> logger_;
+    std::shared_ptr<IBufferService> bufferService_;
     std::unique_ptr<gui::GuiRenderer> renderer_;
     bool initialized_ = false;
 };

@@ -1,14 +1,22 @@
-#include "core/platform.hpp"
+#include "platform_service.hpp"
 
 #include <cstdlib>
+#include <utility>
 
 #ifdef _WIN32
 #include <windows.h>
 #endif
 
-namespace sdl3cpp::platform {
+namespace sdl3cpp::services::impl {
 
-std::optional<std::filesystem::path> GetUserConfigDirectory() {
+PlatformService::PlatformService(std::shared_ptr<ILogger> logger)
+    : logger_(std::move(logger)) {
+}
+
+std::optional<std::filesystem::path> PlatformService::GetUserConfigDirectory() const {
+    if (logger_) {
+        logger_->Trace("PlatformService", "GetUserConfigDirectory");
+    }
 #ifdef _WIN32
     if (const char* appData = std::getenv("APPDATA")) {
         return std::filesystem::path(appData) / "sdl3cpp";
@@ -25,8 +33,7 @@ std::optional<std::filesystem::path> GetUserConfigDirectory() {
 }
 
 #ifdef _WIN32
-namespace {
-std::string FormatWin32Error(DWORD errorCode) {
+std::string PlatformService::FormatWin32Error(unsigned long errorCode) const {
     if (errorCode == ERROR_SUCCESS) {
         return "ERROR_SUCCESS";
     }
@@ -44,7 +51,6 @@ std::string FormatWin32Error(DWORD errorCode) {
     std::string message;
     if (length > 0 && buffer != nullptr) {
         message = std::string(buffer, length);
-        // Remove trailing newlines
         while (!message.empty() && (message.back() == '\n' || message.back() == '\r')) {
             message.pop_back();
         }
@@ -54,10 +60,12 @@ std::string FormatWin32Error(DWORD errorCode) {
     }
     return message;
 }
-} // anonymous namespace
 #endif
 
-std::string GetPlatformError() {
+std::string PlatformService::GetPlatformError() const {
+    if (logger_) {
+        logger_->Trace("PlatformService", "GetPlatformError");
+    }
 #ifdef _WIN32
     DWORD win32Error = ::GetLastError();
     if (win32Error != ERROR_SUCCESS) {
@@ -69,4 +77,4 @@ std::string GetPlatformError() {
 #endif
 }
 
-} // namespace sdl3cpp::platform
+}  // namespace sdl3cpp::services::impl

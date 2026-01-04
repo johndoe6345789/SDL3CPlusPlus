@@ -1,7 +1,5 @@
 #include "gui/gui_renderer.hpp"
 
-#include "../core/vulkan_utils.hpp"
-
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -17,7 +15,6 @@
 #include "../../third_party/font8x8_basic.h"
 
 namespace script = sdl3cpp::script;
-namespace vulkan_utils = sdl3cpp::vulkan::utils;
 
 namespace sdl3cpp::gui {
 namespace {
@@ -350,12 +347,14 @@ private:
 };
 
 GuiRenderer::GuiRenderer(VkDevice device, VkPhysicalDevice physicalDevice, VkFormat swapchainFormat,
-                         const std::filesystem::path& scriptDirectory)
+                         const std::filesystem::path& scriptDirectory,
+                         std::shared_ptr<services::IBufferService> bufferService)
     : device_(device),
       physicalDevice_(physicalDevice),
       swapchainFormat_(swapchainFormat),
       scriptDirectory_(scriptDirectory),
-      canvas_(std::make_unique<Canvas>()) {
+      canvas_(std::make_unique<Canvas>()),
+      bufferService_(std::move(bufferService)) {
 }
 
     GuiRenderer::~GuiRenderer() {
@@ -516,7 +515,10 @@ GuiRenderer::GuiRenderer(VkDevice device, VkPhysicalDevice physicalDevice, VkFor
         if (size == 0) {
             return;
         }
-        vulkan_utils::CreateBuffer(device_, physicalDevice_, static_cast<VkDeviceSize>(size),
+        if (!bufferService_) {
+            throw std::runtime_error("Buffer service not available for GUI staging buffer");
+        }
+        bufferService_->CreateBuffer(static_cast<VkDeviceSize>(size),
                              VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                              VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                              stagingBuffer_, stagingMemory_);

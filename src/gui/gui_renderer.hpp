@@ -9,6 +9,7 @@
 #include <vulkan/vulkan.h>
 
 #include "script/gui_types.hpp"
+#include "services/interfaces/i_buffer_service.hpp"
 
 namespace sdl3cpp::gui {
 
@@ -28,7 +29,8 @@ struct ParsedSvg {
 class GuiRenderer {
 public:
     GuiRenderer(VkDevice device, VkPhysicalDevice physicalDevice, VkFormat swapchainFormat,
-                const std::filesystem::path& scriptDirectory);
+                const std::filesystem::path& scriptDirectory,
+                std::shared_ptr<services::IBufferService> bufferService);
     ~GuiRenderer();
 
     GuiRenderer(const GuiRenderer&) = delete;
@@ -63,6 +65,7 @@ private:
     uint32_t canvasHeight_ = 0;
     std::unique_ptr<Canvas> canvas_;
     std::unordered_map<std::string, ParsedSvg> svgCache_;
+    std::shared_ptr<services::IBufferService> bufferService_;
 };
 
 } // namespace sdl3cpp::gui

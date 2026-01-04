@@ -4,8 +4,10 @@
 
 namespace sdl3cpp::services::impl {
 
-VulkanGuiService::VulkanGuiService(std::shared_ptr<ILogger> logger)
-    : logger_(std::move(logger)) {
+VulkanGuiService::VulkanGuiService(std::shared_ptr<ILogger> logger,
+                                   std::shared_ptr<IBufferService> bufferService)
+    : logger_(std::move(logger)),
+      bufferService_(std::move(bufferService)) {
 }
 
 VulkanGuiService::~VulkanGuiService() {
@@ -24,7 +26,7 @@ void VulkanGuiService::Initialize(VkDevice device,
         return;
     }
 
-    renderer_ = std::make_unique<gui::GuiRenderer>(device, physicalDevice, format, resourcePath);
+    renderer_ = std::make_unique<gui::GuiRenderer>(device, physicalDevice, format, resourcePath, bufferService_);
     initialized_ = true;
 
     logger_->Info("GUI service initialized");
