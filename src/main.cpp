@@ -26,6 +26,11 @@
 
 namespace sdl3cpp::app {
 std::atomic<bool> g_signalReceived{false};
+
+constexpr uint32_t kWidth = 1024;
+constexpr uint32_t kHeight = 768;
+const std::vector<const char*> kDeviceExtensions = {"VK_KHR_swapchain"};
+
 }
 
 namespace {
