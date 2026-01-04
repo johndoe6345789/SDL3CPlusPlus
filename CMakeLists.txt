@@ -140,16 +140,9 @@ if(BUILD_SDL3_APP)
             src/controllers/application_controller.cpp
             src/controllers/render_controller.cpp
             src/controllers/lifecycle_controller.cpp
-            src/app/sdl3_app_core.cpp
             src/app/audio_player.cpp
-            src/app/sdl3_app_device.cpp
-            src/app/sdl3_app_swapchain.cpp
-            src/app/sdl3_app_pipeline.cpp
-            src/app/sdl3_app_build.cpp
             src/app/service_based_app.cpp
             src/gui/gui_renderer.cpp
-            src/app/sdl3_app_render.cpp
-            src/app/vulkan_api.cpp
             src/script/script_engine.cpp
             src/script/physics_bridge.cpp
             src/script/lua_helpers.cpp
