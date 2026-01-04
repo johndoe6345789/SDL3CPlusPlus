@@ -139,14 +139,14 @@ if(BUILD_SDL3_APP)
             src/services/impl/render_command_service.cpp
             src/services/impl/sdl_audio_service.cpp
             src/services/impl/crash_recovery_service.cpp
+            src/services/impl/lifecycle_service.cpp
+            src/services/impl/application_loop_service.cpp
+            src/services/impl/render_coordinator_service.cpp
             src/services/impl/gui_renderer_service.cpp
             src/services/impl/vulkan_gui_service.cpp
             src/services/impl/bullet_physics_service.cpp
             src/services/impl/scene_service.cpp
             src/services/impl/graphics_service.cpp
-            src/controllers/application_controller.cpp
-            src/controllers/render_controller.cpp
-            src/controllers/lifecycle_controller.cpp
             src/app/service_based_app.cpp
             src/gui/gui_renderer.cpp
             src/script/script_engine.cpp

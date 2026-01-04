@@ -4,8 +4,9 @@
 #include <memory>
 #include <SDL3/SDL.h>
 #include "di/service_registry.hpp"
-#include "controllers/lifecycle_controller.hpp"
-#include "controllers/application_controller.hpp"
+#include "services/interfaces/i_application_loop_service.hpp"
+#include "services/interfaces/i_lifecycle_service.hpp"
+#include "services/interfaces/i_render_coordinator_service.hpp"
 #include "services/interfaces/i_application_service.hpp"
 #include "services/interfaces/i_logger.hpp"
 #include "services/interfaces/i_crash_recovery_service.hpp"
@@ -52,8 +53,9 @@ private:
 
     std::filesystem::path scriptPath_;
     di::ServiceRegistry registry_;
-    std::unique_ptr<controllers::LifecycleController> lifecycleController_;
-    std::unique_ptr<controllers::ApplicationController> applicationController_;
+    std::shared_ptr<services::ILifecycleService> lifecycleService_;
+    std::shared_ptr<services::IApplicationLoopService> applicationLoopService_;
+    std::shared_ptr<services::IRenderCoordinatorService> renderCoordinatorService_;
     std::shared_ptr<services::ILogger> logger_;
     std::shared_ptr<services::ICrashRecoveryService> crashRecoveryService_;
 };

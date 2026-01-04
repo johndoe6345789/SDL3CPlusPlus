@@ -3,7 +3,12 @@
 #include "events/i_event_bus.hpp"
 #include "services/interfaces/i_window_service.hpp"
 #include "services/interfaces/i_graphics_service.hpp"
+#include "services/interfaces/i_application_loop_service.hpp"
+#include "services/interfaces/i_lifecycle_service.hpp"
 #include "services/impl/json_config_service.hpp"
+#include "services/impl/lifecycle_service.hpp"
+#include "services/impl/application_loop_service.hpp"
+#include "services/impl/render_coordinator_service.hpp"
 #include "services/impl/platform_service.hpp"
 #include "services/impl/sdl_window_service.hpp"
 #include "services/impl/sdl_input_service.hpp"
@@ -53,10 +58,11 @@ ServiceBasedApp::ServiceBasedApp(const std::filesystem::path& scriptPath)
             crashRecoveryService_->Initialize();
         }
         
-        logger_->Info("ServiceBasedApp::ServiceBasedApp: Creating controllers");
+        logger_->Info("ServiceBasedApp::ServiceBasedApp: Resolving lifecycle services");
 
-        lifecycleController_ = std::make_unique<controllers::LifecycleController>(registry_);
-        applicationController_ = std::make_unique<controllers::ApplicationController>(registry_);
+        lifecycleService_ = registry_.GetService<services::ILifecycleService>();
+        applicationLoopService_ = registry_.GetService<services::IApplicationLoopService>();
+        renderCoordinatorService_ = registry_.GetService<services::IRenderCoordinatorService>();
         
         logger_->Info("ServiceBasedApp::ServiceBasedApp: constructor completed");
     } catch (const std::exception& e) {
@@ -78,8 +84,9 @@ ServiceBasedApp::~ServiceBasedApp() {
         crashRecoveryService_->Shutdown();
     }
 
-    applicationController_.reset();
-    lifecycleController_.reset();
+    renderCoordinatorService_.reset();
+    applicationLoopService_.reset();
+    lifecycleService_.reset();
 
     logger_->Trace("ServiceBasedApp", "~ServiceBasedApp", "", "Exiting");
 }
@@ -89,7 +96,7 @@ void ServiceBasedApp::Run() {
 
     try {
         // Initialize all services
-        lifecycleController_->InitializeAll();
+        lifecycleService_->InitializeAll();
 
         // Create the window
         auto windowService = registry_.GetService<services::IWindowService>();
@@ -115,7 +122,7 @@ void ServiceBasedApp::Run() {
         // Run the main application loop with crash recovery
         if (crashRecoveryService_) {
             bool success = crashRecoveryService_->ExecuteWithTimeout(
-                [this]() { applicationController_->Run(); },
+                [this]() { applicationLoopService_->Run(); },
                 30000, // 30 second timeout for the main loop
                 "Main Application Loop"
             );
@@ -124,16 +131,16 @@ void ServiceBasedApp::Run() {
                 logger_->Warn("ServiceBasedApp::Run: Main loop timed out, attempting recovery");
                 if (crashRecoveryService_->AttemptRecovery()) {
                     logger_->Info("ServiceBasedApp::Run: Recovery successful, restarting main loop");
-                    applicationController_->Run(); // Try again
+                    applicationLoopService_->Run(); // Try again
                 }
             }
         } else {
             // Fallback if no crash recovery service
-            applicationController_->Run();
+            applicationLoopService_->Run();
         }
 
         // Shutdown all services
-        lifecycleController_->ShutdownAll();
+        lifecycleService_->ShutdownAll();
 
         logger_->Trace("ServiceBasedApp", "Run", "", "Exiting");
 
@@ -175,6 +182,11 @@ void ServiceBasedApp::RegisterServices() {
 
     // Crash recovery service (needed early for crash detection)
     registry_.RegisterService<services::ICrashRecoveryService, services::impl::CrashRecoveryService>(
+        registry_.GetService<services::ILogger>());
+
+    // Lifecycle service
+    registry_.RegisterService<services::ILifecycleService, services::impl::LifecycleService>(
+        registry_,
         registry_.GetService<services::ILogger>());
 
     // Platform service (needed for SDL error enrichment)
@@ -292,6 +304,25 @@ void ServiceBasedApp::RegisterServices() {
     // Physics service
     registry_.RegisterService<services::IPhysicsService, services::impl::BulletPhysicsService>(
         registry_.GetService<services::ILogger>());
+
+    // Render coordinator service
+    registry_.RegisterService<services::IRenderCoordinatorService, services::impl::RenderCoordinatorService>(
+        registry_.GetService<services::ILogger>(),
+        registry_.GetService<services::IGraphicsService>(),
+        registry_.GetService<services::ISceneScriptService>(),
+        registry_.GetService<services::IGuiScriptService>(),
+        registry_.GetService<services::IGuiService>(),
+        registry_.GetService<services::ISceneService>());
+
+    // Application loop service
+    registry_.RegisterService<services::IApplicationLoopService, services::impl::ApplicationLoopService>(
+        registry_.GetService<services::ILogger>(),
+        registry_.GetService<services::IWindowService>(),
+        registry_.GetService<events::IEventBus>(),
+        registry_.GetService<services::IInputService>(),
+        registry_.GetService<services::IPhysicsService>(),
+        registry_.GetService<services::ISceneService>(),
+        registry_.GetService<services::IAudioService>());
 
     logger_->Trace("ServiceBasedApp", "RegisterServices", "", "Exiting");
 }
