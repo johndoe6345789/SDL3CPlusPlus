@@ -121,6 +121,8 @@ if(BUILD_SDL3_APP)
             src/logging/logger.cpp
             src/logging/string_utils.cpp
             src/core/platform.cpp
+            src/di/service_registry.cpp
+            src/events/event_bus.cpp
             src/app/sdl3_app_core.cpp
             src/app/audio_player.cpp
             src/app/sdl3_app_device.cpp
