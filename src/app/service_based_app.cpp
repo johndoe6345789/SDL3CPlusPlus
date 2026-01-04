@@ -68,8 +68,6 @@ void ServiceBasedApp::Run() {
         }
 
         // Initialize graphics after window is created
-        // Temporarily disabled for testing
-        /*
         auto graphicsService = registry_.GetService<services::IGraphicsService>();
         if (graphicsService && windowService) {
             services::GraphicsConfig graphicsConfig;
@@ -78,7 +76,6 @@ void ServiceBasedApp::Run() {
             graphicsService->InitializeDevice(windowService->GetNativeHandle(), graphicsConfig);
             graphicsService->InitializeSwapchain();
         }
-        */
 
         // Connect services that depend on each other
         auto scriptService = registry_.GetService<services::IScriptService>();
