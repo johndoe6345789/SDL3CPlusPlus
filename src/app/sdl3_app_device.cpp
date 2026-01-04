@@ -58,9 +58,34 @@ void Sdl3App::CreateInstance() {
     TRACE_VAR(extensionCount);
     TRACE_VAR(extensionList.size());
 
+    // Enable validation layers if available
+    std::vector<const char*> layerList;
+    uint32_t layerCount;
+    vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+    std::vector<VkLayerProperties> availableLayers(layerCount);
+    vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+    
+    const char* validationLayer = "VK_LAYER_KHRONOS_validation";
+    bool validationAvailable = false;
+    for (const auto& layer : availableLayers) {
+        if (strcmp(layer.layerName, validationLayer) == 0) {
+            validationAvailable = true;
+            break;
+        }
+    }
+    
+    if (validationAvailable) {
+        layerList.push_back(validationLayer);
+        std::cout << "Validation layer enabled: " << validationLayer << "\n";
+    } else {
+        std::cout << "Validation layer not available: " << validationLayer << "\n";
+    }
+
     VkInstanceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     createInfo.pApplicationInfo = &appInfo;
+    createInfo.enabledLayerCount = static_cast<uint32_t>(layerList.size());
+    createInfo.ppEnabledLayerNames = layerList.data();
     createInfo.enabledExtensionCount = static_cast<uint32_t>(extensionList.size());
     createInfo.ppEnabledExtensionNames = extensionList.data();
 
