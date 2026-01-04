@@ -56,6 +56,16 @@ public:
         }
     }
 
+    template <typename... Args>
+    void TraceFunctionWithArgs(const std::string& funcName, const Args&... args) {
+        if (GetLevel() <= LogLevel::TRACE) {
+            std::ostringstream oss;
+            oss << "Entering " << funcName << " with args: ";
+            ((oss << args << " "), ...);
+            Trace(oss.str());
+        }
+    }
+
 private:
     Logger();
     ~Logger();
@@ -82,6 +92,7 @@ private:
 
 #define TRACE_FUNCTION() sdl3cpp::logging::Logger::GetInstance().TraceFunction(__func__)
 #define TRACE_VAR(var) sdl3cpp::logging::Logger::GetInstance().TraceVariable(#var, var)
+#define TRACE_FUNCTION_ARGS(...) sdl3cpp::logging::Logger::GetInstance().TraceFunctionWithArgs(__func__, __VA_ARGS__)
 
 } // namespace sdl3cpp::logging
 
