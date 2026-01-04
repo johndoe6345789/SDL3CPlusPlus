@@ -86,7 +86,7 @@ std::array<float, 16> ScriptEngine::GetViewProjectionMatrix(float aspect) {
     return sceneManager_->GetViewProjectionMatrix(aspect);
 }
 
-std::unordered_map<std::string, ShaderManager::ShaderPaths> ScriptEngine::LoadShaderPathsMap() {
+std::unordered_map<std::string, sdl3cpp::services::ShaderPaths> ScriptEngine::LoadShaderPathsMap() {
     return shaderManager_->LoadShaderPathsMap();
 }
 
