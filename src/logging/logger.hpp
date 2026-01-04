@@ -40,6 +40,22 @@ public:
     void Warn(const std::string& message) { Log(LogLevel::WARN, message); }
     void Error(const std::string& message) { Log(LogLevel::ERROR, message); }
 
+    // Tracing methods
+    void TraceFunction(const std::string& funcName) {
+        if (GetLevel() <= LogLevel::TRACE) {
+            Trace(std::string("Entering ") + funcName);
+        }
+    }
+
+    template <typename T>
+    void TraceVariable(const std::string& name, const T& value) {
+        if (GetLevel() <= LogLevel::TRACE) {
+            std::ostringstream oss;
+            oss << name << " = " << value;
+            Trace(oss.str());
+        }
+    }
+
 private:
     Logger();
     ~Logger();
@@ -63,6 +79,9 @@ private:
 #define LOG_INFO(msg) sdl3cpp::logging::Logger::GetInstance().Info(msg)
 #define LOG_WARN(msg) sdl3cpp::logging::Logger::GetInstance().Warn(msg)
 #define LOG_ERROR(msg) sdl3cpp::logging::Logger::GetInstance().Error(msg)
+
+#define TRACE_FUNCTION() sdl3cpp::logging::Logger::GetInstance().TraceFunction(__func__)
+#define TRACE_VAR(var) sdl3cpp::logging::Logger::GetInstance().TraceVariable(#var, var)
 
 } // namespace sdl3cpp::logging
 

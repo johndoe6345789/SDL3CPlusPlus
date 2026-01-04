@@ -1,5 +1,4 @@
 #include "app/sdl3_app.hpp"
-#include "app/trace.hpp"
 #include "app/vulkan_api.hpp"
 #include "logging/logger.hpp"
 

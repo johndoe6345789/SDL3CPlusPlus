@@ -25,6 +25,7 @@ ScriptEngine::ScriptEngine(const std::filesystem::path& scriptPath, bool debugEn
       shaderManager_(std::make_unique<ShaderManager>(L_)),
       guiManager_(std::make_unique<GuiManager>(L_)),
       audioManager_(std::make_unique<AudioManager>(scriptDirectory_)) {
+    TRACE_FUNCTION();
     if (!L_) {
         LOG_ERROR("Failed to create Lua state");
         throw std::runtime_error("Failed to create Lua state");

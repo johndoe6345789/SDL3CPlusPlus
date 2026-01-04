@@ -18,7 +18,6 @@
 #include <string>
 #include <utility>
 
-#include "app/trace.hpp"
 #include "app/sdl3_app.hpp"
 #include <SDL3/SDL_main.h>
 #include "logging/logger.hpp"
@@ -315,7 +314,6 @@ int main(int argc, char** argv) {
     SetupSignalHandlers();
     try {
         AppOptions options = ParseCommandLine(argc, argv);
-        sdl3cpp::app::TraceLogger::SetEnabled(options.traceEnabled);
         // Initialize logger
         auto& logger = sdl3cpp::logging::Logger::GetInstance();
         if (options.traceEnabled) {
@@ -324,6 +322,7 @@ int main(int argc, char** argv) {
             logger.SetLevel(sdl3cpp::logging::LogLevel::INFO);
         }
         logger.EnableConsoleOutput(true);
+        logger.SetOutputFile("sdl3_app.log");
         LOG_INFO("Application starting");
         LogRuntimeConfig(options.runtimeConfig);
         if (options.seedOutput) {

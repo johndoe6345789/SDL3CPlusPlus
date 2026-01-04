@@ -2,6 +2,7 @@
 #include "script/script_engine.hpp"
 #include "script/lua_helpers.hpp"
 #include "script/mesh_loader.hpp"
+#include "logging/logger.hpp"
 
 #include <btBulletDynamicsCommon.h>
 #include <lua.hpp>
@@ -9,6 +10,7 @@
 namespace sdl3cpp::script {
 
 void LuaBindings::RegisterBindings(lua_State* L, ScriptEngine* engine) {
+    TRACE_FUNCTION();
     lua_pushlightuserdata(L, engine);
     lua_pushcclosure(L, &LoadMeshFromFile, 1);
     lua_setglobal(L, "load_mesh_from_file");
@@ -39,8 +41,10 @@ void LuaBindings::RegisterBindings(lua_State* L, ScriptEngine* engine) {
 }
 
 int LuaBindings::LoadMeshFromFile(lua_State* L) {
+    TRACE_FUNCTION();
     auto* engine = static_cast<ScriptEngine*>(lua_touserdata(L, lua_upvalueindex(1)));
     const char* path = luaL_checkstring(L, 1);
+    TRACE_VAR(path);
     
     MeshPayload payload;
     std::string error;
@@ -56,8 +60,10 @@ int LuaBindings::LoadMeshFromFile(lua_State* L) {
 }
 
 int LuaBindings::PhysicsCreateBox(lua_State* L) {
+    TRACE_FUNCTION();
     auto* engine = static_cast<ScriptEngine*>(lua_touserdata(L, lua_upvalueindex(1)));
     const char* name = luaL_checkstring(L, 1);
+    TRACE_VAR(name);
     
     if (!lua_istable(L, 2) || !lua_istable(L, 4) || !lua_istable(L, 5)) {
         luaL_error(L, "physics_create_box expects vector tables for half extents, origin, and rotation");
