@@ -19,17 +19,9 @@ void AudioManager::SetAudioPlayer(app::AudioPlayer* audioPlayer) {
 }
 
 bool AudioManager::QueueAudioCommand(AudioCommandType type, std::string path, bool loop, std::string& error) {
-    if (audioPlayer_) {
-        try {
-            AudioCommand command{type, std::move(path), loop};
-            ExecuteAudioCommand(audioPlayer_, command);
-            return true;
-        } catch (const std::exception& exc) {
-            error = exc.what();
-            return false;
-        }
-    }
-    pendingAudioCommands_.push_back(AudioCommand{type, std::move(path), loop});
+    // Stub implementation - audio functionality now handled through services
+    sdl3cpp::logging::Logger::GetInstance().Trace("AudioManager::QueueAudioCommand: Stub - " + path + " (type: " + 
+        (type == AudioCommandType::Background ? "background" : "effect") + ", loop: " + (loop ? "true" : "false") + ")");
     return true;
 }
 
