@@ -18,7 +18,7 @@
 #include <string>
 #include <utility>
 
-#include "app/sdl3_app.hpp"
+#include "app/service_based_app.hpp"
 #include <SDL3/SDL_main.h>
 #include "logging/logger.hpp"
 #include "logging/string_utils.hpp"
@@ -324,7 +324,7 @@ int main(int argc, char** argv) {
                 throw std::runtime_error("Unable to determine platform config directory");
             }
         }
-        sdl3cpp::app::Sdl3App app(options.runtimeConfig.scriptPath, options.runtimeConfig.luaDebug);
+        sdl3cpp::app::ServiceBasedApp app(options.runtimeConfig.scriptPath);
         app.Run();
     } catch (const std::runtime_error& e) {
         std::string errorMsg = e.what();

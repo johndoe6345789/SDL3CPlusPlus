@@ -6,6 +6,9 @@
 
 namespace sdl3cpp::services {
 
+// Forward declare or use the type from script
+using SceneObject = script::SceneManager::SceneObject;
+
 /**
  * @brief Scene management service interface.
  *

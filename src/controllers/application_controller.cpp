@@ -1,9 +1,13 @@
 #include "application_controller.hpp"
+#include "render_controller.hpp"
 #include "../logging/logger.hpp"
 #include "../services/interfaces/i_window_service.hpp"
 #include "../services/interfaces/i_input_service.hpp"
+#include "../services/interfaces/i_physics_service.hpp"
+#include "../services/interfaces/i_scene_service.hpp"
 #include "../events/event_bus.hpp"
 #include "../events/event_types.hpp"
+#include <chrono>
 
 namespace sdl3cpp::controllers {
 
@@ -58,9 +62,22 @@ void ApplicationController::HandleEvents() {
 void ApplicationController::ProcessFrame(float deltaTime) {
     logging::TraceGuard trace;
 
-    // Render controller will handle rendering pipeline
-    // Physics, scripts, audio updates happen here
-    // This is a placeholder - full implementation in RenderController
+    // Update physics
+    auto physicsService = registry_.GetService<services::IPhysicsService>();
+    if (physicsService) {
+        physicsService->StepSimulation(deltaTime);
+    }
+
+    // Update scene
+    auto sceneService = registry_.GetService<services::ISceneService>();
+    if (sceneService) {
+        sceneService->UpdateScene(deltaTime);
+    }
+
+    // Render frame
+    auto renderController = std::make_unique<RenderController>(registry_);
+    renderController->RenderFrame(static_cast<float>(std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::high_resolution_clock::now().time_since_epoch()).count()) / 1000.0f);
 }
 
 }  // namespace sdl3cpp::controllers
