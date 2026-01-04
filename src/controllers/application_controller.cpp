@@ -74,6 +74,12 @@ void ApplicationController::HandleEvents() {
 void ApplicationController::ProcessFrame(float deltaTime) {
     logger_->Trace("ApplicationController", "ProcessFrame", "deltaTime=" + std::to_string(deltaTime), "Entering");
 
+    // Reset input frame state
+    auto inputService = registry_.GetService<services::IInputService>();
+    if (inputService) {
+        inputService->ResetFrameState();
+    }
+
     // Update physics
     auto physicsService = registry_.GetService<services::IPhysicsService>();
     if (physicsService) {
@@ -84,6 +90,11 @@ void ApplicationController::ProcessFrame(float deltaTime) {
     auto sceneService = registry_.GetService<services::ISceneService>();
     if (sceneService) {
         sceneService->UpdateScene(deltaTime);
+    }
+
+    // Update GUI input to script service
+    if (inputService) {
+        inputService->UpdateGuiInput();
     }
 
     // Render frame

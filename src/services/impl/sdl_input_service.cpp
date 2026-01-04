@@ -1,7 +1,18 @@
 #include "sdl_input_service.hpp"
+#include "../interfaces/i_script_service.hpp"
 #include "../../logging/logger.hpp"
 
 namespace sdl3cpp::services::impl {
+
+// GUI key mapping extracted from old Sdl3App
+const std::unordered_map<SDL_Keycode, std::string> SdlInputService::kGuiKeyNames = {
+    {SDLK_LEFT, "left"}, {SDLK_RIGHT, "right"}, {SDLK_UP, "up"}, {SDLK_DOWN, "down"},
+    {SDLK_HOME, "home"}, {SDLK_END, "end"}, {SDLK_BACKSPACE, "backspace"},
+    {SDLK_DELETE, "delete"}, {SDLK_RETURN, "return"}, {SDLK_TAB, "tab"},
+    {SDLK_ESCAPE, "escape"}, {SDLK_LCTRL, "lctrl"}, {SDLK_RCTRL, "rctrl"},
+    {SDLK_LSHIFT, "lshift"}, {SDLK_RSHIFT, "rshift"}, {SDLK_LALT, "lalt"},
+    {SDLK_RALT, "ralt"}
+};
 
 SdlInputService::SdlInputService(std::shared_ptr<events::EventBus> eventBus)
     : eventBus_(std::move(eventBus)) {
@@ -42,32 +53,61 @@ void SdlInputService::ProcessEvent(const SDL_Event& event) {
     switch (event.type) {
         case SDL_EVENT_KEY_DOWN:
             state_.keysPressed.insert(event.key.key);
+            // GUI input processing
+            {
+                auto it = kGuiKeyNames.find(event.key.key);
+                if (it != kGuiKeyNames.end()) {
+                    guiInputSnapshot_.keyStates[it->second] = true;
+                }
+            }
             break;
 
         case SDL_EVENT_KEY_UP:
             state_.keysPressed.erase(event.key.key);
+            // GUI input processing
+            {
+                auto it = kGuiKeyNames.find(event.key.key);
+                if (it != kGuiKeyNames.end()) {
+                    guiInputSnapshot_.keyStates[it->second] = false;
+                }
+            }
             break;
 
         case SDL_EVENT_MOUSE_MOTION:
             state_.mouseX = event.motion.x;
             state_.mouseY = event.motion.y;
+            // GUI input processing
+            guiInputSnapshot_.mouseX = static_cast<float>(event.motion.x);
+            guiInputSnapshot_.mouseY = static_cast<float>(event.motion.y);
             break;
 
         case SDL_EVENT_MOUSE_BUTTON_DOWN:
             state_.mouseButtonsPressed.insert(event.button.button);
+            // GUI input processing
+            if (event.button.button == SDL_BUTTON_LEFT) {
+                guiInputSnapshot_.mouseDown = true;
+            }
             break;
 
         case SDL_EVENT_MOUSE_BUTTON_UP:
             state_.mouseButtonsPressed.erase(event.button.button);
+            // GUI input processing
+            if (event.button.button == SDL_BUTTON_LEFT) {
+                guiInputSnapshot_.mouseDown = false;
+            }
             break;
 
         case SDL_EVENT_MOUSE_WHEEL:
             state_.mouseWheelDeltaX = event.wheel.x;
             state_.mouseWheelDeltaY = event.wheel.y;
+            // GUI input processing
+            guiInputSnapshot_.wheel += static_cast<float>(event.wheel.y);
             break;
 
         case SDL_EVENT_TEXT_INPUT:
             state_.textInput += event.text.text;
+            // GUI input processing
+            guiInputSnapshot_.textInput.append(event.text.text);
             break;
 
         default:
@@ -80,6 +120,10 @@ void SdlInputService::ResetFrameState() {
     state_.mouseWheelDeltaX = 0.0f;
     state_.mouseWheelDeltaY = 0.0f;
     state_.textInput.clear();
+
+    // Reset GUI per-frame state
+    guiInputSnapshot_.wheel = 0.0f;
+    guiInputSnapshot_.textInput.clear();
 }
 
 bool SdlInputService::IsKeyPressed(SDL_Keycode key) const {
@@ -129,6 +173,16 @@ void SdlInputService::OnMouseWheel(const events::Event& event) {
 void SdlInputService::OnTextInput(const events::Event& event) {
     const auto& textEvent = event.GetData<events::TextInputEvent>();
     state_.textInput += textEvent.text;
+}
+
+void SdlInputService::SetScriptService(IScriptService* scriptService) {
+    scriptService_ = scriptService;
+}
+
+void SdlInputService::UpdateGuiInput() {
+    if (scriptService_) {
+        scriptService_->UpdateGuiInput(guiInputSnapshot_);
+    }
 }
 
 }  // namespace sdl3cpp::services::impl

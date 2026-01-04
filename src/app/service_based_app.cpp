@@ -215,6 +215,13 @@ void ServiceBasedApp::RegisterServices() {
     // Script service
     registry_.RegisterService<services::IScriptService, services::impl::LuaScriptService>(scriptPath_);
 
+    // Connect input service to script service for GUI input processing
+    auto inputService = registry_.GetService<services::IInputService>();
+    auto scriptService = registry_.GetService<services::IScriptService>();
+    if (inputService && scriptService) {
+        inputService->SetScriptService(scriptService.get());
+    }
+
     // Scene service
     registry_.RegisterService<services::ISceneService, services::impl::SceneService>(
         registry_.GetService<services::IScriptService>());

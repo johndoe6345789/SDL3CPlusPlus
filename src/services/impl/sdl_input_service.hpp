@@ -10,7 +10,7 @@ namespace sdl3cpp::services::impl {
  * @brief SDL3-based input service implementation.
  *
  * Subscribes to input events from the event bus and maintains
- * the current input state for queries.
+ * the current input state for queries. Also handles GUI input processing.
  */
 class SdlInputService : public IInputService {
 public:
@@ -30,10 +30,14 @@ public:
     bool IsKeyPressed(SDL_Keycode key) const override;
     bool IsMouseButtonPressed(uint8_t button) const override;
     std::pair<float, float> GetMousePosition() const override;
+    void SetScriptService(IScriptService* scriptService) override;
+    void UpdateGuiInput() override;
 
 private:
     std::shared_ptr<events::EventBus> eventBus_;
     InputState state_;
+    script::GuiInputSnapshot guiInputSnapshot_;
+    IScriptService* scriptService_ = nullptr;
 
     // Event bus listeners
     void OnKeyPressed(const events::Event& event);
@@ -43,6 +47,9 @@ private:
     void OnMouseButtonReleased(const events::Event& event);
     void OnMouseWheel(const events::Event& event);
     void OnTextInput(const events::Event& event);
+
+    // GUI key mapping (extracted from old Sdl3App)
+    static const std::unordered_map<SDL_Keycode, std::string> kGuiKeyNames;
 };
 
 }  // namespace sdl3cpp::services::impl

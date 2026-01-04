@@ -3,8 +3,12 @@
 #include <string>
 #include <unordered_set>
 #include <SDL3/SDL.h>
+#include "../../script/gui_types.hpp"
 
 namespace sdl3cpp::services {
+
+// Forward declaration
+class IScriptService;
 
 /**
  * @brief Input state snapshot for a single frame.
@@ -24,6 +28,7 @@ struct InputState {
  *
  * Subscribes to input events from the event bus and maintains
  * the current input state for queries by other services.
+ * Also handles GUI input processing for script integration.
  */
 class IInputService {
 public:
@@ -76,6 +81,24 @@ public:
      * @return Pair of (x, y) coordinates in pixels
      */
     virtual std::pair<float, float> GetMousePosition() const = 0;
+
+    /**
+     * @brief Set the script service for GUI input processing.
+     *
+     * The input service will update GUI input state to the script service
+     * when events are processed.
+     *
+     * @param scriptService Pointer to the script service, or nullptr to disable
+     */
+    virtual void SetScriptService(IScriptService* scriptService) = 0;
+
+    /**
+     * @brief Update GUI input state to the script service.
+     *
+     * Called at the end of each frame to send accumulated GUI input
+     * to the script engine for processing.
+     */
+    virtual void UpdateGuiInput() = 0;
 };
 
 }  // namespace sdl3cpp::services
