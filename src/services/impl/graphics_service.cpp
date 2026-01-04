@@ -54,7 +54,9 @@ void GraphicsService::InitializeDevice(SDL_Window* window, const GraphicsConfig&
     }
 
     // Device service handles device initialization
-    deviceService_->Initialize(window, config);
+    deviceService_->Initialize(config.deviceExtensions, config.enableValidationLayers);
+    deviceService_->CreateSurface(window);
+    deviceService_->CreateLogicalDevice();
 }
 
 void GraphicsService::InitializeSwapchain() {
