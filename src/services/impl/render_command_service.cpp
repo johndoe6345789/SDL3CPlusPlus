@@ -109,7 +109,7 @@ void RenderCommandService::RecordCommands(uint32_t imageIndex,
 }
 
 bool RenderCommandService::EndFrame(uint32_t imageIndex) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     auto device = deviceService_->GetDevice();
     auto graphicsQueue = deviceService_->GetGraphicsQueue();
@@ -156,7 +156,7 @@ VkCommandBuffer RenderCommandService::GetCurrentCommandBuffer() const {
 }
 
 void RenderCommandService::CreateCommandPool() {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     auto device = deviceService_->GetDevice();
     auto queueFamilies = deviceService_->GetQueueFamilies();
@@ -172,7 +172,7 @@ void RenderCommandService::CreateCommandPool() {
 }
 
 void RenderCommandService::CreateCommandBuffers() {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     auto device = deviceService_->GetDevice();
     auto framebuffers = swapchainService_->GetSwapchainFramebuffers();
@@ -189,11 +189,11 @@ void RenderCommandService::CreateCommandBuffers() {
         throw std::runtime_error("Failed to allocate command buffers");
     }
 
-    logging::Logger::GetInstance().Debug("Created " + std::to_string(commandBuffers_.size()) + " command buffers");
+    logger_->Debug("Created " + std::to_string(commandBuffers_.size()) + " command buffers");
 }
 
 void RenderCommandService::CreateSyncObjects() {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     auto device = deviceService_->GetDevice();
 
@@ -210,7 +210,7 @@ void RenderCommandService::CreateSyncObjects() {
         throw std::runtime_error("Failed to create synchronization objects");
     }
 
-    logging::Logger::GetInstance().Debug("Created synchronization objects");
+    logger_->Debug("Created synchronization objects");
 }
 
 void RenderCommandService::CleanupCommandResources() {
