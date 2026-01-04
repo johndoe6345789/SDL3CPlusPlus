@@ -65,6 +65,19 @@ public:
      * @return Index count
      */
     virtual size_t GetIndexCount() const = 0;
+
+    /**
+     * @brief Create a Vulkan buffer with memory allocation.
+     *
+     * @param size Buffer size in bytes
+     * @param usage Buffer usage flags
+     * @param properties Memory property flags
+     * @param[out] buffer Created buffer handle
+     * @param[out] bufferMemory Allocated memory handle
+     * @throws std::runtime_error if creation fails
+     */
+    virtual void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
+                             VkBuffer& buffer, VkDeviceMemory& bufferMemory) = 0;
 };
 
 }  // namespace sdl3cpp::services

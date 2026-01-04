@@ -143,6 +143,7 @@ if(BUILD_SDL3_APP)
             src/app/audio_player.cpp
             src/app/service_based_app.cpp
             src/gui/gui_renderer.cpp
+            src/core/vulkan_utils.cpp
             src/script/script_engine.cpp
             src/script/physics_bridge.cpp
             src/script/lua_helpers.cpp

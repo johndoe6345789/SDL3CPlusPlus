@@ -1,7 +1,7 @@
 
 #include "gui/gui_renderer.hpp"
 
-#include "app/vulkan_api.hpp"
+#include "../core/vulkan_utils.hpp"
 #include "logging/logger.hpp"
 
 #include <algorithm>
@@ -19,7 +19,7 @@
 #include "../../third_party/font8x8_basic.h"
 
 namespace script = sdl3cpp::script;
-namespace vulkan = sdl3cpp::app::vulkan;
+namespace vulkan_utils = sdl3cpp::vulkan::utils;
 
 namespace sdl3cpp::gui {
 namespace {
@@ -519,7 +519,7 @@ GuiRenderer::GuiRenderer(VkDevice device, VkPhysicalDevice physicalDevice, VkFor
         if (size == 0) {
             return;
         }
-        vulkan::CreateBuffer(device_, physicalDevice_, static_cast<VkDeviceSize>(size),
+        vulkan_utils::CreateBuffer(device_, physicalDevice_, static_cast<VkDeviceSize>(size),
                              VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                              VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                              stagingBuffer_, stagingMemory_);

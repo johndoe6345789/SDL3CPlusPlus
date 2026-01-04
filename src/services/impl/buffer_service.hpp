@@ -29,6 +29,10 @@ public:
     size_t GetVertexCount() const override { return vertexCount_; }
     size_t GetIndexCount() const override { return indexCount_; }
 
+    // Public buffer creation utility
+    void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
+                     VkBuffer& buffer, VkDeviceMemory& bufferMemory) override;
+
     // IShutdownable interface
     void Shutdown() noexcept override;
 
@@ -44,9 +48,6 @@ private:
     size_t indexCount_ = 0;
 
     // Helper methods
-    void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
-                     VkMemoryPropertyFlags properties,
-                     VkBuffer& buffer, VkDeviceMemory& bufferMemory);
     void CleanupBuffers();
 };
 
