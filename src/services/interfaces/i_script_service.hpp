@@ -31,7 +31,7 @@ public:
     virtual std::array<float, 16> GetViewProjectionMatrix(float aspect) = 0;
 
     // Shader management
-    virtual std::unordered_map<std::string, script::ShaderManager::ShaderPaths> LoadShaderPathsMap() = 0;
+    virtual std::unordered_map<std::string, sdl3cpp::services::ShaderPaths> LoadShaderPathsMap() = 0;
 
     // GUI management
     virtual std::vector<script::GuiCommand> LoadGuiCommands() = 0;

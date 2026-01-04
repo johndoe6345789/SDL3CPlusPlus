@@ -131,7 +131,7 @@ private:
     script::ScriptEngine scriptEngine_;
     std::vector<core::Vertex> vertices_;
     std::vector<uint16_t> indices_;
-    std::unordered_map<std::string, script::ShaderManager::ShaderPaths> shaderPathMap_;
+    std::unordered_map<std::string, sdl3cpp::services::ShaderPaths> shaderPathMap_;
     std::unordered_map<std::string, VkPipeline> graphicsPipelines_;
     std::string defaultShaderKey_;
     VkFence inFlightFence_ = VK_NULL_HANDLE;

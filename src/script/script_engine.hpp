@@ -35,7 +35,7 @@ public:
     std::vector<SceneManager::SceneObject> LoadSceneObjects();
     std::array<float, 16> ComputeModelMatrix(int functionRef, float time);
     std::array<float, 16> GetViewProjectionMatrix(float aspect);
-    std::unordered_map<std::string, ShaderManager::ShaderPaths> LoadShaderPathsMap();
+    std::unordered_map<std::string, sdl3cpp::services::ShaderPaths> LoadShaderPathsMap();
     std::vector<GuiCommand> LoadGuiCommands();
     void UpdateGuiInput(const GuiInputSnapshot& input);
     bool HasGuiCommands() const;
