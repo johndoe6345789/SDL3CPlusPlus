@@ -332,11 +332,12 @@ int main(int argc, char** argv) {
                 throw std::runtime_error("Unable to determine platform config directory");
             }
         }
-        sdl3cpp::app::ServiceBasedApp app(options.runtimeConfig.scriptPath);
         app.Run();
     } catch (const std::runtime_error& e) {
         std::string errorMsg = e.what();
-        sdl3cpp::logging::Logger::GetInstance().Error("Runtime error: " + errorMsg);
+        // For early errors before app is created, we can't use service logger
+        // Fall back to console output
+        std::cerr << "Runtime error: " << errorMsg << std::endl;
         
         // Check if this is a timeout/hang error - show simpler message for these
         bool isTimeoutError = errorMsg.find("timeout") != std::string::npos ||
@@ -362,7 +363,8 @@ int main(int argc, char** argv) {
         }
         return EXIT_FAILURE;
     } catch (const std::exception& e) {
-        sdl3cpp::logging::Logger::GetInstance().Error("Exception: " + std::string(e.what()));
+        // For early errors before app is created, we can't use service logger
+        std::cerr << "Exception: " << e.what() << std::endl;
         SDL_ShowSimpleMessageBox(
             SDL_MESSAGEBOX_ERROR,
             "Application Error",

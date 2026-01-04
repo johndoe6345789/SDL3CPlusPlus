@@ -1,5 +1,4 @@
 #include "service_based_app.hpp"
-#include "logging/logger.hpp"
 #include "events/event_bus.hpp"
 #include "services/interfaces/i_window_service.hpp"
 #include "services/interfaces/i_graphics_service.hpp"
@@ -50,7 +49,12 @@ ServiceBasedApp::ServiceBasedApp(const std::filesystem::path& scriptPath)
         
         logger_->Info("ServiceBasedApp::ServiceBasedApp: constructor completed");
     } catch (const std::exception& e) {
-        logging::Logger::GetInstance().Error("ServiceBasedApp::ServiceBasedApp: Failed to initialize ServiceBasedApp: " + std::string(e.what()));
+        if (logger_) {
+            logger_->Error("ServiceBasedApp::ServiceBasedApp: Failed to initialize ServiceBasedApp: " + std::string(e.what()));
+        } else {
+            // Fallback to console if logger not available
+            std::cerr << "ServiceBasedApp::ServiceBasedApp: Failed to initialize ServiceBasedApp: " << e.what() << std::endl;
+        }
         throw;
     }
 }
