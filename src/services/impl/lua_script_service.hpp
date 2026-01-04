@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../interfaces/i_script_service.hpp"
+#include "../interfaces/i_logger.hpp"
 #include "../../script/script_engine.hpp"
 #include "../../di/lifecycle.hpp"
 #include <memory>
@@ -18,7 +19,7 @@ class LuaScriptService : public IScriptService,
                          public di::IInitializable,
                          public di::IShutdownable {
 public:
-    explicit LuaScriptService(const std::filesystem::path& scriptPath, bool debugEnabled = false);
+    explicit LuaScriptService(const std::filesystem::path& scriptPath, std::shared_ptr<ILogger> logger, bool debugEnabled = false);
     ~LuaScriptService() override;
 
     // Lifecycle
@@ -44,6 +45,7 @@ public:
     std::string GetLuaError() override;
 
 private:
+    std::shared_ptr<ILogger> logger_;
     std::unique_ptr<script::ScriptEngine> engine_;
     std::filesystem::path scriptPath_;
     bool debugEnabled_ = false;
