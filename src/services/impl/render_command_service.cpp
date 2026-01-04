@@ -27,14 +27,14 @@ void RenderCommandService::Shutdown() noexcept {
 }
 
 bool RenderCommandService::BeginFrame(uint32_t& imageIndex) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     // Lazy initialization
     if (commandPool_ == VK_NULL_HANDLE) {
         CreateCommandPool();
         CreateCommandBuffers();
         CreateSyncObjects();
-        logging::Logger::GetInstance().Info("RenderCommandService initialized lazily");
+        logger_->Info("RenderCommandService initialized lazily");
     }
 
     auto device = deviceService_->GetDevice();
@@ -44,10 +44,10 @@ bool RenderCommandService::BeginFrame(uint32_t& imageIndex) {
     VkResult fenceResult = vkWaitForFences(device, 1, &inFlightFence_, VK_TRUE, kFenceTimeout);
 
     if (fenceResult == VK_TIMEOUT) {
-        logging::Logger::GetInstance().Error("Fence wait timeout: GPU appears to be hung");
+        logger_->Error("Fence wait timeout: GPU appears to be hung");
         throw std::runtime_error("Fence wait timeout: GPU appears to be hung");
     } else if (fenceResult != VK_SUCCESS) {
-        logging::Logger::GetInstance().Error("Fence wait failed");
+        logger_->Error("Fence wait failed");
         throw std::runtime_error("Fence wait failed");
     }
 
@@ -59,7 +59,7 @@ bool RenderCommandService::BeginFrame(uint32_t& imageIndex) {
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
         return false;  // Need swapchain recreation
     } else if (result == VK_TIMEOUT) {
-        logging::Logger::GetInstance().Error("Image acquisition timeout");
+        logger_->Error("Image acquisition timeout");
         throw std::runtime_error("Image acquisition timeout: GPU appears to be hung");
     } else if (result != VK_SUCCESS) {
         throw std::runtime_error("Failed to acquire swap chain image");
@@ -71,7 +71,7 @@ bool RenderCommandService::BeginFrame(uint32_t& imageIndex) {
 void RenderCommandService::RecordCommands(uint32_t imageIndex,
                                          const std::vector<RenderCommand>& commands,
                                          const std::array<float, 16>& viewProj) {
-    logging::TraceGuard trace;
+    logger_->TraceFunction(__func__);
 
     VkCommandBuffer commandBuffer = commandBuffers_[imageIndex];
 
