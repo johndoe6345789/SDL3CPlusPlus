@@ -35,11 +35,12 @@ void ThrowSdlErrorIfFailed(bool success, const char* context) {
 }
 
 void ShowErrorDialog(const char* title, const std::string& message) {
-    SDL_ShowSimpleMessageBox(
-        SDL_MESSAGEBOX_ERROR,
-        title,
-        message.c_str(),
-        nullptr);
+    // Disabled for headless environments
+    // SDL_ShowSimpleMessageBox(
+    //     SDL_MESSAGEBOX_ERROR,
+    //     title,
+    //     message.c_str(),
+    //     nullptr);
 }
 
 }  // namespace
