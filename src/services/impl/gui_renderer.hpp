@@ -59,6 +59,9 @@ private:
     void GenerateGuiGeometry(const std::vector<GuiCommand>& commands, uint32_t width, uint32_t height);
     const std::vector<uint8_t>& LoadShaderBytes(const std::filesystem::path& path,
                                                 VkShaderStageFlagBits stage);
+    const std::vector<uint8_t>& LoadShaderBytes(const std::string& cacheKey,
+                                                const std::string& source,
+                                                VkShaderStageFlagBits stage);
 
     VkDevice device_;
     VkPhysicalDevice physicalDevice_;

@@ -83,7 +83,7 @@ The file exists but cannot be opened. Check file permissions.
 
 **Example error message**:
 ```
-Vertex shader not found: shaders/gui_2d.vert
+Vertex shader not found: shaders/missing.vert
 
 Shader key: default
 
@@ -160,19 +160,20 @@ Plus a message box with the same error.
 ### Test Case 2: Missing Shader File
 ```bash
 cd build/Release
-mv shaders/gui_2d.vert shaders/gui_2d.vert.backup
+sed -i 's/return {default = variant}/return {default = {vertex = "shaders\/missing.vert", fragment = "shaders\/missing.frag"}}/' ../scripts/gui_demo.lua
 ./sdl3_app --json-file-in ./config/gui_runtime.json
 ```
 
 **Expected Result**:
 Message box showing:
 ```
-Vertex shader not found: shaders/gui_2d.vert
+Vertex shader not found: shaders/missing.vert
 
 Shader key: default
 
 Please ensure shader files are compiled and present in the shaders directory.
 ```
+Restore `scripts/gui_demo.lua` after the test run.
 
 ### Test Case 3: Normal Operation
 ```bash

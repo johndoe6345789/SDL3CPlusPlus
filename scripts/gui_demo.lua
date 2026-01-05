@@ -66,12 +66,26 @@ local function updateFpsModeToggle()
     end
 end
 
-local shader_variants = {
-    default = {
-        vertex = "shaders/gui_2d.vert",
-        fragment = "shaders/gui_2d.frag",
-    },
-}
+local function build_shader_variants()
+    local ok, toolkit = pcall(require, "shader_toolkit")
+    if not ok then
+        error("Shader toolkit unavailable: " .. tostring(toolkit))
+    end
+
+    local ok_generate, variant = pcall(toolkit.generate_variant, {
+        key = "default",
+        template = "gui_2d",
+        output_mode = "source",
+        compile = false,
+    })
+    if not ok_generate then
+        error("Shader generation failed: " .. tostring(variant))
+    end
+
+    return {default = variant}
+end
+
+local shader_variants = build_shader_variants()
 
 local function drawTestButtons()
     -- Background panel
@@ -177,9 +191,12 @@ function get_scene_objects()
 end
 
 function get_shader_paths()
+    local default_variant = shader_variants.default or {}
+    local vertex_label = default_variant.vertex or "inline"
+    local fragment_label = default_variant.fragment or "inline"
     log_trace("GUI demo shader variants: default vertex=%s fragment=%s",
-        shader_variants.default.vertex,
-        shader_variants.default.fragment)
+        vertex_label,
+        fragment_label)
     return shader_variants
 end
 

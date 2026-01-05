@@ -46,8 +46,45 @@ int main() {
 
         // Test pipeline creation
         sdl3cpp::services::ShaderPaths shaderPaths;
-        shaderPaths.vertex = "shaders/gui_2d.vert";
-        shaderPaths.fragment = "shaders/gui_2d.frag";
+        shaderPaths.vertex = "inline:gui_2d.vert";
+        shaderPaths.fragment = "inline:gui_2d.frag";
+        shaderPaths.vertexSource = R"(
+#version 450
+layout(location = 0) in vec3 inPos;
+layout(location = 1) in vec4 inColor;
+layout(location = 0) out vec4 fragColor;
+layout(push_constant) uniform PushConstants {
+    mat4 model;
+    mat4 viewProj;
+    mat4 view;
+    mat4 proj;
+    mat4 lightViewProj;
+    vec3 cameraPos;
+    float time;
+    float ambientStrength;
+    float fogDensity;
+    float fogStart;
+    float fogEnd;
+    vec3 fogColor;
+    float gamma;
+    float exposure;
+    int enableShadows;
+    int enableFog;
+} pushConstants;
+void main() {
+    fragColor = inColor;
+    vec4 worldPos = pushConstants.model * vec4(inPos, 1.0);
+    gl_Position = pushConstants.viewProj * worldPos;
+}
+)";
+        shaderPaths.fragmentSource = R"(
+#version 450
+layout(location = 0) in vec4 fragColor;
+layout(location = 0) out vec4 outColor;
+void main() {
+    outColor = fragColor;
+}
+)";
         auto pipeline = backend->CreatePipeline(device, "test_shader", shaderPaths);
         Assert(pipeline != nullptr, "pipeline creation failed", failures);
         std::cout << "GXM pipeline created successfully\n";

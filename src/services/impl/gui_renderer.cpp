@@ -316,6 +316,93 @@ std::vector<uint8_t> ReadShaderFile(const std::filesystem::path& path,
     return buffer;
 }
 
+std::vector<uint8_t> ReadShaderSource(const std::string& source,
+                                      VkShaderStageFlagBits stage,
+                                      const std::string& label,
+                                      ILogger* logger) {
+    if (logger) {
+        logger->Trace("GuiRenderer", "ReadShaderSource",
+                      "label=" + label + ", stage=" +
+                      std::to_string(static_cast<int>(stage)));
+    }
+
+    if (source.empty()) {
+        throw std::runtime_error("Shader source is empty");
+    }
+
+    shaderc::Compiler compiler;
+    shaderc::CompileOptions options;
+    options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
+
+    shaderc_shader_kind kind = ShadercKindFromStage(stage);
+    auto result = compiler.CompileGlslToSpv(source, kind, label.c_str(), options);
+    if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
+        std::string error = result.GetErrorMessage();
+        if (logger) {
+            logger->Error("GuiRenderer shader compilation failed: " + label + "\n" + error);
+        }
+        throw std::runtime_error("Shader compilation failed: " + label + "\n" + error);
+    }
+
+    std::vector<uint32_t> spirv(result.cbegin(), result.cend());
+    std::vector<uint8_t> buffer(spirv.size() * sizeof(uint32_t));
+    if (!buffer.empty()) {
+        std::memcpy(buffer.data(), spirv.data(), buffer.size());
+    }
+    if (logger) {
+        logger->Trace("GuiRenderer", "ReadShaderSource",
+                      "compiledBytes=" + std::to_string(buffer.size()));
+    }
+    return buffer;
+}
+
+const char* kGuiVertexSource = R"(
+#version 450
+
+layout(location = 0) in vec3 inPos;
+layout(location = 1) in vec4 inColor;
+
+layout(location = 0) out vec4 fragColor;
+
+layout(push_constant) uniform PushConstants {
+    mat4 model;
+    mat4 viewProj;
+    // Extended fields for PBR/atmospherics (ignored by basic shaders)
+    mat4 view;
+    mat4 proj;
+    mat4 lightViewProj;
+    vec3 cameraPos;
+    float time;
+    // Atmospherics parameters
+    float ambientStrength;
+    float fogDensity;
+    float fogStart;
+    float fogEnd;
+    vec3 fogColor;
+    float gamma;
+    float exposure;
+    int enableShadows;
+    int enableFog;
+} pushConstants;
+
+void main() {
+    fragColor = inColor;
+    vec4 worldPos = pushConstants.model * vec4(inPos, 1.0);
+    gl_Position = pushConstants.viewProj * worldPos;
+}
+)";
+
+const char* kGuiFragmentSource = R"(
+#version 450
+
+layout(location = 0) in vec4 fragColor;
+layout(location = 0) out vec4 outColor;
+
+void main() {
+    outColor = fragColor;
+}
+)";
+
 } // namespace
 
 GuiRenderer::GuiRenderer(VkDevice device, VkPhysicalDevice physicalDevice, VkFormat swapchainFormat,
@@ -663,22 +750,45 @@ const std::vector<uint8_t>& GuiRenderer::LoadShaderBytes(const std::filesystem::
     return inserted.first->second;
 }
 
+const std::vector<uint8_t>& GuiRenderer::LoadShaderBytes(const std::string& cacheKey,
+                                                         const std::string& source,
+                                                         VkShaderStageFlagBits stage) {
+    auto cached = shaderSpirvCache_.find(cacheKey);
+    if (cached != shaderSpirvCache_.end()) {
+        if (logger_) {
+            logger_->Trace("GuiRenderer", "LoadShaderBytes",
+                           "cacheHit=true, key=" + cacheKey +
+                           ", bytes=" + std::to_string(cached->second.size()));
+        }
+        return cached->second;
+    }
+
+    std::vector<uint8_t> shaderBytes = ReadShaderSource(source, stage, cacheKey, logger_.get());
+    auto inserted = shaderSpirvCache_.emplace(cacheKey, std::move(shaderBytes));
+    if (logger_) {
+        logger_->Trace("GuiRenderer", "LoadShaderBytes",
+                       "cacheHit=false, key=" + cacheKey +
+                       ", bytes=" + std::to_string(inserted.first->second.size()));
+    }
+    return inserted.first->second;
+}
+
 void GuiRenderer::CreatePipeline(VkRenderPass renderPass, VkExtent2D extent) {
     // Load shader modules
-    const std::filesystem::path vertexShaderPath =
-        scriptDirectory_.parent_path() / "shaders" / "gui_2d.vert";
-    const std::filesystem::path fragmentShaderPath =
-        scriptDirectory_.parent_path() / "shaders" / "gui_2d.frag";
+    const std::string vertexLabel = "inline:gui_2d.vert";
+    const std::string fragmentLabel = "inline:gui_2d.frag";
     if (logger_) {
         logger_->Trace("GuiRenderer", "CreatePipeline",
                        "renderPassIsNull=" + std::string(renderPass == VK_NULL_HANDLE ? "true" : "false") +
                        ", extent=" + std::to_string(extent.width) + "x" + std::to_string(extent.height) +
-                       ", vertexShader=" + vertexShaderPath.string() +
-                       ", fragmentShader=" + fragmentShaderPath.string());
+                       ", vertexShader=" + vertexLabel +
+                       ", fragmentShader=" + fragmentLabel);
     }
 
-    const auto& vertShaderCode = LoadShaderBytes(vertexShaderPath, VK_SHADER_STAGE_VERTEX_BIT);
-    const auto& fragShaderCode = LoadShaderBytes(fragmentShaderPath, VK_SHADER_STAGE_FRAGMENT_BIT);
+    const auto& vertShaderCode = LoadShaderBytes(vertexLabel, kGuiVertexSource,
+                                                 VK_SHADER_STAGE_VERTEX_BIT);
+    const auto& fragShaderCode = LoadShaderBytes(fragmentLabel, kGuiFragmentSource,
+                                                 VK_SHADER_STAGE_FRAGMENT_BIT);
 
     VkShaderModuleCreateInfo vertModuleInfo{};
     vertModuleInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;

@@ -338,6 +338,258 @@ void main() {
 }
 ]]
 
+local gui_2d_vertex_source = [[
+#version 450
+
+layout(location = 0) in vec3 inPos;
+layout(location = 1) in vec4 inColor;
+
+layout(location = 0) out vec4 fragColor;
+
+layout(push_constant) uniform PushConstants {
+    mat4 model;
+    mat4 viewProj;
+    // Extended fields for PBR/atmospherics (ignored by basic shaders)
+    mat4 view;
+    mat4 proj;
+    mat4 lightViewProj;
+    vec3 cameraPos;
+    float time;
+    // Atmospherics parameters
+    float ambientStrength;
+    float fogDensity;
+    float fogStart;
+    float fogEnd;
+    vec3 fogColor;
+    float gamma;
+    float exposure;
+    int enableShadows;
+    int enableFog;
+} pushConstants;
+
+void main() {
+    fragColor = inColor;
+    vec4 worldPos = pushConstants.model * vec4(inPos, 1.0);
+    gl_Position = pushConstants.viewProj * worldPos;
+}
+]]
+
+local gui_2d_fragment_source = [[
+#version 450
+
+layout(location = 0) in vec4 fragColor;
+layout(location = 0) out vec4 outColor;
+
+void main() {
+    outColor = fragColor;
+}
+]]
+
+local shadow_vertex_source = [[
+#version 450
+
+layout(location = 0) in vec3 inPosition;
+layout(location = 1) in vec3 inColor;
+// layout(location = 2) in vec2 inTexCoord;  // Not used
+
+layout(push_constant) uniform PushConstants {
+    mat4 model;
+    mat4 viewProj;
+    // Extended fields for PBR/atmospherics
+    mat4 view;
+    mat4 proj;
+    mat4 lightViewProj;
+    vec3 cameraPos;
+    float time;
+    // Atmospherics parameters
+    float ambientStrength;
+    float fogDensity;
+    float fogStart;
+    float fogEnd;
+    vec3 fogColor;
+    float gamma;
+    float exposure;
+    int enableShadows;
+    int enableFog;
+} pc;
+
+void main() {
+    gl_Position = pc.lightViewProj * pc.model * vec4(inPosition, 1.0);
+}
+]]
+
+local shadow_fragment_source = [[
+#version 450
+
+void main() {
+    // Empty fragment shader for shadow mapping
+    // Depth is automatically written
+}
+]]
+
+local fullscreen_vertex_source = [[
+#version 450
+
+layout(location = 0) in vec2 inPosition;
+layout(location = 1) in vec2 inTexCoord;
+
+layout(location = 0) out vec2 fragPosition;
+layout(location = 1) out vec2 fragTexCoord;
+
+void main() {
+    fragPosition = inPosition;
+    fragTexCoord = inTexCoord;
+    gl_Position = vec4(inPosition, 0.0, 1.0);
+}
+]]
+
+local ssgi_fragment_source = [[
+#version 450
+
+layout(location = 0) in vec2 inPosition;
+layout(location = 1) in vec2 inTexCoord;
+
+layout(location = 0) out vec4 outColor;
+
+layout(set = 0, binding = 0) uniform sampler2D sceneColor;
+layout(set = 0, binding = 1) uniform sampler2D normalBuffer;
+layout(set = 0, binding = 2) uniform sampler2D depthBuffer;
+
+layout(push_constant) uniform PushConstants {
+    mat4 model;
+    mat4 viewProj;
+    // Extended fields for PBR/atmospherics
+    mat4 view;
+    mat4 proj;
+    mat4 lightViewProj;
+    vec3 cameraPos;
+    float time;
+    // Atmospherics parameters
+    float ambientStrength;
+    float fogDensity;
+    float fogStart;
+    float fogEnd;
+    vec3 fogColor;
+    float gamma;
+    float exposure;
+    int enableShadows;
+    int enableFog;
+} pc;
+
+const int NUM_SAMPLES = 16;
+const float SAMPLE_RADIUS = 0.5;
+
+// Reconstruct world position from depth
+vec3 worldPosFromDepth(float depth, vec2 texCoord) {
+    vec4 clipSpace = vec4(texCoord * 2.0 - 1.0, depth, 1.0);
+    vec4 viewSpace = pc.proj * clipSpace;  // Use proj as invProj for now (dummy)
+    viewSpace /= viewSpace.w;
+    vec4 worldSpace = pc.view * viewSpace;  // Use view as invView for now (dummy)
+    return worldSpace.xyz;
+}
+
+vec3 ssao(vec2 texCoord) {
+    float depth = texture(depthBuffer, texCoord).r;
+    if (depth >= 1.0) return vec3(1.0);  // Skybox
+
+    vec3 worldPos = worldPosFromDepth(depth, texCoord);
+    vec3 normal = normalize(texture(normalBuffer, texCoord).rgb * 2.0 - 1.0);
+
+    float occlusion = 0.0;
+
+    for (int i = 0; i < NUM_SAMPLES; i++) {
+        // Generate sample position in hemisphere around normal
+        float angle = (float(i) / float(NUM_SAMPLES)) * 6.283185;
+        vec2 offset = vec2(cos(angle), sin(angle)) * SAMPLE_RADIUS;
+
+        vec2 sampleTexCoord = texCoord + offset / textureSize(depthBuffer, 0);
+        float sampleDepth = texture(depthBuffer, sampleTexCoord).r;
+
+        if (sampleDepth < depth - 0.01) {  // Occluded
+            occlusion += 1.0;
+        }
+    }
+
+    occlusion = 1.0 - (occlusion / float(NUM_SAMPLES));
+    return vec3(occlusion);
+}
+
+void main() {
+    vec3 sceneColor = texture(sceneColor, inTexCoord).rgb;
+    vec3 ao = ssao(inTexCoord);
+
+    // Apply ambient occlusion
+    vec3 finalColor = sceneColor * (0.3 + 0.7 * ao);  // Mix AO with direct lighting
+
+    outColor = vec4(finalColor, 1.0);
+}
+]]
+
+local volumetric_fragment_source = [[
+#version 450
+
+layout(location = 0) in vec2 inPosition;
+layout(location = 1) in vec2 inTexCoord;
+
+layout(location = 0) out vec4 outColor;
+
+layout(set = 0, binding = 0) uniform sampler2D sceneColor;
+layout(set = 0, binding = 1) uniform sampler2D depthBuffer;
+
+layout(push_constant) uniform PushConstants {
+    mat4 model;
+    mat4 viewProj;
+    // Extended fields for PBR/atmospherics
+    mat4 view;
+    mat4 proj;
+    mat4 lightViewProj;
+    vec3 cameraPos;
+    float time;
+    // Atmospherics parameters
+    float ambientStrength;
+    float fogDensity;
+    float fogStart;
+    float fogEnd;
+    vec3 fogColor;
+    float gamma;
+    float exposure;
+    int enableShadows;
+    int enableFog;
+} pc;
+
+const int NUM_SAMPLES = 100;
+const float DECAY_BASE = 0.96815;
+const float WEIGHT_BASE = 0.58767;
+const float EXPOSURE = 0.2;
+
+void main() {
+    vec2 texCoord = inTexCoord;
+    vec2 lightScreenPos = vec2(0.5, 0.5);  // Dummy light position
+    vec2 deltaTexCoord = (texCoord - lightScreenPos);
+    deltaTexCoord *= 1.0 / float(NUM_SAMPLES) * 0.5;  // Scale for effect
+
+    vec3 color = texture(sceneColor, texCoord).rgb;
+
+    // Only apply god rays if we're looking towards the light
+    float centerDistance = length(lightScreenPos - vec2(0.5, 0.5));
+    if (centerDistance < 0.8) {  // Light is visible on screen
+        vec3 godRayColor = vec3(0.0);
+        float weight = WEIGHT_BASE;
+
+        for (int i = 0; i < NUM_SAMPLES; i++) {
+            texCoord -= deltaTexCoord;
+            vec3 sampleColor = texture(sceneColor, texCoord).rgb;
+            godRayColor += sampleColor * weight;
+            weight *= DECAY_BASE;
+        }
+
+        color += godRayColor * EXPOSURE * 1.0;  // Dummy intensity
+    }
+
+    outColor = vec4(color, 1.0);
+}
+]]
+
 local vertex_world_color_source = [[
 #version 450
 
@@ -996,6 +1248,13 @@ local function build_vertex_color_sources()
     }
 end
 
+local function build_gui_2d_sources()
+    return {
+        vertex = gui_2d_vertex_source,
+        fragment = gui_2d_fragment_source,
+    }
+end
+
 local function build_solid_color_sources(options)
     local color = normalize_color(options.color)
     local fragment = string.format([[
@@ -1010,6 +1269,13 @@ void main() {
     return {
         vertex = vertex_color_source,
         fragment = fragment,
+    }
+end
+
+local function build_shadow_sources()
+    return {
+        vertex = shadow_vertex_source,
+        fragment = shadow_fragment_source,
     }
 end
 
@@ -1055,6 +1321,20 @@ local function build_pbr_sources(options)
     }
 end
 
+local function build_ssgi_sources()
+    return {
+        vertex = fullscreen_vertex_source,
+        fragment = ssgi_fragment_source,
+    }
+end
+
+local function build_volumetric_sources()
+    return {
+        vertex = fullscreen_vertex_source,
+        fragment = volumetric_fragment_source,
+    }
+end
+
 local templates = {}
 
 local function register_template_object(template)
@@ -1068,9 +1348,11 @@ local function register_template_object(template)
 end
 
 register_template_object(ShaderTemplate:new("vertex_color", build_vertex_color_sources))
+register_template_object(ShaderTemplate:new("gui_2d", build_gui_2d_sources))
 register_template_object(ShaderTemplate:new("solid_color", build_solid_color_sources, {
     color = {1.0, 1.0, 1.0, 1.0},
 }))
+register_template_object(ShaderTemplate:new("shadow", build_shadow_sources))
 register_template_object(ShaderTemplate:new("cube_rainbow", build_cube_rainbow_sources, {
     band_scale = 0.35,
     diagonal_scale = 0.25,
@@ -1114,6 +1396,8 @@ register_template_object(ShaderTemplate:new("pbr", build_pbr_sources, {
     light_color = {1.0, 0.9, 0.6},
     light_intensity = 1.2,
 }))
+register_template_object(ShaderTemplate:new("ssgi", build_ssgi_sources))
+register_template_object(ShaderTemplate:new("volumetric", build_volumetric_sources))
 
 shader_toolkit.templates = templates
 
