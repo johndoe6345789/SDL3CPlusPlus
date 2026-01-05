@@ -102,12 +102,14 @@ def _as_build_dir(path_str: str | None, fallback: str) -> str:
     return path_str or fallback
 
 
-def _has_toolchain_arg(cmake_args: Sequence[str] | None) -> bool:
-    """Return True if the CMake args already define CMAKE_TOOLCHAIN_FILE."""
+def _has_cache_arg(cmake_args: Sequence[str] | None, name: str) -> bool:
+    """Return True if the CMake args already define a cache variable."""
     if not cmake_args:
         return False
+    key = f"-D{name}"
+    prefix = f"-D{name}="
     for arg in cmake_args:
-        if arg == "-DCMAKE_TOOLCHAIN_FILE" or arg.startswith("-DCMAKE_TOOLCHAIN_FILE="):
+        if arg == key or arg.startswith(prefix):
             return True
     return False
 
@@ -127,8 +129,13 @@ def _find_conan_toolchain(build_type: str) -> Path | None:
     ]
     for candidate in candidates:
         if candidate.is_file():
-            return candidate
+            return candidate.resolve()
     return None
+
+
+def _has_cmake_cache(build_dir: str) -> bool:
+    """Return True if the build directory already has a CMake cache."""
+    return (Path(build_dir) / "CMakeCache.txt").is_file()
 
 
 def dependencies(args: argparse.Namespace) -> None:
@@ -148,8 +155,15 @@ def configure(args: argparse.Namespace) -> None:
     )
     cmake_args: list[str] = ["cmake", "-B", build_dir, "-S", "."]
     conan_toolchain = _find_conan_toolchain(args.build_type)
-    if conan_toolchain and not _has_toolchain_arg(args.cmake_args):
+    if (
+        conan_toolchain
+        and not _has_cache_arg(args.cmake_args, "CMAKE_TOOLCHAIN_FILE")
+        and not _has_cmake_cache(build_dir)
+    ):
         cmake_args.append(f"-DCMAKE_TOOLCHAIN_FILE={conan_toolchain}")
+    if conan_toolchain and not _has_cache_arg(args.cmake_args, "CMAKE_PREFIX_PATH"):
+        conan_generators_dir = conan_toolchain.parent
+        cmake_args.append(f"-DCMAKE_PREFIX_PATH={conan_generators_dir}")
     if generator == "vs":
         cmake_args.extend(["-G", CMAKE_GENERATOR["vs"]])
     else:
