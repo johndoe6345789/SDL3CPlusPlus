@@ -119,11 +119,15 @@ void SdlWindowService::CreateWindow(const WindowConfig& config) {
     // Ensure SDL video is initialized even if another subsystem (like audio) was started first.
     const uint32_t initialized = SDL_WasInit(0);
     const bool videoInitialized = (initialized & SDL_INIT_VIDEO) != 0;
+    logger_->TraceVariable("sdl.initializedFlags", static_cast<int>(initialized));
+    logger_->TraceVariable("sdl.videoInitialized", videoInitialized);
     if (!videoInitialized) {
         try {
             if (initialized == 0) {
+                logger_->Trace("SdlWindowService", "CreateWindow", "SDL_Init(SDL_INIT_VIDEO)");
                 ThrowSdlErrorIfFailed(SDL_Init(SDL_INIT_VIDEO), "SDL_Init(SDL_INIT_VIDEO) failed", platformService_);
             } else {
+                logger_->Trace("SdlWindowService", "CreateWindow", "SDL_InitSubSystem(SDL_INIT_VIDEO)");
                 ThrowSdlErrorIfFailed(SDL_InitSubSystem(SDL_INIT_VIDEO),
                                       "SDL_InitSubSystem(SDL_INIT_VIDEO) failed",
                                       platformService_);
@@ -136,6 +140,7 @@ void SdlWindowService::CreateWindow(const WindowConfig& config) {
     }
 
     try {
+        logger_->Trace("SdlWindowService", "CreateWindow", "SDL_Vulkan_LoadLibrary(nullptr)");
         ThrowSdlErrorIfFailed(SDL_Vulkan_LoadLibrary(nullptr), "SDL_Vulkan_LoadLibrary failed", platformService_);
     } catch (const std::exception& e) {
         ShowErrorDialog("Vulkan Library Load Failed",
@@ -147,7 +152,9 @@ void SdlWindowService::CreateWindow(const WindowConfig& config) {
     if (config.resizable) {
         flags |= SDL_WINDOW_RESIZABLE;
     }
+    logger_->TraceVariable("sdl.windowFlags", static_cast<int>(flags));
 
+    logger_->Trace("SdlWindowService", "CreateWindow", "SDL_CreateWindow");
     window_ = SDL_CreateWindow(
         config.title.c_str(),
         config.width,
@@ -161,6 +168,9 @@ void SdlWindowService::CreateWindow(const WindowConfig& config) {
             std::string("Failed to create application window.\n\nError: ") + errorMsg);
         throw std::runtime_error(errorMsg);
     }
+
+    logger_->Trace("SdlWindowService", "CreateWindow", "SDL_ShowWindow");
+    SDL_ShowWindow(window_);
 
     SDL_StartTextInput(window_);
 
