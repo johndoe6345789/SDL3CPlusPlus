@@ -55,3 +55,4 @@ __pycache__/
 *.pyo
 *.pyd
 sdl3_app.log
+sdl3_app.*.log
