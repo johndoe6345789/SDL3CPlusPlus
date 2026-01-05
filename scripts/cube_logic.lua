@@ -47,7 +47,7 @@ local music_state = {
 
 local function start_music()
     if type(audio_play_background) == "function" then
-        audio_play_background("modmusic.ogg", true)
+        audio_play_background("piano.ogg", true)
         music_state.playing = true
     end
 end
@@ -576,9 +576,9 @@ local function create_room_objects()
     local wall_outer_edge = wall_offset + room.wall_thickness
     log_debug("Room walls: inner=%.2f outer=%.2f", wall_inner_edge, wall_outer_edge)
 
-    local floor_color = {0.18, 0.45, 0.25}
-    local wall_color = {0.75, 0.35, 0.2}
-    local ceiling_color = {0.85, 0.85, 0.76}
+    local floor_color = {0.05, 0.7, 0.45}
+    local wall_color = {0.95, 0.25, 0.08}
+    local ceiling_color = {0.95, 0.95, 0.3}
 
     local objects = {
         create_static_cube({0.0, floor_center_y, 0.0},

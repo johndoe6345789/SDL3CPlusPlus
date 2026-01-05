@@ -8,7 +8,7 @@ float hash(vec2 p) {
     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
 }
 
-const vec3 SURFACE_TINT = vec3(0.35, 0.6, 0.35);
+const vec3 SURFACE_TINT = vec3(0.05, 0.85, 0.65);
 
 const vec3 LIGHT_POSITIONS[8] = vec3[8](
     vec3(13.0, 4.5, 13.0),
