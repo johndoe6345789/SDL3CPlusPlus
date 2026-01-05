@@ -199,32 +199,61 @@ if cube_mesh_info.loaded then
         cube_mesh_info.path, cube_mesh_info.vertex_count, cube_mesh_info.index_count)
 end
 
-local shader_variants = {
-    default = {
-        vertex = "shaders/cube.vert",
-        fragment = "shaders/cube.frag",
-    },
-    solid = {
-        vertex = "shaders/solid.vert",
-        fragment = "shaders/solid.frag",
-    },
-    floor = {
-        vertex = "shaders/solid.vert",
-        fragment = "shaders/floor.frag",
-    },
-    wall = {
-        vertex = "shaders/solid.vert",
-        fragment = "shaders/wall.frag",
-    },
-    ceiling = {
-        vertex = "shaders/solid.vert",
-        fragment = "shaders/ceiling.frag",
-    },
-    pbr = {
-        vertex = "shaders/pbr.vert",
-        fragment = "shaders/pbr.frag",
-    },
-}
+local function build_static_shader_variants()
+    return {
+        default = {
+            vertex = "shaders/cube.vert",
+            fragment = "shaders/cube.frag",
+        },
+        solid = {
+            vertex = "shaders/solid.vert",
+            fragment = "shaders/solid.frag",
+        },
+        floor = {
+            vertex = "shaders/solid.vert",
+            fragment = "shaders/floor.frag",
+        },
+        wall = {
+            vertex = "shaders/solid.vert",
+            fragment = "shaders/wall.frag",
+        },
+        ceiling = {
+            vertex = "shaders/solid.vert",
+            fragment = "shaders/ceiling.frag",
+        },
+        pbr = {
+            vertex = "shaders/pbr.vert",
+            fragment = "shaders/pbr.frag",
+        },
+    }
+end
+
+local function count_shader_variants(variants)
+    local count = 0
+    for _ in pairs(variants) do
+        count = count + 1
+    end
+    return count
+end
+
+local function build_shader_variants()
+    local ok, toolkit = pcall(require, "shader_toolkit")
+    if not ok then
+        log_debug("Shader toolkit unavailable: %s", tostring(toolkit))
+        return build_static_shader_variants()
+    end
+
+    local ok_generate, generated = pcall(toolkit.generate_cube_demo_variants, {compile = false})
+    if not ok_generate then
+        log_debug("Shader generation failed: %s", tostring(generated))
+        return build_static_shader_variants()
+    end
+
+    log_debug("Generated %d shader variants", count_shader_variants(generated))
+    return generated
+end
+
+local shader_variants = build_shader_variants()
 
 local camera = {
     position = {0.0, 0.0, 5.0},
