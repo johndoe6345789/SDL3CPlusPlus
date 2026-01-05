@@ -228,10 +228,6 @@ std::vector<ClipPoint> ClipPolygonToRect(const std::vector<ClipPoint>& polygon,
     return output;
 }
 
-bool IsSpirvPath(const std::filesystem::path& path) {
-    return path.extension() == ".spv";
-}
-
 shaderc_shader_kind ShadercKindFromStage(VkShaderStageFlagBits stage) {
     switch (stage) {
         case VK_SHADER_STAGE_VERTEX_BIT:
@@ -277,7 +273,7 @@ std::vector<uint8_t> ReadShaderFile(const std::filesystem::path& path,
     }
 
     std::filesystem::path shaderPath = path;
-    if (!std::filesystem::exists(shaderPath) && IsSpirvPath(shaderPath)) {
+    if (!std::filesystem::exists(shaderPath) && shaderPath.extension() == ".spv") {
         std::filesystem::path sourcePath = shaderPath;
         sourcePath.replace_extension();
         if (std::filesystem::exists(sourcePath)) {
@@ -298,7 +294,7 @@ std::vector<uint8_t> ReadShaderFile(const std::filesystem::path& path,
         throw std::runtime_error("Path is not a regular file: " + shaderPath.string());
     }
 
-    if (IsSpirvPath(shaderPath)) {
+    if (shaderPath.extension() == ".spv") {
         auto buffer = ReadBinaryFile(shaderPath);
         if (logger) {
             logger->Trace("GuiRenderer", "ReadShaderFile",

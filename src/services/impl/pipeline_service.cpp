@@ -10,10 +10,6 @@
 #include <vector>
 
 namespace {
-bool IsSpirvPath(const std::filesystem::path& path) {
-    return path.extension() == ".spv";
-}
-
 shaderc_shader_kind ShadercKindFromStage(VkShaderStageFlagBits stage) {
     switch (stage) {
         case VK_SHADER_STAGE_VERTEX_BIT:
@@ -400,7 +396,7 @@ bool PipelineService::HasShaderSource(const std::string& path) const {
     if (std::filesystem::exists(shaderPath)) {
         return true;
     }
-    if (IsSpirvPath(shaderPath)) {
+    if (shaderPath.extension() == ".spv") {
         std::filesystem::path sourcePath = shaderPath;
         sourcePath.replace_extension();
         return std::filesystem::exists(sourcePath);
@@ -417,7 +413,7 @@ const std::vector<char>& PipelineService::ReadShaderFile(const std::string& path
     }
 
     std::filesystem::path shaderPath(path);
-    if (!std::filesystem::exists(shaderPath) && IsSpirvPath(shaderPath)) {
+    if (!std::filesystem::exists(shaderPath) && shaderPath.extension() == ".spv") {
         std::filesystem::path sourcePath = shaderPath;
         sourcePath.replace_extension();
         if (std::filesystem::exists(sourcePath)) {
@@ -446,7 +442,7 @@ const std::vector<char>& PipelineService::ReadShaderFile(const std::string& path
     }
 
     std::vector<char> buffer;
-    if (IsSpirvPath(shaderPath)) {
+    if (shaderPath.extension() == ".spv") {
         std::ifstream file(shaderPath, std::ios::ate | std::ios::binary);
         if (!file) {
             throw std::runtime_error("Failed to open shader file: " + shaderPath.string() +
