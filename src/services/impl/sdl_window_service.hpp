@@ -41,9 +41,15 @@ public:
     // IWindowService interface
     void CreateWindow(const WindowConfig& config) override;
     void DestroyWindow() override;
-    SDL_Window* GetNativeHandle() const override { return window_; }
+    SDL_Window* GetNativeHandle() const override {
+        logger_->Trace("SdlWindowService", "GetNativeHandle");
+        return window_;
+    }
     std::pair<uint32_t, uint32_t> GetSize() const override;
-    bool ShouldClose() const override { return shouldClose_; }
+    bool ShouldClose() const override {
+        logger_->Trace("SdlWindowService", "ShouldClose");
+        return shouldClose_;
+    }
     void PollEvents() override;
     void SetTitle(const std::string& title) override;
     bool IsMinimized() const override;

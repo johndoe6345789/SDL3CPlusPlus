@@ -34,13 +34,34 @@ public:
     VkResult Present(const std::vector<VkSemaphore>& waitSemaphores,
                      uint32_t imageIndex) override;
 
-    VkSwapchainKHR GetSwapchain() const override { return swapchain_; }
-    const std::vector<VkImage>& GetSwapchainImages() const override { return images_; }
-    const std::vector<VkImageView>& GetSwapchainImageViews() const override { return imageViews_; }
-    const std::vector<VkFramebuffer>& GetSwapchainFramebuffers() const override { return framebuffers_; }
-    VkFormat GetSwapchainImageFormat() const override { return imageFormat_; }
-    VkExtent2D GetSwapchainExtent() const override { return extent_; }
-    VkRenderPass GetRenderPass() const override { return renderPass_; }
+    VkSwapchainKHR GetSwapchain() const override {
+        logger_->Trace("SwapchainService", "GetSwapchain");
+        return swapchain_;
+    }
+    const std::vector<VkImage>& GetSwapchainImages() const override {
+        logger_->Trace("SwapchainService", "GetSwapchainImages");
+        return images_;
+    }
+    const std::vector<VkImageView>& GetSwapchainImageViews() const override {
+        logger_->Trace("SwapchainService", "GetSwapchainImageViews");
+        return imageViews_;
+    }
+    const std::vector<VkFramebuffer>& GetSwapchainFramebuffers() const override {
+        logger_->Trace("SwapchainService", "GetSwapchainFramebuffers");
+        return framebuffers_;
+    }
+    VkFormat GetSwapchainImageFormat() const override {
+        logger_->Trace("SwapchainService", "GetSwapchainImageFormat");
+        return imageFormat_;
+    }
+    VkExtent2D GetSwapchainExtent() const override {
+        logger_->Trace("SwapchainService", "GetSwapchainExtent");
+        return extent_;
+    }
+    VkRenderPass GetRenderPass() const override {
+        logger_->Trace("SwapchainService", "GetRenderPass");
+        return renderPass_;
+    }
 
     // IInitializable interface
     void Initialize() override;

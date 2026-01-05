@@ -52,16 +52,24 @@ SdlWindowService::SdlWindowService(std::shared_ptr<ILogger> logger,
     : logger_(std::move(logger)),
       platformService_(std::move(platformService)),
       eventBus_(std::move(eventBus)) {
+    if (logger_) {
+        logger_->Trace("SdlWindowService", "SdlWindowService",
+                       "platformService=" + std::string(platformService_ ? "set" : "null") +
+                       ", eventBus=" + std::string(eventBus_ ? "set" : "null"));
+    }
 }
 
 SdlWindowService::~SdlWindowService() {
+    if (logger_) {
+        logger_->Trace("SdlWindowService", "~SdlWindowService");
+    }
     if (window_) {
         DestroyWindow();
     }
 }
 
 void SdlWindowService::Initialize() {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("SdlWindowService", "Initialize");
 
     if (initialized_) {
         throw std::runtime_error("SdlWindowService already initialized");
@@ -79,6 +87,7 @@ void SdlWindowService::Initialize() {
 }
 
 void SdlWindowService::Shutdown() noexcept {
+    logger_->Trace("SdlWindowService", "Shutdown");
     if (!initialized_) {
         return;
     }
@@ -93,7 +102,11 @@ void SdlWindowService::Shutdown() noexcept {
 }
 
 void SdlWindowService::CreateWindow(const WindowConfig& config) {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("SdlWindowService", "CreateWindow",
+                   "config.width=" + std::to_string(config.width) +
+                   ", config.height=" + std::to_string(config.height) +
+                   ", config.title=" + config.title +
+                   ", config.resizable=" + std::string(config.resizable ? "true" : "false"));
 
     if (!initialized_) {
         throw std::runtime_error("SdlWindowService not initialized");
@@ -149,6 +162,8 @@ void SdlWindowService::CreateWindow(const WindowConfig& config) {
 }
 
 void SdlWindowService::DestroyWindow() {
+    logger_->Trace("SdlWindowService", "DestroyWindow",
+                   "windowIsNull=" + std::string(window_ ? "false" : "true"));
     if (window_) {
         SDL_StopTextInput(window_);
         SDL_DestroyWindow(window_);
@@ -157,6 +172,8 @@ void SdlWindowService::DestroyWindow() {
 }
 
 std::pair<uint32_t, uint32_t> SdlWindowService::GetSize() const {
+    logger_->Trace("SdlWindowService", "GetSize",
+                   "windowIsNull=" + std::string(window_ ? "false" : "true"));
     if (!window_) {
         return {0, 0};
     }
@@ -167,6 +184,8 @@ std::pair<uint32_t, uint32_t> SdlWindowService::GetSize() const {
 }
 
 bool SdlWindowService::IsMinimized() const {
+    logger_->Trace("SdlWindowService", "IsMinimized",
+                   "windowIsNull=" + std::string(window_ ? "false" : "true"));
     if (!window_) {
         return false;
     }
@@ -176,6 +195,7 @@ bool SdlWindowService::IsMinimized() const {
 }
 
 void SdlWindowService::PollEvents() {
+    logger_->Trace("SdlWindowService", "PollEvents");
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
         // Convert SDL event to application event and publish
@@ -189,12 +209,15 @@ void SdlWindowService::PollEvents() {
 }
 
 void SdlWindowService::SetTitle(const std::string& title) {
+    logger_->Trace("SdlWindowService", "SetTitle", "title=" + title);
     if (window_) {
         SDL_SetWindowTitle(window_, title.c_str());
     }
 }
 
 void SdlWindowService::PublishEvent(const SDL_Event& sdlEvent) {
+    logger_->Trace("SdlWindowService", "PublishEvent",
+                   "eventType=" + std::to_string(static_cast<int>(sdlEvent.type)));
     double timestamp = GetCurrentTime();
 
     switch (sdlEvent.type) {
@@ -351,6 +374,7 @@ void SdlWindowService::PublishEvent(const SDL_Event& sdlEvent) {
 }
 
 double SdlWindowService::GetCurrentTime() const {
+    logger_->Trace("SdlWindowService", "GetCurrentTime");
     using namespace std::chrono;
     auto now = steady_clock::now();
     auto dur = now.time_since_epoch();

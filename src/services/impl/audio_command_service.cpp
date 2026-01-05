@@ -11,12 +11,23 @@ AudioCommandService::AudioCommandService(std::shared_ptr<IConfigService> configS
     : configService_(std::move(configService)),
       audioService_(std::move(audioService)),
       logger_(std::move(logger)) {
+    if (logger_) {
+        logger_->Trace("AudioCommandService", "AudioCommandService",
+                       "configService=" + std::string(configService_ ? "set" : "null") +
+                       ", audioService=" + std::string(audioService_ ? "set" : "null"));
+    }
 }
 
 bool AudioCommandService::QueueAudioCommand(AudioCommandType type,
                                             const std::string& path,
                                             bool loop,
                                             std::string& error) {
+    if (logger_) {
+        logger_->Trace("AudioCommandService", "QueueAudioCommand",
+                       "type=" + std::to_string(static_cast<int>(type)) +
+                       ", path=" + path +
+                       ", loop=" + std::string(loop ? "true" : "false"));
+    }
     if (!audioService_) {
         error = "Audio service not available";
         return false;

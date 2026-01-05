@@ -25,9 +25,20 @@ ScriptEngineService::ScriptEngineService(const std::filesystem::path& scriptPath
       physicsBridgeService_(std::move(physicsBridgeService)),
       scriptPath_(scriptPath),
       debugEnabled_(debugEnabled) {
+    if (logger_) {
+        logger_->Trace("ScriptEngineService", "ScriptEngineService",
+                       "scriptPath=" + scriptPath_.string() +
+                       ", debugEnabled=" + std::string(debugEnabled_ ? "true" : "false") +
+                       ", meshService=" + std::string(meshService_ ? "set" : "null") +
+                       ", audioCommandService=" + std::string(audioCommandService_ ? "set" : "null") +
+                       ", physicsBridgeService=" + std::string(physicsBridgeService_ ? "set" : "null"));
+    }
 }
 
 ScriptEngineService::~ScriptEngineService() {
+    if (logger_) {
+        logger_->Trace("ScriptEngineService", "~ScriptEngineService");
+    }
     if (initialized_) {
         Shutdown();
     }
@@ -37,7 +48,9 @@ void ScriptEngineService::Initialize() {
     if (initialized_) {
         return;
     }
-    logger_->TraceFunction(__func__);
+    logger_->Trace("ScriptEngineService", "Initialize",
+                   "scriptPath=" + scriptPath_.string() +
+                   ", debugEnabled=" + std::string(debugEnabled_ ? "true" : "false"));
 
     bindingContext_ = std::make_shared<LuaBindingContext>();
     bindingContext_->meshService = meshService_;
@@ -93,7 +106,7 @@ void ScriptEngineService::Shutdown() noexcept {
     if (!initialized_) {
         return;
     }
-    logger_->TraceFunction(__func__);
+    logger_->Trace("ScriptEngineService", "Shutdown");
 
     if (luaState_) {
         lua_close(luaState_);
@@ -106,6 +119,9 @@ void ScriptEngineService::Shutdown() noexcept {
 }
 
 lua_State* ScriptEngineService::GetLuaState() const {
+    if (logger_) {
+        logger_->Trace("ScriptEngineService", "GetLuaState");
+    }
     if (!luaState_) {
         throw std::runtime_error("Script engine service not initialized");
     }
@@ -113,6 +129,9 @@ lua_State* ScriptEngineService::GetLuaState() const {
 }
 
 std::filesystem::path ScriptEngineService::GetScriptDirectory() const {
+    if (logger_) {
+        logger_->Trace("ScriptEngineService", "GetScriptDirectory");
+    }
     if (!luaState_) {
         throw std::runtime_error("Script engine service not initialized");
     }
@@ -153,8 +172,8 @@ int ScriptEngineService::LoadMeshFromFile(lua_State* L) {
 
     const char* path = luaL_checkstring(L, 1);
     if (logger) {
-        logger->Trace("LuaBindings", "LoadMeshFromFile");
-        logger->TraceVariable("path", std::string(path));
+        logger->Trace("ScriptEngineService", "LoadMeshFromFile",
+                      "path=" + std::string(path));
     }
 
     MeshPayload payload;
@@ -181,8 +200,8 @@ int ScriptEngineService::PhysicsCreateBox(lua_State* L) {
 
     const char* name = luaL_checkstring(L, 1);
     if (logger) {
-        logger->Trace("LuaBindings", "PhysicsCreateBox");
-        logger->TraceVariable("name", std::string(name));
+        logger->Trace("ScriptEngineService", "PhysicsCreateBox",
+                      "name=" + std::string(name));
     }
 
     if (!lua_istable(L, 2) || !lua_istable(L, 4) || !lua_istable(L, 5)) {
@@ -223,7 +242,7 @@ int ScriptEngineService::PhysicsStepSimulation(lua_State* L) {
         return 1;
     }
     if (logger) {
-        logger->Trace("LuaBindings", "PhysicsStepSimulation");
+        logger->Trace("ScriptEngineService", "PhysicsStepSimulation");
     }
     float deltaTime = static_cast<float>(luaL_checknumber(L, 1));
     int steps = context->physicsBridgeService->StepSimulation(deltaTime);
@@ -241,8 +260,8 @@ int ScriptEngineService::PhysicsGetTransform(lua_State* L) {
     }
     const char* name = luaL_checkstring(L, 1);
     if (logger) {
-        logger->Trace("LuaBindings", "PhysicsGetTransform");
-        logger->TraceVariable("name", std::string(name));
+        logger->Trace("ScriptEngineService", "PhysicsGetTransform",
+                      "name=" + std::string(name));
     }
 
     btTransform transform;
@@ -293,9 +312,9 @@ int ScriptEngineService::AudioPlayBackground(lua_State* L) {
         loop = lua_toboolean(L, 2);
     }
     if (logger) {
-        logger->Trace("LuaBindings", "AudioPlayBackground");
-        logger->TraceVariable("path", std::string(path));
-        logger->TraceVariable("loop", loop);
+        logger->Trace("ScriptEngineService", "AudioPlayBackground",
+                      "path=" + std::string(path) +
+                      ", loop=" + std::string(loop ? "true" : "false"));
     }
 
     std::string error;
@@ -324,9 +343,9 @@ int ScriptEngineService::AudioPlaySound(lua_State* L) {
         loop = lua_toboolean(L, 2);
     }
     if (logger) {
-        logger->Trace("LuaBindings", "AudioPlaySound");
-        logger->TraceVariable("path", std::string(path));
-        logger->TraceVariable("loop", loop);
+        logger->Trace("ScriptEngineService", "AudioPlaySound",
+                      "path=" + std::string(path) +
+                      ", loop=" + std::string(loop ? "true" : "false"));
     }
 
     std::string error;
@@ -342,6 +361,12 @@ int ScriptEngineService::AudioPlaySound(lua_State* L) {
 }
 
 int ScriptEngineService::GlmMatrixFromTransform(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    auto logger = context ? context->logger : nullptr;
+    if (logger) {
+        logger->Trace("ScriptEngineService", "GlmMatrixFromTransform",
+                      "luaStateIsNull=" + std::string(L ? "false" : "true"));
+    }
     return lua::LuaGlmMatrixFromTransform(L);
 }
 

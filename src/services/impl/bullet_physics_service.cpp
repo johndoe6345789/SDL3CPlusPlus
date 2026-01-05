@@ -6,16 +6,25 @@ namespace sdl3cpp::services::impl {
 
 BulletPhysicsService::BulletPhysicsService(std::shared_ptr<ILogger> logger)
     : logger_(std::move(logger)) {
+    if (logger_) {
+        logger_->Trace("BulletPhysicsService", "BulletPhysicsService");
+    }
 }
 
 BulletPhysicsService::~BulletPhysicsService() {
+    if (logger_) {
+        logger_->Trace("BulletPhysicsService", "~BulletPhysicsService");
+    }
     if (initialized_) {
         Shutdown();
     }
 }
 
 void BulletPhysicsService::Initialize(const btVector3& gravity) {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("BulletPhysicsService", "Initialize",
+                   "gravity.x=" + std::to_string(gravity.getX()) +
+                   ", gravity.y=" + std::to_string(gravity.getY()) +
+                   ", gravity.z=" + std::to_string(gravity.getZ()));
 
     if (initialized_) {
         return;
@@ -28,7 +37,7 @@ void BulletPhysicsService::Initialize(const btVector3& gravity) {
 }
 
 void BulletPhysicsService::Shutdown() noexcept {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("BulletPhysicsService", "Shutdown");
 
     if (!initialized_) {
         return;
@@ -44,7 +53,15 @@ bool BulletPhysicsService::AddBoxRigidBody(const std::string& name,
                                           const btVector3& halfExtents,
                                           float mass,
                                           const btTransform& transform) {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("BulletPhysicsService", "AddBoxRigidBody",
+                   "name=" + name +
+                   ", halfExtents.x=" + std::to_string(halfExtents.getX()) +
+                   ", halfExtents.y=" + std::to_string(halfExtents.getY()) +
+                   ", halfExtents.z=" + std::to_string(halfExtents.getZ()) +
+                   ", mass=" + std::to_string(mass) +
+                   ", origin.x=" + std::to_string(transform.getOrigin().getX()) +
+                   ", origin.y=" + std::to_string(transform.getOrigin().getY()) +
+                   ", origin.z=" + std::to_string(transform.getOrigin().getZ()));
 
     if (!physicsBridge_) {
         throw std::runtime_error("Physics service not initialized");
@@ -62,7 +79,13 @@ bool BulletPhysicsService::AddSphereRigidBody(const std::string& name,
                                              float radius,
                                              float mass,
                                              const btTransform& transform) {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("BulletPhysicsService", "AddSphereRigidBody",
+                   "name=" + name +
+                   ", radius=" + std::to_string(radius) +
+                   ", mass=" + std::to_string(mass) +
+                   ", origin.x=" + std::to_string(transform.getOrigin().getX()) +
+                   ", origin.y=" + std::to_string(transform.getOrigin().getY()) +
+                   ", origin.z=" + std::to_string(transform.getOrigin().getZ()));
 
     // PhysicsBridgeService doesn't support sphere rigid bodies in current implementation
     logger_->Warn("AddSphereRigidBody not supported by PhysicsBridgeService");
@@ -70,7 +93,7 @@ bool BulletPhysicsService::AddSphereRigidBody(const std::string& name,
 }
 
 bool BulletPhysicsService::RemoveRigidBody(const std::string& name) {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("BulletPhysicsService", "RemoveRigidBody", "name=" + name);
 
     // PhysicsBridgeService doesn't support removing bodies in current implementation
     logger_->Warn("RemoveRigidBody not supported by PhysicsBridgeService");
@@ -78,7 +101,9 @@ bool BulletPhysicsService::RemoveRigidBody(const std::string& name) {
 }
 
 void BulletPhysicsService::StepSimulation(float deltaTime, int maxSubSteps) {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("BulletPhysicsService", "StepSimulation",
+                   "deltaTime=" + std::to_string(deltaTime) +
+                   ", maxSubSteps=" + std::to_string(maxSubSteps));
 
     if (!physicsBridge_) {
         throw std::runtime_error("Physics service not initialized");
@@ -88,6 +113,7 @@ void BulletPhysicsService::StepSimulation(float deltaTime, int maxSubSteps) {
 }
 
 bool BulletPhysicsService::GetTransform(const std::string& name, btTransform& outTransform) const {
+    logger_->Trace("BulletPhysicsService", "GetTransform", "name=" + name);
     if (!physicsBridge_) {
         return false;
     }
@@ -103,7 +129,11 @@ bool BulletPhysicsService::GetTransform(const std::string& name, btTransform& ou
 }
 
 bool BulletPhysicsService::SetTransform(const std::string& name, const btTransform& transform) {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("BulletPhysicsService", "SetTransform",
+                   "name=" + name +
+                   ", origin.x=" + std::to_string(transform.getOrigin().getX()) +
+                   ", origin.y=" + std::to_string(transform.getOrigin().getY()) +
+                   ", origin.z=" + std::to_string(transform.getOrigin().getZ()));
 
     // PhysicsBridgeService doesn't support setting transforms in current implementation
     logger_->Warn("SetTransform not supported by PhysicsBridgeService");
@@ -111,7 +141,11 @@ bool BulletPhysicsService::SetTransform(const std::string& name, const btTransfo
 }
 
 bool BulletPhysicsService::ApplyForce(const std::string& name, const btVector3& force) {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("BulletPhysicsService", "ApplyForce",
+                   "name=" + name +
+                   ", force.x=" + std::to_string(force.getX()) +
+                   ", force.y=" + std::to_string(force.getY()) +
+                   ", force.z=" + std::to_string(force.getZ()));
 
     // PhysicsBridgeService doesn't support applying forces in current implementation
     logger_->Warn("ApplyForce not supported by PhysicsBridgeService");
@@ -119,7 +153,11 @@ bool BulletPhysicsService::ApplyForce(const std::string& name, const btVector3& 
 }
 
 bool BulletPhysicsService::ApplyImpulse(const std::string& name, const btVector3& impulse) {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("BulletPhysicsService", "ApplyImpulse",
+                   "name=" + name +
+                   ", impulse.x=" + std::to_string(impulse.getX()) +
+                   ", impulse.y=" + std::to_string(impulse.getY()) +
+                   ", impulse.z=" + std::to_string(impulse.getZ()));
 
     // PhysicsBridgeService doesn't support applying impulses in current implementation
     logger_->Warn("ApplyImpulse not supported by PhysicsBridgeService");
@@ -127,7 +165,11 @@ bool BulletPhysicsService::ApplyImpulse(const std::string& name, const btVector3
 }
 
 bool BulletPhysicsService::SetLinearVelocity(const std::string& name, const btVector3& velocity) {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("BulletPhysicsService", "SetLinearVelocity",
+                   "name=" + name +
+                   ", velocity.x=" + std::to_string(velocity.getX()) +
+                   ", velocity.y=" + std::to_string(velocity.getY()) +
+                   ", velocity.z=" + std::to_string(velocity.getZ()));
 
     // PhysicsBridgeService doesn't support setting velocity in current implementation
     logger_->Warn("SetLinearVelocity not supported by PhysicsBridgeService");
@@ -135,13 +177,14 @@ bool BulletPhysicsService::SetLinearVelocity(const std::string& name, const btVe
 }
 
 size_t BulletPhysicsService::GetBodyCount() const {
+    logger_->Trace("BulletPhysicsService", "GetBodyCount");
     // PhysicsBridgeService doesn't expose GetBodyCount in current implementation
     // Returning 0 as stub - could track bodies in wrapper if needed
     return 0;
 }
 
 void BulletPhysicsService::Clear() {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("BulletPhysicsService", "Clear");
 
     if (!physicsBridge_) {
         return;

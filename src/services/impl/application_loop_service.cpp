@@ -19,7 +19,14 @@ ApplicationLoopService::ApplicationLoopService(std::shared_ptr<ILogger> logger,
       sceneService_(std::move(sceneService)),
       audioService_(std::move(audioService)) {
     if (logger_) {
-        logger_->Trace("ApplicationLoopService", "ApplicationLoopService", "", "Created");
+        logger_->Trace("ApplicationLoopService", "ApplicationLoopService",
+                       "windowService=" + std::string(windowService_ ? "set" : "null") +
+                       ", eventBus=" + std::string(eventBus_ ? "set" : "null") +
+                       ", inputService=" + std::string(inputService_ ? "set" : "null") +
+                       ", physicsService=" + std::string(physicsService_ ? "set" : "null") +
+                       ", sceneService=" + std::string(sceneService_ ? "set" : "null") +
+                       ", audioService=" + std::string(audioService_ ? "set" : "null"),
+                       "Created");
     }
 }
 
@@ -59,6 +66,9 @@ void ApplicationLoopService::Run() {
 }
 
 void ApplicationLoopService::HandleEvents() {
+    if (logger_) {
+        logger_->Trace("ApplicationLoopService", "HandleEvents");
+    }
     if (windowService_) {
         windowService_->PollEvents();
     }

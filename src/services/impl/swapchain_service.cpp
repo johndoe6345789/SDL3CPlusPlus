@@ -1,6 +1,7 @@
 #include "swapchain_service.hpp"
 #include <algorithm>
 #include <stdexcept>
+#include <string>
 
 namespace sdl3cpp::services::impl {
 
@@ -8,24 +9,34 @@ SwapchainService::SwapchainService(std::shared_ptr<IVulkanDeviceService> deviceS
                                    std::shared_ptr<events::IEventBus> eventBus,
                                    std::shared_ptr<ILogger> logger)
     : deviceService_(std::move(deviceService)), eventBus_(std::move(eventBus)), logger_(logger) {
+    if (logger_) {
+        logger_->Trace("SwapchainService", "SwapchainService",
+                       "deviceService=" + std::string(deviceService_ ? "set" : "null") +
+                       ", eventBus=" + std::string(eventBus_ ? "set" : "null"));
+    }
     // Subscribe to window resize events
     eventBus_->Subscribe(events::EventType::WindowResized,
                         [this](const events::Event& event) { OnWindowResized(event); });
 }
 
 SwapchainService::~SwapchainService() {
+    if (logger_) {
+        logger_->Trace("SwapchainService", "~SwapchainService");
+    }
     if (swapchain_ != VK_NULL_HANDLE) {
         Shutdown();
     }
 }
 
 void SwapchainService::Initialize() {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("SwapchainService", "Initialize");
     // Initialization happens in CreateSwapchain()
 }
 
 void SwapchainService::CreateSwapchain(uint32_t width, uint32_t height) {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("SwapchainService", "CreateSwapchain",
+                   "width=" + std::to_string(width) +
+                   ", height=" + std::to_string(height));
 
     currentWidth_ = width;
     currentHeight_ = height;
@@ -112,7 +123,9 @@ void SwapchainService::CreateSwapchain(uint32_t width, uint32_t height) {
 }
 
 void SwapchainService::RecreateSwapchain(uint32_t width, uint32_t height) {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("SwapchainService", "RecreateSwapchain",
+                   "width=" + std::to_string(width) +
+                   ", height=" + std::to_string(height));
 
     logger_->Info("Recreating swapchain: " + std::to_string(width) + "x" + std::to_string(height));
 
@@ -122,6 +135,9 @@ void SwapchainService::RecreateSwapchain(uint32_t width, uint32_t height) {
 }
 
 VkResult SwapchainService::AcquireNextImage(VkSemaphore semaphore, uint32_t& imageIndex) {
+    logger_->Trace("SwapchainService", "AcquireNextImage",
+                   "semaphoreIsNull=" + std::string(semaphore == VK_NULL_HANDLE ? "true" : "false") +
+                   ", imageIndex=" + std::to_string(imageIndex));
     auto device = deviceService_->GetDevice();
     return vkAcquireNextImageKHR(device, swapchain_, UINT64_MAX, semaphore,
                                  VK_NULL_HANDLE, &imageIndex);
@@ -129,6 +145,9 @@ VkResult SwapchainService::AcquireNextImage(VkSemaphore semaphore, uint32_t& ima
 
 VkResult SwapchainService::Present(const std::vector<VkSemaphore>& waitSemaphores,
                                    uint32_t imageIndex) {
+    logger_->Trace("SwapchainService", "Present",
+                   "waitSemaphores.size=" + std::to_string(waitSemaphores.size()) +
+                   ", imageIndex=" + std::to_string(imageIndex));
     auto presentQueue = deviceService_->GetPresentQueue();
 
     VkPresentInfoKHR presentInfo{};
@@ -143,7 +162,7 @@ VkResult SwapchainService::Present(const std::vector<VkSemaphore>& waitSemaphore
 }
 
 void SwapchainService::CreateImageViews() {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("SwapchainService", "CreateImageViews");
 
     auto device = deviceService_->GetDevice();
 
@@ -169,7 +188,7 @@ void SwapchainService::CreateImageViews() {
 }
 
 void SwapchainService::CreateRenderPass() {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("SwapchainService", "CreateRenderPass");
 
     auto device = deviceService_->GetDevice();
 
@@ -215,7 +234,7 @@ void SwapchainService::CreateRenderPass() {
 }
 
 void SwapchainService::CreateFramebuffers() {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("SwapchainService", "CreateFramebuffers");
 
     auto device = deviceService_->GetDevice();
 
@@ -239,7 +258,7 @@ void SwapchainService::CreateFramebuffers() {
 }
 
 void SwapchainService::CleanupSwapchainInternal() {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("SwapchainService", "CleanupSwapchainInternal");
 
     auto device = deviceService_->GetDevice();
 
@@ -265,16 +284,20 @@ void SwapchainService::CleanupSwapchainInternal() {
 }
 
 void SwapchainService::CleanupSwapchain() {
+    logger_->Trace("SwapchainService", "CleanupSwapchain");
     CleanupSwapchainInternal();
 }
 
 void SwapchainService::Shutdown() noexcept {
+    logger_->Trace("SwapchainService", "Shutdown");
     CleanupSwapchainInternal();
 }
 
 SwapchainService::SwapchainSupportDetails SwapchainService::QuerySwapchainSupport(
     VkPhysicalDevice device, VkSurfaceKHR surface) {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("SwapchainService", "QuerySwapchainSupport",
+                   "deviceIsNull=" + std::string(device == VK_NULL_HANDLE ? "true" : "false") +
+                   ", surfaceIsNull=" + std::string(surface == VK_NULL_HANDLE ? "true" : "false"));
 
     SwapchainSupportDetails details;
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
@@ -299,7 +322,8 @@ SwapchainService::SwapchainSupportDetails SwapchainService::QuerySwapchainSuppor
 
 VkSurfaceFormatKHR SwapchainService::ChooseSurfaceFormat(
     const std::vector<VkSurfaceFormatKHR>& availableFormats) {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("SwapchainService", "ChooseSurfaceFormat",
+                   "availableFormats.size=" + std::to_string(availableFormats.size()));
 
     for (const auto& availableFormat : availableFormats) {
         if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB &&
@@ -312,7 +336,8 @@ VkSurfaceFormatKHR SwapchainService::ChooseSurfaceFormat(
 
 VkPresentModeKHR SwapchainService::ChoosePresentMode(
     const std::vector<VkPresentModeKHR>& availablePresentModes) {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("SwapchainService", "ChoosePresentMode",
+                   "availablePresentModes.size=" + std::to_string(availablePresentModes.size()));
 
     for (const auto& availablePresentMode : availablePresentModes) {
         if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
@@ -324,6 +349,13 @@ VkPresentModeKHR SwapchainService::ChoosePresentMode(
 
 VkExtent2D SwapchainService::ChooseExtent(const VkSurfaceCapabilitiesKHR& capabilities,
                                           uint32_t width, uint32_t height) {
+    logger_->Trace("SwapchainService", "ChooseExtent",
+                   "width=" + std::to_string(width) +
+                   ", height=" + std::to_string(height) +
+                   ", minWidth=" + std::to_string(capabilities.minImageExtent.width) +
+                   ", minHeight=" + std::to_string(capabilities.minImageExtent.height) +
+                   ", maxWidth=" + std::to_string(capabilities.maxImageExtent.width) +
+                   ", maxHeight=" + std::to_string(capabilities.maxImageExtent.height));
     return VkExtent2D{
         std::clamp(width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width),
         std::clamp(height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height)
@@ -331,7 +363,8 @@ VkExtent2D SwapchainService::ChooseExtent(const VkSurfaceCapabilitiesKHR& capabi
 }
 
 void SwapchainService::OnWindowResized(const events::Event& event) {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("SwapchainService", "OnWindowResized",
+                   "eventType=" + std::to_string(static_cast<int>(event.type)));
     logger_->Info("Window resized event received, swapchain recreation needed");
 }
 

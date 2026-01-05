@@ -2,6 +2,7 @@
 
 #include "../interfaces/i_mesh_service.hpp"
 #include "../interfaces/i_config_service.hpp"
+#include "../interfaces/i_logger.hpp"
 #include <memory>
 
 namespace sdl3cpp::services::impl {
@@ -11,7 +12,8 @@ namespace sdl3cpp::services::impl {
  */
 class MeshService : public IMeshService {
 public:
-    explicit MeshService(std::shared_ptr<IConfigService> configService);
+    MeshService(std::shared_ptr<IConfigService> configService,
+                std::shared_ptr<ILogger> logger);
 
     bool LoadFromFile(const std::string& requestedPath,
                       MeshPayload& outPayload,
@@ -20,6 +22,7 @@ public:
 
 private:
     std::shared_ptr<IConfigService> configService_;
+    std::shared_ptr<ILogger> logger_;
 };
 
 }  // namespace sdl3cpp::services::impl

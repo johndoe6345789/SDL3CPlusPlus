@@ -8,9 +8,16 @@
 namespace sdl3cpp::services::impl {
 
 VulkanDeviceService::VulkanDeviceService(std::shared_ptr<ILogger> logger)
-    : logger_(logger) {}
+    : logger_(logger) {
+    if (logger_) {
+        logger_->Trace("VulkanDeviceService", "VulkanDeviceService");
+    }
+}
 
 VulkanDeviceService::~VulkanDeviceService() {
+    if (logger_) {
+        logger_->Trace("VulkanDeviceService", "~VulkanDeviceService");
+    }
     if (device_ != VK_NULL_HANDLE) {
         Shutdown();
     }
@@ -18,7 +25,9 @@ VulkanDeviceService::~VulkanDeviceService() {
 
 void VulkanDeviceService::Initialize(const std::vector<const char*>& deviceExtensions,
                                     bool enableValidationLayers) {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("VulkanDeviceService", "Initialize",
+                   "deviceExtensions.size=" + std::to_string(deviceExtensions.size()) +
+                   ", enableValidationLayers=" + std::string(enableValidationLayers ? "true" : "false"));
 
     deviceExtensions_ = deviceExtensions;
     validationLayersEnabled_ = enableValidationLayers;
@@ -37,7 +46,8 @@ void VulkanDeviceService::Initialize(const std::vector<const char*>& deviceExten
 }
 
 void VulkanDeviceService::CreateSurface(SDL_Window* window) {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("VulkanDeviceService", "CreateSurface",
+                   "windowIsNull=" + std::string(window ? "false" : "true"));
 
     if (!window) {
         throw std::invalid_argument("Window cannot be null");
@@ -49,7 +59,8 @@ void VulkanDeviceService::CreateSurface(SDL_Window* window) {
 }
 
 void VulkanDeviceService::CreateInstance(const std::vector<const char*>& requiredExtensions) {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("VulkanDeviceService", "CreateInstance",
+                   "requiredExtensions.size=" + std::to_string(requiredExtensions.size()));
 
     // Check Vulkan availability
     uint32_t apiVersion = 0;
@@ -112,7 +123,7 @@ void VulkanDeviceService::CreateInstance(const std::vector<const char*>& require
 }
 
 void VulkanDeviceService::PickPhysicalDevice() {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("VulkanDeviceService", "PickPhysicalDevice");
 
     uint32_t deviceCount = 0;
     VkResult enumResult = vkEnumeratePhysicalDevices(instance_, &deviceCount, nullptr);
@@ -146,6 +157,8 @@ void VulkanDeviceService::PickPhysicalDevice() {
 }
 
 bool VulkanDeviceService::IsDeviceSuitable(VkPhysicalDevice device) const {
+    logger_->Trace("VulkanDeviceService", "IsDeviceSuitable",
+                   "deviceIsNull=" + std::string(device == VK_NULL_HANDLE ? "true" : "false"));
     QueueFamilyIndices indices = FindQueueFamilies(device);
     bool extensionsSupported = CheckDeviceExtensionSupport(device);
 
@@ -168,6 +181,8 @@ bool VulkanDeviceService::IsDeviceSuitable(VkPhysicalDevice device) const {
 }
 
 QueueFamilyIndices VulkanDeviceService::FindQueueFamilies(VkPhysicalDevice device) const {
+    logger_->Trace("VulkanDeviceService", "FindQueueFamilies",
+                   "deviceIsNull=" + std::string(device == VK_NULL_HANDLE ? "true" : "false"));
     QueueFamilyIndices indices;
 
     uint32_t queueFamilyCount = 0;
@@ -196,6 +211,8 @@ QueueFamilyIndices VulkanDeviceService::FindQueueFamilies(VkPhysicalDevice devic
 }
 
 bool VulkanDeviceService::CheckDeviceExtensionSupport(VkPhysicalDevice device) const {
+    logger_->Trace("VulkanDeviceService", "CheckDeviceExtensionSupport",
+                   "deviceIsNull=" + std::string(device == VK_NULL_HANDLE ? "true" : "false"));
     uint32_t extensionCount;
     vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
 
@@ -212,7 +229,7 @@ bool VulkanDeviceService::CheckDeviceExtensionSupport(VkPhysicalDevice device) c
 }
 
 void VulkanDeviceService::CreateLogicalDevice() {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("VulkanDeviceService", "CreateLogicalDevice");
 
     QueueFamilyIndices indices = FindQueueFamilies(physicalDevice_);
 
@@ -249,6 +266,7 @@ void VulkanDeviceService::CreateLogicalDevice() {
 }
 
 void VulkanDeviceService::Shutdown() noexcept {
+    logger_->Trace("VulkanDeviceService", "Shutdown");
     if (device_ != VK_NULL_HANDLE) {
         vkDestroyDevice(device_, nullptr);
         device_ = VK_NULL_HANDLE;
@@ -266,17 +284,22 @@ void VulkanDeviceService::Shutdown() noexcept {
 }
 
 void VulkanDeviceService::WaitIdle() {
+    logger_->Trace("VulkanDeviceService", "WaitIdle");
     if (device_ != VK_NULL_HANDLE) {
         vkDeviceWaitIdle(device_);
     }
 }
 
 QueueFamilyIndices VulkanDeviceService::GetQueueFamilies() const {
+    logger_->Trace("VulkanDeviceService", "GetQueueFamilies");
     return FindQueueFamilies(physicalDevice_);
 }
 
 uint32_t VulkanDeviceService::FindMemoryType(uint32_t typeFilter,
                                              VkMemoryPropertyFlags properties) const {
+    logger_->Trace("VulkanDeviceService", "FindMemoryType",
+                   "typeFilter=" + std::to_string(typeFilter) +
+                   ", properties=" + std::to_string(static_cast<uint32_t>(properties)));
     VkPhysicalDeviceMemoryProperties memProperties;
     vkGetPhysicalDeviceMemoryProperties(physicalDevice_, &memProperties);
 

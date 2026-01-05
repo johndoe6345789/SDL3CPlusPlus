@@ -229,7 +229,8 @@ void ServiceBasedApp::RegisterServices() {
 
     // Script bridge services
     registry_.RegisterService<services::IMeshService, services::impl::MeshService>(
-        registry_.GetService<services::IConfigService>());
+        registry_.GetService<services::IConfigService>(),
+        registry_.GetService<services::ILogger>());
     registry_.RegisterService<services::IPhysicsBridgeService, services::impl::PhysicsBridgeService>(
         registry_.GetService<services::ILogger>());
     registry_.RegisterService<services::IAudioCommandService, services::impl::AudioCommandService>(

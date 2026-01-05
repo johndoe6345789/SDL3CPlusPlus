@@ -6,16 +6,25 @@
 namespace sdl3cpp::services::impl {
 
 BufferService::BufferService(std::shared_ptr<IVulkanDeviceService> deviceService, std::shared_ptr<ILogger> logger)
-    : deviceService_(std::move(deviceService)), logger_(logger) {}
+    : deviceService_(std::move(deviceService)), logger_(logger) {
+    if (logger_) {
+        logger_->Trace("BufferService", "BufferService",
+                       "deviceService=" + std::string(deviceService_ ? "set" : "null"));
+    }
+}
 
 BufferService::~BufferService() {
+    if (logger_) {
+        logger_->Trace("BufferService", "~BufferService");
+    }
     if (vertexBuffer_ != VK_NULL_HANDLE || indexBuffer_ != VK_NULL_HANDLE) {
         Shutdown();
     }
 }
 
 void BufferService::UploadVertexData(const std::vector<core::Vertex>& vertices) {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("BufferService", "UploadVertexData",
+                   "vertices.size=" + std::to_string(vertices.size()));
 
     if (vertices.empty()) {
         throw std::runtime_error("Cannot upload vertex data: empty vertex array");
@@ -48,7 +57,8 @@ void BufferService::UploadVertexData(const std::vector<core::Vertex>& vertices) 
 }
 
 void BufferService::UploadIndexData(const std::vector<uint16_t>& indices) {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("BufferService", "UploadIndexData",
+                   "indices.size=" + std::to_string(indices.size()));
 
     if (indices.empty()) {
         throw std::runtime_error("Cannot upload index data: empty index array");
@@ -81,18 +91,24 @@ void BufferService::UploadIndexData(const std::vector<uint16_t>& indices) {
 }
 
 void BufferService::Cleanup() {
+    logger_->Trace("BufferService", "Cleanup");
     CleanupBuffers();
 }
 
 void BufferService::Shutdown() noexcept {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("BufferService", "Shutdown");
     CleanupBuffers();
 }
 
 void BufferService::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
                                  VkMemoryPropertyFlags properties,
                                  VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("BufferService", "CreateBuffer",
+                   "size=" + std::to_string(size) +
+                   ", usage=" + std::to_string(static_cast<uint32_t>(usage)) +
+                   ", properties=" + std::to_string(static_cast<uint32_t>(properties)) +
+                   ", bufferIsNull=" + std::string(buffer == VK_NULL_HANDLE ? "true" : "false") +
+                   ", bufferMemoryIsNull=" + std::string(bufferMemory == VK_NULL_HANDLE ? "true" : "false"));
 
     auto device = deviceService_->GetDevice();
     auto physicalDevice = deviceService_->GetPhysicalDevice();
@@ -188,7 +204,7 @@ void BufferService::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
 }
 
 void BufferService::CleanupBuffers() {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("BufferService", "CleanupBuffers");
 
     auto device = deviceService_->GetDevice();
 

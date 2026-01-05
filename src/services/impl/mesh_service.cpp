@@ -11,13 +11,23 @@
 
 namespace sdl3cpp::services::impl {
 
-MeshService::MeshService(std::shared_ptr<IConfigService> configService)
-    : configService_(std::move(configService)) {
+MeshService::MeshService(std::shared_ptr<IConfigService> configService,
+                         std::shared_ptr<ILogger> logger)
+    : configService_(std::move(configService)),
+      logger_(std::move(logger)) {
+    if (logger_) {
+        logger_->Trace("MeshService", "MeshService",
+                       "configService=" + std::string(configService_ ? "set" : "null"));
+    }
 }
 
 bool MeshService::LoadFromFile(const std::string& requestedPath,
                                MeshPayload& outPayload,
                                std::string& outError) {
+    if (logger_) {
+        logger_->Trace("MeshService", "LoadFromFile",
+                       "requestedPath=" + requestedPath);
+    }
     if (!configService_) {
         outError = "Config service not available";
         return false;
@@ -110,6 +120,13 @@ bool MeshService::LoadFromFile(const std::string& requestedPath,
 }
 
 void MeshService::PushMeshToLua(lua_State* L, const MeshPayload& payload) {
+    if (logger_) {
+        logger_->Trace("MeshService", "PushMeshToLua",
+                       "positions.size=" + std::to_string(payload.positions.size()) +
+                       ", colors.size=" + std::to_string(payload.colors.size()) +
+                       ", indices.size=" + std::to_string(payload.indices.size()) +
+                       ", luaStateIsNull=" + std::string(L ? "false" : "true"));
+    }
     lua_newtable(L);
 
     lua_newtable(L);

@@ -34,8 +34,14 @@ public:
     bool EndFrame(uint32_t imageIndex) override;
 
     VkCommandBuffer GetCurrentCommandBuffer() const override;
-    uint32_t GetCurrentFrameIndex() const override { return currentFrame_; }
-    uint32_t GetMaxFramesInFlight() const override { return maxFramesInFlight_; }
+    uint32_t GetCurrentFrameIndex() const override {
+        logger_->Trace("RenderCommandService", "GetCurrentFrameIndex");
+        return currentFrame_;
+    }
+    uint32_t GetMaxFramesInFlight() const override {
+        logger_->Trace("RenderCommandService", "GetMaxFramesInFlight");
+        return maxFramesInFlight_;
+    }
 
     // IShutdownable interface
     void Shutdown() noexcept override;

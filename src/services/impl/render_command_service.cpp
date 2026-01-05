@@ -1,6 +1,7 @@
 #include "render_command_service.hpp"
 #include "../../core/vertex.hpp"
 #include <stdexcept>
+#include <string>
 
 namespace sdl3cpp::services::impl {
 
@@ -9,25 +10,37 @@ RenderCommandService::RenderCommandService(std::shared_ptr<IVulkanDeviceService>
                                            std::shared_ptr<ILogger> logger)
     : deviceService_(std::move(deviceService)),
       swapchainService_(std::move(swapchainService)),
-      logger_(logger) {}
+      logger_(logger) {
+    if (logger_) {
+        logger_->Trace("RenderCommandService", "RenderCommandService",
+                       "deviceService=" + std::string(deviceService_ ? "set" : "null") +
+                       ", swapchainService=" + std::string(swapchainService_ ? "set" : "null"));
+    }
+}
 
 RenderCommandService::~RenderCommandService() {
+    if (logger_) {
+        logger_->Trace("RenderCommandService", "~RenderCommandService");
+    }
     if (commandPool_ != VK_NULL_HANDLE || imageAvailableSemaphore_ != VK_NULL_HANDLE) {
         Shutdown();
     }
 }
 
 void RenderCommandService::Cleanup() {
+    logger_->Trace("RenderCommandService", "Cleanup");
     CleanupCommandResources();
     CleanupSyncObjects();
 }
 
 void RenderCommandService::Shutdown() noexcept {
+    logger_->Trace("RenderCommandService", "Shutdown");
     Cleanup();
 }
 
 bool RenderCommandService::BeginFrame(uint32_t& imageIndex) {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("RenderCommandService", "BeginFrame",
+                   "imageIndex=" + std::to_string(imageIndex));
 
     // Lazy initialization
     if (commandPool_ == VK_NULL_HANDLE) {
@@ -71,7 +84,10 @@ bool RenderCommandService::BeginFrame(uint32_t& imageIndex) {
 void RenderCommandService::RecordCommands(uint32_t imageIndex,
                                          const std::vector<RenderCommand>& commands,
                                          const std::array<float, 16>& viewProj) {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("RenderCommandService", "RecordCommands",
+                   "imageIndex=" + std::to_string(imageIndex) +
+                   ", commands.size=" + std::to_string(commands.size()) +
+                   ", viewProj.size=" + std::to_string(viewProj.size()));
 
     VkCommandBuffer commandBuffer = commandBuffers_[imageIndex];
 
@@ -109,7 +125,8 @@ void RenderCommandService::RecordCommands(uint32_t imageIndex,
 }
 
 bool RenderCommandService::EndFrame(uint32_t imageIndex) {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("RenderCommandService", "EndFrame",
+                   "imageIndex=" + std::to_string(imageIndex));
 
     auto device = deviceService_->GetDevice();
     auto graphicsQueue = deviceService_->GetGraphicsQueue();
@@ -149,6 +166,7 @@ bool RenderCommandService::EndFrame(uint32_t imageIndex) {
 }
 
 VkCommandBuffer RenderCommandService::GetCurrentCommandBuffer() const {
+    logger_->Trace("RenderCommandService", "GetCurrentCommandBuffer");
     if (commandBuffers_.empty()) {
         return VK_NULL_HANDLE;
     }
@@ -156,7 +174,7 @@ VkCommandBuffer RenderCommandService::GetCurrentCommandBuffer() const {
 }
 
 void RenderCommandService::CreateCommandPool() {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("RenderCommandService", "CreateCommandPool");
 
     auto device = deviceService_->GetDevice();
     auto queueFamilies = deviceService_->GetQueueFamilies();
@@ -172,7 +190,7 @@ void RenderCommandService::CreateCommandPool() {
 }
 
 void RenderCommandService::CreateCommandBuffers() {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("RenderCommandService", "CreateCommandBuffers");
 
     auto device = deviceService_->GetDevice();
     auto framebuffers = swapchainService_->GetSwapchainFramebuffers();
@@ -193,7 +211,7 @@ void RenderCommandService::CreateCommandBuffers() {
 }
 
 void RenderCommandService::CreateSyncObjects() {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("RenderCommandService", "CreateSyncObjects");
 
     auto device = deviceService_->GetDevice();
 
@@ -214,7 +232,7 @@ void RenderCommandService::CreateSyncObjects() {
 }
 
 void RenderCommandService::CleanupCommandResources() {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("RenderCommandService", "CleanupCommandResources");
 
     auto device = deviceService_->GetDevice();
 
@@ -232,7 +250,7 @@ void RenderCommandService::CleanupCommandResources() {
 }
 
 void RenderCommandService::CleanupSyncObjects() {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("RenderCommandService", "CleanupSyncObjects");
 
     auto device = deviceService_->GetDevice();
 

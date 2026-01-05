@@ -24,6 +24,9 @@ PhysicsBridgeService::PhysicsBridgeService(std::shared_ptr<ILogger> logger)
 }
 
 PhysicsBridgeService::~PhysicsBridgeService() {
+    if (logger_) {
+        logger_->Trace("PhysicsBridgeService", "~PhysicsBridgeService");
+    }
     if (world_) {
         for (auto& [name, entry] : bodies_) {
             if (entry.body) {
@@ -39,7 +42,15 @@ bool PhysicsBridgeService::AddBoxRigidBody(const std::string& name,
                                            const btTransform& transform,
                                            std::string& error) {
     if (logger_) {
-        logger_->Trace("PhysicsBridgeService", "AddBoxRigidBody", "name=" + name);
+        logger_->Trace("PhysicsBridgeService", "AddBoxRigidBody",
+                       "name=" + name +
+                       ", halfExtents.x=" + std::to_string(halfExtents.getX()) +
+                       ", halfExtents.y=" + std::to_string(halfExtents.getY()) +
+                       ", halfExtents.z=" + std::to_string(halfExtents.getZ()) +
+                       ", mass=" + std::to_string(mass) +
+                       ", origin.x=" + std::to_string(transform.getOrigin().getX()) +
+                       ", origin.y=" + std::to_string(transform.getOrigin().getY()) +
+                       ", origin.z=" + std::to_string(transform.getOrigin().getZ()));
     }
     if (name.empty()) {
         error = "Rigid body name must not be empty";

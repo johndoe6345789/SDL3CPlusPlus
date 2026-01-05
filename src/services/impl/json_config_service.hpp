@@ -45,11 +45,36 @@ public:
     JsonConfigService(std::shared_ptr<ILogger> logger, const RuntimeConfig& config);
 
     // IConfigService interface implementation
-    uint32_t GetWindowWidth() const override { return config_.width; }
-    uint32_t GetWindowHeight() const override { return config_.height; }
-    std::filesystem::path GetScriptPath() const override { return config_.scriptPath; }
-    bool IsLuaDebugEnabled() const override { return config_.luaDebug; }
-    std::string GetWindowTitle() const override { return config_.windowTitle; }
+    uint32_t GetWindowWidth() const override {
+        if (logger_) {
+            logger_->Trace("JsonConfigService", "GetWindowWidth");
+        }
+        return config_.width;
+    }
+    uint32_t GetWindowHeight() const override {
+        if (logger_) {
+            logger_->Trace("JsonConfigService", "GetWindowHeight");
+        }
+        return config_.height;
+    }
+    std::filesystem::path GetScriptPath() const override {
+        if (logger_) {
+            logger_->Trace("JsonConfigService", "GetScriptPath");
+        }
+        return config_.scriptPath;
+    }
+    bool IsLuaDebugEnabled() const override {
+        if (logger_) {
+            logger_->Trace("JsonConfigService", "IsLuaDebugEnabled");
+        }
+        return config_.luaDebug;
+    }
+    std::string GetWindowTitle() const override {
+        if (logger_) {
+            logger_->Trace("JsonConfigService", "GetWindowTitle");
+        }
+        return config_.windowTitle;
+    }
     std::vector<const char*> GetDeviceExtensions() const override;
 
     /**
@@ -57,7 +82,12 @@ public:
      *
      * @return Reference to the config structure
      */
-    const RuntimeConfig& GetConfig() const { return config_; }
+    const RuntimeConfig& GetConfig() const {
+        if (logger_) {
+            logger_->Trace("JsonConfigService", "GetConfig");
+        }
+        return config_;
+    }
 
 private:
     std::shared_ptr<ILogger> logger_;

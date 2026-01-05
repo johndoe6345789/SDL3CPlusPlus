@@ -22,7 +22,14 @@ JsonConfigWriterService::JsonConfigWriterService(std::shared_ptr<ILogger> logger
 
 void JsonConfigWriterService::WriteConfig(const RuntimeConfig& config, const std::filesystem::path& configPath) {
     if (logger_) {
-        logger_->Trace("JsonConfigWriterService", "WriteConfig", "configPath=" + configPath.string(), "Entering");
+        logger_->Trace("JsonConfigWriterService", "WriteConfig",
+                       "config.width=" + std::to_string(config.width) +
+                       ", config.height=" + std::to_string(config.height) +
+                       ", config.scriptPath=" + config.scriptPath.string() +
+                       ", config.luaDebug=" + std::string(config.luaDebug ? "true" : "false") +
+                       ", config.windowTitle=" + config.windowTitle +
+                       ", configPath=" + configPath.string(),
+                       "Entering");
     }
 
     rapidjson::Document document;

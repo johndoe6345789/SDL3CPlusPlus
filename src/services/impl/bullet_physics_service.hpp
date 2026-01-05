@@ -22,7 +22,10 @@ public:
     ~BulletPhysicsService() override;
 
     // IInitializable interface
-    void Initialize() override { Initialize(btVector3(0, -9.8f, 0)); }
+    void Initialize() override {
+        logger_->Trace("BulletPhysicsService", "Initialize");
+        Initialize(btVector3(0, -9.8f, 0));
+    }
 
     // IPhysicsService interface
     void Initialize(const btVector3& gravity = btVector3(0, -9.8f, 0)) override;

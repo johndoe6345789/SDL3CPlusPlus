@@ -28,7 +28,12 @@ public:
     // IInputService interface
     void ProcessEvent(const SDL_Event& event) override;
     void ResetFrameState() override;
-    const InputState& GetState() const override { return state_; }
+    const InputState& GetState() const override {
+        if (logger_) {
+            logger_->Trace("SdlInputService", "GetState");
+        }
+        return state_;
+    }
     bool IsKeyPressed(SDL_Keycode key) const override;
     bool IsMouseButtonPressed(uint8_t button) const override;
     std::pair<float, float> GetMousePosition() const override;

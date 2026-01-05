@@ -25,10 +25,22 @@ public:
     void UploadIndexData(const std::vector<uint16_t>& indices) override;
     void Cleanup() override;
 
-    VkBuffer GetVertexBuffer() const override { return vertexBuffer_; }
-    VkBuffer GetIndexBuffer() const override { return indexBuffer_; }
-    size_t GetVertexCount() const override { return vertexCount_; }
-    size_t GetIndexCount() const override { return indexCount_; }
+    VkBuffer GetVertexBuffer() const override {
+        logger_->Trace("BufferService", "GetVertexBuffer");
+        return vertexBuffer_;
+    }
+    VkBuffer GetIndexBuffer() const override {
+        logger_->Trace("BufferService", "GetIndexBuffer");
+        return indexBuffer_;
+    }
+    size_t GetVertexCount() const override {
+        logger_->Trace("BufferService", "GetVertexCount");
+        return vertexCount_;
+    }
+    size_t GetIndexCount() const override {
+        logger_->Trace("BufferService", "GetIndexCount");
+        return indexCount_;
+    }
 
     // Public buffer creation utility
     void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,

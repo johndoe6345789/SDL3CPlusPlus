@@ -17,6 +17,10 @@ GuiScriptService::GuiScriptService(std::shared_ptr<IScriptEngineService> engineS
                                    std::shared_ptr<ILogger> logger)
     : engineService_(std::move(engineService)),
       logger_(std::move(logger)) {
+    if (logger_) {
+        logger_->Trace("GuiScriptService", "GuiScriptService",
+                       "engineService=" + std::string(engineService_ ? "set" : "null"));
+    }
 }
 
 void GuiScriptService::Initialize() {
@@ -183,7 +187,13 @@ std::vector<GuiCommand> GuiScriptService::LoadGuiCommands() {
 
 void GuiScriptService::UpdateGuiInput(const GuiInputSnapshot& input) {
     if (logger_) {
-        logger_->Trace("GuiScriptService", "UpdateGuiInput");
+        logger_->Trace("GuiScriptService", "UpdateGuiInput",
+                       "mouseX=" + std::to_string(input.mouseX) +
+                       ", mouseY=" + std::to_string(input.mouseY) +
+                       ", mouseDown=" + std::string(input.mouseDown ? "true" : "false") +
+                       ", wheel=" + std::to_string(input.wheel) +
+                       ", textInput.size=" + std::to_string(input.textInput.size()) +
+                       ", keyStates.size=" + std::to_string(input.keyStates.size()));
     }
     if (guiInputRef_ < 0) {
         return;
@@ -228,10 +238,17 @@ void GuiScriptService::UpdateGuiInput(const GuiInputSnapshot& input) {
 }
 
 bool GuiScriptService::HasGuiCommands() const {
+    if (logger_) {
+        logger_->Trace("GuiScriptService", "HasGuiCommands");
+    }
     return guiCommandsFnRef_ >= 0;
 }
 
 GuiCommand::RectData GuiScriptService::ReadRect(lua_State* L, int index) const {
+    if (logger_) {
+        logger_->Trace("GuiScriptService", "ReadRect",
+                       "index=" + std::to_string(index));
+    }
     GuiCommand::RectData rect{};
     if (!lua_istable(L, index)) {
         return rect;
@@ -254,6 +271,10 @@ GuiCommand::RectData GuiScriptService::ReadRect(lua_State* L, int index) const {
 }
 
 GuiColor GuiScriptService::ReadColor(lua_State* L, int index, const GuiColor& defaultColor) const {
+    if (logger_) {
+        logger_->Trace("GuiScriptService", "ReadColor",
+                       "index=" + std::to_string(index));
+    }
     GuiColor color = defaultColor;
     if (!lua_istable(L, index)) {
         return color;
@@ -276,6 +297,11 @@ GuiColor GuiScriptService::ReadColor(lua_State* L, int index, const GuiColor& de
 }
 
 bool GuiScriptService::ReadStringField(lua_State* L, int index, const char* name, std::string& outString) const {
+    if (logger_) {
+        logger_->Trace("GuiScriptService", "ReadStringField",
+                       "index=" + std::to_string(index) +
+                       ", name=" + std::string(name ? name : ""));
+    }
     int absIndex = lua_absindex(L, index);
     lua_getfield(L, absIndex, name);
     if (lua_isstring(L, -1)) {
@@ -288,6 +314,9 @@ bool GuiScriptService::ReadStringField(lua_State* L, int index, const char* name
 }
 
 lua_State* GuiScriptService::GetLuaState() const {
+    if (logger_) {
+        logger_->Trace("GuiScriptService", "GetLuaState");
+    }
     if (!engineService_) {
         throw std::runtime_error("GUI script service is missing script engine service");
     }

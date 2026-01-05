@@ -19,25 +19,49 @@ static const std::vector<const char*> kDeviceExtensions = {
 
 JsonConfigService::JsonConfigService(std::shared_ptr<ILogger> logger, const char* argv0)
     : logger_(std::move(logger)), config_(RuntimeConfig{}) {
+    if (logger_) {
+        logger_->Trace("JsonConfigService", "JsonConfigService",
+                       "argv0=" + std::string(argv0 ? argv0 : ""));
+    }
     config_.scriptPath = FindScriptPath(argv0);
     logger_->Info("JsonConfigService initialized with default configuration");
 }
 
 JsonConfigService::JsonConfigService(std::shared_ptr<ILogger> logger, const std::filesystem::path& configPath, bool dumpConfig)
     : logger_(std::move(logger)), config_(LoadFromJson(logger_, configPath, dumpConfig)) {
+    if (logger_) {
+        logger_->Trace("JsonConfigService", "JsonConfigService",
+                       "configPath=" + configPath.string() +
+                       ", dumpConfig=" + std::string(dumpConfig ? "true" : "false"));
+    }
     logger_->Info("JsonConfigService initialized from config file: " + configPath.string());
 }
 
 JsonConfigService::JsonConfigService(std::shared_ptr<ILogger> logger, const RuntimeConfig& config)
     : logger_(std::move(logger)), config_(config) {
+    if (logger_) {
+        logger_->Trace("JsonConfigService", "JsonConfigService",
+                       "config.width=" + std::to_string(config.width) +
+                       ", config.height=" + std::to_string(config.height) +
+                       ", config.scriptPath=" + config.scriptPath.string() +
+                       ", config.luaDebug=" + std::string(config.luaDebug ? "true" : "false") +
+                       ", config.windowTitle=" + config.windowTitle);
+    }
     logger_->Info("JsonConfigService initialized with explicit configuration");
 }
 
 std::vector<const char*> JsonConfigService::GetDeviceExtensions() const {
+    if (logger_) {
+        logger_->Trace("JsonConfigService", "GetDeviceExtensions");
+    }
     return kDeviceExtensions;
 }
 
 std::filesystem::path JsonConfigService::FindScriptPath(const char* argv0) {
+    if (logger_) {
+        logger_->Trace("JsonConfigService", "FindScriptPath",
+                       "argv0=" + std::string(argv0 ? argv0 : ""));
+    }
     std::filesystem::path executable;
     if (argv0 && *argv0 != '\0') {
         executable = std::filesystem::path(argv0);
@@ -56,7 +80,8 @@ std::filesystem::path JsonConfigService::FindScriptPath(const char* argv0) {
 }
 
 RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger, const std::filesystem::path& configPath, bool dumpConfig) {
-    std::string args = configPath.string() + " dumpConfig=" + (dumpConfig ? "true" : "false");
+    std::string args = "configPath=" + configPath.string() +
+        ", dumpConfig=" + (dumpConfig ? "true" : "false");
     logger->Trace("JsonConfigService", "LoadFromJson", args);
 
     std::ifstream configStream(configPath);

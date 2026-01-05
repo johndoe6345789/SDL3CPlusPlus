@@ -18,7 +18,13 @@ GraphicsService::GraphicsService(std::shared_ptr<ILogger> logger,
       bufferService_(bufferService),
       renderCommandService_(renderCommandService),
       windowService_(windowService) {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("GraphicsService", "GraphicsService",
+                   "deviceService=" + std::string(deviceService_ ? "set" : "null") +
+                   ", swapchainService=" + std::string(swapchainService_ ? "set" : "null") +
+                   ", pipelineService=" + std::string(pipelineService_ ? "set" : "null") +
+                   ", bufferService=" + std::string(bufferService_ ? "set" : "null") +
+                   ", renderCommandService=" + std::string(renderCommandService_ ? "set" : "null") +
+                   ", windowService=" + std::string(windowService_ ? "set" : "null"));
 
     if (!deviceService_ || !swapchainService_ || !pipelineService_ || !bufferService_ || !renderCommandService_ || !windowService_) {
         throw std::invalid_argument("All graphics services must be provided");
@@ -26,14 +32,14 @@ GraphicsService::GraphicsService(std::shared_ptr<ILogger> logger,
 }
 
 GraphicsService::~GraphicsService() {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("GraphicsService", "~GraphicsService");
     if (initialized_) {
         Shutdown();
     }
 }
 
 void GraphicsService::Initialize() {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("GraphicsService", "Initialize");
 
     if (initialized_) {
         throw std::runtime_error("Graphics service already initialized");
@@ -44,14 +50,17 @@ void GraphicsService::Initialize() {
 }
 
 void GraphicsService::Shutdown() noexcept {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("GraphicsService", "Shutdown");
 
     // Services are shutdown individually by the registry
     initialized_ = false;
 }
 
 void GraphicsService::InitializeDevice(SDL_Window* window, const GraphicsConfig& config) {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("GraphicsService", "InitializeDevice",
+                   "windowIsNull=" + std::string(window ? "false" : "true") +
+                   ", deviceExtensions.size=" + std::to_string(config.deviceExtensions.size()) +
+                   ", enableValidationLayers=" + std::string(config.enableValidationLayers ? "true" : "false"));
 
     if (!initialized_) {
         throw std::runtime_error("Graphics service not initialized");
@@ -64,7 +73,7 @@ void GraphicsService::InitializeDevice(SDL_Window* window, const GraphicsConfig&
 }
 
 void GraphicsService::InitializeSwapchain() {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("GraphicsService", "InitializeSwapchain");
 
     if (!initialized_) {
         throw std::runtime_error("Graphics service not initialized");
@@ -76,7 +85,7 @@ void GraphicsService::InitializeSwapchain() {
 }
 
 void GraphicsService::RecreateSwapchain() {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("GraphicsService", "RecreateSwapchain");
 
     if (!initialized_) {
         throw std::runtime_error("Graphics service not initialized");
@@ -88,7 +97,8 @@ void GraphicsService::RecreateSwapchain() {
 }
 
 void GraphicsService::LoadShaders(const std::unordered_map<std::string, ShaderPaths>& shaders) {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("GraphicsService", "LoadShaders",
+                   "shaders.size=" + std::to_string(shaders.size()));
 
     if (!initialized_) {
         throw std::runtime_error("Graphics service not initialized");
@@ -102,7 +112,8 @@ void GraphicsService::LoadShaders(const std::unordered_map<std::string, ShaderPa
 }
 
 void GraphicsService::UploadVertexData(const std::vector<core::Vertex>& vertices) {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("GraphicsService", "UploadVertexData",
+                   "vertices.size=" + std::to_string(vertices.size()));
 
     if (!initialized_) {
         throw std::runtime_error("Graphics service not initialized");
@@ -112,7 +123,8 @@ void GraphicsService::UploadVertexData(const std::vector<core::Vertex>& vertices
 }
 
 void GraphicsService::UploadIndexData(const std::vector<uint16_t>& indices) {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("GraphicsService", "UploadIndexData",
+                   "indices.size=" + std::to_string(indices.size()));
 
     if (!initialized_) {
         throw std::runtime_error("Graphics service not initialized");
@@ -122,7 +134,7 @@ void GraphicsService::UploadIndexData(const std::vector<uint16_t>& indices) {
 }
 
 bool GraphicsService::BeginFrame() {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("GraphicsService", "BeginFrame");
 
     if (!initialized_) {
         return false;
@@ -133,7 +145,9 @@ bool GraphicsService::BeginFrame() {
 
 void GraphicsService::RenderScene(const std::vector<RenderCommand>& commands,
                                  const std::array<float, 16>& viewProj) {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("GraphicsService", "RenderScene",
+                   "commands.size=" + std::to_string(commands.size()) +
+                   ", viewProj.size=" + std::to_string(viewProj.size()));
 
     if (!initialized_) {
         return;
@@ -143,7 +157,7 @@ void GraphicsService::RenderScene(const std::vector<RenderCommand>& commands,
 }
 
 bool GraphicsService::EndFrame() {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("GraphicsService", "EndFrame");
 
     if (!initialized_) {
         return false;
@@ -153,7 +167,7 @@ bool GraphicsService::EndFrame() {
 }
 
 void GraphicsService::WaitIdle() {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("GraphicsService", "WaitIdle");
 
     if (!initialized_) {
         return;
@@ -163,7 +177,7 @@ void GraphicsService::WaitIdle() {
 }
 
 VkDevice GraphicsService::GetDevice() const {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("GraphicsService", "GetDevice");
 
     if (!initialized_) {
         return VK_NULL_HANDLE;
@@ -173,7 +187,7 @@ VkDevice GraphicsService::GetDevice() const {
 }
 
 VkPhysicalDevice GraphicsService::GetPhysicalDevice() const {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("GraphicsService", "GetPhysicalDevice");
 
     if (!initialized_) {
         return VK_NULL_HANDLE;
@@ -183,7 +197,7 @@ VkPhysicalDevice GraphicsService::GetPhysicalDevice() const {
 }
 
 VkExtent2D GraphicsService::GetSwapchainExtent() const {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("GraphicsService", "GetSwapchainExtent");
 
     if (!initialized_) {
         return {0, 0};
@@ -193,7 +207,7 @@ VkExtent2D GraphicsService::GetSwapchainExtent() const {
 }
 
 VkFormat GraphicsService::GetSwapchainFormat() const {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("GraphicsService", "GetSwapchainFormat");
 
     if (!initialized_) {
         return VK_FORMAT_UNDEFINED;
@@ -203,7 +217,7 @@ VkFormat GraphicsService::GetSwapchainFormat() const {
 }
 
 VkCommandBuffer GraphicsService::GetCurrentCommandBuffer() const {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("GraphicsService", "GetCurrentCommandBuffer");
 
     if (!initialized_) {
         return VK_NULL_HANDLE;
@@ -213,7 +227,7 @@ VkCommandBuffer GraphicsService::GetCurrentCommandBuffer() const {
 }
 
 VkQueue GraphicsService::GetGraphicsQueue() const {
-    logger_->TraceFunction(__func__);
+    logger_->Trace("GraphicsService", "GetGraphicsQueue");
 
     if (!initialized_) {
         return VK_NULL_HANDLE;

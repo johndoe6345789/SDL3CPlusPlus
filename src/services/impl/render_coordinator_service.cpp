@@ -15,7 +15,13 @@ RenderCoordinatorService::RenderCoordinatorService(std::shared_ptr<ILogger> logg
       guiService_(std::move(guiService)),
       sceneService_(std::move(sceneService)) {
     if (logger_) {
-        logger_->Trace("RenderCoordinatorService", "RenderCoordinatorService", "", "Created");
+        logger_->Trace("RenderCoordinatorService", "RenderCoordinatorService",
+                       "graphicsService=" + std::string(graphicsService_ ? "set" : "null") +
+                       ", sceneScriptService=" + std::string(sceneScriptService_ ? "set" : "null") +
+                       ", guiScriptService=" + std::string(guiScriptService_ ? "set" : "null") +
+                       ", guiService=" + std::string(guiService_ ? "set" : "null") +
+                       ", sceneService=" + std::string(sceneService_ ? "set" : "null"),
+                       "Created");
     }
 }
 

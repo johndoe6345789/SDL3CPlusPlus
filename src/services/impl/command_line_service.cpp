@@ -17,10 +17,16 @@ CommandLineService::CommandLineService(std::shared_ptr<ILogger> logger,
     if (!logger_) {
         throw std::runtime_error("CommandLineService requires a logger");
     }
-    logger_->Trace("CommandLineService", "CommandLineService", "", "Created");
+    logger_->Trace("CommandLineService", "CommandLineService",
+                   "platformService=" + std::string(platformService_ ? "set" : "null"),
+                   "Created");
 }
 
 CommandLineOptions CommandLineService::Parse(int argc, char** argv) {
+    std::string argv0;
+    if (argc > 0 && argv && argv[0]) {
+        argv0 = argv[0];
+    }
     bool traceRequested = false;
     for (int i = 1; i < argc; ++i) {
         if (argv[i] && std::string(argv[i]) == "--trace") {
@@ -32,7 +38,11 @@ CommandLineOptions CommandLineService::Parse(int argc, char** argv) {
         logger_->SetLevel(LogLevel::TRACE);
     }
 
-    logger_->Trace("CommandLineService", "Parse", "argc=" + std::to_string(argc), "Entering");
+    logger_->Trace("CommandLineService", "Parse",
+                   "argc=" + std::to_string(argc) +
+                   ", argvIsNull=" + std::string(argv ? "false" : "true") +
+                   ", argv0=" + argv0,
+                   "Entering");
 
     std::string jsonInputText;
     std::string seedOutputText;
@@ -98,6 +108,7 @@ CommandLineOptions CommandLineService::Parse(int argc, char** argv) {
 }
 
 std::optional<std::filesystem::path> CommandLineService::GetDefaultConfigPath() const {
+    logger_->Trace("CommandLineService", "GetDefaultConfigPath");
     if (!platformService_) {
         logger_->Warn("CommandLineService::GetDefaultConfigPath: Platform service not available");
         return std::nullopt;
@@ -109,13 +120,16 @@ std::optional<std::filesystem::path> CommandLineService::GetDefaultConfigPath() 
 }
 
 RuntimeConfig CommandLineService::LoadConfigFromJson(const std::filesystem::path& configPath, bool dumpConfig) {
-    logger_->Trace("CommandLineService", "LoadConfigFromJson", "configPath=" + configPath.string());
+    logger_->Trace("CommandLineService", "LoadConfigFromJson",
+                   "configPath=" + configPath.string() +
+                   ", dumpConfig=" + std::string(dumpConfig ? "true" : "false"));
     JsonConfigService configService(logger_, configPath, dumpConfig);
     return configService.GetConfig();
 }
 
 RuntimeConfig CommandLineService::LoadDefaultConfig(const char* argv0) {
-    logger_->Trace("CommandLineService", "LoadDefaultConfig");
+    logger_->Trace("CommandLineService", "LoadDefaultConfig",
+                   "argv0=" + std::string(argv0 ? argv0 : ""));
     JsonConfigService configService(logger_, argv0);
     return configService.GetConfig();
 }

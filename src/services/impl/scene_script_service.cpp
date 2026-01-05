@@ -97,6 +97,10 @@ SceneScriptService::SceneScriptService(std::shared_ptr<IScriptEngineService> eng
                                        std::shared_ptr<ILogger> logger)
     : engineService_(std::move(engineService)),
       logger_(std::move(logger)) {
+    if (logger_) {
+        logger_->Trace("SceneScriptService", "SceneScriptService",
+                       "engineService=" + std::string(engineService_ ? "set" : "null"));
+    }
 }
 
 std::vector<SceneObject> SceneScriptService::LoadSceneObjects() {
@@ -190,7 +194,9 @@ std::vector<SceneObject> SceneScriptService::LoadSceneObjects() {
 
 std::array<float, 16> SceneScriptService::ComputeModelMatrix(int functionRef, float time) {
     if (logger_) {
-        logger_->Trace("SceneScriptService", "ComputeModelMatrix", "time=" + std::to_string(time));
+        logger_->Trace("SceneScriptService", "ComputeModelMatrix",
+                       "functionRef=" + std::to_string(functionRef) +
+                       ", time=" + std::to_string(time));
     }
     lua_State* L = GetLuaState();
 
@@ -262,6 +268,9 @@ std::array<float, 16> SceneScriptService::GetViewProjectionMatrix(float aspect) 
 }
 
 lua_State* SceneScriptService::GetLuaState() const {
+    if (logger_) {
+        logger_->Trace("SceneScriptService", "GetLuaState");
+    }
     if (!engineService_) {
         throw std::runtime_error("Scene script service is missing script engine service");
     }

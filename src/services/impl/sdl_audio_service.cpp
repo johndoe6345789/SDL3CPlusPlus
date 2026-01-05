@@ -12,9 +12,16 @@ constexpr int kMixFrames = 1024;
 }  // namespace
 
 SdlAudioService::SdlAudioService(std::shared_ptr<ILogger> logger)
-    : logger_(logger) {}
+    : logger_(logger) {
+    if (logger_) {
+        logger_->Trace("SdlAudioService", "SdlAudioService");
+    }
+}
 
 SdlAudioService::~SdlAudioService() {
+    if (logger_) {
+        logger_->Trace("SdlAudioService", "~SdlAudioService");
+    }
     if (initialized_) {
         Shutdown();
     }
@@ -22,7 +29,7 @@ SdlAudioService::~SdlAudioService() {
 
 void SdlAudioService::Initialize() {
     if (logger_) {
-        logger_->TraceFunction(__func__);
+        logger_->Trace("SdlAudioService", "Initialize");
     }
 
     if (initialized_) {
@@ -68,7 +75,7 @@ void SdlAudioService::Initialize() {
 
 void SdlAudioService::Shutdown() noexcept {
     if (logger_) {
-        logger_->TraceFunction(__func__);
+        logger_->Trace("SdlAudioService", "Shutdown");
     }
 
     if (!initialized_) {
@@ -104,7 +111,9 @@ void SdlAudioService::Shutdown() noexcept {
 
 void SdlAudioService::PlayBackground(const std::filesystem::path& path, bool loop) {
     if (logger_) {
-        logger_->TraceFunction(__func__);
+        logger_->Trace("SdlAudioService", "PlayBackground",
+                       "path=" + path.string() +
+                       ", loop=" + std::string(loop ? "true" : "false"));
     }
 
     if (!initialized_) {
@@ -136,7 +145,9 @@ void SdlAudioService::PlayBackground(const std::filesystem::path& path, bool loo
 
 void SdlAudioService::PlayEffect(const std::filesystem::path& path, bool loop) {
     if (logger_) {
-        logger_->TraceFunction(__func__);
+        logger_->Trace("SdlAudioService", "PlayEffect",
+                       "path=" + path.string() +
+                       ", loop=" + std::string(loop ? "true" : "false"));
     }
 
     if (!initialized_) {
@@ -159,7 +170,7 @@ void SdlAudioService::PlayEffect(const std::filesystem::path& path, bool loop) {
 
 void SdlAudioService::StopBackground() {
     if (logger_) {
-        logger_->TraceFunction(__func__);
+        logger_->Trace("SdlAudioService", "StopBackground");
     }
 
     if (!initialized_) {
@@ -179,7 +190,7 @@ void SdlAudioService::StopBackground() {
 
 void SdlAudioService::StopAll() {
     if (logger_) {
-        logger_->TraceFunction(__func__);
+        logger_->Trace("SdlAudioService", "StopAll");
     }
 
     if (!initialized_) {
@@ -202,6 +213,10 @@ void SdlAudioService::StopAll() {
 }
 
 void SdlAudioService::SetVolume(float volume) {
+    if (logger_) {
+        logger_->Trace("SdlAudioService", "SetVolume",
+                       "volume=" + std::to_string(volume));
+    }
     std::lock_guard<std::mutex> lock(audioMutex_);
     volume_ = std::clamp(volume, 0.0f, 1.0f);
     if (logger_) {
@@ -210,16 +225,25 @@ void SdlAudioService::SetVolume(float volume) {
 }
 
 float SdlAudioService::GetVolume() const {
+    if (logger_) {
+        logger_->Trace("SdlAudioService", "GetVolume");
+    }
     std::lock_guard<std::mutex> lock(const_cast<std::mutex&>(audioMutex_));
     return volume_;
 }
 
 bool SdlAudioService::IsBackgroundPlaying() const {
+    if (logger_) {
+        logger_->Trace("SdlAudioService", "IsBackgroundPlaying");
+    }
     std::lock_guard<std::mutex> lock(const_cast<std::mutex&>(audioMutex_));
     return backgroundAudio_ && backgroundAudio_->isOpen && !backgroundAudio_->finished;
 }
 
 void SdlAudioService::Update() {
+    if (logger_) {
+        logger_->Trace("SdlAudioService", "Update");
+    }
     if (!initialized_ || !audioStream_) {
         return;
     }
@@ -312,6 +336,11 @@ void SdlAudioService::Update() {
 }
 
 bool SdlAudioService::LoadAudioFile(const std::filesystem::path& path, AudioData& audioData) {
+    if (logger_) {
+        logger_->Trace("SdlAudioService", "LoadAudioFile",
+                       "path=" + path.string() +
+                       ", audioData.isOpen=" + std::string(audioData.isOpen ? "true" : "false"));
+    }
     std::string pathText = path.string();
     FILE* file = fopen(pathText.c_str(), "rb");
     if (!file) {
@@ -356,6 +385,10 @@ bool SdlAudioService::LoadAudioFile(const std::filesystem::path& path, AudioData
 }
 
 void SdlAudioService::CleanupAudioData(AudioData& audioData) {
+    if (logger_) {
+        logger_->Trace("SdlAudioService", "CleanupAudioData",
+                       "audioData.isOpen=" + std::string(audioData.isOpen ? "true" : "false"));
+    }
     if (audioData.convertStream) {
         SDL_DestroyAudioStream(audioData.convertStream);
         audioData.convertStream = nullptr;
@@ -368,6 +401,11 @@ void SdlAudioService::CleanupAudioData(AudioData& audioData) {
 }
 
 int SdlAudioService::ReadStreamSamples(AudioData& audioData, std::vector<int16_t>& output, int frames) {
+    if (logger_) {
+        logger_->Trace("SdlAudioService", "ReadStreamSamples",
+                       "frames=" + std::to_string(frames) +
+                       ", audioData.isOpen=" + std::string(audioData.isOpen ? "true" : "false"));
+    }
     if (!audioData.isOpen || !audioData.convertStream) {
         return 0;
     }

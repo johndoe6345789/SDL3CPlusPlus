@@ -5,7 +5,7 @@ namespace sdl3cpp::services::impl {
 LifecycleService::LifecycleService(di::ServiceRegistry& registry, std::shared_ptr<ILogger> logger)
     : registry_(registry), logger_(std::move(logger)) {
     if (logger_) {
-        logger_->Trace("LifecycleService", "LifecycleService");
+        logger_->Trace("LifecycleService", "LifecycleService", "registry=provided");
     }
 }
 

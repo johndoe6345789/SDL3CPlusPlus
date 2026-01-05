@@ -11,6 +11,9 @@ namespace sdl3cpp::services::impl {
 
 PlatformService::PlatformService(std::shared_ptr<ILogger> logger)
     : logger_(std::move(logger)) {
+    if (logger_) {
+        logger_->Trace("PlatformService", "PlatformService");
+    }
 }
 
 std::optional<std::filesystem::path> PlatformService::GetUserConfigDirectory() const {
@@ -34,6 +37,10 @@ std::optional<std::filesystem::path> PlatformService::GetUserConfigDirectory() c
 
 #ifdef _WIN32
 std::string PlatformService::FormatWin32Error(unsigned long errorCode) const {
+    if (logger_) {
+        logger_->Trace("PlatformService", "FormatWin32Error",
+                       "errorCode=" + std::to_string(errorCode));
+    }
     if (errorCode == ERROR_SUCCESS) {
         return "ERROR_SUCCESS";
     }

@@ -23,7 +23,9 @@ CrashRecoveryService::CrashRecoveryService(std::shared_ptr<ILogger> logger)
     , fileFormatErrors_(0)
     , memoryWarnings_(0)
     , lastHealthCheck_(std::chrono::steady_clock::now()) {
-    logger_->Trace("CrashRecoveryService", "CrashRecoveryService", "", "Created");
+    logger_->Trace("CrashRecoveryService", "CrashRecoveryService",
+                   "logger=" + std::string(logger_ ? "set" : "null"),
+                   "Created");
 }
 
 CrashRecoveryService::~CrashRecoveryService() {
@@ -75,6 +77,7 @@ bool CrashRecoveryService::ExecuteWithTimeout(std::function<void()> func, int ti
 }
 
 bool CrashRecoveryService::IsCrashDetected() const {
+    logger_->Trace("CrashRecoveryService", "IsCrashDetected");
     return crashDetected_.load();
 }
 
@@ -102,17 +105,23 @@ bool CrashRecoveryService::AttemptRecovery() {
 }
 
 std::string CrashRecoveryService::GetCrashReport() const {
+    logger_->Trace("CrashRecoveryService", "GetCrashReport");
     std::lock_guard<std::mutex> lock(crashMutex_);
     return crashReport_;
 }
 
 void CrashRecoveryService::SignalHandler(int signal) {
     if (instance_) {
+        if (instance_->logger_) {
+            instance_->logger_->Trace("CrashRecoveryService", "SignalHandler",
+                                      "signal=" + std::to_string(signal));
+        }
         instance_->HandleCrash(signal);
     }
 }
 
 void CrashRecoveryService::SetupSignalHandlers() {
+    logger_->Trace("CrashRecoveryService", "SetupSignalHandlers");
     if (signalHandlersInstalled_) {
         return;
     }
@@ -143,6 +152,7 @@ void CrashRecoveryService::SetupSignalHandlers() {
 }
 
 void CrashRecoveryService::RemoveSignalHandlers() {
+    logger_->Trace("CrashRecoveryService", "RemoveSignalHandlers");
     if (!signalHandlersInstalled_) {
         return;
     }
@@ -160,6 +170,8 @@ void CrashRecoveryService::RemoveSignalHandlers() {
 }
 
 void CrashRecoveryService::HandleCrash(int signal) {
+    logger_->Trace("CrashRecoveryService", "HandleCrash",
+                   "signal=" + std::to_string(signal));
     std::lock_guard<std::mutex> lock(crashMutex_);
 
     crashDetected_ = true;
@@ -193,6 +205,7 @@ void CrashRecoveryService::HandleCrash(int signal) {
 }
 
 bool CrashRecoveryService::PerformRecovery() {
+    logger_->Trace("CrashRecoveryService", "PerformRecovery");
     // Basic recovery logic - in a real implementation this would be more sophisticated
     logger_->Info("CrashRecoveryService::PerformRecovery: Performing basic recovery");
 
@@ -208,6 +221,9 @@ bool CrashRecoveryService::PerformRecovery() {
 }
 
 bool CrashRecoveryService::CheckGpuHealth(double lastFrameTime, double expectedFrameTime) {
+    logger_->Trace("CrashRecoveryService", "CheckGpuHealth",
+                   "lastFrameTime=" + std::to_string(lastFrameTime) +
+                   ", expectedFrameTime=" + std::to_string(expectedFrameTime));
     UpdateHealthMetrics();
 
     // Check for GPU hangs - if we haven't had a successful frame in too long
@@ -234,6 +250,9 @@ bool CrashRecoveryService::CheckGpuHealth(double lastFrameTime, double expectedF
 }
 
 bool CrashRecoveryService::ValidateLuaExecution(bool scriptResult, const std::string& scriptName) {
+    logger_->Trace("CrashRecoveryService", "ValidateLuaExecution",
+                   "scriptResult=" + std::string(scriptResult ? "true" : "false") +
+                   ", scriptName=" + scriptName);
     if (!scriptResult) {
         luaExecutionFailures_++;
         std::lock_guard<std::mutex> lock(crashMutex_);
@@ -255,6 +274,9 @@ bool CrashRecoveryService::ValidateLuaExecution(bool scriptResult, const std::st
 }
 
 bool CrashRecoveryService::ValidateFileFormat(const std::string& filePath, const std::string& expectedFormat) {
+    logger_->Trace("CrashRecoveryService", "ValidateFileFormat",
+                   "filePath=" + filePath +
+                   ", expectedFormat=" + expectedFormat);
     // Basic file format validation
     std::filesystem::path path(filePath);
 
@@ -307,6 +329,7 @@ bool CrashRecoveryService::ValidateFileFormat(const std::string& filePath, const
 }
 
 bool CrashRecoveryService::CheckMemoryHealth() {
+    logger_->Trace("CrashRecoveryService", "CheckMemoryHealth");
     UpdateHealthMetrics();
 
     size_t currentMemory = GetCurrentMemoryUsage();
@@ -334,6 +357,7 @@ bool CrashRecoveryService::CheckMemoryHealth() {
 }
 
 std::string CrashRecoveryService::GetSystemHealthStatus() const {
+    logger_->Trace("CrashRecoveryService", "GetSystemHealthStatus");
     std::stringstream ss;
 
     ss << "=== SYSTEM HEALTH STATUS ===\n";
@@ -358,10 +382,12 @@ std::string CrashRecoveryService::GetSystemHealthStatus() const {
 }
 
 void CrashRecoveryService::UpdateHealthMetrics() {
+    logger_->Trace("CrashRecoveryService", "UpdateHealthMetrics");
     lastHealthCheck_ = std::chrono::steady_clock::now();
 }
 
 size_t CrashRecoveryService::GetCurrentMemoryUsage() const {
+    logger_->Trace("CrashRecoveryService", "GetCurrentMemoryUsage");
     // This is a simplified memory usage check
     // In a real implementation, you'd use platform-specific APIs
     // For Linux, you might read /proc/self/status or use getrusage
@@ -376,6 +402,7 @@ size_t CrashRecoveryService::GetCurrentMemoryUsage() const {
 }
 
 bool CrashRecoveryService::IsGpuResponsive() const {
+    logger_->Trace("CrashRecoveryService", "IsGpuResponsive");
     // This is a placeholder for GPU responsiveness checking
     // In a real implementation, you'd try a simple GPU operation
     // and check if it completes within a reasonable time

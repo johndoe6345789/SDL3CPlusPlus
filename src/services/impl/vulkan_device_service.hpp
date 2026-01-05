@@ -29,12 +29,30 @@ public:
     void Shutdown() noexcept override;
     void WaitIdle() override;
 
-    VkInstance GetInstance() const override { return instance_; }
-    VkSurfaceKHR GetSurface() const override { return surface_; }
-    VkPhysicalDevice GetPhysicalDevice() const override { return physicalDevice_; }
-    VkDevice GetDevice() const override { return device_; }
-    VkQueue GetGraphicsQueue() const override { return graphicsQueue_; }
-    VkQueue GetPresentQueue() const override { return presentQueue_; }
+    VkInstance GetInstance() const override {
+        logger_->Trace("VulkanDeviceService", "GetInstance");
+        return instance_;
+    }
+    VkSurfaceKHR GetSurface() const override {
+        logger_->Trace("VulkanDeviceService", "GetSurface");
+        return surface_;
+    }
+    VkPhysicalDevice GetPhysicalDevice() const override {
+        logger_->Trace("VulkanDeviceService", "GetPhysicalDevice");
+        return physicalDevice_;
+    }
+    VkDevice GetDevice() const override {
+        logger_->Trace("VulkanDeviceService", "GetDevice");
+        return device_;
+    }
+    VkQueue GetGraphicsQueue() const override {
+        logger_->Trace("VulkanDeviceService", "GetGraphicsQueue");
+        return graphicsQueue_;
+    }
+    VkQueue GetPresentQueue() const override {
+        logger_->Trace("VulkanDeviceService", "GetPresentQueue");
+        return presentQueue_;
+    }
     QueueFamilyIndices GetQueueFamilies() const override;
 
     uint32_t FindMemoryType(uint32_t typeFilter,

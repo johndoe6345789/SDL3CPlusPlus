@@ -16,6 +16,10 @@ ShaderScriptService::ShaderScriptService(std::shared_ptr<IScriptEngineService> e
                                          std::shared_ptr<ILogger> logger)
     : engineService_(std::move(engineService)),
       logger_(std::move(logger)) {
+    if (logger_) {
+        logger_->Trace("ShaderScriptService", "ShaderScriptService",
+                       "engineService=" + std::string(engineService_ ? "set" : "null"));
+    }
 }
 
 std::unordered_map<std::string, ShaderPaths> ShaderScriptService::LoadShaderPathsMap() {
@@ -69,6 +73,10 @@ std::unordered_map<std::string, ShaderPaths> ShaderScriptService::LoadShaderPath
 }
 
 ShaderPaths ShaderScriptService::ReadShaderPathsTable(lua_State* L, int index) const {
+    if (logger_) {
+        logger_->Trace("ShaderScriptService", "ReadShaderPathsTable",
+                       "index=" + std::to_string(index));
+    }
     ShaderPaths paths;
     int absIndex = lua_absindex(L, index);
 
@@ -98,6 +106,9 @@ ShaderPaths ShaderScriptService::ReadShaderPathsTable(lua_State* L, int index) c
 }
 
 lua_State* ShaderScriptService::GetLuaState() const {
+    if (logger_) {
+        logger_->Trace("ShaderScriptService", "GetLuaState");
+    }
     if (!engineService_) {
         throw std::runtime_error("Shader script service is missing script engine service");
     }

@@ -35,7 +35,12 @@ public:
     // IScriptEngineService interface
     lua_State* GetLuaState() const override;
     std::filesystem::path GetScriptDirectory() const override;
-    bool IsInitialized() const override { return initialized_; }
+    bool IsInitialized() const override {
+        if (logger_) {
+            logger_->Trace("ScriptEngineService", "IsInitialized");
+        }
+        return initialized_;
+    }
 
 private:
     struct LuaBindingContext {

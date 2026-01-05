@@ -29,9 +29,15 @@ public:
     void Cleanup() override;
 
     VkPipeline GetPipeline(const std::string& key) const override;
-    VkPipelineLayout GetPipelineLayout() const override { return pipelineLayout_; }
+    VkPipelineLayout GetPipelineLayout() const override {
+        logger_->Trace("PipelineService", "GetPipelineLayout");
+        return pipelineLayout_;
+    }
     bool HasShader(const std::string& key) const override;
-    size_t GetShaderCount() const override { return shaderPathMap_.size(); }
+    size_t GetShaderCount() const override {
+        logger_->Trace("PipelineService", "GetShaderCount");
+        return shaderPathMap_.size();
+    }
 
     // IShutdownable interface
     void Shutdown() noexcept override;
