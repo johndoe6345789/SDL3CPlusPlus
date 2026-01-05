@@ -96,7 +96,8 @@ void RenderCoordinatorService::RenderFrame(float time) {
 
     if (guiService_ && guiScriptService_ && guiScriptService_->HasGuiCommands()) {
         auto guiCommands = guiScriptService_->LoadGuiCommands();
-        (void)guiCommands;
+        auto extent = graphicsService_->GetSwapchainExtent();
+        guiService_->PrepareFrame(guiCommands, extent.width, extent.height);
     }
 
     graphicsService_->EndFrame();

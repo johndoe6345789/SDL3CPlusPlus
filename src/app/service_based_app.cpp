@@ -136,6 +136,17 @@ void ServiceBasedApp::Run() {
             graphicsService->InitializeSwapchain();
         }
 
+        // Initialize GUI service after graphics
+        auto guiService = registry_.GetService<services::IGuiService>();
+        auto vulkanDeviceService = registry_.GetService<services::IVulkanDeviceService>();
+        auto swapchainService = registry_.GetService<services::ISwapchainService>();
+        if (guiService && vulkanDeviceService && swapchainService) {
+            guiService->Initialize(vulkanDeviceService->GetDevice(),
+                                 vulkanDeviceService->GetPhysicalDevice(),
+                                 swapchainService->GetSwapchainImageFormat(),
+                                 runtimeConfig_.scriptPath.parent_path());
+        }
+
         // Run the main application loop with crash recovery
         if (crashRecoveryService_) {
             bool success = crashRecoveryService_->ExecuteWithTimeout(
