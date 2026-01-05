@@ -66,9 +66,30 @@ SdlInputService::SdlInputService(std::shared_ptr<events::IEventBus> eventBus,
         OnTextInput(e);
     });
 
+    eventBus_->Subscribe(events::EventType::WindowFocusGained, [this](const events::Event& e) {
+        OnWindowFocusGained(e);
+    });
+
+    eventBus_->Subscribe(events::EventType::WindowFocusLost, [this](const events::Event& e) {
+        OnWindowFocusLost(e);
+    });
+
+    eventBus_->Subscribe(events::EventType::MouseGrabChanged, [this](const events::Event& e) {
+        OnMouseGrabChanged(e);
+    });
+
     if (logger_) {
         logger_->Trace("SdlInputService", "SdlInputService",
                        "eventBus=" + std::string(eventBus_ ? "set" : "null"));
+    }
+    if (configService_) {
+        const auto& mouseGrabConfig = configService_->GetMouseGrabConfig();
+        mouseGrabGatesLook_ = mouseGrabConfig.enabled &&
+                              (mouseGrabConfig.grabOnClick || mouseGrabConfig.startGrabbed);
+        if (logger_) {
+            logger_->Trace("SdlInputService", "SdlInputService",
+                           "mouseGrabGatesLook=" + std::string(mouseGrabGatesLook_ ? "true" : "false"));
+        }
     }
     BuildActionKeyMapping();
     EnsureGamepadSubsystem();
@@ -102,8 +123,10 @@ void SdlInputService::ProcessEvent(const SDL_Event& event) {
             // GUI input processing
             guiInputSnapshot_.mouseX = static_cast<float>(event.motion.x);
             guiInputSnapshot_.mouseY = static_cast<float>(event.motion.y);
-            guiInputSnapshot_.mouseDeltaX += static_cast<float>(event.motion.xrel);
-            guiInputSnapshot_.mouseDeltaY += static_cast<float>(event.motion.yrel);
+            if (ShouldCaptureMouseDelta()) {
+                guiInputSnapshot_.mouseDeltaX += static_cast<float>(event.motion.xrel);
+                guiInputSnapshot_.mouseDeltaY += static_cast<float>(event.motion.yrel);
+            }
             break;
 
         case SDL_EVENT_MOUSE_BUTTON_DOWN:
@@ -218,8 +241,10 @@ void SdlInputService::OnMouseMoved(const events::Event& event) {
     state_.mouseY = mouseEvent.y;
     guiInputSnapshot_.mouseX = mouseEvent.x;
     guiInputSnapshot_.mouseY = mouseEvent.y;
-    guiInputSnapshot_.mouseDeltaX += mouseEvent.deltaX;
-    guiInputSnapshot_.mouseDeltaY += mouseEvent.deltaY;
+    if (ShouldCaptureMouseDelta()) {
+        guiInputSnapshot_.mouseDeltaX += mouseEvent.deltaX;
+        guiInputSnapshot_.mouseDeltaY += mouseEvent.deltaY;
+    }
 }
 
 void SdlInputService::OnMouseButtonPressed(const events::Event& event) {
@@ -273,6 +298,37 @@ void SdlInputService::OnTextInput(const events::Event& event) {
     }
     state_.textInput += textEvent.text;
     guiInputSnapshot_.textInput += textEvent.text;
+}
+
+void SdlInputService::OnWindowFocusGained(const events::Event& event) {
+    (void)event;
+    windowFocused_ = true;
+    if (logger_) {
+        logger_->Trace("SdlInputService", "OnWindowFocusGained", "windowFocused=true");
+    }
+}
+
+void SdlInputService::OnWindowFocusLost(const events::Event& event) {
+    (void)event;
+    windowFocused_ = false;
+    guiInputSnapshot_.mouseDeltaX = 0.0f;
+    guiInputSnapshot_.mouseDeltaY = 0.0f;
+    if (logger_) {
+        logger_->Trace("SdlInputService", "OnWindowFocusLost", "windowFocused=false");
+    }
+}
+
+void SdlInputService::OnMouseGrabChanged(const events::Event& event) {
+    const auto& grabEvent = event.GetData<events::MouseGrabEvent>();
+    mouseGrabbed_ = grabEvent.grabbed;
+    if (!mouseGrabbed_) {
+        guiInputSnapshot_.mouseDeltaX = 0.0f;
+        guiInputSnapshot_.mouseDeltaY = 0.0f;
+    }
+    if (logger_) {
+        logger_->Trace("SdlInputService", "OnMouseGrabChanged",
+                       "grabbed=" + std::string(mouseGrabbed_ ? "true" : "false"));
+    }
 }
 
 void SdlInputService::BuildActionKeyMapping() {
@@ -460,6 +516,16 @@ bool SdlInputService::IsActionKeyPressed(const std::string& action) const {
         }
     }
     return false;
+}
+
+bool SdlInputService::ShouldCaptureMouseDelta() const {
+    if (!windowFocused_) {
+        return false;
+    }
+    if (mouseGrabGatesLook_) {
+        return mouseGrabbed_;
+    }
+    return true;
 }
 
 void SdlInputService::EnsureGamepadSubsystem() {

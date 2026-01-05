@@ -32,6 +32,7 @@ enum class EventType {
     MouseButtonPressed,
     MouseButtonReleased,
     MouseWheel,
+    MouseGrabChanged,
     TextInput,
 
     // Rendering events
@@ -145,6 +146,13 @@ struct MouseWheelEvent {
     float deltaX;
     float deltaY;
     bool flipped;
+};
+
+/**
+ * @brief Mouse grab state change event data.
+ */
+struct MouseGrabEvent {
+    bool grabbed;
 };
 
 /**

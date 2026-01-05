@@ -53,6 +53,9 @@ private:
     GuiInputSnapshot guiInputSnapshot_;
     IGuiScriptService* guiScriptService_ = nullptr;
     SDL_Gamepad* gamepad_ = nullptr;
+    bool windowFocused_ = true;
+    bool mouseGrabbed_ = false;
+    bool mouseGrabGatesLook_ = false;
     SDL_GamepadButton musicToggleButton_ = SDL_GAMEPAD_BUTTON_START;
     SDL_GamepadButton dpadUpButton_ = SDL_GAMEPAD_BUTTON_DPAD_UP;
     SDL_GamepadButton dpadDownButton_ = SDL_GAMEPAD_BUTTON_DPAD_DOWN;
@@ -75,6 +78,9 @@ private:
     void OnMouseButtonReleased(const events::Event& event);
     void OnMouseWheel(const events::Event& event);
     void OnTextInput(const events::Event& event);
+    void OnWindowFocusGained(const events::Event& event);
+    void OnWindowFocusLost(const events::Event& event);
+    void OnMouseGrabChanged(const events::Event& event);
     void EnsureGamepadSubsystem();
     void TryOpenGamepad();
     void CloseGamepad();
@@ -82,6 +88,7 @@ private:
     void BuildActionKeyMapping();
     void ApplyKeyMapping(SDL_Keycode key, bool isDown);
     bool IsActionKeyPressed(const std::string& action) const;
+    bool ShouldCaptureMouseDelta() const;
 
     // GUI key mapping (extracted from old Sdl3App)
     static const std::unordered_map<SDL_Keycode, std::string> kGuiKeyNames;

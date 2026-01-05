@@ -378,6 +378,17 @@ void SdlWindowService::ApplyMouseGrab(bool grabbed) {
 
     if (success) {
         mouseGrabbed_ = grabbed;
+        if (eventBus_) {
+            eventBus_->Publish(events::Event{
+                events::EventType::MouseGrabChanged,
+                GetCurrentTime(),
+                events::MouseGrabEvent{grabbed}
+            });
+        }
+        if (logger_) {
+            logger_->Trace("SdlWindowService", "ApplyMouseGrab",
+                           "mouseGrabChanged=true, grabbed=" + std::string(grabbed ? "true" : "false"));
+        }
     } else if (logger_) {
         logger_->Trace("SdlWindowService", "ApplyMouseGrab", "grabChangeFailed=true");
     }
