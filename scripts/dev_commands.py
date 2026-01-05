@@ -458,9 +458,6 @@ def gui(args: argparse.Namespace) -> None:
             # Set dark theme similar to Steam
             self.set_dark_theme()
 
-            # Create menu bar
-            self.create_menu_bar()
-
             # Central widget with horizontal splitter
             central_widget = QWidget()
             self.setCentralWidget(central_widget)
@@ -644,6 +641,9 @@ def gui(args: argparse.Namespace) -> None:
             right_layout.addWidget(console_container)
 
             main_layout.addWidget(right_panel, 1)
+
+            # Create menu bar after all widgets are initialized
+            self.create_menu_bar()
 
             # Select first game by default
             if self.games:
