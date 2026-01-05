@@ -496,22 +496,6 @@ end
 
 local rotation_speed = 0.9
 
-local function create_spinning_cube()
-    local function compute_model_matrix(time)
-        local rotation = math3d.rotation_y(time * rotation_speed)
-        local scale = scale_matrix(1.5, 1.5, 1.5)  -- Make cube 3x3x3 units
-        local position = math3d.translation(0.0, 5.0, 0.0)  -- Center of the room
-        return math3d.multiply(position, math3d.multiply(rotation, scale))
-    end
-
-    return {
-        vertices = cube_vertices,
-        indices = cube_indices,
-        compute_model_matrix = compute_model_matrix,
-        shader_key = "default",  -- Rainbow shader for spinning cube
-    }
-end
-
 local function build_static_model_matrix(position, scale)
     local translation = math3d.translation(position[1], position[2], position[3])
     local scaling = scale_matrix(scale[1], scale[2], scale[3])
@@ -546,6 +530,22 @@ local function create_static_cube(position, scale, color)
     }
 end
 
+local function create_spinning_cube()
+    local function compute_model_matrix(time)
+        local rotation = math3d.rotation_y(time * rotation_speed)
+        local scale = scale_matrix(1.5, 1.5, 1.5)  -- Make cube 3x3x3 units
+        local position = math3d.translation(0.0, 5.0, 0.0)  -- Center of the room
+        return math3d.multiply(position, math3d.multiply(rotation, scale))
+    end
+
+    return {
+        vertices = cube_vertices,
+        indices = cube_indices,
+        compute_model_matrix = compute_model_matrix,
+        shader_key = "default",
+    }
+end
+
 local function create_lantern(x, z)
     local lantern_height = 9
     local lantern_size = 0.2
@@ -557,25 +557,28 @@ local function create_room_objects()
     local floor_center_y = room.floor_top - room.floor_half_thickness
     local wall_center_y = room.floor_top + room.wall_height
     local ceiling_y = room.floor_top + room.wall_height * 2 + room.floor_half_thickness
-    local wall_offset = room.half_size - room.wall_thickness / 2
+    local wall_offset = room.half_size + room.wall_thickness
+    local wall_inner_edge = wall_offset - room.wall_thickness
+    local wall_outer_edge = wall_offset + room.wall_thickness
+    log_debug("Room walls: inner=%.2f outer=%.2f", wall_inner_edge, wall_outer_edge)
 
-    local blue_floor = {0.2, 0.3, 0.8}
-    local green_wall = {0.2, 0.7, 0.3}
-    local light_gray = {0.7, 0.7, 0.7}
+    local floor_color = {0.14, 0.19, 0.26}
+    local wall_color = {0.52, 0.36, 0.22}
+    local ceiling_color = {0.78, 0.8, 0.86}
 
     local objects = {
         create_static_cube({0.0, floor_center_y, 0.0},
-            {room.half_size, room.floor_half_thickness, room.half_size}, blue_floor),
+            {room.half_size, room.floor_half_thickness, room.half_size}, floor_color),
         create_static_cube({0.0, ceiling_y, 0.0},
-            {room.half_size, room.floor_half_thickness, room.half_size}, light_gray),
+            {room.half_size, room.floor_half_thickness, room.half_size}, ceiling_color),
         create_static_cube({0.0, wall_center_y, -wall_offset},
-            {room.half_size, room.wall_height, room.wall_thickness}, green_wall),
+            {room.half_size, room.wall_height, room.wall_thickness}, wall_color),
         create_static_cube({0.0, wall_center_y, wall_offset},
-            {room.half_size, room.wall_height, room.wall_thickness}, green_wall),
+            {room.half_size, room.wall_height, room.wall_thickness}, wall_color),
         create_static_cube({-wall_offset, wall_center_y, 0.0},
-            {room.wall_thickness, room.wall_height, room.half_size}, green_wall),
+            {room.wall_thickness, room.wall_height, room.half_size}, wall_color),
         create_static_cube({wall_offset, wall_center_y, 0.0},
-            {room.wall_thickness, room.wall_height, room.half_size}, green_wall),
+            {room.wall_thickness, room.wall_height, room.half_size}, wall_color),
     }
 
     -- Add lanterns in the four corners (adjusted for bigger room)
