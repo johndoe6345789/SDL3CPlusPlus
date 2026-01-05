@@ -18,6 +18,16 @@ class SDL3CppConan(ConanFile):
     def layout(self):
         cmake_layout(self)
 
+    def generate(self):
+        from conan.tools.cmake import CMakeToolchain
+        tc = CMakeToolchain(self)
+        if self.settings.os == "Vita":
+            import os
+            vitasdk = os.environ.get("VITASDK")
+            if vitasdk:
+                tc.toolchain_file = f"{vitasdk}/share/vita.toolchain.cmake"
+        tc.generate()
+
     def requirements(self):
         self.requires("lua/5.4.8")
         self.requires("sdl/3.2.20")

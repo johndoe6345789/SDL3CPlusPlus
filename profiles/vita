@@ -1,0 +1,13 @@
+[settings]
+os=Vita
+arch=armv7
+compiler=gcc
+compiler.version=9
+compiler.libcxx=libstdc++11
+build_type=Release
+
+[tool_requires]
+# Vita SDK isn't in Conan; handle separately
+
+[conf]
+tools.cmake.cmaketoolchain:generator=Ninja

@@ -180,6 +180,13 @@ def dependencies(args: argparse.Namespace) -> None:
 
 def configure(args: argparse.Namespace) -> None:
     """Configure a CMake project based on the chosen generator and options."""
+    if args.preset:
+        cmake_args = ["cmake", "--preset", args.preset]
+        cmake_extra_args = _strip_leading_double_dash(args.cmake_args)
+        if cmake_extra_args:
+            cmake_args.extend(cmake_extra_args)
+        run_argvs([cmake_args], args.dry_run)
+        return
     generator = args.generator or DEFAULT_GENERATOR
     build_dir = _as_build_dir(
         args.build_dir, GENERATOR_DEFAULT_DIR.get(generator, "build")
@@ -499,6 +506,11 @@ def gui(args: argparse.Namespace) -> None:
 
             layout = QFormLayout(self)
 
+            self.preset_combo = QComboBox()
+            self.preset_combo.addItems(["default", "vita-release"])
+            self.preset_combo.setCurrentText("default")
+            layout.addRow("Preset:", self.preset_combo)
+
             self.generator_combo = QComboBox()
             self.generator_combo.addItems(["ninja", "ninja-msvc", "vs"])
             self.generator_combo.setCurrentText(DEFAULT_GENERATOR)
@@ -592,6 +604,7 @@ def gui(args: argparse.Namespace) -> None:
             self.current_game = None
 
             # Build settings
+            self.preset = "default"
             self.generator = DEFAULT_GENERATOR
             self.build_type = "Release"
             self.target = "sdl3_app"
@@ -1115,15 +1128,17 @@ def gui(args: argparse.Namespace) -> None:
         def show_settings(self):
             """Show build settings dialog"""
             dialog = BuildSettingsDialog(self)
+            dialog.preset_combo.setCurrentText(self.preset)
             dialog.generator_combo.setCurrentText(self.generator)
             dialog.build_type_combo.setCurrentText(self.build_type)
             dialog.target_combo.setCurrentText(self.target)
 
             if dialog.exec() == QDialog.DialogCode.Accepted:
+                self.preset = dialog.preset_combo.currentText()
                 self.generator = dialog.generator_combo.currentText()
                 self.build_type = dialog.build_type_combo.currentText()
                 self.target = dialog.target_combo.currentText()
-                self.log(f"Settings updated: Generator={self.generator}, Build Type={self.build_type}, Target={self.target}")
+                self.log(f"Settings updated: Preset={self.preset}, Generator={self.generator}, Build Type={self.build_type}, Target={self.target}")
 
         def show_new_project_dialog(self):
             """Show new project creation dialog"""
@@ -1609,20 +1624,28 @@ return {{
         def run_dependencies(self):
             """Run conan dependencies installation"""
             cmd = [sys.executable, __file__, "dependencies"]
+            if self.preset == "vita-release":
+                cmd.extend(["--conan-install-args", "--profile", "profiles/vita"])
             self.run_command(cmd)
 
         def run_configure(self):
             """Run CMake configuration"""
-            cmd = [
-                sys.executable, __file__, "configure",
-                "--generator", self.generator,
-                "--build-type", self.build_type
-            ]
+            cmd = [sys.executable, __file__, "configure"]
+            if self.preset != "default":
+                cmd.extend(["--preset", self.preset])
+            else:
+                cmd.extend([
+                    "--generator", self.generator,
+                    "--build-type", self.build_type
+                ])
             self.run_command(cmd)
 
         def run_build(self):
             """Run build command"""
-            build_dir = GENERATOR_DEFAULT_DIR.get(self.generator, DEFAULT_BUILD_DIR)
+            if self.preset != "default":
+                build_dir = f"build-{self.preset.split('-')[0]}"  # e.g., build-vita
+            else:
+                build_dir = GENERATOR_DEFAULT_DIR.get(self.generator, DEFAULT_BUILD_DIR)
             cmd = [
                 sys.executable, __file__, "build",
                 "--build-dir", build_dir,
@@ -1662,6 +1685,10 @@ def main() -> int:
     )
     deps.set_defaults(func=dependencies)
     conf = subparsers.add_parser("configure", help="configure CMake project")
+    conf.add_argument(
+        "--preset",
+        help="use a CMake preset instead of manual configuration",
+    )
     conf.add_argument(
         "--generator",
         choices=["vs", "ninja", "ninja-msvc"],

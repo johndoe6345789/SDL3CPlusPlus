@@ -3,6 +3,18 @@
     "vendor": {
         "conan": {}
     },
+    "configurePresets": [
+        {
+            "name": "vita-release",
+            "inherits": ["conan-release"],
+            "cacheVariables": {
+                "ENABLE_VITA": "ON"
+            },
+            "environment": {
+                "VITASDK": "/home/rewrich/vita-toolchain"
+            }
+        }
+    ],
     "include": [
         "build/build/Release/generators/CMakePresets.json"
     ]
