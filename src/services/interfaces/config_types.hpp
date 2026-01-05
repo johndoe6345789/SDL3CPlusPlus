@@ -23,25 +23,25 @@ struct InputBindings {
     std::string gamepadMoveYAxis = "lefty";
     std::string gamepadLookXAxis = "rightx";
     std::string gamepadLookYAxis = "righty";
-    std::string gamepadDpadUpButton = "dpad_up";
-    std::string gamepadDpadDownButton = "dpad_down";
-    std::string gamepadDpadLeftButton = "dpad_left";
-    std::string gamepadDpadRightButton = "dpad_right";
+    std::string gamepadDpadUpButton = "dpup";
+    std::string gamepadDpadDownButton = "dpdown";
+    std::string gamepadDpadLeftButton = "dpleft";
+    std::string gamepadDpadRightButton = "dpright";
     std::unordered_map<std::string, std::string> gamepadButtonActions = {
-        {"south", "gamepad_a"},
-        {"east", "gamepad_b"},
-        {"west", "gamepad_x"},
-        {"north", "gamepad_y"},
-        {"left_shoulder", "gamepad_lb"},
-        {"right_shoulder", "gamepad_rb"},
-        {"left_stick", "gamepad_ls"},
-        {"right_stick", "gamepad_rs"},
+        {"a", "gamepad_a"},
+        {"b", "gamepad_b"},
+        {"x", "gamepad_x"},
+        {"y", "gamepad_y"},
+        {"leftshoulder", "gamepad_lb"},
+        {"rightshoulder", "gamepad_rb"},
+        {"leftstick", "gamepad_ls"},
+        {"rightstick", "gamepad_rs"},
         {"back", "gamepad_back"},
         {"start", "gamepad_start"}
     };
     std::unordered_map<std::string, std::string> gamepadAxisActions = {
-        {"left_trigger", "gamepad_lt"},
-        {"right_trigger", "gamepad_rt"}
+        {"lefttrigger", "gamepad_lt"},
+        {"righttrigger", "gamepad_rt"}
     };
     float gamepadAxisActionThreshold = 0.5f;
 };

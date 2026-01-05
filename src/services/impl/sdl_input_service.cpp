@@ -330,6 +330,12 @@ void SdlInputService::BuildActionKeyMapping() {
         SDL_GamepadButton button = SDL_GetGamepadButtonFromString(normalized.c_str());
         if (button != SDL_GAMEPAD_BUTTON_INVALID) {
             target = button;
+            if (logger_) {
+                logger_->Trace("SdlInputService", "BuildActionKeyMapping",
+                               "gamepadButton=" + std::string(bindingName) +
+                               ", value=" + buttonValue +
+                               ", buttonCode=" + std::to_string(static_cast<int>(button)));
+            }
         } else if (logger_) {
             logger_->Error("SdlInputService: unknown gamepad button binding for " +
                            std::string(bindingName) + " -> " + buttonValue);
@@ -350,6 +356,12 @@ void SdlInputService::BuildActionKeyMapping() {
         SDL_GamepadAxis axis = SDL_GetGamepadAxisFromString(normalized.c_str());
         if (axis != SDL_GAMEPAD_AXIS_INVALID) {
             target = axis;
+            if (logger_) {
+                logger_->Trace("SdlInputService", "BuildActionKeyMapping",
+                               "gamepadAxis=" + std::string(axisName) +
+                               ", value=" + axisValue +
+                               ", axisCode=" + std::to_string(static_cast<int>(axis)));
+            }
         } else if (logger_) {
             logger_->Error("SdlInputService: unknown gamepad axis binding for " +
                            std::string(axisName) + " -> " + axisValue);
@@ -375,6 +387,12 @@ void SdlInputService::BuildActionKeyMapping() {
             continue;
         }
         gamepadButtonActions_[button] = actionName;
+        if (logger_) {
+            logger_->Trace("SdlInputService", "BuildActionKeyMapping",
+                           "gamepadButtonAction=" + buttonName +
+                           ", action=" + actionName +
+                           ", buttonCode=" + std::to_string(static_cast<int>(button)));
+        }
     }
 
     for (const auto& [axisName, actionName] : bindings.gamepadAxisActions) {
@@ -391,6 +409,12 @@ void SdlInputService::BuildActionKeyMapping() {
             continue;
         }
         gamepadAxisActions_[axis] = actionName;
+        if (logger_) {
+            logger_->Trace("SdlInputService", "BuildActionKeyMapping",
+                           "gamepadAxisAction=" + axisName +
+                           ", action=" + actionName +
+                           ", axisCode=" + std::to_string(static_cast<int>(axis)));
+        }
     }
 
     gamepadAxisActionThreshold_ = bindings.gamepadAxisActionThreshold;

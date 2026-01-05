@@ -45,6 +45,13 @@ local function rectContains(rect, x, y)
     return x >= rect.x and x <= rect.x + rect.width and y >= rect.y and y <= rect.y + rect.height
 end
 
+local function log_trace(fmt, ...)
+    if not lua_debug or not fmt then
+        return
+    end
+    print(string.format(fmt, ...))
+end
+
 local InputState = {}
 InputState.__index = InputState
 
@@ -382,7 +389,8 @@ function Gui.textbox(context, widgetId, rectDef, state, opts)
         end
         if context.input:isKeyDown("end") then
             state.cursor = #state.text
-            context.input.keys.end = false
+            context.input.keys["end"] = false
+            log_trace("Textbox end key pressed, cursor=%d text_len=%d", state.cursor, #state.text)
         end
         if context.input:isKeyDown("enter") then
             if opts.onSubmit then
