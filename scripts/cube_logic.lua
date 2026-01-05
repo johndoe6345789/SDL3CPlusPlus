@@ -543,7 +543,7 @@ local function create_static_cube(position, scale, color)
 end
 
 local function create_lantern(x, z)
-    local lantern_height = 4.5
+    local lantern_height = 9
     local lantern_size = 0.2
     return create_static_cube({x, lantern_height, z},
         {lantern_size, lantern_size, lantern_size}, {1.0, 0.9, 0.6})

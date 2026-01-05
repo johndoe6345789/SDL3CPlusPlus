@@ -389,8 +389,8 @@ def gui(args: argparse.Namespace) -> None:
             QSplitter, QMenuBar, QDialog, QDialogButtonBox, QFormLayout, QMessageBox,
             QPlainTextEdit, QTabWidget, QLineEdit
         )
-        from PyQt6.QtCore import Qt, QProcess, QSize
-        from PyQt6.QtGui import QFont, QPalette, QColor, QAction, QSyntaxHighlighter, QTextCharFormat
+        from PyQt6.QtCore import Qt, QProcess, QSize, QTimer
+        from PyQt6.QtGui import QFont, QPalette, QColor, QAction, QSyntaxHighlighter, QTextCharFormat, QTextCursor, QTextDocument
     except ImportError:
         raise SystemExit(
             "PyQt6 is not installed. Install it with:\n"
@@ -821,6 +821,59 @@ def gui(args: argparse.Namespace) -> None:
             self.lua_file_label = QLabel("No file loaded")
             self.lua_file_label.setStyleSheet("color: #8f98a0; font-size: 9pt;")
             editor_toolbar.addWidget(self.lua_file_label)
+
+            # Search box
+            self.search_edit = QLineEdit()
+            self.search_edit.setPlaceholderText("Search...")
+            self.search_edit.setMaximumWidth(150)
+            self.search_edit.setStyleSheet("""
+                QLineEdit {
+                    background-color: #2a475e;
+                    color: #c6d1db;
+                    border: 1px solid #0e1216;
+                    border-radius: 3px;
+                    padding: 3px;
+                }
+            """)
+            self.search_edit.returnPressed.connect(lambda: self.search_in_editor(forward=True))
+            editor_toolbar.addWidget(self.search_edit)
+
+            self.find_prev_btn = QPushButton("⬆ Prev")
+            self.find_prev_btn.setStyleSheet("""
+                QPushButton {
+                    background-color: #2a475e;
+                    color: #c6d1db;
+                    border: none;
+                    border-radius: 3px;
+                    padding: 5px;
+                }
+                QPushButton:hover {
+                    background-color: #3e5c78;
+                }
+            """)
+            self.find_prev_btn.clicked.connect(lambda: self.search_in_editor(forward=False))
+            editor_toolbar.addWidget(self.find_prev_btn)
+
+            self.find_next_btn = QPushButton("⬇ Next")
+            self.find_next_btn.setStyleSheet("""
+                QPushButton {
+                    background-color: #2a475e;
+                    color: #c6d1db;
+                    border: none;
+                    border-radius: 3px;
+                    padding: 5px;
+                }
+                QPushButton:hover {
+                    background-color: #3e5c78;
+                }
+            """)
+            self.find_next_btn.clicked.connect(lambda: self.search_in_editor(forward=True))
+            editor_toolbar.addWidget(self.find_next_btn)
+
+            # Status label for feedback
+            self.status_label = QLabel("")
+            self.status_label.setStyleSheet("color: #8f98a0; font-size: 9pt;")
+            editor_toolbar.addWidget(self.status_label)
 
             editor_toolbar.addStretch()
 
@@ -1346,13 +1399,13 @@ return {{
 
                 self.lua_modified = False
                 self.save_lua_btn.setEnabled(False)
-                self.log(f"✓ Saved {self.current_lua_file}")
-
-                # Switch to console tab to show the message
-                self.tab_widget.setCurrentIndex(1)
+                self.status_label.setText(f"✓ Saved {self.current_lua_file}")
+                self.status_label.setStyleSheet("color: #4caf50; font-size: 9pt;")
+                QTimer.singleShot(3000, lambda: self.status_label.setText(""))
             except Exception as e:
-                self.log(f"❌ Error saving {self.current_lua_file}: {e}")
-                self.tab_widget.setCurrentIndex(1)
+                self.status_label.setText(f"❌ Error saving {self.current_lua_file}: {e}")
+                self.status_label.setStyleSheet("color: #ff6b6b; font-size: 9pt;")
+                QTimer.singleShot(5000, lambda: self.status_label.setText(""))
 
         def reload_lua_script(self):
             """Reload the Lua script from disk"""
@@ -1369,6 +1422,29 @@ return {{
                     return
 
             self.load_lua_script()
+
+        def search_in_editor(self, forward=True):
+            """Search for text in the Lua editor"""
+            text = self.search_edit.text()
+            if text:
+                flags = QTextDocument.FindFlag(0)
+                if not forward:
+                    flags |= QTextDocument.FindFlag.FindBackward
+                
+                found = self.lua_editor.find(text, flags)
+                if not found:
+                    # Wrap around
+                    cursor = self.lua_editor.textCursor()
+                    if forward:
+                        cursor.movePosition(QTextCursor.MoveOperation.Start)
+                    else:
+                        cursor.movePosition(QTextCursor.MoveOperation.End)
+                    self.lua_editor.setTextCursor(cursor)
+                    found = self.lua_editor.find(text, flags)
+                    if not found:
+                        self.status_label.setText(f"No matches for '{text}'")
+                        self.status_label.setStyleSheet("color: #ff6b6b; font-size: 9pt;")
+                        QTimer.singleShot(3000, lambda: self.status_label.setText(""))
 
         def play_game(self):
             """Launch the selected game"""
