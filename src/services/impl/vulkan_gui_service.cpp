@@ -74,14 +74,15 @@ void VulkanGuiService::RenderToSwapchain(VkCommandBuffer commandBuffer, VkImage 
     rendererService_->RenderToSwapchain(commandBuffer, image);
 }
 
-void VulkanGuiService::Resize(uint32_t width, uint32_t height, VkFormat format) {
+void VulkanGuiService::Resize(uint32_t width, uint32_t height, VkFormat format, VkRenderPass renderPass) {
     logger_->Trace("VulkanGuiService", "Resize",
                    "width=" + std::to_string(width) +
                    ", height=" + std::to_string(height) +
-                   ", format=" + std::to_string(static_cast<uint32_t>(format)));
+                   ", format=" + std::to_string(static_cast<uint32_t>(format)) +
+                   ", renderPassIsNull=" + std::string(renderPass == VK_NULL_HANDLE ? "true" : "false"));
 
     if (rendererService_) {
-        rendererService_->Resize(width, height, format);
+        rendererService_->Resize(width, height, format, renderPass);
     }
 }
 

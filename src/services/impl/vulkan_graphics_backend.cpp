@@ -1,7 +1,9 @@
 #include "vulkan_graphics_backend.hpp"
 
+#include "../../core/vertex.hpp"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
+#include <cstring>
 #include <stdexcept>
 #include <vector>
 
@@ -54,7 +56,7 @@ void VulkanGraphicsBackend::Initialize(void* window, const GraphicsConfig& confi
 
     // Get window size for swapchain
     int width, height;
-    SDL_GetWindowSize(window_, &width, &height);
+    SDL_GetWindowSizeInPixels(window_, &width, &height);
 
     // Initialize swapchain
     swapchainService_->CreateSwapchain(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
@@ -80,6 +82,33 @@ void VulkanGraphicsBackend::Shutdown() {
     initialized_ = false;
 }
 
+void VulkanGraphicsBackend::RecreateSwapchain(uint32_t width, uint32_t height) {
+    logger_->Trace("VulkanGraphicsBackend", "RecreateSwapchain",
+                   "width=" + std::to_string(width) +
+                   ", height=" + std::to_string(height));
+
+    if (!initialized_) {
+        return;
+    }
+
+    if (width == 0 || height == 0) {
+        logger_->Warn("VulkanGraphicsBackend::RecreateSwapchain: Skipping swapchain recreation for zero size");
+        return;
+    }
+
+    deviceService_->WaitIdle();
+    swapchainService_->RecreateSwapchain(width, height);
+
+    VkExtent2D extent = swapchainService_->GetSwapchainExtent();
+    pipelineService_->RecreatePipelines(swapchainService_->GetRenderPass(), extent);
+    renderCommandService_->OnSwapchainRecreated();
+}
+
+void VulkanGraphicsBackend::WaitIdle() {
+    logger_->Trace("VulkanGraphicsBackend", "WaitIdle");
+    deviceService_->WaitIdle();
+}
+
 GraphicsDeviceHandle VulkanGraphicsBackend::CreateDevice() {
     logger_->Trace("VulkanGraphicsBackend", "CreateDevice");
     // Device is already created in Initialize, just return a handle
@@ -99,10 +128,12 @@ GraphicsPipelineHandle VulkanGraphicsBackend::CreatePipeline(GraphicsDeviceHandl
 
     // Compile pipeline with render pass from swapchain service
     // Note: This assumes swapchain service has created the render pass
-    VkExtent2D extent;
-    // TODO: Get extent from swapchain service
-    extent.width = 800;  // Temporary
-    extent.height = 600; // Temporary
+    VkExtent2D extent = swapchainService_->GetSwapchainExtent();
+    if (logger_) {
+        logger_->Trace("VulkanGraphicsBackend", "CreatePipeline",
+                       "swapchainExtent=" + std::to_string(extent.width) + "x" +
+                       std::to_string(extent.height));
+    }
 
     pipelineService_->CompileAll(swapchainService_->GetRenderPass(), extent);
 
@@ -124,18 +155,52 @@ void VulkanGraphicsBackend::DestroyPipeline(GraphicsDeviceHandle device, Graphic
 GraphicsBufferHandle VulkanGraphicsBackend::CreateVertexBuffer(GraphicsDeviceHandle device, const std::vector<uint8_t>& data) {
     logger_->Trace("VulkanGraphicsBackend", "CreateVertexBuffer", "data.size=" + std::to_string(data.size()));
 
-    // For now, we'll use the buffer service's existing vertex buffer functionality
-    // This is a bit of a mismatch - the buffer service expects core::Vertex, but we get raw bytes
-    // TODO: Extend buffer service to handle raw buffer creation or create a new method
+    if (data.empty()) {
+        logger_->Error("VulkanGraphicsBackend::CreateVertexBuffer: No vertex data provided");
+        return nullptr;
+    }
 
-    // Return a dummy handle for now
+    if (data.size() % sizeof(core::Vertex) != 0) {
+        logger_->Error("VulkanGraphicsBackend::CreateVertexBuffer: Vertex data size is not aligned to Vertex");
+        return nullptr;
+    }
+
+    const size_t vertexCount = data.size() / sizeof(core::Vertex);
+    if (logger_) {
+        logger_->Trace("VulkanGraphicsBackend", "CreateVertexBuffer",
+                       "vertexCount=" + std::to_string(vertexCount));
+    }
+
+    std::vector<core::Vertex> vertices(vertexCount);
+    std::memcpy(vertices.data(), data.data(), data.size());
+    bufferService_->UploadVertexData(vertices);
+
     return reinterpret_cast<GraphicsBufferHandle>(bufferService_->GetVertexBuffer());
 }
 
 GraphicsBufferHandle VulkanGraphicsBackend::CreateIndexBuffer(GraphicsDeviceHandle device, const std::vector<uint8_t>& data) {
     logger_->Trace("VulkanGraphicsBackend", "CreateIndexBuffer", "data.size=" + std::to_string(data.size()));
 
-    // Similar issue as vertex buffer
+    if (data.empty()) {
+        logger_->Error("VulkanGraphicsBackend::CreateIndexBuffer: No index data provided");
+        return nullptr;
+    }
+
+    if (data.size() % sizeof(uint16_t) != 0) {
+        logger_->Error("VulkanGraphicsBackend::CreateIndexBuffer: Index data size is not aligned to uint16_t");
+        return nullptr;
+    }
+
+    const size_t indexCount = data.size() / sizeof(uint16_t);
+    if (logger_) {
+        logger_->Trace("VulkanGraphicsBackend", "CreateIndexBuffer",
+                       "indexCount=" + std::to_string(indexCount));
+    }
+
+    std::vector<uint16_t> indices(indexCount);
+    std::memcpy(indices.data(), data.data(), data.size());
+    bufferService_->UploadIndexData(indices);
+
     return reinterpret_cast<GraphicsBufferHandle>(bufferService_->GetIndexBuffer());
 }
 
@@ -188,6 +253,32 @@ void VulkanGraphicsBackend::Draw(GraphicsDeviceHandle device, GraphicsPipelineHa
 
     // Accumulate the command for later recording
     frameCommands_.push_back(command);
+}
+
+GraphicsDeviceHandle VulkanGraphicsBackend::GetPhysicalDevice() const {
+    logger_->Trace("VulkanGraphicsBackend", "GetPhysicalDevice");
+    return reinterpret_cast<GraphicsDeviceHandle>(deviceService_->GetPhysicalDevice());
+}
+
+std::pair<uint32_t, uint32_t> VulkanGraphicsBackend::GetSwapchainExtent() const {
+    logger_->Trace("VulkanGraphicsBackend", "GetSwapchainExtent");
+    VkExtent2D extent = swapchainService_->GetSwapchainExtent();
+    return {extent.width, extent.height};
+}
+
+uint32_t VulkanGraphicsBackend::GetSwapchainFormat() const {
+    logger_->Trace("VulkanGraphicsBackend", "GetSwapchainFormat");
+    return static_cast<uint32_t>(swapchainService_->GetSwapchainImageFormat());
+}
+
+void* VulkanGraphicsBackend::GetCurrentCommandBuffer() const {
+    logger_->Trace("VulkanGraphicsBackend", "GetCurrentCommandBuffer");
+    return reinterpret_cast<void*>(renderCommandService_->GetCurrentCommandBuffer());
+}
+
+void* VulkanGraphicsBackend::GetGraphicsQueue() const {
+    logger_->Trace("VulkanGraphicsBackend", "GetGraphicsQueue");
+    return reinterpret_cast<void*>(deviceService_->GetGraphicsQueue());
 }
 
 }  // namespace sdl3cpp::services::impl

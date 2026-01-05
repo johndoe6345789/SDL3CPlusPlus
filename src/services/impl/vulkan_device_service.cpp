@@ -1,9 +1,60 @@
 #include "vulkan_device_service.hpp"
 #include <SDL3/SDL_vulkan.h>
+#include <algorithm>
 #include <iostream>
 #include <set>
 #include <stdexcept>
 #include <cstring>
+
+namespace {
+
+VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+                                             VkDebugUtilsMessageTypeFlagsEXT messageType,
+                                             const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+                                             void* pUserData) {
+    auto* logger = static_cast<sdl3cpp::services::ILogger*>(pUserData);
+    std::string message = "Vulkan validation: ";
+    message += pCallbackData && pCallbackData->pMessage ? pCallbackData->pMessage : "Unknown message";
+
+    if (logger) {
+        if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
+            logger->Error(message);
+        } else if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
+            logger->Warn(message);
+        } else {
+            logger->Debug(message);
+        }
+    } else {
+        std::cerr << message << std::endl;
+    }
+
+    (void)messageType;
+    return VK_FALSE;
+}
+
+VkResult CreateDebugUtilsMessengerEXT(VkInstance instance,
+                                      const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
+                                      const VkAllocationCallbacks* pAllocator,
+                                      VkDebugUtilsMessengerEXT* pDebugMessenger) {
+    auto func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(
+        vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
+    if (func != nullptr) {
+        return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
+    }
+    return VK_ERROR_EXTENSION_NOT_PRESENT;
+}
+
+void DestroyDebugUtilsMessengerEXT(VkInstance instance,
+                                   VkDebugUtilsMessengerEXT debugMessenger,
+                                   const VkAllocationCallbacks* pAllocator) {
+    auto func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
+        vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT"));
+    if (func != nullptr) {
+        func(instance, debugMessenger, pAllocator);
+    }
+}
+
+} // namespace
 
 namespace sdl3cpp::services::impl {
 
@@ -42,6 +93,7 @@ void VulkanDeviceService::Initialize(const std::vector<const char*>& deviceExten
     device_ = VK_NULL_HANDLE;
     graphicsQueue_ = VK_NULL_HANDLE;
     presentQueue_ = VK_NULL_HANDLE;
+    debugMessenger_ = VK_NULL_HANDLE;
 
     // Get required extensions from SDL
     uint32_t extensionCount = 0;
@@ -51,8 +103,16 @@ void VulkanDeviceService::Initialize(const std::vector<const char*>& deviceExten
     }
 
     std::vector<const char*> requiredExtensions(extensions, extensions + extensionCount);
+    if (validationLayersEnabled_) {
+        auto it = std::find(requiredExtensions.begin(), requiredExtensions.end(),
+                            VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+        if (it == requiredExtensions.end()) {
+            requiredExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+        }
+    }
 
     CreateInstance(requiredExtensions);
+    SetupDebugMessenger();
     logger_->Trace("VulkanDeviceService", "Initialize",
                    "instanceCreated=" + std::string(instance_ != VK_NULL_HANDLE ? "true" : "false") +
                    ", selectionDeferredUntilSurface=true");
@@ -131,6 +191,13 @@ void VulkanDeviceService::CreateInstance(const std::vector<const char*>& require
     createInfo.ppEnabledLayerNames = layerList.data();
     createInfo.enabledExtensionCount = static_cast<uint32_t>(requiredExtensions.size());
     createInfo.ppEnabledExtensionNames = requiredExtensions.data();
+    createInfo.pNext = nullptr;
+
+    VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
+    if (validationLayersEnabled_ && !layerList.empty()) {
+        PopulateDebugMessengerCreateInfo(debugCreateInfo);
+        createInfo.pNext = &debugCreateInfo;
+    }
 
     if (vkCreateInstance(&createInfo, nullptr, &instance_) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create Vulkan instance");
@@ -313,6 +380,34 @@ void VulkanDeviceService::CreateLogicalDevice() {
     vkGetDeviceQueue(device_, indices.presentFamily, 0, &presentQueue_);
 }
 
+void VulkanDeviceService::PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo) const {
+    createInfo = {};
+    createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+    createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
+                                 VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+                                 VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+    createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+                             VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+                             VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+    createInfo.pfnUserCallback = DebugCallback;
+    createInfo.pUserData = logger_.get();
+}
+
+void VulkanDeviceService::SetupDebugMessenger() {
+    logger_->Trace("VulkanDeviceService", "SetupDebugMessenger",
+                   "validationLayersEnabled=" + std::string(validationLayersEnabled_ ? "true" : "false"));
+    if (!validationLayersEnabled_) {
+        return;
+    }
+
+    VkDebugUtilsMessengerCreateInfoEXT createInfo{};
+    PopulateDebugMessengerCreateInfo(createInfo);
+
+    if (CreateDebugUtilsMessengerEXT(instance_, &createInfo, nullptr, &debugMessenger_) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to set up Vulkan debug messenger");
+    }
+}
+
 void VulkanDeviceService::Shutdown() noexcept {
     logger_->Trace("VulkanDeviceService", "Shutdown");
     if (device_ != VK_NULL_HANDLE) {
@@ -323,6 +418,11 @@ void VulkanDeviceService::Shutdown() noexcept {
     if (surface_ != VK_NULL_HANDLE) {
         vkDestroySurfaceKHR(instance_, surface_, nullptr);
         surface_ = VK_NULL_HANDLE;
+    }
+
+    if (debugMessenger_ != VK_NULL_HANDLE) {
+        DestroyDebugUtilsMessengerEXT(instance_, debugMessenger_, nullptr);
+        debugMessenger_ = VK_NULL_HANDLE;
     }
 
     if (instance_ != VK_NULL_HANDLE) {

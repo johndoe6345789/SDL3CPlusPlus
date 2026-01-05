@@ -67,12 +67,15 @@ private:
     VkDevice device_ = VK_NULL_HANDLE;
     VkQueue graphicsQueue_ = VK_NULL_HANDLE;
     VkQueue presentQueue_ = VK_NULL_HANDLE;
+    VkDebugUtilsMessengerEXT debugMessenger_ = VK_NULL_HANDLE;
 
     std::vector<const char*> deviceExtensions_;
     bool validationLayersEnabled_ = false;
 
     // Helper methods
     void CreateInstance(const std::vector<const char*>& requiredExtensions);
+    void SetupDebugMessenger();
+    void PopulateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo) const;
     void PickPhysicalDevice();
     bool IsDeviceSuitable(VkPhysicalDevice device) const;
     QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device) const;

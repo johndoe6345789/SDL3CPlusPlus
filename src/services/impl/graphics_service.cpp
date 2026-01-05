@@ -78,7 +78,18 @@ void GraphicsService::RecreateSwapchain() {
         throw std::runtime_error("Graphics service not initialized");
     }
 
-    // TODO: Implement swapchain recreation via backend
+    auto size = windowService_ ? windowService_->GetSize() : std::pair<uint32_t, uint32_t>{0, 0};
+    if (logger_) {
+        logger_->Trace("GraphicsService", "RecreateSwapchain",
+                       "windowSize=" + std::to_string(size.first) + "x" +
+                       std::to_string(size.second));
+    }
+    if (size.first == 0 || size.second == 0) {
+        logger_->Warn("GraphicsService::RecreateSwapchain: Skipping recreation for zero-size window");
+        return;
+    }
+
+    backend_->RecreateSwapchain(size.first, size.second);
 }
 
 void GraphicsService::LoadShaders(const std::unordered_map<std::string, ShaderPaths>& shaders) {
@@ -173,7 +184,7 @@ void GraphicsService::WaitIdle() {
         return;
     }
 
-    // TODO: Implement via backend
+    backend_->WaitIdle();
 }
 
 GraphicsDeviceHandle GraphicsService::GetDevice() const {
@@ -193,8 +204,7 @@ GraphicsDeviceHandle GraphicsService::GetPhysicalDevice() const {
         return nullptr;
     }
 
-    // TODO: Return physical device from backend
-    return nullptr;
+    return backend_->GetPhysicalDevice();
 }
 
 std::pair<uint32_t, uint32_t> GraphicsService::GetSwapchainExtent() const {
@@ -204,8 +214,7 @@ std::pair<uint32_t, uint32_t> GraphicsService::GetSwapchainExtent() const {
         return {0, 0};
     }
 
-    // TODO: Return extent from backend
-    return {800, 600}; // Placeholder
+    return backend_->GetSwapchainExtent();
 }
 
 uint32_t GraphicsService::GetSwapchainFormat() const {
@@ -215,8 +224,7 @@ uint32_t GraphicsService::GetSwapchainFormat() const {
         return 0;
     }
 
-    // TODO: Return format from backend
-    return 0; // Placeholder
+    return backend_->GetSwapchainFormat();
 }
 
 void* GraphicsService::GetCurrentCommandBuffer() const {
@@ -226,8 +234,7 @@ void* GraphicsService::GetCurrentCommandBuffer() const {
         return nullptr;
     }
 
-    // TODO: Return command buffer from backend
-    return nullptr;
+    return backend_->GetCurrentCommandBuffer();
 }
 
 void* GraphicsService::GetGraphicsQueue() const {
@@ -237,8 +244,7 @@ void* GraphicsService::GetGraphicsQueue() const {
         return nullptr;
     }
 
-    // TODO: Return queue from backend
-    return nullptr;
+    return backend_->GetGraphicsQueue();
 }
 
 }  // namespace sdl3cpp::services::impl

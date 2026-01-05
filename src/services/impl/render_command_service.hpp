@@ -51,6 +51,7 @@ public:
         logger_->Trace("RenderCommandService", "GetMaxFramesInFlight");
         return maxFramesInFlight_;
     }
+    void OnSwapchainRecreated() override;
 
     // IShutdownable interface
     void Shutdown() noexcept override;

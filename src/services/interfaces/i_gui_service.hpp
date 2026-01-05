@@ -68,7 +68,7 @@ public:
      * @param height New height in pixels
      * @param format Swapchain image format
      */
-    virtual void Resize(uint32_t width, uint32_t height, VkFormat format) = 0;
+    virtual void Resize(uint32_t width, uint32_t height, VkFormat format, VkRenderPass renderPass) = 0;
 
     /**
      * @brief Shutdown and release GPU resources.

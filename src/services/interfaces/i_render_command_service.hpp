@@ -75,6 +75,13 @@ public:
      * @return Max concurrent frames
      */
     virtual uint32_t GetMaxFramesInFlight() const = 0;
+
+    /**
+     * @brief Handle swapchain recreation.
+     *
+     * Resets command buffers/synchronization and updates GUI renderer state.
+     */
+    virtual void OnSwapchainRecreated() = 0;
 };
 
 }  // namespace sdl3cpp::services

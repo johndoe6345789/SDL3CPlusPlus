@@ -23,7 +23,7 @@ public:
 
     virtual void RenderToSwapchain(VkCommandBuffer commandBuffer, VkImage image) = 0;
 
-    virtual void Resize(uint32_t width, uint32_t height, VkFormat format) = 0;
+    virtual void Resize(uint32_t width, uint32_t height, VkFormat format, VkRenderPass renderPass) = 0;
 
     virtual void Shutdown() noexcept = 0;
 

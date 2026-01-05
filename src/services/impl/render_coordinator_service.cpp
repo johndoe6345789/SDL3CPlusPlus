@@ -56,7 +56,13 @@ void RenderCoordinatorService::RenderFrame(float time) {
         shadersLoaded_ = true;
     }
 
-    graphicsService_->BeginFrame();
+    if (!graphicsService_->BeginFrame()) {
+        if (logger_) {
+            logger_->Warn("RenderCoordinatorService::RenderFrame: Swapchain out of date during BeginFrame");
+        }
+        graphicsService_->RecreateSwapchain();
+        return;
+    }
 
     if (guiService_ && guiScriptService_ && guiScriptService_->HasGuiCommands()) {
         auto guiCommands = guiScriptService_->LoadGuiCommands();
@@ -100,7 +106,13 @@ void RenderCoordinatorService::RenderFrame(float time) {
         graphicsService_->RenderScene(renderCommands, viewProj);
     }
 
-    graphicsService_->EndFrame();
+    if (!graphicsService_->EndFrame()) {
+        if (logger_) {
+            logger_->Warn("RenderCoordinatorService::RenderFrame: Swapchain out of date during EndFrame");
+        }
+        graphicsService_->RecreateSwapchain();
+        return;
+    }
 
     if (logger_) {
         logger_->Trace("RenderCoordinatorService", "RenderFrame", "", "Exiting");

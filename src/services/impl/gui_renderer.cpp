@@ -137,6 +137,96 @@ ParsedSvg ParseSvgFile(const std::filesystem::path& path) {
     return result;
 }
 
+GuiCommand::RectData IntersectRect(const GuiCommand::RectData& a, const GuiCommand::RectData& b) {
+    GuiCommand::RectData result;
+    result.x = std::max(a.x, b.x);
+    result.y = std::max(a.y, b.y);
+    float right = std::min(a.x + a.width, b.x + b.width);
+    float bottom = std::min(a.y + a.height, b.y + b.height);
+    result.width = std::max(0.0f, right - result.x);
+    result.height = std::max(0.0f, bottom - result.y);
+    return result;
+}
+
+bool RectHasArea(const GuiCommand::RectData& rect) {
+    return rect.width > 0.0f && rect.height > 0.0f;
+}
+
+struct ClipPoint {
+    float x = 0.0f;
+    float y = 0.0f;
+};
+
+enum class ClipEdge {
+    Left,
+    Right,
+    Top,
+    Bottom
+};
+
+bool IsInsideClip(const ClipPoint& point, const GuiCommand::RectData& rect, ClipEdge edge) {
+    switch (edge) {
+        case ClipEdge::Left:
+            return point.x >= rect.x;
+        case ClipEdge::Right:
+            return point.x <= rect.x + rect.width;
+        case ClipEdge::Top:
+            return point.y >= rect.y;
+        case ClipEdge::Bottom:
+            return point.y <= rect.y + rect.height;
+    }
+    return false;
+}
+
+ClipPoint IntersectClipEdge(const ClipPoint& a, const ClipPoint& b,
+                            const GuiCommand::RectData& rect, ClipEdge edge) {
+    ClipPoint result = a;
+    float dx = b.x - a.x;
+    float dy = b.y - a.y;
+
+    if (edge == ClipEdge::Left || edge == ClipEdge::Right) {
+        float clipX = (edge == ClipEdge::Left) ? rect.x : (rect.x + rect.width);
+        float t = (dx != 0.0f) ? (clipX - a.x) / dx : 0.0f;
+        result.x = clipX;
+        result.y = a.y + t * dy;
+    } else {
+        float clipY = (edge == ClipEdge::Top) ? rect.y : (rect.y + rect.height);
+        float t = (dy != 0.0f) ? (clipY - a.y) / dy : 0.0f;
+        result.x = a.x + t * dx;
+        result.y = clipY;
+    }
+    return result;
+}
+
+std::vector<ClipPoint> ClipPolygonToRect(const std::vector<ClipPoint>& polygon,
+                                         const GuiCommand::RectData& rect) {
+    std::vector<ClipPoint> output = polygon;
+    for (ClipEdge edge : {ClipEdge::Left, ClipEdge::Right, ClipEdge::Top, ClipEdge::Bottom}) {
+        if (output.empty()) {
+            break;
+        }
+        std::vector<ClipPoint> input = output;
+        output.clear();
+
+        for (size_t i = 0; i < input.size(); ++i) {
+            const ClipPoint& current = input[i];
+            const ClipPoint& previous = input[(i + input.size() - 1) % input.size()];
+            bool currentInside = IsInsideClip(current, rect, edge);
+            bool previousInside = IsInsideClip(previous, rect, edge);
+
+            if (currentInside) {
+                if (!previousInside) {
+                    output.push_back(IntersectClipEdge(previous, current, rect, edge));
+                }
+                output.push_back(current);
+            } else if (previousInside) {
+                output.push_back(IntersectClipEdge(previous, current, rect, edge));
+            }
+        }
+    }
+    return output;
+}
+
 std::vector<uint8_t> ReadFile(const std::filesystem::path& path) {
     std::ifstream file(path, std::ios::binary | std::ios::ate);
     if (!file) {
@@ -231,13 +321,15 @@ void GuiRenderer::RenderToSwapchain(VkCommandBuffer commandBuffer, VkRenderPass 
     vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices_.size()), 1, 0, 0, 0);
 }
 
-void GuiRenderer::Resize(uint32_t width, uint32_t height, VkFormat format) {
-    if (width == viewportWidth_ && height == viewportHeight_ && format == swapchainFormat_) {
+void GuiRenderer::Resize(uint32_t width, uint32_t height, VkFormat format, VkRenderPass renderPass) {
+    if (width == viewportWidth_ && height == viewportHeight_ &&
+        format == swapchainFormat_ && renderPass == renderPass_) {
         return;
     }
     UpdateFormat(format);
     viewportWidth_ = width;
     viewportHeight_ = height;
+    renderPass_ = renderPass;
 
     // Recreate pipeline for new viewport size
     if (pipeline_ != VK_NULL_HANDLE) {
@@ -258,30 +350,90 @@ void GuiRenderer::GenerateGuiGeometry(const std::vector<GuiCommand>& commands, u
         };
     };
 
+    std::vector<GuiCommand::RectData> clipStack;
+    clipStack.push_back({0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height)});
+
+    auto addQuad = [&](const GuiCommand::RectData& rect, const GuiColor& color,
+                       const GuiCommand::RectData& clipRect) {
+        GuiCommand::RectData clipped = IntersectRect(rect, clipRect);
+        if (!RectHasArea(clipped)) {
+            return;
+        }
+        auto [x0, y0] = toNDC(clipped.x, clipped.y);
+        auto [x1, y1] = toNDC(clipped.x + clipped.width, clipped.y + clipped.height);
+
+        uint32_t baseIndex = static_cast<uint32_t>(vertices_.size());
+        vertices_.push_back({x0, y0, 0.0f, color.r, color.g, color.b, color.a});
+        vertices_.push_back({x1, y0, 0.0f, color.r, color.g, color.b, color.a});
+        vertices_.push_back({x1, y1, 0.0f, color.r, color.g, color.b, color.a});
+        vertices_.push_back({x0, y1, 0.0f, color.r, color.g, color.b, color.a});
+
+        indices_.push_back(baseIndex + 0);
+        indices_.push_back(baseIndex + 1);
+        indices_.push_back(baseIndex + 2);
+        indices_.push_back(baseIndex + 0);
+        indices_.push_back(baseIndex + 2);
+        indices_.push_back(baseIndex + 3);
+    };
+
+    auto addClippedPolygon = [&](const std::vector<ClipPoint>& polygon,
+                                 const GuiColor& color,
+                                 const GuiCommand::RectData& clipRect) {
+        std::vector<ClipPoint> clipped = ClipPolygonToRect(polygon, clipRect);
+        if (clipped.size() < 3) {
+            return;
+        }
+        uint32_t baseIndex = static_cast<uint32_t>(vertices_.size());
+        for (const auto& point : clipped) {
+            auto [x, y] = toNDC(point.x, point.y);
+            vertices_.push_back({x, y, 0.0f, color.r, color.g, color.b, color.a});
+        }
+        for (size_t i = 1; i + 1 < clipped.size(); ++i) {
+            indices_.push_back(baseIndex);
+            indices_.push_back(baseIndex + static_cast<uint32_t>(i));
+            indices_.push_back(baseIndex + static_cast<uint32_t>(i + 1));
+        }
+    };
+
     for (const auto& cmd : commands) {
+        if (cmd.type == GuiCommand::Type::ClipPush) {
+            GuiCommand::RectData nextClip = IntersectRect(clipStack.back(), cmd.rect);
+            clipStack.push_back(nextClip);
+            continue;
+        }
+        if (cmd.type == GuiCommand::Type::ClipPop) {
+            if (clipStack.size() > 1) {
+                clipStack.pop_back();
+            }
+            continue;
+        }
+
+        const GuiCommand::RectData& activeClip = clipStack.back();
+        if (!RectHasArea(activeClip)) {
+            continue;
+        }
+
         if (cmd.type == GuiCommand::Type::Rect) {
-            // Generate a quad (2 triangles) for the rectangle
-            auto [x0, y0] = toNDC(cmd.rect.x, cmd.rect.y);
-            auto [x1, y1] = toNDC(cmd.rect.x + cmd.rect.width, cmd.rect.y + cmd.rect.height);
-
-            uint32_t baseIndex = static_cast<uint32_t>(vertices_.size());
-
-            // Add 4 vertices for the quad
-            vertices_.push_back({x0, y0, 0.0f, cmd.color.r, cmd.color.g, cmd.color.b, cmd.color.a});
-            vertices_.push_back({x1, y0, 0.0f, cmd.color.r, cmd.color.g, cmd.color.b, cmd.color.a});
-            vertices_.push_back({x1, y1, 0.0f, cmd.color.r, cmd.color.g, cmd.color.b, cmd.color.a});
-            vertices_.push_back({x0, y1, 0.0f, cmd.color.r, cmd.color.g, cmd.color.b, cmd.color.a});
-
-            // Add 6 indices for 2 triangles
-            indices_.push_back(baseIndex + 0);
-            indices_.push_back(baseIndex + 1);
-            indices_.push_back(baseIndex + 2);
-            indices_.push_back(baseIndex + 0);
-            indices_.push_back(baseIndex + 2);
-            indices_.push_back(baseIndex + 3);
+            addQuad(cmd.rect, cmd.color, activeClip);
+            if (cmd.borderWidth > 0.0f && cmd.borderColor.a > 0.0f) {
+                float border = std::min(cmd.borderWidth, std::min(cmd.rect.width, cmd.rect.height));
+                if (border > 0.0f) {
+                    float innerHeight = std::max(0.0f, cmd.rect.height - border * 2.0f);
+                    GuiCommand::RectData top{cmd.rect.x, cmd.rect.y, cmd.rect.width, border};
+                    GuiCommand::RectData bottom{cmd.rect.x, cmd.rect.y + cmd.rect.height - border,
+                                                cmd.rect.width, border};
+                    GuiCommand::RectData left{cmd.rect.x, cmd.rect.y + border, border, innerHeight};
+                    GuiCommand::RectData right{cmd.rect.x + cmd.rect.width - border,
+                                               cmd.rect.y + border, border, innerHeight};
+                    addQuad(top, cmd.borderColor, activeClip);
+                    addQuad(bottom, cmd.borderColor, activeClip);
+                    addQuad(left, cmd.borderColor, activeClip);
+                    addQuad(right, cmd.borderColor, activeClip);
+                }
+            }
         } else if (cmd.type == GuiCommand::Type::Text) {
             // Render text using 8x8 bitmap font
-            if (cmd.text.empty() || !cmd.hasBounds) {
+            if (cmd.text.empty()) {
                 continue;
             }
 
@@ -295,19 +447,37 @@ void GuiRenderer::GenerateGuiGeometry(const std::vector<GuiCommand>& commands, u
 
             // Calculate text position based on alignment
             // Text commands use bounds field, not rect field
-            float startX = cmd.bounds.x;
-            float startY = cmd.bounds.y;
+            GuiCommand::RectData textBounds = cmd.bounds;
+            if (!cmd.hasBounds) {
+                textBounds = {
+                    cmd.rect.x,
+                    cmd.rect.y,
+                    cmd.fontSize * static_cast<float>(std::max<size_t>(1, cmd.text.size())),
+                    cmd.fontSize
+                };
+            }
+
+            float startX = textBounds.x;
+            float startY = textBounds.y;
 
             if (cmd.alignX == "center") {
-                startX += (cmd.bounds.width - textWidth) * 0.5f;
+                startX += (textBounds.width - textWidth) * 0.5f;
             } else if (cmd.alignX == "right") {
-                startX += cmd.bounds.width - textWidth;
+                startX += textBounds.width - textWidth;
             }
 
             if (cmd.alignY == "center") {
-                startY += (cmd.bounds.height - charHeight) * 0.5f;
+                startY += (textBounds.height - charHeight) * 0.5f;
             } else if (cmd.alignY == "bottom") {
-                startY += cmd.bounds.height - charHeight;
+                startY += textBounds.height - charHeight;
+            }
+
+            GuiCommand::RectData textClip = activeClip;
+            if (cmd.hasClipRect) {
+                textClip = IntersectRect(textClip, cmd.clipRect);
+            }
+            if (!RectHasArea(textClip)) {
+                continue;
             }
 
             // Render each character as a small quad
@@ -333,32 +503,61 @@ void GuiRenderer::GenerateGuiGeometry(const std::vector<GuiCommand>& commands, u
                                 float pw = pixelWidth;
                                 float ph = pixelHeight;
 
-                                auto [px0, py0] = toNDC(px, py);
-                                auto [px1, py1] = toNDC(px + pw, py + ph);
-
-                                uint32_t baseIndex = static_cast<uint32_t>(vertices_.size());
-
-                                // Add 4 vertices for the pixel quad
-                                vertices_.push_back({px0, py0, 0.0f, cmd.color.r, cmd.color.g, cmd.color.b, cmd.color.a});
-                                vertices_.push_back({px1, py0, 0.0f, cmd.color.r, cmd.color.g, cmd.color.b, cmd.color.a});
-                                vertices_.push_back({px1, py1, 0.0f, cmd.color.r, cmd.color.g, cmd.color.b, cmd.color.a});
-                                vertices_.push_back({px0, py1, 0.0f, cmd.color.r, cmd.color.g, cmd.color.b, cmd.color.a});
-
-                                // Add 6 indices for 2 triangles
-                                indices_.push_back(baseIndex + 0);
-                                indices_.push_back(baseIndex + 1);
-                                indices_.push_back(baseIndex + 2);
-                                indices_.push_back(baseIndex + 0);
-                                indices_.push_back(baseIndex + 2);
-                                indices_.push_back(baseIndex + 3);
+                                GuiCommand::RectData pixelRect{px, py, pw, ph};
+                                addQuad(pixelRect, cmd.color, textClip);
                             }
                         }
                     }
                 }
                 x += charWidth + charSpacing;
             }
+        } else if (cmd.type == GuiCommand::Type::Svg) {
+            if (cmd.svgPath.empty()) {
+                continue;
+            }
+            const ParsedSvg* svg = LoadSvg(cmd.svgPath);
+            if (!svg || svg->circles.empty() || svg->viewWidth <= 0.0f || svg->viewHeight <= 0.0f) {
+                continue;
+            }
+
+            GuiCommand::RectData clippedTarget = IntersectRect(cmd.rect, activeClip);
+            if (!RectHasArea(clippedTarget)) {
+                continue;
+            }
+
+            float scaleX = clippedTarget.width / svg->viewWidth;
+            float scaleY = clippedTarget.height / svg->viewHeight;
+            float scale = std::min(scaleX, scaleY);
+
+            for (const auto& circle : svg->circles) {
+                float cx = clippedTarget.x + circle.cx * scaleX;
+                float cy = clippedTarget.y + circle.cy * scaleY;
+                float radius = circle.r * scale;
+                if (radius <= 0.0f) {
+                    continue;
+                }
+
+                GuiColor color = circle.color;
+                if (cmd.svgTint.a > 0.0f) {
+                    color.r *= cmd.svgTint.r;
+                    color.g *= cmd.svgTint.g;
+                    color.b *= cmd.svgTint.b;
+                    color.a *= cmd.svgTint.a;
+                }
+
+                int segments = std::max(12, static_cast<int>(radius * 0.25f));
+                const float twoPi = 6.283185307179586f;
+                ClipPoint center{cx, cy};
+
+                for (int i = 0; i < segments; ++i) {
+                    float angle0 = twoPi * static_cast<float>(i) / static_cast<float>(segments);
+                    float angle1 = twoPi * static_cast<float>(i + 1) / static_cast<float>(segments);
+                    ClipPoint p0{cx + std::cos(angle0) * radius, cy + std::sin(angle0) * radius};
+                    ClipPoint p1{cx + std::cos(angle1) * radius, cy + std::sin(angle1) * radius};
+                    addClippedPolygon({center, p0, p1}, color, activeClip);
+                }
+            }
         }
-        // TODO: Implement SVG, ClipPush, ClipPop command types
     }
 }
 

@@ -44,7 +44,7 @@ public:
     void Prepare(const std::vector<GuiCommand>& commands, uint32_t width,
                  uint32_t height);
     void RenderToSwapchain(VkCommandBuffer commandBuffer, VkRenderPass renderPass);
-    void Resize(uint32_t width, uint32_t height, VkFormat format);
+    void Resize(uint32_t width, uint32_t height, VkFormat format, VkRenderPass renderPass);
     bool IsReady() const;
 
 private:

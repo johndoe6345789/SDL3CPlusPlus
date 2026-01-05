@@ -297,6 +297,20 @@ VkCommandBuffer RenderCommandService::GetCurrentCommandBuffer() const {
     return commandBuffers_[currentFrame_];
 }
 
+void RenderCommandService::OnSwapchainRecreated() {
+    logger_->Trace("RenderCommandService", "OnSwapchainRecreated");
+
+    Cleanup();
+    currentFrame_ = 0;
+
+    if (guiRendererService_) {
+        VkExtent2D extent = swapchainService_->GetSwapchainExtent();
+        VkFormat format = swapchainService_->GetSwapchainImageFormat();
+        VkRenderPass renderPass = swapchainService_->GetRenderPass();
+        guiRendererService_->Resize(extent.width, extent.height, format, renderPass);
+    }
+}
+
 void RenderCommandService::CreateCommandPool() {
     logger_->Trace("RenderCommandService", "CreateCommandPool");
 

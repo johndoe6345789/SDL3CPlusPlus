@@ -34,7 +34,7 @@ public:
 
     void RenderToSwapchain(VkCommandBuffer commandBuffer, VkImage image) override;
 
-    void Resize(uint32_t width, uint32_t height, VkFormat format) override;
+    void Resize(uint32_t width, uint32_t height, VkFormat format, VkRenderPass renderPass) override;
 
     void Shutdown() noexcept override;
 

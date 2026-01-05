@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <array>
+#include <utility>
 #include "graphics_types.hpp"
 
 namespace sdl3cpp::services {
@@ -50,6 +51,19 @@ public:
      * @brief Shutdown the graphics backend.
      */
     virtual void Shutdown() = 0;
+
+    /**
+     * @brief Recreate the swapchain for a new window size.
+     *
+     * @param width New width in pixels
+     * @param height New height in pixels
+     */
+    virtual void RecreateSwapchain(uint32_t width, uint32_t height) = 0;
+
+    /**
+     * @brief Wait for GPU operations to complete.
+     */
+    virtual void WaitIdle() = 0;
 
     /**
      * @brief Create a graphics device.
@@ -145,6 +159,41 @@ public:
     virtual void Draw(GraphicsDeviceHandle device, GraphicsPipelineHandle pipeline,
                       GraphicsBufferHandle vertexBuffer, GraphicsBufferHandle indexBuffer,
                       uint32_t indexCount, const std::array<float, 16>& modelMatrix) = 0;
+
+    /**
+     * @brief Get the physical device handle.
+     *
+     * @return Opaque physical device handle
+     */
+    virtual GraphicsDeviceHandle GetPhysicalDevice() const = 0;
+
+    /**
+     * @brief Get the swapchain extent.
+     *
+     * @return Width and height in pixels
+     */
+    virtual std::pair<uint32_t, uint32_t> GetSwapchainExtent() const = 0;
+
+    /**
+     * @brief Get the swapchain image format.
+     *
+     * @return Format identifier
+     */
+    virtual uint32_t GetSwapchainFormat() const = 0;
+
+    /**
+     * @brief Get the current command buffer.
+     *
+     * @return Opaque command buffer handle
+     */
+    virtual void* GetCurrentCommandBuffer() const = 0;
+
+    /**
+     * @brief Get the graphics queue handle.
+     *
+     * @return Opaque queue handle
+     */
+    virtual void* GetGraphicsQueue() const = 0;
 };
 
 }  // namespace sdl3cpp::services

@@ -60,17 +60,18 @@ void GuiRendererService::RenderToSwapchain(VkCommandBuffer commandBuffer, VkImag
     renderer_->RenderToSwapchain(commandBuffer, VK_NULL_HANDLE);
 }
 
-void GuiRendererService::Resize(uint32_t width, uint32_t height, VkFormat format) {
+void GuiRendererService::Resize(uint32_t width, uint32_t height, VkFormat format, VkRenderPass renderPass) {
     if (logger_) {
         logger_->Trace("GuiRendererService", "Resize",
                        "width=" + std::to_string(width) +
                        ", height=" + std::to_string(height) +
-                       ", format=" + std::to_string(static_cast<uint32_t>(format)));
+                       ", format=" + std::to_string(static_cast<uint32_t>(format)) +
+                       ", renderPassIsNull=" + std::string(renderPass == VK_NULL_HANDLE ? "true" : "false"));
     }
     if (!renderer_) {
         return;
     }
-    renderer_->Resize(width, height, format);
+    renderer_->Resize(width, height, format, renderPass);
 }
 
 void GuiRendererService::Shutdown() noexcept {

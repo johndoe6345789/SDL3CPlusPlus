@@ -31,7 +31,9 @@ GxmGraphicsBackend::GxmGraphicsBackend()
       initialized_(false), vdmRingBuffer_(nullptr), vertexRingBuffer_(nullptr),
       fragmentRingBuffer_(nullptr), fragmentUsseRingBuffer_(nullptr),
       vdmRingBufferUid_(0), vertexRingBufferUid_(0), fragmentRingBufferUid_(0),
-      fragmentUsseRingBufferUid_(0) {
+      fragmentUsseRingBufferUid_(0),
+      displayWidth_(DISPLAY_WIDTH),
+      displayHeight_(DISPLAY_HEIGHT) {
 }
 
 GxmGraphicsBackend::~GxmGraphicsBackend() {
@@ -250,6 +252,16 @@ void GxmGraphicsBackend::Shutdown() {
 
     sceGxmTerminate();
     initialized_ = false;
+}
+
+void GxmGraphicsBackend::RecreateSwapchain(uint32_t width, uint32_t height) {
+    std::cout << "GXM: Swapchain recreation not supported on Vita (" << width << "x" << height << ")" << std::endl;
+}
+
+void GxmGraphicsBackend::WaitIdle() {
+    if (context_) {
+        sceGxmFinish(context_);
+    }
 }
 
 GraphicsDeviceHandle GxmGraphicsBackend::CreateDevice() {
@@ -494,6 +506,26 @@ void GxmGraphicsBackend::Draw(GraphicsDeviceHandle device, GraphicsPipelineHandl
     if (err != SCE_OK) {
         std::cerr << "Draw failed: " << err << std::endl;
     }
+}
+
+GraphicsDeviceHandle GxmGraphicsBackend::GetPhysicalDevice() const {
+    return nullptr;
+}
+
+std::pair<uint32_t, uint32_t> GxmGraphicsBackend::GetSwapchainExtent() const {
+    return {displayWidth_, displayHeight_};
+}
+
+uint32_t GxmGraphicsBackend::GetSwapchainFormat() const {
+    return 0;
+}
+
+void* GxmGraphicsBackend::GetCurrentCommandBuffer() const {
+    return nullptr;
+}
+
+void* GxmGraphicsBackend::GetGraphicsQueue() const {
+    return nullptr;
 }
 
 // Helper methods

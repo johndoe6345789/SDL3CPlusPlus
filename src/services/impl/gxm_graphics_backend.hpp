@@ -20,6 +20,8 @@ public:
 
     void Initialize(void* window, const GraphicsConfig& config) override;
     void Shutdown() override;
+    void RecreateSwapchain(uint32_t width, uint32_t height) override;
+    void WaitIdle() override;
 
     GraphicsDeviceHandle CreateDevice() override;
     void DestroyDevice(GraphicsDeviceHandle device) override;
@@ -39,6 +41,12 @@ public:
     void Draw(GraphicsDeviceHandle device, GraphicsPipelineHandle pipeline,
               GraphicsBufferHandle vertexBuffer, GraphicsBufferHandle indexBuffer,
               uint32_t indexCount, const std::array<float, 16>& modelMatrix) override;
+
+    GraphicsDeviceHandle GetPhysicalDevice() const override;
+    std::pair<uint32_t, uint32_t> GetSwapchainExtent() const override;
+    uint32_t GetSwapchainFormat() const override;
+    void* GetCurrentCommandBuffer() const override;
+    void* GetGraphicsQueue() const override;
 
 private:
     // GXM-specific members
@@ -69,6 +77,9 @@ private:
     SceUID vertexRingBufferUid_;
     SceUID fragmentRingBufferUid_;
     SceUID fragmentUsseRingBufferUid_;
+
+    uint32_t displayWidth_ = 0;
+    uint32_t displayHeight_ = 0;
     
     // Helper methods
     int createDisplayBuffers();

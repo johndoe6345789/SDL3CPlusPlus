@@ -1,5 +1,6 @@
 #include "swapchain_service.hpp"
 #include <algorithm>
+#include <limits>
 #include <stdexcept>
 #include <string>
 
@@ -393,6 +394,10 @@ VkExtent2D SwapchainService::ChooseExtent(const VkSurfaceCapabilitiesKHR& capabi
                    ", minHeight=" + std::to_string(capabilities.minImageExtent.height) +
                    ", maxWidth=" + std::to_string(capabilities.maxImageExtent.width) +
                    ", maxHeight=" + std::to_string(capabilities.maxImageExtent.height));
+    if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
+        return capabilities.currentExtent;
+    }
+
     return VkExtent2D{
         std::clamp(width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width),
         std::clamp(height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height)
