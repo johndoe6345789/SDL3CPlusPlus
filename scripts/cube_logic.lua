@@ -538,7 +538,7 @@ local function create_static_cube(position, scale, color)
         vertices = vertices,
         indices = cube_indices,
         compute_model_matrix = compute_model_matrix,
-        shader_key = "solid",  -- Use solid color shader for room objects
+        shader_key = "pbr",  -- Use PBR shader for realistic materials and lighting
     }
 end
 
