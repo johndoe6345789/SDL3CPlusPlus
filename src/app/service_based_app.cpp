@@ -224,6 +224,7 @@ void ServiceBasedApp::RegisterServices() {
     // Input service
     registry_.RegisterService<services::IInputService, services::impl::SdlInputService>(
         registry_.GetService<events::IEventBus>(),
+        registry_.GetService<services::IConfigService>(),
         registry_.GetService<services::ILogger>());
 
     // Audio service (needed before script bindings execute)

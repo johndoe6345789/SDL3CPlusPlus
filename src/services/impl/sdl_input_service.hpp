@@ -3,8 +3,10 @@
 #include "../interfaces/i_input_service.hpp"
 #include "../interfaces/i_gui_script_service.hpp"
 #include "../interfaces/i_logger.hpp"
+#include "../interfaces/i_config_service.hpp"
 #include "../../events/i_event_bus.hpp"
 #include <memory>
+#include <unordered_map>
 
 namespace sdl3cpp::services::impl {
 
@@ -23,7 +25,9 @@ public:
      *
      * @param eventBus Event bus to subscribe to
      */
-    explicit SdlInputService(std::shared_ptr<events::IEventBus> eventBus, std::shared_ptr<ILogger> logger);
+    explicit SdlInputService(std::shared_ptr<events::IEventBus> eventBus,
+                             std::shared_ptr<IConfigService> configService,
+                             std::shared_ptr<ILogger> logger);
     ~SdlInputService() override;
 
     // IInputService interface
@@ -43,11 +47,25 @@ public:
 
 private:
     std::shared_ptr<events::IEventBus> eventBus_;
+    std::shared_ptr<IConfigService> configService_;
     std::shared_ptr<ILogger> logger_;
     InputState state_;
     GuiInputSnapshot guiInputSnapshot_;
     IGuiScriptService* guiScriptService_ = nullptr;
     SDL_Gamepad* gamepad_ = nullptr;
+    SDL_GamepadButton musicToggleButton_ = SDL_GAMEPAD_BUTTON_START;
+    SDL_GamepadButton dpadUpButton_ = SDL_GAMEPAD_BUTTON_DPAD_UP;
+    SDL_GamepadButton dpadDownButton_ = SDL_GAMEPAD_BUTTON_DPAD_DOWN;
+    SDL_GamepadButton dpadLeftButton_ = SDL_GAMEPAD_BUTTON_DPAD_LEFT;
+    SDL_GamepadButton dpadRightButton_ = SDL_GAMEPAD_BUTTON_DPAD_RIGHT;
+    SDL_GamepadAxis moveXAxis_ = SDL_GAMEPAD_AXIS_LEFTX;
+    SDL_GamepadAxis moveYAxis_ = SDL_GAMEPAD_AXIS_LEFTY;
+    SDL_GamepadAxis lookXAxis_ = SDL_GAMEPAD_AXIS_RIGHTX;
+    SDL_GamepadAxis lookYAxis_ = SDL_GAMEPAD_AXIS_RIGHTY;
+    std::unordered_map<SDL_GamepadButton, std::string> gamepadButtonActions_;
+    std::unordered_map<SDL_GamepadAxis, std::string> gamepadAxisActions_;
+    float gamepadAxisActionThreshold_ = 0.5f;
+    std::unordered_map<SDL_Keycode, std::string> actionKeyNames_;
 
     // Event bus listeners
     void OnKeyPressed(const events::Event& event);
@@ -61,6 +79,9 @@ private:
     void TryOpenGamepad();
     void CloseGamepad();
     void UpdateGamepadSnapshot();
+    void BuildActionKeyMapping();
+    void ApplyKeyMapping(SDL_Keycode key, bool isDown);
+    bool IsActionKeyPressed(const std::string& action) const;
 
     // GUI key mapping (extracted from old Sdl3App)
     static const std::unordered_map<SDL_Keycode, std::string> kGuiKeyNames;

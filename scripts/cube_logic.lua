@@ -257,16 +257,16 @@ local function update_camera(dt)
     local move_x = 0.0
     local move_z = 0.0
 
-    if gui_input.keyStates["w"] then
+    if gui_input.keyStates["move_forward"] then
         move_z = move_z + 1.0
     end
-    if gui_input.keyStates["s"] then
+    if gui_input.keyStates["move_back"] then
         move_z = move_z - 1.0
     end
-    if gui_input.keyStates["d"] then
+    if gui_input.keyStates["move_right"] then
         move_x = move_x + 1.0
     end
-    if gui_input.keyStates["a"] then
+    if gui_input.keyStates["move_left"] then
         move_x = move_x - 1.0
     end
 
@@ -295,7 +295,7 @@ local function update_audio_controls()
     end
 
     local pad = gui_input.gamepad
-    local toggle_pressed = gui_input.keyStates["m"]
+    local toggle_pressed = gui_input.keyStates["music_toggle"]
     if pad and pad.connected and pad.togglePressed then
         toggle_pressed = true
     end

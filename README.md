@@ -45,6 +45,48 @@ SDL3 + Vulkan demo app with Lua-driven runtime configuration, audio playback, an
 - `sdl3_app --create-seed-json config/seed_runtime.json` writes a starter file assuming `scripts/cube_logic.lua` sits beside the binary.
 - `sdl3_app --set-default-json [path]` stores or overrides the runtime JSON; Windows writes `%APPDATA%/sdl3cpp`, other OSes use `$XDG_CONFIG_HOME/sdl3cpp/default_runtime.json` (fallback `~/.config/sdl3cpp`).
 
+### Input bindings
+`config/seed_runtime.json` includes an `input_bindings` section that maps keyboard keys and gamepad inputs to action names consumed by the Lua script (see `scripts/cube_logic.lua`).
+
+Keyboard bindings use SDL key names (e.g. `W`, `Space`, `Left Shift`). Gamepad bindings use SDL gamepad names (e.g. `start`, `south`, `dpad_up`, `leftx`).
+
+Example:
+```
+"input_bindings": {
+  "move_forward": "W",
+  "move_back": "S",
+  "move_left": "A",
+  "move_right": "D",
+  "music_toggle": "M",
+  "music_toggle_gamepad": "start",
+  "gamepad_move_x_axis": "leftx",
+  "gamepad_move_y_axis": "lefty",
+  "gamepad_look_x_axis": "rightx",
+  "gamepad_look_y_axis": "righty",
+  "gamepad_dpad_up": "dpad_up",
+  "gamepad_dpad_down": "dpad_down",
+  "gamepad_dpad_left": "dpad_left",
+  "gamepad_dpad_right": "dpad_right",
+  "gamepad_button_actions": {
+    "south": "gamepad_a",
+    "east": "gamepad_b",
+    "west": "gamepad_x",
+    "north": "gamepad_y",
+    "left_shoulder": "gamepad_lb",
+    "right_shoulder": "gamepad_rb",
+    "left_stick": "gamepad_ls",
+    "right_stick": "gamepad_rs",
+    "back": "gamepad_back",
+    "start": "gamepad_start"
+  },
+  "gamepad_axis_actions": {
+    "left_trigger": "gamepad_lt",
+    "right_trigger": "gamepad_rt"
+  },
+  "gamepad_axis_action_threshold": 0.5
+}
+```
+
 ## GUI demo
 `scripts/gui_demo.lua` paints the Lua GUI framework on top of the Vulkan scene. Launch it as `python scripts/dev_commands.py run -- --json-file-in config/gui_runtime.json` or register that config via `sdl3_app --set-default-json`.
 

@@ -49,6 +49,45 @@ void JsonConfigWriterService::WriteConfig(const RuntimeConfig& config, const std
     std::filesystem::path scriptsDir = config.scriptPath.parent_path();
     addStringMember("scripts_directory", scriptsDir.string());
 
+    rapidjson::Value bindingsObject(rapidjson::kObjectType);
+    auto addBindingMember = [&](const char* name, const std::string& value) {
+        rapidjson::Value nameValue(name, allocator);
+        rapidjson::Value stringValue(value.c_str(), allocator);
+        bindingsObject.AddMember(nameValue, stringValue, allocator);
+    };
+    addBindingMember("move_forward", config.inputBindings.moveForwardKey);
+    addBindingMember("move_back", config.inputBindings.moveBackKey);
+    addBindingMember("move_left", config.inputBindings.moveLeftKey);
+    addBindingMember("move_right", config.inputBindings.moveRightKey);
+    addBindingMember("music_toggle", config.inputBindings.musicToggleKey);
+    addBindingMember("music_toggle_gamepad", config.inputBindings.musicToggleGamepadButton);
+    addBindingMember("gamepad_move_x_axis", config.inputBindings.gamepadMoveXAxis);
+    addBindingMember("gamepad_move_y_axis", config.inputBindings.gamepadMoveYAxis);
+    addBindingMember("gamepad_look_x_axis", config.inputBindings.gamepadLookXAxis);
+    addBindingMember("gamepad_look_y_axis", config.inputBindings.gamepadLookYAxis);
+    addBindingMember("gamepad_dpad_up", config.inputBindings.gamepadDpadUpButton);
+    addBindingMember("gamepad_dpad_down", config.inputBindings.gamepadDpadDownButton);
+    addBindingMember("gamepad_dpad_left", config.inputBindings.gamepadDpadLeftButton);
+    addBindingMember("gamepad_dpad_right", config.inputBindings.gamepadDpadRightButton);
+
+    auto addMappingObject = [&](const char* name,
+                                const std::unordered_map<std::string, std::string>& mappings,
+                                rapidjson::Value& target) {
+        rapidjson::Value mappingObject(rapidjson::kObjectType);
+        for (const auto& [key, value] : mappings) {
+            rapidjson::Value keyValue(key.c_str(), allocator);
+            rapidjson::Value stringValue(value.c_str(), allocator);
+            mappingObject.AddMember(keyValue, stringValue, allocator);
+        }
+        target.AddMember(rapidjson::Value(name, allocator), mappingObject, allocator);
+    };
+
+    addMappingObject("gamepad_button_actions", config.inputBindings.gamepadButtonActions, bindingsObject);
+    addMappingObject("gamepad_axis_actions", config.inputBindings.gamepadAxisActions, bindingsObject);
+    bindingsObject.AddMember("gamepad_axis_action_threshold",
+                             config.inputBindings.gamepadAxisActionThreshold, allocator);
+    document.AddMember("input_bindings", bindingsObject, allocator);
+
     std::filesystem::path projectRoot = scriptsDir.parent_path();
     if (!projectRoot.empty()) {
         addStringMember("project_root", projectRoot.string());

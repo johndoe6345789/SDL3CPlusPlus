@@ -76,6 +76,12 @@ public:
         return config_.windowTitle;
     }
     std::vector<const char*> GetDeviceExtensions() const override;
+    const InputBindings& GetInputBindings() const override {
+        if (logger_) {
+            logger_->Trace("JsonConfigService", "GetInputBindings");
+        }
+        return config_.inputBindings;
+    }
 
     /**
      * @brief Get the full runtime configuration.

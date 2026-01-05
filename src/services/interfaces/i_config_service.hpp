@@ -1,5 +1,6 @@
 #pragma once
 
+#include "config_types.hpp"
 #include <cstdint>
 #include <filesystem>
 #include <string>
@@ -52,6 +53,12 @@ public:
      * @return List of extension names
      */
     virtual std::vector<const char*> GetDeviceExtensions() const = 0;
+
+    /**
+     * @brief Get configured input bindings.
+     * @return Input bindings structure
+     */
+    virtual const InputBindings& GetInputBindings() const = 0;
 };
 
 }  // namespace sdl3cpp::services

@@ -1,5 +1,9 @@
 #include "sdl_input_service.hpp"
 
+#include <algorithm>
+#include <cctype>
+#include <cmath>
+
 namespace {
 constexpr float kAxisPositiveMax = static_cast<float>(SDL_JOYSTICK_AXIS_MAX);
 constexpr float kAxisNegativeMax = static_cast<float>(-SDL_JOYSTICK_AXIS_MIN);
@@ -23,12 +27,15 @@ const std::unordered_map<SDL_Keycode, std::string> SdlInputService::kGuiKeyNames
     {SDLK_DELETE, "delete"}, {SDLK_RETURN, "return"}, {SDLK_TAB, "tab"},
     {SDLK_ESCAPE, "escape"}, {SDLK_LCTRL, "lctrl"}, {SDLK_RCTRL, "rctrl"},
     {SDLK_LSHIFT, "lshift"}, {SDLK_RSHIFT, "rshift"}, {SDLK_LALT, "lalt"},
-    {SDLK_RALT, "ralt"}, {SDLK_w, "w"}, {SDLK_a, "a"}, {SDLK_s, "s"},
-    {SDLK_d, "d"}, {SDLK_m, "m"}
+    {SDLK_RALT, "ralt"}
 };
 
-SdlInputService::SdlInputService(std::shared_ptr<events::IEventBus> eventBus, std::shared_ptr<ILogger> logger)
-    : eventBus_(std::move(eventBus)), logger_(logger) {
+SdlInputService::SdlInputService(std::shared_ptr<events::IEventBus> eventBus,
+                                 std::shared_ptr<IConfigService> configService,
+                                 std::shared_ptr<ILogger> logger)
+    : eventBus_(std::move(eventBus)),
+      configService_(std::move(configService)),
+      logger_(logger) {
 
     // Subscribe to input events
     eventBus_->Subscribe(events::EventType::KeyPressed, [this](const events::Event& e) {
@@ -63,6 +70,7 @@ SdlInputService::SdlInputService(std::shared_ptr<events::IEventBus> eventBus, st
         logger_->Trace("SdlInputService", "SdlInputService",
                        "eventBus=" + std::string(eventBus_ ? "set" : "null"));
     }
+    BuildActionKeyMapping();
     EnsureGamepadSubsystem();
 }
 
@@ -80,24 +88,12 @@ void SdlInputService::ProcessEvent(const SDL_Event& event) {
     switch (event.type) {
         case SDL_EVENT_KEY_DOWN:
             state_.keysPressed.insert(event.key.key);
-            // GUI input processing
-            {
-                auto it = kGuiKeyNames.find(event.key.key);
-                if (it != kGuiKeyNames.end()) {
-                    guiInputSnapshot_.keyStates[it->second] = true;
-                }
-            }
+            ApplyKeyMapping(event.key.key, true);
             break;
 
         case SDL_EVENT_KEY_UP:
             state_.keysPressed.erase(event.key.key);
-            // GUI input processing
-            {
-                auto it = kGuiKeyNames.find(event.key.key);
-                if (it != kGuiKeyNames.end()) {
-                    guiInputSnapshot_.keyStates[it->second] = false;
-                }
-            }
+            ApplyKeyMapping(event.key.key, false);
             break;
 
         case SDL_EVENT_MOUSE_MOTION:
@@ -189,10 +185,7 @@ void SdlInputService::OnKeyPressed(const events::Event& event) {
                        ", repeat=" + std::string(keyEvent.repeat ? "true" : "false"));
     }
     state_.keysPressed.insert(keyEvent.key);
-    auto it = kGuiKeyNames.find(keyEvent.key);
-    if (it != kGuiKeyNames.end()) {
-        guiInputSnapshot_.keyStates[it->second] = true;
-    }
+    ApplyKeyMapping(keyEvent.key, true);
 }
 
 void SdlInputService::OnKeyReleased(const events::Event& event) {
@@ -205,10 +198,7 @@ void SdlInputService::OnKeyReleased(const events::Event& event) {
                        ", repeat=" + std::string(keyEvent.repeat ? "true" : "false"));
     }
     state_.keysPressed.erase(keyEvent.key);
-    auto it = kGuiKeyNames.find(keyEvent.key);
-    if (it != kGuiKeyNames.end()) {
-        guiInputSnapshot_.keyStates[it->second] = false;
-    }
+    ApplyKeyMapping(keyEvent.key, false);
 }
 
 void SdlInputService::OnMouseMoved(const events::Event& event) {
@@ -277,6 +267,167 @@ void SdlInputService::OnTextInput(const events::Event& event) {
     }
     state_.textInput += textEvent.text;
     guiInputSnapshot_.textInput += textEvent.text;
+}
+
+void SdlInputService::BuildActionKeyMapping() {
+    actionKeyNames_.clear();
+    gamepadButtonActions_.clear();
+    gamepadAxisActions_.clear();
+    if (!configService_) {
+        if (logger_) {
+            logger_->Trace("SdlInputService", "BuildActionKeyMapping", "configService=null");
+        }
+        return;
+    }
+
+    const auto& bindings = configService_->GetInputBindings();
+    auto addKey = [&](const char* actionName, const std::string& keyName) {
+        if (keyName.empty()) {
+            return;
+        }
+        SDL_Keycode key = SDL_GetKeyFromName(keyName.c_str());
+        if (key == SDLK_UNKNOWN) {
+            if (logger_) {
+                logger_->Error("SdlInputService: unknown key binding for " + std::string(actionName) +
+                               " -> " + keyName);
+            }
+            return;
+        }
+        actionKeyNames_[key] = actionName;
+        if (logger_) {
+            logger_->Trace("SdlInputService", "BuildActionKeyMapping",
+                           "action=" + std::string(actionName) +
+                           ", keyName=" + keyName +
+                           ", keyCode=" + std::to_string(static_cast<int>(key)));
+        }
+    };
+
+    addKey("move_forward", bindings.moveForwardKey);
+    addKey("move_back", bindings.moveBackKey);
+    addKey("move_left", bindings.moveLeftKey);
+    addKey("move_right", bindings.moveRightKey);
+    addKey("music_toggle", bindings.musicToggleKey);
+
+    auto toLower = [](std::string value) {
+        std::transform(value.begin(), value.end(), value.begin(),
+                       [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+        return value;
+    };
+
+    auto setButton = [&](const char* bindingName, const std::string& buttonValue, SDL_GamepadButton& target) {
+        if (buttonValue.empty()) {
+            return;
+        }
+        std::string normalized = toLower(buttonValue);
+        SDL_GamepadButton button = SDL_GetGamepadButtonFromString(normalized.c_str());
+        if (button != SDL_GAMEPAD_BUTTON_INVALID) {
+            target = button;
+        } else if (logger_) {
+            logger_->Error("SdlInputService: unknown gamepad button binding for " +
+                           std::string(bindingName) + " -> " + buttonValue);
+        }
+    };
+
+    setButton("music_toggle_gamepad", bindings.musicToggleGamepadButton, musicToggleButton_);
+    setButton("gamepad_dpad_up", bindings.gamepadDpadUpButton, dpadUpButton_);
+    setButton("gamepad_dpad_down", bindings.gamepadDpadDownButton, dpadDownButton_);
+    setButton("gamepad_dpad_left", bindings.gamepadDpadLeftButton, dpadLeftButton_);
+    setButton("gamepad_dpad_right", bindings.gamepadDpadRightButton, dpadRightButton_);
+
+    auto setAxis = [&](const char* axisName, const std::string& axisValue, SDL_GamepadAxis& target) {
+        if (axisValue.empty()) {
+            return;
+        }
+        std::string normalized = toLower(axisValue);
+        SDL_GamepadAxis axis = SDL_GetGamepadAxisFromString(normalized.c_str());
+        if (axis != SDL_GAMEPAD_AXIS_INVALID) {
+            target = axis;
+        } else if (logger_) {
+            logger_->Error("SdlInputService: unknown gamepad axis binding for " +
+                           std::string(axisName) + " -> " + axisValue);
+        }
+    };
+
+    setAxis("gamepad_move_x_axis", bindings.gamepadMoveXAxis, moveXAxis_);
+    setAxis("gamepad_move_y_axis", bindings.gamepadMoveYAxis, moveYAxis_);
+    setAxis("gamepad_look_x_axis", bindings.gamepadLookXAxis, lookXAxis_);
+    setAxis("gamepad_look_y_axis", bindings.gamepadLookYAxis, lookYAxis_);
+
+    for (const auto& [buttonName, actionName] : bindings.gamepadButtonActions) {
+        if (buttonName.empty() || actionName.empty()) {
+            continue;
+        }
+        std::string normalized = toLower(buttonName);
+        SDL_GamepadButton button = SDL_GetGamepadButtonFromString(normalized.c_str());
+        if (button == SDL_GAMEPAD_BUTTON_INVALID) {
+            if (logger_) {
+                logger_->Error("SdlInputService: unknown gamepad button mapping " +
+                               buttonName + " -> " + actionName);
+            }
+            continue;
+        }
+        gamepadButtonActions_[button] = actionName;
+    }
+
+    for (const auto& [axisName, actionName] : bindings.gamepadAxisActions) {
+        if (axisName.empty() || actionName.empty()) {
+            continue;
+        }
+        std::string normalized = toLower(axisName);
+        SDL_GamepadAxis axis = SDL_GetGamepadAxisFromString(normalized.c_str());
+        if (axis == SDL_GAMEPAD_AXIS_INVALID) {
+            if (logger_) {
+                logger_->Error("SdlInputService: unknown gamepad axis mapping " +
+                               axisName + " -> " + actionName);
+            }
+            continue;
+        }
+        gamepadAxisActions_[axis] = actionName;
+    }
+
+    gamepadAxisActionThreshold_ = bindings.gamepadAxisActionThreshold;
+    if (gamepadAxisActionThreshold_ < 0.0f) {
+        gamepadAxisActionThreshold_ = 0.0f;
+    } else if (gamepadAxisActionThreshold_ > 1.0f) {
+        gamepadAxisActionThreshold_ = 1.0f;
+    }
+
+    if (logger_) {
+        logger_->Trace("SdlInputService", "BuildActionKeyMapping",
+                       "musicToggleButton=" + std::to_string(static_cast<int>(musicToggleButton_)) +
+                       ", dpadUpButton=" + std::to_string(static_cast<int>(dpadUpButton_)) +
+                       ", dpadDownButton=" + std::to_string(static_cast<int>(dpadDownButton_)) +
+                       ", dpadLeftButton=" + std::to_string(static_cast<int>(dpadLeftButton_)) +
+                       ", dpadRightButton=" + std::to_string(static_cast<int>(dpadRightButton_)) +
+                       ", moveXAxis=" + std::to_string(static_cast<int>(moveXAxis_)) +
+                       ", moveYAxis=" + std::to_string(static_cast<int>(moveYAxis_)) +
+                       ", lookXAxis=" + std::to_string(static_cast<int>(lookXAxis_)) +
+                       ", lookYAxis=" + std::to_string(static_cast<int>(lookYAxis_)) +
+                       ", buttonActions=" + std::to_string(gamepadButtonActions_.size()) +
+                       ", axisActions=" + std::to_string(gamepadAxisActions_.size()) +
+                       ", axisThreshold=" + std::to_string(gamepadAxisActionThreshold_));
+    }
+}
+
+void SdlInputService::ApplyKeyMapping(SDL_Keycode key, bool isDown) {
+    auto actionIt = actionKeyNames_.find(key);
+    if (actionIt != actionKeyNames_.end()) {
+        guiInputSnapshot_.keyStates[actionIt->second] = isDown;
+    }
+    auto guiIt = kGuiKeyNames.find(key);
+    if (guiIt != kGuiKeyNames.end()) {
+        guiInputSnapshot_.keyStates[guiIt->second] = isDown;
+    }
+}
+
+bool SdlInputService::IsActionKeyPressed(const std::string& action) const {
+    for (const auto& key : state_.keysPressed) {
+        auto it = actionKeyNames_.find(key);
+        if (it != actionKeyNames_.end() && it->second == action) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void SdlInputService::EnsureGamepadSubsystem() {
@@ -355,12 +506,45 @@ void SdlInputService::UpdateGamepadSnapshot() {
     }
 
     guiInputSnapshot_.gamepadConnected = true;
-    guiInputSnapshot_.gamepadLeftX = NormalizeAxis(SDL_GetGamepadAxis(gamepad_, SDL_GAMEPAD_AXIS_LEFTX));
-    guiInputSnapshot_.gamepadLeftY = NormalizeAxis(SDL_GetGamepadAxis(gamepad_, SDL_GAMEPAD_AXIS_LEFTY));
-    guiInputSnapshot_.gamepadRightX = NormalizeAxis(SDL_GetGamepadAxis(gamepad_, SDL_GAMEPAD_AXIS_RIGHTX));
-    guiInputSnapshot_.gamepadRightY = NormalizeAxis(SDL_GetGamepadAxis(gamepad_, SDL_GAMEPAD_AXIS_RIGHTY));
+    guiInputSnapshot_.gamepadLeftX = 0.0f;
+    guiInputSnapshot_.gamepadLeftY = 0.0f;
+    guiInputSnapshot_.gamepadRightX = 0.0f;
+    guiInputSnapshot_.gamepadRightY = 0.0f;
+    if (moveXAxis_ != SDL_GAMEPAD_AXIS_INVALID) {
+        guiInputSnapshot_.gamepadLeftX = NormalizeAxis(SDL_GetGamepadAxis(gamepad_, moveXAxis_));
+    }
+    if (moveYAxis_ != SDL_GAMEPAD_AXIS_INVALID) {
+        guiInputSnapshot_.gamepadLeftY = NormalizeAxis(SDL_GetGamepadAxis(gamepad_, moveYAxis_));
+    }
+    if (lookXAxis_ != SDL_GAMEPAD_AXIS_INVALID) {
+        guiInputSnapshot_.gamepadRightX = NormalizeAxis(SDL_GetGamepadAxis(gamepad_, lookXAxis_));
+    }
+    if (lookYAxis_ != SDL_GAMEPAD_AXIS_INVALID) {
+        guiInputSnapshot_.gamepadRightY = NormalizeAxis(SDL_GetGamepadAxis(gamepad_, lookYAxis_));
+    }
     guiInputSnapshot_.gamepadTogglePressed =
-        SDL_GetGamepadButton(gamepad_, SDL_GAMEPAD_BUTTON_START);
+        SDL_GetGamepadButton(gamepad_, musicToggleButton_);
+
+    auto updateActionState = [&](const std::string& actionName, bool gamepadPressed) {
+        bool keyboardPressed = IsActionKeyPressed(actionName);
+        bool current = guiInputSnapshot_.keyStates[actionName];
+        guiInputSnapshot_.keyStates[actionName] = current || keyboardPressed || gamepadPressed;
+    };
+
+    updateActionState("move_forward", SDL_GetGamepadButton(gamepad_, dpadUpButton_));
+    updateActionState("move_back", SDL_GetGamepadButton(gamepad_, dpadDownButton_));
+    updateActionState("move_left", SDL_GetGamepadButton(gamepad_, dpadLeftButton_));
+    updateActionState("move_right", SDL_GetGamepadButton(gamepad_, dpadRightButton_));
+
+    for (const auto& [button, actionName] : gamepadButtonActions_) {
+        updateActionState(actionName, SDL_GetGamepadButton(gamepad_, button));
+    }
+
+    for (const auto& [axis, actionName] : gamepadAxisActions_) {
+        float value = NormalizeAxis(SDL_GetGamepadAxis(gamepad_, axis));
+        bool pressed = std::fabs(value) >= gamepadAxisActionThreshold_;
+        updateActionState(actionName, pressed);
+    }
 }
 
 void SdlInputService::SetGuiScriptService(IGuiScriptService* guiScriptService) {

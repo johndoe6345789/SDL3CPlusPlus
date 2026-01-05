@@ -176,6 +176,73 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger, c
         config.windowTitle = value.GetString();
     }
 
+    if (document.HasMember("input_bindings")) {
+        const auto& bindingsValue = document["input_bindings"];
+        if (!bindingsValue.IsObject()) {
+            throw std::runtime_error("JSON member 'input_bindings' must be an object");
+        }
+        auto readBinding = [&](const char* name, std::string& target) {
+            if (!bindingsValue.HasMember(name)) {
+                return;
+            }
+            const auto& value = bindingsValue[name];
+            if (!value.IsString()) {
+                throw std::runtime_error("JSON member 'input_bindings." + std::string(name) + "' must be a string");
+            }
+            target = value.GetString();
+        };
+
+        readBinding("move_forward", config.inputBindings.moveForwardKey);
+        readBinding("move_back", config.inputBindings.moveBackKey);
+        readBinding("move_left", config.inputBindings.moveLeftKey);
+        readBinding("move_right", config.inputBindings.moveRightKey);
+        readBinding("music_toggle", config.inputBindings.musicToggleKey);
+        readBinding("music_toggle_gamepad", config.inputBindings.musicToggleGamepadButton);
+        readBinding("gamepad_move_x_axis", config.inputBindings.gamepadMoveXAxis);
+        readBinding("gamepad_move_y_axis", config.inputBindings.gamepadMoveYAxis);
+        readBinding("gamepad_look_x_axis", config.inputBindings.gamepadLookXAxis);
+        readBinding("gamepad_look_y_axis", config.inputBindings.gamepadLookYAxis);
+        readBinding("gamepad_dpad_up", config.inputBindings.gamepadDpadUpButton);
+        readBinding("gamepad_dpad_down", config.inputBindings.gamepadDpadDownButton);
+        readBinding("gamepad_dpad_left", config.inputBindings.gamepadDpadLeftButton);
+        readBinding("gamepad_dpad_right", config.inputBindings.gamepadDpadRightButton);
+
+        auto readMapping = [&](const char* name,
+                               std::unordered_map<std::string, std::string>& target) {
+            if (!bindingsValue.HasMember(name)) {
+                return;
+            }
+            const auto& mappingValue = bindingsValue[name];
+            if (!mappingValue.IsObject()) {
+                throw std::runtime_error("JSON member 'input_bindings." + std::string(name) + "' must be an object");
+            }
+            for (auto it = mappingValue.MemberBegin(); it != mappingValue.MemberEnd(); ++it) {
+                if (!it->name.IsString() || !it->value.IsString()) {
+                    throw std::runtime_error("JSON member 'input_bindings." + std::string(name) +
+                                             "' must contain string pairs");
+                }
+                std::string key = it->name.GetString();
+                std::string value = it->value.GetString();
+                if (value.empty()) {
+                    target.erase(key);
+                } else {
+                    target[key] = value;
+                }
+            }
+        };
+
+        readMapping("gamepad_button_actions", config.inputBindings.gamepadButtonActions);
+        readMapping("gamepad_axis_actions", config.inputBindings.gamepadAxisActions);
+
+        if (bindingsValue.HasMember("gamepad_axis_action_threshold")) {
+            const auto& value = bindingsValue["gamepad_axis_action_threshold"];
+            if (!value.IsNumber()) {
+                throw std::runtime_error("JSON member 'input_bindings.gamepad_axis_action_threshold' must be a number");
+            }
+            config.inputBindings.gamepadAxisActionThreshold = static_cast<float>(value.GetDouble());
+        }
+    }
+
     return config;
 }
 
