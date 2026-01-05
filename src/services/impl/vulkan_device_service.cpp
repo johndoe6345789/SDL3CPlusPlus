@@ -29,9 +29,19 @@ void VulkanDeviceService::Initialize(const std::vector<const char*>& deviceExten
                    "deviceExtensions.size=" + std::to_string(deviceExtensions.size()) +
                    ", enableValidationLayers=" + std::string(enableValidationLayers ? "true" : "false"));
 
+    if (instance_ != VK_NULL_HANDLE || surface_ != VK_NULL_HANDLE || device_ != VK_NULL_HANDLE) {
+        logger_->Warn("VulkanDeviceService::Initialize: Existing Vulkan handles detected; shutting down before reinitializing");
+        Shutdown();
+    }
+
     deviceExtensions_ = deviceExtensions;
     validationLayersEnabled_ = enableValidationLayers;
+    instance_ = VK_NULL_HANDLE;
+    surface_ = VK_NULL_HANDLE;
     physicalDevice_ = VK_NULL_HANDLE;
+    device_ = VK_NULL_HANDLE;
+    graphicsQueue_ = VK_NULL_HANDLE;
+    presentQueue_ = VK_NULL_HANDLE;
 
     // Get required extensions from SDL
     uint32_t extensionCount = 0;
@@ -128,7 +138,18 @@ void VulkanDeviceService::CreateInstance(const std::vector<const char*>& require
 }
 
 void VulkanDeviceService::PickPhysicalDevice() {
-    logger_->Trace("VulkanDeviceService", "PickPhysicalDevice");
+    const bool instanceIsNull = instance_ == VK_NULL_HANDLE;
+    const bool surfaceIsNull = surface_ == VK_NULL_HANDLE;
+    logger_->Trace("VulkanDeviceService", "PickPhysicalDevice",
+                   "instanceIsNull=" + std::string(instanceIsNull ? "true" : "false") +
+                   ", surfaceIsNull=" + std::string(surfaceIsNull ? "true" : "false"));
+
+    if (instanceIsNull) {
+        throw std::runtime_error("Vulkan instance must be created before selecting a physical device");
+    }
+    if (surfaceIsNull) {
+        throw std::runtime_error("Vulkan surface must be created before selecting a physical device");
+    }
 
     uint32_t deviceCount = 0;
     VkResult enumResult = vkEnumeratePhysicalDevices(instance_, &deviceCount, nullptr);
@@ -162,8 +183,10 @@ void VulkanDeviceService::PickPhysicalDevice() {
 }
 
 bool VulkanDeviceService::IsDeviceSuitable(VkPhysicalDevice device) const {
+    const bool surfaceIsNull = surface_ == VK_NULL_HANDLE;
     logger_->Trace("VulkanDeviceService", "IsDeviceSuitable",
-                   "deviceIsNull=" + std::string(device == VK_NULL_HANDLE ? "true" : "false"));
+                   "deviceIsNull=" + std::string(device == VK_NULL_HANDLE ? "true" : "false") +
+                   ", surfaceIsNull=" + std::string(surfaceIsNull ? "true" : "false"));
     if (surface_ == VK_NULL_HANDLE) {
         throw std::runtime_error("Vulkan surface must be created before checking device suitability");
     }
@@ -189,8 +212,10 @@ bool VulkanDeviceService::IsDeviceSuitable(VkPhysicalDevice device) const {
 }
 
 QueueFamilyIndices VulkanDeviceService::FindQueueFamilies(VkPhysicalDevice device) const {
+    const bool surfaceIsNull = surface_ == VK_NULL_HANDLE;
     logger_->Trace("VulkanDeviceService", "FindQueueFamilies",
-                   "deviceIsNull=" + std::string(device == VK_NULL_HANDLE ? "true" : "false"));
+                   "deviceIsNull=" + std::string(device == VK_NULL_HANDLE ? "true" : "false") +
+                   ", surfaceIsNull=" + std::string(surfaceIsNull ? "true" : "false"));
     if (surface_ == VK_NULL_HANDLE) {
         throw std::runtime_error("Vulkan surface must be created before querying queue families");
     }
