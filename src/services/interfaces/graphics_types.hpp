@@ -22,6 +22,10 @@ struct GraphicsConfig {
 struct ShaderPaths {
     std::string vertex;
     std::string fragment;
+    std::string geometry;
+    std::string tessControl;
+    std::string tessEval;
+    std::string compute;
 };
 
 /**

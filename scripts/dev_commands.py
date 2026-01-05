@@ -284,7 +284,7 @@ def msvc_quick(args: argparse.Namespace) -> None:
 def _compile_shaders(dry_run: bool) -> None:
     """
     Compile GLSL shaders to SPIR-V format using glslangValidator.
-    Compiles all .vert and .frag files in the shaders directory.
+    Compiles .vert, .frag, .geom, .tesc, .tese, and .comp files in the shaders directory.
     """
     shaders_dir = Path("shaders")
     if not shaders_dir.exists():
@@ -309,7 +309,14 @@ def _compile_shaders(dry_run: bool) -> None:
         return
 
     print("\n=== Compiling Shaders ===")
-    shader_files = list(shaders_dir.glob("*.vert")) + list(shaders_dir.glob("*.frag"))
+    shader_files = (
+        list(shaders_dir.glob("*.vert"))
+        + list(shaders_dir.glob("*.frag"))
+        + list(shaders_dir.glob("*.geom"))
+        + list(shaders_dir.glob("*.tesc"))
+        + list(shaders_dir.glob("*.tese"))
+        + list(shaders_dir.glob("*.comp"))
+    )
 
     for shader_file in shader_files:
         output_file = shader_file.with_suffix(shader_file.suffix + ".spv")

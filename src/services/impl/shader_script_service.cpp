@@ -82,30 +82,52 @@ ShaderPaths ShaderScriptService::ReadShaderPathsTable(lua_State* L, int index) c
     ShaderPaths paths;
     int absIndex = lua_absindex(L, index);
 
-    lua_getfield(L, absIndex, "vertex");
-    if (!lua_isstring(L, -1)) {
-        lua_pop(L, 1);
-        if (logger_) {
-            logger_->Error("Shader path 'vertex' must be a string");
+    auto readRequiredPath = [&](const char* field, std::string& target) {
+        lua_getfield(L, absIndex, field);
+        if (!lua_isstring(L, -1)) {
+            lua_pop(L, 1);
+            if (logger_) {
+                logger_->Error("Shader path '" + std::string(field) + "' must be a string");
+            }
+            throw std::runtime_error("Shader path '" + std::string(field) + "' must be a string");
         }
-        throw std::runtime_error("Shader path 'vertex' must be a string");
-    }
-    paths.vertex = lua_tostring(L, -1);
-    lua_pop(L, 1);
-
-    lua_getfield(L, absIndex, "fragment");
-    if (!lua_isstring(L, -1)) {
+        target = lua_tostring(L, -1);
         lua_pop(L, 1);
-        if (logger_) {
-            logger_->Error("Shader path 'fragment' must be a string");
-        }
-        throw std::runtime_error("Shader path 'fragment' must be a string");
-    }
-    paths.fragment = lua_tostring(L, -1);
-    lua_pop(L, 1);
+    };
 
-    paths.vertex = ResolveShaderPath(paths.vertex);
-    paths.fragment = ResolveShaderPath(paths.fragment);
+    auto readOptionalPath = [&](const char* field, std::string& target) {
+        lua_getfield(L, absIndex, field);
+        if (lua_isstring(L, -1)) {
+            target = lua_tostring(L, -1);
+        } else if (!lua_isnil(L, -1)) {
+            lua_pop(L, 1);
+            if (logger_) {
+                logger_->Error("Shader path '" + std::string(field) + "' must be a string when provided");
+            }
+            throw std::runtime_error("Shader path '" + std::string(field) + "' must be a string when provided");
+        }
+        lua_pop(L, 1);
+    };
+
+    readRequiredPath("vertex", paths.vertex);
+    readRequiredPath("fragment", paths.fragment);
+    readOptionalPath("geometry", paths.geometry);
+    readOptionalPath("tesc", paths.tessControl);
+    readOptionalPath("tese", paths.tessEval);
+    readOptionalPath("compute", paths.compute);
+
+    auto resolveIfPresent = [&](std::string& value) {
+        if (!value.empty()) {
+            value = ResolveShaderPath(value);
+        }
+    };
+
+    resolveIfPresent(paths.vertex);
+    resolveIfPresent(paths.fragment);
+    resolveIfPresent(paths.geometry);
+    resolveIfPresent(paths.tessControl);
+    resolveIfPresent(paths.tessEval);
+    resolveIfPresent(paths.compute);
 
     return paths;
 }

@@ -37,6 +37,8 @@ class SDL3CppConan(ConanFile):
         self.requires("vulkan-headers/1.3.243.0")
         self.requires("vulkan-memory-allocator/3.3.0")
         self.requires("vulkan-validationlayers/1.3.243.0")
+        self.requires("spirv-tools/1.4.313.0")
+        self.requires("spirv-headers/1.4.313.0")
         self.requires("cpptrace/1.0.4")
         self.requires("ogg/1.3.5")
         self.requires("theora/1.1.1")

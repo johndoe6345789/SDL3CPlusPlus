@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <fstream>
 #include <stdexcept>
+#include <vector>
 
 namespace sdl3cpp::services::impl {
 
@@ -248,42 +249,96 @@ void PipelineService::CreatePipelinesInternal(VkRenderPass renderPass, VkExtent2
                 "\n\nPlease ensure shader files are compiled and present in the shaders directory.");
         }
 
-        auto vertShaderCode = ReadShaderFile(paths.vertex);
-        auto fragShaderCode = ReadShaderFile(paths.fragment);
+        bool hasGeometry = !paths.geometry.empty();
+        bool hasTessControl = !paths.tessControl.empty();
+        bool hasTessEval = !paths.tessEval.empty();
 
-        VkShaderModule vertShaderModule = CreateShaderModule(vertShaderCode);
-        VkShaderModule fragShaderModule = CreateShaderModule(fragShaderCode);
-
-        VkPipelineShaderStageCreateInfo vertStageInfo{};
-        vertStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        vertStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-        vertStageInfo.module = vertShaderModule;
-        vertStageInfo.pName = "main";
-
-        VkPipelineShaderStageCreateInfo fragStageInfo{};
-        fragStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        fragStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        fragStageInfo.module = fragShaderModule;
-        fragStageInfo.pName = "main";
-
-        VkPipelineShaderStageCreateInfo shaderStages[] = {vertStageInfo, fragStageInfo};
-
-        VkGraphicsPipelineCreateInfo pipelineCreateInfo = pipelineInfo;
-        pipelineCreateInfo.stageCount = 2;
-        pipelineCreateInfo.pStages = shaderStages;
-
-        VkPipeline pipeline;
-        if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr,
-                                      &pipeline) != VK_SUCCESS) {
-            vkDestroyShaderModule(device, fragShaderModule, nullptr);
-            vkDestroyShaderModule(device, vertShaderModule, nullptr);
-            throw std::runtime_error("Failed to create graphics pipeline for shader: " + key);
+        if (hasGeometry && !std::filesystem::exists(paths.geometry)) {
+            throw std::runtime_error(
+                "Geometry shader not found: " + paths.geometry +
+                "\n\nShader key: " + key +
+                "\n\nPlease ensure shader files are compiled and present in the shaders directory.");
+        }
+        if (hasTessControl != hasTessEval) {
+            throw std::runtime_error(
+                "Tessellation shaders require both 'tesc' and 'tese' paths. Shader key: " + key);
+        }
+        if (hasTessControl && !std::filesystem::exists(paths.tessControl)) {
+            throw std::runtime_error(
+                "Tessellation control shader not found: " + paths.tessControl +
+                "\n\nShader key: " + key +
+                "\n\nPlease ensure shader files are compiled and present in the shaders directory.");
+        }
+        if (hasTessEval && !std::filesystem::exists(paths.tessEval)) {
+            throw std::runtime_error(
+                "Tessellation evaluation shader not found: " + paths.tessEval +
+                "\n\nShader key: " + key +
+                "\n\nPlease ensure shader files are compiled and present in the shaders directory.");
         }
 
-        pipelines_[key] = pipeline;
+        std::vector<VkShaderModule> shaderModules;
+        std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
+        shaderStages.reserve(2 + (hasGeometry ? 1 : 0) + (hasTessControl ? 2 : 0));
 
-        vkDestroyShaderModule(device, fragShaderModule, nullptr);
-        vkDestroyShaderModule(device, vertShaderModule, nullptr);
+        auto destroyShaderModules = [&]() {
+            for (VkShaderModule module : shaderModules) {
+                vkDestroyShaderModule(device, module, nullptr);
+            }
+            shaderModules.clear();
+        };
+
+        auto addStage = [&](VkShaderStageFlagBits stage, const std::string& path) {
+            auto shaderCode = ReadShaderFile(path);
+            VkShaderModule shaderModule = CreateShaderModule(shaderCode);
+            shaderModules.push_back(shaderModule);
+
+            VkPipelineShaderStageCreateInfo stageInfo{};
+            stageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+            stageInfo.stage = stage;
+            stageInfo.module = shaderModule;
+            stageInfo.pName = "main";
+            shaderStages.push_back(stageInfo);
+        };
+
+        try {
+            addStage(VK_SHADER_STAGE_VERTEX_BIT, paths.vertex);
+            if (hasTessControl) {
+                addStage(VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT, paths.tessControl);
+                addStage(VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT, paths.tessEval);
+            }
+            if (hasGeometry) {
+                addStage(VK_SHADER_STAGE_GEOMETRY_BIT, paths.geometry);
+            }
+            addStage(VK_SHADER_STAGE_FRAGMENT_BIT, paths.fragment);
+
+            VkPipelineInputAssemblyStateCreateInfo inputAssemblyState = inputAssembly;
+            VkPipelineTessellationStateCreateInfo tessellationState{};
+            bool useTessellation = hasTessControl && hasTessEval;
+            if (useTessellation) {
+                inputAssemblyState.topology = VK_PRIMITIVE_TOPOLOGY_PATCH_LIST;
+                tessellationState.sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
+                tessellationState.patchControlPoints = 3;
+            }
+
+            VkGraphicsPipelineCreateInfo pipelineCreateInfo = pipelineInfo;
+            pipelineCreateInfo.pInputAssemblyState = &inputAssemblyState;
+            pipelineCreateInfo.pTessellationState = useTessellation ? &tessellationState : nullptr;
+            pipelineCreateInfo.stageCount = static_cast<uint32_t>(shaderStages.size());
+            pipelineCreateInfo.pStages = shaderStages.data();
+
+            VkPipeline pipeline;
+            if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr,
+                                          &pipeline) != VK_SUCCESS) {
+                destroyShaderModules();
+                throw std::runtime_error("Failed to create graphics pipeline for shader: " + key);
+            }
+
+            pipelines_[key] = pipeline;
+            destroyShaderModules();
+        } catch (...) {
+            destroyShaderModules();
+            throw;
+        }
 
         logger_->Debug("Created pipeline: " + key);
     }
