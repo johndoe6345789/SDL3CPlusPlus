@@ -254,13 +254,63 @@ def msvc_quick(args: argparse.Namespace) -> None:
     run_argvs([cmd], args.dry_run)
 
 
+def _sync_assets(build_dir: str, dry_run: bool) -> None:
+    """
+    Sync asset files (scripts, shaders, models) from the project root to the
+    build directory before running the application.
+    """
+    import shutil
+
+    build_path = Path(build_dir)
+    project_root = Path(".")
+
+    # Define asset directories to sync
+    asset_dirs = [
+        ("scripts", ["*.lua"]),
+        ("shaders", ["*.spv"]),
+        ("scripts/models", ["*.stl", "*.obj", "*.fbx"]),
+    ]
+
+    print("\n=== Syncing Assets ===")
+
+    for src_dir, patterns in asset_dirs:
+        src_path = project_root / src_dir
+        dst_path = build_path / src_dir
+
+        if not src_path.exists():
+            continue
+
+        # Create destination directory if needed
+        if not dry_run:
+            dst_path.mkdir(parents=True, exist_ok=True)
+
+        # Sync files matching patterns
+        for pattern in patterns:
+            for src_file in src_path.glob(pattern):
+                if src_file.is_file():
+                    dst_file = dst_path / src_file.name
+                    print(f"  {src_file} -> {dst_file}")
+                    if not dry_run:
+                        shutil.copy2(src_file, dst_file)
+
+    print("=== Assets Synced ===\n")
+
+
 def run_demo(args: argparse.Namespace) -> None:
     """
     Run a compiled demo application from the build directory. The default
     executable is `sdl3_app` (or `sdl3_app.exe` on Windows). Additional
     arguments can be passed to the executable after `--`.
+
+    By default, syncs asset files (scripts, shaders, models) before running.
+    Use --no-sync to skip asset synchronization.
     """
     build_dir = _as_build_dir(args.build_dir, DEFAULT_BUILD_DIR)
+
+    # Sync assets unless --no-sync is specified
+    if not args.no_sync:
+        _sync_assets(build_dir, args.dry_run)
+
     exe_name = args.target or ("sdl3_app.exe" if IS_WINDOWS else "sdl3_app")
     binary = str(Path(build_dir) / exe_name)
     cmd: list[str] = [binary]
@@ -376,6 +426,11 @@ def main() -> int:
     runp.add_argument(
         "--target",
         help="executable name to run (defaults to `sdl3_app[.exe]`)",
+    )
+    runp.add_argument(
+        "--no-sync",
+        action="store_true",
+        help="skip syncing assets (scripts, shaders, models) before running",
     )
     runp.add_argument(
         "args",

@@ -548,7 +548,7 @@ local function create_room_objects()
     local floor_center_y = room.floor_top - room.floor_half_thickness
     local wall_center_y = room.floor_top + room.wall_height
     local ceiling_y = room.floor_top + room.wall_height * 2 + room.floor_half_thickness
-    local wall_offset = room.half_size + room.wall_thickness
+    local wall_offset = room.half_size - room.wall_thickness / 2
 
     local blue_floor = {0.2, 0.3, 0.8}
     local green_wall = {0.2, 0.7, 0.3}
