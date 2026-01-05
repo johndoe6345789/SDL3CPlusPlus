@@ -32,6 +32,7 @@
     "fly_down": "Z",
     "jump": "Space",
     "noclip_toggle": "N",
+    "fps_toggle": "F1",
     "music_toggle": "M",
     "music_toggle_gamepad": "start",
     "gamepad_move_x_axis": "leftx",

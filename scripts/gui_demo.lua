@@ -22,6 +22,16 @@ local statusMessage = 'Ready'
 local viewProjectionLogged = false
 local fpsMode = false
 local fpsToggleWasDown = false
+local fpsToggleKey = "F1"
+if type(config) == "table" then
+    local bindings = config.input_bindings
+    if type(bindings) == "table" then
+        local key = bindings.fps_toggle or bindings.fps_toggle_key
+        if type(key) == "string" or type(key) == "number" then
+            fpsToggleKey = key
+        end
+    end
+end
 
 local function setFpsMode(enabled)
     fpsMode = enabled
@@ -42,7 +52,10 @@ local function updateFpsModeToggle()
     if not input_is_key_down then
         return
     end
-    local down = input_is_key_down("F1")
+    if fpsToggleKey == nil or fpsToggleKey == "" then
+        return
+    end
+    local down = input_is_key_down(fpsToggleKey)
     if down and not fpsToggleWasDown then
         setFpsMode(not fpsMode)
     end
@@ -132,8 +145,9 @@ local function drawTestButtons()
 
     local grabState = window_get_mouse_grabbed and window_get_mouse_grabbed() or false
     local fpsLabel = fpsMode and "ON" or "OFF"
+    local fpsToggleLabel = tostring(fpsToggleKey or "F1")
     Gui.text(ctx, {x = 70, y = 362, width = 360, height = 20},
-        string.format("FPS Mode: %s (grab=%s, F1 toggle)", fpsLabel, grabState and "on" or "off"), {
+        string.format("FPS Mode: %s (grab=%s, %s toggle)", fpsLabel, grabState and "on" or "off", fpsToggleLabel), {
             fontSize = 14,
             alignX = "center",
             color = {0.85, 0.85, 0.95, 1.0},
