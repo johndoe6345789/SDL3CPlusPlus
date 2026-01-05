@@ -84,6 +84,16 @@ def _print_cmd(argv: Sequence[str]) -> None:
     print("\n> " + rendered)
 
 
+def _strip_leading_double_dash(args: Sequence[str] | None) -> list[str]:
+    """Drop a leading `--` that argparse keeps with REMAINDER arguments."""
+    if not args:
+        return []
+    args_list = list(args)
+    if args_list and args_list[0] == "--":
+        return args_list[1:]
+    return args_list
+
+
 def run_argvs(argvs: Iterable[Sequence[str]], dry_run: bool) -> None:
     """
     Run a sequence of commands represented as lists of arguments. Each command
@@ -142,8 +152,9 @@ def dependencies(args: argparse.Namespace) -> None:
     """Run Conan profile detection and install dependencies."""
     cmd_detect = ["conan", "profile", "detect", "-f"]
     cmd_install = ["conan", "install", ".", "-of", "build", "-b", "missing"]
-    if args.conan_install_args:
-        cmd_install.extend(args.conan_install_args)
+    conan_install_args = _strip_leading_double_dash(args.conan_install_args)
+    if conan_install_args:
+        cmd_install.extend(conan_install_args)
     run_argvs([cmd_detect, cmd_install], args.dry_run)
 
 
@@ -169,8 +180,9 @@ def configure(args: argparse.Namespace) -> None:
     else:
         cmake_args.extend(["-G", CMAKE_GENERATOR[generator]])
         cmake_args.append(f"-DCMAKE_BUILD_TYPE={args.build_type}")
-    if args.cmake_args:
-        cmake_args.extend(args.cmake_args)
+    cmake_extra_args = _strip_leading_double_dash(args.cmake_args)
+    if cmake_extra_args:
+        cmake_args.extend(cmake_extra_args)
     run_argvs([cmake_args], args.dry_run)
 
 
@@ -181,9 +193,10 @@ def build(args: argparse.Namespace) -> None:
         cmd.extend(["--config", args.config])
     if args.target:
         cmd.extend(["--target", args.target])
-    if args.build_tool_args:
+    build_tool_args = _strip_leading_double_dash(args.build_tool_args)
+    if build_tool_args:
         cmd.append("--")
-        cmd.extend(args.build_tool_args)
+        cmd.extend(build_tool_args)
     run_argvs([cmd], args.dry_run)
 
 
@@ -225,7 +238,7 @@ def msvc_quick(args: argparse.Namespace) -> None:
     bat = args.bat_path or DEFAULT_VCVARSALL
     arch = args.arch or "x64"
     if args.then_command:
-        then_cmd = list(args.then_command)
+        then_cmd = _strip_leading_double_dash(args.then_command)
     else:
         build_dir = _as_build_dir(args.build_dir, DEFAULT_BUILD_DIR)
         then_cmd = ["cmake", "--build", build_dir]
@@ -233,9 +246,10 @@ def msvc_quick(args: argparse.Namespace) -> None:
             then_cmd.extend(["--config", args.config])
         if args.target:
             then_cmd.extend(["--target", args.target])
-        if args.build_tool_args:
+        build_tool_args = _strip_leading_double_dash(args.build_tool_args)
+        if build_tool_args:
             then_cmd.append("--")
-            then_cmd.extend(args.build_tool_args)
+            then_cmd.extend(build_tool_args)
     cmd = _cmd_one_liner_vcvars_then(bat, arch, then_cmd)
     run_argvs([cmd], args.dry_run)
 
@@ -250,8 +264,9 @@ def run_demo(args: argparse.Namespace) -> None:
     exe_name = args.target or ("sdl3_app.exe" if IS_WINDOWS else "sdl3_app")
     binary = str(Path(build_dir) / exe_name)
     cmd: list[str] = [binary]
-    if args.args:
-        cmd.extend(args.args)
+    run_args = _strip_leading_double_dash(args.args)
+    if run_args:
+        cmd.extend(run_args)
     run_argvs([cmd], args.dry_run)
 
 
