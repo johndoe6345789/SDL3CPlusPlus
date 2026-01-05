@@ -3,6 +3,7 @@
 #include "../interfaces/i_logger.hpp"
 #include <atomic>
 #include <chrono>
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -16,12 +17,23 @@ namespace sdl3cpp::services::impl {
 // Implementation class that holds all the logging logic
 class LoggerImpl {
 public:
+    static constexpr size_t kDefaultMaxLinesPerFile = 10000;
+
     std::atomic<LogLevel> level_;
     bool consoleEnabled_;
     std::unique_ptr<std::ofstream> fileStream_;
     std::mutex mutex_;
+    std::filesystem::path baseFilePath_;
+    size_t maxLinesPerFile_;
+    size_t currentLineCount_;
+    size_t currentFileIndex_;
 
-    LoggerImpl() : level_(LogLevel::INFO), consoleEnabled_(true) {}
+    LoggerImpl()
+        : level_(LogLevel::INFO),
+          consoleEnabled_(true),
+          maxLinesPerFile_(kDefaultMaxLinesPerFile),
+          currentLineCount_(0),
+          currentFileIndex_(0) {}
 
     ~LoggerImpl() {
         if (fileStream_) {
@@ -66,7 +78,68 @@ public:
         if (fileStream_) {
             *fileStream_ << message << std::endl;
             fileStream_->flush();
+            ++currentLineCount_;
+            RotateFileIfNeeded();
         }
+    }
+
+    void SetOutputFile(const std::string& filename) {
+        if (fileStream_) {
+            fileStream_->close();
+        }
+        fileStream_.reset();
+
+        baseFilePath_ = filename;
+        currentLineCount_ = 0;
+        currentFileIndex_ = 0;
+
+        if (!baseFilePath_.empty()) {
+            OpenLogFile(currentFileIndex_);
+        }
+    }
+
+    void SetMaxLinesPerFile(size_t maxLines) {
+        maxLinesPerFile_ = maxLines;
+    }
+
+    std::filesystem::path BuildLogFilePath(size_t index) const {
+        if (baseFilePath_.empty() || index == 0) {
+            return baseFilePath_;
+        }
+
+        std::filesystem::path basePath(baseFilePath_);
+        std::string stem = basePath.stem().string();
+        std::string extension = basePath.extension().string();
+        std::string rotatedName = stem + "." + std::to_string(index) + extension;
+
+        return basePath.parent_path() / rotatedName;
+    }
+
+    void OpenLogFile(size_t index) {
+        if (baseFilePath_.empty()) {
+            return;
+        }
+
+        std::filesystem::path logPath = BuildLogFilePath(index);
+        fileStream_ = std::make_unique<std::ofstream>(logPath, std::ios::out | std::ios::trunc);
+        if (!fileStream_->is_open()) {
+            std::cerr << "Failed to open log file: " << logPath.string() << std::endl;
+            fileStream_.reset();
+        }
+    }
+
+    void RotateFileIfNeeded() {
+        if (maxLinesPerFile_ == 0 || currentLineCount_ < maxLinesPerFile_) {
+            return;
+        }
+
+        if (fileStream_) {
+            fileStream_->close();
+        }
+
+        ++currentFileIndex_;
+        currentLineCount_ = 0;
+        OpenLogFile(currentFileIndex_);
     }
 };
 
@@ -85,6 +158,7 @@ public:
     void SetLevel(LogLevel level) override;
     LogLevel GetLevel() const override;
     void SetOutputFile(const std::string& filename) override;
+    void SetMaxLinesPerFile(size_t maxLines) override;
     void EnableConsoleOutput(bool enable) override;
     void Log(LogLevel level, const std::string& message) override;
     void Trace(const std::string& message) override;

@@ -19,15 +19,12 @@ LogLevel LoggerService::GetLevel() const {
 
 void LoggerService::SetOutputFile(const std::string& filename) {
     std::lock_guard<std::mutex> lock(impl_->mutex_);
-    if (impl_->fileStream_) {
-        impl_->fileStream_->close();
-    }
-    impl_->fileStream_ = std::make_unique<std::ofstream>(filename, std::ios::app);
-    if (!impl_->fileStream_->is_open()) {
-        // Fallback to console if file can't be opened
-        std::cerr << "Failed to open log file: " << filename << std::endl;
-        impl_->fileStream_.reset();
-    }
+    impl_->SetOutputFile(filename);
+}
+
+void LoggerService::SetMaxLinesPerFile(size_t maxLines) {
+    std::lock_guard<std::mutex> lock(impl_->mutex_);
+    impl_->SetMaxLinesPerFile(maxLines);
 }
 
 void LoggerService::EnableConsoleOutput(bool enable) {

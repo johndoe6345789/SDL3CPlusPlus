@@ -45,6 +45,13 @@ public:
     virtual void SetOutputFile(const std::string& filename) = 0;
 
     /**
+     * @brief Set the maximum number of log lines per file before rotation.
+     *
+     * @param maxLines Max lines per log file, or 0 to disable rotation
+     */
+    virtual void SetMaxLinesPerFile(size_t maxLines) = 0;
+
+    /**
      * @brief Enable or disable console output.
      *
      * @param enable True to enable console output
