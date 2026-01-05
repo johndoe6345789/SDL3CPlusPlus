@@ -206,8 +206,26 @@ void GuiRenderer::RenderToSwapchain(VkCommandBuffer commandBuffer, VkRenderPass 
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer_, &offset);
     vkCmdBindIndexBuffer(commandBuffer, indexBuffer_, 0, VK_INDEX_TYPE_UINT32);
 
-    // TODO: Set up push constants for orthographic projection matrix here
-    // For now, we'll use identity matrices which assumes the shaders handle 2D coordinates
+    // Push identity matrices for 2D GUI rendering (no 3D transformation)
+    // The GUI coordinates are already in NDC space, so we use identity matrices
+    struct GuiPushConstants {
+        float model[16];      // Identity matrix
+        float viewProj[16];   // Identity matrix
+    } pushConstants{};
+
+    // Initialize as identity matrices
+    pushConstants.model[0] = 1.0f;
+    pushConstants.model[5] = 1.0f;
+    pushConstants.model[10] = 1.0f;
+    pushConstants.model[15] = 1.0f;
+
+    pushConstants.viewProj[0] = 1.0f;
+    pushConstants.viewProj[5] = 1.0f;
+    pushConstants.viewProj[10] = 1.0f;
+    pushConstants.viewProj[15] = 1.0f;
+
+    vkCmdPushConstants(commandBuffer, pipelineLayout_, VK_SHADER_STAGE_VERTEX_BIT,
+                       0, sizeof(GuiPushConstants), &pushConstants);
 
     // Draw
     vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices_.size()), 1, 0, 0, 0);
@@ -261,9 +279,86 @@ void GuiRenderer::GenerateGuiGeometry(const std::vector<GuiCommand>& commands, u
             indices_.push_back(baseIndex + 0);
             indices_.push_back(baseIndex + 2);
             indices_.push_back(baseIndex + 3);
+        } else if (cmd.type == GuiCommand::Type::Text) {
+            // Render text using 8x8 bitmap font
+            if (cmd.text.empty() || !cmd.hasBounds) {
+                continue;
+            }
+
+            // Font metrics (8x8 bitmap font)
+            const float charWidth = cmd.fontSize * 0.6f;  // Slightly wider for better appearance
+            const float charHeight = cmd.fontSize;
+            const float charSpacing = charWidth * 0.05f;  // Tighter spacing
+
+            // Calculate text width for alignment
+            float textWidth = cmd.text.size() * (charWidth + charSpacing);
+
+            // Calculate text position based on alignment
+            // Text commands use bounds field, not rect field
+            float startX = cmd.bounds.x;
+            float startY = cmd.bounds.y;
+
+            if (cmd.alignX == "center") {
+                startX += (cmd.bounds.width - textWidth) * 0.5f;
+            } else if (cmd.alignX == "right") {
+                startX += cmd.bounds.width - textWidth;
+            }
+
+            if (cmd.alignY == "center") {
+                startY += (cmd.bounds.height - charHeight) * 0.5f;
+            } else if (cmd.alignY == "bottom") {
+                startY += cmd.bounds.height - charHeight;
+            }
+
+            // Render each character as a small quad
+            float x = startX;
+            for (char c : cmd.text) {
+                // Only render printable ASCII characters
+                if (c >= 32 && c < 127) {
+                    // Get character bitmap from font8x8_basic
+                    const uint8_t* glyph = font8x8_basic[static_cast<unsigned char>(c)];
+
+                    // Render each pixel of the 8x8 glyph
+                    for (int row = 0; row < 8; ++row) {
+                        uint8_t rowData = glyph[row];
+                        for (int col = 0; col < 8; ++col) {
+                            if (rowData & (1 << col)) {
+                                // This pixel is on, render a small quad
+                                // Add slight overlap (1.15x) for smoother appearance
+                                const float pixelScale = 1.15f;
+                                float pixelWidth = (charWidth / 8.0f) * pixelScale;
+                                float pixelHeight = (charHeight / 8.0f) * pixelScale;
+                                float px = x + col * (charWidth / 8.0f) - (pixelWidth - charWidth / 8.0f) * 0.5f;
+                                float py = startY + row * (charHeight / 8.0f) - (pixelHeight - charHeight / 8.0f) * 0.5f;
+                                float pw = pixelWidth;
+                                float ph = pixelHeight;
+
+                                auto [px0, py0] = toNDC(px, py);
+                                auto [px1, py1] = toNDC(px + pw, py + ph);
+
+                                uint32_t baseIndex = static_cast<uint32_t>(vertices_.size());
+
+                                // Add 4 vertices for the pixel quad
+                                vertices_.push_back({px0, py0, 0.0f, cmd.color.r, cmd.color.g, cmd.color.b, cmd.color.a});
+                                vertices_.push_back({px1, py0, 0.0f, cmd.color.r, cmd.color.g, cmd.color.b, cmd.color.a});
+                                vertices_.push_back({px1, py1, 0.0f, cmd.color.r, cmd.color.g, cmd.color.b, cmd.color.a});
+                                vertices_.push_back({px0, py1, 0.0f, cmd.color.r, cmd.color.g, cmd.color.b, cmd.color.a});
+
+                                // Add 6 indices for 2 triangles
+                                indices_.push_back(baseIndex + 0);
+                                indices_.push_back(baseIndex + 1);
+                                indices_.push_back(baseIndex + 2);
+                                indices_.push_back(baseIndex + 0);
+                                indices_.push_back(baseIndex + 2);
+                                indices_.push_back(baseIndex + 3);
+                            }
+                        }
+                    }
+                }
+                x += charWidth + charSpacing;
+            }
         }
-        // TODO: Implement Text, SVG, and other command types
-        // For now, just render rectangles to get the pipeline working
+        // TODO: Implement SVG, ClipPush, ClipPop command types
     }
 }
 
@@ -368,10 +463,11 @@ void GuiRenderer::CreatePipeline(VkRenderPass renderPass, VkExtent2D extent) {
     rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
     rasterizer.depthBiasEnable = VK_FALSE;
 
-    // Multisampling
+    // Multisampling - enable sample shading for smoother text
     VkPipelineMultisampleStateCreateInfo multisampling{};
     multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-    multisampling.sampleShadingEnable = VK_FALSE;
+    multisampling.sampleShadingEnable = VK_TRUE;  // Enable for smoother rendering
+    multisampling.minSampleShading = 0.5f;  // Shade at least 50% of samples
     multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
     // **CRITICAL: Alpha blending for transparency**
