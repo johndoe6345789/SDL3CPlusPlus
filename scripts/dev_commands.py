@@ -31,6 +31,7 @@ Use this script as a drop-in replacement for the original `dev_commands.py`.
 from __future__ import annotations
 
 import argparse
+import os
 import platform
 import subprocess
 from pathlib import Path
@@ -51,6 +52,7 @@ CMAKE_GENERATOR = {
 }
 
 DEFAULT_BUILD_DIR = GENERATOR_DEFAULT_DIR[DEFAULT_GENERATOR]
+TRACE_ENV_VAR = "DEV_COMMANDS_TRACE"
 
 DEFAULT_VCVARSALL = (
     "C:\\Program Files\\Microsoft Visual Studio\\2022\\Professional"
@@ -84,6 +86,11 @@ def _print_cmd(argv: Sequence[str]) -> None:
     print("\n> " + rendered)
 
 
+def _trace(message: str) -> None:
+    if os.environ.get(TRACE_ENV_VAR) == "1":
+        print(f"[trace] {message}")
+
+
 def _strip_leading_double_dash(args: Sequence[str] | None) -> list[str]:
     """Drop a leading `--` that argparse keeps with REMAINDER arguments."""
     if not args:
@@ -94,7 +101,20 @@ def _strip_leading_double_dash(args: Sequence[str] | None) -> list[str]:
     return args_list
 
 
-def run_argvs(argvs: Iterable[Sequence[str]], dry_run: bool) -> None:
+def _has_runtime_config_arg(args: Sequence[str] | None) -> bool:
+    if not args:
+        return False
+    for arg in args:
+        if arg in {"-j", "--json-file-in"}:
+            return True
+        if arg.startswith("--json-file-in="):
+            return True
+        if arg.startswith("-j") and len(arg) > 2:
+            return True
+    return False
+
+
+def run_argvs(argvs: Iterable[Sequence[str]], dry_run: bool, cwd: str | None = None) -> None:
     """
     Run a sequence of commands represented as lists of arguments. Each command
     is printed before execution. If `dry_run` is True, commands are printed
@@ -104,7 +124,7 @@ def run_argvs(argvs: Iterable[Sequence[str]], dry_run: bool) -> None:
         _print_cmd(argv)
         if dry_run:
             continue
-        subprocess.run(list(argv), check=True)
+        subprocess.run(list(argv), check=True, cwd=cwd)
 
 
 def _as_build_dir(path_str: str | None, fallback: str) -> str:
@@ -343,7 +363,7 @@ def _sync_assets(build_dir: str, dry_run: bool) -> None:
         # Sync files matching patterns
         for pattern in patterns:
             for src_file in src_path.glob(pattern):
-                if src_file.is_file():
+                if src_file.is_file() and src_file.name != "dev_commands.py":
                     dst_file = dst_path / src_file.name
                     print(f"  {src_file} -> {dst_file}")
                     if not dry_run:
@@ -369,12 +389,15 @@ def run_demo(args: argparse.Namespace) -> None:
         _sync_assets(build_dir, args.dry_run)
 
     exe_name = args.target or ("sdl3_app.exe" if IS_WINDOWS else "sdl3_app")
-    binary = str(Path(build_dir) / exe_name)
-    cmd: list[str] = [binary, "-j", "config/seed_runtime.json"]
+    binary = str(Path(build_dir).resolve() / exe_name)
     run_args = _strip_leading_double_dash(args.args)
+    cmd: list[str] = [binary]
     if run_args:
         cmd.extend(run_args)
-    run_argvs([cmd], args.dry_run)
+    _print_cmd(cmd)
+    import os
+    os.chdir(build_dir)
+    os.execv(binary, cmd)
 
 
 def gui(args: argparse.Namespace) -> None:

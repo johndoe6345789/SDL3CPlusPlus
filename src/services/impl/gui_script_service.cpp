@@ -125,8 +125,9 @@ std::vector<GuiCommand> GuiScriptService::LoadGuiCommands() {
         if (std::strcmp(typeName, "rect") == 0) {
             command.type = GuiCommand::Type::Rect;
             command.rect = ReadRect(L, commandIndex);
-            command.color = ReadColor(L, commandIndex, GuiColor{0.0f, 0.0f, 0.0f, 1.0f});
-            command.borderColor = ReadColor(L, commandIndex, GuiColor{0.0f, 0.0f, 0.0f, 0.0f});
+            command.color = ReadColorField(L, commandIndex, "color", GuiColor{0.0f, 0.0f, 0.0f, 1.0f});
+            command.borderColor = ReadColorField(L, commandIndex, "borderColor",
+                                                 GuiColor{0.0f, 0.0f, 0.0f, 0.0f});
             lua_getfield(L, commandIndex, "borderWidth");
             if (lua_isnumber(L, -1)) {
                 command.borderWidth = static_cast<float>(lua_tonumber(L, -1));
@@ -159,7 +160,7 @@ std::vector<GuiCommand> GuiScriptService::LoadGuiCommands() {
                 command.hasBounds = true;
             }
             lua_pop(L, 1);
-            command.color = ReadColor(L, commandIndex, GuiColor{1.0f, 1.0f, 1.0f, 1.0f});
+            command.color = ReadColorField(L, commandIndex, "color", GuiColor{1.0f, 1.0f, 1.0f, 1.0f});
         } else if (std::strcmp(typeName, "clip_push") == 0) {
             command.type = GuiCommand::Type::ClipPush;
             command.rect = ReadRect(L, commandIndex);
@@ -169,12 +170,8 @@ std::vector<GuiCommand> GuiScriptService::LoadGuiCommands() {
             command.type = GuiCommand::Type::Svg;
             ReadStringField(L, commandIndex, "path", command.svgPath);
             command.rect = ReadRect(L, commandIndex);
-            command.svgTint = ReadColor(L, commandIndex, GuiColor{1.0f, 1.0f, 1.0f, 0.0f});
-            lua_getfield(L, commandIndex, "tint");
-            if (lua_istable(L, -1)) {
-                command.svgTint = ReadColor(L, -1, command.svgTint);
-            }
-            lua_pop(L, 1);
+            command.svgTint = ReadColorField(L, commandIndex, "tint", GuiColor{1.0f, 1.0f, 1.0f, 0.0f});
+            command.svgTint = ReadColorField(L, commandIndex, "color", command.svgTint);
         }
         lua_pop(L, 1);
         lua_pop(L, 1);
@@ -311,6 +308,29 @@ GuiColor GuiScriptService::ReadColor(lua_State* L, int index, const GuiColor& de
         }
         lua_pop(L, 1);
     }
+    return color;
+}
+
+GuiColor GuiScriptService::ReadColorField(lua_State* L, int index, const char* name,
+                                          const GuiColor& defaultColor) const {
+    if (logger_) {
+        logger_->Trace("GuiScriptService", "ReadColorField",
+                       "index=" + std::to_string(index) +
+                       ", name=" + std::string(name ? name : ""));
+    }
+    if (!lua_istable(L, index) || !name) {
+        return defaultColor;
+    }
+    int absIndex = lua_absindex(L, index);
+    lua_getfield(L, absIndex, name);
+    GuiColor color = defaultColor;
+    if (lua_istable(L, -1)) {
+        color = ReadColor(L, -1, defaultColor);
+    } else if (logger_) {
+        logger_->Trace("GuiScriptService", "ReadColorField",
+                       "Field not found or not table: " + std::string(name));
+    }
+    lua_pop(L, 1);
     return color;
 }
 
