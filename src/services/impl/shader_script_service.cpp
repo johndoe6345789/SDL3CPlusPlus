@@ -5,9 +5,11 @@
 
 #include <lua.hpp>
 
+#include <filesystem>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
+#include <vector>
 #include <utility>
 
 namespace sdl3cpp::services::impl {
@@ -102,7 +104,51 @@ ShaderPaths ShaderScriptService::ReadShaderPathsTable(lua_State* L, int index) c
     paths.fragment = lua_tostring(L, -1);
     lua_pop(L, 1);
 
+    paths.vertex = ResolveShaderPath(paths.vertex);
+    paths.fragment = ResolveShaderPath(paths.fragment);
+
     return paths;
+}
+
+std::string ShaderScriptService::ResolveShaderPath(const std::string& path) const {
+    if (path.empty()) {
+        return path;
+    }
+
+    std::filesystem::path rawPath(path);
+    if (rawPath.is_absolute()) {
+        return rawPath.string();
+    }
+
+    std::vector<std::filesystem::path> searchRoots;
+    if (engineService_) {
+        auto scriptDir = engineService_->GetScriptDirectory();
+        if (!scriptDir.empty()) {
+            auto projectRoot = scriptDir.parent_path();
+            if (!projectRoot.empty()) {
+                searchRoots.push_back(projectRoot);
+            }
+            searchRoots.push_back(scriptDir);
+        }
+    }
+    searchRoots.push_back(std::filesystem::current_path());
+
+    for (const auto& root : searchRoots) {
+        std::filesystem::path candidate = root / rawPath;
+        if (std::filesystem::exists(candidate)) {
+            if (logger_) {
+                logger_->Trace("ShaderScriptService", "ResolveShaderPath",
+                               "path=" + path + ", resolved=" + candidate.string());
+            }
+            return candidate.string();
+        }
+    }
+
+    if (logger_) {
+        logger_->Trace("ShaderScriptService", "ResolveShaderPath",
+                       "path=" + path + ", resolved=unmodified");
+    }
+    return rawPath.string();
 }
 
 lua_State* ShaderScriptService::GetLuaState() const {

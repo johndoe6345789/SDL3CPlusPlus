@@ -1,6 +1,8 @@
 #pragma once
 
 #include "../interfaces/i_render_command_service.hpp"
+#include "../interfaces/i_buffer_service.hpp"
+#include "../interfaces/i_pipeline_service.hpp"
 #include "../interfaces/i_vulkan_device_service.hpp"
 #include "../interfaces/i_swapchain_service.hpp"
 #include "../interfaces/i_logger.hpp"
@@ -21,6 +23,8 @@ class RenderCommandService : public IRenderCommandService,
 public:
     explicit RenderCommandService(std::shared_ptr<IVulkanDeviceService> deviceService,
                                   std::shared_ptr<ISwapchainService> swapchainService,
+                                  std::shared_ptr<IPipelineService> pipelineService,
+                                  std::shared_ptr<IBufferService> bufferService,
                                   std::shared_ptr<ILogger> logger);
     ~RenderCommandService() override;
 
@@ -49,6 +53,8 @@ public:
 private:
     std::shared_ptr<IVulkanDeviceService> deviceService_;
     std::shared_ptr<ISwapchainService> swapchainService_;
+    std::shared_ptr<IPipelineService> pipelineService_;
+    std::shared_ptr<IBufferService> bufferService_;
     std::shared_ptr<ILogger> logger_;
 
     VkCommandPool commandPool_ = VK_NULL_HANDLE;

@@ -43,6 +43,20 @@ public:
     virtual std::vector<RenderCommand> GetRenderCommands(float time) const = 0;
 
     /**
+     * @brief Get combined vertex data for the current scene.
+     *
+     * @return Reference to the combined vertex array
+     */
+    virtual const std::vector<core::Vertex>& GetCombinedVertices() const = 0;
+
+    /**
+     * @brief Get combined index data for the current scene.
+     *
+     * @return Reference to the combined index array
+     */
+    virtual const std::vector<uint16_t>& GetCombinedIndices() const = 0;
+
+    /**
      * @brief Clear the scene (remove all objects).
      */
     virtual void Clear() = 0;

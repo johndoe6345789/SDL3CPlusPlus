@@ -292,6 +292,8 @@ void ServiceBasedApp::RegisterServices() {
     registry_.RegisterService<services::IRenderCommandService, services::impl::RenderCommandService>(
         registry_.GetService<services::IVulkanDeviceService>(),
         registry_.GetService<services::ISwapchainService>(),
+        registry_.GetService<services::IPipelineService>(),
+        registry_.GetService<services::IBufferService>(),
         registry_.GetService<services::ILogger>());
 
     // Graphics service (facade)
@@ -327,6 +329,7 @@ void ServiceBasedApp::RegisterServices() {
         registry_.GetService<services::ILogger>(),
         registry_.GetService<services::IGraphicsService>(),
         registry_.GetService<services::ISceneScriptService>(),
+        registry_.GetService<services::IShaderScriptService>(),
         registry_.GetService<services::IGuiScriptService>(),
         registry_.GetService<services::IGuiService>(),
         registry_.GetService<services::ISceneService>());

@@ -22,6 +22,7 @@ public:
 private:
     lua_State* GetLuaState() const;
     ShaderPaths ReadShaderPathsTable(lua_State* L, int index) const;
+    std::string ResolveShaderPath(const std::string& path) const;
 
     std::shared_ptr<IScriptEngineService> engineService_;
     std::shared_ptr<ILogger> logger_;

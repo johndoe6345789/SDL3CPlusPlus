@@ -7,14 +7,24 @@ namespace sdl3cpp::services::impl {
 
 RenderCommandService::RenderCommandService(std::shared_ptr<IVulkanDeviceService> deviceService,
                                            std::shared_ptr<ISwapchainService> swapchainService,
+                                           std::shared_ptr<IPipelineService> pipelineService,
+                                           std::shared_ptr<IBufferService> bufferService,
                                            std::shared_ptr<ILogger> logger)
     : deviceService_(std::move(deviceService)),
       swapchainService_(std::move(swapchainService)),
+      pipelineService_(std::move(pipelineService)),
+      bufferService_(std::move(bufferService)),
       logger_(logger) {
     if (logger_) {
         logger_->Trace("RenderCommandService", "RenderCommandService",
                        "deviceService=" + std::string(deviceService_ ? "set" : "null") +
-                       ", swapchainService=" + std::string(swapchainService_ ? "set" : "null"));
+                       ", swapchainService=" + std::string(swapchainService_ ? "set" : "null") +
+                       ", pipelineService=" + std::string(pipelineService_ ? "set" : "null") +
+                       ", bufferService=" + std::string(bufferService_ ? "set" : "null"));
+    }
+
+    if (!deviceService_ || !swapchainService_ || !pipelineService_ || !bufferService_) {
+        throw std::invalid_argument("All render command dependencies must be provided");
     }
 }
 
@@ -117,8 +127,55 @@ void RenderCommandService::RecordCommands(uint32_t imageIndex,
 
     vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-    // Record draw commands (placeholder - actual drawing would go here)
-    // This would bind vertex buffers, index buffers, pipelines, and issue draw calls
+    VkBuffer vertexBuffer = bufferService_->GetVertexBuffer();
+    VkBuffer indexBuffer = bufferService_->GetIndexBuffer();
+    if (vertexBuffer == VK_NULL_HANDLE || indexBuffer == VK_NULL_HANDLE) {
+        logger_->Error("RenderCommandService: Vertex or index buffer not initialized");
+    } else if (commands.empty()) {
+        logger_->Trace("RenderCommandService", "RecordCommands", "No render commands to draw");
+    } else {
+        VkDeviceSize offsets[] = {0};
+        vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, offsets);
+        vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+
+        VkPipelineLayout pipelineLayout = pipelineService_->GetPipelineLayout();
+        if (pipelineLayout == VK_NULL_HANDLE) {
+            logger_->Error("RenderCommandService: Pipeline layout is not initialized");
+        } else {
+            if (logger_) {
+                logger_->Trace("RenderCommandService", "RecordCommands",
+                               "drawing commands=" + std::to_string(commands.size()));
+            }
+            size_t drawIndex = 0;
+            for (const auto& command : commands) {
+                if (!pipelineService_->HasShader(command.shaderKey)) {
+                    logger_->Error("RenderCommandService: Missing pipeline for shader key: " + command.shaderKey);
+                    continue;
+                }
+
+                if (logger_) {
+                    logger_->Trace("RenderCommandService", "RecordCommands",
+                                   "draw=" + std::to_string(drawIndex) +
+                                   ", shaderKey=" + command.shaderKey +
+                                   ", indexOffset=" + std::to_string(command.indexOffset) +
+                                   ", indexCount=" + std::to_string(command.indexCount) +
+                                   ", vertexOffset=" + std::to_string(command.vertexOffset));
+                }
+
+                VkPipeline pipeline = pipelineService_->GetPipeline(command.shaderKey);
+                vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+
+                core::PushConstants pushConstants{};
+                pushConstants.model = command.modelMatrix;
+                pushConstants.viewProj = viewProj;
+                vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0,
+                                   sizeof(core::PushConstants), &pushConstants);
+
+                vkCmdDrawIndexed(commandBuffer, command.indexCount, 1, command.indexOffset, command.vertexOffset, 0);
+                ++drawIndex;
+            }
+        }
+    }
 
     vkCmdEndRenderPass(commandBuffer);
     vkEndCommandBuffer(commandBuffer);

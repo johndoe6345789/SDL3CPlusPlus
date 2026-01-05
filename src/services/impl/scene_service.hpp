@@ -25,6 +25,8 @@ public:
     void LoadScene(const std::vector<SceneObject>& objects) override;
     void UpdateScene(float deltaTime) override;
     std::vector<RenderCommand> GetRenderCommands(float time) const override;
+    const std::vector<core::Vertex>& GetCombinedVertices() const override;
+    const std::vector<uint16_t>& GetCombinedIndices() const override;
     void Clear() override;
     size_t GetObjectCount() const override;
 
@@ -32,9 +34,19 @@ public:
     void Shutdown() noexcept override;
 
 private:
+    struct SceneDrawInfo {
+        uint32_t indexOffset = 0;
+        uint32_t indexCount = 0;
+        int32_t vertexOffset = 0;
+        int computeModelMatrixRef = -1;
+        std::string shaderKey;
+    };
+
     std::shared_ptr<ISceneScriptService> scriptService_;
     std::shared_ptr<ILogger> logger_;
-    std::vector<SceneObject> sceneObjects_;
+    std::vector<core::Vertex> combinedVertices_;
+    std::vector<uint16_t> combinedIndices_;
+    std::vector<SceneDrawInfo> drawInfos_;
     bool initialized_ = false;
 };
 
