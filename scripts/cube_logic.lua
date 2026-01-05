@@ -576,9 +576,9 @@ local function create_room_objects()
     local wall_outer_edge = wall_offset + room.wall_thickness
     log_debug("Room walls: inner=%.2f outer=%.2f", wall_inner_edge, wall_outer_edge)
 
-    local floor_color = {0.05, 0.7, 0.45}
-    local wall_color = {0.95, 0.25, 0.08}
-    local ceiling_color = {0.95, 0.95, 0.3}
+    local floor_color = {1.0, 1.0, 1.0}
+    local wall_color = {1.0, 1.0, 1.0}
+    local ceiling_color = {1.0, 1.0, 1.0}
 
     local objects = {
         create_static_cube({0.0, floor_center_y, 0.0},

@@ -8,7 +8,7 @@ float hash(vec2 p) {
     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
 }
 
-const vec3 SURFACE_TINT = vec3(0.05, 0.85, 0.65);
+const vec3 SURFACE_BASE = vec3(0.02, 0.95, 0.72);
 
 const vec3 LIGHT_POSITIONS[8] = vec3[8](
     vec3(13.0, 4.5, 13.0),
@@ -33,7 +33,7 @@ float calculateAttenuation(float distance) {
 }
 
 void main() {
-    vec3 baseColor = clamp(fragColor * 1.1 * SURFACE_TINT, 0.0, 1.0);
+    vec3 baseColor = SURFACE_BASE;
     float checkerScale = 0.55;
     float cx = step(0.5, fract(fragWorldPos.x * checkerScale));
     float cz = step(0.5, fract(fragWorldPos.z * checkerScale));

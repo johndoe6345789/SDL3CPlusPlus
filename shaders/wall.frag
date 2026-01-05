@@ -8,7 +8,7 @@ float hash(vec2 p) {
     return fract(sin(dot(p, vec2(91.7, 127.3))) * 43758.5453123);
 }
 
-const vec3 SURFACE_TINT = vec3(1.0, 0.32, 0.08);
+const vec3 SURFACE_BASE = vec3(0.98, 0.18, 0.08);
 
 const vec3 LIGHT_POSITIONS[8] = vec3[8](
     vec3(13.0, 4.5, 13.0),
@@ -33,7 +33,7 @@ float calculateAttenuation(float distance) {
 }
 
 void main() {
-    vec3 baseColor = clamp(fragColor * 1.05 * SURFACE_TINT, 0.0, 1.0);
+    vec3 baseColor = SURFACE_BASE;
     float axisSelector = step(abs(fragWorldPos.z), abs(fragWorldPos.x));
     float coord = mix(fragWorldPos.z, fragWorldPos.x, axisSelector);
     float plankScale = 0.4;
