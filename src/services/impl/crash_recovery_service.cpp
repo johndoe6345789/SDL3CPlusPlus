@@ -3,11 +3,27 @@
 #include <chrono>
 #include <sstream>
 #include <cstring>
+#include <cpptrace/cpptrace.hpp>
 #include <unistd.h>
 #include <filesystem>
 #include <sys/resource.h>
 
 namespace sdl3cpp::services::impl {
+
+namespace {
+constexpr int kSignalExitCodeBase = 128;
+constexpr size_t kStackTraceSkipFrames = 3;
+constexpr size_t kStackTraceMaxDepth = 64;
+volatile sig_atomic_t crashHandlingInProgress = 0;
+
+std::string BuildStackTrace() {
+    const auto trace = cpptrace::generate_trace(kStackTraceSkipFrames, kStackTraceMaxDepth);
+    if (trace.empty()) {
+        return {};
+    }
+    return trace.to_string();
+}
+}
 
 // Static instance for signal handler
 CrashRecoveryService* CrashRecoveryService::instance_ = nullptr;
@@ -111,6 +127,11 @@ std::string CrashRecoveryService::GetCrashReport() const {
 }
 
 void CrashRecoveryService::SignalHandler(int signal) {
+    if (crashHandlingInProgress != 0) {
+        _exit(kSignalExitCodeBase + signal);
+    }
+    crashHandlingInProgress = 1;
+
     if (instance_) {
         if (instance_->logger_) {
             instance_->logger_->Trace("CrashRecoveryService", "SignalHandler",
@@ -118,6 +139,8 @@ void CrashRecoveryService::SignalHandler(int signal) {
         }
         instance_->HandleCrash(signal);
     }
+
+    _exit(kSignalExitCodeBase + signal);
 }
 
 void CrashRecoveryService::SetupSignalHandlers() {
@@ -192,6 +215,12 @@ void CrashRecoveryService::HandleCrash(int signal) {
     ss << "\nThread ID: " << std::this_thread::get_id();
 
     crashReport_ = ss.str();
+
+    const std::string stackTrace = BuildStackTrace();
+    if (!stackTrace.empty()) {
+        crashReport_ += "\n=== STACK TRACE ===\n";
+        crashReport_ += stackTrace;
+    }
 
     logger_->Error("CrashRecoveryService::HandleCrash: " + crashReport_);
 

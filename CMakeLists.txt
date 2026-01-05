@@ -114,6 +114,7 @@ find_package(assimp CONFIG REQUIRED)
 find_package(Bullet CONFIG REQUIRED)
 find_package(Vorbis CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
+find_package(cpptrace REQUIRED)
 
 if(BUILD_SDL3_APP)
     add_executable(sdl3_app
@@ -154,7 +155,7 @@ if(BUILD_SDL3_APP)
             src/services/impl/gui_renderer.cpp
         )
     target_include_directories(sdl3_app PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-    target_link_libraries(sdl3_app PRIVATE ${SDL_TARGET} Vulkan::Vulkan lua::lua CLI11::CLI11 rapidjson assimp::assimp Bullet::Bullet glm::glm Vorbis::vorbisfile Vorbis::vorbis)
+    target_link_libraries(sdl3_app PRIVATE ${SDL_TARGET} Vulkan::Vulkan lua::lua CLI11::CLI11 rapidjson assimp::assimp Bullet::Bullet glm::glm Vorbis::vorbisfile Vorbis::vorbis cpptrace)
     target_compile_definitions(sdl3_app PRIVATE SDL_MAIN_HANDLED)
 
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/shaders")
