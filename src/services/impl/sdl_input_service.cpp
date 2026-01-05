@@ -370,6 +370,8 @@ void SdlInputService::BuildActionKeyMapping() {
     addKey("move_right", bindings.moveRightKey);
     addKey("fly_up", bindings.flyUpKey);
     addKey("fly_down", bindings.flyDownKey);
+    addKey("jump", bindings.jumpKey);
+    addKey("noclip_toggle", bindings.noclipToggleKey);
     addKey("music_toggle", bindings.musicToggleKey);
 
     auto toLower = [](std::string value) {

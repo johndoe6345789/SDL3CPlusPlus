@@ -221,13 +221,15 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger, c
             const char* name;
             std::string InputBindings::* member;
         };
-        const std::array<BindingSpec, 16> bindingSpecs = {{
+        const std::array<BindingSpec, 18> bindingSpecs = {{
             {"move_forward", &InputBindings::moveForwardKey},
             {"move_back", &InputBindings::moveBackKey},
             {"move_left", &InputBindings::moveLeftKey},
             {"move_right", &InputBindings::moveRightKey},
             {"fly_up", &InputBindings::flyUpKey},
             {"fly_down", &InputBindings::flyDownKey},
+            {"jump", &InputBindings::jumpKey},
+            {"noclip_toggle", &InputBindings::noclipToggleKey},
             {"music_toggle", &InputBindings::musicToggleKey},
             {"music_toggle_gamepad", &InputBindings::musicToggleGamepadButton},
             {"gamepad_move_x_axis", &InputBindings::gamepadMoveXAxis},

@@ -17,6 +17,8 @@ struct InputBindings {
     std::string moveRightKey = "D";
     std::string flyUpKey = "Q";
     std::string flyDownKey = "Z";
+    std::string jumpKey = "Space";
+    std::string noclipToggleKey = "N";
     std::string musicToggleKey = "M";
     std::string musicToggleGamepadButton = "start";
     std::string gamepadMoveXAxis = "leftx";

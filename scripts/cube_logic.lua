@@ -218,6 +218,9 @@ local camera = {
 local controls = {
     move_speed = 4.0,
     fly_speed = 3.0,
+    jump_speed = 5.5,
+    gravity = -12.0,
+    max_fall_speed = -20.0,
     mouse_sensitivity = 0.0025,
     gamepad_look_speed = 2.5,
     stick_deadzone = 0.2,
@@ -228,6 +231,25 @@ local controls = {
 local last_frame_time = nil
 local movement_log_cooldown = 0.0
 local world_up = {0.0, 1.0, 0.0}
+local room = {
+    half_size = 6.0,
+    wall_thickness = 0.3,
+    wall_height = 2.5,
+    floor_half_thickness = 0.2,
+    floor_top = -1.0,
+}
+local player_state = {
+    eye_height = 1.6,
+    radius = 0.4,
+    vertical_velocity = 0.0,
+    grounded = true,
+    jump_pressed = false,
+    noclip = false,
+    noclip_toggle_pressed = false,
+}
+
+camera.position[2] = room.floor_top + player_state.eye_height
+camera.position[3] = room.half_size - 1.5
 
 local function clamp(value, minValue, maxValue)
     if value < minValue then
@@ -237,6 +259,15 @@ local function clamp(value, minValue, maxValue)
         return maxValue
     end
     return value
+end
+
+local function scale_matrix(x, y, z)
+    return {
+        x, 0.0, 0.0, 0.0,
+        0.0, y, 0.0, 0.0,
+        0.0, 0.0, z, 0.0,
+        0.0, 0.0, 0.0, 1.0,
+    }
 end
 
 local function normalize(vec)
@@ -327,10 +358,6 @@ local function update_camera(dt)
     local forward = forward_from_angles(camera.yaw, camera.pitch)
     local forward_flat = normalize({forward[1], 0.0, forward[3]})
     local right = normalize(cross(forward_flat, world_up))
-    local move_forward = forward_flat
-    if controls.move_forward_uses_pitch then
-        move_forward = forward
-    end
 
     local move_x = 0.0
     local move_z = 0.0
@@ -349,11 +376,13 @@ local function update_camera(dt)
         move_x = move_x - 1.0
     end
 
-    if gui_input.keyStates["fly_up"] or ui_state.flyUpActive or ui_state.flyUpPulse then
-        move_y = move_y + 1.0
-    end
-    if gui_input.keyStates["fly_down"] or ui_state.flyDownActive or ui_state.flyDownPulse then
-        move_y = move_y - 1.0
+    if player_state.noclip then
+        if gui_input.keyStates["fly_up"] or ui_state.flyUpActive or ui_state.flyUpPulse then
+            move_y = move_y + 1.0
+        end
+        if gui_input.keyStates["fly_down"] or ui_state.flyDownActive or ui_state.flyDownPulse then
+            move_y = move_y - 1.0
+        end
     end
     ui_state.flyUpPulse = false
     ui_state.flyDownPulse = false
@@ -369,24 +398,73 @@ local function update_camera(dt)
         move_z = move_z / length
     end
 
-    if length > 0.0 then
-        local speed = controls.move_speed * dt
-        if lua_debug and controls.move_forward_uses_pitch and math.abs(camera.pitch) > 0.001 then
-            movement_log_cooldown = movement_log_cooldown - dt
-            if movement_log_cooldown <= 0.0 then
-                log_debug("Move forward uses pitch: pitch=%.3f forward=(%.2f, %.2f, %.2f)",
-                    camera.pitch, move_forward[1], move_forward[2], move_forward[3])
-                movement_log_cooldown = 0.5
-            end
+    local toggle_pressed = gui_input.keyStates["noclip_toggle"]
+    if toggle_pressed and not player_state.noclip_toggle_pressed then
+        player_state.noclip = not player_state.noclip
+        player_state.vertical_velocity = 0.0
+        player_state.grounded = false
+        log_debug("Noclip %s", player_state.noclip and "enabled" or "disabled")
+    end
+    player_state.noclip_toggle_pressed = toggle_pressed and true or false
+
+    if player_state.noclip then
+        local move_forward = forward_flat
+        if controls.move_forward_uses_pitch then
+            move_forward = forward
         end
-        camera.position[1] = camera.position[1] + (right[1] * move_x + move_forward[1] * move_z) * speed
-        camera.position[2] = camera.position[2] + (right[2] * move_x + move_forward[2] * move_z) * speed
-        camera.position[3] = camera.position[3] + (right[3] * move_x + move_forward[3] * move_z) * speed
+
+        if length > 0.0 then
+            local speed = controls.move_speed * dt
+            if lua_debug and controls.move_forward_uses_pitch and math.abs(camera.pitch) > 0.001 then
+                movement_log_cooldown = movement_log_cooldown - dt
+                if movement_log_cooldown <= 0.0 then
+                    log_debug("Move forward uses pitch: pitch=%.3f forward=(%.2f, %.2f, %.2f)",
+                        camera.pitch, move_forward[1], move_forward[2], move_forward[3])
+                    movement_log_cooldown = 0.5
+                end
+            end
+            camera.position[1] = camera.position[1] + (right[1] * move_x + move_forward[1] * move_z) * speed
+            camera.position[2] = camera.position[2] + (right[2] * move_x + move_forward[2] * move_z) * speed
+            camera.position[3] = camera.position[3] + (right[3] * move_x + move_forward[3] * move_z) * speed
+        end
+
+        if move_y ~= 0.0 then
+            camera.position[2] = camera.position[2] + move_y * controls.fly_speed * dt
+        end
+        return
     end
 
-    if move_y ~= 0.0 then
-        camera.position[2] = camera.position[2] + move_y * controls.fly_speed * dt
+    if length > 0.0 then
+        local speed = controls.move_speed * dt
+        camera.position[1] = camera.position[1] + (right[1] * move_x + forward_flat[1] * move_z) * speed
+        camera.position[3] = camera.position[3] + (right[3] * move_x + forward_flat[3] * move_z) * speed
     end
+
+    local jump_pressed = gui_input.keyStates["jump"]
+    if jump_pressed and not player_state.jump_pressed and player_state.grounded then
+        player_state.vertical_velocity = controls.jump_speed
+        player_state.grounded = false
+    end
+    player_state.jump_pressed = jump_pressed and true or false
+
+    player_state.vertical_velocity = player_state.vertical_velocity + controls.gravity * dt
+    if player_state.vertical_velocity < controls.max_fall_speed then
+        player_state.vertical_velocity = controls.max_fall_speed
+    end
+    camera.position[2] = camera.position[2] + player_state.vertical_velocity * dt
+
+    local floor_height = room.floor_top + player_state.eye_height
+    if camera.position[2] <= floor_height then
+        camera.position[2] = floor_height
+        player_state.vertical_velocity = 0.0
+        player_state.grounded = true
+    else
+        player_state.grounded = false
+    end
+
+    local room_limit = room.half_size - player_state.radius
+    camera.position[1] = clamp(camera.position[1], -room_limit, room_limit)
+    camera.position[3] = clamp(camera.position[3], -room_limit, room_limit)
 end
 
 local function update_audio_controls()
@@ -421,6 +499,47 @@ local function create_spinning_cube()
         shader_key = "default",
     }
 end
+
+local function build_static_model_matrix(position, scale)
+    local translation = math3d.translation(position[1], position[2], position[3])
+    local scaling = scale_matrix(scale[1], scale[2], scale[3])
+    return math3d.multiply(translation, scaling)
+end
+
+local function create_static_cube(position, scale)
+    local model = build_static_model_matrix(position, scale)
+    local function compute_model_matrix()
+        return model
+    end
+
+    return {
+        vertices = cube_vertices,
+        indices = cube_indices,
+        compute_model_matrix = compute_model_matrix,
+        shader_key = "default",
+    }
+end
+
+local function create_room_objects()
+    local floor_center_y = room.floor_top - room.floor_half_thickness
+    local wall_center_y = room.floor_top + room.wall_height
+    local wall_offset = room.half_size + room.wall_thickness
+
+    return {
+        create_static_cube({0.0, floor_center_y, 0.0},
+            {room.half_size, room.floor_half_thickness, room.half_size}),
+        create_static_cube({0.0, wall_center_y, -wall_offset},
+            {room.half_size, room.wall_height, room.wall_thickness}),
+        create_static_cube({0.0, wall_center_y, wall_offset},
+            {room.half_size, room.wall_height, room.wall_thickness}),
+        create_static_cube({-wall_offset, wall_center_y, 0.0},
+            {room.wall_thickness, room.wall_height, room.half_size}),
+        create_static_cube({wall_offset, wall_center_y, 0.0},
+            {room.wall_thickness, room.wall_height, room.half_size}),
+    }
+end
+
+local room_objects = create_room_objects()
 
 local function heading_from_yaw(yaw)
     local forward = forward_from_angles(yaw, 0.0)
@@ -539,9 +658,13 @@ local function draw_flight_buttons()
 end
 
 function get_scene_objects()
-    return {
+    local objects = {
         create_spinning_cube(),
     }
+    for i = 1, #room_objects do
+        objects[#objects + 1] = room_objects[i]
+    end
+    return objects
 end
 
 function get_shader_paths()
