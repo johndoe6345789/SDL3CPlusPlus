@@ -25,6 +25,7 @@ public:
     void Initialize(VkDevice device,
                    VkPhysicalDevice physicalDevice,
                    VkFormat format,
+                   VkRenderPass renderPass,
                    const std::filesystem::path& resourcePath) override;
 
     void PrepareFrame(const std::vector<GuiCommand>& commands,

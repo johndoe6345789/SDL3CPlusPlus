@@ -137,442 +137,404 @@ ParsedSvg ParseSvgFile(const std::filesystem::path& path) {
     return result;
 }
 
-GuiCommand::RectData IntersectRect(const GuiCommand::RectData& a,
-                                                     const GuiCommand::RectData& b) {
-    GuiCommand::RectData result;
-    result.x = std::max(a.x, b.x);
-    result.y = std::max(a.y, b.y);
-    float right = std::min(a.x + a.width, b.x + b.width);
-    float bottom = std::min(a.y + a.height, b.y + b.height);
-    result.width = std::max(0.0f, right - result.x);
-    result.height = std::max(0.0f, bottom - result.y);
-    return result;
-}
-
-int ClampToRange(int value, int minimum, int maximum) {
-    return std::min(std::max(value, minimum), maximum);
+std::vector<uint8_t> ReadFile(const std::filesystem::path& path) {
+    std::ifstream file(path, std::ios::binary | std::ios::ate);
+    if (!file) {
+        throw std::runtime_error("Failed to read file: " + path.string());
+    }
+    size_t fileSize = file.tellg();
+    std::vector<uint8_t> buffer(fileSize);
+    file.seekg(0);
+    file.read(reinterpret_cast<char*>(buffer.data()), fileSize);
+    return buffer;
 }
 
 } // namespace
 
-class GuiRenderer::Canvas {
-public:
-    using RectData = GuiCommand::RectData;
-
-    void Resize(uint32_t width, uint32_t height) {
-        width_ = width;
-        height_ = height;
-        pixels_.assign(static_cast<size_t>(width_) * static_cast<size_t>(height_) * 4, 0);
-        clipStack_.clear();
-        clipStack_.push_back({0.0f, 0.0f, static_cast<float>(width_), static_cast<float>(height_)});
-    }
-
-    void Clear() {
-        std::fill(pixels_.begin(), pixels_.end(), 0);
-        clipStack_.clear();
-        clipStack_.push_back({0.0f, 0.0f, static_cast<float>(width_), static_cast<float>(height_)});
-    }
-
-    void PushClip(const RectData& rect) {
-        clipStack_.push_back(rect);
-    }
-
-    void PopClip() {
-        if (clipStack_.size() > 1) {
-            clipStack_.pop_back();
-        }
-    }
-
-    void FillRect(const RectData& rect, const GuiColor& fillColor,
-                  const GuiColor& borderColor, float borderWidth) {
-        DrawFilledRect(rect, fillColor);
-        if (borderWidth > 0.0f && borderColor.a > 0.0f) {
-            DrawFilledRect({rect.x, rect.y, rect.width, borderWidth}, borderColor);
-            DrawFilledRect({rect.x, rect.y + rect.height - borderWidth, rect.width, borderWidth}, borderColor);
-            DrawFilledRect({rect.x, rect.y + borderWidth, borderWidth, rect.height - borderWidth * 2.0f}, borderColor);
-            DrawFilledRect({rect.x + rect.width - borderWidth, rect.y + borderWidth, borderWidth,
-                            rect.height - borderWidth * 2.0f}, borderColor);
-        }
-    }
-
-    void DrawText(const std::string& text, const GuiColor& color, const RectData& bounds,
-                  const std::string& alignX, const std::string& alignY, float fontSize) {
-        if (text.empty() || width_ == 0 || height_ == 0) {
-            return;
-        }
-        float scale = std::max(1.0f, fontSize / 8.0f);
-        float glyphWidth = 8.0f * scale;
-        float glyphHeight = 8.0f * scale;
-        float textWidth = glyphWidth * static_cast<float>(text.size());
-        float x = bounds.x;
-        if (alignX == "center") {
-            x += (bounds.width - textWidth) * 0.5f;
-        } else if (alignX == "right") {
-            x += bounds.width - textWidth;
-        }
-        float y = bounds.y;
-        if (alignY == "center") {
-            y += (bounds.height - glyphHeight) * 0.5f;
-        } else if (alignY == "bottom") {
-            y += bounds.height - glyphHeight;
-        }
-        for (size_t i = 0; i < text.size(); ++i) {
-            unsigned char code = static_cast<unsigned char>(text[i]);
-            if (code >= 128) {
-                continue;
-            }
-            float glyphX = x + glyphWidth * static_cast<float>(i);
-            for (int row = 0; row < 8; ++row) {
-                uint8_t pattern = static_cast<uint8_t>(font8x8_basic[code][row]);
-                for (int col = 0; col < 8; ++col) {
-                    if ((pattern & (1 << col)) == 0) {
-                        continue;
-                    }
-                    RectData pixelRect{
-                        glyphX + static_cast<float>(col) * scale,
-                        y + static_cast<float>(row) * scale,
-                        scale,
-                        scale,
-                    };
-                    DrawFilledRect(pixelRect, color);
-                }
-            }
-        }
-    }
-
-    void DrawSvg(const ParsedSvg& svg, const RectData& target, const GuiColor& tint) {
-        if (svg.circles.empty() || svg.viewWidth <= 0.0f || svg.viewHeight <= 0.0f || width_ == 0 ||
-            height_ == 0) {
-            return;
-        }
-        RectData clipped = ClipRect(target);
-        if (clipped.width <= 0.0f || clipped.height <= 0.0f) {
-            return;
-        }
-        float scaleX = clipped.width / svg.viewWidth;
-        float scaleY = clipped.height / svg.viewHeight;
-        float scale = std::min(scaleX, scaleY);
-        for (const auto& circle : svg.circles) {
-            float cx = clipped.x + circle.cx * scaleX;
-            float cy = clipped.y + circle.cy * scaleY;
-            float radius = circle.r * scale;
-            GuiColor color = circle.color;
-            if (tint.a > 0.0f) {
-                color.r *= tint.r;
-                color.g *= tint.g;
-                color.b *= tint.b;
-                color.a *= tint.a;
-            }
-            int yStart = ClampToRange(static_cast<int>(std::floor(cy - radius)), 0, static_cast<int>(height_));
-            int yEnd = ClampToRange(static_cast<int>(std::ceil(cy + radius)), 0, static_cast<int>(height_));
-            for (int row = yStart; row < yEnd; ++row) {
-                float dy = (static_cast<float>(row) + 0.5f) - cy;
-                float horizontalSpan = radius * radius - dy * dy;
-                if (horizontalSpan <= 0.0f) {
-                    continue;
-                }
-                float span = std::sqrt(horizontalSpan);
-                RectData slice{
-                    cx - span,
-                    static_cast<float>(row),
-                    2.0f * span,
-                    1.0f,
-                };
-                DrawFilledRect(slice, color);
-            }
-        }
-    }
-
-    const std::vector<uint8_t>& Pixels() const {
-        return pixels_;
-    }
-
-private:
-    RectData ClipRect(const RectData& rect) const {
-        RectData clipped = rect;
-        for (const auto& entry : clipStack_) {
-            clipped = IntersectRect(clipped, entry);
-        }
-        return clipped;
-    }
-
-    void DrawFilledRect(const RectData& rect, const GuiColor& color) {
-        if (rect.width <= 0.0f || rect.height <= 0.0f) {
-            return;
-        }
-        RectData clipped = ClipRect(rect);
-        if (clipped.width <= 0.0f || clipped.height <= 0.0f) {
-            return;
-        }
-        int startX = ClampToRange(static_cast<int>(std::floor(clipped.x)), 0, static_cast<int>(width_));
-        int startY = ClampToRange(static_cast<int>(std::floor(clipped.y)), 0, static_cast<int>(height_));
-        int endX = ClampToRange(static_cast<int>(std::ceil(clipped.x + clipped.width)), 0, static_cast<int>(width_));
-        int endY = ClampToRange(static_cast<int>(std::ceil(clipped.y + clipped.height)), 0, static_cast<int>(height_));
-        for (int y = startY; y < endY; ++y) {
-            for (int x = startX; x < endX; ++x) {
-                BlendPixel(x, y, color);
-            }
-        }
-    }
-
-    void BlendPixel(int x, int y, const GuiColor& color) {
-        size_t index = (static_cast<size_t>(y) * width_ + static_cast<size_t>(x)) * 4;
-        auto clampByte = [](float value) -> uint8_t {
-            return static_cast<uint8_t>(std::clamp(value, 0.0f, 1.0f) * 255.0f);
-        };
-        float destR = pixels_[index] / 255.0f;
-        float destG = pixels_[index + 1] / 255.0f;
-        float destB = pixels_[index + 2] / 255.0f;
-        float destA = pixels_[index + 3] / 255.0f;
-        float srcA = std::clamp(color.a, 0.0f, 1.0f);
-        float invSrc = 1.0f - srcA;
-        float outR = color.r * srcA + destR * invSrc;
-        float outG = color.g * srcA + destG * invSrc;
-        float outB = color.b * srcA + destB * invSrc;
-        float outA = srcA + destA * invSrc;
-        pixels_[index] = clampByte(outR);
-        pixels_[index + 1] = clampByte(outG);
-        pixels_[index + 2] = clampByte(outB);
-        pixels_[index + 3] = clampByte(outA);
-    }
-
-    uint32_t width_ = 0;
-    uint32_t height_ = 0;
-    std::vector<uint8_t> pixels_;
-    std::vector<RectData> clipStack_;
-};
-
 GuiRenderer::GuiRenderer(VkDevice device, VkPhysicalDevice physicalDevice, VkFormat swapchainFormat,
-                         const std::filesystem::path& scriptDirectory,
+                         VkRenderPass renderPass, const std::filesystem::path& scriptDirectory,
                          std::shared_ptr<IBufferService> bufferService)
     : device_(device),
       physicalDevice_(physicalDevice),
       swapchainFormat_(swapchainFormat),
+      renderPass_(renderPass),
       scriptDirectory_(scriptDirectory),
-      canvas_(std::make_unique<Canvas>()),
       bufferService_(std::move(bufferService)) {
 }
 
-    GuiRenderer::~GuiRenderer() {
-        DestroyStagingBuffer();
+GuiRenderer::~GuiRenderer() {
+    CleanupBuffers();
+    CleanupPipeline();
+}
+
+bool GuiRenderer::IsReady() const {
+    return pipeline_ != VK_NULL_HANDLE && !vertices_.empty();
+}
+
+void GuiRenderer::Prepare(const std::vector<GuiCommand>& commands, uint32_t width, uint32_t height) {
+    if (width == 0 || height == 0) {
+        return;
     }
 
-    bool GuiRenderer::IsReady() const {
-        return canvasWidth_ > 0 && canvasHeight_ > 0 && stagingBuffer_ != VK_NULL_HANDLE;
+    viewportWidth_ = width;
+    viewportHeight_ = height;
+
+    // Create pipeline if needed
+    if (pipeline_ == VK_NULL_HANDLE) {
+        CreatePipeline(renderPass_, {width, height});
     }
 
-    void GuiRenderer::Prepare(const std::vector<GuiCommand>& commands, uint32_t width,
-                              uint32_t height) {
-        if (width == 0 || height == 0 || !canvas_) {
-            return;
-        }
-        EnsureCanvas(width, height);
-        canvas_->Clear();
-        for (const auto& command : commands) {
-            switch (command.type) {
-                case GuiCommand::Type::Rect:
-                    canvas_->FillRect(command.rect, command.color, command.borderColor, command.borderWidth);
-                    break;
-                case GuiCommand::Type::Text: {
-                    if (command.hasClipRect) {
-                        canvas_->PushClip(command.clipRect);
-                    }
-                    if (command.hasBounds) {
-                        canvas_->DrawText(command.text, command.color, command.bounds, command.alignX,
-                                          command.alignY, command.fontSize);
-                    } else {
-                        GuiCommand::RectData fallback{
-                            command.rect.x, command.rect.y,
-                            command.fontSize * static_cast<float>(std::max<size_t>(1, command.text.size())), command.fontSize};
-                        canvas_->DrawText(command.text, command.color, fallback, command.alignX,
-                                          command.alignY, command.fontSize);
-                    }
-                    if (command.hasClipRect) {
-                        canvas_->PopClip();
-                    }
-                    break;
-                }
-                case GuiCommand::Type::ClipPush:
-                    canvas_->PushClip(command.rect);
-                    break;
-                case GuiCommand::Type::ClipPop:
-                    canvas_->PopClip();
-                    break;
-                case GuiCommand::Type::Svg:
-                    if (command.svgPath.empty()) {
-                        break;
-                    }
-                    if (const ParsedSvg* svg = LoadSvg(command.svgPath)) {
-                        canvas_->DrawSvg(*svg, command.rect, command.svgTint);
-                    }
-                    break;
-            }
-        }
-        UpdateStagingBuffer();
+    // Generate geometry from GUI commands
+    GenerateGuiGeometry(commands, width, height);
+
+    // Create/update vertex and index buffers
+    if (!vertices_.empty() && !indices_.empty()) {
+        CreateVertexAndIndexBuffers(vertices_.size(), indices_.size());
+    }
+}
+
+void GuiRenderer::RenderToSwapchain(VkCommandBuffer commandBuffer, VkRenderPass renderPass) {
+    if (!IsReady() || vertices_.empty() || indices_.empty()) {
+        return;
     }
 
-    void GuiRenderer::BlitToSwapchain(VkCommandBuffer commandBuffer, VkImage image) {
-        if (!IsReady()) {
-            return;
+    // Bind pipeline
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_);
+
+    // Bind vertex and index buffers
+    VkDeviceSize offset = 0;
+    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer_, &offset);
+    vkCmdBindIndexBuffer(commandBuffer, indexBuffer_, 0, VK_INDEX_TYPE_UINT32);
+
+    // TODO: Set up push constants for orthographic projection matrix here
+    // For now, we'll use identity matrices which assumes the shaders handle 2D coordinates
+
+    // Draw
+    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices_.size()), 1, 0, 0, 0);
+}
+
+void GuiRenderer::Resize(uint32_t width, uint32_t height, VkFormat format) {
+    if (width == viewportWidth_ && height == viewportHeight_ && format == swapchainFormat_) {
+        return;
+    }
+    UpdateFormat(format);
+    viewportWidth_ = width;
+    viewportHeight_ = height;
+
+    // Recreate pipeline for new viewport size
+    if (pipeline_ != VK_NULL_HANDLE) {
+        CleanupPipeline();
+        CreatePipeline(renderPass_, {width, height});
+    }
+}
+
+void GuiRenderer::GenerateGuiGeometry(const std::vector<GuiCommand>& commands, uint32_t width, uint32_t height) {
+    vertices_.clear();
+    indices_.clear();
+
+    // Convert screen coordinates to NDC (-1 to 1)
+    auto toNDC = [width, height](float x, float y) -> std::pair<float, float> {
+        return {
+            (x / static_cast<float>(width)) * 2.0f - 1.0f,
+            (y / static_cast<float>(height)) * 2.0f - 1.0f
+        };
+    };
+
+    for (const auto& cmd : commands) {
+        if (cmd.type == GuiCommand::Type::Rect) {
+            // Generate a quad (2 triangles) for the rectangle
+            auto [x0, y0] = toNDC(cmd.rect.x, cmd.rect.y);
+            auto [x1, y1] = toNDC(cmd.rect.x + cmd.rect.width, cmd.rect.y + cmd.rect.height);
+
+            uint32_t baseIndex = static_cast<uint32_t>(vertices_.size());
+
+            // Add 4 vertices for the quad
+            vertices_.push_back({x0, y0, 0.0f, cmd.color.r, cmd.color.g, cmd.color.b, cmd.color.a});
+            vertices_.push_back({x1, y0, 0.0f, cmd.color.r, cmd.color.g, cmd.color.b, cmd.color.a});
+            vertices_.push_back({x1, y1, 0.0f, cmd.color.r, cmd.color.g, cmd.color.b, cmd.color.a});
+            vertices_.push_back({x0, y1, 0.0f, cmd.color.r, cmd.color.g, cmd.color.b, cmd.color.a});
+
+            // Add 6 indices for 2 triangles
+            indices_.push_back(baseIndex + 0);
+            indices_.push_back(baseIndex + 1);
+            indices_.push_back(baseIndex + 2);
+            indices_.push_back(baseIndex + 0);
+            indices_.push_back(baseIndex + 2);
+            indices_.push_back(baseIndex + 3);
         }
-        VkImageMemoryBarrier barrier{};
-        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        barrier.oldLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-        barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-        barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-        barrier.image = image;
-        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        barrier.subresourceRange.baseMipLevel = 0;
-        barrier.subresourceRange.levelCount = 1;
-        barrier.subresourceRange.baseArrayLayer = 0;
-        barrier.subresourceRange.layerCount = 1;
-        vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                             VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+        // TODO: Implement Text, SVG, and other command types
+        // For now, just render rectangles to get the pipeline working
+    }
+}
 
-        VkBufferImageCopy region{};
-        region.bufferOffset = 0;
-        region.bufferRowLength = 0;
-        region.bufferImageHeight = 0;
-        region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        region.imageSubresource.mipLevel = 0;
-        region.imageSubresource.baseArrayLayer = 0;
-        region.imageSubresource.layerCount = 1;
-        region.imageOffset = {0, 0, 0};
-        region.imageExtent = {canvasWidth_, canvasHeight_, 1};
+void GuiRenderer::CreatePipeline(VkRenderPass renderPass, VkExtent2D extent) {
+    // Load shader modules
+    auto vertShaderCode = ReadFile(scriptDirectory_.parent_path() / "shaders" / "gui_2d.vert.spv");
+    auto fragShaderCode = ReadFile(scriptDirectory_.parent_path() / "shaders" / "gui_2d.frag.spv");
 
-        vkCmdCopyBufferToImage(commandBuffer, stagingBuffer_, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1,
-                               &region);
+    VkShaderModuleCreateInfo vertModuleInfo{};
+    vertModuleInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    vertModuleInfo.codeSize = vertShaderCode.size();
+    vertModuleInfo.pCode = reinterpret_cast<const uint32_t*>(vertShaderCode.data());
 
-        barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-        barrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-        barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-        barrier.dstAccessMask = 0;
-        vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0,
-                             0, nullptr, 0, nullptr, 1, &barrier);
+    if (vkCreateShaderModule(device_, &vertModuleInfo, nullptr, &vertShaderModule_) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to create vertex shader module for GUI");
     }
 
-    void GuiRenderer::Resize(uint32_t width, uint32_t height, VkFormat format) {
-        if (width == canvasWidth_ && height == canvasHeight_ && format == swapchainFormat_) {
-            return;
-        }
-        UpdateFormat(format);
-        EnsureCanvas(width, height);
+    VkShaderModuleCreateInfo fragModuleInfo{};
+    fragModuleInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    fragModuleInfo.codeSize = fragShaderCode.size();
+    fragModuleInfo.pCode = reinterpret_cast<const uint32_t*>(fragShaderCode.data());
+
+    if (vkCreateShaderModule(device_, &fragModuleInfo, nullptr, &fragShaderModule_) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to create fragment shader module for GUI");
     }
 
-    void GuiRenderer::EnsureCanvas(uint32_t width, uint32_t height) {
-        if (width == canvasWidth_ && height == canvasHeight_) {
-            return;
-        }
-        canvasWidth_ = width;
-        canvasHeight_ = height;
-        if (canvas_) {
-            canvas_->Resize(width, height);
-        }
-        size_t bufferSize = static_cast<size_t>(canvasWidth_) * canvasHeight_ * 4;
-        CreateStagingBuffer(bufferSize);
+    // Shader stages
+    VkPipelineShaderStageCreateInfo vertStageInfo{};
+    vertStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    vertStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+    vertStageInfo.module = vertShaderModule_;
+    vertStageInfo.pName = "main";
+
+    VkPipelineShaderStageCreateInfo fragStageInfo{};
+    fragStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    fragStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+    fragStageInfo.module = fragShaderModule_;
+    fragStageInfo.pName = "main";
+
+    VkPipelineShaderStageCreateInfo shaderStages[] = {vertStageInfo, fragStageInfo};
+
+    // Vertex input - GuiVertex format
+    VkVertexInputBindingDescription bindingDesc{};
+    bindingDesc.binding = 0;
+    bindingDesc.stride = sizeof(GuiVertex);
+    bindingDesc.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+    std::array<VkVertexInputAttributeDescription, 2> attributeDescs{};
+    // Position (vec3)
+    attributeDescs[0].binding = 0;
+    attributeDescs[0].location = 0;
+    attributeDescs[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+    attributeDescs[0].offset = offsetof(GuiVertex, x);
+
+    // Color (vec4)
+    attributeDescs[1].binding = 0;
+    attributeDescs[1].location = 1;
+    attributeDescs[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+    attributeDescs[1].offset = offsetof(GuiVertex, r);
+
+    VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
+    vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+    vertexInputInfo.vertexBindingDescriptionCount = 1;
+    vertexInputInfo.pVertexBindingDescriptions = &bindingDesc;
+    vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescs.size());
+    vertexInputInfo.pVertexAttributeDescriptions = attributeDescs.data();
+
+    // Input assembly
+    VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
+    inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+    inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    inputAssembly.primitiveRestartEnable = VK_FALSE;
+
+    // Viewport and scissor
+    VkViewport viewport{};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = static_cast<float>(extent.width);
+    viewport.height = static_cast<float>(extent.height);
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+
+    VkRect2D scissor{};
+    scissor.offset = {0, 0};
+    scissor.extent = extent;
+
+    VkPipelineViewportStateCreateInfo viewportState{};
+    viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+    viewportState.viewportCount = 1;
+    viewportState.pViewports = &viewport;
+    viewportState.scissorCount = 1;
+    viewportState.pScissors = &scissor;
+
+    // Rasterization
+    VkPipelineRasterizationStateCreateInfo rasterizer{};
+    rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+    rasterizer.depthClampEnable = VK_FALSE;
+    rasterizer.rasterizerDiscardEnable = VK_FALSE;
+    rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+    rasterizer.lineWidth = 1.0f;
+    rasterizer.cullMode = VK_CULL_MODE_NONE;  // No culling for 2D GUI
+    rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+    rasterizer.depthBiasEnable = VK_FALSE;
+
+    // Multisampling
+    VkPipelineMultisampleStateCreateInfo multisampling{};
+    multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+    multisampling.sampleShadingEnable = VK_FALSE;
+    multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+
+    // **CRITICAL: Alpha blending for transparency**
+    VkPipelineColorBlendAttachmentState colorBlendAttachment{};
+    colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
+                                         VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+    colorBlendAttachment.blendEnable = VK_TRUE;  // Enable blending!
+    colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+    colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+    colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+    colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+    colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+    colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+
+    VkPipelineColorBlendStateCreateInfo colorBlending{};
+    colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+    colorBlending.logicOpEnable = VK_FALSE;
+    colorBlending.attachmentCount = 1;
+    colorBlending.pAttachments = &colorBlendAttachment;
+
+    // Depth stencil - disable depth test for 2D GUI overlay
+    VkPipelineDepthStencilStateCreateInfo depthStencil{};
+    depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    depthStencil.depthTestEnable = VK_FALSE;
+    depthStencil.depthWriteEnable = VK_FALSE;
+    depthStencil.stencilTestEnable = VK_FALSE;
+
+    // Push constants for transformation matrices
+    VkPushConstantRange pushConstantRange{};
+    pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    pushConstantRange.offset = 0;
+    pushConstantRange.size = sizeof(float) * 32;  // 2 mat4s
+
+    // Pipeline layout
+    VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+    pipelineLayoutInfo.pushConstantRangeCount = 1;
+    pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+
+    if (vkCreatePipelineLayout(device_, &pipelineLayoutInfo, nullptr, &pipelineLayout_) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to create GUI pipeline layout");
     }
 
-    void GuiRenderer::UpdateStagingBuffer() {
-        if (!stagingMapped_ || !canvas_) {
-            return;
-        }
-        const auto& pixels = canvas_->Pixels();
-        size_t pixelCount = static_cast<size_t>(canvasWidth_) * canvasHeight_;
-        uint8_t* dest = reinterpret_cast<uint8_t*>(stagingMapped_);
+    // Create graphics pipeline
+    VkGraphicsPipelineCreateInfo pipelineInfo{};
+    pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+    pipelineInfo.stageCount = 2;
+    pipelineInfo.pStages = shaderStages;
+    pipelineInfo.pVertexInputState = &vertexInputInfo;
+    pipelineInfo.pInputAssemblyState = &inputAssembly;
+    pipelineInfo.pViewportState = &viewportState;
+    pipelineInfo.pRasterizationState = &rasterizer;
+    pipelineInfo.pMultisampleState = &multisampling;
+    pipelineInfo.pDepthStencilState = &depthStencil;
+    pipelineInfo.pColorBlendState = &colorBlending;
+    pipelineInfo.layout = pipelineLayout_;
+    pipelineInfo.renderPass = renderPass;
+    pipelineInfo.subpass = 0;
 
-        // Clear destination to fully transparent so pixels with alpha=0 don't overwrite the scene
-        std::memset(dest, 0, pixelCount * 4);
+    if (vkCreateGraphicsPipelines(device_, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline_) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to create GUI graphics pipeline");
+    }
+}
 
-        for (size_t i = 0; i < pixelCount; ++i) {
-            size_t offset = i * 4;
-            uint8_t r = pixels[offset];
-            uint8_t g = pixels[offset + 1];
-            uint8_t b = pixels[offset + 2];
-            uint8_t a = pixels[offset + 3];
+void GuiRenderer::CreateVertexAndIndexBuffers(size_t vertexCount, size_t indexCount) {
+    // Clean up old buffers
+    CleanupBuffers();
 
-            // Skip fully transparent pixels to avoid overwriting the 3D scene
-            if (a == 0) {
-                continue;
-            }
-
-            switch (swapchainFormat_) {
-                case VK_FORMAT_B8G8R8A8_UNORM:
-                case VK_FORMAT_B8G8R8A8_SRGB:
-                    dest[offset] = b;
-                    dest[offset + 1] = g;
-                    dest[offset + 2] = r;
-                    dest[offset + 3] = a;
-                    break;
-                case VK_FORMAT_R8G8B8A8_UNORM:
-                case VK_FORMAT_R8G8B8A8_SRGB:
-                default:
-                    dest[offset] = r;
-                    dest[offset + 1] = g;
-                    dest[offset + 2] = b;
-                    dest[offset + 3] = a;
-                    break;
-            }
-        }
+    if (vertexCount == 0 || indexCount == 0) {
+        return;
     }
 
-    void GuiRenderer::CreateStagingBuffer(size_t size) {
-        DestroyStagingBuffer();
-        if (size == 0) {
-            return;
-        }
-        if (!bufferService_) {
-            throw std::runtime_error("Buffer service not available for GUI staging buffer");
-        }
-        bufferService_->CreateBuffer(static_cast<VkDeviceSize>(size),
-                             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                             stagingBuffer_, stagingMemory_);
-        stagingSize_ = size;
-        vkMapMemory(device_, stagingMemory_, 0, stagingSize_, 0, &stagingMapped_);
-    }
+    // Create vertex buffer
+    VkDeviceSize vertexBufferSize = sizeof(GuiVertex) * vertexCount;
+    bufferService_->CreateBuffer(
+        vertexBufferSize,
+        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+        vertexBuffer_,
+        vertexMemory_
+    );
 
-    void GuiRenderer::DestroyStagingBuffer() {
-        if (stagingMapped_) {
-            vkUnmapMemory(device_, stagingMemory_);
-            stagingMapped_ = nullptr;
-        }
-        if (stagingBuffer_ != VK_NULL_HANDLE) {
-            vkDestroyBuffer(device_, stagingBuffer_, nullptr);
-            stagingBuffer_ = VK_NULL_HANDLE;
-        }
-        if (stagingMemory_ != VK_NULL_HANDLE) {
-            vkFreeMemory(device_, stagingMemory_, nullptr);
-            stagingMemory_ = VK_NULL_HANDLE;
-        }
-        stagingSize_ = 0;
-    }
+    // Upload vertex data
+    void* vertexData;
+    vkMapMemory(device_, vertexMemory_, 0, vertexBufferSize, 0, &vertexData);
+    std::memcpy(vertexData, vertices_.data(), vertexBufferSize);
+    vkUnmapMemory(device_, vertexMemory_);
 
-    void GuiRenderer::UpdateFormat(VkFormat format) {
-        if (swapchainFormat_ == format) {
-            return;
-        }
-        swapchainFormat_ = format;
-        DestroyStagingBuffer();
-        if (canvasWidth_ > 0 && canvasHeight_ > 0) {
-            size_t bufferSize = static_cast<size_t>(canvasWidth_) * canvasHeight_ * 4;
-            CreateStagingBuffer(bufferSize);
-        }
-    }
+    // Create index buffer
+    VkDeviceSize indexBufferSize = sizeof(uint32_t) * indexCount;
+    bufferService_->CreateBuffer(
+        indexBufferSize,
+        VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+        indexBuffer_,
+        indexMemory_
+    );
 
-    const ParsedSvg* GuiRenderer::LoadSvg(const std::string& relativePath) {
-        auto it = svgCache_.find(relativePath);
-        if (it != svgCache_.end()) {
-            return &it->second;
-        }
-        std::filesystem::path path = scriptDirectory_ / relativePath;
-        try {
-            ParsedSvg parsed = ParseSvgFile(path);
-            auto inserted = svgCache_.emplace(relativePath, std::move(parsed));
-            return &inserted.first->second;
-        } catch (...) {
-            return nullptr;
-        }
+    // Upload index data
+    void* indexData;
+    vkMapMemory(device_, indexMemory_, 0, indexBufferSize, 0, &indexData);
+    std::memcpy(indexData, indices_.data(), indexBufferSize);
+    vkUnmapMemory(device_, indexMemory_);
+}
+
+void GuiRenderer::CleanupPipeline() {
+    if (pipeline_ != VK_NULL_HANDLE) {
+        vkDestroyPipeline(device_, pipeline_, nullptr);
+        pipeline_ = VK_NULL_HANDLE;
     }
+    if (pipelineLayout_ != VK_NULL_HANDLE) {
+        vkDestroyPipelineLayout(device_, pipelineLayout_, nullptr);
+        pipelineLayout_ = VK_NULL_HANDLE;
+    }
+    if (vertShaderModule_ != VK_NULL_HANDLE) {
+        vkDestroyShaderModule(device_, vertShaderModule_, nullptr);
+        vertShaderModule_ = VK_NULL_HANDLE;
+    }
+    if (fragShaderModule_ != VK_NULL_HANDLE) {
+        vkDestroyShaderModule(device_, fragShaderModule_, nullptr);
+        fragShaderModule_ = VK_NULL_HANDLE;
+    }
+}
+
+void GuiRenderer::CleanupBuffers() {
+    if (vertexBuffer_ != VK_NULL_HANDLE) {
+        vkDestroyBuffer(device_, vertexBuffer_, nullptr);
+        vertexBuffer_ = VK_NULL_HANDLE;
+    }
+    if (vertexMemory_ != VK_NULL_HANDLE) {
+        vkFreeMemory(device_, vertexMemory_, nullptr);
+        vertexMemory_ = VK_NULL_HANDLE;
+    }
+    if (indexBuffer_ != VK_NULL_HANDLE) {
+        vkDestroyBuffer(device_, indexBuffer_, nullptr);
+        indexBuffer_ = VK_NULL_HANDLE;
+    }
+    if (indexMemory_ != VK_NULL_HANDLE) {
+        vkFreeMemory(device_, indexMemory_, nullptr);
+        indexMemory_ = VK_NULL_HANDLE;
+    }
+}
+
+void GuiRenderer::UpdateFormat(VkFormat format) {
+    if (swapchainFormat_ == format) {
+        return;
+    }
+    swapchainFormat_ = format;
+}
+
+const ParsedSvg* GuiRenderer::LoadSvg(const std::string& relativePath) {
+    auto it = svgCache_.find(relativePath);
+    if (it != svgCache_.end()) {
+        return &it->second;
+    }
+    std::filesystem::path path = scriptDirectory_ / relativePath;
+    try {
+        ParsedSvg parsed = ParseSvgFile(path);
+        auto inserted = svgCache_.emplace(relativePath, std::move(parsed));
+        return &inserted.first->second;
+    } catch (...) {
+        return nullptr;
+    }
+}
 
 } // namespace sdl3cpp::services::impl

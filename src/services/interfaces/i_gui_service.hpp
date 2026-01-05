@@ -26,12 +26,14 @@ public:
      * @param device Vulkan logical device
      * @param physicalDevice Vulkan physical device
      * @param format Swapchain image format
+     * @param renderPass Vulkan render pass for GUI pipeline creation
      * @param resourcePath Path to GUI resources (fonts, SVG files, etc.)
      * @throws std::runtime_error if initialization fails
      */
     virtual void Initialize(VkDevice device,
                            VkPhysicalDevice physicalDevice,
                            VkFormat format,
+                           VkRenderPass renderPass,
                            const std::filesystem::path& resourcePath) = 0;
 
     /**

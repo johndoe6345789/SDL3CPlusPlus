@@ -13,6 +13,11 @@
 
 namespace sdl3cpp::services::impl {
 
+struct GuiVertex {
+    float x, y, z;
+    float r, g, b, a;
+};
+
 struct SvgCircle {
     float cx = 0.0f;
     float cy = 0.0f;
@@ -29,7 +34,7 @@ struct ParsedSvg {
 class GuiRenderer {
 public:
     GuiRenderer(VkDevice device, VkPhysicalDevice physicalDevice, VkFormat swapchainFormat,
-                const std::filesystem::path& scriptDirectory,
+                VkRenderPass renderPass, const std::filesystem::path& scriptDirectory,
                 std::shared_ptr<IBufferService> bufferService);
     ~GuiRenderer();
 
@@ -38,32 +43,44 @@ public:
 
     void Prepare(const std::vector<GuiCommand>& commands, uint32_t width,
                  uint32_t height);
-    void BlitToSwapchain(VkCommandBuffer commandBuffer, VkImage image);
+    void RenderToSwapchain(VkCommandBuffer commandBuffer, VkRenderPass renderPass);
     void Resize(uint32_t width, uint32_t height, VkFormat format);
     bool IsReady() const;
 
 private:
-    struct Canvas;
-
     const ParsedSvg* LoadSvg(const std::string& relativePath);
 
-    void EnsureCanvas(uint32_t width, uint32_t height);
-    void UpdateStagingBuffer();
-    void CreateStagingBuffer(size_t size);
-    void DestroyStagingBuffer();
+    void CreatePipeline(VkRenderPass renderPass, VkExtent2D extent);
+    void CreateVertexAndIndexBuffers(size_t vertexCount, size_t indexCount);
+    void CleanupPipeline();
+    void CleanupBuffers();
     void UpdateFormat(VkFormat format);
+    void GenerateGuiGeometry(const std::vector<GuiCommand>& commands, uint32_t width, uint32_t height);
 
     VkDevice device_;
     VkPhysicalDevice physicalDevice_;
     VkFormat swapchainFormat_;
+    VkRenderPass renderPass_;
     std::filesystem::path scriptDirectory_;
-    VkBuffer stagingBuffer_ = VK_NULL_HANDLE;
-    VkDeviceMemory stagingMemory_ = VK_NULL_HANDLE;
-    void* stagingMapped_ = nullptr;
-    size_t stagingSize_ = 0;
-    uint32_t canvasWidth_ = 0;
-    uint32_t canvasHeight_ = 0;
-    std::unique_ptr<Canvas> canvas_;
+
+    // Pipeline resources
+    VkPipeline pipeline_ = VK_NULL_HANDLE;
+    VkPipelineLayout pipelineLayout_ = VK_NULL_HANDLE;
+    VkShaderModule vertShaderModule_ = VK_NULL_HANDLE;
+    VkShaderModule fragShaderModule_ = VK_NULL_HANDLE;
+
+    // Vertex/index buffers
+    VkBuffer vertexBuffer_ = VK_NULL_HANDLE;
+    VkDeviceMemory vertexMemory_ = VK_NULL_HANDLE;
+    VkBuffer indexBuffer_ = VK_NULL_HANDLE;
+    VkDeviceMemory indexMemory_ = VK_NULL_HANDLE;
+
+    // Geometry data
+    std::vector<GuiVertex> vertices_;
+    std::vector<uint32_t> indices_;
+
+    uint32_t viewportWidth_ = 0;
+    uint32_t viewportHeight_ = 0;
     std::unordered_map<std::string, ParsedSvg> svgCache_;
     std::shared_ptr<IBufferService> bufferService_;
 };

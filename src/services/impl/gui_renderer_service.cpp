@@ -18,16 +18,18 @@ GuiRendererService::GuiRendererService(std::shared_ptr<ILogger> logger,
 void GuiRendererService::Initialize(VkDevice device,
                                     VkPhysicalDevice physicalDevice,
                                     VkFormat format,
+                                    VkRenderPass renderPass,
                                     const std::filesystem::path& resourcePath) {
     if (logger_) {
         logger_->Trace("GuiRendererService", "Initialize",
                        "deviceIsNull=" + std::string(device == VK_NULL_HANDLE ? "true" : "false") +
                        ", physicalDeviceIsNull=" + std::string(physicalDevice == VK_NULL_HANDLE ? "true" : "false") +
                        ", format=" + std::to_string(static_cast<uint32_t>(format)) +
+                       ", renderPassIsNull=" + std::string(renderPass == VK_NULL_HANDLE ? "true" : "false") +
                        ", resourcePath=" + resourcePath.string());
     }
     renderer_ = std::make_unique<GuiRenderer>(
-        device, physicalDevice, format, resourcePath, bufferService_);
+        device, physicalDevice, format, renderPass, resourcePath, bufferService_);
 }
 
 void GuiRendererService::PrepareFrame(const std::vector<GuiCommand>& commands,
@@ -54,7 +56,8 @@ void GuiRendererService::RenderToSwapchain(VkCommandBuffer commandBuffer, VkImag
     if (!renderer_) {
         throw std::runtime_error("GuiRenderer service not initialized");
     }
-    renderer_->BlitToSwapchain(commandBuffer, image);
+    // Note: image parameter is ignored - GUI renders into active render pass, not a specific image
+    renderer_->RenderToSwapchain(commandBuffer, VK_NULL_HANDLE);
 }
 
 void GuiRendererService::Resize(uint32_t width, uint32_t height, VkFormat format) {

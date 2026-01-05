@@ -26,11 +26,13 @@ VulkanGuiService::~VulkanGuiService() {
 void VulkanGuiService::Initialize(VkDevice device,
                                   VkPhysicalDevice physicalDevice,
                                   VkFormat format,
+                                  VkRenderPass renderPass,
                                   const std::filesystem::path& resourcePath) {
     logger_->Trace("VulkanGuiService", "Initialize",
                    "deviceIsNull=" + std::string(device == VK_NULL_HANDLE ? "true" : "false") +
                    ", physicalDeviceIsNull=" + std::string(physicalDevice == VK_NULL_HANDLE ? "true" : "false") +
                    ", format=" + std::to_string(static_cast<uint32_t>(format)) +
+                   ", renderPassIsNull=" + std::string(renderPass == VK_NULL_HANDLE ? "true" : "false") +
                    ", resourcePath=" + resourcePath.string());
 
     if (initialized_) {
@@ -40,7 +42,7 @@ void VulkanGuiService::Initialize(VkDevice device,
     if (!rendererService_) {
         throw std::runtime_error("GUI renderer service not available");
     }
-    rendererService_->Initialize(device, physicalDevice, format, resourcePath);
+    rendererService_->Initialize(device, physicalDevice, format, renderPass, resourcePath);
     initialized_ = true;
 
     logger_->Info("GUI service initialized");

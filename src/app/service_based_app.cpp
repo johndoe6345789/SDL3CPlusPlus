@@ -144,6 +144,7 @@ void ServiceBasedApp::Run() {
             guiService->Initialize(vulkanDeviceService->GetDevice(),
                                  vulkanDeviceService->GetPhysicalDevice(),
                                  swapchainService->GetSwapchainImageFormat(),
+                                 swapchainService->GetRenderPass(),
                                  runtimeConfig_.scriptPath.parent_path());
         }
 

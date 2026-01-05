@@ -219,7 +219,7 @@ void RenderCommandService::RecordCommands(uint32_t imageIndex,
         }
     }
 
-    vkCmdEndRenderPass(commandBuffer);
+    // Render GUI overlay BEFORE ending render pass so we can use alpha blending
     if (guiRendererService_) {
         bool guiReady = guiRendererService_->IsReady();
         const auto& images = swapchainService_->GetSwapchainImages();
@@ -243,6 +243,8 @@ void RenderCommandService::RecordCommands(uint32_t imageIndex,
         logger_->Trace("RenderCommandService", "RecordCommands",
                        "GUI overlay skipped: renderer service not available");
     }
+
+    vkCmdEndRenderPass(commandBuffer);
     vkEndCommandBuffer(commandBuffer);
 }
 
