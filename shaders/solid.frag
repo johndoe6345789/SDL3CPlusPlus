@@ -17,8 +17,8 @@ const vec3 LIGHT_POSITIONS[8] = vec3[8](
 );
 
 const vec3 LIGHT_COLOR = vec3(1.0, 0.9, 0.6);  // Warm lantern color
-const float LIGHT_INTENSITY = 0.8;
-const float AMBIENT_STRENGTH = 0.08;  // Low ambient for darker atmosphere
+const float LIGHT_INTENSITY = 0.9;
+const float AMBIENT_STRENGTH = 0.22;  // Boost ambient to preserve surface color
 
 float calculateAttenuation(float distance) {
     // Quadratic attenuation: 1 / (constant + linear*d + quadratic*d^2)

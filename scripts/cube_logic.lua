@@ -208,6 +208,18 @@ local shader_variants = {
         vertex = "shaders/solid.vert.spv",
         fragment = "shaders/solid.frag.spv",
     },
+    floor = {
+        vertex = "shaders/solid.vert.spv",
+        fragment = "shaders/floor.frag.spv",
+    },
+    wall = {
+        vertex = "shaders/solid.vert.spv",
+        fragment = "shaders/wall.frag.spv",
+    },
+    ceiling = {
+        vertex = "shaders/solid.vert.spv",
+        fragment = "shaders/ceiling.frag.spv",
+    },
     pbr = {
         vertex = "shaders/pbr.vert.spv",
         fragment = "shaders/pbr.frag.spv",
@@ -514,19 +526,20 @@ local function apply_color_to_vertices(color)
     return colored_vertices
 end
 
-local function create_static_cube(position, scale, color)
+local function create_static_cube(position, scale, color, shader_key)
     local model = build_static_model_matrix(position, scale)
     local function compute_model_matrix()
         return model
     end
 
     local vertices = color and apply_color_to_vertices(color) or cube_vertices
+    local resolved_shader = shader_key or "solid"
 
     return {
         vertices = vertices,
         indices = cube_indices,
         compute_model_matrix = compute_model_matrix,
-        shader_key = "solid",  -- Use solid shader for room geometry
+        shader_key = resolved_shader,
     }
 end
 
@@ -563,23 +576,23 @@ local function create_room_objects()
     local wall_outer_edge = wall_offset + room.wall_thickness
     log_debug("Room walls: inner=%.2f outer=%.2f", wall_inner_edge, wall_outer_edge)
 
-    local floor_color = {0.14, 0.19, 0.26}
-    local wall_color = {0.52, 0.36, 0.22}
-    local ceiling_color = {0.78, 0.8, 0.86}
+    local floor_color = {0.08, 0.26, 0.55}
+    local wall_color = {0.78, 0.38, 0.18}
+    local ceiling_color = {0.72, 0.9, 0.96}
 
     local objects = {
         create_static_cube({0.0, floor_center_y, 0.0},
-            {room.half_size, room.floor_half_thickness, room.half_size}, floor_color),
+            {room.half_size, room.floor_half_thickness, room.half_size}, floor_color, "floor"),
         create_static_cube({0.0, ceiling_y, 0.0},
-            {room.half_size, room.floor_half_thickness, room.half_size}, ceiling_color),
+            {room.half_size, room.floor_half_thickness, room.half_size}, ceiling_color, "ceiling"),
         create_static_cube({0.0, wall_center_y, -wall_offset},
-            {room.half_size, room.wall_height, room.wall_thickness}, wall_color),
+            {room.half_size, room.wall_height, room.wall_thickness}, wall_color, "wall"),
         create_static_cube({0.0, wall_center_y, wall_offset},
-            {room.half_size, room.wall_height, room.wall_thickness}, wall_color),
+            {room.half_size, room.wall_height, room.wall_thickness}, wall_color, "wall"),
         create_static_cube({-wall_offset, wall_center_y, 0.0},
-            {room.wall_thickness, room.wall_height, room.half_size}, wall_color),
+            {room.wall_thickness, room.wall_height, room.half_size}, wall_color, "wall"),
         create_static_cube({wall_offset, wall_center_y, 0.0},
-            {room.wall_thickness, room.wall_height, room.half_size}, wall_color),
+            {room.wall_thickness, room.wall_height, room.half_size}, wall_color, "wall"),
     }
 
     -- Add lanterns in the four corners (adjusted for bigger room)
