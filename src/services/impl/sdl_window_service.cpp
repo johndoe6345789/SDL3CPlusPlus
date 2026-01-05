@@ -220,7 +220,8 @@ void SdlWindowService::PollEvents() {
         PublishEvent(event);
 
         // Check for quit event
-        if (event.type == SDL_EVENT_QUIT) {
+        if (event.type == SDL_EVENT_QUIT || event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED) {
+            logger_->Trace("SdlWindowService", "PollEvents", "closeRequested=true");
             shouldClose_ = true;
         }
     }
@@ -240,6 +241,7 @@ void SdlWindowService::PublishEvent(const SDL_Event& sdlEvent) {
 
     switch (sdlEvent.type) {
         case SDL_EVENT_QUIT:
+        case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
             eventBus_->Publish(events::Event{
                 events::EventType::WindowClosed,
                 timestamp,

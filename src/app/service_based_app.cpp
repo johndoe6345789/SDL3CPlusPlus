@@ -339,6 +339,7 @@ void ServiceBasedApp::RegisterServices() {
         registry_.GetService<services::IInputService>(),
         registry_.GetService<services::IPhysicsService>(),
         registry_.GetService<services::ISceneService>(),
+        registry_.GetService<services::IRenderCoordinatorService>(),
         registry_.GetService<services::IAudioService>());
 
     logger_->Trace("ServiceBasedApp", "RegisterServices", "", "Exiting");

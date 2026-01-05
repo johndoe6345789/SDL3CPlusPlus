@@ -10,6 +10,7 @@ ApplicationLoopService::ApplicationLoopService(std::shared_ptr<ILogger> logger,
                                                std::shared_ptr<IInputService> inputService,
                                                std::shared_ptr<IPhysicsService> physicsService,
                                                std::shared_ptr<ISceneService> sceneService,
+                                               std::shared_ptr<IRenderCoordinatorService> renderCoordinatorService,
                                                std::shared_ptr<IAudioService> audioService)
     : logger_(std::move(logger)),
       windowService_(std::move(windowService)),
@@ -17,6 +18,7 @@ ApplicationLoopService::ApplicationLoopService(std::shared_ptr<ILogger> logger,
       inputService_(std::move(inputService)),
       physicsService_(std::move(physicsService)),
       sceneService_(std::move(sceneService)),
+      renderCoordinatorService_(std::move(renderCoordinatorService)),
       audioService_(std::move(audioService)) {
     if (logger_) {
         logger_->Trace("ApplicationLoopService", "ApplicationLoopService",
@@ -25,6 +27,7 @@ ApplicationLoopService::ApplicationLoopService(std::shared_ptr<ILogger> logger,
                        ", inputService=" + std::string(inputService_ ? "set" : "null") +
                        ", physicsService=" + std::string(physicsService_ ? "set" : "null") +
                        ", sceneService=" + std::string(sceneService_ ? "set" : "null") +
+                       ", renderCoordinatorService=" + std::string(renderCoordinatorService_ ? "set" : "null") +
                        ", audioService=" + std::string(audioService_ ? "set" : "null"),
                        "Created");
     }
@@ -39,24 +42,16 @@ void ApplicationLoopService::Run() {
     running_ = true;
     auto lastTime = std::chrono::high_resolution_clock::now();
     auto startTime = lastTime;
-    const auto timeout = std::chrono::seconds(5);
 
     while (running_) {
         auto currentTime = std::chrono::high_resolution_clock::now();
 
-        if (currentTime - startTime > timeout) {
-            if (logger_) {
-                logger_->Info("ApplicationLoopService::Run: Timeout reached, exiting");
-            }
-            running_ = false;
-            break;
-        }
-
         float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
+        float elapsedTime = std::chrono::duration<float>(currentTime - startTime).count();
         lastTime = currentTime;
 
         HandleEvents();
-        ProcessFrame(deltaTime);
+        ProcessFrame(deltaTime, elapsedTime);
     }
 
     if (logger_) {
@@ -82,9 +77,13 @@ void ApplicationLoopService::HandleEvents() {
     }
 }
 
-void ApplicationLoopService::ProcessFrame(float deltaTime) {
+void ApplicationLoopService::ProcessFrame(float deltaTime, float elapsedTime) {
     if (logger_) {
-        logger_->Trace("ApplicationLoopService", "ProcessFrame", "deltaTime=" + std::to_string(deltaTime), "Entering");
+        logger_->Trace("ApplicationLoopService", "ProcessFrame",
+                       "deltaTime=" + std::to_string(deltaTime) +
+                       ", elapsedTime=" + std::to_string(elapsedTime) +
+                       ", renderCoordinatorAvailable=" + std::string(renderCoordinatorService_ ? "true" : "false"),
+                       "Entering");
     }
 
     if (inputService_) {
@@ -97,6 +96,10 @@ void ApplicationLoopService::ProcessFrame(float deltaTime) {
 
     if (sceneService_) {
         sceneService_->UpdateScene(deltaTime);
+    }
+
+    if (renderCoordinatorService_) {
+        renderCoordinatorService_->RenderFrame(elapsedTime);
     }
 
     if (audioService_) {

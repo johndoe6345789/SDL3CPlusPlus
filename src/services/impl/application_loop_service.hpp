@@ -5,6 +5,7 @@
 #include "../interfaces/i_input_service.hpp"
 #include "../interfaces/i_logger.hpp"
 #include "../interfaces/i_physics_service.hpp"
+#include "../interfaces/i_render_coordinator_service.hpp"
 #include "../interfaces/i_scene_service.hpp"
 #include "../interfaces/i_window_service.hpp"
 #include "../../events/i_event_bus.hpp"
@@ -20,6 +21,7 @@ public:
                            std::shared_ptr<IInputService> inputService,
                            std::shared_ptr<IPhysicsService> physicsService,
                            std::shared_ptr<ISceneService> sceneService,
+                           std::shared_ptr<IRenderCoordinatorService> renderCoordinatorService,
                            std::shared_ptr<IAudioService> audioService);
     ~ApplicationLoopService() override = default;
 
@@ -27,7 +29,7 @@ public:
 
 private:
     void HandleEvents();
-    void ProcessFrame(float deltaTime);
+    void ProcessFrame(float deltaTime, float elapsedTime);
 
     std::shared_ptr<ILogger> logger_;
     std::shared_ptr<IWindowService> windowService_;
@@ -35,6 +37,7 @@ private:
     std::shared_ptr<IInputService> inputService_;
     std::shared_ptr<IPhysicsService> physicsService_;
     std::shared_ptr<ISceneService> sceneService_;
+    std::shared_ptr<IRenderCoordinatorService> renderCoordinatorService_;
     std::shared_ptr<IAudioService> audioService_;
     bool running_ = false;
 };
