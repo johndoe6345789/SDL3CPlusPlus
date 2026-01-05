@@ -222,9 +222,11 @@ local controls = {
     gamepad_look_speed = 2.5,
     stick_deadzone = 0.2,
     max_pitch = math.rad(85.0),
+    move_forward_uses_pitch = true,
 }
 
 local last_frame_time = nil
+local movement_log_cooldown = 0.0
 local world_up = {0.0, 1.0, 0.0}
 
 local function clamp(value, minValue, maxValue)
@@ -325,6 +327,10 @@ local function update_camera(dt)
     local forward = forward_from_angles(camera.yaw, camera.pitch)
     local forward_flat = normalize({forward[1], 0.0, forward[3]})
     local right = normalize(cross(forward_flat, world_up))
+    local move_forward = forward_flat
+    if controls.move_forward_uses_pitch then
+        move_forward = forward
+    end
 
     local move_x = 0.0
     local move_z = 0.0
@@ -365,9 +371,17 @@ local function update_camera(dt)
 
     if length > 0.0 then
         local speed = controls.move_speed * dt
-        camera.position[1] = camera.position[1] + (right[1] * move_x + forward_flat[1] * move_z) * speed
-        camera.position[2] = camera.position[2] + (right[2] * move_x + forward_flat[2] * move_z) * speed
-        camera.position[3] = camera.position[3] + (right[3] * move_x + forward_flat[3] * move_z) * speed
+        if lua_debug and controls.move_forward_uses_pitch and math.abs(camera.pitch) > 0.001 then
+            movement_log_cooldown = movement_log_cooldown - dt
+            if movement_log_cooldown <= 0.0 then
+                log_debug("Move forward uses pitch: pitch=%.3f forward=(%.2f, %.2f, %.2f)",
+                    camera.pitch, move_forward[1], move_forward[2], move_forward[3])
+                movement_log_cooldown = 0.5
+            end
+        end
+        camera.position[1] = camera.position[1] + (right[1] * move_x + move_forward[1] * move_z) * speed
+        camera.position[2] = camera.position[2] + (right[2] * move_x + move_forward[2] * move_z) * speed
+        camera.position[3] = camera.position[3] + (right[3] * move_x + move_forward[3] * move_z) * speed
     end
 
     if move_y ~= 0.0 then
