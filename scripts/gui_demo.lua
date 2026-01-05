@@ -125,6 +125,12 @@ end
 function get_gui_commands()
     ctx:beginFrame(input)
     drawTestButtons()
+    Gui.cursor(ctx, input, {
+        size = 16,
+        thickness = 2,
+        color = {1.0, 0.9, 0.2, 1.0},
+        activeColor = {1.0, 0.35, 0.15, 1.0},
+    })
     ctx:endFrame()
     return ctx:getCommands()
 end

@@ -326,6 +326,40 @@ function Gui.svg(context, rectDef, svgPath, opts)
     context:pushSvg(svgPath, rect, opts)
 end
 
+function Gui.cursor(context, inputState, opts)
+    opts = opts or {}
+    if not context or not inputState then
+        return
+    end
+    local size = opts.size or 14
+    local thickness = opts.thickness or 2
+    local half = size / 2
+    local halfThickness = thickness / 2
+    local color = opts.color or {1.0, 0.95, 0.2, 1.0}
+    if inputState.mouseDown and opts.activeColor then
+        color = opts.activeColor
+    end
+
+    local x = inputState.mouseX or 0
+    local y = inputState.mouseY or 0
+    context:pushRect({
+        x = x - half,
+        y = y - halfThickness,
+        width = size,
+        height = thickness,
+    }, {
+        color = color,
+    })
+    context:pushRect({
+        x = x - halfThickness,
+        y = y - half,
+        width = thickness,
+        height = size,
+    }, {
+        color = color,
+    })
+end
+
 function Gui.textbox(context, widgetId, rectDef, state, opts)
     opts = opts or {}
     state = state or {}
