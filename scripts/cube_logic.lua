@@ -236,7 +236,7 @@ local room = {
     wall_thickness = 0.3,
     wall_height = 2.5,
     floor_half_thickness = 0.2,
-    floor_top = -1.0,
+    floor_top = 0.0,
 }
 local player_state = {
     eye_height = 1.6,
@@ -248,8 +248,9 @@ local player_state = {
     noclip_toggle_pressed = false,
 }
 
+camera.position[1] = 0.0
 camera.position[2] = room.floor_top + player_state.eye_height
-camera.position[3] = room.half_size - 1.5
+camera.position[3] = 0.0
 
 local function clamp(value, minValue, maxValue)
     if value < minValue then
@@ -489,7 +490,9 @@ local rotation_speed = 0.9
 
 local function create_spinning_cube()
     local function compute_model_matrix(time)
-        return math3d.rotation_y(time * rotation_speed)
+        local rotation = math3d.rotation_y(time * rotation_speed)
+        local position = math3d.translation(0.0, 1.5, 0.0)
+        return math3d.multiply(position, rotation)
     end
 
     return {
@@ -506,14 +509,28 @@ local function build_static_model_matrix(position, scale)
     return math3d.multiply(translation, scaling)
 end
 
-local function create_static_cube(position, scale)
+local function apply_color_to_vertices(color)
+    local colored_vertices = {}
+    for i = 1, #cube_vertices do
+        local v = cube_vertices[i]
+        colored_vertices[i] = {
+            position = v.position,
+            color = color,
+        }
+    end
+    return colored_vertices
+end
+
+local function create_static_cube(position, scale, color)
     local model = build_static_model_matrix(position, scale)
     local function compute_model_matrix()
         return model
     end
 
+    local vertices = color and apply_color_to_vertices(color) or cube_vertices
+
     return {
-        vertices = cube_vertices,
+        vertices = vertices,
         indices = cube_indices,
         compute_model_matrix = compute_model_matrix,
         shader_key = "default",
@@ -523,19 +540,26 @@ end
 local function create_room_objects()
     local floor_center_y = room.floor_top - room.floor_half_thickness
     local wall_center_y = room.floor_top + room.wall_height
+    local ceiling_y = room.floor_top + room.wall_height * 2 + room.floor_half_thickness
     local wall_offset = room.half_size + room.wall_thickness
+
+    local blue_floor = {0.2, 0.3, 0.8}
+    local green_wall = {0.2, 0.7, 0.3}
+    local light_gray = {0.7, 0.7, 0.7}
 
     return {
         create_static_cube({0.0, floor_center_y, 0.0},
-            {room.half_size, room.floor_half_thickness, room.half_size}),
+            {room.half_size, room.floor_half_thickness, room.half_size}, blue_floor),
+        create_static_cube({0.0, ceiling_y, 0.0},
+            {room.half_size, room.floor_half_thickness, room.half_size}, light_gray),
         create_static_cube({0.0, wall_center_y, -wall_offset},
-            {room.half_size, room.wall_height, room.wall_thickness}),
+            {room.half_size, room.wall_height, room.wall_thickness}, green_wall),
         create_static_cube({0.0, wall_center_y, wall_offset},
-            {room.half_size, room.wall_height, room.wall_thickness}),
+            {room.half_size, room.wall_height, room.wall_thickness}, green_wall),
         create_static_cube({-wall_offset, wall_center_y, 0.0},
-            {room.wall_thickness, room.wall_height, room.half_size}),
+            {room.wall_thickness, room.wall_height, room.half_size}, green_wall),
         create_static_cube({wall_offset, wall_center_y, 0.0},
-            {room.wall_thickness, room.wall_height, room.half_size}),
+            {room.wall_thickness, room.wall_height, room.half_size}, green_wall),
     }
 end
 
