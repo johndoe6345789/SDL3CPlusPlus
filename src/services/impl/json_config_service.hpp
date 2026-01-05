@@ -94,7 +94,7 @@ private:
     RuntimeConfig config_;
 
     // Helper methods moved from main.cpp
-    static std::filesystem::path FindScriptPath(const char* argv0);
+    std::filesystem::path FindScriptPath(const char* argv0);
     static RuntimeConfig LoadFromJson(std::shared_ptr<ILogger> logger, const std::filesystem::path& configPath, bool dumpConfig);
 };
 
