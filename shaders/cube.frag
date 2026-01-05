@@ -5,7 +5,7 @@ layout(location = 1) in vec3 fragWorldPos;
 layout(location = 0) out vec4 outColor;
 
 vec3 RainbowBand(float t) {
-    t = clamp(t, 0.0, 1.0);
+    t = fract(t);
     float scaled = t * 5.0;
     int index = int(floor(scaled));
     float blend = fract(scaled);
@@ -40,8 +40,8 @@ vec3 RainbowBand(float t) {
 }
 
 void main() {
-    float bandPos = (fragWorldPos.y + 1.0) * 0.5;
-    float diagonal = (fragWorldPos.x + fragWorldPos.z) * 0.15;
+    float bandPos = fragWorldPos.y * 0.35;
+    float diagonal = (fragWorldPos.x + fragWorldPos.z) * 0.25;
     vec3 rainbow = RainbowBand(bandPos + diagonal);
     vec3 shaded = mix(rainbow, fragColor, 0.08);
     outColor = vec4(shaded, 1.0);

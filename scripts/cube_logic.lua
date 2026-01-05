@@ -531,6 +531,7 @@ local function create_static_cube(position, scale, color)
 end
 
 local function create_spinning_cube()
+    log_debug("Spinning cube shader=default (rainbow wrap)")
     local function compute_model_matrix(time)
         local rotation = math3d.rotation_y(time * rotation_speed)
         local scale = scale_matrix(1.5, 1.5, 1.5)  -- Make cube 3x3x3 units
