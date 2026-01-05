@@ -968,6 +968,45 @@ def gui(args: argparse.Namespace) -> None:
                     border-radius: 3px;
                 }
             """)
+
+            # Console toolbar
+            console_toolbar = QHBoxLayout()
+
+            self.copy_console_btn = QPushButton("📋 Copy")
+            self.copy_console_btn.setStyleSheet("""
+                QPushButton {
+                    background-color: #2a475e;
+                    color: #c6d1db;
+                    border: none;
+                    border-radius: 3px;
+                    padding: 5px 15px;
+                }
+                QPushButton:hover {
+                    background-color: #3e5c78;
+                }
+            """)
+            self.copy_console_btn.clicked.connect(self.copy_console)
+            console_toolbar.addWidget(self.copy_console_btn)
+
+            self.clear_console_btn = QPushButton("🗑 Clear")
+            self.clear_console_btn.setStyleSheet("""
+                QPushButton {
+                    background-color: #2a475e;
+                    color: #c6d1db;
+                    border: none;
+                    border-radius: 3px;
+                    padding: 5px 15px;
+                }
+                QPushButton:hover {
+                    background-color: #3e5c78;
+                }
+            """)
+            self.clear_console_btn.clicked.connect(self.console.clear)
+            console_toolbar.addWidget(self.clear_console_btn)
+
+            console_toolbar.addStretch()
+            console_layout.addLayout(console_toolbar)
+
             console_layout.addWidget(self.console)
 
             self.tab_widget.addTab(console_container, "Console Output")
@@ -1445,6 +1484,17 @@ return {{
                         self.status_label.setText(f"No matches for '{text}'")
                         self.status_label.setStyleSheet("color: #ff6b6b; font-size: 9pt;")
                         QTimer.singleShot(3000, lambda: self.status_label.setText(""))
+
+        def copy_console(self):
+            """Copy console output to clipboard"""
+            from PyQt6.QtWidgets import QApplication
+            clipboard = QApplication.clipboard()
+            selected_text = self.console.textCursor().selectedText()
+            if selected_text:
+                clipboard.setText(selected_text)
+            else:
+                # If no selection, copy all text
+                clipboard.setText(self.console.toPlainText())
 
         def play_game(self):
             """Launch the selected game"""
