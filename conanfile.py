@@ -13,7 +13,7 @@ class SDL3CppConan(ConanFile):
         "lua/*:compile_as_cpp": False,
         "lua/*:with_tools": False,
     }
-    generators = "CMakeDeps", "CMakeToolchain", "VirtualRunEnv"
+    generators = "CMakeDeps", "VirtualRunEnv"
 
     def layout(self):
         cmake_layout(self)
@@ -21,11 +21,13 @@ class SDL3CppConan(ConanFile):
     def generate(self):
         from conan.tools.cmake import CMakeToolchain
         tc = CMakeToolchain(self)
-        if self.settings.os == "Vita":
-            import os
-            vitasdk = os.environ.get("VITASDK")
-            if vitasdk:
-                tc.toolchain_file = f"{vitasdk}/share/vita.toolchain.cmake"
+        import os
+        vitasdk = os.environ.get("VITASDK")
+        if vitasdk:
+            tc.toolchain_file = f"{vitasdk}/share/vita.toolchain.cmake"
+            self.output.trace(f"Using VITASDK toolchain file: {tc.toolchain_file}")
+        else:
+            self.output.trace("Using default CMake toolchain file.")
         tc.generate()
 
     def requirements(self):

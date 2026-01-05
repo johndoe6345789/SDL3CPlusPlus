@@ -6,7 +6,9 @@
     "configurePresets": [
         {
             "name": "vita-release",
-            "inherits": ["conan-release"],
+            "inherits": [
+                "conan-release"
+            ],
             "cacheVariables": {
                 "ENABLE_VITA": "ON"
             },
