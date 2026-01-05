@@ -247,18 +247,6 @@ shaderc_shader_kind ShadercKindFromStage(VkShaderStageFlagBits stage) {
     }
 }
 
-std::vector<uint8_t> ReadBinaryFile(const std::filesystem::path& path) {
-    std::ifstream file(path, std::ios::binary | std::ios::ate);
-    if (!file) {
-        throw std::runtime_error("Failed to read file: " + path.string());
-    }
-    size_t fileSize = static_cast<size_t>(file.tellg());
-    std::vector<uint8_t> buffer(fileSize);
-    file.seekg(0);
-    file.read(reinterpret_cast<char*>(buffer.data()), static_cast<std::streamsize>(fileSize));
-    return buffer;
-}
-
 std::vector<uint8_t> ReadShaderFile(const std::filesystem::path& path,
                                     VkShaderStageFlagBits stage,
                                     ILogger* logger) {
@@ -273,34 +261,23 @@ std::vector<uint8_t> ReadShaderFile(const std::filesystem::path& path,
     }
 
     std::filesystem::path shaderPath = path;
-    if (!std::filesystem::exists(shaderPath) && shaderPath.extension() == ".spv") {
+    if (shaderPath.extension() == ".spv") {
         std::filesystem::path sourcePath = shaderPath;
         sourcePath.replace_extension();
-        if (std::filesystem::exists(sourcePath)) {
-            if (logger) {
-                logger->Trace("GuiRenderer", "ReadShaderFile",
-                              "usingSource=" + sourcePath.string());
-            }
-            shaderPath = sourcePath;
+        if (logger) {
+            logger->Trace("GuiRenderer", "ReadShaderFile",
+                          "usingSource=" + sourcePath.string());
         }
+        shaderPath = sourcePath;
     }
 
     if (!std::filesystem::exists(shaderPath)) {
         throw std::runtime_error("Shader file not found: " + shaderPath.string() +
-            "\n\nPlease ensure the source (.vert/.frag/etc.) or compiled .spv exists.");
+            "\n\nPlease ensure the shader source (.vert/.frag/etc.) exists.");
     }
 
     if (!std::filesystem::is_regular_file(shaderPath)) {
         throw std::runtime_error("Path is not a regular file: " + shaderPath.string());
-    }
-
-    if (shaderPath.extension() == ".spv") {
-        auto buffer = ReadBinaryFile(shaderPath);
-        if (logger) {
-            logger->Trace("GuiRenderer", "ReadShaderFile",
-                          "loadedSpirvBytes=" + std::to_string(buffer.size()));
-        }
-        return buffer;
     }
 
     std::ifstream sourceFile(shaderPath);
@@ -689,9 +666,9 @@ const std::vector<uint8_t>& GuiRenderer::LoadShaderBytes(const std::filesystem::
 void GuiRenderer::CreatePipeline(VkRenderPass renderPass, VkExtent2D extent) {
     // Load shader modules
     const std::filesystem::path vertexShaderPath =
-        scriptDirectory_.parent_path() / "shaders" / "gui_2d.vert.spv";
+        scriptDirectory_.parent_path() / "shaders" / "gui_2d.vert";
     const std::filesystem::path fragmentShaderPath =
-        scriptDirectory_.parent_path() / "shaders" / "gui_2d.frag.spv";
+        scriptDirectory_.parent_path() / "shaders" / "gui_2d.frag";
     if (logger_) {
         logger_->Trace("GuiRenderer", "CreatePipeline",
                        "renderPassIsNull=" + std::string(renderPass == VK_NULL_HANDLE ? "true" : "false") +

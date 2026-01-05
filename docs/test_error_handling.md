@@ -65,7 +65,7 @@ Now validates before attempting to read:
 
 **Example error messages**:
 ```
-File not found: /path/to/shader.spv
+File not found: /path/to/shader.vert
 
 Please ensure the file exists at this location.
 ```
@@ -79,15 +79,15 @@ The file exists but cannot be opened. Check file permissions.
 #### Shader File Validation
 - Checks both vertex and fragment shader files exist before loading
 - Provides the shader key to help identify which pipeline failed
-- Suggests checking that shaders are compiled and in the correct directory
+- Suggests checking that shader sources are present in the correct directory
 
 **Example error message**:
 ```
-Vertex shader not found: shaders/cube.vert.spv
+Vertex shader not found: shaders/cube.vert
 
 Shader key: default
 
-Please ensure shader files are compiled and present in the shaders directory.
+Please ensure shader source files are present in the shaders directory.
 ```
 
 ### 4. Structured Vulkan Initialization ([sdl3_app_core.cpp](src/app/sdl3_app_core.cpp))
@@ -160,14 +160,14 @@ Plus a message box with the same error.
 ### Test Case 2: Missing Shader File
 ```bash
 cd build/Release
-mv shaders/cube.vert.spv shaders/cube.vert.spv.backup
+mv shaders/cube.vert shaders/cube.vert.backup
 ./sdl3_app --json-file-in ./config/seed_runtime.json
 ```
 
 **Expected Result**:
 Message box showing:
 ```
-Vertex shader not found: shaders/cube.vert.spv
+Vertex shader not found: shaders/cube.vert
 
 Shader key: default
 
@@ -226,4 +226,3 @@ Application runs normally. If any errors occur during initialization, they will 
 ## Conclusion
 
 The application now provides comprehensive error feedback instead of failing silently with a "see-through window". Every potential failure point has been wrapped with validation and clear error messages, making it much easier to diagnose and fix issues.
-
