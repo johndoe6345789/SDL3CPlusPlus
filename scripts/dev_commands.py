@@ -386,10 +386,11 @@ def gui(args: argparse.Namespace) -> None:
         from PyQt6.QtWidgets import (
             QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
             QPushButton, QLabel, QTextEdit, QComboBox, QListWidget, QListWidgetItem,
-            QSplitter, QMenuBar, QDialog, QDialogButtonBox, QFormLayout, QMessageBox
+            QSplitter, QMenuBar, QDialog, QDialogButtonBox, QFormLayout, QMessageBox,
+            QPlainTextEdit, QTabWidget
         )
         from PyQt6.QtCore import Qt, QProcess, QSize
-        from PyQt6.QtGui import QFont, QPalette, QColor, QAction
+        from PyQt6.QtGui import QFont, QPalette, QColor, QAction, QSyntaxHighlighter, QTextCharFormat
     except ImportError:
         raise SystemExit(
             "PyQt6 is not installed. Install it with:\n"
@@ -397,6 +398,74 @@ def gui(args: argparse.Namespace) -> None:
         )
 
     import sys
+    import re
+
+    class LuaSyntaxHighlighter(QSyntaxHighlighter):
+        """Simple Lua syntax highlighter"""
+        def __init__(self, parent=None):
+            super().__init__(parent)
+
+            # Define colors
+            keyword_color = QColor("#569cd6")  # Blue
+            string_color = QColor("#ce9178")   # Orange
+            comment_color = QColor("#6a9955")  # Green
+            function_color = QColor("#dcdcaa")  # Yellow
+            number_color = QColor("#b5cea8")   # Light green
+
+            # Define formatting
+            self.keyword_format = QTextCharFormat()
+            self.keyword_format.setForeground(keyword_color)
+            self.keyword_format.setFontWeight(700)
+
+            self.string_format = QTextCharFormat()
+            self.string_format.setForeground(string_color)
+
+            self.comment_format = QTextCharFormat()
+            self.comment_format.setForeground(comment_color)
+            self.comment_format.setFontItalic(True)
+
+            self.function_format = QTextCharFormat()
+            self.function_format.setForeground(function_color)
+
+            self.number_format = QTextCharFormat()
+            self.number_format.setForeground(number_color)
+
+            # Lua keywords
+            keywords = [
+                'and', 'break', 'do', 'else', 'elseif', 'end', 'false', 'for',
+                'function', 'if', 'in', 'local', 'nil', 'not', 'or', 'repeat',
+                'return', 'then', 'true', 'until', 'while'
+            ]
+
+            # Build highlighting rules
+            self.rules = []
+
+            # Keywords
+            for word in keywords:
+                pattern = f'\\b{word}\\b'
+                self.rules.append((re.compile(pattern), self.keyword_format))
+
+            # Numbers
+            self.rules.append((re.compile(r'\b\d+\.?\d*\b'), self.number_format))
+
+            # Functions
+            self.rules.append((re.compile(r'\b[A-Za-z_][A-Za-z0-9_]*(?=\s*\()'), self.function_format))
+
+            # Strings (double quotes)
+            self.rules.append((re.compile(r'"[^"\\]*(\\.[^"\\]*)*"'), self.string_format))
+
+            # Strings (single quotes)
+            self.rules.append((re.compile(r"'[^'\\]*(\\.[^'\\]*)*'"), self.string_format))
+
+            # Comments
+            self.rules.append((re.compile(r'--[^\n]*'), self.comment_format))
+
+        def highlightBlock(self, text):
+            """Apply syntax highlighting to the given block of text"""
+            for pattern, fmt in self.rules:
+                for match in pattern.finditer(text):
+                    start, end = match.span()
+                    self.setFormat(start, end - start, fmt)
 
     class BuildSettingsDialog(QDialog):
         """Dialog for configuring build settings"""
@@ -655,9 +724,113 @@ def gui(args: argparse.Namespace) -> None:
 
             right_layout.addWidget(detail_header)
 
-            # Console output
+            # Tabbed interface for code editor and console
+            self.tab_widget = QTabWidget()
+            self.tab_widget.setStyleSheet("""
+                QTabWidget::pane {
+                    background-color: #1b2838;
+                    border: none;
+                }
+                QTabBar::tab {
+                    background-color: #1b2838;
+                    color: #8f98a0;
+                    padding: 8px 16px;
+                    border: none;
+                    margin-right: 2px;
+                }
+                QTabBar::tab:selected {
+                    background-color: #2a475e;
+                    color: #c6d1db;
+                }
+                QTabBar::tab:hover {
+                    background-color: #243447;
+                }
+            """)
+
+            # Lua Code Editor Tab
+            editor_container = QWidget()
+            editor_layout = QVBoxLayout(editor_container)
+            editor_layout.setContentsMargins(10, 10, 10, 10)
+
+            # Editor toolbar
+            editor_toolbar = QHBoxLayout()
+            self.lua_file_label = QLabel("No file loaded")
+            self.lua_file_label.setStyleSheet("color: #8f98a0; font-size: 9pt;")
+            editor_toolbar.addWidget(self.lua_file_label)
+
+            editor_toolbar.addStretch()
+
+            self.save_lua_btn = QPushButton("💾 Save")
+            self.save_lua_btn.setEnabled(False)
+            self.save_lua_btn.setStyleSheet("""
+                QPushButton {
+                    background-color: #2a475e;
+                    color: #c6d1db;
+                    border: none;
+                    border-radius: 3px;
+                    padding: 5px 15px;
+                }
+                QPushButton:hover {
+                    background-color: #3e5c78;
+                }
+                QPushButton:disabled {
+                    background-color: #1b2838;
+                    color: #4e5a66;
+                }
+            """)
+            self.save_lua_btn.clicked.connect(self.save_lua_script)
+            editor_toolbar.addWidget(self.save_lua_btn)
+
+            self.reload_lua_btn = QPushButton("🔄 Reload")
+            self.reload_lua_btn.setEnabled(False)
+            self.reload_lua_btn.setStyleSheet("""
+                QPushButton {
+                    background-color: #2a475e;
+                    color: #c6d1db;
+                    border: none;
+                    border-radius: 3px;
+                    padding: 5px 15px;
+                }
+                QPushButton:hover {
+                    background-color: #3e5c78;
+                }
+                QPushButton:disabled {
+                    background-color: #1b2838;
+                    color: #4e5a66;
+                }
+            """)
+            self.reload_lua_btn.clicked.connect(self.reload_lua_script)
+            editor_toolbar.addWidget(self.reload_lua_btn)
+
+            editor_layout.addLayout(editor_toolbar)
+
+            # Code editor
+            self.lua_editor = QPlainTextEdit()
+            self.lua_editor.setPlaceholderText("Select a game to edit its Lua script...")
+            editor_font = QFont("Courier New")
+            editor_font.setPointSize(10)
+            self.lua_editor.setFont(editor_font)
+            self.lua_editor.setStyleSheet("""
+                QPlainTextEdit {
+                    background-color: #1e1e1e;
+                    color: #d4d4d4;
+                    border: 1px solid #0e1216;
+                    border-radius: 3px;
+                    padding: 5px;
+                }
+            """)
+            self.lua_editor.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
+            self.lua_editor.textChanged.connect(self.on_lua_text_changed)
+
+            # Apply syntax highlighting
+            self.lua_highlighter = LuaSyntaxHighlighter(self.lua_editor.document())
+
+            editor_layout.addWidget(self.lua_editor)
+
+            self.tab_widget.addTab(editor_container, "Lua Script Editor")
+
+            # Console Output Tab
             console_container = QWidget()
-            console_container.setStyleSheet("background-color: #1b2838;")
             console_layout = QVBoxLayout(console_container)
             console_layout.setContentsMargins(10, 10, 10, 10)
 
@@ -667,7 +840,6 @@ def gui(args: argparse.Namespace) -> None:
 
             self.console = QTextEdit()
             self.console.setReadOnly(True)
-            self.console.setMinimumHeight(250)
             console_font = QFont("Courier New")
             console_font.setPointSize(9)
             self.console.setFont(console_font)
@@ -681,7 +853,9 @@ def gui(args: argparse.Namespace) -> None:
             """)
             console_layout.addWidget(self.console)
 
-            right_layout.addWidget(console_container)
+            self.tab_widget.addTab(console_container, "Console Output")
+
+            right_layout.addWidget(self.tab_widget)
 
             main_layout.addWidget(right_panel, 1)
 
@@ -767,11 +941,107 @@ def gui(args: argparse.Namespace) -> None:
                 self.game_title.setText(game["name"])
                 self.game_description.setText(game["description"])
                 self.play_btn.setEnabled(True)
+
+                # Load the Lua script for this game
+                self.load_lua_script()
             else:
                 self.current_game = None
                 self.game_title.setText("Select a game")
                 self.game_description.setText("")
                 self.play_btn.setEnabled(False)
+                self.lua_editor.clear()
+                self.lua_file_label.setText("No file loaded")
+                self.save_lua_btn.setEnabled(False)
+                self.reload_lua_btn.setEnabled(False)
+
+        def load_lua_script(self):
+            """Load the Lua script associated with the current game"""
+            if not self.current_game:
+                return
+
+            import json
+
+            try:
+                # Read the config file to get the lua_script path
+                config_file = self.current_game.get("config_file", "")
+                with open(config_file, 'r') as f:
+                    config_data = json.load(f)
+
+                lua_script_path = config_data.get("lua_script", "")
+                if not lua_script_path:
+                    self.lua_editor.setPlainText("# No Lua script specified in config")
+                    self.lua_file_label.setText("No Lua script found")
+                    self.save_lua_btn.setEnabled(False)
+                    self.reload_lua_btn.setEnabled(False)
+                    return
+
+                # Load the Lua script
+                lua_file = Path(lua_script_path)
+                if lua_file.exists():
+                    with open(lua_file, 'r') as f:
+                        content = f.read()
+
+                    # Block signals to prevent marking as modified
+                    self.lua_editor.blockSignals(True)
+                    self.lua_editor.setPlainText(content)
+                    self.lua_editor.blockSignals(False)
+
+                    self.lua_file_label.setText(str(lua_file))
+                    self.current_lua_file = lua_file
+                    self.lua_modified = False
+                    self.save_lua_btn.setEnabled(False)
+                    self.reload_lua_btn.setEnabled(True)
+                else:
+                    self.lua_editor.setPlainText(f"# Lua script not found: {lua_script_path}")
+                    self.lua_file_label.setText(f"File not found: {lua_script_path}")
+                    self.save_lua_btn.setEnabled(False)
+                    self.reload_lua_btn.setEnabled(False)
+            except Exception as e:
+                self.lua_editor.setPlainText(f"# Error loading Lua script: {e}")
+                self.lua_file_label.setText("Error loading script")
+                self.save_lua_btn.setEnabled(False)
+                self.reload_lua_btn.setEnabled(False)
+
+        def on_lua_text_changed(self):
+            """Handle Lua editor text changes"""
+            if hasattr(self, 'current_lua_file'):
+                self.lua_modified = True
+                self.save_lua_btn.setEnabled(True)
+
+        def save_lua_script(self):
+            """Save the current Lua script"""
+            if not hasattr(self, 'current_lua_file'):
+                return
+
+            try:
+                with open(self.current_lua_file, 'w') as f:
+                    f.write(self.lua_editor.toPlainText())
+
+                self.lua_modified = False
+                self.save_lua_btn.setEnabled(False)
+                self.log(f"✓ Saved {self.current_lua_file}")
+
+                # Switch to console tab to show the message
+                self.tab_widget.setCurrentIndex(1)
+            except Exception as e:
+                self.log(f"❌ Error saving {self.current_lua_file}: {e}")
+                self.tab_widget.setCurrentIndex(1)
+
+        def reload_lua_script(self):
+            """Reload the Lua script from disk"""
+            if self.lua_modified:
+                # Warn user about unsaved changes
+                from PyQt6.QtWidgets import QMessageBox
+                reply = QMessageBox.question(
+                    self, 'Unsaved Changes',
+                    'You have unsaved changes. Reload anyway?',
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                    QMessageBox.StandardButton.No
+                )
+                if reply == QMessageBox.StandardButton.No:
+                    return
+
+            self.load_lua_script()
 
         def play_game(self):
             """Launch the selected game"""
