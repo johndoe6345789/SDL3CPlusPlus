@@ -324,6 +324,7 @@ def _sync_assets(build_dir: str, dry_run: bool) -> None:
         ("scripts", ["*.lua"]),
         ("shaders", ["*.spv"]),
         ("scripts/models", ["*.stl", "*.obj", "*.fbx"]),
+        ("config", ["*.json"]),
     ]
 
     print("\n=== Syncing Assets ===")
@@ -369,7 +370,7 @@ def run_demo(args: argparse.Namespace) -> None:
 
     exe_name = args.target or ("sdl3_app.exe" if IS_WINDOWS else "sdl3_app")
     binary = str(Path(build_dir) / exe_name)
-    cmd: list[str] = [binary]
+    cmd: list[str] = [binary, "-j", "config/seed_runtime.json"]
     run_args = _strip_leading_double_dash(args.args)
     if run_args:
         cmd.extend(run_args)

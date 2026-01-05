@@ -263,9 +263,34 @@ void SdlWindowService::PollEvents() {
     logger_->Trace("SdlWindowService", "PollEvents");
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
-        // Convert SDL event to application event and publish
-        PublishEvent(event);
-        HandleMouseGrabEvent(event);
+        // Check if this event should trigger mouse grab
+        bool isGrabTrigger = false;
+        if (window_ && mouseGrabConfig_.enabled && mouseGrabConfig_.grabOnClick &&
+            event.type == SDL_EVENT_MOUSE_BUTTON_DOWN &&
+            event.button.button == grabMouseButton_) {
+            isGrabTrigger = true;
+            if (logger_) {
+                logger_->Info("SdlWindowService: Mouse grab triggered by click (button=" +
+                             std::to_string(event.button.button) + ")");
+            }
+            ApplyMouseGrab(true);
+        }
+
+        // Handle release separately (doesn't suppress event)
+        if (window_ && mouseGrabConfig_.enabled && mouseGrabConfig_.releaseOnEscape &&
+            event.type == SDL_EVENT_KEY_DOWN &&
+            event.key.key == releaseKey_ &&
+            !event.key.repeat) {
+            if (logger_) {
+                logger_->Info("SdlWindowService: Mouse grab released by escape key");
+            }
+            ApplyMouseGrab(false);
+        }
+
+        // Only publish event if it's not the grab-triggering click
+        if (!isGrabTrigger) {
+            PublishEvent(event);
+        }
 
         // Check for quit event
         if (event.type == SDL_EVENT_QUIT || event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED) {
@@ -307,9 +332,11 @@ void SdlWindowService::ConfigureMouseGrabBindings() {
     }
 
     if (logger_) {
-        logger_->Trace("SdlWindowService", "ConfigureMouseGrabBindings",
-                       "grabMouseButton=" + std::to_string(static_cast<int>(grabMouseButton_)) +
-                       ", releaseKey=" + std::to_string(static_cast<int>(releaseKey_)));
+        logger_->Info("SdlWindowService: Mouse grab config: enabled=" +
+                     std::string(mouseGrabConfig_.enabled ? "true" : "false") +
+                     ", grabOnClick=" + std::string(mouseGrabConfig_.grabOnClick ? "true" : "false") +
+                     ", grabMouseButton=" + std::to_string(static_cast<int>(grabMouseButton_)) +
+                     ", releaseKey=" + std::to_string(static_cast<int>(releaseKey_)));
     }
 }
 

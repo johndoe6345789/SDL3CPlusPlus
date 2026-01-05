@@ -574,8 +574,8 @@ local function create_room_objects()
             {room.wall_thickness, room.wall_height, room.half_size}, green_wall),
     }
 
-    -- Add lanterns in the four corners
-    local lantern_offset = 4.0
+    -- Add lanterns in the four corners (adjusted for bigger room)
+    local lantern_offset = room.half_size - 2.0  -- 2 units from wall
     objects[#objects + 1] = create_lantern(lantern_offset, lantern_offset)
     objects[#objects + 1] = create_lantern(-lantern_offset, lantern_offset)
     objects[#objects + 1] = create_lantern(lantern_offset, -lantern_offset)
