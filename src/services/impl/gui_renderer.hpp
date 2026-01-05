@@ -10,6 +10,7 @@
 
 #include "services/interfaces/gui_types.hpp"
 #include "services/interfaces/i_buffer_service.hpp"
+#include "services/interfaces/i_logger.hpp"
 
 namespace sdl3cpp::services::impl {
 
@@ -35,7 +36,7 @@ class GuiRenderer {
 public:
     GuiRenderer(VkDevice device, VkPhysicalDevice physicalDevice, VkFormat swapchainFormat,
                 VkRenderPass renderPass, const std::filesystem::path& scriptDirectory,
-                std::shared_ptr<IBufferService> bufferService);
+                std::shared_ptr<IBufferService> bufferService, std::shared_ptr<ILogger> logger);
     ~GuiRenderer();
 
     GuiRenderer(const GuiRenderer&) = delete;
@@ -83,6 +84,7 @@ private:
     uint32_t viewportHeight_ = 0;
     std::unordered_map<std::string, ParsedSvg> svgCache_;
     std::shared_ptr<IBufferService> bufferService_;
+    std::shared_ptr<ILogger> logger_;
 };
 
 } // namespace sdl3cpp::services::impl

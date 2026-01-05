@@ -8,6 +8,7 @@
 #include <cstring>
 #include <fstream>
 #include <iterator>
+#include <shaderc/shaderc.hpp>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -227,15 +228,118 @@ std::vector<ClipPoint> ClipPolygonToRect(const std::vector<ClipPoint>& polygon,
     return output;
 }
 
-std::vector<uint8_t> ReadFile(const std::filesystem::path& path) {
+bool IsSpirvPath(const std::filesystem::path& path) {
+    return path.extension() == ".spv";
+}
+
+shaderc_shader_kind ShadercKindFromStage(VkShaderStageFlagBits stage) {
+    switch (stage) {
+        case VK_SHADER_STAGE_VERTEX_BIT:
+            return shaderc_vertex_shader;
+        case VK_SHADER_STAGE_FRAGMENT_BIT:
+            return shaderc_fragment_shader;
+        case VK_SHADER_STAGE_GEOMETRY_BIT:
+            return shaderc_geometry_shader;
+        case VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT:
+            return shaderc_tess_control_shader;
+        case VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT:
+            return shaderc_tess_evaluation_shader;
+        case VK_SHADER_STAGE_COMPUTE_BIT:
+            return shaderc_compute_shader;
+        default:
+            return shaderc_glsl_infer_from_source;
+    }
+}
+
+std::vector<uint8_t> ReadBinaryFile(const std::filesystem::path& path) {
     std::ifstream file(path, std::ios::binary | std::ios::ate);
     if (!file) {
         throw std::runtime_error("Failed to read file: " + path.string());
     }
-    size_t fileSize = file.tellg();
+    size_t fileSize = static_cast<size_t>(file.tellg());
     std::vector<uint8_t> buffer(fileSize);
     file.seekg(0);
-    file.read(reinterpret_cast<char*>(buffer.data()), fileSize);
+    file.read(reinterpret_cast<char*>(buffer.data()), static_cast<std::streamsize>(fileSize));
+    return buffer;
+}
+
+std::vector<uint8_t> ReadShaderFile(const std::filesystem::path& path,
+                                    VkShaderStageFlagBits stage,
+                                    ILogger* logger) {
+    if (logger) {
+        logger->Trace("GuiRenderer", "ReadShaderFile",
+                      "path=" + path.string() + ", stage=" +
+                      std::to_string(static_cast<int>(stage)));
+    }
+
+    if (path.empty()) {
+        throw std::runtime_error("Shader path is empty");
+    }
+
+    std::filesystem::path shaderPath = path;
+    if (!std::filesystem::exists(shaderPath) && IsSpirvPath(shaderPath)) {
+        std::filesystem::path sourcePath = shaderPath;
+        sourcePath.replace_extension();
+        if (std::filesystem::exists(sourcePath)) {
+            if (logger) {
+                logger->Trace("GuiRenderer", "ReadShaderFile",
+                              "usingSource=" + sourcePath.string());
+            }
+            shaderPath = sourcePath;
+        }
+    }
+
+    if (!std::filesystem::exists(shaderPath)) {
+        throw std::runtime_error("Shader file not found: " + shaderPath.string() +
+            "\n\nPlease ensure the source (.vert/.frag/etc.) or compiled .spv exists.");
+    }
+
+    if (!std::filesystem::is_regular_file(shaderPath)) {
+        throw std::runtime_error("Path is not a regular file: " + shaderPath.string());
+    }
+
+    if (IsSpirvPath(shaderPath)) {
+        auto buffer = ReadBinaryFile(shaderPath);
+        if (logger) {
+            logger->Trace("GuiRenderer", "ReadShaderFile",
+                          "loadedSpirvBytes=" + std::to_string(buffer.size()));
+        }
+        return buffer;
+    }
+
+    std::ifstream sourceFile(shaderPath);
+    if (!sourceFile) {
+        throw std::runtime_error("Failed to open shader source: " + shaderPath.string());
+    }
+    std::string source((std::istreambuf_iterator<char>(sourceFile)),
+                       std::istreambuf_iterator<char>());
+    sourceFile.close();
+
+    shaderc::Compiler compiler;
+    shaderc::CompileOptions options;
+    options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
+
+    shaderc_shader_kind kind = ShadercKindFromStage(stage);
+    auto result = compiler.CompileGlslToSpv(source, kind, shaderPath.string().c_str(), options);
+    if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
+        std::string error = result.GetErrorMessage();
+        if (logger) {
+            logger->Error("GuiRenderer shader compilation failed: " + shaderPath.string() +
+                          "\n" + error);
+        }
+        throw std::runtime_error("Shader compilation failed: " + shaderPath.string() +
+            "\n" + error);
+    }
+
+    std::vector<uint32_t> spirv(result.cbegin(), result.cend());
+    std::vector<uint8_t> buffer(spirv.size() * sizeof(uint32_t));
+    if (!buffer.empty()) {
+        std::memcpy(buffer.data(), spirv.data(), buffer.size());
+    }
+    if (logger) {
+        logger->Trace("GuiRenderer", "ReadShaderFile",
+                      "compiledBytes=" + std::to_string(buffer.size()));
+    }
     return buffer;
 }
 
@@ -243,13 +347,15 @@ std::vector<uint8_t> ReadFile(const std::filesystem::path& path) {
 
 GuiRenderer::GuiRenderer(VkDevice device, VkPhysicalDevice physicalDevice, VkFormat swapchainFormat,
                          VkRenderPass renderPass, const std::filesystem::path& scriptDirectory,
-                         std::shared_ptr<IBufferService> bufferService)
+                         std::shared_ptr<IBufferService> bufferService,
+                         std::shared_ptr<ILogger> logger)
     : device_(device),
       physicalDevice_(physicalDevice),
       swapchainFormat_(swapchainFormat),
       renderPass_(renderPass),
       scriptDirectory_(scriptDirectory),
-      bufferService_(std::move(bufferService)) {
+      bufferService_(std::move(bufferService)),
+      logger_(std::move(logger)) {
 }
 
 GuiRenderer::~GuiRenderer() {
@@ -563,8 +669,20 @@ void GuiRenderer::GenerateGuiGeometry(const std::vector<GuiCommand>& commands, u
 
 void GuiRenderer::CreatePipeline(VkRenderPass renderPass, VkExtent2D extent) {
     // Load shader modules
-    auto vertShaderCode = ReadFile(scriptDirectory_.parent_path() / "shaders" / "gui_2d.vert.spv");
-    auto fragShaderCode = ReadFile(scriptDirectory_.parent_path() / "shaders" / "gui_2d.frag.spv");
+    const std::filesystem::path vertexShaderPath =
+        scriptDirectory_.parent_path() / "shaders" / "gui_2d.vert.spv";
+    const std::filesystem::path fragmentShaderPath =
+        scriptDirectory_.parent_path() / "shaders" / "gui_2d.frag.spv";
+    if (logger_) {
+        logger_->Trace("GuiRenderer", "CreatePipeline",
+                       "renderPassIsNull=" + std::string(renderPass == VK_NULL_HANDLE ? "true" : "false") +
+                       ", extent=" + std::to_string(extent.width) + "x" + std::to_string(extent.height) +
+                       ", vertexShader=" + vertexShaderPath.string() +
+                       ", fragmentShader=" + fragmentShaderPath.string());
+    }
+
+    auto vertShaderCode = ReadShaderFile(vertexShaderPath, VK_SHADER_STAGE_VERTEX_BIT, logger_.get());
+    auto fragShaderCode = ReadShaderFile(fragmentShaderPath, VK_SHADER_STAGE_FRAGMENT_BIT, logger_.get());
 
     VkShaderModuleCreateInfo vertModuleInfo{};
     vertModuleInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;

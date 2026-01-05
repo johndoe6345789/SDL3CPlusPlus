@@ -29,7 +29,7 @@ void GuiRendererService::Initialize(VkDevice device,
                        ", resourcePath=" + resourcePath.string());
     }
     renderer_ = std::make_unique<GuiRenderer>(
-        device, physicalDevice, format, renderPass, resourcePath, bufferService_);
+        device, physicalDevice, format, renderPass, resourcePath, bufferService_, logger_);
 }
 
 void GuiRendererService::PrepareFrame(const std::vector<GuiCommand>& commands,
