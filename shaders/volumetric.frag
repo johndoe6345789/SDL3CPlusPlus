@@ -9,9 +9,24 @@ layout(set = 0, binding = 0) uniform sampler2D sceneColor;
 layout(set = 0, binding = 1) uniform sampler2D depthBuffer;
 
 layout(push_constant) uniform PushConstants {
-    vec2 lightScreenPos;
+    mat4 model;
+    mat4 viewProj;
+    // Extended fields for PBR/atmospherics
+    mat4 view;
+    mat4 proj;
+    mat4 lightViewProj;
+    vec3 cameraPos;
     float time;
-    float intensity;
+    // Atmospherics parameters
+    float ambientStrength;
+    float fogDensity;
+    float fogStart;
+    float fogEnd;
+    vec3 fogColor;
+    float gamma;
+    float exposure;
+    int enableShadows;
+    int enableFog;
 } pc;
 
 const int NUM_SAMPLES = 100;
@@ -21,13 +36,14 @@ const float EXPOSURE = 0.2;
 
 void main() {
     vec2 texCoord = inTexCoord;
-    vec2 deltaTexCoord = (texCoord - pc.lightScreenPos);
+    vec2 lightScreenPos = vec2(0.5, 0.5);  // Dummy light position
+    vec2 deltaTexCoord = (texCoord - lightScreenPos);
     deltaTexCoord *= 1.0 / float(NUM_SAMPLES) * 0.5;  // Scale for effect
 
     vec3 color = texture(sceneColor, texCoord).rgb;
 
     // Only apply god rays if we're looking towards the light
-    float centerDistance = length(pc.lightScreenPos - vec2(0.5, 0.5));
+    float centerDistance = length(lightScreenPos - vec2(0.5, 0.5));
     if (centerDistance < 0.8) {  // Light is visible on screen
         vec3 godRayColor = vec3(0.0);
         float weight = WEIGHT_BASE;
@@ -39,7 +55,7 @@ void main() {
             weight *= DECAY_BASE;
         }
 
-        color += godRayColor * EXPOSURE * pc.intensity;
+        color += godRayColor * EXPOSURE * 1.0;  // Dummy intensity
     }
 
     outColor = vec4(color, 1.0);

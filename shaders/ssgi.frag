@@ -10,10 +10,24 @@ layout(set = 0, binding = 1) uniform sampler2D normalBuffer;
 layout(set = 0, binding = 2) uniform sampler2D depthBuffer;
 
 layout(push_constant) uniform PushConstants {
-    mat4 invProj;
-    mat4 invView;
+    mat4 model;
+    mat4 viewProj;
+    // Extended fields for PBR/atmospherics
+    mat4 view;
+    mat4 proj;
+    mat4 lightViewProj;
     vec3 cameraPos;
-    float intensity;
+    float time;
+    // Atmospherics parameters
+    float ambientStrength;
+    float fogDensity;
+    float fogStart;
+    float fogEnd;
+    vec3 fogColor;
+    float gamma;
+    float exposure;
+    int enableShadows;
+    int enableFog;
 } pc;
 
 const int NUM_SAMPLES = 16;
@@ -22,9 +36,9 @@ const float SAMPLE_RADIUS = 0.5;
 // Reconstruct world position from depth
 vec3 worldPosFromDepth(float depth, vec2 texCoord) {
     vec4 clipSpace = vec4(texCoord * 2.0 - 1.0, depth, 1.0);
-    vec4 viewSpace = pc.invProj * clipSpace;
+    vec4 viewSpace = pc.proj * clipSpace;  // Use proj as invProj for now (dummy)
     viewSpace /= viewSpace.w;
-    vec4 worldSpace = pc.invView * viewSpace;
+    vec4 worldSpace = pc.view * viewSpace;  // Use view as invView for now (dummy)
     return worldSpace.xyz;
 }
 

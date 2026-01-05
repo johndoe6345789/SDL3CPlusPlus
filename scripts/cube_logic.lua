@@ -208,6 +208,10 @@ local shader_variants = {
         vertex = "shaders/solid.vert.spv",
         fragment = "shaders/solid.frag.spv",
     },
+    pbr = {
+        vertex = "shaders/pbr.vert.spv",
+        fragment = "shaders/pbr.frag.spv",
+    },
 }
 
 local camera = {

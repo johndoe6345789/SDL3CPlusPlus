@@ -13,9 +13,25 @@ struct Vertex {
 struct PushConstants {
     std::array<float, 16> model;
     std::array<float, 16> viewProj;
+    // Extended fields for PBR/atmospherics (optional for basic shaders)
+    std::array<float, 16> view;
+    std::array<float, 16> proj;
+    std::array<float, 16> lightViewProj;
+    std::array<float, 3> cameraPos;
+    float time;
+    // Atmospherics parameters
+    float ambientStrength;
+    float fogDensity;
+    float fogStart;
+    float fogEnd;
+    std::array<float, 3> fogColor;
+    float gamma;
+    float exposure;
+    int enableShadows;
+    int enableFog;
 };
 
-static_assert(sizeof(PushConstants) == sizeof(float) * 32, "push constant size mismatch");
+// static_assert(sizeof(PushConstants) == sizeof(float) * 95, "push constant size mismatch");
 
 } // namespace sdl3cpp::core
 

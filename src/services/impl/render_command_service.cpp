@@ -9,11 +9,13 @@ RenderCommandService::RenderCommandService(std::shared_ptr<IVulkanDeviceService>
                                            std::shared_ptr<ISwapchainService> swapchainService,
                                            std::shared_ptr<IPipelineService> pipelineService,
                                            std::shared_ptr<IBufferService> bufferService,
+                                           std::shared_ptr<IConfigService> configService,
                                            std::shared_ptr<ILogger> logger)
     : deviceService_(std::move(deviceService)),
       swapchainService_(std::move(swapchainService)),
       pipelineService_(std::move(pipelineService)),
       bufferService_(std::move(bufferService)),
+      configService_(std::move(configService)),
       logger_(logger) {
     if (logger_) {
         logger_->Trace("RenderCommandService", "RenderCommandService",
@@ -168,6 +170,37 @@ void RenderCommandService::RecordCommands(uint32_t imageIndex,
                 core::PushConstants pushConstants{};
                 pushConstants.model = command.modelMatrix;
                 pushConstants.viewProj = viewProj;
+                
+                // For PBR shaders, populate extended push constants
+                if (command.shaderKey.find("pbr") != std::string::npos) {
+                    // Get atmospherics config
+                    auto config = configService_->GetConfig();
+                    
+                    // For now, use identity for view and proj (since viewProj is already combined)
+                    // In a full implementation, we'd need separate view/proj matrices
+                    pushConstants.view = {1.0f, 0.0f, 0.0f, 0.0f,
+                                         0.0f, 1.0f, 0.0f, 0.0f,
+                                         0.0f, 0.0f, 1.0f, 0.0f,
+                                         0.0f, 0.0f, 0.0f, 1.0f};
+                    pushConstants.proj = pushConstants.view; // Identity for now
+                    pushConstants.lightViewProj = pushConstants.view; // Identity for now
+                    
+                    // Camera position (0,0,0) for now - would need to be passed from scene
+                    pushConstants.cameraPos = {0.0f, 0.0f, 0.0f};
+                    pushConstants.time = 0.0f; // Would need actual time
+                    
+                    // Atmospherics
+                    pushConstants.ambientStrength = config.atmospherics.ambientStrength;
+                    pushConstants.fogDensity = config.atmospherics.fogDensity;
+                    pushConstants.fogStart = 0.0f;
+                    pushConstants.fogEnd = 100.0f;
+                    pushConstants.fogColor = config.atmospherics.fogColor;
+                    pushConstants.gamma = config.atmospherics.gamma;
+                    pushConstants.exposure = 1.0f;
+                    pushConstants.enableShadows = config.atmospherics.enableShadows ? 1 : 0;
+                    pushConstants.enableFog = 1; // Enable fog for PBR
+                }
+                
                 vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0,
                                    sizeof(core::PushConstants), &pushConstants);
 

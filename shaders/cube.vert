@@ -9,6 +9,22 @@ layout(location = 1) out vec3 fragWorldPos;
 layout(push_constant) uniform PushConstants {
     mat4 model;
     mat4 viewProj;
+    // Extended fields for PBR/atmospherics (ignored by basic shaders)
+    mat4 view;
+    mat4 proj;
+    mat4 lightViewProj;
+    vec3 cameraPos;
+    float time;
+    // Atmospherics parameters
+    float ambientStrength;
+    float fogDensity;
+    float fogStart;
+    float fogEnd;
+    vec3 fogColor;
+    float gamma;
+    float exposure;
+    int enableShadows;
+    int enableFog;
 } pushConstants;
 
 void main() {

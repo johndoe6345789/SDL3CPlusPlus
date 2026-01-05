@@ -293,6 +293,62 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger, c
         }
     }
 
+    if (document.HasMember("atmospherics")) {
+        const auto& atmosphericsValue = document["atmospherics"];
+        if (!atmosphericsValue.IsObject()) {
+            throw std::runtime_error("JSON member 'atmospherics' must be an object");
+        }
+        
+        auto readFloat = [&](const char* name, float& target) {
+            if (!atmosphericsValue.HasMember(name)) {
+                return;
+            }
+            const auto& value = atmosphericsValue[name];
+            if (!value.IsNumber()) {
+                throw std::runtime_error("JSON member 'atmospherics." + std::string(name) + "' must be a number");
+            }
+            target = static_cast<float>(value.GetDouble());
+        };
+        
+        auto readBool = [&](const char* name, bool& target) {
+            if (!atmosphericsValue.HasMember(name)) {
+                return;
+            }
+            const auto& value = atmosphericsValue[name];
+            if (!value.IsBool()) {
+                throw std::runtime_error("JSON member 'atmospherics." + std::string(name) + "' must be a boolean");
+            }
+            target = value.GetBool();
+        };
+        
+        auto readFloatArray3 = [&](const char* name, std::array<float, 3>& target) {
+            if (!atmosphericsValue.HasMember(name)) {
+                return;
+            }
+            const auto& value = atmosphericsValue[name];
+            if (!value.IsArray() || value.Size() != 3) {
+                throw std::runtime_error("JSON member 'atmospherics." + std::string(name) + "' must be an array of 3 numbers");
+            }
+            for (rapidjson::SizeType i = 0; i < 3; ++i) {
+                if (!value[i].IsNumber()) {
+                    throw std::runtime_error("JSON member 'atmospherics." + std::string(name) + "[" + std::to_string(i) + "]' must be a number");
+                }
+                target[i] = static_cast<float>(value[i].GetDouble());
+            }
+        };
+        
+        readFloat("ambient_strength", config.atmospherics.ambientStrength);
+        readFloat("fog_density", config.atmospherics.fogDensity);
+        readFloatArray3("fog_color", config.atmospherics.fogColor);
+        readFloat("gamma", config.atmospherics.gamma);
+        readBool("enable_tone_mapping", config.atmospherics.enableToneMapping);
+        readBool("enable_shadows", config.atmospherics.enableShadows);
+        readBool("enable_ssgi", config.atmospherics.enableSSGI);
+        readBool("enable_volumetric_lighting", config.atmospherics.enableVolumetricLighting);
+        readFloat("pbr_roughness", config.atmospherics.pbrRoughness);
+        readFloat("pbr_metallic", config.atmospherics.pbrMetallic);
+    }
+
     return config;
 }
 

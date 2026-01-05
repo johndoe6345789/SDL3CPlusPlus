@@ -15,10 +15,20 @@ layout(push_constant) uniform PushConstants {
     mat4 lightViewProj;
     vec3 cameraPos;
     float time;
+    // Atmospherics parameters
+    float ambientStrength;
+    float fogDensity;
+    float fogStart;
+    float fogEnd;
+    vec3 fogColor;
+    float gamma;
+    float exposure;
+    int enableShadows;
+    int enableFog;
 } pc;
 
 // Lighting uniforms
-layout(set = 0, binding = 0) uniform sampler2D shadowMap;
+// layout(set = 0, binding = 0) uniform sampler2D shadowMap;
 
 // Material parameters (can be extended to use textures)
 const vec3 MATERIAL_ALBEDO = vec3(0.8, 0.8, 0.8);
@@ -26,9 +36,9 @@ const float MATERIAL_ROUGHNESS = 0.3;
 const float MATERIAL_METALLIC = 0.1;
 
 // Atmospheric parameters
-const vec3 FOG_COLOR = vec3(0.05, 0.05, 0.08);
-const float FOG_DENSITY = 0.003;
-const float AMBIENT_STRENGTH = 0.01;  // Much darker ambient
+// const vec3 FOG_COLOR = vec3(0.05, 0.05, 0.08);
+// const float FOG_DENSITY = 0.003;
+// const float AMBIENT_STRENGTH = 0.01;  // Much darker ambient
 
 // Light properties
 const vec3 LIGHT_COLOR = vec3(1.0, 0.9, 0.6);
@@ -82,26 +92,8 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness) {
 }
 
 float calculateShadow(vec3 worldPos) {
-    vec4 lightSpacePos = pc.lightViewProj * vec4(worldPos, 1.0);
-    vec3 projCoords = lightSpacePos.xyz / lightSpacePos.w;
-    projCoords = projCoords * 0.5 + 0.5;
-
-    if (projCoords.z > 1.0) return 0.0;
-
-    float closestDepth = texture(shadowMap, projCoords.xy).r;
-    float currentDepth = projCoords.z;
-
-    float shadow = 0.0;
-    vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
-    for(int x = -1; x <= 1; ++x) {
-        for(int y = -1; y <= 1; ++y) {
-            float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r;
-            shadow += currentDepth - 0.005 > pcfDepth ? 1.0 : 0.0;
-        }
-    }
-    shadow /= 9.0;
-
-    return shadow;
+    // TODO: Implement shadow mapping
+    return 0.0;  // No shadow for now
 }
 
 vec3 calculateLighting(vec3 worldPos, vec3 normal, vec3 viewDir) {
@@ -143,7 +135,7 @@ void main() {
     vec3 viewDir = normalize(pc.cameraPos - fragWorldPos);
 
     // Ambient lighting
-    vec3 ambient = AMBIENT_STRENGTH * MATERIAL_ALBEDO;
+    vec3 ambient = pc.ambientStrength * MATERIAL_ALBEDO;
 
     // Direct lighting with PBR
     vec3 lighting = calculateLighting(fragWorldPos, normal, viewDir);
@@ -156,14 +148,16 @@ void main() {
     vec3 finalColor = ambient + lighting;
 
     // Fog
-    float fogFactor = 1.0 - exp(-FOG_DENSITY * length(pc.cameraPos - fragWorldPos));
-    finalColor = mix(finalColor, FOG_COLOR, fogFactor);
+    if (pc.enableFog != 0) {
+        float fogFactor = 1.0 - exp(-pc.fogDensity * length(pc.cameraPos - fragWorldPos));
+        finalColor = mix(finalColor, pc.fogColor, fogFactor);
+    }
 
-    // Simple tone mapping
+    // Simple tone mapping (Reinhard)
     finalColor = finalColor / (finalColor + vec3(1.0));
 
     // Gamma correction
-    finalColor = pow(finalColor, vec3(1.0 / 2.2));
+    finalColor = pow(finalColor, vec3(1.0 / pc.gamma));
 
     outColor = vec4(finalColor, 1.0);
 }

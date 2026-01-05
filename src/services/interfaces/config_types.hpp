@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <filesystem>
 #include <string>
@@ -63,6 +64,22 @@ struct MouseGrabConfig {
 };
 
 /**
+ * @brief Atmospherics and lighting configuration.
+ */
+struct AtmosphericsConfig {
+    float ambientStrength = 0.01f;
+    float fogDensity = 0.003f;
+    std::array<float, 3> fogColor = {0.05f, 0.05f, 0.08f};
+    float gamma = 2.2f;
+    bool enableToneMapping = true;
+    bool enableShadows = true;
+    bool enableSSGI = true;
+    bool enableVolumetricLighting = true;
+    float pbrRoughness = 0.3f;
+    float pbrMetallic = 0.1f;
+};
+
+/**
  * @brief Runtime configuration values used across services.
  */
 struct RuntimeConfig {
@@ -73,6 +90,7 @@ struct RuntimeConfig {
     std::string windowTitle = "SDL3 Vulkan Demo";
     MouseGrabConfig mouseGrab{};
     InputBindings inputBindings{};
+    AtmosphericsConfig atmospherics{};
 };
 
 }  // namespace sdl3cpp::services
