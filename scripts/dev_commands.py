@@ -385,10 +385,11 @@ def gui(args: argparse.Namespace) -> None:
     try:
         from PyQt6.QtWidgets import (
             QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-            QPushButton, QLabel, QTextEdit, QComboBox, QCheckBox, QSplitter
+            QPushButton, QLabel, QTextEdit, QComboBox, QListWidget, QListWidgetItem,
+            QSplitter, QMenuBar, QDialog, QDialogButtonBox, QFormLayout, QMessageBox
         )
-        from PyQt6.QtCore import Qt, QProcess, pyqtSignal
-        from PyQt6.QtGui import QFont, QPalette, QColor
+        from PyQt6.QtCore import Qt, QProcess, QSize
+        from PyQt6.QtGui import QFont, QPalette, QColor, QAction
     except ImportError:
         raise SystemExit(
             "PyQt6 is not installed. Install it with:\n"
@@ -397,131 +398,357 @@ def gui(args: argparse.Namespace) -> None:
 
     import sys
 
+    class BuildSettingsDialog(QDialog):
+        """Dialog for configuring build settings"""
+        def __init__(self, parent=None):
+            super().__init__(parent)
+            self.setWindowTitle("Build Settings")
+            self.setMinimumWidth(400)
+
+            layout = QFormLayout(self)
+
+            self.generator_combo = QComboBox()
+            self.generator_combo.addItems(["ninja", "ninja-msvc", "vs"])
+            self.generator_combo.setCurrentText(DEFAULT_GENERATOR)
+            layout.addRow("Generator:", self.generator_combo)
+
+            self.build_type_combo = QComboBox()
+            self.build_type_combo.addItems(["Release", "Debug", "RelWithDebInfo"])
+            layout.addRow("Build Type:", self.build_type_combo)
+
+            self.target_combo = QComboBox()
+            self.target_combo.addItems(["sdl3_app", "all"])
+            layout.addRow("Target:", self.target_combo)
+
+            buttons = QDialogButtonBox(
+                QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+            )
+            buttons.accepted.connect(self.accept)
+            buttons.rejected.connect(self.reject)
+            layout.addRow(buttons)
+
     class BuildLauncherGUI(QMainWindow):
         def __init__(self):
             super().__init__()
             self.process = None
+            self.current_game = None
+
+            # Build settings
+            self.generator = DEFAULT_GENERATOR
+            self.build_type = "Release"
+            self.target = "sdl3_app"
+
+            # Define available games/demos
+            self.games = [
+                {
+                    "id": "sdl3_app",
+                    "name": "SDL3 Demo Application",
+                    "description": "Main SDL3 demo application showcasing basic functionality",
+                    "executable": "sdl3_app",
+                },
+                # Add more games/demos here as your project grows
+            ]
+
             self.init_ui()
 
         def init_ui(self):
-            self.setWindowTitle("SDL3 C++ Build Launcher")
-            self.setMinimumSize(900, 600)
+            self.setWindowTitle("SDL3 C++ Launcher")
+            self.setMinimumSize(1000, 700)
 
             # Set dark theme similar to Steam
             self.set_dark_theme()
 
-            # Central widget
+            # Create menu bar
+            self.create_menu_bar()
+
+            # Central widget with horizontal splitter
             central_widget = QWidget()
             self.setCentralWidget(central_widget)
-            main_layout = QVBoxLayout(central_widget)
-            main_layout.setContentsMargins(10, 10, 10, 10)
+            main_layout = QHBoxLayout(central_widget)
+            main_layout.setContentsMargins(0, 0, 0, 0)
+            main_layout.setSpacing(0)
 
-            # Title
-            title = QLabel("SDL3 C++ Project Manager")
+            # Left sidebar - Game library
+            sidebar = QWidget()
+            sidebar.setMaximumWidth(250)
+            sidebar.setStyleSheet("background-color: #171a21;")
+            sidebar_layout = QVBoxLayout(sidebar)
+            sidebar_layout.setContentsMargins(0, 0, 0, 0)
+
+            # Library header
+            library_header = QLabel("LIBRARY")
+            library_header.setStyleSheet("""
+                background-color: #1b2838;
+                color: #c6d1db;
+                padding: 12px;
+                font-weight: bold;
+                font-size: 11pt;
+            """)
+            sidebar_layout.addWidget(library_header)
+
+            # Game list
+            self.game_list = QListWidget()
+            self.game_list.setStyleSheet("""
+                QListWidget {
+                    background-color: #171a21;
+                    border: none;
+                    color: #c6d1db;
+                    font-size: 10pt;
+                    outline: none;
+                }
+                QListWidget::item {
+                    padding: 12px;
+                    border-bottom: 1px solid #0e1216;
+                }
+                QListWidget::item:selected {
+                    background-color: #2a475e;
+                }
+                QListWidget::item:hover {
+                    background-color: #1b2838;
+                }
+            """)
+            self.game_list.currentItemChanged.connect(self.on_game_selected)
+
+            for game in self.games:
+                item = QListWidgetItem(game["name"])
+                item.setData(Qt.ItemDataRole.UserRole, game)
+                self.game_list.addItem(item)
+
+            sidebar_layout.addWidget(self.game_list)
+            main_layout.addWidget(sidebar)
+
+            # Right side - Game details and console
+            right_panel = QWidget()
+            right_layout = QVBoxLayout(right_panel)
+            right_layout.setContentsMargins(0, 0, 0, 0)
+            right_layout.setSpacing(0)
+
+            # Game detail header
+            detail_header = QWidget()
+            detail_header.setStyleSheet("background-color: #1b2838;")
+            detail_header.setMinimumHeight(200)
+            detail_layout = QVBoxLayout(detail_header)
+            detail_layout.setContentsMargins(30, 30, 30, 30)
+
+            # Game title
+            self.game_title = QLabel("Select a game")
             title_font = QFont()
-            title_font.setPointSize(18)
+            title_font.setPointSize(24)
             title_font.setBold(True)
-            title.setFont(title_font)
-            title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            main_layout.addWidget(title)
+            self.game_title.setFont(title_font)
+            self.game_title.setStyleSheet("color: #ffffff;")
+            detail_layout.addWidget(self.game_title)
 
-            # Create splitter for controls and output
-            splitter = QSplitter(Qt.Orientation.Vertical)
+            # Game description
+            self.game_description = QLabel("")
+            self.game_description.setWordWrap(True)
+            self.game_description.setStyleSheet("color: #8f98a0; font-size: 11pt;")
+            detail_layout.addWidget(self.game_description)
 
-            # Control panel
-            control_widget = QWidget()
-            control_layout = QVBoxLayout(control_widget)
+            detail_layout.addStretch()
 
-            # Build options
-            build_group = QWidget()
-            build_layout = QVBoxLayout(build_group)
+            # Play button container
+            button_container = QHBoxLayout()
 
-            # Generator selection
-            gen_layout = QHBoxLayout()
-            gen_layout.addWidget(QLabel("Generator:"))
-            self.generator_combo = QComboBox()
-            self.generator_combo.addItems(["ninja", "ninja-msvc", "vs"])
-            self.generator_combo.setCurrentText(DEFAULT_GENERATOR)
-            gen_layout.addWidget(self.generator_combo)
-            gen_layout.addStretch()
-            build_layout.addLayout(gen_layout)
+            self.play_btn = QPushButton("▶ PLAY")
+            self.play_btn.setEnabled(False)
+            self.play_btn.setMinimumHeight(50)
+            self.play_btn.setMinimumWidth(200)
+            play_font = QFont()
+            play_font.setPointSize(14)
+            play_font.setBold(True)
+            self.play_btn.setFont(play_font)
+            self.play_btn.setStyleSheet("""
+                QPushButton {
+                    background-color: #5c7e10;
+                    color: white;
+                    border: none;
+                    border-radius: 4px;
+                    padding: 10px 40px;
+                }
+                QPushButton:hover {
+                    background-color: #6a9612;
+                }
+                QPushButton:pressed {
+                    background-color: #4a6a0d;
+                }
+                QPushButton:disabled {
+                    background-color: #3f4e5f;
+                    color: #7a8896;
+                }
+            """)
+            self.play_btn.clicked.connect(self.play_game)
+            button_container.addWidget(self.play_btn)
 
-            # Build type selection
-            type_layout = QHBoxLayout()
-            type_layout.addWidget(QLabel("Build Type:"))
-            self.build_type_combo = QComboBox()
-            self.build_type_combo.addItems(["Release", "Debug", "RelWithDebInfo"])
-            type_layout.addWidget(self.build_type_combo)
-            type_layout.addStretch()
-            build_layout.addLayout(type_layout)
-
-            # Target selection
-            target_layout = QHBoxLayout()
-            target_layout.addWidget(QLabel("Target:"))
-            self.target_combo = QComboBox()
-            self.target_combo.addItems(["sdl3_app", "all"])
-            target_layout.addWidget(self.target_combo)
-            target_layout.addStretch()
-            build_layout.addLayout(target_layout)
-
-            control_layout.addWidget(build_group)
-
-            # Action buttons in a grid layout
-            buttons_widget = QWidget()
-            buttons_layout = QVBoxLayout(buttons_widget)
-
-            # Row 1: Dependencies and Configure
-            row1 = QHBoxLayout()
-            self.deps_btn = self.create_styled_button("Install Dependencies", "#2a475e")
-            self.deps_btn.clicked.connect(self.run_dependencies)
-            row1.addWidget(self.deps_btn)
-
-            self.config_btn = self.create_styled_button("Configure", "#2a475e")
-            self.config_btn.clicked.connect(self.run_configure)
-            row1.addWidget(self.config_btn)
-            buttons_layout.addLayout(row1)
-
-            # Row 2: Build and Run
-            row2 = QHBoxLayout()
-            self.build_btn = self.create_styled_button("Build", "#3e6b3e")
-            self.build_btn.clicked.connect(self.run_build)
-            row2.addWidget(self.build_btn)
-
-            self.run_btn = self.create_styled_button("▶ Run Demo", "#5b7c99")
-            self.run_btn.clicked.connect(self.run_demo)
-            row2.addWidget(self.run_btn)
-            buttons_layout.addLayout(row2)
-
-            # Row 3: Compile Shaders and Stop
-            row3 = QHBoxLayout()
-            self.shader_btn = self.create_styled_button("Compile Shaders", "#5e4a2a")
-            self.shader_btn.clicked.connect(self.compile_shaders)
-            row3.addWidget(self.shader_btn)
-
-            self.stop_btn = self.create_styled_button("Stop Process", "#7e2a2a")
-            self.stop_btn.clicked.connect(self.stop_process)
+            self.stop_btn = QPushButton("⏹ STOP")
             self.stop_btn.setEnabled(False)
-            row3.addWidget(self.stop_btn)
-            buttons_layout.addLayout(row3)
+            self.stop_btn.setMinimumHeight(50)
+            self.stop_btn.setMinimumWidth(120)
+            stop_font = QFont()
+            stop_font.setPointSize(12)
+            stop_font.setBold(True)
+            self.stop_btn.setFont(stop_font)
+            self.stop_btn.setStyleSheet("""
+                QPushButton {
+                    background-color: #a83232;
+                    color: white;
+                    border: none;
+                    border-radius: 4px;
+                    padding: 10px 20px;
+                }
+                QPushButton:hover {
+                    background-color: #c13838;
+                }
+                QPushButton:pressed {
+                    background-color: #8f2828;
+                }
+                QPushButton:disabled {
+                    background-color: #3f4e5f;
+                    color: #7a8896;
+                }
+            """)
+            self.stop_btn.clicked.connect(self.stop_process)
+            button_container.addWidget(self.stop_btn)
 
-            control_layout.addWidget(buttons_widget)
-            control_layout.addStretch()
+            button_container.addStretch()
+            detail_layout.addLayout(button_container)
 
-            splitter.addWidget(control_widget)
+            right_layout.addWidget(detail_header)
 
-            # Output console
+            # Console output
+            console_container = QWidget()
+            console_container.setStyleSheet("background-color: #1b2838;")
+            console_layout = QVBoxLayout(console_container)
+            console_layout.setContentsMargins(10, 10, 10, 10)
+
+            console_label = QLabel("OUTPUT")
+            console_label.setStyleSheet("color: #8f98a0; font-weight: bold; font-size: 9pt;")
+            console_layout.addWidget(console_label)
+
             self.console = QTextEdit()
             self.console.setReadOnly(True)
-            self.console.setMinimumHeight(200)
+            self.console.setMinimumHeight(250)
             console_font = QFont("Courier New")
             console_font.setPointSize(9)
             self.console.setFont(console_font)
-            splitter.addWidget(self.console)
+            self.console.setStyleSheet("""
+                QTextEdit {
+                    background-color: #0e1216;
+                    color: #c6d1db;
+                    border: 1px solid #0e1216;
+                    border-radius: 3px;
+                }
+            """)
+            console_layout.addWidget(self.console)
 
-            splitter.setStretchFactor(0, 1)
-            splitter.setStretchFactor(1, 2)
+            right_layout.addWidget(console_container)
 
-            main_layout.addWidget(splitter)
+            main_layout.addWidget(right_panel, 1)
+
+            # Select first game by default
+            if self.games:
+                self.game_list.setCurrentRow(0)
+
+        def create_menu_bar(self):
+            """Create menu bar with developer tools"""
+            menubar = self.menuBar()
+            menubar.setStyleSheet("""
+                QMenuBar {
+                    background-color: #171a21;
+                    color: #c6d1db;
+                    padding: 4px;
+                }
+                QMenuBar::item:selected {
+                    background-color: #2a475e;
+                }
+                QMenu {
+                    background-color: #1b2838;
+                    color: #c6d1db;
+                    border: 1px solid #0e1216;
+                }
+                QMenu::item:selected {
+                    background-color: #2a475e;
+                }
+            """)
+
+            # Developer menu
+            dev_menu = menubar.addMenu("Developer")
+
+            deps_action = QAction("Install Dependencies", self)
+            deps_action.triggered.connect(self.run_dependencies)
+            dev_menu.addAction(deps_action)
+
+            config_action = QAction("Configure CMake", self)
+            config_action.triggered.connect(self.run_configure)
+            dev_menu.addAction(config_action)
+
+            build_action = QAction("Build Project", self)
+            build_action.triggered.connect(self.run_build)
+            dev_menu.addAction(build_action)
+
+            shader_action = QAction("Compile Shaders", self)
+            shader_action.triggered.connect(self.compile_shaders)
+            dev_menu.addAction(shader_action)
+
+            dev_menu.addSeparator()
+
+            settings_action = QAction("Build Settings...", self)
+            settings_action.triggered.connect(self.show_settings)
+            dev_menu.addAction(settings_action)
+
+            # View menu
+            view_menu = menubar.addMenu("View")
+
+            clear_console_action = QAction("Clear Console", self)
+            clear_console_action.triggered.connect(self.console.clear)
+            view_menu.addAction(clear_console_action)
+
+        def show_settings(self):
+            """Show build settings dialog"""
+            dialog = BuildSettingsDialog(self)
+            dialog.generator_combo.setCurrentText(self.generator)
+            dialog.build_type_combo.setCurrentText(self.build_type)
+            dialog.target_combo.setCurrentText(self.target)
+
+            if dialog.exec() == QDialog.DialogCode.Accepted:
+                self.generator = dialog.generator_combo.currentText()
+                self.build_type = dialog.build_type_combo.currentText()
+                self.target = dialog.target_combo.currentText()
+                self.log(f"Settings updated: Generator={self.generator}, Build Type={self.build_type}, Target={self.target}")
+
+        def on_game_selected(self, current, previous):
+            """Handle game selection from library"""
+            if current:
+                game = current.data(Qt.ItemDataRole.UserRole)
+                self.current_game = game
+                self.game_title.setText(game["name"])
+                self.game_description.setText(game["description"])
+                self.play_btn.setEnabled(True)
+            else:
+                self.current_game = None
+                self.game_title.setText("Select a game")
+                self.game_description.setText("")
+                self.play_btn.setEnabled(False)
+
+        def play_game(self):
+            """Launch the selected game"""
+            if not self.current_game:
+                return
+
+            build_dir = GENERATOR_DEFAULT_DIR.get(self.generator, DEFAULT_BUILD_DIR)
+            cmd = [sys.executable, __file__, "run", "--build-dir", build_dir]
+
+            if self.current_game["executable"] != "sdl3_app":
+                cmd.extend(["--target", self.current_game["executable"]])
+
+            self.run_command(cmd)
+
+        def stop_process(self):
+            """Stop the running process"""
+            if self.process and self.process.state() == QProcess.ProcessState.Running:
+                self.log("\n⏸ Stopping process...")
+                self.process.kill()
+                self.process.waitForFinished(3000)
 
         def set_dark_theme(self):
             """Apply a dark theme similar to Steam"""
@@ -536,49 +763,6 @@ def gui(args: argparse.Namespace) -> None:
             palette.setColor(QPalette.ColorRole.Highlight, QColor(91, 124, 153))
             palette.setColor(QPalette.ColorRole.HighlightedText, QColor(255, 255, 255))
             self.setPalette(palette)
-
-        def create_styled_button(self, text: str, base_color: str) -> QPushButton:
-            """Create a button with Steam-like styling"""
-            btn = QPushButton(text)
-            btn.setMinimumHeight(45)
-            btn.setStyleSheet(f"""
-                QPushButton {{
-                    background-color: {base_color};
-                    color: #c6d1db;
-                    border: 1px solid #1b2838;
-                    border-radius: 3px;
-                    padding: 8px;
-                    font-size: 12pt;
-                    font-weight: bold;
-                }}
-                QPushButton:hover {{
-                    background-color: {self.lighten_color(base_color)};
-                }}
-                QPushButton:pressed {{
-                    background-color: {self.darken_color(base_color)};
-                }}
-                QPushButton:disabled {{
-                    background-color: #1b2838;
-                    color: #4e5a66;
-                }}
-            """)
-            return btn
-
-        @staticmethod
-        def lighten_color(hex_color: str) -> str:
-            """Lighten a hex color by 20%"""
-            hex_color = hex_color.lstrip('#')
-            r, g, b = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
-            r, g, b = min(255, int(r * 1.2)), min(255, int(g * 1.2)), min(255, int(b * 1.2))
-            return f"#{r:02x}{g:02x}{b:02x}"
-
-        @staticmethod
-        def darken_color(hex_color: str) -> str:
-            """Darken a hex color by 20%"""
-            hex_color = hex_color.lstrip('#')
-            r, g, b = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
-            r, g, b = int(r * 0.8), int(g * 0.8), int(b * 0.8)
-            return f"#{r:02x}{g:02x}{b:02x}"
 
         def log(self, message: str):
             """Add a message to the console"""
@@ -603,8 +787,8 @@ def gui(args: argparse.Namespace) -> None:
             self.process.finished.connect(self.process_finished)
             self.process.start(args[0], args[1:])
 
+            self.play_btn.setEnabled(False)
             self.stop_btn.setEnabled(True)
-            self.disable_action_buttons()
 
         def handle_stdout(self):
             """Handle stdout from the process"""
@@ -628,30 +812,8 @@ def gui(args: argparse.Namespace) -> None:
                 self.log(f"\n❌ Process exited with code {exit_code}")
 
             self.stop_btn.setEnabled(False)
-            self.enable_action_buttons()
-
-        def stop_process(self):
-            """Stop the running process"""
-            if self.process and self.process.state() == QProcess.ProcessState.Running:
-                self.log("\n⏸ Stopping process...")
-                self.process.kill()
-                self.process.waitForFinished(3000)
-
-        def disable_action_buttons(self):
-            """Disable action buttons while a process is running"""
-            self.deps_btn.setEnabled(False)
-            self.config_btn.setEnabled(False)
-            self.build_btn.setEnabled(False)
-            self.run_btn.setEnabled(False)
-            self.shader_btn.setEnabled(False)
-
-        def enable_action_buttons(self):
-            """Enable action buttons after process completes"""
-            self.deps_btn.setEnabled(True)
-            self.config_btn.setEnabled(True)
-            self.build_btn.setEnabled(True)
-            self.run_btn.setEnabled(True)
-            self.shader_btn.setEnabled(True)
+            if self.current_game:
+                self.play_btn.setEnabled(True)
 
         def run_dependencies(self):
             """Run conan dependencies installation"""
@@ -660,26 +822,20 @@ def gui(args: argparse.Namespace) -> None:
 
         def run_configure(self):
             """Run CMake configuration"""
-            generator = self.generator_combo.currentText()
-            build_type = self.build_type_combo.currentText()
             cmd = [
                 sys.executable, __file__, "configure",
-                "--generator", generator,
-                "--build-type", build_type
+                "--generator", self.generator,
+                "--build-type", self.build_type
             ]
             self.run_command(cmd)
 
         def run_build(self):
             """Run build command"""
-            target = self.target_combo.currentText()
-            build_dir = GENERATOR_DEFAULT_DIR.get(
-                self.generator_combo.currentText(),
-                DEFAULT_BUILD_DIR
-            )
+            build_dir = GENERATOR_DEFAULT_DIR.get(self.generator, DEFAULT_BUILD_DIR)
             cmd = [
                 sys.executable, __file__, "build",
                 "--build-dir", build_dir,
-                "--target", target
+                "--target", self.target
             ]
             self.run_command(cmd)
 
@@ -689,15 +845,6 @@ def gui(args: argparse.Namespace) -> None:
             self.log("=== Compiling Shaders ===\n")
             _compile_shaders(dry_run=False)
             self.log("\n✓ Shader compilation completed")
-
-        def run_demo(self):
-            """Run the demo application"""
-            build_dir = GENERATOR_DEFAULT_DIR.get(
-                self.generator_combo.currentText(),
-                DEFAULT_BUILD_DIR
-            )
-            cmd = [sys.executable, __file__, "run", "--build-dir", build_dir]
-            self.run_command(cmd)
 
     app = QApplication(sys.argv)
     window = BuildLauncherGUI()
