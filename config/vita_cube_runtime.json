@@ -1,0 +1,75 @@
+{
+  "launcher": {
+    "name": "Vita Cube Demo",
+    "description": "3D cube room optimized for PS Vita with analog stick controls",
+    "enabled": true
+  },
+  "display_width": 960,
+  "display_height": 544,
+  "lua_script": "scripts/cube_logic.lua",
+  "scripts_directory": "scripts",
+  "project_root": "../",
+  "shaders_directory": "shaders",
+  "vita_specific": {
+    "analog_stick_sensitivity": 1.2,
+    "gyroscope_enabled": true,
+    "memory_budget_mb": 48,
+    "gxm_ring_buffer_sizes": {
+      "vdm_kb": 128,
+      "vertex_mb": 3,
+      "fragment_mb": 2,
+      "fragment_usse_kb": 64
+    },
+    "texture_quality": "high",
+    "shadow_resolution": 512
+  },
+  "controls": {
+    "analog_sticks": {
+      "left": {
+        "movement": true,
+        "deadzone": 0.15,
+        "sensitivity": 1.5,
+        "invert_y": false
+      },
+      "right": {
+        "camera": true,
+        "deadzone": 0.1,
+        "sensitivity": 2.0,
+        "invert_y": true
+      }
+    },
+    "buttons": {
+      "cross": "jump",
+      "circle": "interact",
+      "triangle": "toggle_flashlight",
+      "square": "crouch",
+      "l_trigger": "previous_item",
+      "r_trigger": "next_item",
+      "start": "pause",
+      "select": "inventory"
+    },
+    "touch": {
+      "enabled": false
+    }
+  },
+  "camera": {
+    "fov_degrees": 75,
+    "near_clip": 0.1,
+    "far_clip": 100.0,
+    "mouse_sensitivity": 0.002
+  },
+  "physics": {
+    "gravity": -9.81,
+    "player_speed": 5.0,
+    "jump_force": 8.0,
+    "friction": 0.8
+  },
+  "performance": {
+    "target_fps": 60,
+    "vsync": true,
+    "frame_skip_allowed": false,
+    "dynamic_lighting": true,
+    "shadows_enabled": true,
+    "particle_effects": true
+  }
+}

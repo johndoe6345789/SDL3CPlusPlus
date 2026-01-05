@@ -2,33 +2,24 @@
 
 #include "../interfaces/i_graphics_service.hpp"
 #include "../interfaces/i_logger.hpp"
-#include "../interfaces/i_vulkan_device_service.hpp"
-#include "../interfaces/i_swapchain_service.hpp"
-#include "../interfaces/i_pipeline_service.hpp"
-#include "../interfaces/i_buffer_service.hpp"
-#include "../interfaces/i_render_command_service.hpp"
 #include "../interfaces/i_window_service.hpp"
 #include "../../di/lifecycle.hpp"
 #include <memory>
+#include <unordered_map>
 
 namespace sdl3cpp::services::impl {
 
 /**
  * @brief Graphics service implementation.
  *
- * Coordinates all graphics subsystems (device, swapchain, pipeline, buffers, rendering).
- * Acts as a facade for the smaller graphics services.
+ * Coordinates graphics backend operations.
  */
 class GraphicsService : public IGraphicsService,
                         public di::IInitializable,
                         public di::IShutdownable {
 public:
     GraphicsService(std::shared_ptr<ILogger> logger,
-                    std::shared_ptr<IVulkanDeviceService> deviceService,
-                    std::shared_ptr<ISwapchainService> swapchainService,
-                    std::shared_ptr<IPipelineService> pipelineService,
-                    std::shared_ptr<IBufferService> bufferService,
-                    std::shared_ptr<IRenderCommandService> renderCommandService,
+                    std::shared_ptr<IGraphicsBackend> backend,
                     std::shared_ptr<IWindowService> windowService);
     ~GraphicsService() override;
 
@@ -50,23 +41,23 @@ public:
                     const std::array<float, 16>& viewProj) override;
     bool EndFrame() override;
     void WaitIdle() override;
-    VkDevice GetDevice() const override;
-    VkPhysicalDevice GetPhysicalDevice() const override;
-    VkExtent2D GetSwapchainExtent() const override;
-    VkFormat GetSwapchainFormat() const override;
-    VkCommandBuffer GetCurrentCommandBuffer() const override;
-    VkQueue GetGraphicsQueue() const override;
+    GraphicsDeviceHandle GetDevice() const override;
+    GraphicsDeviceHandle GetPhysicalDevice() const override;
+    std::pair<uint32_t, uint32_t> GetSwapchainExtent() const override;
+    uint32_t GetSwapchainFormat() const override;
+    void* GetCurrentCommandBuffer() const override;
+    void* GetGraphicsQueue() const override;
 
 private:
     std::shared_ptr<ILogger> logger_;
-    std::shared_ptr<IVulkanDeviceService> deviceService_;
-    std::shared_ptr<ISwapchainService> swapchainService_;
-    std::shared_ptr<IPipelineService> pipelineService_;
-    std::shared_ptr<IBufferService> bufferService_;
-    std::shared_ptr<IRenderCommandService> renderCommandService_;
+    std::shared_ptr<IGraphicsBackend> backend_;
     std::shared_ptr<IWindowService> windowService_;
+    GraphicsDeviceHandle device_;
+    std::unordered_map<std::string, GraphicsPipelineHandle> pipelines_;
+    GraphicsBufferHandle vertexBuffer_;
+    GraphicsBufferHandle indexBuffer_;
+    // Other state
     bool initialized_ = false;
-    uint32_t currentImageIndex_ = 0;
 };
 
-}  // namespace sdl3cpp::services::impl
+} // namespace sdl3cpp::services::impl

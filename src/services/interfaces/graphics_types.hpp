@@ -2,9 +2,19 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 #include <array>
 
 namespace sdl3cpp::services {
+
+/**
+ * @brief Graphics service configuration.
+ */
+struct GraphicsConfig {
+    std::vector<const char*> deviceExtensions;
+    uint32_t preferredFormat = 0;  // Backend-specific format
+    bool enableValidationLayers = false;
+};
 
 /**
  * @brief Shader file paths for a shader program.

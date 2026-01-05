@@ -1,0 +1,70 @@
+{
+  "launcher": {
+    "name": "Vita Soundboard",
+    "description": "Audio playback and mixing demo optimized for PS Vita",
+    "enabled": true
+  },
+  "display_width": 960,
+  "display_height": 544,
+  "lua_script": "scripts/soundboard.lua",
+  "scripts_directory": "scripts",
+  "project_root": "../",
+  "shaders_directory": "shaders",
+  "vita_specific": {
+    "audio_channels": 2,
+    "sample_rate": 44100,
+    "audio_buffer_size": 1024,
+    "memory_budget_mb": 16,
+    "touch_sensitivity": 0.8
+  },
+  "controls": {
+    "touch": {
+      "enabled": true,
+      "tap_threshold": 30,
+      "drag_threshold": 5,
+      "multi_touch": true
+    },
+    "buttons": {
+      "cross": "play_pause",
+      "circle": "stop",
+      "triangle": "next_track",
+      "square": "previous_track",
+      "l_trigger": "volume_down",
+      "r_trigger": "volume_up",
+      "start": "menu",
+      "select": "shuffle"
+    },
+    "analog_sticks": {
+      "left": {
+        "scrub": true,
+        "deadzone": 0.2,
+        "sensitivity": 1.0
+      }
+    }
+  },
+  "audio": {
+    "master_volume": 0.8,
+    "music_volume": 1.0,
+    "sfx_volume": 0.9,
+    "voice_volume": 1.0,
+    "crossfade_time_ms": 2000,
+    "equalizer": {
+      "enabled": true,
+      "bass_boost": 1.2,
+      "treble_boost": 0.8,
+      "mid_range": 1.0
+    }
+  },
+  "visualization": {
+    "waveform_enabled": true,
+    "spectrum_analyzer": true,
+    "fft_size": 512,
+    "smoothing_factor": 0.8
+  },
+  "performance": {
+    "target_fps": 30,
+    "vsync": true,
+    "low_power_mode": false,
+    "background_audio": true
+  }
+}

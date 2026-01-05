@@ -5,6 +5,11 @@ if(ENABLE_VITA)
         message(FATAL_ERROR "VITASDK environment variable must be set when ENABLE_VITA is ON")
     endif()
     set(CMAKE_TOOLCHAIN_FILE "$ENV{VITASDK}/share/vita.toolchain.cmake" CACHE FILEPATH "Vita SDK toolchain" FORCE)
+    include_directories("$ENV{VITASDK}/arm-vita-eabi/include")
+    link_directories("$ENV{VITASDK}/arm-vita-eabi/lib")
+    # Disable SDL3 app when building for Vita
+    set(BUILD_SDL3_APP OFF CACHE BOOL "Build the SDL3 Vulkan demo" FORCE)
+    set(BUILD_SCRIPT_TESTS OFF CACHE BOOL "Build script engine tests" FORCE)
 endif()
 if(CMAKE_GENERATOR MATCHES "Ninja")
     if(DEFINED CMAKE_GENERATOR_PLATFORM)
@@ -71,7 +76,11 @@ if(BUILD_SDL3_APP AND NOT SDL_VERSION STREQUAL "SDL3")
     set(BUILD_SDL3_APP OFF CACHE BOOL "Build the SDL3 Vulkan demo" FORCE)
 endif()
 
-set(CMAKE_CXX_STANDARD 23)
+if(ENABLE_VITA)
+    set(CMAKE_CXX_STANDARD 17)
+else()
+    set(CMAKE_CXX_STANDARD 23)
+endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -119,6 +128,7 @@ else()
     message(FATAL_ERROR "Invalid SDL_VERSION: ${SDL_VERSION}. Must be SDL3 or sdl")
 endif()
 
+if(NOT ENABLE_VITA)
 find_package(lua CONFIG REQUIRED)
 find_package(CLI11 CONFIG REQUIRED)
 find_package(RapidJSON CONFIG REQUIRED)
@@ -127,6 +137,7 @@ find_package(Bullet CONFIG REQUIRED)
 find_package(Vorbis CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(cpptrace REQUIRED)
+endif()
 
 if(BUILD_SDL3_APP)
     add_executable(sdl3_app
@@ -163,6 +174,8 @@ if(BUILD_SDL3_APP)
             src/services/impl/bullet_physics_service.cpp
             src/services/impl/scene_service.cpp
             src/services/impl/graphics_service.cpp
+            $<$<NOT:$<BOOL:${ENABLE_VITA}>>:src/services/impl/vulkan_graphics_backend.cpp>
+            $<$<BOOL:${ENABLE_VITA}>:src/services/impl/gxm_graphics_backend.cpp>
             src/app/service_based_app.cpp
             src/services/impl/gui_renderer.cpp
         )
@@ -191,12 +204,34 @@ if(BUILD_SDL3_APP)
     endif()
 
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/config")
+        if(ENABLE_VITA)
+            # For Vita builds, copy only Vita-specific configs            file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/config/vita_system_config.json" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/config")            file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/config/vita_gui_runtime.json" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/config")
+            file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/config/vita_cube_runtime.json" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/config")
+            file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/config/vita_soundboard_runtime.json" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/config")
+        else()
+            # For desktop builds, copy all configs
+            file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/config" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+        endif()
+    endif()
+endif()
+
+# Copy config files for all builds (including Vita test builds)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/config")
+    if(ENABLE_VITA)
+        # For Vita builds, copy only Vita-specific configs
+        file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/config/vita_system_config.json" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/config")
+        file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/config/vita_gui_runtime.json" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/config")
+        file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/config/vita_cube_runtime.json" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/config")
+        file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/config/vita_soundboard_runtime.json" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/config")
+    else()
+        # For desktop builds, copy all configs
         file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/config" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
     endif()
 endif()
 
 enable_testing()
 
+if(NOT ENABLE_VITA)
 add_executable(script_engine_tests
     tests/test_cube_script.cpp
     src/services/impl/logger_service.cpp
@@ -216,3 +251,24 @@ target_link_libraries(script_engine_tests PRIVATE
     Vorbis::vorbis
 )
 add_test(NAME script_engine_tests COMMAND script_engine_tests)
+endif()
+
+add_executable(gxm_backend_tests
+    tests/test_gxm_backend.cpp
+    src/services/impl/gxm_graphics_backend.cpp
+)
+if(ENABLE_VITA)
+    target_include_directories(gxm_backend_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+    target_link_libraries(gxm_backend_tests PRIVATE
+        SceGxm_stub
+        SceDisplay_stub
+        SceSysmem_stub
+        SceLibKernel_stub
+    )
+else()
+    target_include_directories(gxm_backend_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+    target_link_libraries(gxm_backend_tests PRIVATE
+        ${SDL_TARGET}
+    )
+endif()
+add_test(NAME gxm_backend_tests COMMAND gxm_backend_tests)

@@ -2,12 +2,12 @@
 
 #include "../../core/vertex.hpp"
 #include "graphics_types.hpp"
+#include "i_graphics_backend.hpp"
 #include <array>
 #include <cstdint>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <vulkan/vulkan.h>
 
 // Forward declare SDL type
 struct SDL_Window;
@@ -15,33 +15,20 @@ struct SDL_Window;
 namespace sdl3cpp::services {
 
 /**
- * @brief Graphics service configuration.
- */
-struct GraphicsConfig {
-    std::vector<const char*> deviceExtensions;
-    VkFormat preferredFormat = VK_FORMAT_B8G8R8A8_SRGB;
-    bool enableValidationLayers = false;
-};
-
-/**
- * @brief Graphics service interface (Vulkan rendering).
+ * @brief Graphics service interface (backend-agnostic rendering).
  *
- * Abstracts all Vulkan rendering operations including device management,
- * swapchain, pipelines, buffers, and rendering.
- *
- * This is the largest service, consolidating ~1,500 lines of Vulkan code
- * from the original Sdl3App class.
+ * Abstracts all rendering operations using opaque handles.
  */
 class IGraphicsService {
 public:
     virtual ~IGraphicsService() = default;
 
     /**
-     * @brief Initialize the Vulkan instance, device, and queues.
+     * @brief Initialize the graphics backend.
      *
      * @param window The SDL window to create a surface for
      * @param config Graphics configuration
-     * @throws std::runtime_error if device initialization fails
+     * @throws std::runtime_error if initialization fails
      */
     virtual void InitializeDevice(SDL_Window* window, const GraphicsConfig& config) = 0;
 
@@ -57,12 +44,12 @@ public:
     /**
      * @brief Recreate the swapchain (e.g., after window resize).
      *
-     * @throws std::runtime_error if swapchain recreation fails
+     * @throws std::runtime_error if recreation fails
      */
     virtual void RecreateSwapchain() = 0;
 
     /**
-     * @brief Shutdown and release all Vulkan resources.
+     * @brief Shutdown and release all resources.
      */
     virtual void Shutdown() noexcept = 0;
 
@@ -121,46 +108,46 @@ public:
     virtual void WaitIdle() = 0;
 
     /**
-     * @brief Get the Vulkan logical device.
+     * @brief Get the graphics device handle.
      *
-     * @return VkDevice handle (needed for GUI renderer, etc.)
+     * @return Opaque device handle
      */
-    virtual VkDevice GetDevice() const = 0;
+    virtual GraphicsDeviceHandle GetDevice() const = 0;
 
     /**
-     * @brief Get the Vulkan physical device.
+     * @brief Get the physical device handle.
      *
-     * @return VkPhysicalDevice handle
+     * @return Opaque physical device handle
      */
-    virtual VkPhysicalDevice GetPhysicalDevice() const = 0;
+    virtual GraphicsDeviceHandle GetPhysicalDevice() const = 0;
 
     /**
      * @brief Get the current swapchain extent (framebuffer size).
      *
-     * @return VkExtent2D with width and height
+     * @return Width and height
      */
-    virtual VkExtent2D GetSwapchainExtent() const = 0;
+    virtual std::pair<uint32_t, uint32_t> GetSwapchainExtent() const = 0;
 
     /**
      * @brief Get the swapchain image format.
      *
-     * @return VkFormat of swapchain images
+     * @return Format identifier
      */
-    virtual VkFormat GetSwapchainFormat() const = 0;
+    virtual uint32_t GetSwapchainFormat() const = 0;
 
     /**
-     * @brief Get the current command buffer being recorded.
+     * @brief Get the current command buffer handle.
      *
-     * @return VkCommandBuffer (needed for GUI rendering)
+     * @return Opaque command buffer handle
      */
-    virtual VkCommandBuffer GetCurrentCommandBuffer() const = 0;
+    virtual void* GetCurrentCommandBuffer() const = 0;
 
     /**
-     * @brief Get the graphics queue.
+     * @brief Get the graphics queue handle.
      *
-     * @return VkQueue handle
+     * @return Opaque queue handle
      */
-    virtual VkQueue GetGraphicsQueue() const = 0;
+    virtual void* GetGraphicsQueue() const = 0;
 };
 
 }  // namespace sdl3cpp::services

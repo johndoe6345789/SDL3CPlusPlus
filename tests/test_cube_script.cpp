@@ -61,6 +61,9 @@ int main() {
             nullptr,
             nullptr,
             nullptr,
+            nullptr,
+            nullptr,
+            nullptr,
             false);
         engineService->Initialize();
 

@@ -1,33 +1,23 @@
 #include "graphics_service.hpp"
 #include "../interfaces/i_logger.hpp"
+#include "../interfaces/graphics_types.hpp"
 #include <stdexcept>
+#include <cstring>
 
 namespace sdl3cpp::services::impl {
 
 GraphicsService::GraphicsService(std::shared_ptr<ILogger> logger,
-                                 std::shared_ptr<IVulkanDeviceService> deviceService,
-                                 std::shared_ptr<ISwapchainService> swapchainService,
-                                 std::shared_ptr<IPipelineService> pipelineService,
-                                 std::shared_ptr<IBufferService> bufferService,
-                                 std::shared_ptr<IRenderCommandService> renderCommandService,
+                                 std::shared_ptr<IGraphicsBackend> backend,
                                  std::shared_ptr<IWindowService> windowService)
     : logger_(std::move(logger)),
-      deviceService_(deviceService),
-      swapchainService_(swapchainService),
-      pipelineService_(pipelineService),
-      bufferService_(bufferService),
-      renderCommandService_(renderCommandService),
+      backend_(backend),
       windowService_(windowService) {
     logger_->Trace("GraphicsService", "GraphicsService",
-                   "deviceService=" + std::string(deviceService_ ? "set" : "null") +
-                   ", swapchainService=" + std::string(swapchainService_ ? "set" : "null") +
-                   ", pipelineService=" + std::string(pipelineService_ ? "set" : "null") +
-                   ", bufferService=" + std::string(bufferService_ ? "set" : "null") +
-                   ", renderCommandService=" + std::string(renderCommandService_ ? "set" : "null") +
+                   "backend=" + std::string(backend_ ? "set" : "null") +
                    ", windowService=" + std::string(windowService_ ? "set" : "null"));
 
-    if (!deviceService_ || !swapchainService_ || !pipelineService_ || !bufferService_ || !renderCommandService_ || !windowService_) {
-        throw std::invalid_argument("All graphics services must be provided");
+    if (!backend_ || !windowService_) {
+        throw std::invalid_argument("Backend and window service must be provided");
     }
 }
 
@@ -45,14 +35,15 @@ void GraphicsService::Initialize() {
         throw std::runtime_error("Graphics service already initialized");
     }
 
-    // Services are initialized individually by the registry
     initialized_ = true;
 }
 
 void GraphicsService::Shutdown() noexcept {
     logger_->Trace("GraphicsService", "Shutdown");
 
-    // Services are shutdown individually by the registry
+    if (backend_) {
+        backend_->Shutdown();
+    }
     initialized_ = false;
 }
 
@@ -66,10 +57,8 @@ void GraphicsService::InitializeDevice(SDL_Window* window, const GraphicsConfig&
         throw std::runtime_error("Graphics service not initialized");
     }
 
-    // Device service handles device initialization
-    deviceService_->Initialize(config.deviceExtensions, config.enableValidationLayers);
-    deviceService_->CreateSurface(window);
-    deviceService_->CreateLogicalDevice();
+    backend_->Initialize(window, config);
+    device_ = backend_->CreateDevice();
 }
 
 void GraphicsService::InitializeSwapchain() {
@@ -79,9 +68,7 @@ void GraphicsService::InitializeSwapchain() {
         throw std::runtime_error("Graphics service not initialized");
     }
 
-    // Get window size and create swapchain
-    auto [width, height] = windowService_->GetSize();
-    swapchainService_->CreateSwapchain(width, height);
+    // Swapchain is initialized in InitializeDevice via backend
 }
 
 void GraphicsService::RecreateSwapchain() {
@@ -91,9 +78,7 @@ void GraphicsService::RecreateSwapchain() {
         throw std::runtime_error("Graphics service not initialized");
     }
 
-    // Get current window size and recreate swapchain
-    auto [width, height] = windowService_->GetSize();
-    swapchainService_->RecreateSwapchain(width, height);
+    // TODO: Implement swapchain recreation via backend
 }
 
 void GraphicsService::LoadShaders(const std::unordered_map<std::string, ShaderPaths>& shaders) {
@@ -104,11 +89,10 @@ void GraphicsService::LoadShaders(const std::unordered_map<std::string, ShaderPa
         throw std::runtime_error("Graphics service not initialized");
     }
 
-    // Convert shader paths map to the format expected by pipeline service
     for (const auto& [key, paths] : shaders) {
-        pipelineService_->RegisterShader(key, paths);
+        auto pipeline = backend_->CreatePipeline(device_, key, paths);
+        pipelines_[key] = pipeline;
     }
-    pipelineService_->CompileAll(swapchainService_->GetRenderPass(), swapchainService_->GetSwapchainExtent());
 }
 
 void GraphicsService::UploadVertexData(const std::vector<core::Vertex>& vertices) {
@@ -119,7 +103,10 @@ void GraphicsService::UploadVertexData(const std::vector<core::Vertex>& vertices
         throw std::runtime_error("Graphics service not initialized");
     }
 
-    bufferService_->UploadVertexData(vertices);
+    // Convert vertices to bytes
+    std::vector<uint8_t> data(sizeof(core::Vertex) * vertices.size());
+    std::memcpy(data.data(), vertices.data(), data.size());
+    vertexBuffer_ = backend_->CreateVertexBuffer(device_, data);
 }
 
 void GraphicsService::UploadIndexData(const std::vector<uint16_t>& indices) {
@@ -130,7 +117,10 @@ void GraphicsService::UploadIndexData(const std::vector<uint16_t>& indices) {
         throw std::runtime_error("Graphics service not initialized");
     }
 
-    bufferService_->UploadIndexData(indices);
+    // Convert indices to bytes
+    std::vector<uint8_t> data(sizeof(uint16_t) * indices.size());
+    std::memcpy(data.data(), indices.data(), data.size());
+    indexBuffer_ = backend_->CreateIndexBuffer(device_, data);
 }
 
 bool GraphicsService::BeginFrame() {
@@ -140,7 +130,7 @@ bool GraphicsService::BeginFrame() {
         return false;
     }
 
-    return renderCommandService_->BeginFrame(currentImageIndex_);
+    return backend_->BeginFrame(device_);
 }
 
 void GraphicsService::RenderScene(const std::vector<RenderCommand>& commands,
@@ -153,7 +143,17 @@ void GraphicsService::RenderScene(const std::vector<RenderCommand>& commands,
         return;
     }
 
-    renderCommandService_->RecordCommands(currentImageIndex_, commands, viewProj);
+    // Set the view-projection matrix for the frame
+    backend_->SetViewProjection(viewProj);
+
+    // Execute draw calls
+    for (const auto& command : commands) {
+        auto it = pipelines_.find(command.shaderKey);
+        if (it != pipelines_.end()) {
+            backend_->Draw(device_, it->second, vertexBuffer_, indexBuffer_,
+                          command.indexCount, command.modelMatrix);
+        }
+    }
 }
 
 bool GraphicsService::EndFrame() {
@@ -163,7 +163,7 @@ bool GraphicsService::EndFrame() {
         return false;
     }
 
-    return renderCommandService_->EndFrame(currentImageIndex_);
+    return backend_->EndFrame(device_);
 }
 
 void GraphicsService::WaitIdle() {
@@ -173,67 +173,72 @@ void GraphicsService::WaitIdle() {
         return;
     }
 
-    deviceService_->WaitIdle();
+    // TODO: Implement via backend
 }
 
-VkDevice GraphicsService::GetDevice() const {
+GraphicsDeviceHandle GraphicsService::GetDevice() const {
     logger_->Trace("GraphicsService", "GetDevice");
 
     if (!initialized_) {
-        return VK_NULL_HANDLE;
+        return nullptr;
     }
 
-    return deviceService_->GetDevice();
+    return device_;
 }
 
-VkPhysicalDevice GraphicsService::GetPhysicalDevice() const {
+GraphicsDeviceHandle GraphicsService::GetPhysicalDevice() const {
     logger_->Trace("GraphicsService", "GetPhysicalDevice");
 
     if (!initialized_) {
-        return VK_NULL_HANDLE;
+        return nullptr;
     }
 
-    return deviceService_->GetPhysicalDevice();
+    // TODO: Return physical device from backend
+    return nullptr;
 }
 
-VkExtent2D GraphicsService::GetSwapchainExtent() const {
+std::pair<uint32_t, uint32_t> GraphicsService::GetSwapchainExtent() const {
     logger_->Trace("GraphicsService", "GetSwapchainExtent");
 
     if (!initialized_) {
         return {0, 0};
     }
 
-    return swapchainService_->GetSwapchainExtent();
+    // TODO: Return extent from backend
+    return {800, 600}; // Placeholder
 }
 
-VkFormat GraphicsService::GetSwapchainFormat() const {
+uint32_t GraphicsService::GetSwapchainFormat() const {
     logger_->Trace("GraphicsService", "GetSwapchainFormat");
 
     if (!initialized_) {
-        return VK_FORMAT_UNDEFINED;
+        return 0;
     }
 
-    return swapchainService_->GetSwapchainImageFormat();
+    // TODO: Return format from backend
+    return 0; // Placeholder
 }
 
-VkCommandBuffer GraphicsService::GetCurrentCommandBuffer() const {
+void* GraphicsService::GetCurrentCommandBuffer() const {
     logger_->Trace("GraphicsService", "GetCurrentCommandBuffer");
 
     if (!initialized_) {
-        return VK_NULL_HANDLE;
+        return nullptr;
     }
 
-    return renderCommandService_->GetCurrentCommandBuffer();
+    // TODO: Return command buffer from backend
+    return nullptr;
 }
 
-VkQueue GraphicsService::GetGraphicsQueue() const {
+void* GraphicsService::GetGraphicsQueue() const {
     logger_->Trace("GraphicsService", "GetGraphicsQueue");
 
     if (!initialized_) {
-        return VK_NULL_HANDLE;
+        return nullptr;
     }
 
-    return deviceService_->GetGraphicsQueue();
+    // TODO: Return queue from backend
+    return nullptr;
 }
 
 }  // namespace sdl3cpp::services::impl

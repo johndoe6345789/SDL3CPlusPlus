@@ -18,6 +18,7 @@
 #include "services/impl/buffer_service.hpp"
 #include "services/impl/render_command_service.hpp"
 #include "services/impl/graphics_service.hpp"
+#include "services/impl/vulkan_graphics_backend.hpp"
 #include "services/impl/script_engine_service.hpp"
 #include "services/impl/scene_script_service.hpp"
 #include "services/impl/shader_script_service.hpp"
@@ -326,11 +327,13 @@ void ServiceBasedApp::RegisterServices() {
     // Graphics service (facade)
     registry_.RegisterService<services::IGraphicsService, services::impl::GraphicsService>(
         registry_.GetService<services::ILogger>(),
-        registry_.GetService<services::IVulkanDeviceService>(),
-        registry_.GetService<services::ISwapchainService>(),
-        registry_.GetService<services::IPipelineService>(),
-        registry_.GetService<services::IBufferService>(),
-        registry_.GetService<services::IRenderCommandService>(),
+        std::make_shared<services::impl::VulkanGraphicsBackend>(
+            registry_.GetService<services::IVulkanDeviceService>(),
+            registry_.GetService<services::ISwapchainService>(),
+            registry_.GetService<services::IRenderCommandService>(),
+            registry_.GetService<services::IPipelineService>(),
+            registry_.GetService<services::IBufferService>(),
+            registry_.GetService<services::ILogger>()),
         registry_.GetService<services::IWindowService>());
 
     // Scene service
