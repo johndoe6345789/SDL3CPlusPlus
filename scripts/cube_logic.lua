@@ -208,7 +208,7 @@ local shader_variants = {
 
 local camera = {
     position = {0.0, 0.0, 5.0},
-    yaw = -math.pi / 2.0,
+    yaw = math.pi,  -- Face toward -Z (center of room)
     pitch = 0.0,
     fov = 0.78,
     near = 0.1,
