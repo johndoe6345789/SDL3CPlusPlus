@@ -103,7 +103,7 @@ void LoggerService::TraceVariable(const std::string& name, size_t value) {
 }
 
 void LoggerService::TraceVariable(const std::string& name, bool value) {
-    TraceVariable(name, value ? "true" : "false");
+    TraceVariable(name, std::string(value ? "true" : "false"));
 }
 
 void LoggerService::TraceVariable(const std::string& name, float value) {
