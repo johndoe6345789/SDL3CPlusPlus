@@ -17,6 +17,13 @@ local statusMessage = 'Idle'
 local selectedItem = items[1]
 local rotationSpeeds = {x = 0.45, y = 0.65}
 
+local function log_trace(fmt, ...)
+    if not lua_debug or not fmt then
+        return
+    end
+    print(string.format(fmt, ...))
+end
+
 local cubeVertices = {
     { position = {-1.0, -1.0, -1.0}, color = {1.0, 0.2, 0.4} },
     { position = {1.0, -1.0, -1.0}, color = {0.2, 0.9, 0.4} },
@@ -95,34 +102,37 @@ local function drawPanel()
         color = {0.06, 0.07, 0.09, 0.9},
         borderColor = {0.35, 0.38, 0.42, 1.0},
     })
-    Gui.text(ctx, {x = 30, y = 30, width = 420, height = 30}, \Command Console\, {
+    Gui.text(ctx, {x = 30, y = 30, width = 420, height = 30}, "Command Console", {
         fontSize = 24,
-        alignX = \left\,
+        alignX = "left",
         color = {0.95, 0.95, 0.95, 1.0},
     })
-    Gui.svg(ctx, {x = 320, y = 30, width = 120, height = 120}, \assets/logo.svg\)
-    textState = Gui.textbox(ctx, \search_field\, {x = 30, y = 80, width = 420, height = 40}, textState, {
+    Gui.svg(ctx, {x = 320, y = 30, width = 120, height = 120}, "assets/logo.svg")
+    textState = Gui.textbox(ctx, "search_field", {x = 30, y = 80, width = 420, height = 40}, textState, {
         placeholder = 'Filter modules...',
         onSubmit = function(text)
             statusMessage = 'Searching for: ' .. (text ~= '' and text or 'anything')
+            log_trace("GuiDemo search submitted: %s", statusMessage)
         end,
     })
 
-    listState = Gui.listView(ctx, \menu_list\, {x = 30, y = 140, width = 420, height = 240}, items, listState, {
+    listState = Gui.listView(ctx, "menu_list", {x = 30, y = 140, width = 420, height = 240}, items, listState, {
         onSelect = function(idx, item)
             selectedItem = item
-            statusMessage = \Ready to adjust \ .. item
+            statusMessage = "Ready to adjust " .. item
+            log_trace("GuiDemo selection changed: idx=%d item=%s", idx, item)
         end,
         scrollToSelection = true,
     })
 
-    if Gui.button(ctx, \apply\, {x = 30, y = 400, width = 200, height = 38}, \Apply Settings\) then
-        statusMessage = \Applied configuration for \ .. (selectedItem or \–\)
+    if Gui.button(ctx, "apply", {x = 30, y = 400, width = 200, height = 38}, "Apply Settings") then
+        statusMessage = "Applied configuration for " .. (selectedItem or "-")
+        log_trace("GuiDemo apply clicked: %s", statusMessage)
     end
 
-    Gui.text(ctx, {x = 30, y = 448, width = 420, height = 24}, \Status: \ .. statusMessage, {
+    Gui.text(ctx, {x = 30, y = 448, width = 420, height = 24}, "Status: " .. statusMessage, {
         color = {0.6, 0.9, 1.0, 1.0},
-        alignY = \top\,
+        alignY = "top",
     })
 end
 
