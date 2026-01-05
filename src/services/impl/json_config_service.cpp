@@ -361,6 +361,14 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
         readFloat("pbr_metallic", config.atmospherics.pbrMetallic);
     }
 
+    if (document.HasMember("gui_opacity")) {
+        const auto& value = document["gui_opacity"];
+        if (!value.IsNumber()) {
+            throw std::runtime_error("JSON member 'gui_opacity' must be a number");
+        }
+        config.guiOpacity = static_cast<float>(value.GetDouble());
+    }
+
     return config;
 }
 
@@ -461,6 +469,8 @@ std::string JsonConfigService::BuildConfigJson(const RuntimeConfig& config,
     } else {
         addStringMember("shaders_directory", "shaders");
     }
+
+    document.AddMember("gui_opacity", config.guiOpacity, allocator);
 
     rapidjson::Value extensionArray(rapidjson::kArrayType);
     for (const char* extension : kDeviceExtensions) {

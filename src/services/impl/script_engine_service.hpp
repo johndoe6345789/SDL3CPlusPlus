@@ -86,6 +86,7 @@ private:
     static int WindowGetRelativeMouseMode(lua_State* L);
     static int WindowSetCursorVisible(lua_State* L);
     static int WindowIsCursorVisible(lua_State* L);
+    static int LuaPrint(lua_State* L);
 
     std::shared_ptr<ILogger> logger_;
     std::shared_ptr<IMeshService> meshService_;

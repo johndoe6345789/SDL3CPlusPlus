@@ -125,6 +125,10 @@ Context.__index = Context
 function Context:new(options)
     options = options or {}
     local style = options.style or DEFAULT_STYLE
+    local opacity = 1.0
+    if type(config) == "table" and type(config.gui_opacity) == "number" then
+        opacity = config.gui_opacity
+    end
     local instance = {
         commands = {},
         input = nil,
@@ -133,6 +137,7 @@ function Context:new(options)
         focusWidget = nil,
         nextFocus = nil,
         style = style,
+        opacity = opacity,
         mousePressed = false,
         mouseReleased = false,
     }
@@ -184,15 +189,27 @@ function Context:markHot(widgetId, hovered)
     end
 end
 
+function Context:applyOpacity(color)
+    if not color then
+        return color
+    end
+    local result = {color[1], color[2], color[3], color[4]}
+    if result[4] then
+        result[4] = result[4] * self.opacity
+    end
+    return result
+end
+
 function Context:pushRect(rect, params)
     params = params or {}
+    local color = params.color and self:applyOpacity(params.color) or params.color
     local command = {
         type = "rect",
         x = rect.x,
         y = rect.y,
         width = rect.width,
         height = rect.height,
-        color = params.color,
+        color = color,
         borderColor = params.borderColor,
         borderWidth = params.borderWidth or (params.borderColor and 1 or 0),
         radius = params.radius or self.style.radius,

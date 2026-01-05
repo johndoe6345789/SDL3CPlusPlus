@@ -91,6 +91,7 @@ struct RuntimeConfig {
     MouseGrabConfig mouseGrab{};
     InputBindings inputBindings{};
     AtmosphericsConfig atmospherics{};
+    float guiOpacity = 1.0f;
 };
 
 }  // namespace sdl3cpp::services

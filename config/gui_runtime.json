@@ -61,5 +61,6 @@
     },
     "gamepad_axis_action_threshold": 0.5
   },
+  "gui_opacity": 1.0,
   "config_file": "config/gui_runtime.json"
 }

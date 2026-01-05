@@ -72,5 +72,6 @@
     "pbr_roughness": 0.3,
     "pbr_metallic": 0.1
   },
+  "gui_opacity": 0.75,
   "config_file": "config/seed_runtime.json"
 }

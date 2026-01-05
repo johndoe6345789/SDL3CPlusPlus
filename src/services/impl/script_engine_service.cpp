@@ -311,6 +311,7 @@ void ScriptEngineService::RegisterBindings(lua_State* L) {
     bind("window_get_relative_mouse_mode", &ScriptEngineService::WindowGetRelativeMouseMode);
     bind("window_set_cursor_visible", &ScriptEngineService::WindowSetCursorVisible);
     bind("window_is_cursor_visible", &ScriptEngineService::WindowIsCursorVisible);
+    bind("print", &ScriptEngineService::LuaPrint);
 }
 
 int ScriptEngineService::LoadMeshFromFile(lua_State* L) {
@@ -792,6 +793,50 @@ int ScriptEngineService::GlmMatrixFromTransform(lua_State* L) {
                       "luaStateIsNull=" + std::string(L ? "false" : "true"));
     }
     return lua::LuaGlmMatrixFromTransform(L);
+}
+
+int ScriptEngineService::LuaPrint(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    auto logger = context ? context->logger : nullptr;
+
+    int nargs = lua_gettop(L);
+    std::string message;
+
+    for (int i = 1; i <= nargs; ++i) {
+        if (i > 1) {
+            message += "\t";
+        }
+
+        const char* str = nullptr;
+        if (lua_isstring(L, i)) {
+            str = lua_tostring(L, i);
+        } else if (lua_isnil(L, i)) {
+            str = "nil";
+        } else if (lua_isboolean(L, i)) {
+            str = lua_toboolean(L, i) ? "true" : "false";
+        } else if (lua_isnumber(L, i)) {
+            lua_pushvalue(L, i);
+            str = lua_tostring(L, -1);
+            lua_pop(L, 1);
+        } else {
+            lua_pushvalue(L, i);
+            str = lua_tostring(L, -1);
+            if (!str) {
+                str = lua_typename(L, lua_type(L, i));
+            }
+            lua_pop(L, 1);
+        }
+
+        if (str) {
+            message += str;
+        }
+    }
+
+    if (logger) {
+        logger->Info("[Lua] " + message);
+    }
+
+    return 0;
 }
 
 }  // namespace sdl3cpp::services::impl
