@@ -500,7 +500,7 @@ local function create_spinning_cube()
     local function compute_model_matrix(time)
         local rotation = math3d.rotation_y(time * rotation_speed)
         local scale = scale_matrix(1.5, 1.5, 1.5)  -- Make cube 3x3x3 units
-        local position = math3d.translation(0.0, 3.0, 0.0)  -- Center of the room
+        local position = math3d.translation(0.0, 5.0, 0.0)  -- Center of the room
         return math3d.multiply(position, math3d.multiply(rotation, scale))
     end
 
