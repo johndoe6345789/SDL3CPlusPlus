@@ -9,12 +9,14 @@ RenderCommandService::RenderCommandService(std::shared_ptr<IVulkanDeviceService>
                                            std::shared_ptr<ISwapchainService> swapchainService,
                                            std::shared_ptr<IPipelineService> pipelineService,
                                            std::shared_ptr<IBufferService> bufferService,
+                                           std::shared_ptr<IGuiRendererService> guiRendererService,
                                            std::shared_ptr<JsonConfigService> configService,
                                            std::shared_ptr<ILogger> logger)
     : deviceService_(std::move(deviceService)),
       swapchainService_(std::move(swapchainService)),
       pipelineService_(std::move(pipelineService)),
       bufferService_(std::move(bufferService)),
+      guiRendererService_(std::move(guiRendererService)),
       configService_(std::move(configService)),
       logger_(logger) {
     if (logger_) {
@@ -22,7 +24,8 @@ RenderCommandService::RenderCommandService(std::shared_ptr<IVulkanDeviceService>
                        "deviceService=" + std::string(deviceService_ ? "set" : "null") +
                        ", swapchainService=" + std::string(swapchainService_ ? "set" : "null") +
                        ", pipelineService=" + std::string(pipelineService_ ? "set" : "null") +
-                       ", bufferService=" + std::string(bufferService_ ? "set" : "null"));
+                       ", bufferService=" + std::string(bufferService_ ? "set" : "null") +
+                       ", guiRendererService=" + std::string(guiRendererService_ ? "set" : "null"));
     }
 
     if (!deviceService_ || !swapchainService_ || !pipelineService_ || !bufferService_) {
@@ -217,6 +220,29 @@ void RenderCommandService::RecordCommands(uint32_t imageIndex,
     }
 
     vkCmdEndRenderPass(commandBuffer);
+    if (guiRendererService_) {
+        bool guiReady = guiRendererService_->IsReady();
+        const auto& images = swapchainService_->GetSwapchainImages();
+        if (!guiReady) {
+            if (logger_) {
+                logger_->Trace("RenderCommandService", "RecordCommands",
+                               "GUI overlay skipped: renderer not ready");
+            }
+        } else if (imageIndex >= images.size() || images[imageIndex] == VK_NULL_HANDLE) {
+            if (logger_) {
+                logger_->Error("RenderCommandService: GUI overlay skipped due to invalid swapchain image");
+            }
+        } else {
+            if (logger_) {
+                logger_->Trace("RenderCommandService", "RecordCommands",
+                               "Rendering GUI overlay imageIndex=" + std::to_string(imageIndex));
+            }
+            guiRendererService_->RenderToSwapchain(commandBuffer, images[imageIndex]);
+        }
+    } else if (logger_) {
+        logger_->Trace("RenderCommandService", "RecordCommands",
+                       "GUI overlay skipped: renderer service not available");
+    }
     vkEndCommandBuffer(commandBuffer);
 }
 

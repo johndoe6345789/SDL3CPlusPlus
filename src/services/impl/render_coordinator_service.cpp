@@ -58,6 +58,12 @@ void RenderCoordinatorService::RenderFrame(float time) {
 
     graphicsService_->BeginFrame();
 
+    if (guiService_ && guiScriptService_ && guiScriptService_->HasGuiCommands()) {
+        auto guiCommands = guiScriptService_->LoadGuiCommands();
+        auto extent = graphicsService_->GetSwapchainExtent();
+        guiService_->PrepareFrame(guiCommands, extent.width, extent.height);
+    }
+
     if (sceneScriptService_ && sceneService_) {
         auto sceneObjects = sceneScriptService_->LoadSceneObjects();
         sceneService_->LoadScene(sceneObjects);
@@ -92,12 +98,6 @@ void RenderCoordinatorService::RenderFrame(float time) {
         auto viewProj = sceneScriptService_->GetViewProjectionMatrix(aspect);
 
         graphicsService_->RenderScene(renderCommands, viewProj);
-    }
-
-    if (guiService_ && guiScriptService_ && guiScriptService_->HasGuiCommands()) {
-        auto guiCommands = guiScriptService_->LoadGuiCommands();
-        auto extent = graphicsService_->GetSwapchainExtent();
-        guiService_->PrepareFrame(guiCommands, extent.width, extent.height);
     }
 
     graphicsService_->EndFrame();

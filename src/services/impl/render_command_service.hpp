@@ -6,6 +6,7 @@
 #include "../interfaces/i_vulkan_device_service.hpp"
 #include "../interfaces/i_swapchain_service.hpp"
 #include "../interfaces/i_config_service.hpp"
+#include "../interfaces/i_gui_renderer_service.hpp"
 #include "../impl/json_config_service.hpp"
 #include "../interfaces/i_logger.hpp"
 #include "../../di/lifecycle.hpp"
@@ -27,6 +28,7 @@ public:
                                   std::shared_ptr<ISwapchainService> swapchainService,
                                   std::shared_ptr<IPipelineService> pipelineService,
                                   std::shared_ptr<IBufferService> bufferService,
+                                  std::shared_ptr<IGuiRendererService> guiRendererService,
                                   std::shared_ptr<JsonConfigService> configService,
                                   std::shared_ptr<ILogger> logger);
     ~RenderCommandService() override;
@@ -58,6 +60,7 @@ private:
     std::shared_ptr<ISwapchainService> swapchainService_;
     std::shared_ptr<IPipelineService> pipelineService_;
     std::shared_ptr<IBufferService> bufferService_;
+    std::shared_ptr<IGuiRendererService> guiRendererService_;
     std::shared_ptr<JsonConfigService> configService_;
     std::shared_ptr<ILogger> logger_;
 
