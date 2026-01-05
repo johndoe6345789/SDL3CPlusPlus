@@ -9,7 +9,7 @@ RenderCommandService::RenderCommandService(std::shared_ptr<IVulkanDeviceService>
                                            std::shared_ptr<ISwapchainService> swapchainService,
                                            std::shared_ptr<IPipelineService> pipelineService,
                                            std::shared_ptr<IBufferService> bufferService,
-                                           std::shared_ptr<IConfigService> configService,
+                                           std::shared_ptr<JsonConfigService> configService,
                                            std::shared_ptr<ILogger> logger)
     : deviceService_(std::move(deviceService)),
       swapchainService_(std::move(swapchainService)),
@@ -123,9 +123,12 @@ void RenderCommandService::RecordCommands(uint32_t imageIndex,
     renderPassInfo.renderArea.offset = {0, 0};
     renderPassInfo.renderArea.extent = extent;
 
-    VkClearValue clearColor = {{{0.1f, 0.1f, 0.15f, 1.0f}}};
-    renderPassInfo.clearValueCount = 1;
-    renderPassInfo.pClearValues = &clearColor;
+    std::array<VkClearValue, 2> clearValues{};
+    clearValues[0].color = {{0.1f, 0.1f, 0.15f, 1.0f}};  // Color clear
+    clearValues[1].depthStencil = {1.0f, 0};  // Depth clear
+
+    renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+    renderPassInfo.pClearValues = clearValues.data();
 
     vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 

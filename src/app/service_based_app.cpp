@@ -297,7 +297,7 @@ void ServiceBasedApp::RegisterServices() {
         registry_.GetService<services::ISwapchainService>(),
         registry_.GetService<services::IPipelineService>(),
         registry_.GetService<services::IBufferService>(),
-        registry_.GetService<services::IConfigService>(),
+        std::static_pointer_cast<services::impl::JsonConfigService>(registry_.GetService<services::IConfigService>()),
         registry_.GetService<services::ILogger>());
 
     // Graphics service (facade)

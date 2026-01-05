@@ -82,6 +82,12 @@ private:
     VkRenderPass renderPass_ = VK_NULL_HANDLE;
     std::vector<VkFramebuffer> framebuffers_;
 
+    // Depth buffer resources
+    VkFormat depthFormat_ = VK_FORMAT_UNDEFINED;
+    std::vector<VkImage> depthImages_;
+    std::vector<VkDeviceMemory> depthImageMemories_;
+    std::vector<VkImageView> depthImageViews_;
+
     uint32_t currentWidth_ = 0;
     uint32_t currentHeight_ = 0;
 
@@ -98,9 +104,13 @@ private:
     VkExtent2D ChooseExtent(const VkSurfaceCapabilitiesKHR& capabilities, uint32_t width, uint32_t height);
 
     void CreateImageViews();
+    void CreateDepthResources();
     void CreateRenderPass();
     void CreateFramebuffers();
     void CleanupSwapchainInternal();
+
+    VkFormat FindDepthFormat();
+    bool HasStencilComponent(VkFormat format);
 
     void OnWindowResized(const events::Event& event);
 };
