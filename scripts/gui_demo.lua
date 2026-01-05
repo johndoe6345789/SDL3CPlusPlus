@@ -20,6 +20,38 @@ local buttonStates = {
 
 local statusMessage = 'Ready'
 local viewProjectionLogged = false
+local fpsMode = false
+local fpsToggleWasDown = false
+
+local function setFpsMode(enabled)
+    fpsMode = enabled
+    if window_set_relative_mouse_mode then
+        window_set_relative_mouse_mode(enabled)
+    end
+    if window_set_mouse_grabbed then
+        window_set_mouse_grabbed(enabled)
+    end
+    if window_set_cursor_visible then
+        window_set_cursor_visible(not enabled)
+    end
+    statusMessage = enabled and "FPS mode enabled" or "FPS mode disabled"
+    log_trace("FPS mode toggled: %s", enabled and "on" or "off")
+end
+
+local function updateFpsModeToggle()
+    if not input_is_key_down then
+        return
+    end
+    local down = input_is_key_down("F1")
+    if down and not fpsToggleWasDown then
+        setFpsMode(not fpsMode)
+    end
+    fpsToggleWasDown = down
+    if fpsMode and window_get_mouse_grabbed and not window_get_mouse_grabbed() then
+        fpsMode = false
+        statusMessage = "FPS mode disabled"
+    end
+end
 
 local shader_variants = {
     default = {
@@ -83,14 +115,37 @@ local function drawTestButtons()
         buttonStates.button2 and "ON" or "OFF",
         buttonStates.button3 and "ON" or "OFF",
         buttonStates.button4 and "ON" or "OFF")
-    Gui.text(ctx, {x = 70, y = 320, width = 360, height = 30}, statesText, {
+    Gui.text(ctx, {x = 70, y = 315, width = 360, height = 22}, statesText, {
         fontSize = 16,
         alignX = "center",
         color = {1.0, 0.8, 0.8, 1.0},
     })
 
+    local deltaX = input.mouseDeltaX or 0
+    local deltaY = input.mouseDeltaY or 0
+    Gui.text(ctx, {x = 70, y = 340, width = 360, height = 20},
+        string.format("Mouse d: %.1f, %.1f", deltaX, deltaY), {
+            fontSize = 14,
+            alignX = "center",
+            color = {0.85, 0.9, 0.85, 1.0},
+        })
+
+    local grabState = window_get_mouse_grabbed and window_get_mouse_grabbed() or false
+    local fpsLabel = fpsMode and "ON" or "OFF"
+    Gui.text(ctx, {x = 70, y = 362, width = 360, height = 20},
+        string.format("FPS Mode: %s (grab=%s, F1 toggle)", fpsLabel, grabState and "on" or "off"), {
+            fontSize = 14,
+            alignX = "center",
+            color = {0.85, 0.85, 0.95, 1.0},
+        })
+
+    if Gui.button(ctx, "fps_toggle", {x = 155, y = 385, width = 140, height = 28},
+                  fpsMode and "FPS: ON" or "FPS: OFF") then
+        setFpsMode(not fpsMode)
+    end
+
     -- Reset button
-    if Gui.button(ctx, "reset", {x = 175, y = 370, width = 100, height = 40}, "Reset") then
+    if Gui.button(ctx, "reset", {x = 175, y = 418, width = 100, height = 28}, "Reset") then
         buttonStates.button1 = false
         buttonStates.button2 = false
         buttonStates.button3 = false
@@ -123,14 +178,31 @@ function get_view_projection(aspect)
 end
 
 function get_gui_commands()
+    updateFpsModeToggle()
     ctx:beginFrame(input)
     drawTestButtons()
-    Gui.cursor(ctx, input, {
-        size = 16,
-        thickness = 2,
-        color = {1.0, 0.9, 0.2, 1.0},
-        activeColor = {1.0, 0.35, 0.15, 1.0},
-    })
+    if fpsMode then
+        local width, height = 1024, 768
+        if window_get_size then
+            local w, h = window_get_size()
+            if type(w) == "number" and type(h) == "number" then
+                width, height = w, h
+            end
+        end
+        Gui.cursor(ctx, {mouseX = width * 0.5, mouseY = height * 0.5, mouseDown = input.mouseDown}, {
+            size = 18,
+            thickness = 2,
+            color = {0.9, 0.95, 1.0, 1.0},
+            activeColor = {1.0, 0.4, 0.2, 1.0},
+        })
+    else
+        Gui.cursor(ctx, input, {
+            size = 16,
+            thickness = 2,
+            color = {1.0, 0.9, 0.2, 1.0},
+            activeColor = {1.0, 0.35, 0.15, 1.0},
+        })
+    end
     ctx:endFrame()
     return ctx:getCommands()
 end

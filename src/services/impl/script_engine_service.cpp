@@ -5,11 +5,63 @@
 
 #include <btBulletDynamicsCommon.h>
 #include <lua.hpp>
+#include <SDL3/SDL.h>
 
+#include <algorithm>
 #include <array>
+#include <cctype>
 #include <stdexcept>
 #include <string>
 #include <utility>
+
+namespace {
+bool TryParseMouseButtonName(const char* name, uint8_t& button) {
+    if (!name) {
+        return false;
+    }
+    std::string lower(name);
+    std::transform(lower.begin(), lower.end(), lower.begin(),
+                   [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+    if (lower == "left") {
+        button = SDL_BUTTON_LEFT;
+        return true;
+    }
+    if (lower == "right") {
+        button = SDL_BUTTON_RIGHT;
+        return true;
+    }
+    if (lower == "middle") {
+        button = SDL_BUTTON_MIDDLE;
+        return true;
+    }
+    if (lower == "x1" || lower == "extra1") {
+        button = SDL_BUTTON_X1;
+        return true;
+    }
+    if (lower == "x2" || lower == "extra2") {
+        button = SDL_BUTTON_X2;
+        return true;
+    }
+    return false;
+}
+
+SDL_Keycode ReadKeycodeFromLua(lua_State* L, int index, bool& ok) {
+    ok = true;
+    if (lua_isnumber(L, index)) {
+        return static_cast<SDL_Keycode>(lua_tointeger(L, index));
+    }
+    if (lua_isstring(L, index)) {
+        const char* name = lua_tostring(L, index);
+        SDL_Keycode key = SDL_GetKeyFromName(name);
+        if (key == SDLK_UNKNOWN) {
+            ok = false;
+        }
+        return key;
+    }
+    ok = false;
+    return SDLK_UNKNOWN;
+}
+}  // namespace
 
 namespace sdl3cpp::services::impl {
 
@@ -18,11 +70,15 @@ ScriptEngineService::ScriptEngineService(const std::filesystem::path& scriptPath
                                          std::shared_ptr<IMeshService> meshService,
                                          std::shared_ptr<IAudioCommandService> audioCommandService,
                                          std::shared_ptr<IPhysicsBridgeService> physicsBridgeService,
+                                         std::shared_ptr<IInputService> inputService,
+                                         std::shared_ptr<IWindowService> windowService,
                                          bool debugEnabled)
     : logger_(std::move(logger)),
       meshService_(std::move(meshService)),
       audioCommandService_(std::move(audioCommandService)),
       physicsBridgeService_(std::move(physicsBridgeService)),
+      inputService_(std::move(inputService)),
+      windowService_(std::move(windowService)),
       scriptPath_(scriptPath),
       debugEnabled_(debugEnabled) {
     if (logger_) {
@@ -31,7 +87,9 @@ ScriptEngineService::ScriptEngineService(const std::filesystem::path& scriptPath
                        ", debugEnabled=" + std::string(debugEnabled_ ? "true" : "false") +
                        ", meshService=" + std::string(meshService_ ? "set" : "null") +
                        ", audioCommandService=" + std::string(audioCommandService_ ? "set" : "null") +
-                       ", physicsBridgeService=" + std::string(physicsBridgeService_ ? "set" : "null"));
+                       ", physicsBridgeService=" + std::string(physicsBridgeService_ ? "set" : "null") +
+                       ", inputService=" + std::string(inputService_ ? "set" : "null") +
+                       ", windowService=" + std::string(windowService_ ? "set" : "null"));
     }
 }
 
@@ -56,6 +114,8 @@ void ScriptEngineService::Initialize() {
     bindingContext_->meshService = meshService_;
     bindingContext_->audioCommandService = audioCommandService_;
     bindingContext_->physicsBridgeService = physicsBridgeService_;
+    bindingContext_->inputService = inputService_;
+    bindingContext_->windowService = windowService_;
     bindingContext_->logger = logger_;
 
     luaState_ = luaL_newstate();
@@ -160,6 +220,22 @@ void ScriptEngineService::RegisterBindings(lua_State* L) {
     bind("audio_play_background", &ScriptEngineService::AudioPlayBackground);
     bind("audio_play_sound", &ScriptEngineService::AudioPlaySound);
     bind("audio_stop_background", &ScriptEngineService::AudioStopBackground);
+    bind("input_get_mouse_position", &ScriptEngineService::InputGetMousePosition);
+    bind("input_get_mouse_delta", &ScriptEngineService::InputGetMouseDelta);
+    bind("input_get_mouse_wheel", &ScriptEngineService::InputGetMouseWheel);
+    bind("input_is_key_down", &ScriptEngineService::InputIsKeyDown);
+    bind("input_is_action_down", &ScriptEngineService::InputIsActionDown);
+    bind("input_is_mouse_down", &ScriptEngineService::InputIsMouseDown);
+    bind("input_get_text", &ScriptEngineService::InputGetText);
+    bind("window_get_size", &ScriptEngineService::WindowGetSize);
+    bind("window_set_title", &ScriptEngineService::WindowSetTitle);
+    bind("window_is_minimized", &ScriptEngineService::WindowIsMinimized);
+    bind("window_set_mouse_grabbed", &ScriptEngineService::WindowSetMouseGrabbed);
+    bind("window_get_mouse_grabbed", &ScriptEngineService::WindowGetMouseGrabbed);
+    bind("window_set_relative_mouse_mode", &ScriptEngineService::WindowSetRelativeMouseMode);
+    bind("window_get_relative_mouse_mode", &ScriptEngineService::WindowGetRelativeMouseMode);
+    bind("window_set_cursor_visible", &ScriptEngineService::WindowSetCursorVisible);
+    bind("window_is_cursor_visible", &ScriptEngineService::WindowIsCursorVisible);
 }
 
 int ScriptEngineService::LoadMeshFromFile(lua_State* L) {
@@ -381,6 +457,222 @@ int ScriptEngineService::AudioStopBackground(lua_State* L) {
     }
 
     lua_pushboolean(L, 1);
+    return 1;
+}
+
+int ScriptEngineService::InputGetMousePosition(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    if (!context || !context->inputService) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Input service not available");
+        return 2;
+    }
+    auto [x, y] = context->inputService->GetMousePosition();
+    lua_pushnumber(L, x);
+    lua_pushnumber(L, y);
+    return 2;
+}
+
+int ScriptEngineService::InputGetMouseDelta(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    if (!context || !context->inputService) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Input service not available");
+        return 2;
+    }
+    const auto& state = context->inputService->GetState();
+    lua_pushnumber(L, state.mouseDeltaX);
+    lua_pushnumber(L, state.mouseDeltaY);
+    return 2;
+}
+
+int ScriptEngineService::InputGetMouseWheel(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    if (!context || !context->inputService) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Input service not available");
+        return 2;
+    }
+    const auto& state = context->inputService->GetState();
+    lua_pushnumber(L, state.mouseWheelDeltaX);
+    lua_pushnumber(L, state.mouseWheelDeltaY);
+    return 2;
+}
+
+int ScriptEngineService::InputIsKeyDown(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    if (!context || !context->inputService) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Input service not available");
+        return 2;
+    }
+    bool ok = false;
+    SDL_Keycode key = ReadKeycodeFromLua(L, 1, ok);
+    if (!ok) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+    lua_pushboolean(L, context->inputService->IsKeyPressed(key));
+    return 1;
+}
+
+int ScriptEngineService::InputIsActionDown(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    if (!context || !context->inputService) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Input service not available");
+        return 2;
+    }
+    const char* action = luaL_checkstring(L, 1);
+    lua_pushboolean(L, context->inputService->IsActionPressed(action));
+    return 1;
+}
+
+int ScriptEngineService::InputIsMouseDown(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    if (!context || !context->inputService) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Input service not available");
+        return 2;
+    }
+    uint8_t button = SDL_BUTTON_LEFT;
+    if (lua_isnumber(L, 1)) {
+        button = static_cast<uint8_t>(lua_tointeger(L, 1));
+    } else if (lua_isstring(L, 1)) {
+        const char* name = lua_tostring(L, 1);
+        if (!TryParseMouseButtonName(name, button)) {
+            lua_pushboolean(L, 0);
+            return 1;
+        }
+    } else {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+    lua_pushboolean(L, context->inputService->IsMouseButtonPressed(button));
+    return 1;
+}
+
+int ScriptEngineService::InputGetText(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    if (!context || !context->inputService) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Input service not available");
+        return 2;
+    }
+    const auto& state = context->inputService->GetState();
+    lua_pushstring(L, state.textInput.c_str());
+    return 1;
+}
+
+int ScriptEngineService::WindowGetSize(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    if (!context || !context->windowService) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Window service not available");
+        return 2;
+    }
+    auto [width, height] = context->windowService->GetSize();
+    lua_pushinteger(L, static_cast<lua_Integer>(width));
+    lua_pushinteger(L, static_cast<lua_Integer>(height));
+    return 2;
+}
+
+int ScriptEngineService::WindowSetTitle(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    if (!context || !context->windowService) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Window service not available");
+        return 2;
+    }
+    const char* title = luaL_checkstring(L, 1);
+    context->windowService->SetTitle(title);
+    lua_pushboolean(L, 1);
+    return 1;
+}
+
+int ScriptEngineService::WindowIsMinimized(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    if (!context || !context->windowService) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Window service not available");
+        return 2;
+    }
+    lua_pushboolean(L, context->windowService->IsMinimized());
+    return 1;
+}
+
+int ScriptEngineService::WindowSetMouseGrabbed(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    if (!context || !context->windowService) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Window service not available");
+        return 2;
+    }
+    bool grabbed = lua_toboolean(L, 1);
+    context->windowService->SetMouseGrabbed(grabbed);
+    lua_pushboolean(L, 1);
+    return 1;
+}
+
+int ScriptEngineService::WindowGetMouseGrabbed(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    if (!context || !context->windowService) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Window service not available");
+        return 2;
+    }
+    lua_pushboolean(L, context->windowService->IsMouseGrabbed());
+    return 1;
+}
+
+int ScriptEngineService::WindowSetRelativeMouseMode(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    if (!context || !context->windowService) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Window service not available");
+        return 2;
+    }
+    bool enabled = lua_toboolean(L, 1);
+    context->windowService->SetRelativeMouseMode(enabled);
+    if (context->inputService) {
+        context->inputService->SetRelativeMouseMode(enabled);
+    }
+    lua_pushboolean(L, 1);
+    return 1;
+}
+
+int ScriptEngineService::WindowGetRelativeMouseMode(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    if (!context || !context->windowService) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Window service not available");
+        return 2;
+    }
+    lua_pushboolean(L, context->windowService->IsRelativeMouseMode());
+    return 1;
+}
+
+int ScriptEngineService::WindowSetCursorVisible(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    if (!context || !context->windowService) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Window service not available");
+        return 2;
+    }
+    bool visible = lua_toboolean(L, 1);
+    context->windowService->SetCursorVisible(visible);
+    lua_pushboolean(L, 1);
+    return 1;
+}
+
+int ScriptEngineService::WindowIsCursorVisible(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    if (!context || !context->windowService) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Window service not available");
+        return 2;
+    }
+    lua_pushboolean(L, context->windowService->IsCursorVisible());
     return 1;
 }
 

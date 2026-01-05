@@ -66,6 +66,10 @@ SdlInputService::SdlInputService(std::shared_ptr<events::IEventBus> eventBus,
         OnTextInput(e);
     });
 
+    eventBus_->Subscribe(events::EventType::WindowResized, [this](const events::Event& e) {
+        OnWindowResized(e);
+    });
+
     eventBus_->Subscribe(events::EventType::WindowFocusGained, [this](const events::Event& e) {
         OnWindowFocusGained(e);
     });
@@ -86,9 +90,23 @@ SdlInputService::SdlInputService(std::shared_ptr<events::IEventBus> eventBus,
         const auto& mouseGrabConfig = configService_->GetMouseGrabConfig();
         mouseGrabGatesLook_ = mouseGrabConfig.enabled &&
                               (mouseGrabConfig.grabOnClick || mouseGrabConfig.startGrabbed);
+        mouseRelativeMode_ = mouseGrabConfig.relativeMode;
+        guiWindowWidth_ = configService_->GetWindowWidth();
+        guiWindowHeight_ = configService_->GetWindowHeight();
+        if (guiWindowWidth_ > 0 && guiWindowHeight_ > 0) {
+            guiCursorX_ = static_cast<float>(guiWindowWidth_) * 0.5f;
+            guiCursorY_ = static_cast<float>(guiWindowHeight_) * 0.5f;
+            state_.mouseX = guiCursorX_;
+            state_.mouseY = guiCursorY_;
+            guiInputSnapshot_.mouseX = guiCursorX_;
+            guiInputSnapshot_.mouseY = guiCursorY_;
+        }
         if (logger_) {
             logger_->Trace("SdlInputService", "SdlInputService",
-                           "mouseGrabGatesLook=" + std::string(mouseGrabGatesLook_ ? "true" : "false"));
+                           "mouseGrabGatesLook=" + std::string(mouseGrabGatesLook_ ? "true" : "false") +
+                           ", relativeMode=" + std::string(mouseRelativeMode_ ? "true" : "false") +
+                           ", guiWindow=" + std::to_string(guiWindowWidth_) + "x" +
+                           std::to_string(guiWindowHeight_));
         }
     }
     BuildActionKeyMapping();
@@ -118,15 +136,10 @@ void SdlInputService::ProcessEvent(const SDL_Event& event) {
             break;
 
         case SDL_EVENT_MOUSE_MOTION:
-            state_.mouseX = event.motion.x;
-            state_.mouseY = event.motion.y;
-            // GUI input processing
-            guiInputSnapshot_.mouseX = static_cast<float>(event.motion.x);
-            guiInputSnapshot_.mouseY = static_cast<float>(event.motion.y);
-            if (ShouldCaptureMouseDelta()) {
-                guiInputSnapshot_.mouseDeltaX += static_cast<float>(event.motion.xrel);
-                guiInputSnapshot_.mouseDeltaY += static_cast<float>(event.motion.yrel);
-            }
+            UpdateMousePosition(static_cast<float>(event.motion.x),
+                                static_cast<float>(event.motion.y),
+                                static_cast<float>(event.motion.xrel),
+                                static_cast<float>(event.motion.yrel));
             break;
 
         case SDL_EVENT_MOUSE_BUTTON_DOWN:
@@ -168,6 +181,8 @@ void SdlInputService::ResetFrameState() {
         logger_->Trace("SdlInputService", "ResetFrameState");
     }
     // Reset per-frame state
+    state_.mouseDeltaX = 0.0f;
+    state_.mouseDeltaY = 0.0f;
     state_.mouseWheelDeltaX = 0.0f;
     state_.mouseWheelDeltaY = 0.0f;
     state_.textInput.clear();
@@ -195,11 +210,34 @@ bool SdlInputService::IsMouseButtonPressed(uint8_t button) const {
     return state_.mouseButtonsPressed.count(button) > 0;
 }
 
+bool SdlInputService::IsActionPressed(const std::string& action) const {
+    if (logger_) {
+        logger_->Trace("SdlInputService", "IsActionPressed",
+                       "action=" + action);
+    }
+    return IsActionKeyPressed(action);
+}
+
 std::pair<float, float> SdlInputService::GetMousePosition() const {
     if (logger_) {
         logger_->Trace("SdlInputService", "GetMousePosition");
     }
     return {state_.mouseX, state_.mouseY};
+}
+
+void SdlInputService::SetRelativeMouseMode(bool enabled) {
+    if (logger_) {
+        logger_->Trace("SdlInputService", "SetRelativeMouseMode",
+                       "enabled=" + std::string(enabled ? "true" : "false"));
+    }
+    mouseRelativeMode_ = enabled;
+}
+
+bool SdlInputService::IsRelativeMouseMode() const {
+    if (logger_) {
+        logger_->Trace("SdlInputService", "IsRelativeMouseMode");
+    }
+    return mouseRelativeMode_;
 }
 
 void SdlInputService::OnKeyPressed(const events::Event& event) {
@@ -237,14 +275,7 @@ void SdlInputService::OnMouseMoved(const events::Event& event) {
                        ", deltaX=" + std::to_string(mouseEvent.deltaX) +
                        ", deltaY=" + std::to_string(mouseEvent.deltaY));
     }
-    state_.mouseX = mouseEvent.x;
-    state_.mouseY = mouseEvent.y;
-    guiInputSnapshot_.mouseX = mouseEvent.x;
-    guiInputSnapshot_.mouseY = mouseEvent.y;
-    if (ShouldCaptureMouseDelta()) {
-        guiInputSnapshot_.mouseDeltaX += mouseEvent.deltaX;
-        guiInputSnapshot_.mouseDeltaY += mouseEvent.deltaY;
-    }
+    UpdateMousePosition(mouseEvent.x, mouseEvent.y, mouseEvent.deltaX, mouseEvent.deltaY);
 }
 
 void SdlInputService::OnMouseButtonPressed(const events::Event& event) {
@@ -298,6 +329,18 @@ void SdlInputService::OnTextInput(const events::Event& event) {
     }
     state_.textInput += textEvent.text;
     guiInputSnapshot_.textInput += textEvent.text;
+}
+
+void SdlInputService::OnWindowResized(const events::Event& event) {
+    const auto& resized = event.GetData<events::WindowResizedEvent>();
+    guiWindowWidth_ = resized.width;
+    guiWindowHeight_ = resized.height;
+    ClampGuiCursor();
+    if (logger_) {
+        logger_->Trace("SdlInputService", "OnWindowResized",
+                       "width=" + std::to_string(guiWindowWidth_) +
+                       ", height=" + std::to_string(guiWindowHeight_));
+    }
 }
 
 void SdlInputService::OnWindowFocusGained(const events::Event& event) {
@@ -528,6 +571,46 @@ bool SdlInputService::ShouldCaptureMouseDelta() const {
         return mouseGrabbed_;
     }
     return true;
+}
+
+void SdlInputService::UpdateMousePosition(float x, float y, float deltaX, float deltaY) {
+    if (mouseRelativeMode_ && mouseGrabbed_) {
+        guiCursorX_ += deltaX;
+        guiCursorY_ += deltaY;
+        ClampGuiCursor();
+        state_.mouseX = guiCursorX_;
+        state_.mouseY = guiCursorY_;
+        guiInputSnapshot_.mouseX = guiCursorX_;
+        guiInputSnapshot_.mouseY = guiCursorY_;
+        if (logger_ && !relativeCursorLogged_) {
+            logger_->Trace("SdlInputService", "UpdateMousePosition",
+                           "relativeCursor=true, startX=" + std::to_string(guiCursorX_) +
+                           ", startY=" + std::to_string(guiCursorY_));
+            relativeCursorLogged_ = true;
+        }
+    } else {
+        state_.mouseX = x;
+        state_.mouseY = y;
+        guiInputSnapshot_.mouseX = x;
+        guiInputSnapshot_.mouseY = y;
+        guiCursorX_ = x;
+        guiCursorY_ = y;
+    }
+
+    if (ShouldCaptureMouseDelta()) {
+        guiInputSnapshot_.mouseDeltaX += deltaX;
+        guiInputSnapshot_.mouseDeltaY += deltaY;
+    }
+    state_.mouseDeltaX += deltaX;
+    state_.mouseDeltaY += deltaY;
+}
+
+void SdlInputService::ClampGuiCursor() {
+    if (guiWindowWidth_ == 0 || guiWindowHeight_ == 0) {
+        return;
+    }
+    guiCursorX_ = std::clamp(guiCursorX_, 0.0f, static_cast<float>(guiWindowWidth_ - 1));
+    guiCursorY_ = std::clamp(guiCursorY_, 0.0f, static_cast<float>(guiWindowHeight_ - 1));
 }
 
 void SdlInputService::EnsureGamepadSubsystem() {

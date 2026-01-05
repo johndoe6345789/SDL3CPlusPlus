@@ -215,7 +215,7 @@ void SdlWindowService::CreateWindow(const WindowConfig& config) {
     mouseGrabbed_ = false;
     ConfigureMouseGrabBindings();
     if (mouseGrabConfig_.enabled && mouseGrabConfig_.startGrabbed) {
-        ApplyMouseGrab(true);
+        ApplyMouseGrab(true, false);
     }
 
     logger_->TraceVariable("window_", reinterpret_cast<void*>(window_));
@@ -228,7 +228,7 @@ void SdlWindowService::DestroyWindow() {
                    "windowIsNull=" + std::string(window_ ? "false" : "true"));
     if (window_) {
         if (mouseGrabbed_) {
-            ApplyMouseGrab(false);
+            ApplyMouseGrab(false, false);
         }
         SDL_StopTextInput(window_);
         SDL_DestroyWindow(window_);
@@ -259,6 +259,81 @@ bool SdlWindowService::IsMinimized() const {
     return (flags & SDL_WINDOW_MINIMIZED) != 0;
 }
 
+void SdlWindowService::SetMouseGrabbed(bool grabbed) {
+    if (logger_) {
+        logger_->Trace("SdlWindowService", "SetMouseGrabbed",
+                       "grabbed=" + std::string(grabbed ? "true" : "false"));
+    }
+    if (!window_) {
+        return;
+    }
+    if (!mouseGrabConfig_.enabled) {
+        mouseGrabConfig_.enabled = true;
+    }
+    ApplyMouseGrab(grabbed, true);
+}
+
+bool SdlWindowService::IsMouseGrabbed() const {
+    if (logger_) {
+        logger_->Trace("SdlWindowService", "IsMouseGrabbed");
+    }
+    return mouseGrabbed_;
+}
+
+void SdlWindowService::SetRelativeMouseMode(bool enabled) {
+    if (logger_) {
+        logger_->Trace("SdlWindowService", "SetRelativeMouseMode",
+                       "enabled=" + std::string(enabled ? "true" : "false"));
+    }
+    mouseGrabConfig_.relativeMode = enabled;
+    if (!window_) {
+        return;
+    }
+    if (!SDL_SetWindowRelativeMouseMode(window_, enabled) && logger_) {
+        logger_->Error("SdlWindowService: " +
+                       BuildSdlErrorMessage("SDL_SetWindowRelativeMouseMode failed", platformService_));
+    }
+    if (mouseGrabbed_ && mouseGrabConfig_.enabled) {
+        ApplyMouseGrab(mouseGrabbed_, true);
+    }
+}
+
+bool SdlWindowService::IsRelativeMouseMode() const {
+    if (logger_) {
+        logger_->Trace("SdlWindowService", "IsRelativeMouseMode");
+    }
+    return mouseGrabConfig_.relativeMode;
+}
+
+void SdlWindowService::SetCursorVisible(bool visible) {
+    if (logger_) {
+        logger_->Trace("SdlWindowService", "SetCursorVisible",
+                       "visible=" + std::string(visible ? "true" : "false"));
+    }
+    if (!window_) {
+        return;
+    }
+    mouseGrabConfig_.hideCursor = !visible;
+    bool cursorResult = visible ? SDL_ShowCursor() : SDL_HideCursor();
+    if (!cursorResult && logger_) {
+        logger_->Error("SdlWindowService: " +
+                       BuildSdlErrorMessage(visible ? "SDL_ShowCursor failed" : "SDL_HideCursor failed",
+                                            platformService_));
+    } else {
+        cursorVisible_ = visible;
+    }
+    if (mouseGrabbed_ && mouseGrabConfig_.enabled) {
+        ApplyMouseGrab(mouseGrabbed_, true);
+    }
+}
+
+bool SdlWindowService::IsCursorVisible() const {
+    if (logger_) {
+        logger_->Trace("SdlWindowService", "IsCursorVisible");
+    }
+    return cursorVisible_;
+}
+
 void SdlWindowService::PollEvents() {
     logger_->Trace("SdlWindowService", "PollEvents");
     SDL_Event event;
@@ -273,7 +348,7 @@ void SdlWindowService::PollEvents() {
                 logger_->Info("SdlWindowService: Mouse grab triggered by click (button=" +
                              std::to_string(event.button.button) + ")");
             }
-            ApplyMouseGrab(true);
+            ApplyMouseGrab(true, false);
         }
 
         // Handle release separately (doesn't suppress event)
@@ -284,7 +359,7 @@ void SdlWindowService::PollEvents() {
             if (logger_) {
                 logger_->Info("SdlWindowService: Mouse grab released by escape key");
             }
-            ApplyMouseGrab(false);
+            ApplyMouseGrab(false, false);
         }
 
         // Only publish event if it's not the grab-triggering click
@@ -348,7 +423,7 @@ void SdlWindowService::HandleMouseGrabEvent(const SDL_Event& sdlEvent) {
     if (mouseGrabConfig_.grabOnClick &&
         sdlEvent.type == SDL_EVENT_MOUSE_BUTTON_DOWN &&
         sdlEvent.button.button == grabMouseButton_) {
-        ApplyMouseGrab(true);
+        ApplyMouseGrab(true, false);
         return;
     }
 
@@ -356,15 +431,15 @@ void SdlWindowService::HandleMouseGrabEvent(const SDL_Event& sdlEvent) {
         sdlEvent.type == SDL_EVENT_KEY_DOWN &&
         sdlEvent.key.key == releaseKey_ &&
         !sdlEvent.key.repeat) {
-        ApplyMouseGrab(false);
+        ApplyMouseGrab(false, false);
     }
 }
 
-void SdlWindowService::ApplyMouseGrab(bool grabbed) {
+void SdlWindowService::ApplyMouseGrab(bool grabbed, bool force) {
     if (!window_ || !mouseGrabConfig_.enabled) {
         return;
     }
-    if (mouseGrabbed_ == grabbed) {
+    if (!force && mouseGrabbed_ == grabbed) {
         return;
     }
 
@@ -400,6 +475,16 @@ void SdlWindowService::ApplyMouseGrab(bool grabbed) {
             logger_->Error("SdlWindowService: " +
                            BuildSdlErrorMessage(grabbed ? "SDL_HideCursor failed" : "SDL_ShowCursor failed",
                                                 platformService_));
+        } else {
+            cursorVisible_ = !grabbed;
+        }
+    } else {
+        bool cursorResult = SDL_ShowCursor();
+        if (!cursorResult && logger_) {
+            logger_->Error("SdlWindowService: " +
+                           BuildSdlErrorMessage("SDL_ShowCursor failed", platformService_));
+        } else {
+            cursorVisible_ = true;
         }
     }
 

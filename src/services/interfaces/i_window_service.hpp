@@ -92,6 +92,48 @@ public:
      * @return true if minimized, false otherwise
      */
     virtual bool IsMinimized() const = 0;
+
+    /**
+     * @brief Set mouse grab (capture) state.
+     *
+     * @param grabbed true to grab, false to release
+     */
+    virtual void SetMouseGrabbed(bool grabbed) = 0;
+
+    /**
+     * @brief Check if the mouse is currently grabbed.
+     *
+     * @return true if grabbed, false otherwise
+     */
+    virtual bool IsMouseGrabbed() const = 0;
+
+    /**
+     * @brief Enable or disable relative mouse mode.
+     *
+     * @param enabled true for relative mode, false for absolute
+     */
+    virtual void SetRelativeMouseMode(bool enabled) = 0;
+
+    /**
+     * @brief Check if relative mouse mode is enabled.
+     *
+     * @return true if enabled, false otherwise
+     */
+    virtual bool IsRelativeMouseMode() const = 0;
+
+    /**
+     * @brief Show or hide the OS cursor.
+     *
+     * @param visible true to show, false to hide
+     */
+    virtual void SetCursorVisible(bool visible) = 0;
+
+    /**
+     * @brief Check if the OS cursor is visible.
+     *
+     * @return true if visible, false otherwise
+     */
+    virtual bool IsCursorVisible() const = 0;
 };
 
 }  // namespace sdl3cpp::services

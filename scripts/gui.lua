@@ -59,6 +59,8 @@ function InputState:new()
     local instance = {
         mouseX = 0,
         mouseY = 0,
+        mouseDeltaX = 0,
+        mouseDeltaY = 0,
         mouseDown = false,
         mouseDownPrevious = false,
         wheel = 0,
@@ -68,10 +70,12 @@ function InputState:new()
     return setmetatable(instance, self)
 end
 
-function InputState:setMouse(x, y, isDown)
+function InputState:setMouse(x, y, isDown, deltaX, deltaY)
     self.mouseDownPrevious = self.mouseDown
     self.mouseX = x
     self.mouseY = y
+    self.mouseDeltaX = deltaX or 0
+    self.mouseDeltaY = deltaY or 0
     self.mouseDown = isDown
 end
 
@@ -102,6 +106,8 @@ end
 function InputState:resetTransient()
     self.textInput = ""
     self.wheel = 0
+    self.mouseDeltaX = 0
+    self.mouseDeltaY = 0
 end
 
 local Context = {}

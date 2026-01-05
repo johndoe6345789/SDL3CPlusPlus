@@ -53,6 +53,12 @@ public:
     void PollEvents() override;
     void SetTitle(const std::string& title) override;
     bool IsMinimized() const override;
+    void SetMouseGrabbed(bool grabbed) override;
+    bool IsMouseGrabbed() const override;
+    void SetRelativeMouseMode(bool enabled) override;
+    bool IsRelativeMouseMode() const override;
+    void SetCursorVisible(bool visible) override;
+    bool IsCursorVisible() const override;
 
 private:
     std::shared_ptr<ILogger> logger_;
@@ -63,6 +69,7 @@ private:
     bool initialized_ = false;
     MouseGrabConfig mouseGrabConfig_{};
     bool mouseGrabbed_ = false;
+    bool cursorVisible_ = true;
     uint8_t grabMouseButton_ = SDL_BUTTON_LEFT;
     SDL_Keycode releaseKey_ = SDLK_ESCAPE;
 
@@ -70,7 +77,7 @@ private:
     void PublishEvent(const SDL_Event& sdlEvent);
     double GetCurrentTime() const;
     void HandleMouseGrabEvent(const SDL_Event& sdlEvent);
-    void ApplyMouseGrab(bool grabbed);
+    void ApplyMouseGrab(bool grabbed, bool force);
     void ConfigureMouseGrabBindings();
 };
 

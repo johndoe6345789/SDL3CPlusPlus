@@ -41,7 +41,10 @@ public:
     }
     bool IsKeyPressed(SDL_Keycode key) const override;
     bool IsMouseButtonPressed(uint8_t button) const override;
+    bool IsActionPressed(const std::string& action) const override;
     std::pair<float, float> GetMousePosition() const override;
+    void SetRelativeMouseMode(bool enabled) override;
+    bool IsRelativeMouseMode() const override;
     void SetGuiScriptService(IGuiScriptService* guiScriptService) override;
     void UpdateGuiInput() override;
 
@@ -56,6 +59,12 @@ private:
     bool windowFocused_ = true;
     bool mouseGrabbed_ = false;
     bool mouseGrabGatesLook_ = false;
+    bool mouseRelativeMode_ = false;
+    float guiCursorX_ = 0.0f;
+    float guiCursorY_ = 0.0f;
+    uint32_t guiWindowWidth_ = 0;
+    uint32_t guiWindowHeight_ = 0;
+    bool relativeCursorLogged_ = false;
     SDL_GamepadButton musicToggleButton_ = SDL_GAMEPAD_BUTTON_START;
     SDL_GamepadButton dpadUpButton_ = SDL_GAMEPAD_BUTTON_DPAD_UP;
     SDL_GamepadButton dpadDownButton_ = SDL_GAMEPAD_BUTTON_DPAD_DOWN;
@@ -78,6 +87,7 @@ private:
     void OnMouseButtonReleased(const events::Event& event);
     void OnMouseWheel(const events::Event& event);
     void OnTextInput(const events::Event& event);
+    void OnWindowResized(const events::Event& event);
     void OnWindowFocusGained(const events::Event& event);
     void OnWindowFocusLost(const events::Event& event);
     void OnMouseGrabChanged(const events::Event& event);
@@ -89,6 +99,8 @@ private:
     void ApplyKeyMapping(SDL_Keycode key, bool isDown);
     bool IsActionKeyPressed(const std::string& action) const;
     bool ShouldCaptureMouseDelta() const;
+    void UpdateMousePosition(float x, float y, float deltaX, float deltaY);
+    void ClampGuiCursor();
 
     // GUI key mapping (extracted from old Sdl3App)
     static const std::unordered_map<SDL_Keycode, std::string> kGuiKeyNames;

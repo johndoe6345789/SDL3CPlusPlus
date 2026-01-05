@@ -15,6 +15,8 @@ class IGuiScriptService;
 struct InputState {
     float mouseX = 0.0f;
     float mouseY = 0.0f;
+    float mouseDeltaX = 0.0f;
+    float mouseDeltaY = 0.0f;
     float mouseWheelDeltaX = 0.0f;
     float mouseWheelDeltaY = 0.0f;
     std::unordered_set<SDL_Keycode> keysPressed;
@@ -75,11 +77,35 @@ public:
     virtual bool IsMouseButtonPressed(uint8_t button) const = 0;
 
     /**
+     * @brief Check if an action is currently pressed based on input bindings.
+     *
+     * @param action The action name to check
+     * @return true if the action is pressed, false otherwise
+     */
+    virtual bool IsActionPressed(const std::string& action) const = 0;
+
+    /**
      * @brief Get the current mouse position.
      *
      * @return Pair of (x, y) coordinates in pixels
      */
     virtual std::pair<float, float> GetMousePosition() const = 0;
+
+    /**
+     * @brief Set whether mouse input should be treated as relative motion.
+     *
+     * This updates internal cursor tracking for script usage.
+     *
+     * @param enabled true for relative mode, false for absolute
+     */
+    virtual void SetRelativeMouseMode(bool enabled) = 0;
+
+    /**
+     * @brief Check whether mouse input is treated as relative motion.
+     *
+     * @return true if relative mode is enabled, false otherwise
+     */
+    virtual bool IsRelativeMouseMode() const = 0;
 
     /**
      * @brief Set the GUI script service for GUI input processing.

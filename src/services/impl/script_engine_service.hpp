@@ -4,6 +4,8 @@
 #include "../interfaces/i_audio_command_service.hpp"
 #include "../interfaces/i_mesh_service.hpp"
 #include "../interfaces/i_physics_bridge_service.hpp"
+#include "../interfaces/i_input_service.hpp"
+#include "../interfaces/i_window_service.hpp"
 #include "../interfaces/i_logger.hpp"
 #include "../../di/lifecycle.hpp"
 #include <filesystem>
@@ -25,6 +27,8 @@ public:
                         std::shared_ptr<IMeshService> meshService,
                         std::shared_ptr<IAudioCommandService> audioCommandService,
                         std::shared_ptr<IPhysicsBridgeService> physicsBridgeService,
+                        std::shared_ptr<IInputService> inputService,
+                        std::shared_ptr<IWindowService> windowService,
                         bool debugEnabled = false);
     ~ScriptEngineService() override;
 
@@ -47,6 +51,8 @@ private:
         std::shared_ptr<IMeshService> meshService;
         std::shared_ptr<IAudioCommandService> audioCommandService;
         std::shared_ptr<IPhysicsBridgeService> physicsBridgeService;
+        std::shared_ptr<IInputService> inputService;
+        std::shared_ptr<IWindowService> windowService;
         std::shared_ptr<ILogger> logger;
     };
 
@@ -59,11 +65,29 @@ private:
     static int AudioPlaySound(lua_State* L);
     static int AudioStopBackground(lua_State* L);
     static int GlmMatrixFromTransform(lua_State* L);
+    static int InputGetMousePosition(lua_State* L);
+    static int InputGetMouseDelta(lua_State* L);
+    static int InputGetMouseWheel(lua_State* L);
+    static int InputIsKeyDown(lua_State* L);
+    static int InputIsActionDown(lua_State* L);
+    static int InputIsMouseDown(lua_State* L);
+    static int InputGetText(lua_State* L);
+    static int WindowGetSize(lua_State* L);
+    static int WindowSetTitle(lua_State* L);
+    static int WindowIsMinimized(lua_State* L);
+    static int WindowSetMouseGrabbed(lua_State* L);
+    static int WindowGetMouseGrabbed(lua_State* L);
+    static int WindowSetRelativeMouseMode(lua_State* L);
+    static int WindowGetRelativeMouseMode(lua_State* L);
+    static int WindowSetCursorVisible(lua_State* L);
+    static int WindowIsCursorVisible(lua_State* L);
 
     std::shared_ptr<ILogger> logger_;
     std::shared_ptr<IMeshService> meshService_;
     std::shared_ptr<IAudioCommandService> audioCommandService_;
     std::shared_ptr<IPhysicsBridgeService> physicsBridgeService_;
+    std::shared_ptr<IInputService> inputService_;
+    std::shared_ptr<IWindowService> windowService_;
     std::filesystem::path scriptPath_;
     std::filesystem::path scriptDirectory_;
     bool debugEnabled_ = false;
