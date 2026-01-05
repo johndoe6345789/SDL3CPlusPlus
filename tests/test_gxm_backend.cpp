@@ -45,7 +45,9 @@ int main() {
         std::cout << "GXM device created successfully\n";
 
         // Test pipeline creation
-        sdl3cpp::services::ShaderPaths shaderPaths{"shaders/cube.vert", "shaders/cube.frag"};
+        sdl3cpp::services::ShaderPaths shaderPaths;
+        shaderPaths.vertex = "shaders/gui_2d.vert";
+        shaderPaths.fragment = "shaders/gui_2d.frag";
         auto pipeline = backend->CreatePipeline(device, "test_shader", shaderPaths);
         Assert(pipeline != nullptr, "pipeline creation failed", failures);
         std::cout << "GXM pipeline created successfully\n";

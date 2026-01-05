@@ -4,6 +4,7 @@
 #include <array>
 #include <cstring>
 #include <filesystem>
+#include <functional>
 #include <fstream>
 #include <iterator>
 #include <stdexcept>
@@ -50,10 +51,16 @@ PipelineService::~PipelineService() {
 }
 
 void PipelineService::RegisterShader(const std::string& key, const ShaderPaths& paths) {
+    std::string vertexLabel = paths.vertex.empty()
+        ? (paths.vertexSource.empty() ? "<missing>" : "<inline>")
+        : paths.vertex;
+    std::string fragmentLabel = paths.fragment.empty()
+        ? (paths.fragmentSource.empty() ? "<missing>" : "<inline>")
+        : paths.fragment;
     logger_->Trace("PipelineService", "RegisterShader",
                    "key=" + key +
-                   ", vertex=" + paths.vertex +
-                   ", fragment=" + paths.fragment);
+                   ", vertex=" + vertexLabel +
+                   ", fragment=" + fragmentLabel);
     shaderPathMap_[key] = paths;
     logger_->Debug("Registered shader: " + key);
 }
@@ -260,35 +267,38 @@ void PipelineService::CreatePipelinesInternal(VkRenderPass renderPass, VkExtent2
 
     // Create pipeline for each registered shader
     for (const auto& [key, paths] : shaderPathMap_) {
-        auto requireShader = [&](const std::string& label, const std::string& path) {
-            if (!HasShaderSource(path)) {
+        auto requireShader = [&](const std::string& label,
+                                 const std::string& path,
+                                 const std::string& source) {
+            if (!HasShaderSource(path, source)) {
+                std::string labelPath = path.empty() ? "<inline>" : path;
                 throw std::runtime_error(
-                    label + " shader not found: " + path +
+                    label + " shader not found: " + labelPath +
                     "\n\nShader key: " + key +
                     "\n\nPlease ensure the shader source (.vert/.frag/etc.) exists.");
             }
         };
 
         // Validate shader files exist
-        requireShader("Vertex", paths.vertex);
-        requireShader("Fragment", paths.fragment);
+        requireShader("Vertex", paths.vertex, paths.vertexSource);
+        requireShader("Fragment", paths.fragment, paths.fragmentSource);
 
-        bool hasGeometry = !paths.geometry.empty();
-        bool hasTessControl = !paths.tessControl.empty();
-        bool hasTessEval = !paths.tessEval.empty();
+        bool hasGeometry = !paths.geometry.empty() || !paths.geometrySource.empty();
+        bool hasTessControl = !paths.tessControl.empty() || !paths.tessControlSource.empty();
+        bool hasTessEval = !paths.tessEval.empty() || !paths.tessEvalSource.empty();
 
         if (hasGeometry) {
-            requireShader("Geometry", paths.geometry);
+            requireShader("Geometry", paths.geometry, paths.geometrySource);
         }
         if (hasTessControl != hasTessEval) {
             throw std::runtime_error(
                 "Tessellation shaders require both 'tesc' and 'tese' paths. Shader key: " + key);
         }
         if (hasTessControl) {
-            requireShader("Tessellation control", paths.tessControl);
+            requireShader("Tessellation control", paths.tessControl, paths.tessControlSource);
         }
         if (hasTessEval) {
-            requireShader("Tessellation evaluation", paths.tessEval);
+            requireShader("Tessellation evaluation", paths.tessEval, paths.tessEvalSource);
         }
 
         std::vector<VkShaderModule> shaderModules;
@@ -302,8 +312,10 @@ void PipelineService::CreatePipelinesInternal(VkRenderPass renderPass, VkExtent2
             shaderModules.clear();
         };
 
-        auto addStage = [&](VkShaderStageFlagBits stage, const std::string& path) {
-            const auto& shaderCode = ReadShaderFile(path, stage);
+        auto addStage = [&](VkShaderStageFlagBits stage,
+                            const std::string& path,
+                            const std::string& source) {
+            const auto& shaderCode = ReadShaderSource(path, source, stage);
             VkShaderModule shaderModule = CreateShaderModule(shaderCode);
             shaderModules.push_back(shaderModule);
 
@@ -316,15 +328,17 @@ void PipelineService::CreatePipelinesInternal(VkRenderPass renderPass, VkExtent2
         };
 
         try {
-            addStage(VK_SHADER_STAGE_VERTEX_BIT, paths.vertex);
+            addStage(VK_SHADER_STAGE_VERTEX_BIT, paths.vertex, paths.vertexSource);
             if (hasTessControl) {
-                addStage(VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT, paths.tessControl);
-                addStage(VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT, paths.tessEval);
+                addStage(VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT, paths.tessControl,
+                         paths.tessControlSource);
+                addStage(VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT, paths.tessEval,
+                         paths.tessEvalSource);
             }
             if (hasGeometry) {
-                addStage(VK_SHADER_STAGE_GEOMETRY_BIT, paths.geometry);
+                addStage(VK_SHADER_STAGE_GEOMETRY_BIT, paths.geometry, paths.geometrySource);
             }
-            addStage(VK_SHADER_STAGE_FRAGMENT_BIT, paths.fragment);
+            addStage(VK_SHADER_STAGE_FRAGMENT_BIT, paths.fragment, paths.fragmentSource);
 
             VkPipelineInputAssemblyStateCreateInfo inputAssemblyState = inputAssembly;
             VkPipelineTessellationStateCreateInfo tessellationState{};
@@ -388,7 +402,26 @@ VkShaderModule PipelineService::CreateShaderModule(const std::vector<char>& code
     return shaderModule;
 }
 
-bool PipelineService::HasShaderSource(const std::string& path) const {
+std::string PipelineService::BuildShaderCacheKey(const std::string& path,
+                                                 const std::string& source,
+                                                 VkShaderStageFlagBits stage) const {
+    if (!source.empty()) {
+        size_t hash = std::hash<std::string>{}(source);
+        return "inline:" + std::to_string(hash) + "|" +
+            std::to_string(static_cast<int>(stage));
+    }
+    std::filesystem::path shaderPath(path);
+    if (shaderPath.extension() == ".spv") {
+        shaderPath.replace_extension();
+    }
+    return shaderPath.string() + "|" +
+        std::to_string(static_cast<int>(stage));
+}
+
+bool PipelineService::HasShaderSource(const std::string& path, const std::string& source) const {
+    if (!source.empty()) {
+        return true;
+    }
     if (path.empty()) {
         return false;
     }
@@ -399,59 +432,66 @@ bool PipelineService::HasShaderSource(const std::string& path) const {
     return std::filesystem::exists(shaderPath);
 }
 
-const std::vector<char>& PipelineService::ReadShaderFile(const std::string& path, VkShaderStageFlagBits stage) {
-    logger_->Trace("PipelineService", "ReadShaderFile",
-                   "path=" + path + ", stage=" + std::to_string(static_cast<int>(stage)));
+const std::vector<char>& PipelineService::ReadShaderSource(const std::string& path,
+                                                           const std::string& source,
+                                                           VkShaderStageFlagBits stage) {
+    logger_->Trace("PipelineService", "ReadShaderSource",
+                   "path=" + path + ", stage=" + std::to_string(static_cast<int>(stage)) +
+                   ", source=" + std::string(source.empty() ? "path" : "inline"));
 
-    if (path.empty()) {
-        throw std::runtime_error("Shader path is empty");
+    if (path.empty() && source.empty()) {
+        throw std::runtime_error("Shader path and source are empty");
     }
 
-    std::filesystem::path shaderPath(path);
-    if (shaderPath.extension() == ".spv") {
-        std::filesystem::path sourcePath = shaderPath;
-        sourcePath.replace_extension();
-        logger_->Trace("PipelineService", "ReadShaderFile",
-                       "usingSource=" + sourcePath.string());
-        shaderPath = sourcePath;
-    }
-
-    if (!std::filesystem::exists(shaderPath)) {
-        throw std::runtime_error("Shader file not found: " + shaderPath.string() +
-            "\n\nPlease ensure the shader source (.vert/.frag/etc.) exists.");
-    }
-
-    if (!std::filesystem::is_regular_file(shaderPath)) {
-        throw std::runtime_error("Path is not a regular file: " + shaderPath.string());
-    }
-
-    const std::string cacheKey = shaderPath.string() + "|" +
-        std::to_string(static_cast<int>(stage));
+    const std::string cacheKey = BuildShaderCacheKey(path, source, stage);
     auto cached = shaderSpirvCache_.find(cacheKey);
     if (cached != shaderSpirvCache_.end()) {
-        logger_->Trace("PipelineService", "ReadShaderFile",
+        logger_->Trace("PipelineService", "ReadShaderSource",
                        "cacheHit=true, bytes=" + std::to_string(cached->second.size()));
         return cached->second;
     }
 
-    std::ifstream sourceFile(shaderPath);
-    if (!sourceFile) {
-        throw std::runtime_error("Failed to open shader source: " + shaderPath.string());
+    std::string shaderLabel = path.empty() ? "<inline>" : path;
+    std::string shaderSource = source;
+    if (shaderSource.empty()) {
+        std::filesystem::path shaderPath(path);
+        if (shaderPath.extension() == ".spv") {
+            std::filesystem::path sourcePath = shaderPath;
+            sourcePath.replace_extension();
+            logger_->Trace("PipelineService", "ReadShaderSource",
+                           "usingSource=" + sourcePath.string());
+            shaderPath = sourcePath;
+        }
+
+        if (!std::filesystem::exists(shaderPath)) {
+            throw std::runtime_error("Shader file not found: " + shaderPath.string() +
+                "\n\nPlease ensure the shader source (.vert/.frag/etc.) exists.");
+        }
+
+        if (!std::filesystem::is_regular_file(shaderPath)) {
+            throw std::runtime_error("Path is not a regular file: " + shaderPath.string());
+        }
+
+        std::ifstream sourceFile(shaderPath);
+        if (!sourceFile) {
+            throw std::runtime_error("Failed to open shader source: " + shaderPath.string());
+        }
+        shaderSource.assign((std::istreambuf_iterator<char>(sourceFile)),
+                            std::istreambuf_iterator<char>());
+        sourceFile.close();
+        shaderLabel = shaderPath.string();
     }
-    std::string source((std::istreambuf_iterator<char>(sourceFile)),
-                       std::istreambuf_iterator<char>());
-    sourceFile.close();
 
     shaderc::Compiler compiler;
     shaderc::CompileOptions options;
     options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
 
     shaderc_shader_kind kind = ShadercKindFromStage(stage);
-    auto result = compiler.CompileGlslToSpv(source, kind, shaderPath.string().c_str(), options);
+    auto result = compiler.CompileGlslToSpv(shaderSource, kind, shaderLabel.c_str(), options);
     if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
         std::string error = result.GetErrorMessage();
-        logger_->Error("Shader compilation failed: " + shaderPath.string() + "\n" + error);
-        throw std::runtime_error("Shader compilation failed: " + shaderPath.string() + "\n" + error);
+        logger_->Error("Shader compilation failed: " + shaderLabel + "\n" + error);
+        throw std::runtime_error("Shader compilation failed: " + shaderLabel + "\n" + error);
     }
 
     std::vector<uint32_t> spirv(result.cbegin(), result.cend());
@@ -460,11 +500,11 @@ const std::vector<char>& PipelineService::ReadShaderFile(const std::string& path
         std::memcpy(buffer.data(), spirv.data(), buffer.size());
     }
 
-    logger_->Debug("Compiled shader: " + shaderPath.string() +
+    logger_->Debug("Compiled shader: " + shaderLabel +
                    " (" + std::to_string(buffer.size()) + " bytes)");
 
     auto inserted = shaderSpirvCache_.emplace(cacheKey, std::move(buffer));
-    logger_->Trace("PipelineService", "ReadShaderFile",
+    logger_->Trace("PipelineService", "ReadShaderSource",
                    "cacheHit=false, bytes=" + std::to_string(inserted.first->second.size()));
     return inserted.first->second;
 }

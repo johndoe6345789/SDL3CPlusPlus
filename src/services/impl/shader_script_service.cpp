@@ -82,19 +82,6 @@ ShaderPaths ShaderScriptService::ReadShaderPathsTable(lua_State* L, int index) c
     ShaderPaths paths;
     int absIndex = lua_absindex(L, index);
 
-    auto readRequiredPath = [&](const char* field, std::string& target) {
-        lua_getfield(L, absIndex, field);
-        if (!lua_isstring(L, -1)) {
-            lua_pop(L, 1);
-            if (logger_) {
-                logger_->Error("Shader path '" + std::string(field) + "' must be a string");
-            }
-            throw std::runtime_error("Shader path '" + std::string(field) + "' must be a string");
-        }
-        target = lua_tostring(L, -1);
-        lua_pop(L, 1);
-    };
-
     auto readOptionalPath = [&](const char* field, std::string& target) {
         lua_getfield(L, absIndex, field);
         if (lua_isstring(L, -1)) {
@@ -109,12 +96,31 @@ ShaderPaths ShaderScriptService::ReadShaderPathsTable(lua_State* L, int index) c
         lua_pop(L, 1);
     };
 
-    readRequiredPath("vertex", paths.vertex);
-    readRequiredPath("fragment", paths.fragment);
+    readOptionalPath("vertex", paths.vertex);
+    readOptionalPath("vertex_source", paths.vertexSource);
+    readOptionalPath("fragment", paths.fragment);
+    readOptionalPath("fragment_source", paths.fragmentSource);
     readOptionalPath("geometry", paths.geometry);
+    readOptionalPath("geometry_source", paths.geometrySource);
     readOptionalPath("tesc", paths.tessControl);
+    readOptionalPath("tesc_source", paths.tessControlSource);
     readOptionalPath("tese", paths.tessEval);
+    readOptionalPath("tese_source", paths.tessEvalSource);
     readOptionalPath("compute", paths.compute);
+    readOptionalPath("compute_source", paths.computeSource);
+
+    auto requirePathOrSource = [&](const char* field, const std::string& path, const std::string& source) {
+        if (!path.empty() || !source.empty()) {
+            return;
+        }
+        if (logger_) {
+            logger_->Error("Shader stage '" + std::string(field) + "' must provide a path or source");
+        }
+        throw std::runtime_error("Shader stage '" + std::string(field) + "' must provide a path or source");
+    };
+
+    requirePathOrSource("vertex", paths.vertex, paths.vertexSource);
+    requirePathOrSource("fragment", paths.fragment, paths.fragmentSource);
 
     auto resolveIfPresent = [&](std::string& value) {
         if (!value.empty()) {

@@ -21,11 +21,17 @@ struct GraphicsConfig {
  */
 struct ShaderPaths {
     std::string vertex;
+    std::string vertexSource;
     std::string fragment;
+    std::string fragmentSource;
     std::string geometry;
+    std::string geometrySource;
     std::string tessControl;
+    std::string tessControlSource;
     std::string tessEval;
+    std::string tessEvalSource;
     std::string compute;
+    std::string computeSource;
 };
 
 /**

@@ -281,6 +281,7 @@ function ShaderVariant:new(options)
         template = options.template or options.template_name,
         output_name = options.output_name or options.outputName,
         output_dir = options.output_dir or options.outputDir,
+        output_mode = options.output_mode or options.outputMode,
         compile = options.compile,
         compiler = options.compiler,
         skip_if_present = options.skip_if_present,
@@ -1177,10 +1178,30 @@ function shader_toolkit.generate_variant(options)
     if not template then
         error("Unknown shader template: " .. tostring(variant.template))
     end
+    local output_mode = variant.output_mode or "source"
     local output_name = normalize_output_name(variant.output_name or variant.key or template.name)
     if not output_name then
         error("Shader variant requires output_name or key")
     end
+
+    local sources = template:Generate(variant.parameters)
+    if type(sources) ~= "table" or not sources.vertex or not sources.fragment then
+        error("Shader template did not return vertex and fragment source")
+    end
+
+    if output_mode ~= "files" then
+        if variant.compile == true then
+            error("Inline shader output does not support external compilation")
+        end
+        local result = {}
+        for stage, source in pairs(sources) do
+            if type(source) == "string" then
+                result[stage .. "_source"] = source
+            end
+        end
+        return result
+    end
+
     local output_dir = resolve_output_dir(variant.output_dir)
     if not ensure_directory(output_dir) then
         error("Failed to create shader output directory: " .. output_dir)
@@ -1191,11 +1212,6 @@ function shader_toolkit.generate_variant(options)
     local fragment_source = base_name .. ".frag"
     local vertex_spv = vertex_source .. ".spv"
     local fragment_spv = fragment_source .. ".spv"
-
-    local sources = template:Generate(variant.parameters)
-    if type(sources) ~= "table" or not sources.vertex or not sources.fragment then
-        error("Shader template did not return vertex and fragment source")
-    end
 
     write_text_file_if_changed(vertex_source, sources.vertex)
     write_text_file_if_changed(fragment_source, sources.fragment)
@@ -1243,6 +1259,7 @@ end
 function shader_toolkit.generate_cube_demo_variants(options)
     local settings = options or {}
     local parameters = settings.parameters or {}
+    local output_mode = settings.output_mode or "source"
     local compile = settings.compile
     if compile == nil then
         compile = false
@@ -1254,6 +1271,7 @@ function shader_toolkit.generate_cube_demo_variants(options)
             key = "default",
             template = "cube_rainbow",
             output_name = "cube",
+            output_mode = output_mode,
             compile = compile,
             output_dir = output_dir,
             parameters = parameters.default,
@@ -1261,6 +1279,7 @@ function shader_toolkit.generate_cube_demo_variants(options)
         shader_toolkit.create_variant({
             key = "solid",
             template = "solid_lit",
+            output_mode = output_mode,
             compile = compile,
             output_dir = output_dir,
             parameters = parameters.solid,
@@ -1268,6 +1287,7 @@ function shader_toolkit.generate_cube_demo_variants(options)
         shader_toolkit.create_variant({
             key = "floor",
             template = "room_floor",
+            output_mode = output_mode,
             compile = compile,
             output_dir = output_dir,
             parameters = parameters.floor,
@@ -1275,6 +1295,7 @@ function shader_toolkit.generate_cube_demo_variants(options)
         shader_toolkit.create_variant({
             key = "wall",
             template = "room_wall",
+            output_mode = output_mode,
             compile = compile,
             output_dir = output_dir,
             parameters = parameters.wall,
@@ -1282,6 +1303,7 @@ function shader_toolkit.generate_cube_demo_variants(options)
         shader_toolkit.create_variant({
             key = "ceiling",
             template = "room_ceiling",
+            output_mode = output_mode,
             compile = compile,
             output_dir = output_dir,
             parameters = parameters.ceiling,
@@ -1289,6 +1311,7 @@ function shader_toolkit.generate_cube_demo_variants(options)
         shader_toolkit.create_variant({
             key = "pbr",
             template = "pbr",
+            output_mode = output_mode,
             compile = compile,
             output_dir = output_dir,
             parameters = parameters.pbr,

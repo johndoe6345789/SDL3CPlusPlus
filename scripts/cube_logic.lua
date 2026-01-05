@@ -200,30 +200,74 @@ if cube_mesh_info.loaded then
 end
 
 local function build_static_shader_variants()
+    local fallback_vertex_source = [[
+#version 450
+
+layout(location = 0) in vec3 inPos;
+layout(location = 1) in vec3 inColor;
+
+layout(location = 0) out vec3 fragColor;
+
+layout(push_constant) uniform PushConstants {
+    mat4 model;
+    mat4 viewProj;
+    mat4 view;
+    mat4 proj;
+    mat4 lightViewProj;
+    vec3 cameraPos;
+    float time;
+    float ambientStrength;
+    float fogDensity;
+    float fogStart;
+    float fogEnd;
+    vec3 fogColor;
+    float gamma;
+    float exposure;
+    int enableShadows;
+    int enableFog;
+} pushConstants;
+
+void main() {
+    fragColor = inColor;
+    gl_Position = pushConstants.viewProj * pushConstants.model * vec4(inPos, 1.0);
+}
+]]
+
+    local fallback_fragment_source = [[
+#version 450
+
+layout(location = 0) in vec3 fragColor;
+layout(location = 0) out vec4 outColor;
+
+void main() {
+    outColor = vec4(fragColor, 1.0);
+}
+]]
+
     return {
         default = {
-            vertex = "shaders/cube.vert",
-            fragment = "shaders/cube.frag",
+            vertex_source = fallback_vertex_source,
+            fragment_source = fallback_fragment_source,
         },
         solid = {
-            vertex = "shaders/solid.vert",
-            fragment = "shaders/solid.frag",
+            vertex_source = fallback_vertex_source,
+            fragment_source = fallback_fragment_source,
         },
         floor = {
-            vertex = "shaders/solid.vert",
-            fragment = "shaders/floor.frag",
+            vertex_source = fallback_vertex_source,
+            fragment_source = fallback_fragment_source,
         },
         wall = {
-            vertex = "shaders/solid.vert",
-            fragment = "shaders/wall.frag",
+            vertex_source = fallback_vertex_source,
+            fragment_source = fallback_fragment_source,
         },
         ceiling = {
-            vertex = "shaders/solid.vert",
-            fragment = "shaders/ceiling.frag",
+            vertex_source = fallback_vertex_source,
+            fragment_source = fallback_fragment_source,
         },
         pbr = {
-            vertex = "shaders/pbr.vert",
-            fragment = "shaders/pbr.frag",
+            vertex_source = fallback_vertex_source,
+            fragment_source = fallback_fragment_source,
         },
     }
 end
@@ -243,7 +287,8 @@ local function build_shader_variants()
         return build_static_shader_variants()
     end
 
-    local ok_generate, generated = pcall(toolkit.generate_cube_demo_variants, {compile = false})
+    local ok_generate, generated = pcall(toolkit.generate_cube_demo_variants,
+        {compile = false, output_mode = "source"})
     if not ok_generate then
         log_debug("Shader generation failed: %s", tostring(generated))
         return build_static_shader_variants()
