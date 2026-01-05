@@ -387,7 +387,7 @@ def gui(args: argparse.Namespace) -> None:
             QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
             QPushButton, QLabel, QTextEdit, QComboBox, QListWidget, QListWidgetItem,
             QSplitter, QMenuBar, QDialog, QDialogButtonBox, QFormLayout, QMessageBox,
-            QPlainTextEdit, QTabWidget
+            QPlainTextEdit, QTabWidget, QLineEdit
         )
         from PyQt6.QtCore import Qt, QProcess, QSize
         from PyQt6.QtGui import QFont, QPalette, QColor, QAction, QSyntaxHighlighter, QTextCharFormat
@@ -495,6 +495,72 @@ def gui(args: argparse.Namespace) -> None:
             buttons.accepted.connect(self.accept)
             buttons.rejected.connect(self.reject)
             layout.addRow(buttons)
+
+    class NewProjectDialog(QDialog):
+        """Dialog for creating a new project from templates"""
+        def __init__(self, parent=None):
+            super().__init__(parent)
+            self.setWindowTitle("New Project")
+            self.setMinimumWidth(500)
+            self.setMinimumHeight(300)
+
+            layout = QVBoxLayout(self)
+
+            # Project name input
+            name_layout = QHBoxLayout()
+            name_label = QLabel("Project Name:")
+            self.name_input = QLineEdit()
+            self.name_input.setPlaceholderText("Enter project name")
+            name_layout.addWidget(name_label)
+            name_layout.addWidget(self.name_input)
+            layout.addLayout(name_layout)
+
+            # Template selection
+            template_label = QLabel("Template:")
+            layout.addWidget(template_label)
+
+            self.template_combo = QComboBox()
+            self.template_combo.addItem("Cube Demo - 3D game with physics", "cube")
+            self.template_combo.addItem("GUI Demo - ImGui interface demo", "gui")
+            self.template_combo.addItem("Soundboard - Audio application", "soundboard")
+            layout.addWidget(self.template_combo)
+
+            # Description
+            self.description_label = QLabel()
+            self.description_label.setWordWrap(True)
+            self.description_label.setStyleSheet("color: #666; font-size: 10pt; margin-top: 10px;")
+            layout.addWidget(self.description_label)
+
+            # Update description when template changes
+            self.template_combo.currentIndexChanged.connect(self.update_description)
+            self.update_description()
+
+            layout.addStretch()
+
+            # Buttons
+            buttons = QDialogButtonBox(
+                QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+            )
+            buttons.accepted.connect(self.accept)
+            buttons.rejected.connect(self.reject)
+            layout.addWidget(buttons)
+
+        def update_description(self):
+            """Update description based on selected template"""
+            template = self.template_combo.currentData()
+            descriptions = {
+                "cube": "A 3D cube room with first-person controls, lanterns, and physics interactions. Includes mouse look, movement controls, and audio.",
+                "gui": "An interactive GUI demonstration using ImGui widgets and controls. Showcases various UI elements and interactions.",
+                "soundboard": "An audio soundboard application for playing and mixing sound effects. Features multiple audio channels and controls."
+            }
+            self.description_label.setText(descriptions.get(template, ""))
+
+        def get_project_data(self):
+            """Return the project name and template type"""
+            return {
+                "name": self.name_input.text().strip(),
+                "template": self.template_combo.currentData()
+            }
 
     class BuildLauncherGUI(QMainWindow):
         def __init__(self):
@@ -653,8 +719,6 @@ def gui(args: argparse.Namespace) -> None:
             self.game_description.setWordWrap(True)
             self.game_description.setStyleSheet("color: #8f98a0; font-size: 11pt;")
             detail_layout.addWidget(self.game_description)
-
-            detail_layout.addStretch()
 
             # Play button container
             button_container = QHBoxLayout()
@@ -888,6 +952,19 @@ def gui(args: argparse.Namespace) -> None:
                 }
             """)
 
+            # File menu
+            file_menu = menubar.addMenu("File")
+
+            new_action = QAction("New Project...", self)
+            new_action.triggered.connect(self.show_new_project_dialog)
+            file_menu.addAction(new_action)
+
+            file_menu.addSeparator()
+
+            exit_action = QAction("Exit", self)
+            exit_action.triggered.connect(self.close)
+            file_menu.addAction(exit_action)
+
             # Developer menu
             dev_menu = menubar.addMenu("Developer")
 
@@ -932,6 +1009,256 @@ def gui(args: argparse.Namespace) -> None:
                 self.build_type = dialog.build_type_combo.currentText()
                 self.target = dialog.target_combo.currentText()
                 self.log(f"Settings updated: Generator={self.generator}, Build Type={self.build_type}, Target={self.target}")
+
+        def show_new_project_dialog(self):
+            """Show new project creation dialog"""
+            dialog = NewProjectDialog(self)
+            if dialog.exec() == QDialog.DialogCode.Accepted:
+                project_data = dialog.get_project_data()
+                if project_data["name"]:
+                    self.create_new_project(project_data["name"], project_data["template"])
+                else:
+                    QMessageBox.warning(self, "Invalid Name", "Please enter a valid project name.")
+
+        def create_new_project(self, name, template):
+            """Create a new project based on template"""
+            import json
+            from pathlib import Path
+
+            # Create project ID from name
+            project_id = name.lower().replace(" ", "_").replace("-", "_")
+
+            # Template configurations
+            templates = {
+                "cube": {
+                    "config": {
+                        "launcher": {
+                            "name": name,
+                            "description": f"3D {name} project based on cube demo template",
+                            "enabled": True
+                        },
+                        "window_width": 1024,
+                        "window_height": 768,
+                        "lua_script": f"scripts/{project_id}_logic.lua",
+                        "scripts_directory": "scripts",
+                        "mouse_grab": {
+                            "enabled": True,
+                            "grab_on_click": True,
+                            "release_on_escape": True,
+                            "start_grabbed": False,
+                            "hide_cursor": True,
+                            "relative_mode": True,
+                            "grab_mouse_button": "left",
+                            "release_key": "escape"
+                        },
+                        "input_bindings": {
+                            "move_forward": "W",
+                            "move_back": "S",
+                            "move_left": "A",
+                            "move_right": "D",
+                            "fly_up": "Q",
+                            "fly_down": "Z",
+                            "jump": "Space",
+                            "noclip_toggle": "N",
+                            "music_toggle": "M"
+                        }
+                    },
+                    "lua_script": f"""-- {name} Logic Script
+-- Generated from cube demo template
+
+local function init()
+    -- Initialize your game here
+    print("{name} initialized")
+end
+
+local function update(dt)
+    -- Update game logic here
+    -- dt is the time delta in seconds
+end
+
+local function render()
+    -- Render your game here
+end
+
+local function shutdown()
+    -- Cleanup resources here
+    print("{name} shutdown")
+end
+
+-- Return the game interface
+return {{
+    init = init,
+    update = update,
+    render = render,
+    shutdown = shutdown
+}}
+"""
+                },
+                "gui": {
+                    "config": {
+                        "launcher": {
+                            "name": name,
+                            "description": f"GUI {name} project based on GUI demo template",
+                            "enabled": True
+                        },
+                        "window_width": 1024,
+                        "window_height": 768,
+                        "lua_script": f"scripts/{project_id}_gui.lua",
+                        "scripts_directory": "scripts",
+                        "project_root": "../",
+                        "shaders_directory": "shaders",
+                        "device_extensions": ["VK_KHR_swapchain"],
+                        "mouse_grab": {
+                            "enabled": False
+                        }
+                    },
+                    "lua_script": f"""-- {name} GUI Script
+-- Generated from GUI demo template
+
+local function init()
+    -- Initialize ImGui interface here
+    print("{name} GUI initialized")
+end
+
+local function update(dt)
+    -- Update GUI logic here
+end
+
+local function render()
+    -- Render ImGui interface here
+    if imgui_begin then
+        imgui_begin("{name}")
+
+        imgui_text("Welcome to {name}!")
+
+        if imgui_button then
+            if imgui_button("Click me!") then
+                print("Button clicked!")
+            end
+        end
+
+        imgui_end()
+    end
+end
+
+local function shutdown()
+    -- Cleanup GUI resources here
+    print("{name} GUI shutdown")
+end
+
+-- Return the GUI interface
+return {{
+    init = init,
+    update = update,
+    render = render,
+    shutdown = shutdown
+}}
+"""
+                },
+                "soundboard": {
+                    "config": {
+                        "launcher": {
+                            "name": name,
+                            "description": f"Soundboard {name} project based on soundboard template",
+                            "enabled": True
+                        },
+                        "window_width": 1024,
+                        "window_height": 768,
+                        "lua_script": f"scripts/{project_id}_soundboard.lua",
+                        "scripts_directory": "scripts",
+                        "project_root": "../",
+                        "shaders_directory": "shaders",
+                        "device_extensions": ["VK_KHR_swapchain"],
+                        "config_file": f"config/{project_id}_runtime.json",
+                        "mouse_grab": {
+                            "enabled": False
+                        }
+                    },
+                    "lua_script": f"""-- {name} Soundboard Script
+-- Generated from soundboard template
+
+local sounds = {{
+    -- Add your sound files here
+    -- "sound1.ogg",
+    -- "sound2.ogg"
+}}
+
+local function init()
+    -- Initialize soundboard here
+    print("{name} soundboard initialized")
+end
+
+local function update(dt)
+    -- Update soundboard logic here
+end
+
+local function render()
+    -- Render soundboard interface here
+    if imgui_begin then
+        imgui_begin("{name} Soundboard")
+
+        imgui_text("Soundboard Controls")
+
+        for i, sound in ipairs(sounds) do
+            if imgui_button then
+                if imgui_button("Play " .. sound) then
+                    if audio_play_sound then
+                        audio_play_sound(sound)
+                    end
+                end
+            end
+        end
+
+        imgui_end()
+    end
+end
+
+local function shutdown()
+    -- Cleanup soundboard resources here
+    print("{name} soundboard shutdown")
+end
+
+-- Return the soundboard interface
+return {{
+    init = init,
+    update = update,
+    render = render,
+    shutdown = shutdown
+}}
+"""
+                }
+            }
+
+            try:
+                # Create config file
+                config_path = Path("config") / f"{project_id}_runtime.json"
+                with open(config_path, 'w') as f:
+                    json.dump(templates[template]["config"], f, indent=2)
+
+                # Create Lua script file
+                script_path = Path("scripts") / f"{project_id}_{template}.lua"
+                with open(script_path, 'w') as f:
+                    f.write(templates[template]["lua_script"])
+
+                self.log(f"Created new project '{name}' based on {template} template")
+                self.log(f"Config: {config_path}")
+                self.log(f"Script: {script_path}")
+
+                # Refresh the games list
+                self.games = self.load_games_from_config()
+                self.game_list.clear()
+                for game in self.games:
+                    item = QListWidgetItem(game["name"])
+                    item.setData(Qt.ItemDataRole.UserRole, game)
+                    self.game_list.addItem(item)
+
+                QMessageBox.information(self, "Project Created",
+                    f"New project '{name}' has been created successfully!\n\n"
+                    f"Config: {config_path}\n"
+                    f"Script: {script_path}")
+
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Failed to create project: {str(e)}")
 
         def on_game_selected(self, current, previous):
             """Handle game selection from library"""
