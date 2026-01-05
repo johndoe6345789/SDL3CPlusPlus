@@ -1,4 +1,9 @@
 {
+  "launcher": {
+    "name": "GUI Demo",
+    "description": "Interactive GUI demonstration with ImGui widgets and controls",
+    "enabled": true
+  },
   "window_width": 1024,
   "window_height": 768,
   "lua_script": "scripts/gui_demo.lua",

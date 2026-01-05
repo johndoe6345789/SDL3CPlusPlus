@@ -438,18 +438,61 @@ def gui(args: argparse.Namespace) -> None:
             self.build_type = "Release"
             self.target = "sdl3_app"
 
-            # Define available games/demos
-            self.games = [
-                {
+            # Load games from config files
+            self.games = self.load_games_from_config()
+
+            self.init_ui()
+
+        def load_games_from_config(self):
+            """Scan config directory for JSON files with launcher metadata"""
+            import json
+            from pathlib import Path
+
+            games = []
+            config_dir = Path("config")
+
+            if not config_dir.exists():
+                # Fallback if config dir doesn't exist
+                return [{
                     "id": "sdl3_app",
                     "name": "SDL3 Demo Application",
                     "description": "Main SDL3 demo application showcasing basic functionality",
-                    "executable": "sdl3_app",
-                },
-                # Add more games/demos here as your project grows
-            ]
+                    "config_file": "config/seed_runtime.json",
+                }]
 
-            self.init_ui()
+            # Scan all JSON files in config directory
+            for config_file in sorted(config_dir.glob("*.json")):
+                try:
+                    with open(config_file, 'r') as f:
+                        data = json.load(f)
+
+                    # Check if file has launcher metadata
+                    if "launcher" in data:
+                        launcher = data["launcher"]
+
+                        # Only add if enabled (defaults to True if not specified)
+                        if launcher.get("enabled", True):
+                            games.append({
+                                "id": config_file.stem,
+                                "name": launcher.get("name", config_file.stem),
+                                "description": launcher.get("description", ""),
+                                "config_file": str(config_file),
+                            })
+                except (json.JSONDecodeError, IOError) as e:
+                    # Skip files that can't be parsed
+                    print(f"Warning: Could not load {config_file}: {e}")
+                    continue
+
+            # If no games found, add a default one
+            if not games:
+                games.append({
+                    "id": "sdl3_app",
+                    "name": "SDL3 Demo Application",
+                    "description": "Main SDL3 demo application showcasing basic functionality",
+                    "config_file": "config/seed_runtime.json",
+                })
+
+            return games
 
         def init_ui(self):
             self.setWindowTitle("SDL3 C++ Launcher")
@@ -736,11 +779,13 @@ def gui(args: argparse.Namespace) -> None:
                 return
 
             build_dir = GENERATOR_DEFAULT_DIR.get(self.generator, DEFAULT_BUILD_DIR)
-            cmd = [sys.executable, __file__, "run", "--build-dir", build_dir]
 
-            if self.current_game["executable"] != "sdl3_app":
-                cmd.extend(["--target", self.current_game["executable"]])
+            # Build the command to run the demo with the specific config file
+            exe_name = "sdl3_app.exe" if IS_WINDOWS else "sdl3_app"
+            binary = str(Path(build_dir) / exe_name)
+            config_file = self.current_game.get("config_file", "config/seed_runtime.json")
 
+            cmd = [binary, "-j", config_file]
             self.run_command(cmd)
 
         def stop_process(self):
