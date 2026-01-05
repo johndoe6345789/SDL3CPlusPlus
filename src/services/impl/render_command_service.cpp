@@ -132,83 +132,86 @@ void RenderCommandService::RecordCommands(uint32_t imageIndex,
 
     vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-    VkBuffer vertexBuffer = bufferService_->GetVertexBuffer();
-    VkBuffer indexBuffer = bufferService_->GetIndexBuffer();
-    if (vertexBuffer == VK_NULL_HANDLE || indexBuffer == VK_NULL_HANDLE) {
-        logger_->Error("RenderCommandService: Vertex or index buffer not initialized");
-    } else if (commands.empty()) {
-        logger_->Trace("RenderCommandService", "RecordCommands", "No render commands to draw");
+    if (commands.empty()) {
+        logger_->Trace("RenderCommandService", "RecordCommands",
+                       "No render commands to draw; skipping buffer bind");
     } else {
-        VkDeviceSize offsets[] = {0};
-        vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, offsets);
-        vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT16);
-
-        VkPipelineLayout pipelineLayout = pipelineService_->GetPipelineLayout();
-        if (pipelineLayout == VK_NULL_HANDLE) {
-            logger_->Error("RenderCommandService: Pipeline layout is not initialized");
+        VkBuffer vertexBuffer = bufferService_->GetVertexBuffer();
+        VkBuffer indexBuffer = bufferService_->GetIndexBuffer();
+        if (vertexBuffer == VK_NULL_HANDLE || indexBuffer == VK_NULL_HANDLE) {
+            logger_->Error("RenderCommandService: Vertex or index buffer not initialized");
         } else {
-            if (logger_) {
-                logger_->Trace("RenderCommandService", "RecordCommands",
-                               "drawing commands=" + std::to_string(commands.size()));
-            }
-            size_t drawIndex = 0;
-            for (const auto& command : commands) {
-                if (!pipelineService_->HasShader(command.shaderKey)) {
-                    logger_->Error("RenderCommandService: Missing pipeline for shader key: " + command.shaderKey);
-                    continue;
-                }
+            VkDeviceSize offsets[] = {0};
+            vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer, offsets);
+            vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT16);
 
+            VkPipelineLayout pipelineLayout = pipelineService_->GetPipelineLayout();
+            if (pipelineLayout == VK_NULL_HANDLE) {
+                logger_->Error("RenderCommandService: Pipeline layout is not initialized");
+            } else {
                 if (logger_) {
                     logger_->Trace("RenderCommandService", "RecordCommands",
-                                   "draw=" + std::to_string(drawIndex) +
-                                   ", shaderKey=" + command.shaderKey +
-                                   ", indexOffset=" + std::to_string(command.indexOffset) +
-                                   ", indexCount=" + std::to_string(command.indexCount) +
-                                   ", vertexOffset=" + std::to_string(command.vertexOffset));
+                                   "drawing commands=" + std::to_string(commands.size()));
                 }
+                size_t drawIndex = 0;
+                for (const auto& command : commands) {
+                    if (!pipelineService_->HasShader(command.shaderKey)) {
+                        logger_->Error("RenderCommandService: Missing pipeline for shader key: " + command.shaderKey);
+                        continue;
+                    }
 
-                VkPipeline pipeline = pipelineService_->GetPipeline(command.shaderKey);
-                vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+                    if (logger_) {
+                        logger_->Trace("RenderCommandService", "RecordCommands",
+                                       "draw=" + std::to_string(drawIndex) +
+                                       ", shaderKey=" + command.shaderKey +
+                                       ", indexOffset=" + std::to_string(command.indexOffset) +
+                                       ", indexCount=" + std::to_string(command.indexCount) +
+                                       ", vertexOffset=" + std::to_string(command.vertexOffset));
+                    }
 
-                core::PushConstants pushConstants{};
-                pushConstants.model = command.modelMatrix;
-                pushConstants.viewProj = viewProj;
-                
-                // For PBR shaders, populate extended push constants
-                if (command.shaderKey.find("pbr") != std::string::npos) {
-                    // Get atmospherics config
-                    auto config = configService_->GetConfig();
-                    
-                    // For now, use identity for view and proj (since viewProj is already combined)
-                    // In a full implementation, we'd need separate view/proj matrices
-                    pushConstants.view = {1.0f, 0.0f, 0.0f, 0.0f,
-                                         0.0f, 1.0f, 0.0f, 0.0f,
-                                         0.0f, 0.0f, 1.0f, 0.0f,
-                                         0.0f, 0.0f, 0.0f, 1.0f};
-                    pushConstants.proj = pushConstants.view; // Identity for now
-                    pushConstants.lightViewProj = pushConstants.view; // Identity for now
-                    
-                    // Camera position (0,0,0) for now - would need to be passed from scene
-                    pushConstants.cameraPos = {0.0f, 0.0f, 0.0f};
-                    pushConstants.time = 0.0f; // Would need actual time
-                    
-                    // Atmospherics
-                    pushConstants.ambientStrength = config.atmospherics.ambientStrength;
-                    pushConstants.fogDensity = config.atmospherics.fogDensity;
-                    pushConstants.fogStart = 0.0f;
-                    pushConstants.fogEnd = 100.0f;
-                    pushConstants.fogColor = config.atmospherics.fogColor;
-                    pushConstants.gamma = config.atmospherics.gamma;
-                    pushConstants.exposure = 1.0f;
-                    pushConstants.enableShadows = config.atmospherics.enableShadows ? 1 : 0;
-                    pushConstants.enableFog = 1; // Enable fog for PBR
+                    VkPipeline pipeline = pipelineService_->GetPipeline(command.shaderKey);
+                    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+
+                    core::PushConstants pushConstants{};
+                    pushConstants.model = command.modelMatrix;
+                    pushConstants.viewProj = viewProj;
+
+                    // For PBR shaders, populate extended push constants
+                    if (command.shaderKey.find("pbr") != std::string::npos) {
+                        // Get atmospherics config
+                        auto config = configService_->GetConfig();
+
+                        // For now, use identity for view and proj (since viewProj is already combined)
+                        // In a full implementation, we'd need separate view/proj matrices
+                        pushConstants.view = {1.0f, 0.0f, 0.0f, 0.0f,
+                                             0.0f, 1.0f, 0.0f, 0.0f,
+                                             0.0f, 0.0f, 1.0f, 0.0f,
+                                             0.0f, 0.0f, 0.0f, 1.0f};
+                        pushConstants.proj = pushConstants.view; // Identity for now
+                        pushConstants.lightViewProj = pushConstants.view; // Identity for now
+
+                        // Camera position (0,0,0) for now - would need to be passed from scene
+                        pushConstants.cameraPos = {0.0f, 0.0f, 0.0f};
+                        pushConstants.time = 0.0f; // Would need actual time
+
+                        // Atmospherics
+                        pushConstants.ambientStrength = config.atmospherics.ambientStrength;
+                        pushConstants.fogDensity = config.atmospherics.fogDensity;
+                        pushConstants.fogStart = 0.0f;
+                        pushConstants.fogEnd = 100.0f;
+                        pushConstants.fogColor = config.atmospherics.fogColor;
+                        pushConstants.gamma = config.atmospherics.gamma;
+                        pushConstants.exposure = 1.0f;
+                        pushConstants.enableShadows = config.atmospherics.enableShadows ? 1 : 0;
+                        pushConstants.enableFog = 1; // Enable fog for PBR
+                    }
+
+                    vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0,
+                                       sizeof(core::PushConstants), &pushConstants);
+
+                    vkCmdDrawIndexed(commandBuffer, command.indexCount, 1, command.indexOffset, command.vertexOffset, 0);
+                    ++drawIndex;
                 }
-                
-                vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0,
-                                   sizeof(core::PushConstants), &pushConstants);
-
-                vkCmdDrawIndexed(commandBuffer, command.indexCount, 1, command.indexOffset, command.vertexOffset, 0);
-                ++drawIndex;
             }
         }
     }
