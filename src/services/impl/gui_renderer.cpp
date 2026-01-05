@@ -12,7 +12,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../../third_party/font8x8_basic.h"
+#include "font8x8_basic.h"
 
 namespace sdl3cpp::services::impl {
 namespace {
