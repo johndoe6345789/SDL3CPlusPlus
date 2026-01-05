@@ -20,7 +20,7 @@ static const std::vector<const char*> kDeviceExtensions = {
 };
 
 JsonConfigService::JsonConfigService(std::shared_ptr<ILogger> logger, const char* argv0)
-    : logger_(std::move(logger)), config_(RuntimeConfig{}) {
+    : logger_(std::move(logger)), configJson_(), config_(RuntimeConfig{}) {
     if (logger_) {
         logger_->Trace("JsonConfigService", "JsonConfigService",
                        "argv0=" + std::string(argv0 ? argv0 : ""));
@@ -32,6 +32,7 @@ JsonConfigService::JsonConfigService(std::shared_ptr<ILogger> logger, const char
 
 JsonConfigService::JsonConfigService(std::shared_ptr<ILogger> logger, const std::filesystem::path& configPath, bool dumpConfig)
     : logger_(std::move(logger)),
+      configJson_(),
       config_(LoadFromJson(logger_, configPath, dumpConfig, &configJson_)) {
     if (logger_) {
         logger_->Trace("JsonConfigService", "JsonConfigService",
@@ -42,7 +43,7 @@ JsonConfigService::JsonConfigService(std::shared_ptr<ILogger> logger, const std:
 }
 
 JsonConfigService::JsonConfigService(std::shared_ptr<ILogger> logger, const RuntimeConfig& config)
-    : logger_(std::move(logger)), config_(config), configJson_(BuildConfigJson(config, {})) {
+    : logger_(std::move(logger)), configJson_(BuildConfigJson(config, {})), config_(config) {
     if (logger_) {
         logger_->Trace("JsonConfigService", "JsonConfigService",
                        "config.width=" + std::to_string(config.width) +

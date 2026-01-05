@@ -109,8 +109,8 @@ public:
 
 private:
     std::shared_ptr<ILogger> logger_;
-    RuntimeConfig config_;
     std::string configJson_;
+    RuntimeConfig config_;
 
     // Helper methods moved from main.cpp
     std::filesystem::path FindScriptPath(const char* argv0);
