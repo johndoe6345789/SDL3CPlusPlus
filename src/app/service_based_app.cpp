@@ -302,6 +302,13 @@ void ServiceBasedApp::RegisterServices() {
         registry_.GetService<services::IVulkanDeviceService>(),
         registry_.GetService<services::ILogger>());
 
+    // GUI renderer service (needed by render command service and GUI service)
+    registry_.RegisterService<services::IGuiRendererService, services::impl::GuiRendererService>(
+        registry_.GetService<services::ILogger>(),
+        registry_.GetService<services::IBufferService>());
+    logger_->Trace("ServiceBasedApp", "RegisterServices",
+                   "Registered GUI renderer service before render command service");
+
     // Render command service
     registry_.RegisterService<services::IRenderCommandService, services::impl::RenderCommandService>(
         registry_.GetService<services::IVulkanDeviceService>(),
@@ -328,10 +335,6 @@ void ServiceBasedApp::RegisterServices() {
         registry_.GetService<services::ILogger>());
 
     // GUI service
-    registry_.RegisterService<services::IGuiRendererService, services::impl::GuiRendererService>(
-        registry_.GetService<services::ILogger>(),
-        registry_.GetService<services::IBufferService>());
-
     registry_.RegisterService<services::IGuiService, services::impl::VulkanGuiService>(
         registry_.GetService<services::ILogger>(),
         registry_.GetService<services::IGuiRendererService>());
