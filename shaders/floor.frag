@@ -4,6 +4,12 @@ layout(location = 0) in vec3 fragColor;
 layout(location = 1) in vec3 fragWorldPos;
 layout(location = 0) out vec4 outColor;
 
+float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+
+const vec3 SURFACE_TINT = vec3(0.35, 0.6, 0.35);
+
 const vec3 LIGHT_POSITIONS[8] = vec3[8](
     vec3(13.0, 4.5, 13.0),
     vec3(-13.0, 4.5, 13.0),
@@ -27,7 +33,15 @@ float calculateAttenuation(float distance) {
 }
 
 void main() {
-    vec3 baseColor = clamp(fragColor * 1.1, 0.0, 1.0);
+    vec3 baseColor = clamp(fragColor * 1.1 * SURFACE_TINT, 0.0, 1.0);
+    float checkerScale = 0.55;
+    float cx = step(0.5, fract(fragWorldPos.x * checkerScale));
+    float cz = step(0.5, fract(fragWorldPos.z * checkerScale));
+    float checker = abs(cx - cz);
+    float grit = hash(floor(fragWorldPos.xz * 2.2));
+    float pattern = mix(0.82, 1.08, checker) * mix(0.96, 1.04, grit);
+    baseColor *= pattern;
+
     vec3 ambient = AMBIENT_STRENGTH * baseColor;
     vec3 lighting = vec3(0.0);
 
