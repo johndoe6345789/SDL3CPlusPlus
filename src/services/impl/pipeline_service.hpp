@@ -52,11 +52,13 @@ private:
 
     // Helper methods
     VkShaderModule CreateShaderModule(const std::vector<char>& code);
-    std::vector<char> ReadShaderFile(const std::string& path, VkShaderStageFlagBits stage);
+    const std::vector<char>& ReadShaderFile(const std::string& path, VkShaderStageFlagBits stage);
     bool HasShaderSource(const std::string& path) const;
     void CreatePipelineLayout();
     void CreatePipelinesInternal(VkRenderPass renderPass, VkExtent2D extent);
     void CleanupPipelines();
+
+    std::unordered_map<std::string, std::vector<char>> shaderSpirvCache_;
 };
 
 }  // namespace sdl3cpp::services::impl

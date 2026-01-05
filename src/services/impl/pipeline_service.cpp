@@ -94,6 +94,7 @@ void PipelineService::RecreatePipelines(VkRenderPass renderPass, VkExtent2D exte
 void PipelineService::Cleanup() {
     logger_->Trace("PipelineService", "Cleanup");
     CleanupPipelines();
+    shaderSpirvCache_.clear();
 
     auto device = deviceService_->GetDevice();
 
@@ -306,7 +307,7 @@ void PipelineService::CreatePipelinesInternal(VkRenderPass renderPass, VkExtent2
         };
 
         auto addStage = [&](VkShaderStageFlagBits stage, const std::string& path) {
-            auto shaderCode = ReadShaderFile(path, stage);
+            const auto& shaderCode = ReadShaderFile(path, stage);
             VkShaderModule shaderModule = CreateShaderModule(shaderCode);
             shaderModules.push_back(shaderModule);
 
@@ -407,7 +408,7 @@ bool PipelineService::HasShaderSource(const std::string& path) const {
     return false;
 }
 
-std::vector<char> PipelineService::ReadShaderFile(const std::string& path, VkShaderStageFlagBits stage) {
+const std::vector<char>& PipelineService::ReadShaderFile(const std::string& path, VkShaderStageFlagBits stage) {
     logger_->Trace("PipelineService", "ReadShaderFile",
                    "path=" + path + ", stage=" + std::to_string(static_cast<int>(stage)));
 
@@ -435,6 +436,16 @@ std::vector<char> PipelineService::ReadShaderFile(const std::string& path, VkSha
         throw std::runtime_error("Path is not a regular file: " + shaderPath.string());
     }
 
+    const std::string cacheKey = shaderPath.string() + "|" +
+        std::to_string(static_cast<int>(stage));
+    auto cached = shaderSpirvCache_.find(cacheKey);
+    if (cached != shaderSpirvCache_.end()) {
+        logger_->Trace("PipelineService", "ReadShaderFile",
+                       "cacheHit=true, bytes=" + std::to_string(cached->second.size()));
+        return cached->second;
+    }
+
+    std::vector<char> buffer;
     if (IsSpirvPath(shaderPath)) {
         std::ifstream file(shaderPath, std::ios::ate | std::ios::binary);
         if (!file) {
@@ -443,7 +454,7 @@ std::vector<char> PipelineService::ReadShaderFile(const std::string& path, VkSha
         }
 
         size_t fileSize = static_cast<size_t>(file.tellg());
-        std::vector<char> buffer(fileSize);
+        buffer.resize(fileSize);
 
         file.seekg(0);
         file.read(buffer.data(), static_cast<std::streamsize>(fileSize));
@@ -451,38 +462,41 @@ std::vector<char> PipelineService::ReadShaderFile(const std::string& path, VkSha
 
         logger_->Debug("Read shader file: " + shaderPath.string() +
                        " (" + std::to_string(fileSize) + " bytes)");
-        return buffer;
+    } else {
+        std::ifstream sourceFile(shaderPath);
+        if (!sourceFile) {
+            throw std::runtime_error("Failed to open shader source: " + shaderPath.string());
+        }
+        std::string source((std::istreambuf_iterator<char>(sourceFile)),
+                           std::istreambuf_iterator<char>());
+        sourceFile.close();
+
+        shaderc::Compiler compiler;
+        shaderc::CompileOptions options;
+        options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
+
+        shaderc_shader_kind kind = ShadercKindFromStage(stage);
+        auto result = compiler.CompileGlslToSpv(source, kind, shaderPath.string().c_str(), options);
+        if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
+            std::string error = result.GetErrorMessage();
+            logger_->Error("Shader compilation failed: " + shaderPath.string() + "\n" + error);
+            throw std::runtime_error("Shader compilation failed: " + shaderPath.string() + "\n" + error);
+        }
+
+        std::vector<uint32_t> spirv(result.cbegin(), result.cend());
+        buffer.resize(spirv.size() * sizeof(uint32_t));
+        if (!buffer.empty()) {
+            std::memcpy(buffer.data(), spirv.data(), buffer.size());
+        }
+
+        logger_->Debug("Compiled shader: " + shaderPath.string() +
+                       " (" + std::to_string(buffer.size()) + " bytes)");
     }
 
-    std::ifstream sourceFile(shaderPath);
-    if (!sourceFile) {
-        throw std::runtime_error("Failed to open shader source: " + shaderPath.string());
-    }
-    std::string source((std::istreambuf_iterator<char>(sourceFile)),
-                       std::istreambuf_iterator<char>());
-    sourceFile.close();
-
-    shaderc::Compiler compiler;
-    shaderc::CompileOptions options;
-    options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
-
-    shaderc_shader_kind kind = ShadercKindFromStage(stage);
-    auto result = compiler.CompileGlslToSpv(source, kind, shaderPath.string().c_str(), options);
-    if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
-        std::string error = result.GetErrorMessage();
-        logger_->Error("Shader compilation failed: " + shaderPath.string() + "\n" + error);
-        throw std::runtime_error("Shader compilation failed: " + shaderPath.string() + "\n" + error);
-    }
-
-    std::vector<uint32_t> spirv(result.cbegin(), result.cend());
-    std::vector<char> buffer(spirv.size() * sizeof(uint32_t));
-    if (!buffer.empty()) {
-        std::memcpy(buffer.data(), spirv.data(), buffer.size());
-    }
-
-    logger_->Debug("Compiled shader: " + shaderPath.string() +
-                   " (" + std::to_string(buffer.size()) + " bytes)");
-    return buffer;
+    auto inserted = shaderSpirvCache_.emplace(cacheKey, std::move(buffer));
+    logger_->Trace("PipelineService", "ReadShaderFile",
+                   "cacheHit=false, bytes=" + std::to_string(inserted.first->second.size()));
+    return inserted.first->second;
 }
 
 }  // namespace sdl3cpp::services::impl

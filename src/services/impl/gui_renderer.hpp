@@ -57,6 +57,8 @@ private:
     void CleanupBuffers();
     void UpdateFormat(VkFormat format);
     void GenerateGuiGeometry(const std::vector<GuiCommand>& commands, uint32_t width, uint32_t height);
+    const std::vector<uint8_t>& LoadShaderBytes(const std::filesystem::path& path,
+                                                VkShaderStageFlagBits stage);
 
     VkDevice device_;
     VkPhysicalDevice physicalDevice_;
@@ -83,6 +85,7 @@ private:
     uint32_t viewportWidth_ = 0;
     uint32_t viewportHeight_ = 0;
     std::unordered_map<std::string, ParsedSvg> svgCache_;
+    std::unordered_map<std::string, std::vector<uint8_t>> shaderSpirvCache_;
     std::shared_ptr<IBufferService> bufferService_;
     std::shared_ptr<ILogger> logger_;
 };

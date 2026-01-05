@@ -27,8 +27,8 @@ end
 function get_shader_paths()
     return {
         test = {
-            vertex = "shaders/test.vert.spv",
-            fragment = "shaders/test.frag.spv",
+            vertex = "shaders/test.vert",
+            fragment = "shaders/test.frag",
         },
     }
 end

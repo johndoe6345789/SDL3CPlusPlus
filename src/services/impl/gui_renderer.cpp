@@ -667,6 +667,29 @@ void GuiRenderer::GenerateGuiGeometry(const std::vector<GuiCommand>& commands, u
     }
 }
 
+const std::vector<uint8_t>& GuiRenderer::LoadShaderBytes(const std::filesystem::path& path,
+                                                         VkShaderStageFlagBits stage) {
+    const std::string key = path.string();
+    auto cached = shaderSpirvCache_.find(key);
+    if (cached != shaderSpirvCache_.end()) {
+        if (logger_) {
+            logger_->Trace("GuiRenderer", "LoadShaderBytes",
+                           "cacheHit=true, path=" + key +
+                           ", bytes=" + std::to_string(cached->second.size()));
+        }
+        return cached->second;
+    }
+
+    std::vector<uint8_t> shaderBytes = ReadShaderFile(path, stage, logger_.get());
+    auto inserted = shaderSpirvCache_.emplace(key, std::move(shaderBytes));
+    if (logger_) {
+        logger_->Trace("GuiRenderer", "LoadShaderBytes",
+                       "cacheHit=false, path=" + key +
+                       ", bytes=" + std::to_string(inserted.first->second.size()));
+    }
+    return inserted.first->second;
+}
+
 void GuiRenderer::CreatePipeline(VkRenderPass renderPass, VkExtent2D extent) {
     // Load shader modules
     const std::filesystem::path vertexShaderPath =
@@ -681,8 +704,8 @@ void GuiRenderer::CreatePipeline(VkRenderPass renderPass, VkExtent2D extent) {
                        ", fragmentShader=" + fragmentShaderPath.string());
     }
 
-    auto vertShaderCode = ReadShaderFile(vertexShaderPath, VK_SHADER_STAGE_VERTEX_BIT, logger_.get());
-    auto fragShaderCode = ReadShaderFile(fragmentShaderPath, VK_SHADER_STAGE_FRAGMENT_BIT, logger_.get());
+    const auto& vertShaderCode = LoadShaderBytes(vertexShaderPath, VK_SHADER_STAGE_VERTEX_BIT);
+    const auto& fragShaderCode = LoadShaderBytes(fragmentShaderPath, VK_SHADER_STAGE_FRAGMENT_BIT);
 
     VkShaderModuleCreateInfo vertModuleInfo{};
     vertModuleInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;

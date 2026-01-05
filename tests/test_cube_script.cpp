@@ -97,8 +97,8 @@ int main() {
         auto testEntry = shaderMap.find("test");
         Assert(testEntry != shaderMap.end(), "shader map missing test entry", failures);
         if (testEntry != shaderMap.end()) {
-            Assert(testEntry->second.vertex == "shaders/test.vert.spv", "vertex shader path", failures);
-            Assert(testEntry->second.fragment == "shaders/test.frag.spv", "fragment shader path", failures);
+            Assert(testEntry->second.vertex == "shaders/test.vert", "vertex shader path", failures);
+            Assert(testEntry->second.fragment == "shaders/test.frag", "fragment shader path", failures);
         }
     } catch (const std::exception& ex) {
         std::cerr << "exception during tests: " << ex.what() << '\n';
