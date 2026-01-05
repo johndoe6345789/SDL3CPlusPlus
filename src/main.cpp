@@ -46,11 +46,10 @@ int main(int argc, char** argv) {
         sdl3cpp::services::impl::CommandLineService commandLineService(startupLogger, platformService);
         sdl3cpp::services::CommandLineOptions options = commandLineService.Parse(argc, argv);
 
-        sdl3cpp::app::ServiceBasedApp app(options.runtimeConfig);
-
         sdl3cpp::services::LogLevel logLevel = options.traceEnabled
             ? sdl3cpp::services::LogLevel::TRACE
             : sdl3cpp::services::LogLevel::INFO;
+        sdl3cpp::app::ServiceBasedApp app(options.runtimeConfig, logLevel);
         app.ConfigureLogging(logLevel, true, "sdl3_app.log");
 
         auto logger = app.GetLogger();

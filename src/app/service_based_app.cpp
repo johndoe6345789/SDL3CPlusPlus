@@ -39,11 +39,14 @@
 
 namespace sdl3cpp::app {
 
-ServiceBasedApp::ServiceBasedApp(services::RuntimeConfig runtimeConfig)
+ServiceBasedApp::ServiceBasedApp(services::RuntimeConfig runtimeConfig, services::LogLevel logLevel)
     : runtimeConfig_(std::move(runtimeConfig)) {
     // Register logger service first
     registry_.RegisterService<services::ILogger, services::impl::LoggerService>();
     logger_ = registry_.GetService<services::ILogger>();
+    if (logger_) {
+        logger_->SetLevel(logLevel);
+    }
     
     logger_->Trace("ServiceBasedApp", "ServiceBasedApp", "scriptPath=" + runtimeConfig_.scriptPath.string(), "constructor starting");
 

@@ -20,7 +20,7 @@ namespace sdl3cpp::app {
  */
 class ServiceBasedApp : public services::IApplicationService {
 public:
-    explicit ServiceBasedApp(services::RuntimeConfig runtimeConfig);
+    explicit ServiceBasedApp(services::RuntimeConfig runtimeConfig, services::LogLevel logLevel);
     ~ServiceBasedApp();
 
     ServiceBasedApp(const ServiceBasedApp&) = delete;

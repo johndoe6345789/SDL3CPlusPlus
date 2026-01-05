@@ -116,23 +116,31 @@ void SdlWindowService::CreateWindow(const WindowConfig& config) {
         throw std::runtime_error("Window already created");
     }
 
-    // Initialize SDL here if not already initialized
-    if (SDL_WasInit(0) == 0) {
+    // Ensure SDL video is initialized even if another subsystem (like audio) was started first.
+    const uint32_t initialized = SDL_WasInit(0);
+    const bool videoInitialized = (initialized & SDL_INIT_VIDEO) != 0;
+    if (!videoInitialized) {
         try {
-            ThrowSdlErrorIfFailed(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO), "SDL_Init failed", platformService_);
+            if (initialized == 0) {
+                ThrowSdlErrorIfFailed(SDL_Init(SDL_INIT_VIDEO), "SDL_Init(SDL_INIT_VIDEO) failed", platformService_);
+            } else {
+                ThrowSdlErrorIfFailed(SDL_InitSubSystem(SDL_INIT_VIDEO),
+                                      "SDL_InitSubSystem(SDL_INIT_VIDEO) failed",
+                                      platformService_);
+            }
         } catch (const std::exception& e) {
             ShowErrorDialog("SDL Initialization Failed",
-                std::string("Failed to initialize SDL subsystems.\n\nError: ") + e.what());
+                std::string("Failed to initialize SDL video subsystem.\n\nError: ") + e.what());
             throw;
         }
+    }
 
-        try {
-            ThrowSdlErrorIfFailed(SDL_Vulkan_LoadLibrary(nullptr), "SDL_Vulkan_LoadLibrary failed", platformService_);
-        } catch (const std::exception& e) {
-            ShowErrorDialog("Vulkan Library Load Failed",
-                std::string("Failed to load Vulkan library. Make sure Vulkan drivers are installed.\n\nError: ") + e.what());
-            throw;
-        }
+    try {
+        ThrowSdlErrorIfFailed(SDL_Vulkan_LoadLibrary(nullptr), "SDL_Vulkan_LoadLibrary failed", platformService_);
+    } catch (const std::exception& e) {
+        ShowErrorDialog("Vulkan Library Load Failed",
+            std::string("Failed to load Vulkan library. Make sure Vulkan drivers are installed.\n\nError: ") + e.what());
+        throw;
     }
 
     uint32_t flags = SDL_WINDOW_VULKAN;
