@@ -500,7 +500,7 @@ local function create_spinning_cube()
     local function compute_model_matrix(time)
         local rotation = math3d.rotation_y(time * rotation_speed)
         local scale = scale_matrix(1.5, 1.5, 1.5)  -- Make cube 3x3x3 units
-        local position = math3d.translation(0.0, 3.0, 0.0)
+        local position = math3d.translation(0.0, 3.0, 0.0)  -- Center of the room
         return math3d.multiply(position, math3d.multiply(rotation, scale))
     end
 
@@ -542,7 +542,7 @@ local function create_static_cube(position, scale, color)
         vertices = vertices,
         indices = cube_indices,
         compute_model_matrix = compute_model_matrix,
-        shader_key = "pbr",  -- Use PBR shader for realistic materials and lighting
+        shader_key = "solid",  -- Use solid shader for room geometry
     }
 end
 
@@ -713,12 +713,11 @@ local function draw_flight_buttons()
 end
 
 function get_scene_objects()
-    local objects = {
-        create_spinning_cube(),
-    }
+    local objects = {}
     for i = 1, #room_objects do
         objects[#objects + 1] = room_objects[i]
     end
+    objects[#objects + 1] = create_spinning_cube()
     return objects
 end
 
