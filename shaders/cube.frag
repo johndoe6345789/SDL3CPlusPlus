@@ -4,6 +4,12 @@ layout(location = 0) in vec3 fragColor;
 layout(location = 1) in vec3 fragWorldPos;
 layout(location = 0) out vec4 outColor;
 
+vec3 ComputeNormal() {
+    vec3 dx = dFdx(fragWorldPos);
+    vec3 dy = dFdy(fragWorldPos);
+    return normalize(cross(dx, dy));
+}
+
 vec3 RainbowBand(float t) {
     t = fract(t);
     float scaled = t * 5.0;
@@ -43,6 +49,19 @@ void main() {
     float bandPos = fragWorldPos.y * 0.35;
     float diagonal = (fragWorldPos.x + fragWorldPos.z) * 0.25;
     vec3 rainbow = RainbowBand(bandPos + diagonal);
-    vec3 shaded = mix(rainbow, fragColor, 0.08);
-    outColor = vec4(shaded, 1.0);
+    vec3 baseColor = mix(rainbow, fragColor, 0.08);
+
+    vec3 normal = ComputeNormal();
+    vec3 lighting = vec3(0.0);
+
+    vec3 keyDir = normalize(vec3(-0.35, 1.0, -0.25));
+    vec3 fillDir = normalize(vec3(0.45, 0.6, 0.2));
+    float keyNdotL = abs(dot(normal, keyDir));
+    float fillNdotL = abs(dot(normal, fillDir));
+
+    lighting += vec3(1.0, 0.92, 0.85) * keyNdotL * 0.9;
+    lighting += vec3(0.35, 0.45, 0.65) * fillNdotL * 0.4;
+
+    vec3 finalColor = baseColor * (0.28 + lighting);
+    outColor = vec4(clamp(finalColor, 0.0, 1.0), 1.0);
 }

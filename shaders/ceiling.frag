@@ -10,6 +10,12 @@ float hash(vec2 p) {
 
 const vec3 SURFACE_BASE = vec3(0.98, 0.96, 0.1);
 
+vec3 ComputeNormal() {
+    vec3 dx = dFdx(fragWorldPos);
+    vec3 dy = dFdy(fragWorldPos);
+    return normalize(cross(dx, dy));
+}
+
 const vec3 LIGHT_POSITIONS[8] = vec3[8](
     vec3(13.0, 4.5, 13.0),
     vec3(-13.0, 4.5, 13.0),
@@ -41,6 +47,7 @@ void main() {
     baseColor *= mix(0.94, 1.04, speckle);
     baseColor *= mix(1.0, 0.84, gridLine);
 
+    vec3 normal = ComputeNormal();
     vec3 ambient = AMBIENT_STRENGTH * baseColor;
     vec3 lighting = vec3(0.0);
 
@@ -49,8 +56,13 @@ void main() {
         float distance = length(lightDir);
         lightDir = normalize(lightDir);
         float attenuation = calculateAttenuation(distance);
-        lighting += LIGHT_COLOR * LIGHT_INTENSITY * attenuation;
+        float ndotl = abs(dot(normal, lightDir));
+        lighting += LIGHT_COLOR * LIGHT_INTENSITY * attenuation * ndotl;
     }
+
+    vec3 keyDir = normalize(vec3(-0.15, 1.0, 0.25));
+    float keyNdotL = abs(dot(normal, keyDir));
+    lighting += vec3(0.85, 0.95, 1.0) * keyNdotL * 0.28;
 
     vec3 finalColor = ambient + baseColor * lighting;
     finalColor = clamp(finalColor, 0.0, 1.0);
