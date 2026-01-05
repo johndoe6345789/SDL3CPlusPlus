@@ -103,6 +103,15 @@ function InputState:addTextInput(text)
     self.textInput = (self.textInput or "") .. (text or "")
 end
 
+function InputState:setGamepad(connected, leftX, leftY, rightX, rightY, togglePressed)
+    self.gamepadConnected = connected
+    self.gamepadLeftX = leftX or 0
+    self.gamepadLeftY = leftY or 0
+    self.gamepadRightX = rightX or 0
+    self.gamepadRightY = rightY or 0
+    self.gamepadTogglePressed = togglePressed
+end
+
 function InputState:resetTransient()
     self.textInput = ""
     self.wheel = 0

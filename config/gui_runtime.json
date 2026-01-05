@@ -15,7 +15,7 @@
   ],
   "mouse_grab": {
     "enabled": true,
-    "grab_on_click": true,
+    "grab_on_click": false,
     "release_on_escape": true,
     "start_grabbed": false,
     "hide_cursor": true,
