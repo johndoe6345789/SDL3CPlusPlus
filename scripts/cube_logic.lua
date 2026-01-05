@@ -204,6 +204,10 @@ local shader_variants = {
         vertex = "shaders/cube.vert.spv",
         fragment = "shaders/cube.frag.spv",
     },
+    solid = {
+        vertex = "shaders/solid.vert.spv",
+        fragment = "shaders/solid.frag.spv",
+    },
 }
 
 local camera = {
@@ -232,10 +236,10 @@ local last_frame_time = nil
 local movement_log_cooldown = 0.0
 local world_up = {0.0, 1.0, 0.0}
 local room = {
-    half_size = 6.0,
-    wall_thickness = 0.3,
-    wall_height = 2.5,
-    floor_half_thickness = 0.2,
+    half_size = 15.0,
+    wall_thickness = 0.5,
+    wall_height = 4.0,
+    floor_half_thickness = 0.3,
     floor_top = 0.0,
 }
 local player_state = {
@@ -250,7 +254,7 @@ local player_state = {
 
 camera.position[1] = 0.0
 camera.position[2] = room.floor_top + player_state.eye_height
-camera.position[3] = 4.0
+camera.position[3] = 10.0
 
 local function clamp(value, minValue, maxValue)
     if value < minValue then
@@ -491,15 +495,16 @@ local rotation_speed = 0.9
 local function create_spinning_cube()
     local function compute_model_matrix(time)
         local rotation = math3d.rotation_y(time * rotation_speed)
-        local position = math3d.translation(0.0, 3.4, 0.0)
-        return math3d.multiply(position, rotation)
+        local scale = scale_matrix(1.5, 1.5, 1.5)  -- Make cube 3x3x3 units
+        local position = math3d.translation(0.0, 3.0, 0.0)
+        return math3d.multiply(position, math3d.multiply(rotation, scale))
     end
 
     return {
         vertices = cube_vertices,
         indices = cube_indices,
         compute_model_matrix = compute_model_matrix,
-        shader_key = "default",
+        shader_key = "default",  -- Rainbow shader for spinning cube
     }
 end
 
@@ -533,7 +538,7 @@ local function create_static_cube(position, scale, color)
         vertices = vertices,
         indices = cube_indices,
         compute_model_matrix = compute_model_matrix,
-        shader_key = "default",
+        shader_key = "solid",  -- Use solid color shader for room objects
     }
 end
 
