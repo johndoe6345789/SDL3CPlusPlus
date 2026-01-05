@@ -52,7 +52,8 @@ private:
 
     // Helper methods
     VkShaderModule CreateShaderModule(const std::vector<char>& code);
-    std::vector<char> ReadShaderFile(const std::string& path);
+    std::vector<char> ReadShaderFile(const std::string& path, VkShaderStageFlagBits stage);
+    bool HasShaderSource(const std::string& path) const;
     void CreatePipelineLayout();
     void CreatePipelinesInternal(VkRenderPass renderPass, VkExtent2D extent);
     void CleanupPipelines();

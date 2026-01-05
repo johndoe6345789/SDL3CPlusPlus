@@ -115,6 +115,9 @@ endif()
 
 if(BUILD_SDL3_APP)
     find_package(Vulkan REQUIRED)
+    if(NOT ENABLE_VITA)
+        find_package(shaderc CONFIG REQUIRED)
+    endif()
 endif()
 
 # SDL is required for both the demo app and cube_script_tests (used by audio_player)
@@ -193,6 +196,15 @@ if(BUILD_SDL3_APP)
         Vorbis::vorbis
         cpptrace::cpptrace
     )
+    if(NOT ENABLE_VITA)
+        if(TARGET shaderc::shaderc)
+            target_link_libraries(sdl3_app PRIVATE shaderc::shaderc)
+        elseif(TARGET shaderc::shaderc_combined)
+            target_link_libraries(sdl3_app PRIVATE shaderc::shaderc_combined)
+        else()
+            message(FATAL_ERROR "shaderc CMake target not found")
+        endif()
+    endif()
     target_compile_definitions(sdl3_app PRIVATE SDL_MAIN_HANDLED)
 
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/shaders")

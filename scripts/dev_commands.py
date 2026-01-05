@@ -281,68 +281,6 @@ def msvc_quick(args: argparse.Namespace) -> None:
     run_argvs([cmd], args.dry_run)
 
 
-def _compile_shaders(dry_run: bool) -> None:
-    """
-    Compile GLSL shaders to SPIR-V format using glslangValidator.
-    Compiles .vert, .frag, .geom, .tesc, .tese, and .comp files in the shaders directory.
-    """
-    shaders_dir = Path("shaders")
-    if not shaders_dir.exists():
-        return
-
-    # Find shader compiler
-    compiler = None
-    for cmd in ["glslangValidator", "glslc"]:
-        try:
-            result = subprocess.run([cmd, "--version"],
-                                   capture_output=True,
-                                   timeout=5)
-            if result.returncode == 0:
-                compiler = cmd
-                break
-        except (FileNotFoundError, subprocess.TimeoutExpired):
-            continue
-
-    if not compiler:
-        print("⚠️  No shader compiler found (glslangValidator or glslc)")
-        print("   Skipping shader compilation")
-        return
-
-    print("\n=== Compiling Shaders ===")
-    shader_files = (
-        list(shaders_dir.glob("*.vert"))
-        + list(shaders_dir.glob("*.frag"))
-        + list(shaders_dir.glob("*.geom"))
-        + list(shaders_dir.glob("*.tesc"))
-        + list(shaders_dir.glob("*.tese"))
-        + list(shaders_dir.glob("*.comp"))
-    )
-
-    for shader_file in shader_files:
-        output_file = shader_file.with_suffix(shader_file.suffix + ".spv")
-
-        # Check if compilation is needed
-        if output_file.exists():
-            if output_file.stat().st_mtime >= shader_file.stat().st_mtime:
-                continue  # Skip if .spv is newer than source
-
-        print(f"  Compiling {shader_file.name} -> {output_file.name}")
-
-        if not dry_run:
-            if compiler == "glslangValidator":
-                cmd = [compiler, "-V", str(shader_file), "-o", str(output_file)]
-            else:  # glslc
-                cmd = [compiler, str(shader_file), "-o", str(output_file)]
-
-            result = subprocess.run(cmd, capture_output=True, text=True)
-            if result.returncode != 0:
-                print(f"    ❌ Failed: {result.stderr}")
-            else:
-                print(f"    ✓ Success")
-
-    print("=== Shaders Compiled ===\n")
-
-
 def _sync_assets(build_dir: str, dry_run: bool) -> None:
     """
     Sync asset files (scripts, shaders, models) from the project root to the
@@ -356,7 +294,7 @@ def _sync_assets(build_dir: str, dry_run: bool) -> None:
     # Define asset directories to sync
     asset_dirs = [
         ("scripts", ["*.lua"]),
-        ("shaders", ["*.spv"]),
+        ("shaders", ["*.vert", "*.frag", "*.geom", "*.tesc", "*.tese", "*.comp", "*.spv"]),
         ("scripts/models", ["*.stl", "*.obj", "*.fbx"]),
         ("config", ["*.json"]),
     ]
@@ -392,14 +330,12 @@ def run_demo(args: argparse.Namespace) -> None:
     executable is `sdl3_app` (or `sdl3_app.exe` on Windows). Additional
     arguments can be passed to the executable after `--`.
 
-    By default, compiles shaders and syncs asset files before running.
-    Use --no-sync to skip shader compilation and asset synchronization.
+    By default, syncs asset files before running.
+    Use --no-sync to skip asset synchronization.
     """
     build_dir = _as_build_dir(args.build_dir, DEFAULT_BUILD_DIR)
 
-    # Compile shaders and sync assets unless --no-sync is specified
     if not args.no_sync:
-        _compile_shaders(args.dry_run)
         _sync_assets(build_dir, args.dry_run)
 
     exe_name = args.target or ("sdl3_app.exe" if IS_WINDOWS else "sdl3_app")
@@ -1115,9 +1051,9 @@ def gui(args: argparse.Namespace) -> None:
             build_action.triggered.connect(self.run_build)
             dev_menu.addAction(build_action)
 
-            shader_action = QAction("Compile Shaders", self)
-            shader_action.triggered.connect(self.compile_shaders)
-            dev_menu.addAction(shader_action)
+            sync_action = QAction("Sync Assets", self)
+            sync_action.triggered.connect(self.sync_assets)
+            dev_menu.addAction(sync_action)
 
             dev_menu.addSeparator()
 
@@ -1660,12 +1596,16 @@ return {{
             ]
             self.run_command(cmd)
 
-        def compile_shaders(self):
-            """Compile shaders manually"""
+        def sync_assets(self):
+            """Sync assets into the active build directory"""
+            if self.preset != "default":
+                build_dir = f"build-{self.preset.split('-')[0]}"  # e.g., build-vita
+            else:
+                build_dir = GENERATOR_DEFAULT_DIR.get(self.generator, DEFAULT_BUILD_DIR)
             self.console.clear()
-            self.log("=== Compiling Shaders ===\n")
-            _compile_shaders(dry_run=False)
-            self.log("\n✓ Shader compilation completed")
+            self.log("=== Syncing Assets ===\n")
+            _sync_assets(build_dir, dry_run=False)
+            self.log("\n✓ Asset sync completed")
 
     app = QApplication(sys.argv)
     window = BuildLauncherGUI()
@@ -1787,7 +1727,7 @@ def main() -> int:
     runp.add_argument(
         "--no-sync",
         action="store_true",
-        help="skip shader compilation and asset syncing before running",
+        help="skip asset syncing before running",
     )
     runp.add_argument(
         "args",

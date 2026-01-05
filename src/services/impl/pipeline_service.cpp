@@ -1,10 +1,38 @@
 #include "pipeline_service.hpp"
 #include "../../core/vertex.hpp"
+#include <shaderc/shaderc.hpp>
 #include <array>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <iterator>
 #include <stdexcept>
 #include <vector>
+
+namespace {
+bool IsSpirvPath(const std::filesystem::path& path) {
+    return path.extension() == ".spv";
+}
+
+shaderc_shader_kind ShadercKindFromStage(VkShaderStageFlagBits stage) {
+    switch (stage) {
+        case VK_SHADER_STAGE_VERTEX_BIT:
+            return shaderc_vertex_shader;
+        case VK_SHADER_STAGE_FRAGMENT_BIT:
+            return shaderc_fragment_shader;
+        case VK_SHADER_STAGE_GEOMETRY_BIT:
+            return shaderc_geometry_shader;
+        case VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT:
+            return shaderc_tess_control_shader;
+        case VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT:
+            return shaderc_tess_evaluation_shader;
+        case VK_SHADER_STAGE_COMPUTE_BIT:
+            return shaderc_compute_shader;
+        default:
+            return shaderc_glsl_infer_from_source;
+    }
+}
+}  // namespace
 
 namespace sdl3cpp::services::impl {
 
@@ -235,45 +263,35 @@ void PipelineService::CreatePipelinesInternal(VkRenderPass renderPass, VkExtent2
 
     // Create pipeline for each registered shader
     for (const auto& [key, paths] : shaderPathMap_) {
+        auto requireShader = [&](const std::string& label, const std::string& path) {
+            if (!HasShaderSource(path)) {
+                throw std::runtime_error(
+                    label + " shader not found: " + path +
+                    "\n\nShader key: " + key +
+                    "\n\nPlease ensure the shader source (.vert/.frag/etc.) or compiled .spv exists.");
+            }
+        };
+
         // Validate shader files exist
-        if (!std::filesystem::exists(paths.vertex)) {
-            throw std::runtime_error(
-                "Vertex shader not found: " + paths.vertex +
-                "\n\nShader key: " + key +
-                "\n\nPlease ensure shader files are compiled and present in the shaders directory.");
-        }
-        if (!std::filesystem::exists(paths.fragment)) {
-            throw std::runtime_error(
-                "Fragment shader not found: " + paths.fragment +
-                "\n\nShader key: " + key +
-                "\n\nPlease ensure shader files are compiled and present in the shaders directory.");
-        }
+        requireShader("Vertex", paths.vertex);
+        requireShader("Fragment", paths.fragment);
 
         bool hasGeometry = !paths.geometry.empty();
         bool hasTessControl = !paths.tessControl.empty();
         bool hasTessEval = !paths.tessEval.empty();
 
-        if (hasGeometry && !std::filesystem::exists(paths.geometry)) {
-            throw std::runtime_error(
-                "Geometry shader not found: " + paths.geometry +
-                "\n\nShader key: " + key +
-                "\n\nPlease ensure shader files are compiled and present in the shaders directory.");
+        if (hasGeometry) {
+            requireShader("Geometry", paths.geometry);
         }
         if (hasTessControl != hasTessEval) {
             throw std::runtime_error(
                 "Tessellation shaders require both 'tesc' and 'tese' paths. Shader key: " + key);
         }
-        if (hasTessControl && !std::filesystem::exists(paths.tessControl)) {
-            throw std::runtime_error(
-                "Tessellation control shader not found: " + paths.tessControl +
-                "\n\nShader key: " + key +
-                "\n\nPlease ensure shader files are compiled and present in the shaders directory.");
+        if (hasTessControl) {
+            requireShader("Tessellation control", paths.tessControl);
         }
-        if (hasTessEval && !std::filesystem::exists(paths.tessEval)) {
-            throw std::runtime_error(
-                "Tessellation evaluation shader not found: " + paths.tessEval +
-                "\n\nShader key: " + key +
-                "\n\nPlease ensure shader files are compiled and present in the shaders directory.");
+        if (hasTessEval) {
+            requireShader("Tessellation evaluation", paths.tessEval);
         }
 
         std::vector<VkShaderModule> shaderModules;
@@ -288,7 +306,7 @@ void PipelineService::CreatePipelinesInternal(VkRenderPass renderPass, VkExtent2
         };
 
         auto addStage = [&](VkShaderStageFlagBits stage, const std::string& path) {
-            auto shaderCode = ReadShaderFile(path);
+            auto shaderCode = ReadShaderFile(path, stage);
             VkShaderModule shaderModule = CreateShaderModule(shaderCode);
             shaderModules.push_back(shaderModule);
 
@@ -373,33 +391,97 @@ VkShaderModule PipelineService::CreateShaderModule(const std::vector<char>& code
     return shaderModule;
 }
 
-std::vector<char> PipelineService::ReadShaderFile(const std::string& path) {
-    logger_->Trace("PipelineService", "ReadShaderFile", "path=" + path);
+bool PipelineService::HasShaderSource(const std::string& path) const {
+    if (path.empty()) {
+        return false;
+    }
+    std::filesystem::path shaderPath(path);
+    if (std::filesystem::exists(shaderPath)) {
+        return true;
+    }
+    if (IsSpirvPath(shaderPath)) {
+        std::filesystem::path sourcePath = shaderPath;
+        sourcePath.replace_extension();
+        return std::filesystem::exists(sourcePath);
+    }
+    return false;
+}
 
-    if (!std::filesystem::exists(path)) {
-        throw std::runtime_error("Shader file not found: " + path +
-            "\n\nPlease ensure the file exists at this location.");
+std::vector<char> PipelineService::ReadShaderFile(const std::string& path, VkShaderStageFlagBits stage) {
+    logger_->Trace("PipelineService", "ReadShaderFile",
+                   "path=" + path + ", stage=" + std::to_string(static_cast<int>(stage)));
+
+    if (path.empty()) {
+        throw std::runtime_error("Shader path is empty");
     }
 
-    if (!std::filesystem::is_regular_file(path)) {
-        throw std::runtime_error("Path is not a regular file: " + path);
+    std::filesystem::path shaderPath(path);
+    if (!std::filesystem::exists(shaderPath) && IsSpirvPath(shaderPath)) {
+        std::filesystem::path sourcePath = shaderPath;
+        sourcePath.replace_extension();
+        if (std::filesystem::exists(sourcePath)) {
+            logger_->Trace("PipelineService", "ReadShaderFile",
+                           "usingSource=" + sourcePath.string());
+            shaderPath = sourcePath;
+        }
     }
 
-    std::ifstream file(path, std::ios::ate | std::ios::binary);
-    if (!file) {
-        throw std::runtime_error("Failed to open shader file: " + path +
-            "\n\nCheck file permissions.");
+    if (!std::filesystem::exists(shaderPath)) {
+        throw std::runtime_error("Shader file not found: " + shaderPath.string() +
+            "\n\nPlease ensure the source (.vert/.frag/etc.) or compiled .spv exists.");
     }
 
-    size_t fileSize = static_cast<size_t>(file.tellg());
-    std::vector<char> buffer(fileSize);
+    if (!std::filesystem::is_regular_file(shaderPath)) {
+        throw std::runtime_error("Path is not a regular file: " + shaderPath.string());
+    }
 
-    file.seekg(0);
-    file.read(buffer.data(), static_cast<std::streamsize>(fileSize));
-    file.close();
+    if (IsSpirvPath(shaderPath)) {
+        std::ifstream file(shaderPath, std::ios::ate | std::ios::binary);
+        if (!file) {
+            throw std::runtime_error("Failed to open shader file: " + shaderPath.string() +
+                "\n\nCheck file permissions.");
+        }
 
-    logger_->Debug("Read shader file: " + path + " (" + std::to_string(fileSize) + " bytes)");
+        size_t fileSize = static_cast<size_t>(file.tellg());
+        std::vector<char> buffer(fileSize);
 
+        file.seekg(0);
+        file.read(buffer.data(), static_cast<std::streamsize>(fileSize));
+        file.close();
+
+        logger_->Debug("Read shader file: " + shaderPath.string() +
+                       " (" + std::to_string(fileSize) + " bytes)");
+        return buffer;
+    }
+
+    std::ifstream sourceFile(shaderPath);
+    if (!sourceFile) {
+        throw std::runtime_error("Failed to open shader source: " + shaderPath.string());
+    }
+    std::string source((std::istreambuf_iterator<char>(sourceFile)),
+                       std::istreambuf_iterator<char>());
+    sourceFile.close();
+
+    shaderc::Compiler compiler;
+    shaderc::CompileOptions options;
+    options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
+
+    shaderc_shader_kind kind = ShadercKindFromStage(stage);
+    auto result = compiler.CompileGlslToSpv(source, kind, shaderPath.string().c_str(), options);
+    if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
+        std::string error = result.GetErrorMessage();
+        logger_->Error("Shader compilation failed: " + shaderPath.string() + "\n" + error);
+        throw std::runtime_error("Shader compilation failed: " + shaderPath.string() + "\n" + error);
+    }
+
+    std::vector<uint32_t> spirv(result.cbegin(), result.cend());
+    std::vector<char> buffer(spirv.size() * sizeof(uint32_t));
+    if (!buffer.empty()) {
+        std::memcpy(buffer.data(), spirv.data(), buffer.size());
+    }
+
+    logger_->Debug("Compiled shader: " + shaderPath.string() +
+                   " (" + std::to_string(buffer.size()) + " bytes)");
     return buffer;
 }
 
