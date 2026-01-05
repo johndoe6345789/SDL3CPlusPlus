@@ -1,7 +1,7 @@
 {
   "launcher": {
     "name": "GUI Demo",
-    "description": "Interactive GUI demonstration with ImGui widgets and controls",
+    "description": "Interactive GUI demonstration with (Not-a-ImGui, it should be LUA DIY) widgets and controls",
     "enabled": true
   },
   "window_width": 1024,
