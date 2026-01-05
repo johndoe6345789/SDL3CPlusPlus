@@ -31,6 +31,7 @@ void VulkanDeviceService::Initialize(const std::vector<const char*>& deviceExten
 
     deviceExtensions_ = deviceExtensions;
     validationLayersEnabled_ = enableValidationLayers;
+    physicalDevice_ = VK_NULL_HANDLE;
 
     // Get required extensions from SDL
     uint32_t extensionCount = 0;
@@ -42,7 +43,9 @@ void VulkanDeviceService::Initialize(const std::vector<const char*>& deviceExten
     std::vector<const char*> requiredExtensions(extensions, extensions + extensionCount);
 
     CreateInstance(requiredExtensions);
-    PickPhysicalDevice();
+    logger_->Trace("VulkanDeviceService", "Initialize",
+                   "instanceCreated=" + std::string(instance_ != VK_NULL_HANDLE ? "true" : "false") +
+                   ", selectionDeferredUntilSurface=true");
 }
 
 void VulkanDeviceService::CreateSurface(SDL_Window* window) {
@@ -56,6 +59,8 @@ void VulkanDeviceService::CreateSurface(SDL_Window* window) {
     if (!SDL_Vulkan_CreateSurface(window, instance_, nullptr, &surface_)) {
         throw std::runtime_error("Failed to create Vulkan surface");
     }
+    logger_->Trace("VulkanDeviceService", "CreateSurface",
+                   "surfaceCreated=" + std::string(surface_ != VK_NULL_HANDLE ? "true" : "false"));
 }
 
 void VulkanDeviceService::CreateInstance(const std::vector<const char*>& requiredExtensions) {
@@ -159,6 +164,9 @@ void VulkanDeviceService::PickPhysicalDevice() {
 bool VulkanDeviceService::IsDeviceSuitable(VkPhysicalDevice device) const {
     logger_->Trace("VulkanDeviceService", "IsDeviceSuitable",
                    "deviceIsNull=" + std::string(device == VK_NULL_HANDLE ? "true" : "false"));
+    if (surface_ == VK_NULL_HANDLE) {
+        throw std::runtime_error("Vulkan surface must be created before checking device suitability");
+    }
     QueueFamilyIndices indices = FindQueueFamilies(device);
     bool extensionsSupported = CheckDeviceExtensionSupport(device);
 
@@ -183,6 +191,9 @@ bool VulkanDeviceService::IsDeviceSuitable(VkPhysicalDevice device) const {
 QueueFamilyIndices VulkanDeviceService::FindQueueFamilies(VkPhysicalDevice device) const {
     logger_->Trace("VulkanDeviceService", "FindQueueFamilies",
                    "deviceIsNull=" + std::string(device == VK_NULL_HANDLE ? "true" : "false"));
+    if (surface_ == VK_NULL_HANDLE) {
+        throw std::runtime_error("Vulkan surface must be created before querying queue families");
+    }
     QueueFamilyIndices indices;
 
     uint32_t queueFamilyCount = 0;
@@ -230,6 +241,18 @@ bool VulkanDeviceService::CheckDeviceExtensionSupport(VkPhysicalDevice device) c
 
 void VulkanDeviceService::CreateLogicalDevice() {
     logger_->Trace("VulkanDeviceService", "CreateLogicalDevice");
+
+    if (surface_ == VK_NULL_HANDLE) {
+        logger_->Trace("VulkanDeviceService", "CreateLogicalDevice", "surfaceIsNull=true");
+        throw std::runtime_error("Vulkan surface must be created before creating the logical device");
+    }
+
+    if (physicalDevice_ == VK_NULL_HANDLE) {
+        logger_->Trace("VulkanDeviceService", "CreateLogicalDevice", "physicalDeviceSelected=false");
+        PickPhysicalDevice();
+    }
+    logger_->Trace("VulkanDeviceService", "CreateLogicalDevice",
+                   "physicalDeviceSelected=" + std::string(physicalDevice_ != VK_NULL_HANDLE ? "true" : "false"));
 
     QueueFamilyIndices indices = FindQueueFamilies(physicalDevice_);
 

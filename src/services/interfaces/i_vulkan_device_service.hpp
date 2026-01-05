@@ -33,7 +33,7 @@ public:
     virtual ~IVulkanDeviceService() = default;
 
     /**
-     * @brief Initialize Vulkan instance and select physical device.
+     * @brief Initialize Vulkan instance and store required extensions.
      *
      * @param deviceExtensions Required device extensions
      * @param enableValidationLayers Whether to enable validation layers
@@ -55,7 +55,7 @@ public:
     /**
      * @brief Create the logical device and retrieve queues.
      *
-     * Must be called after Initialize().
+     * Must be called after CreateSurface(). This selects the physical device.
      *
      * @throws std::runtime_error if device creation fails
      */

@@ -10,3 +10,5 @@
 - Prefer `constexpr`, `inline`, and scoped enums over macros.
 - Keep APIs explicit and predictable; avoid implicit conversions.
 
+## Logging
+- When fixing a bug, add trace logging in the affected area to improve diagnostics.
