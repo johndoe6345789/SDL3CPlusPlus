@@ -226,8 +226,8 @@ local cubeIndices = {
 
 local shaderVariants = {
     default = {
-        vertex = "shaders/cube.vert.spv",
-        fragment = "shaders/cube.frag.spv",
+        vertex = "shaders/cube.vert",
+        fragment = "shaders/cube.frag",
     },
 }
 

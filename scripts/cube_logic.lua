@@ -201,28 +201,28 @@ end
 
 local shader_variants = {
     default = {
-        vertex = "shaders/cube.vert.spv",
-        fragment = "shaders/cube.frag.spv",
+        vertex = "shaders/cube.vert",
+        fragment = "shaders/cube.frag",
     },
     solid = {
-        vertex = "shaders/solid.vert.spv",
-        fragment = "shaders/solid.frag.spv",
+        vertex = "shaders/solid.vert",
+        fragment = "shaders/solid.frag",
     },
     floor = {
-        vertex = "shaders/solid.vert.spv",
-        fragment = "shaders/floor.frag.spv",
+        vertex = "shaders/solid.vert",
+        fragment = "shaders/floor.frag",
     },
     wall = {
-        vertex = "shaders/solid.vert.spv",
-        fragment = "shaders/wall.frag.spv",
+        vertex = "shaders/solid.vert",
+        fragment = "shaders/wall.frag",
     },
     ceiling = {
-        vertex = "shaders/solid.vert.spv",
-        fragment = "shaders/ceiling.frag.spv",
+        vertex = "shaders/solid.vert",
+        fragment = "shaders/ceiling.frag",
     },
     pbr = {
-        vertex = "shaders/pbr.vert.spv",
-        fragment = "shaders/pbr.frag.spv",
+        vertex = "shaders/pbr.vert",
+        fragment = "shaders/pbr.frag",
     },
 }
 

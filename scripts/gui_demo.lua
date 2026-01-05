@@ -68,8 +68,8 @@ end
 
 local shader_variants = {
     default = {
-        vertex = "shaders/gui_2d.vert.spv",
-        fragment = "shaders/gui_2d.frag.spv",
+        vertex = "shaders/gui_2d.vert",
+        fragment = "shaders/gui_2d.frag",
     },
 }
 
