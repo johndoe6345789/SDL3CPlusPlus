@@ -2,8 +2,20 @@
 
 #include "../interfaces/i_physics_bridge_service.hpp"
 #include "../interfaces/i_logger.hpp"
-#include "physics_bridge.hpp"
 #include <memory>
+#include <string>
+#include <unordered_map>
+
+class btVector3;
+class btTransform;
+class btCollisionShape;
+class btMotionState;
+class btRigidBody;
+class btDefaultCollisionConfiguration;
+class btCollisionDispatcher;
+class btBroadphaseInterface;
+class btSequentialImpulseConstraintSolver;
+class btDiscreteDynamicsWorld;
 
 namespace sdl3cpp::services::impl {
 
@@ -13,6 +25,7 @@ namespace sdl3cpp::services::impl {
 class PhysicsBridgeService : public IPhysicsBridgeService {
 public:
     explicit PhysicsBridgeService(std::shared_ptr<ILogger> logger);
+    ~PhysicsBridgeService() override;
 
     bool AddBoxRigidBody(const std::string& name,
                          const btVector3& halfExtents,
@@ -25,7 +38,18 @@ public:
                                std::string& error) const override;
 
 private:
-    std::unique_ptr<PhysicsBridge> bridge_;
+    struct BodyRecord {
+        std::unique_ptr<btCollisionShape> shape;
+        std::unique_ptr<btMotionState> motionState;
+        std::unique_ptr<btRigidBody> body;
+    };
+
+    std::unique_ptr<btDefaultCollisionConfiguration> collisionConfig_;
+    std::unique_ptr<btCollisionDispatcher> dispatcher_;
+    std::unique_ptr<btBroadphaseInterface> broadphase_;
+    std::unique_ptr<btSequentialImpulseConstraintSolver> solver_;
+    std::unique_ptr<btDiscreteDynamicsWorld> world_;
+    std::unordered_map<std::string, BodyRecord> bodies_;
     std::shared_ptr<ILogger> logger_;
 };
 

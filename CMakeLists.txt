@@ -148,7 +148,6 @@ if(BUILD_SDL3_APP)
             src/services/impl/gui_renderer_service.cpp
             src/services/impl/vulkan_gui_service.cpp
             src/services/impl/bullet_physics_service.cpp
-            src/services/impl/physics_bridge.cpp
             src/services/impl/scene_service.cpp
             src/services/impl/graphics_service.cpp
             src/app/service_based_app.cpp

@@ -10,7 +10,7 @@ namespace sdl3cpp::services {
  * @brief Physics simulation service interface.
  *
  * Provides rigid body physics simulation using Bullet Physics.
- * Wraps the PhysicsBridge class with a clean service interface.
+ * Wraps the physics bridge service with a clean simulation interface.
  */
 class IPhysicsService {
 public:

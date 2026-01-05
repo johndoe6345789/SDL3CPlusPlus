@@ -21,7 +21,7 @@ void BulletPhysicsService::Initialize(const btVector3& gravity) {
         return;
     }
 
-    physicsBridge_ = std::make_unique<PhysicsBridge>(logger_);
+    physicsBridge_ = std::make_unique<PhysicsBridgeService>(logger_);
     initialized_ = true;
 
     logger_->Info("Physics service initialized");
@@ -51,7 +51,11 @@ bool BulletPhysicsService::AddBoxRigidBody(const std::string& name,
     }
 
     std::string error;
-    return physicsBridge_->addBoxRigidBody(name, halfExtents, mass, transform, error);
+    if (!physicsBridge_->AddBoxRigidBody(name, halfExtents, mass, transform, error)) {
+        logger_->Error("AddBoxRigidBody failed: " + error);
+        return false;
+    }
+    return true;
 }
 
 bool BulletPhysicsService::AddSphereRigidBody(const std::string& name,
@@ -60,16 +64,16 @@ bool BulletPhysicsService::AddSphereRigidBody(const std::string& name,
                                              const btTransform& transform) {
     logger_->TraceFunction(__func__);
 
-    // PhysicsBridge doesn't support sphere rigid bodies in current implementation
-    logger_->Warn("AddSphereRigidBody not supported by PhysicsBridge");
+    // PhysicsBridgeService doesn't support sphere rigid bodies in current implementation
+    logger_->Warn("AddSphereRigidBody not supported by PhysicsBridgeService");
     return false;
 }
 
 bool BulletPhysicsService::RemoveRigidBody(const std::string& name) {
     logger_->TraceFunction(__func__);
 
-    // PhysicsBridge doesn't support removing bodies in current implementation
-    logger_->Warn("RemoveRigidBody not supported by PhysicsBridge");
+    // PhysicsBridgeService doesn't support removing bodies in current implementation
+    logger_->Warn("RemoveRigidBody not supported by PhysicsBridgeService");
     return false;
 }
 
@@ -80,7 +84,7 @@ void BulletPhysicsService::StepSimulation(float deltaTime, int maxSubSteps) {
         throw std::runtime_error("Physics service not initialized");
     }
 
-    physicsBridge_->stepSimulation(deltaTime);
+    physicsBridge_->StepSimulation(deltaTime);
 }
 
 bool BulletPhysicsService::GetTransform(const std::string& name, btTransform& outTransform) const {
@@ -89,43 +93,49 @@ bool BulletPhysicsService::GetTransform(const std::string& name, btTransform& ou
     }
 
     std::string error;
-    return physicsBridge_->getRigidBodyTransform(name, outTransform, error);
+    if (!physicsBridge_->GetRigidBodyTransform(name, outTransform, error)) {
+        if (logger_) {
+            logger_->Warn("GetTransform failed: " + error);
+        }
+        return false;
+    }
+    return true;
 }
 
 bool BulletPhysicsService::SetTransform(const std::string& name, const btTransform& transform) {
     logger_->TraceFunction(__func__);
 
-    // PhysicsBridge doesn't support setting transforms in current implementation
-    logger_->Warn("SetTransform not supported by PhysicsBridge");
+    // PhysicsBridgeService doesn't support setting transforms in current implementation
+    logger_->Warn("SetTransform not supported by PhysicsBridgeService");
     return false;
 }
 
 bool BulletPhysicsService::ApplyForce(const std::string& name, const btVector3& force) {
     logger_->TraceFunction(__func__);
 
-    // PhysicsBridge doesn't support applying forces in current implementation
-    logger_->Warn("ApplyForce not supported by PhysicsBridge");
+    // PhysicsBridgeService doesn't support applying forces in current implementation
+    logger_->Warn("ApplyForce not supported by PhysicsBridgeService");
     return false;
 }
 
 bool BulletPhysicsService::ApplyImpulse(const std::string& name, const btVector3& impulse) {
     logger_->TraceFunction(__func__);
 
-    // PhysicsBridge doesn't support applying impulses in current implementation
-    logger_->Warn("ApplyImpulse not supported by PhysicsBridge");
+    // PhysicsBridgeService doesn't support applying impulses in current implementation
+    logger_->Warn("ApplyImpulse not supported by PhysicsBridgeService");
     return false;
 }
 
 bool BulletPhysicsService::SetLinearVelocity(const std::string& name, const btVector3& velocity) {
     logger_->TraceFunction(__func__);
 
-    // PhysicsBridge doesn't support setting velocity in current implementation
-    logger_->Warn("SetLinearVelocity not supported by PhysicsBridge");
+    // PhysicsBridgeService doesn't support setting velocity in current implementation
+    logger_->Warn("SetLinearVelocity not supported by PhysicsBridgeService");
     return false;
 }
 
 size_t BulletPhysicsService::GetBodyCount() const {
-    // PhysicsBridge doesn't expose GetBodyCount in current implementation
+    // PhysicsBridgeService doesn't expose GetBodyCount in current implementation
     // Returning 0 as stub - could track bodies in wrapper if needed
     return 0;
 }
@@ -137,10 +147,10 @@ void BulletPhysicsService::Clear() {
         return;
     }
 
-    // PhysicsBridge doesn't expose Clear in current implementation
+    // PhysicsBridgeService doesn't expose Clear in current implementation
     // Shutdown and reinitialize to clear all bodies
     physicsBridge_.reset();
-    physicsBridge_ = std::make_unique<PhysicsBridge>(logger_);
+    physicsBridge_ = std::make_unique<PhysicsBridgeService>(logger_);
 }
 
 }  // namespace sdl3cpp::services::impl

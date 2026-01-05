@@ -2,7 +2,7 @@
 
 #include "../interfaces/i_physics_service.hpp"
 #include "../interfaces/i_logger.hpp"
-#include "physics_bridge.hpp"
+#include "physics_bridge_service.hpp"
 #include "../../di/lifecycle.hpp"
 #include <memory>
 
@@ -11,7 +11,7 @@ namespace sdl3cpp::services::impl {
 /**
  * @brief Bullet physics service implementation.
  *
- * Small wrapper service (~120 lines) around PhysicsBridge.
+ * Small wrapper service (~120 lines) around PhysicsBridgeService.
  * Provides rigid body physics simulation using Bullet Physics.
  */
 class BulletPhysicsService : public IPhysicsService,
@@ -54,7 +54,7 @@ public:
 
 private:
     std::shared_ptr<ILogger> logger_;
-    std::unique_ptr<PhysicsBridge> physicsBridge_;
+    std::unique_ptr<PhysicsBridgeService> physicsBridge_;
     bool initialized_ = false;
 };
 
