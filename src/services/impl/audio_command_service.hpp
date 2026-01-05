@@ -21,6 +21,7 @@ public:
                            const std::string& path,
                            bool loop,
                            std::string& error) override;
+    bool StopBackground(std::string& error) override;
 
 private:
     std::shared_ptr<IConfigService> configService_;

@@ -159,6 +159,7 @@ void ScriptEngineService::RegisterBindings(lua_State* L) {
     bind("glm_matrix_from_transform", &ScriptEngineService::GlmMatrixFromTransform);
     bind("audio_play_background", &ScriptEngineService::AudioPlayBackground);
     bind("audio_play_sound", &ScriptEngineService::AudioPlaySound);
+    bind("audio_stop_background", &ScriptEngineService::AudioStopBackground);
 }
 
 int ScriptEngineService::LoadMeshFromFile(lua_State* L) {
@@ -351,6 +352,29 @@ int ScriptEngineService::AudioPlaySound(lua_State* L) {
     std::string error;
     if (!context->audioCommandService->QueueAudioCommand(
             AudioCommandType::Effect, path, loop, error)) {
+        lua_pushnil(L);
+        lua_pushstring(L, error.c_str());
+        return 2;
+    }
+
+    lua_pushboolean(L, 1);
+    return 1;
+}
+
+int ScriptEngineService::AudioStopBackground(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    auto logger = context ? context->logger : nullptr;
+    if (!context || !context->audioCommandService) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Audio service not available");
+        return 2;
+    }
+    if (logger) {
+        logger->Trace("ScriptEngineService", "AudioStopBackground");
+    }
+
+    std::string error;
+    if (!context->audioCommandService->StopBackground(error)) {
         lua_pushnil(L);
         lua_pushstring(L, error.c_str());
         return 2;

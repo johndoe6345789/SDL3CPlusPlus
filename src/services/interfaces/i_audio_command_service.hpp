@@ -23,6 +23,7 @@ public:
                                    const std::string& path,
                                    bool loop,
                                    std::string& error) = 0;
+    virtual bool StopBackground(std::string& error) = 0;
 };
 
 }  // namespace sdl3cpp::services

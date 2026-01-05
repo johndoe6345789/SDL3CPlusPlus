@@ -1,20 +1,3 @@
-local pyramid_vertices = {
-    { position = {0.0, 1.0, 0.0}, color = {1.0, 0.5, 0.0} },
-    { position = {-1.0, -1.0, -1.0}, color = {0.0, 1.0, 1.0} },
-    { position = {1.0, -1.0, -1.0}, color = {1.0, 0.0, 1.0} },
-    { position = {1.0, -1.0, 1.0}, color = {1.0, 1.0, 0.0} },
-    { position = {-1.0, -1.0, 1.0}, color = {0.0, 0.0, 1.0} },
-}
-
-local pyramid_indices = {
-    1, 2, 3,
-    1, 3, 4,
-    1, 4, 5,
-    1, 5, 2,
-    2, 3, 4,
-    4, 5, 2,
-}
-
 local cube_mesh_info = {
     path = "models/cube.stl",
     loaded = false,
@@ -53,21 +36,41 @@ end
 
 load_cube_mesh()
 
-local function init_audio()
-    if type(audio_play_background) == "function" then
-        audio_play_background("modmusic.ogg", true)
-    end
-end
-
-init_audio()
-
 if not cube_mesh_info.loaded then
     error("Unable to load cube mesh: " .. (cube_mesh_info.error or "unknown"))
 end
 
+local music_state = {
+    playing = false,
+    togglePressed = false,
+}
+
+local function start_music()
+    if type(audio_play_background) == "function" then
+        audio_play_background("modmusic.ogg", true)
+        music_state.playing = true
+    end
+end
+
+local function stop_music()
+    if type(audio_stop_background) == "function" then
+        audio_stop_background()
+    end
+    music_state.playing = false
+end
+
+local function toggle_music()
+    if music_state.playing then
+        stop_music()
+    else
+        start_music()
+    end
+end
+
+start_music()
+
 local math3d = require("math3d")
 local string_format = string.format
-local table_concat = table.concat
 
 local InputState = {}
 InputState.__index = InputState
@@ -76,10 +79,22 @@ function InputState:new()
     local instance = {
         mouseX = 0.0,
         mouseY = 0.0,
+        mouseDeltaX = 0.0,
+        mouseDeltaY = 0.0,
         mouseDown = false,
         wheel = 0.0,
         textInput = "",
         keyStates = {},
+        lastMouseX = nil,
+        lastMouseY = nil,
+        gamepad = {
+            connected = false,
+            leftX = 0.0,
+            leftY = 0.0,
+            rightX = 0.0,
+            rightY = 0.0,
+            togglePressed = false,
+        },
     }
     return setmetatable(instance, InputState)
 end
@@ -87,9 +102,17 @@ end
 function InputState:resetTransient()
     self.textInput = ""
     self.wheel = 0.0
+    self.mouseDeltaX = 0.0
+    self.mouseDeltaY = 0.0
 end
 
 function InputState:setMouse(x, y, isDown)
+    if self.lastMouseX ~= nil and self.lastMouseY ~= nil then
+        self.mouseDeltaX = x - self.lastMouseX
+        self.mouseDeltaY = y - self.lastMouseY
+    end
+    self.lastMouseX = x
+    self.lastMouseY = y
     self.mouseX = x
     self.mouseY = y
     self.mouseDown = isDown
@@ -109,6 +132,16 @@ function InputState:addTextInput(text)
     end
 end
 
+function InputState:setGamepad(connected, leftX, leftY, rightX, rightY, togglePressed)
+    local pad = self.gamepad
+    pad.connected = connected and true or false
+    pad.leftX = leftX or 0.0
+    pad.leftY = leftY or 0.0
+    pad.rightX = rightX or 0.0
+    pad.rightY = rightY or 0.0
+    pad.togglePressed = togglePressed and true or false
+end
+
 gui_input = InputState:new()
 
 local function log_debug(fmt, ...)
@@ -123,199 +156,176 @@ if cube_mesh_info.loaded then
         cube_mesh_info.path, cube_mesh_info.vertex_count, cube_mesh_info.index_count)
 end
 
-local cube_body_name = "cube_body"
-local cube_state = {
-    position = {0.0, 0.0, 0.0},
-    rotation = {0.0, 0.0, 0.0, 1.0},
-}
-local physics_last_time = 0.0
-
-local function initialize_physics()
-    if type(physics_create_box) ~= "function" then
-        error("physics_create_box() is unavailable")
-    end
-    local ok, err = physics_create_box(
-        cube_body_name,
-        {1.0, 1.0, 1.0},
-        1.0,
-        {0.0, 2.0, 0.0},
-        {0.0, 0.0, 0.0, 1.0}
-    )
-    if not ok then
-        error("physics_create_box failed: " .. (err or "unknown"))
-    end
-    if type(physics_step_simulation) == "function" then
-        physics_step_simulation(0.0)
-    end
-end
-initialize_physics()
-
-local function sync_physics(time)
-    local dt = time - physics_last_time
-    if dt < 0.0 then
-        dt = 0.0
-    end
-    if dt > 0.0 and type(physics_step_simulation) == "function" then
-        physics_step_simulation(dt)
-    end
-    physics_last_time = time
-    if type(physics_get_transform) ~= "function" then
-        error("physics_get_transform() is unavailable")
-    end
-    local transform, err = physics_get_transform(cube_body_name)
-    if not transform then
-        error("physics_get_transform failed: " .. (err or "unknown"))
-    end
-    cube_state.position = transform.position
-    cube_state.rotation = transform.rotation
-end
-
-local rotation_speeds = {x = 0.5, y = 0.7}
-
 local shader_variants = {
     default = {
-        vertex = "shaders/cube.vert.spv",
-        fragment = "shaders/cube.frag.spv",
-    },
-    cube = {
-        vertex = "shaders/cube.vert.spv",
-        fragment = "shaders/cube.frag.spv",
-    },
-    pyramid = {
         vertex = "shaders/cube.vert.spv",
         fragment = "shaders/cube.frag.spv",
     },
 }
 
 local camera = {
-    eye = {2.0, 2.0, 2.5},
-    center = {0.0, 0.0, 0.0},
-    up = {0.0, 1.0, 0.0},
+    position = {0.0, 0.0, 5.0},
+    yaw = -math.pi / 2.0,
+    pitch = 0.0,
     fov = 0.78,
     near = 0.1,
-    far = 10.0,
+    far = 50.0,
 }
 
-local effect_key = "space"
-local effect_active = false
-
-local function update_audio_controls()
-    if type(audio_play_sound) ~= "function" then
-        return
-    end
-    if gui_input.keyStates[effect_key] then
-        if not effect_active then
-            audio_play_sound("modmusic.ogg", false)
-            effect_active = true
-        end
-    else
-        effect_active = false
-    end
-end
-
-local zoom_settings = {
-    min_distance = 2.0,
-    max_distance = 12.0,
-    speed = 0.25,
+local controls = {
+    move_speed = 4.0,
+    mouse_sensitivity = 0.0025,
+    gamepad_look_speed = 2.5,
+    stick_deadzone = 0.2,
+    max_pitch = math.rad(85.0),
 }
 
-local function clamp_distance(value, minValue, maxValue)
-    if minValue and value < minValue then
+local last_frame_time = nil
+local world_up = {0.0, 1.0, 0.0}
+
+local function clamp(value, minValue, maxValue)
+    if value < minValue then
         return minValue
     end
-    if maxValue and value > maxValue then
+    if value > maxValue then
         return maxValue
     end
     return value
 end
 
-local function update_camera_zoom(delta)
-    if delta == 0 then
-        return
+local function normalize(vec)
+    local x, y, z = vec[1], vec[2], vec[3]
+    local len = math.sqrt(x * x + y * y + z * z)
+    if len == 0.0 then
+        return {x, y, z}
     end
-    local dx = camera.eye[1] - camera.center[1]
-    local dy = camera.eye[2] - camera.center[2]
-    local dz = camera.eye[3] - camera.center[3]
-    local distance = math.sqrt(dx * dx + dy * dy + dz * dz)
-    if distance == 0 then
-        return
-    end
-    local normalizedX = dx / distance
-    local normalizedY = dy / distance
-    local normalizedZ = dz / distance
-    local adjustment = -delta * zoom_settings.speed
-    local targetDistance = clamp_distance(distance + adjustment, zoom_settings.min_distance, zoom_settings.max_distance)
-    camera.eye[1] = camera.center[1] + normalizedX * targetDistance
-    camera.eye[2] = camera.center[2] + normalizedY * targetDistance
-    camera.eye[3] = camera.center[3] + normalizedZ * targetDistance
-    log_debug("zoom delta=%.2f -> distance=%.2f", delta, targetDistance)
+    return {x / len, y / len, z / len}
 end
 
-local function build_model(time)
-    local y = math3d.rotation_y(time * rotation_speeds.y)
-    local x = math3d.rotation_x(time * rotation_speeds.x)
-    return math3d.multiply(y, x)
+local function cross(a, b)
+    return {
+        a[2] * b[3] - a[3] * b[2],
+        a[3] * b[1] - a[1] * b[3],
+        a[1] * b[2] - a[2] * b[1],
+    }
 end
 
-local function create_rotating_cube(position, speed_scale, shader_key)
+local function apply_deadzone(value, deadzone)
+    local magnitude = math.abs(value)
+    if magnitude < deadzone then
+        return 0.0
+    end
+    local scaled = (magnitude - deadzone) / (1.0 - deadzone)
+    if value < 0.0 then
+        return -scaled
+    end
+    return scaled
+end
+
+local function forward_from_angles(yaw, pitch)
+    local cos_pitch = math.cos(pitch)
+    return {
+        math.cos(yaw) * cos_pitch,
+        math.sin(pitch),
+        math.sin(yaw) * cos_pitch,
+    }
+end
+
+local function update_camera(dt)
+    if not gui_input then
+        return
+    end
+
+    local look_delta_x = gui_input.mouseDeltaX * controls.mouse_sensitivity
+    local look_delta_y = -gui_input.mouseDeltaY * controls.mouse_sensitivity
+
+    local pad = gui_input.gamepad
+    if pad and pad.connected then
+        local stick_x = apply_deadzone(pad.rightX, controls.stick_deadzone)
+        local stick_y = apply_deadzone(pad.rightY, controls.stick_deadzone)
+        look_delta_x = look_delta_x + stick_x * controls.gamepad_look_speed * dt
+        look_delta_y = look_delta_y - stick_y * controls.gamepad_look_speed * dt
+    end
+
+    camera.yaw = camera.yaw + look_delta_x
+    camera.pitch = clamp(camera.pitch + look_delta_y, -controls.max_pitch, controls.max_pitch)
+
+    local forward = forward_from_angles(camera.yaw, camera.pitch)
+    local forward_flat = normalize({forward[1], 0.0, forward[3]})
+    local right = normalize(cross(forward_flat, world_up))
+
+    local move_x = 0.0
+    local move_z = 0.0
+
+    if gui_input.keyStates["w"] then
+        move_z = move_z + 1.0
+    end
+    if gui_input.keyStates["s"] then
+        move_z = move_z - 1.0
+    end
+    if gui_input.keyStates["d"] then
+        move_x = move_x + 1.0
+    end
+    if gui_input.keyStates["a"] then
+        move_x = move_x - 1.0
+    end
+
+    if pad and pad.connected then
+        move_x = move_x + apply_deadzone(pad.leftX, controls.stick_deadzone)
+        move_z = move_z - apply_deadzone(pad.leftY, controls.stick_deadzone)
+    end
+
+    local length = math.sqrt(move_x * move_x + move_z * move_z)
+    if length > 1.0 then
+        move_x = move_x / length
+        move_z = move_z / length
+    end
+
+    if length > 0.0 then
+        local speed = controls.move_speed * dt
+        camera.position[1] = camera.position[1] + (right[1] * move_x + forward_flat[1] * move_z) * speed
+        camera.position[2] = camera.position[2] + (right[2] * move_x + forward_flat[2] * move_z) * speed
+        camera.position[3] = camera.position[3] + (right[3] * move_x + forward_flat[3] * move_z) * speed
+    end
+end
+
+local function update_audio_controls()
+    if not gui_input then
+        return
+    end
+
+    local pad = gui_input.gamepad
+    local toggle_pressed = gui_input.keyStates["m"]
+    if pad and pad.connected and pad.togglePressed then
+        toggle_pressed = true
+    end
+
+    if toggle_pressed and not music_state.togglePressed then
+        toggle_music()
+    end
+
+    music_state.togglePressed = toggle_pressed and true or false
+end
+
+local rotation_speed = 0.9
+
+local function create_spinning_cube()
     local function compute_model_matrix(time)
-        local base = build_model(time * speed_scale)
-        local offset = math3d.translation(position[1], position[2], position[3])
-        return math3d.multiply(offset, base)
+        return math3d.rotation_y(time * rotation_speed)
     end
 
     return {
         vertices = cube_vertices,
         indices = cube_indices,
         compute_model_matrix = compute_model_matrix,
-        shader_key = shader_key or "cube",
-    }
-end
-
-local function create_physics_cube(shader_key)
-    local function compute_model_matrix(time)
-        sync_physics(time)
-        return glm_matrix_from_transform(cube_state.position, cube_state.rotation)
-    end
-
-    return {
-        vertices = cube_vertices,
-        indices = cube_indices,
-        compute_model_matrix = compute_model_matrix,
-        shader_key = shader_key or "cube",
-    }
-end
-
-local function create_pyramid(position, shader_key)
-    local function compute_model_matrix(time)
-        local base = build_model(time * 0.6)
-        local offset = math3d.translation(position[1], position[2], position[3])
-        return math3d.multiply(offset, base)
-    end
-
-    return {
-        vertices = pyramid_vertices,
-        indices = pyramid_indices,
-        compute_model_matrix = compute_model_matrix,
-        shader_key = shader_key or "pyramid",
+        shader_key = "default",
     }
 end
 
 function get_scene_objects()
-    local objects = {
-        create_physics_cube("cube"),
-        create_rotating_cube({3.0, 0.0, 0.0}, 0.8, "cube"),
-        create_rotating_cube({-3.0, 0.0, 0.0}, 1.2, "cube"),
-        create_pyramid({0.0, -0.5, -4.0}, "pyramid"),
+    return {
+        create_spinning_cube(),
     }
-    if lua_debug then
-        local labels = {}
-        for idx, obj in ipairs(objects) do
-            table.insert(labels, string_format("[%d:%s]", idx, obj.shader_key))
-        end
-        log_debug("get_scene_objects -> %d entries: %s", #objects, table_concat(labels, ", "))
-    end
-    return objects
 end
 
 function get_shader_paths()
@@ -323,11 +333,29 @@ function get_shader_paths()
 end
 
 function get_view_projection(aspect)
-    if gui_input then
-        update_camera_zoom(gui_input.wheel)
+    local now = os.clock()
+    local dt = 0.0
+    if last_frame_time then
+        dt = now - last_frame_time
     end
+    last_frame_time = now
+    if dt < 0.0 then
+        dt = 0.0
+    elseif dt > 0.1 then
+        dt = 0.1
+    end
+
+    update_camera(dt)
     update_audio_controls()
-    local view = math3d.look_at(camera.eye, camera.center, camera.up)
+
+    local forward = forward_from_angles(camera.yaw, camera.pitch)
+    local center = {
+        camera.position[1] + forward[1],
+        camera.position[2] + forward[2],
+        camera.position[3] + forward[3],
+    }
+
+    local view = math3d.look_at(camera.position, center, world_up)
     local projection = math3d.perspective(camera.fov, aspect, camera.near, camera.far)
     return math3d.multiply(projection, view)
 end

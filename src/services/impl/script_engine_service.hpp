@@ -57,6 +57,7 @@ private:
     static int PhysicsGetTransform(lua_State* L);
     static int AudioPlayBackground(lua_State* L);
     static int AudioPlaySound(lua_State* L);
+    static int AudioStopBackground(lua_State* L);
     static int GlmMatrixFromTransform(lua_State* L);
 
     std::shared_ptr<ILogger> logger_;

@@ -12,6 +12,12 @@ struct GuiInputSnapshot {
     float wheel = 0.0f;
     std::string textInput;
     std::unordered_map<std::string, bool> keyStates;
+    bool gamepadConnected = false;
+    float gamepadLeftX = 0.0f;
+    float gamepadLeftY = 0.0f;
+    float gamepadRightX = 0.0f;
+    float gamepadRightY = 0.0f;
+    bool gamepadTogglePressed = false;
 };
 
 struct GuiColor {

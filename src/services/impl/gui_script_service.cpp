@@ -219,6 +219,20 @@ void GuiScriptService::UpdateGuiInput(const GuiInputSnapshot& input) {
     lua_pushnumber(L, input.wheel);
     lua_call(L, 2, 0);
 
+    lua_getfield(L, stateIndex, "setGamepad");
+    if (lua_isfunction(L, -1)) {
+        lua_pushvalue(L, stateIndex);
+        lua_pushboolean(L, input.gamepadConnected);
+        lua_pushnumber(L, input.gamepadLeftX);
+        lua_pushnumber(L, input.gamepadLeftY);
+        lua_pushnumber(L, input.gamepadRightX);
+        lua_pushnumber(L, input.gamepadRightY);
+        lua_pushboolean(L, input.gamepadTogglePressed);
+        lua_call(L, 7, 0);
+    } else {
+        lua_pop(L, 1);
+    }
+
     if (!input.textInput.empty()) {
         lua_getfield(L, stateIndex, "addTextInput");
         lua_pushvalue(L, stateIndex);

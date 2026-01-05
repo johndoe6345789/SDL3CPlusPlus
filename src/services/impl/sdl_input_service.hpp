@@ -24,6 +24,7 @@ public:
      * @param eventBus Event bus to subscribe to
      */
     explicit SdlInputService(std::shared_ptr<events::IEventBus> eventBus, std::shared_ptr<ILogger> logger);
+    ~SdlInputService() override;
 
     // IInputService interface
     void ProcessEvent(const SDL_Event& event) override;
@@ -46,6 +47,7 @@ private:
     InputState state_;
     GuiInputSnapshot guiInputSnapshot_;
     IGuiScriptService* guiScriptService_ = nullptr;
+    SDL_Gamepad* gamepad_ = nullptr;
 
     // Event bus listeners
     void OnKeyPressed(const events::Event& event);
@@ -55,6 +57,10 @@ private:
     void OnMouseButtonReleased(const events::Event& event);
     void OnMouseWheel(const events::Event& event);
     void OnTextInput(const events::Event& event);
+    void EnsureGamepadSubsystem();
+    void TryOpenGamepad();
+    void CloseGamepad();
+    void UpdateGamepadSnapshot();
 
     // GUI key mapping (extracted from old Sdl3App)
     static const std::unordered_map<SDL_Keycode, std::string> kGuiKeyNames;

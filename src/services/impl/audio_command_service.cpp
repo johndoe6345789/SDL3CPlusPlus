@@ -72,4 +72,21 @@ bool AudioCommandService::QueueAudioCommand(AudioCommandType type,
     return true;
 }
 
+bool AudioCommandService::StopBackground(std::string& error) {
+    if (logger_) {
+        logger_->Trace("AudioCommandService", "StopBackground");
+    }
+    if (!audioService_) {
+        error = "Audio service not available";
+        return false;
+    }
+    try {
+        audioService_->StopBackground();
+    } catch (const std::exception& ex) {
+        error = ex.what();
+        return false;
+    }
+    return true;
+}
+
 }  // namespace sdl3cpp::services::impl
