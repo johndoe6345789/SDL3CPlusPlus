@@ -18,6 +18,8 @@
     "move_back": "S",
     "move_left": "A",
     "move_right": "D",
+    "fly_up": "Q",
+    "fly_down": "Z",
     "music_toggle": "M",
     "music_toggle_gamepad": "start",
     "gamepad_move_x_axis": "leftx",

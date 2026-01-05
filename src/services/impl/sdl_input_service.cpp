@@ -312,6 +312,8 @@ void SdlInputService::BuildActionKeyMapping() {
     addKey("move_back", bindings.moveBackKey);
     addKey("move_left", bindings.moveLeftKey);
     addKey("move_right", bindings.moveRightKey);
+    addKey("fly_up", bindings.flyUpKey);
+    addKey("fly_down", bindings.flyDownKey);
     addKey("music_toggle", bindings.musicToggleKey);
 
     auto toLower = [](std::string value) {

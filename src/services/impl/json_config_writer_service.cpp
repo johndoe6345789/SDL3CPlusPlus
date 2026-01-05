@@ -5,6 +5,7 @@
 #include <rapidjson/writer.h>
 #include <vulkan/vulkan.h>
 
+#include <array>
 #include <filesystem>
 #include <fstream>
 #include <stdexcept>
@@ -70,20 +71,31 @@ void JsonConfigWriterService::WriteConfig(const RuntimeConfig& config, const std
         rapidjson::Value stringValue(value.c_str(), allocator);
         bindingsObject.AddMember(nameValue, stringValue, allocator);
     };
-    addBindingMember("move_forward", config.inputBindings.moveForwardKey);
-    addBindingMember("move_back", config.inputBindings.moveBackKey);
-    addBindingMember("move_left", config.inputBindings.moveLeftKey);
-    addBindingMember("move_right", config.inputBindings.moveRightKey);
-    addBindingMember("music_toggle", config.inputBindings.musicToggleKey);
-    addBindingMember("music_toggle_gamepad", config.inputBindings.musicToggleGamepadButton);
-    addBindingMember("gamepad_move_x_axis", config.inputBindings.gamepadMoveXAxis);
-    addBindingMember("gamepad_move_y_axis", config.inputBindings.gamepadMoveYAxis);
-    addBindingMember("gamepad_look_x_axis", config.inputBindings.gamepadLookXAxis);
-    addBindingMember("gamepad_look_y_axis", config.inputBindings.gamepadLookYAxis);
-    addBindingMember("gamepad_dpad_up", config.inputBindings.gamepadDpadUpButton);
-    addBindingMember("gamepad_dpad_down", config.inputBindings.gamepadDpadDownButton);
-    addBindingMember("gamepad_dpad_left", config.inputBindings.gamepadDpadLeftButton);
-    addBindingMember("gamepad_dpad_right", config.inputBindings.gamepadDpadRightButton);
+    struct BindingSpec {
+        const char* name;
+        std::string InputBindings::* member;
+    };
+    const std::array<BindingSpec, 16> bindingSpecs = {{
+        {"move_forward", &InputBindings::moveForwardKey},
+        {"move_back", &InputBindings::moveBackKey},
+        {"move_left", &InputBindings::moveLeftKey},
+        {"move_right", &InputBindings::moveRightKey},
+        {"fly_up", &InputBindings::flyUpKey},
+        {"fly_down", &InputBindings::flyDownKey},
+        {"music_toggle", &InputBindings::musicToggleKey},
+        {"music_toggle_gamepad", &InputBindings::musicToggleGamepadButton},
+        {"gamepad_move_x_axis", &InputBindings::gamepadMoveXAxis},
+        {"gamepad_move_y_axis", &InputBindings::gamepadMoveYAxis},
+        {"gamepad_look_x_axis", &InputBindings::gamepadLookXAxis},
+        {"gamepad_look_y_axis", &InputBindings::gamepadLookYAxis},
+        {"gamepad_dpad_up", &InputBindings::gamepadDpadUpButton},
+        {"gamepad_dpad_down", &InputBindings::gamepadDpadDownButton},
+        {"gamepad_dpad_left", &InputBindings::gamepadDpadLeftButton},
+        {"gamepad_dpad_right", &InputBindings::gamepadDpadRightButton},
+    }};
+    for (const auto& spec : bindingSpecs) {
+        addBindingMember(spec.name, config.inputBindings.*(spec.member));
+    }
 
     auto addMappingObject = [&](const char* name,
                                 const std::unordered_map<std::string, std::string>& mappings,

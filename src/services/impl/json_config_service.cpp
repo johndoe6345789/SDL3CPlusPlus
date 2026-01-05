@@ -5,6 +5,7 @@
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/prettywriter.h>
 #include <vulkan/vulkan.h>
+#include <array>
 #include <fstream>
 #include <iostream>
 #include <optional>
@@ -216,31 +217,43 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger, c
         if (!bindingsValue.IsObject()) {
             throw std::runtime_error("JSON member 'input_bindings' must be an object");
         }
-        auto readBinding = [&](const char* name, std::string& target) {
-            if (!bindingsValue.HasMember(name)) {
+        struct BindingSpec {
+            const char* name;
+            std::string InputBindings::* member;
+        };
+        const std::array<BindingSpec, 16> bindingSpecs = {{
+            {"move_forward", &InputBindings::moveForwardKey},
+            {"move_back", &InputBindings::moveBackKey},
+            {"move_left", &InputBindings::moveLeftKey},
+            {"move_right", &InputBindings::moveRightKey},
+            {"fly_up", &InputBindings::flyUpKey},
+            {"fly_down", &InputBindings::flyDownKey},
+            {"music_toggle", &InputBindings::musicToggleKey},
+            {"music_toggle_gamepad", &InputBindings::musicToggleGamepadButton},
+            {"gamepad_move_x_axis", &InputBindings::gamepadMoveXAxis},
+            {"gamepad_move_y_axis", &InputBindings::gamepadMoveYAxis},
+            {"gamepad_look_x_axis", &InputBindings::gamepadLookXAxis},
+            {"gamepad_look_y_axis", &InputBindings::gamepadLookYAxis},
+            {"gamepad_dpad_up", &InputBindings::gamepadDpadUpButton},
+            {"gamepad_dpad_down", &InputBindings::gamepadDpadDownButton},
+            {"gamepad_dpad_left", &InputBindings::gamepadDpadLeftButton},
+            {"gamepad_dpad_right", &InputBindings::gamepadDpadRightButton},
+        }};
+
+        auto readBinding = [&](const BindingSpec& spec) {
+            if (!bindingsValue.HasMember(spec.name)) {
                 return;
             }
-            const auto& value = bindingsValue[name];
+            const auto& value = bindingsValue[spec.name];
             if (!value.IsString()) {
-                throw std::runtime_error("JSON member 'input_bindings." + std::string(name) + "' must be a string");
+                throw std::runtime_error("JSON member 'input_bindings." + std::string(spec.name) + "' must be a string");
             }
-            target = value.GetString();
+            config.inputBindings.*(spec.member) = value.GetString();
         };
 
-        readBinding("move_forward", config.inputBindings.moveForwardKey);
-        readBinding("move_back", config.inputBindings.moveBackKey);
-        readBinding("move_left", config.inputBindings.moveLeftKey);
-        readBinding("move_right", config.inputBindings.moveRightKey);
-        readBinding("music_toggle", config.inputBindings.musicToggleKey);
-        readBinding("music_toggle_gamepad", config.inputBindings.musicToggleGamepadButton);
-        readBinding("gamepad_move_x_axis", config.inputBindings.gamepadMoveXAxis);
-        readBinding("gamepad_move_y_axis", config.inputBindings.gamepadMoveYAxis);
-        readBinding("gamepad_look_x_axis", config.inputBindings.gamepadLookXAxis);
-        readBinding("gamepad_look_y_axis", config.inputBindings.gamepadLookYAxis);
-        readBinding("gamepad_dpad_up", config.inputBindings.gamepadDpadUpButton);
-        readBinding("gamepad_dpad_down", config.inputBindings.gamepadDpadDownButton);
-        readBinding("gamepad_dpad_left", config.inputBindings.gamepadDpadLeftButton);
-        readBinding("gamepad_dpad_right", config.inputBindings.gamepadDpadRightButton);
+        for (const auto& spec : bindingSpecs) {
+            readBinding(spec);
+        }
 
         auto readMapping = [&](const char* name,
                                std::unordered_map<std::string, std::string>& target) {
