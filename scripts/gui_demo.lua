@@ -1,4 +1,5 @@
 ﻿local Gui = require('gui')
+local math3d = require('math3d')
 
 local ctx = Gui.newContext()
 local input = Gui.newInputState()
@@ -18,6 +19,14 @@ local buttonStates = {
 }
 
 local statusMessage = 'Ready'
+local viewProjectionLogged = false
+
+local shader_variants = {
+    default = {
+        vertex = "shaders/gui_2d.vert.spv",
+        fragment = "shaders/gui_2d.frag.spv",
+    },
+}
 
 local function drawTestButtons()
     -- Background panel
@@ -99,11 +108,18 @@ function get_scene_objects()
 end
 
 function get_shader_paths()
-    return {}  -- No shaders needed for 2D
+    log_trace("GUI demo shader variants: default vertex=%s fragment=%s",
+        shader_variants.default.vertex,
+        shader_variants.default.fragment)
+    return shader_variants
 end
 
 function get_view_projection(aspect)
-    return {}  -- No 3D projection needed
+    if not viewProjectionLogged then
+        log_trace("GUI demo view projection: identity (aspect=%.2f)", aspect)
+        viewProjectionLogged = true
+    end
+    return math3d.identity()
 end
 
 function get_gui_commands()
