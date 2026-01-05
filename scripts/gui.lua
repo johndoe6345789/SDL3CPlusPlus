@@ -189,12 +189,16 @@ function Context:markHot(widgetId, hovered)
     end
 end
 
-function Context:applyOpacity(color)
+function Context:applyBackgroundOpacity(color)
     if not color then
         return color
     end
-    local result = {color[1], color[2], color[3], color[4]}
-    if result[4] then
+    -- For full transparency (opacity = 0), set alpha to 0
+    -- For partial transparency, multiply the existing alpha
+    local result = {color[1], color[2], color[3], color[4] or 1.0}
+    if self.opacity == 0 then
+        result[4] = 0
+    else
         result[4] = result[4] * self.opacity
     end
     return result
@@ -202,7 +206,8 @@ end
 
 function Context:pushRect(rect, params)
     params = params or {}
-    local color = params.color and self:applyOpacity(params.color) or params.color
+    -- Only apply opacity to the background color, not borders or other elements
+    local color = params.color and self:applyBackgroundOpacity(params.color) or params.color
     local command = {
         type = "rect",
         x = rect.x,
