@@ -102,6 +102,35 @@ def _as_build_dir(path_str: str | None, fallback: str) -> str:
     return path_str or fallback
 
 
+def _has_toolchain_arg(cmake_args: Sequence[str] | None) -> bool:
+    """Return True if the CMake args already define CMAKE_TOOLCHAIN_FILE."""
+    if not cmake_args:
+        return False
+    for arg in cmake_args:
+        if arg == "-DCMAKE_TOOLCHAIN_FILE" or arg.startswith("-DCMAKE_TOOLCHAIN_FILE="):
+            return True
+    return False
+
+
+def _find_conan_toolchain(build_type: str) -> Path | None:
+    """
+    Look for the Conan toolchain file in common output locations.
+
+    The default `conan install -of build` + `cmake_layout()` layout produces
+    `build/build/<build_type>/generators/conan_toolchain.cmake`.
+    """
+    candidates = [
+        Path("build") / "build" / build_type / "generators" / "conan_toolchain.cmake",
+        Path("build") / build_type / "generators" / "conan_toolchain.cmake",
+        Path("build") / "generators" / "conan_toolchain.cmake",
+        Path("build") / "conan_toolchain.cmake",
+    ]
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+    return None
+
+
 def dependencies(args: argparse.Namespace) -> None:
     """Run Conan profile detection and install dependencies."""
     cmd_detect = ["conan", "profile", "detect", "-f"]
@@ -118,6 +147,9 @@ def configure(args: argparse.Namespace) -> None:
         args.build_dir, GENERATOR_DEFAULT_DIR.get(generator, "build")
     )
     cmake_args: list[str] = ["cmake", "-B", build_dir, "-S", "."]
+    conan_toolchain = _find_conan_toolchain(args.build_type)
+    if conan_toolchain and not _has_toolchain_arg(args.cmake_args):
+        cmake_args.append(f"-DCMAKE_TOOLCHAIN_FILE={conan_toolchain}")
     if generator == "vs":
         cmake_args.extend(["-G", CMAKE_GENERATOR["vs"]])
     else:
