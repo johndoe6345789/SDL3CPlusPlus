@@ -82,6 +82,12 @@ public:
         }
         return config_.inputBindings;
     }
+    const MouseGrabConfig& GetMouseGrabConfig() const override {
+        if (logger_) {
+            logger_->Trace("JsonConfigService", "GetMouseGrabConfig");
+        }
+        return config_.mouseGrab;
+    }
 
     /**
      * @brief Get the full runtime configuration.

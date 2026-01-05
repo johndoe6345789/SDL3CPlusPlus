@@ -102,6 +102,8 @@ void SdlInputService::ProcessEvent(const SDL_Event& event) {
             // GUI input processing
             guiInputSnapshot_.mouseX = static_cast<float>(event.motion.x);
             guiInputSnapshot_.mouseY = static_cast<float>(event.motion.y);
+            guiInputSnapshot_.mouseDeltaX += static_cast<float>(event.motion.xrel);
+            guiInputSnapshot_.mouseDeltaY += static_cast<float>(event.motion.yrel);
             break;
 
         case SDL_EVENT_MOUSE_BUTTON_DOWN:
@@ -148,6 +150,8 @@ void SdlInputService::ResetFrameState() {
     state_.textInput.clear();
 
     // Reset GUI per-frame state
+    guiInputSnapshot_.mouseDeltaX = 0.0f;
+    guiInputSnapshot_.mouseDeltaY = 0.0f;
     guiInputSnapshot_.wheel = 0.0f;
     guiInputSnapshot_.textInput.clear();
 }
@@ -214,6 +218,8 @@ void SdlInputService::OnMouseMoved(const events::Event& event) {
     state_.mouseY = mouseEvent.y;
     guiInputSnapshot_.mouseX = mouseEvent.x;
     guiInputSnapshot_.mouseY = mouseEvent.y;
+    guiInputSnapshot_.mouseDeltaX += mouseEvent.deltaX;
+    guiInputSnapshot_.mouseDeltaY += mouseEvent.deltaY;
 }
 
 void SdlInputService::OnMouseButtonPressed(const events::Event& event) {

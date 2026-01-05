@@ -190,6 +190,8 @@ void GuiScriptService::UpdateGuiInput(const GuiInputSnapshot& input) {
         logger_->Trace("GuiScriptService", "UpdateGuiInput",
                        "mouseX=" + std::to_string(input.mouseX) +
                        ", mouseY=" + std::to_string(input.mouseY) +
+                       ", mouseDeltaX=" + std::to_string(input.mouseDeltaX) +
+                       ", mouseDeltaY=" + std::to_string(input.mouseDeltaY) +
                        ", mouseDown=" + std::string(input.mouseDown ? "true" : "false") +
                        ", wheel=" + std::to_string(input.wheel) +
                        ", textInput.size=" + std::to_string(input.textInput.size()) +
@@ -212,7 +214,9 @@ void GuiScriptService::UpdateGuiInput(const GuiInputSnapshot& input) {
     lua_pushnumber(L, input.mouseX);
     lua_pushnumber(L, input.mouseY);
     lua_pushboolean(L, input.mouseDown);
-    lua_call(L, 4, 0);
+    lua_pushnumber(L, input.mouseDeltaX);
+    lua_pushnumber(L, input.mouseDeltaY);
+    lua_call(L, 6, 0);
 
     lua_getfield(L, stateIndex, "setWheel");
     lua_pushvalue(L, stateIndex);

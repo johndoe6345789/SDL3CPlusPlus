@@ -106,8 +106,11 @@ function InputState:resetTransient()
     self.mouseDeltaY = 0.0
 end
 
-function InputState:setMouse(x, y, isDown)
-    if self.lastMouseX ~= nil and self.lastMouseY ~= nil then
+function InputState:setMouse(x, y, isDown, deltaX, deltaY)
+    if type(deltaX) == "number" and type(deltaY) == "number" then
+        self.mouseDeltaX = deltaX
+        self.mouseDeltaY = deltaY
+    elseif self.lastMouseX ~= nil and self.lastMouseY ~= nil then
         self.mouseDeltaX = x - self.lastMouseX
         self.mouseDeltaY = y - self.lastMouseY
     end

@@ -1,6 +1,8 @@
 #include "sdl_window_service.hpp"
 #include "../interfaces/i_logger.hpp"
 #include <SDL3/SDL_vulkan.h>
+#include <algorithm>
+#include <cctype>
 #include <chrono>
 #include <sstream>
 #include <stdexcept>
@@ -27,6 +29,40 @@ std::string BuildSdlErrorMessage(const char* context, const std::shared_ptr<IPla
     }
 
     return oss.str();
+}
+
+std::string NormalizeMouseBindingName(std::string value) {
+    std::transform(value.begin(), value.end(), value.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    return value;
+}
+
+bool TryParseMouseButton(const std::string& name, uint8_t& buttonOut) {
+    if (name.empty()) {
+        return false;
+    }
+    std::string normalized = NormalizeMouseBindingName(name);
+    if (normalized == "left" || normalized == "button1") {
+        buttonOut = SDL_BUTTON_LEFT;
+        return true;
+    }
+    if (normalized == "right" || normalized == "button2") {
+        buttonOut = SDL_BUTTON_RIGHT;
+        return true;
+    }
+    if (normalized == "middle" || normalized == "button3") {
+        buttonOut = SDL_BUTTON_MIDDLE;
+        return true;
+    }
+    if (normalized == "x1" || normalized == "button4") {
+        buttonOut = SDL_BUTTON_X1;
+        return true;
+    }
+    if (normalized == "x2" || normalized == "button5") {
+        buttonOut = SDL_BUTTON_X2;
+        return true;
+    }
+    return false;
 }
 
 void ThrowSdlErrorIfFailed(bool success, const char* context, const std::shared_ptr<IPlatformService>& platformService) {
@@ -106,7 +142,8 @@ void SdlWindowService::CreateWindow(const WindowConfig& config) {
                    "config.width=" + std::to_string(config.width) +
                    ", config.height=" + std::to_string(config.height) +
                    ", config.title=" + config.title +
-                   ", config.resizable=" + std::string(config.resizable ? "true" : "false"));
+                   ", config.resizable=" + std::string(config.resizable ? "true" : "false") +
+                   ", mouseGrab.enabled=" + std::string(config.mouseGrab.enabled ? "true" : "false"));
 
     if (!initialized_) {
         throw std::runtime_error("SdlWindowService not initialized");
@@ -174,6 +211,13 @@ void SdlWindowService::CreateWindow(const WindowConfig& config) {
 
     SDL_StartTextInput(window_);
 
+    mouseGrabConfig_ = config.mouseGrab;
+    mouseGrabbed_ = false;
+    ConfigureMouseGrabBindings();
+    if (mouseGrabConfig_.enabled && mouseGrabConfig_.startGrabbed) {
+        ApplyMouseGrab(true);
+    }
+
     logger_->TraceVariable("window_", reinterpret_cast<void*>(window_));
     logger_->TraceVariable("width", static_cast<int>(config.width));
     logger_->TraceVariable("height", static_cast<int>(config.height));
@@ -183,6 +227,9 @@ void SdlWindowService::DestroyWindow() {
     logger_->Trace("SdlWindowService", "DestroyWindow",
                    "windowIsNull=" + std::string(window_ ? "false" : "true"));
     if (window_) {
+        if (mouseGrabbed_) {
+            ApplyMouseGrab(false);
+        }
         SDL_StopTextInput(window_);
         SDL_DestroyWindow(window_);
         window_ = nullptr;
@@ -218,6 +265,7 @@ void SdlWindowService::PollEvents() {
     while (SDL_PollEvent(&event)) {
         // Convert SDL event to application event and publish
         PublishEvent(event);
+        HandleMouseGrabEvent(event);
 
         // Check for quit event
         if (event.type == SDL_EVENT_QUIT || event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED) {
@@ -231,6 +279,107 @@ void SdlWindowService::SetTitle(const std::string& title) {
     logger_->Trace("SdlWindowService", "SetTitle", "title=" + title);
     if (window_) {
         SDL_SetWindowTitle(window_, title.c_str());
+    }
+}
+
+void SdlWindowService::ConfigureMouseGrabBindings() {
+    grabMouseButton_ = SDL_BUTTON_LEFT;
+    releaseKey_ = SDLK_ESCAPE;
+
+    if (!mouseGrabConfig_.grabMouseButton.empty()) {
+        uint8_t parsedButton = grabMouseButton_;
+        if (TryParseMouseButton(mouseGrabConfig_.grabMouseButton, parsedButton)) {
+            grabMouseButton_ = parsedButton;
+        } else if (logger_) {
+            logger_->Error("SdlWindowService: unknown mouse grab button '" +
+                           mouseGrabConfig_.grabMouseButton + "'");
+        }
+    }
+
+    if (!mouseGrabConfig_.releaseKey.empty()) {
+        SDL_Keycode parsedKey = SDL_GetKeyFromName(mouseGrabConfig_.releaseKey.c_str());
+        if (parsedKey != SDLK_UNKNOWN) {
+            releaseKey_ = parsedKey;
+        } else if (logger_) {
+            logger_->Error("SdlWindowService: unknown mouse release key '" +
+                           mouseGrabConfig_.releaseKey + "'");
+        }
+    }
+
+    if (logger_) {
+        logger_->Trace("SdlWindowService", "ConfigureMouseGrabBindings",
+                       "grabMouseButton=" + std::to_string(static_cast<int>(grabMouseButton_)) +
+                       ", releaseKey=" + std::to_string(static_cast<int>(releaseKey_)));
+    }
+}
+
+void SdlWindowService::HandleMouseGrabEvent(const SDL_Event& sdlEvent) {
+    if (!window_ || !mouseGrabConfig_.enabled) {
+        return;
+    }
+
+    if (mouseGrabConfig_.grabOnClick &&
+        sdlEvent.type == SDL_EVENT_MOUSE_BUTTON_DOWN &&
+        sdlEvent.button.button == grabMouseButton_) {
+        ApplyMouseGrab(true);
+        return;
+    }
+
+    if (mouseGrabConfig_.releaseOnEscape &&
+        sdlEvent.type == SDL_EVENT_KEY_DOWN &&
+        sdlEvent.key.key == releaseKey_ &&
+        !sdlEvent.key.repeat) {
+        ApplyMouseGrab(false);
+    }
+}
+
+void SdlWindowService::ApplyMouseGrab(bool grabbed) {
+    if (!window_ || !mouseGrabConfig_.enabled) {
+        return;
+    }
+    if (mouseGrabbed_ == grabbed) {
+        return;
+    }
+
+    if (logger_) {
+        logger_->Trace("SdlWindowService", "ApplyMouseGrab",
+                       "grabbed=" + std::string(grabbed ? "true" : "false") +
+                       ", relativeMode=" + std::string(mouseGrabConfig_.relativeMode ? "true" : "false") +
+                       ", hideCursor=" + std::string(mouseGrabConfig_.hideCursor ? "true" : "false"));
+    }
+
+    bool success = true;
+    if (mouseGrabConfig_.relativeMode) {
+        if (!SDL_SetWindowRelativeMouseMode(window_, grabbed)) {
+            success = false;
+            if (logger_) {
+                logger_->Error("SdlWindowService: " +
+                               BuildSdlErrorMessage("SDL_SetWindowRelativeMouseMode failed", platformService_));
+            }
+        }
+    }
+
+    if (!SDL_SetWindowMouseGrab(window_, grabbed)) {
+        success = false;
+        if (logger_) {
+            logger_->Error("SdlWindowService: " +
+                           BuildSdlErrorMessage("SDL_SetWindowMouseGrab failed", platformService_));
+        }
+    }
+
+    if (mouseGrabConfig_.hideCursor) {
+        bool cursorResult = grabbed ? SDL_HideCursor() : SDL_ShowCursor();
+        if (!cursorResult && logger_) {
+            logger_->Error("SdlWindowService: " +
+                           BuildSdlErrorMessage(grabbed ? "SDL_HideCursor failed" : "SDL_ShowCursor failed",
+                                                platformService_));
+        }
+    }
+
+    if (success) {
+        mouseGrabbed_ = grabbed;
+    } else if (logger_) {
+        logger_->Trace("SdlWindowService", "ApplyMouseGrab", "grabChangeFailed=true");
     }
 }
 

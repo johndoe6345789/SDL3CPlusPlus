@@ -176,6 +176,41 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger, c
         config.windowTitle = value.GetString();
     }
 
+    if (document.HasMember("mouse_grab")) {
+        const auto& mouseGrabValue = document["mouse_grab"];
+        if (!mouseGrabValue.IsObject()) {
+            throw std::runtime_error("JSON member 'mouse_grab' must be an object");
+        }
+        auto readBool = [&](const char* name, bool& target) {
+            if (!mouseGrabValue.HasMember(name)) {
+                return;
+            }
+            const auto& value = mouseGrabValue[name];
+            if (!value.IsBool()) {
+                throw std::runtime_error("JSON member 'mouse_grab." + std::string(name) + "' must be a boolean");
+            }
+            target = value.GetBool();
+        };
+        auto readString = [&](const char* name, std::string& target) {
+            if (!mouseGrabValue.HasMember(name)) {
+                return;
+            }
+            const auto& value = mouseGrabValue[name];
+            if (!value.IsString()) {
+                throw std::runtime_error("JSON member 'mouse_grab." + std::string(name) + "' must be a string");
+            }
+            target = value.GetString();
+        };
+        readBool("enabled", config.mouseGrab.enabled);
+        readBool("grab_on_click", config.mouseGrab.grabOnClick);
+        readBool("release_on_escape", config.mouseGrab.releaseOnEscape);
+        readBool("start_grabbed", config.mouseGrab.startGrabbed);
+        readBool("hide_cursor", config.mouseGrab.hideCursor);
+        readBool("relative_mode", config.mouseGrab.relativeMode);
+        readString("grab_mouse_button", config.mouseGrab.grabMouseButton);
+        readString("release_key", config.mouseGrab.releaseKey);
+    }
+
     if (document.HasMember("input_bindings")) {
         const auto& bindingsValue = document["input_bindings"];
         if (!bindingsValue.IsObject()) {

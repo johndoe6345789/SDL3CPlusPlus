@@ -59,6 +59,12 @@ public:
      * @return Input bindings structure
      */
     virtual const InputBindings& GetInputBindings() const = 0;
+
+    /**
+     * @brief Get configured mouse grab settings.
+     * @return Mouse grab configuration
+     */
+    virtual const MouseGrabConfig& GetMouseGrabConfig() const = 0;
 };
 
 }  // namespace sdl3cpp::services

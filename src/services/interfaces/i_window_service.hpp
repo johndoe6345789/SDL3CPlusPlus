@@ -1,5 +1,6 @@
 #pragma once
 
+#include "config_types.hpp"
 #include <cstdint>
 #include <string>
 #include <utility>
@@ -17,6 +18,7 @@ struct WindowConfig {
     uint32_t height;
     std::string title;
     bool resizable;
+    MouseGrabConfig mouseGrab{};
 };
 
 /**

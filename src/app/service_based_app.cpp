@@ -111,10 +111,12 @@ void ServiceBasedApp::Run() {
                 config.width = configService->GetWindowWidth();
                 config.height = configService->GetWindowHeight();
                 config.title = configService->GetWindowTitle();
+                config.mouseGrab = configService->GetMouseGrabConfig();
             } else {
                 config.width = runtimeConfig_.width;
                 config.height = runtimeConfig_.height;
                 config.title = runtimeConfig_.windowTitle;
+                config.mouseGrab = runtimeConfig_.mouseGrab;
             }
             config.resizable = true;
             windowService->CreateWindow(config);

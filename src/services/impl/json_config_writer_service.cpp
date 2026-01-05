@@ -49,6 +49,21 @@ void JsonConfigWriterService::WriteConfig(const RuntimeConfig& config, const std
     std::filesystem::path scriptsDir = config.scriptPath.parent_path();
     addStringMember("scripts_directory", scriptsDir.string());
 
+    rapidjson::Value mouseGrabObject(rapidjson::kObjectType);
+    mouseGrabObject.AddMember("enabled", config.mouseGrab.enabled, allocator);
+    mouseGrabObject.AddMember("grab_on_click", config.mouseGrab.grabOnClick, allocator);
+    mouseGrabObject.AddMember("release_on_escape", config.mouseGrab.releaseOnEscape, allocator);
+    mouseGrabObject.AddMember("start_grabbed", config.mouseGrab.startGrabbed, allocator);
+    mouseGrabObject.AddMember("hide_cursor", config.mouseGrab.hideCursor, allocator);
+    mouseGrabObject.AddMember("relative_mode", config.mouseGrab.relativeMode, allocator);
+    mouseGrabObject.AddMember("grab_mouse_button",
+                              rapidjson::Value(config.mouseGrab.grabMouseButton.c_str(), allocator),
+                              allocator);
+    mouseGrabObject.AddMember("release_key",
+                              rapidjson::Value(config.mouseGrab.releaseKey.c_str(), allocator),
+                              allocator);
+    document.AddMember("mouse_grab", mouseGrabObject, allocator);
+
     rapidjson::Value bindingsObject(rapidjson::kObjectType);
     auto addBindingMember = [&](const char* name, const std::string& value) {
         rapidjson::Value nameValue(name, allocator);

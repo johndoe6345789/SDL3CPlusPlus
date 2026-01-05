@@ -61,10 +61,17 @@ private:
     SDL_Window* window_ = nullptr;
     bool shouldClose_ = false;
     bool initialized_ = false;
+    MouseGrabConfig mouseGrabConfig_{};
+    bool mouseGrabbed_ = false;
+    uint8_t grabMouseButton_ = SDL_BUTTON_LEFT;
+    SDL_Keycode releaseKey_ = SDLK_ESCAPE;
 
     // Helper methods
     void PublishEvent(const SDL_Event& sdlEvent);
     double GetCurrentTime() const;
+    void HandleMouseGrabEvent(const SDL_Event& sdlEvent);
+    void ApplyMouseGrab(bool grabbed);
+    void ConfigureMouseGrabBindings();
 };
 
 }  // namespace sdl3cpp::services::impl

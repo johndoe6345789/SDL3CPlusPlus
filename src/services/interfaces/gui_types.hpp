@@ -8,6 +8,8 @@ namespace sdl3cpp::services {
 struct GuiInputSnapshot {
     float mouseX = 0.0f;
     float mouseY = 0.0f;
+    float mouseDeltaX = 0.0f;
+    float mouseDeltaY = 0.0f;
     bool mouseDown = false;
     float wheel = 0.0f;
     std::string textInput;

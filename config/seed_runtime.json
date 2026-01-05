@@ -3,6 +3,16 @@
   "window_height": 768,
   "lua_script": "scripts/cube_logic.lua",
   "scripts_directory": "scripts",
+  "mouse_grab": {
+    "enabled": true,
+    "grab_on_click": true,
+    "release_on_escape": true,
+    "start_grabbed": false,
+    "hide_cursor": true,
+    "relative_mode": true,
+    "grab_mouse_button": "left",
+    "release_key": "escape"
+  },
   "input_bindings": {
     "move_forward": "W",
     "move_back": "S",

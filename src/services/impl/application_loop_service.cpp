@@ -64,6 +64,12 @@ void ApplicationLoopService::HandleEvents() {
     if (logger_) {
         logger_->Trace("ApplicationLoopService", "HandleEvents");
     }
+    if (inputService_) {
+        if (logger_) {
+            logger_->Trace("ApplicationLoopService", "HandleEvents", "resetInputState=true");
+        }
+        inputService_->ResetFrameState();
+    }
     if (windowService_) {
         windowService_->PollEvents();
     }
@@ -84,10 +90,6 @@ void ApplicationLoopService::ProcessFrame(float deltaTime, float elapsedTime) {
                        ", elapsedTime=" + std::to_string(elapsedTime) +
                        ", renderCoordinatorAvailable=" + std::string(renderCoordinatorService_ ? "true" : "false"),
                        "Entering");
-    }
-
-    if (inputService_) {
-        inputService_->ResetFrameState();
     }
 
     if (physicsService_) {

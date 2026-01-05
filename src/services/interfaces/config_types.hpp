@@ -45,6 +45,20 @@ struct InputBindings {
 };
 
 /**
+ * @brief Mouse grabbing behavior configuration.
+ */
+struct MouseGrabConfig {
+    bool enabled = false;
+    bool grabOnClick = true;
+    bool releaseOnEscape = true;
+    bool startGrabbed = false;
+    bool hideCursor = true;
+    bool relativeMode = true;
+    std::string grabMouseButton = "left";
+    std::string releaseKey = "escape";
+};
+
+/**
  * @brief Runtime configuration values used across services.
  */
 struct RuntimeConfig {
@@ -53,6 +67,7 @@ struct RuntimeConfig {
     std::filesystem::path scriptPath;
     bool luaDebug = false;
     std::string windowTitle = "SDL3 Vulkan Demo";
+    MouseGrabConfig mouseGrab{};
     InputBindings inputBindings{};
 };
 
