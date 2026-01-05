@@ -88,6 +88,12 @@ public:
         }
         return config_.mouseGrab;
     }
+    const std::string& GetConfigJson() const override {
+        if (logger_) {
+            logger_->Trace("JsonConfigService", "GetConfigJson");
+        }
+        return configJson_;
+    }
 
     /**
      * @brief Get the full runtime configuration.
@@ -104,10 +110,15 @@ public:
 private:
     std::shared_ptr<ILogger> logger_;
     RuntimeConfig config_;
+    std::string configJson_;
 
     // Helper methods moved from main.cpp
     std::filesystem::path FindScriptPath(const char* argv0);
-    static RuntimeConfig LoadFromJson(std::shared_ptr<ILogger> logger, const std::filesystem::path& configPath, bool dumpConfig);
+    static RuntimeConfig LoadFromJson(std::shared_ptr<ILogger> logger,
+                                      const std::filesystem::path& configPath,
+                                      bool dumpConfig,
+                                      std::string* configJson);
+    static std::string BuildConfigJson(const RuntimeConfig& config, const std::filesystem::path& configPath);
 };
 
 }  // namespace sdl3cpp::services::impl

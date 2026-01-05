@@ -3,6 +3,7 @@
 #include <rapidjson/document.h>
 #include <rapidjson/istreamwrapper.h>
 #include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
 #include <rapidjson/prettywriter.h>
 #include <vulkan/vulkan.h>
 #include <array>
@@ -25,11 +26,13 @@ JsonConfigService::JsonConfigService(std::shared_ptr<ILogger> logger, const char
                        "argv0=" + std::string(argv0 ? argv0 : ""));
     }
     config_.scriptPath = FindScriptPath(argv0);
+    configJson_ = BuildConfigJson(config_, {});
     logger_->Info("JsonConfigService initialized with default configuration");
 }
 
 JsonConfigService::JsonConfigService(std::shared_ptr<ILogger> logger, const std::filesystem::path& configPath, bool dumpConfig)
-    : logger_(std::move(logger)), config_(LoadFromJson(logger_, configPath, dumpConfig)) {
+    : logger_(std::move(logger)),
+      config_(LoadFromJson(logger_, configPath, dumpConfig, &configJson_)) {
     if (logger_) {
         logger_->Trace("JsonConfigService", "JsonConfigService",
                        "configPath=" + configPath.string() +
@@ -39,7 +42,7 @@ JsonConfigService::JsonConfigService(std::shared_ptr<ILogger> logger, const std:
 }
 
 JsonConfigService::JsonConfigService(std::shared_ptr<ILogger> logger, const RuntimeConfig& config)
-    : logger_(std::move(logger)), config_(config) {
+    : logger_(std::move(logger)), config_(config), configJson_(BuildConfigJson(config, {})) {
     if (logger_) {
         logger_->Trace("JsonConfigService", "JsonConfigService",
                        "config.width=" + std::to_string(config.width) +
@@ -80,7 +83,10 @@ std::filesystem::path JsonConfigService::FindScriptPath(const char* argv0) {
     return scriptPath;
 }
 
-RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger, const std::filesystem::path& configPath, bool dumpConfig) {
+RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
+                                              const std::filesystem::path& configPath,
+                                              bool dumpConfig,
+                                              std::string* configJson) {
     std::string args = "configPath=" + configPath.string() +
         ", dumpConfig=" + (dumpConfig ? "true" : "false");
     logger->Trace("JsonConfigService", "LoadFromJson", args);
@@ -100,13 +106,18 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger, c
         throw std::runtime_error("JSON config must contain an object at the root");
     }
 
-    if (dumpConfig) {
+    if (dumpConfig || configJson) {
         rapidjson::StringBuffer buffer;
         rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
         writer.SetIndent(' ', 2);
         document.Accept(writer);
-        std::cout << "Loaded runtime config (" << configPath << "):\n"
-                  << buffer.GetString() << '\n';
+        if (dumpConfig) {
+            std::cout << "Loaded runtime config (" << configPath << "):\n"
+                      << buffer.GetString() << '\n';
+        }
+        if (configJson) {
+            *configJson = buffer.GetString();
+        }
     }
 
     const char* scriptField = "lua_script";
@@ -350,6 +361,120 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger, c
     }
 
     return config;
+}
+
+std::string JsonConfigService::BuildConfigJson(const RuntimeConfig& config,
+                                               const std::filesystem::path& configPath) {
+    rapidjson::Document document;
+    document.SetObject();
+    auto& allocator = document.GetAllocator();
+
+    auto addStringMember = [&](const char* name, const std::string& value) {
+        rapidjson::Value nameValue(name, allocator);
+        rapidjson::Value stringValue(value.c_str(), allocator);
+        document.AddMember(nameValue, stringValue, allocator);
+    };
+
+    document.AddMember("window_width", config.width, allocator);
+    document.AddMember("window_height", config.height, allocator);
+    addStringMember("lua_script", config.scriptPath.string());
+    addStringMember("window_title", config.windowTitle);
+    document.AddMember("lua_debug", config.luaDebug, allocator);
+
+    std::filesystem::path scriptsDir = config.scriptPath.parent_path();
+    if (!scriptsDir.empty()) {
+        addStringMember("scripts_directory", scriptsDir.string());
+    }
+
+    rapidjson::Value mouseGrabObject(rapidjson::kObjectType);
+    mouseGrabObject.AddMember("enabled", config.mouseGrab.enabled, allocator);
+    mouseGrabObject.AddMember("grab_on_click", config.mouseGrab.grabOnClick, allocator);
+    mouseGrabObject.AddMember("release_on_escape", config.mouseGrab.releaseOnEscape, allocator);
+    mouseGrabObject.AddMember("start_grabbed", config.mouseGrab.startGrabbed, allocator);
+    mouseGrabObject.AddMember("hide_cursor", config.mouseGrab.hideCursor, allocator);
+    mouseGrabObject.AddMember("relative_mode", config.mouseGrab.relativeMode, allocator);
+    mouseGrabObject.AddMember("grab_mouse_button",
+                              rapidjson::Value(config.mouseGrab.grabMouseButton.c_str(), allocator),
+                              allocator);
+    mouseGrabObject.AddMember("release_key",
+                              rapidjson::Value(config.mouseGrab.releaseKey.c_str(), allocator),
+                              allocator);
+    document.AddMember("mouse_grab", mouseGrabObject, allocator);
+
+    rapidjson::Value bindingsObject(rapidjson::kObjectType);
+    auto addBindingMember = [&](const char* name, const std::string& value) {
+        rapidjson::Value nameValue(name, allocator);
+        rapidjson::Value stringValue(value.c_str(), allocator);
+        bindingsObject.AddMember(nameValue, stringValue, allocator);
+    };
+    struct BindingSpec {
+        const char* name;
+        std::string InputBindings::* member;
+    };
+    const std::array<BindingSpec, 18> bindingSpecs = {{
+        {"move_forward", &InputBindings::moveForwardKey},
+        {"move_back", &InputBindings::moveBackKey},
+        {"move_left", &InputBindings::moveLeftKey},
+        {"move_right", &InputBindings::moveRightKey},
+        {"fly_up", &InputBindings::flyUpKey},
+        {"fly_down", &InputBindings::flyDownKey},
+        {"jump", &InputBindings::jumpKey},
+        {"noclip_toggle", &InputBindings::noclipToggleKey},
+        {"music_toggle", &InputBindings::musicToggleKey},
+        {"music_toggle_gamepad", &InputBindings::musicToggleGamepadButton},
+        {"gamepad_move_x_axis", &InputBindings::gamepadMoveXAxis},
+        {"gamepad_move_y_axis", &InputBindings::gamepadMoveYAxis},
+        {"gamepad_look_x_axis", &InputBindings::gamepadLookXAxis},
+        {"gamepad_look_y_axis", &InputBindings::gamepadLookYAxis},
+        {"gamepad_dpad_up", &InputBindings::gamepadDpadUpButton},
+        {"gamepad_dpad_down", &InputBindings::gamepadDpadDownButton},
+        {"gamepad_dpad_left", &InputBindings::gamepadDpadLeftButton},
+        {"gamepad_dpad_right", &InputBindings::gamepadDpadRightButton},
+    }};
+    for (const auto& spec : bindingSpecs) {
+        addBindingMember(spec.name, config.inputBindings.*(spec.member));
+    }
+
+    auto addMappingObject = [&](const char* name,
+                                const std::unordered_map<std::string, std::string>& mappings,
+                                rapidjson::Value& target) {
+        rapidjson::Value mappingObject(rapidjson::kObjectType);
+        for (const auto& [key, value] : mappings) {
+            rapidjson::Value keyValue(key.c_str(), allocator);
+            rapidjson::Value stringValue(value.c_str(), allocator);
+            mappingObject.AddMember(keyValue, stringValue, allocator);
+        }
+        target.AddMember(rapidjson::Value(name, allocator), mappingObject, allocator);
+    };
+
+    addMappingObject("gamepad_button_actions", config.inputBindings.gamepadButtonActions, bindingsObject);
+    addMappingObject("gamepad_axis_actions", config.inputBindings.gamepadAxisActions, bindingsObject);
+    bindingsObject.AddMember("gamepad_axis_action_threshold",
+                             config.inputBindings.gamepadAxisActionThreshold, allocator);
+    document.AddMember("input_bindings", bindingsObject, allocator);
+
+    std::filesystem::path projectRoot = scriptsDir.parent_path();
+    if (!projectRoot.empty()) {
+        addStringMember("project_root", projectRoot.string());
+        addStringMember("shaders_directory", (projectRoot / "shaders").string());
+    } else {
+        addStringMember("shaders_directory", "shaders");
+    }
+
+    rapidjson::Value extensionArray(rapidjson::kArrayType);
+    for (const char* extension : kDeviceExtensions) {
+        rapidjson::Value extensionValue(extension, allocator);
+        extensionArray.PushBack(extensionValue, allocator);
+    }
+    document.AddMember("device_extensions", extensionArray, allocator);
+    if (!configPath.empty()) {
+        addStringMember("config_file", configPath.string());
+    }
+
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    document.Accept(writer);
+    return buffer.GetString();
 }
 
 }  // namespace sdl3cpp::services::impl

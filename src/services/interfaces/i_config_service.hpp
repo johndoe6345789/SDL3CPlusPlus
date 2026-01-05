@@ -65,6 +65,13 @@ public:
      * @return Mouse grab configuration
      */
     virtual const MouseGrabConfig& GetMouseGrabConfig() const = 0;
+
+    /**
+     * @brief Get the full JSON configuration as a string.
+     *
+     * @return JSON string (may be empty if unavailable)
+     */
+    virtual const std::string& GetConfigJson() const = 0;
 };
 
 }  // namespace sdl3cpp::services

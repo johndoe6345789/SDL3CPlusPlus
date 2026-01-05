@@ -6,6 +6,8 @@
 #include <btBulletDynamicsCommon.h>
 #include <lua.hpp>
 #include <SDL3/SDL.h>
+#include <rapidjson/document.h>
+#include <rapidjson/error/en.h>
 
 #include <algorithm>
 #include <array>
@@ -61,6 +63,54 @@ SDL_Keycode ReadKeycodeFromLua(lua_State* L, int index, bool& ok) {
     ok = false;
     return SDLK_UNKNOWN;
 }
+
+void PushJsonValue(lua_State* L, const rapidjson::Value& value) {
+    if (value.IsObject()) {
+        lua_newtable(L);
+        for (auto it = value.MemberBegin(); it != value.MemberEnd(); ++it) {
+            lua_pushlstring(L, it->name.GetString(), it->name.GetStringLength());
+            PushJsonValue(L, it->value);
+            lua_settable(L, -3);
+        }
+        return;
+    }
+    if (value.IsArray()) {
+        lua_newtable(L);
+        for (rapidjson::SizeType i = 0; i < value.Size(); ++i) {
+            PushJsonValue(L, value[i]);
+            lua_rawseti(L, -2, static_cast<lua_Integer>(i + 1));
+        }
+        return;
+    }
+    if (value.IsString()) {
+        lua_pushlstring(L, value.GetString(), value.GetStringLength());
+        return;
+    }
+    if (value.IsBool()) {
+        lua_pushboolean(L, value.GetBool());
+        return;
+    }
+    if (value.IsNumber()) {
+        lua_pushnumber(L, value.GetDouble());
+        return;
+    }
+    lua_pushnil(L);
+}
+
+bool PushConfigTableFromJson(lua_State* L, const std::string& json, std::string& error) {
+    if (json.empty()) {
+        error = "Config JSON not available";
+        return false;
+    }
+    rapidjson::Document document;
+    rapidjson::ParseResult result = document.Parse(json.c_str());
+    if (!result) {
+        error = std::string("Config JSON parse failed: ") + rapidjson::GetParseError_En(result.Code());
+        return false;
+    }
+    PushJsonValue(L, document);
+    return true;
+}
 }  // namespace
 
 namespace sdl3cpp::services::impl {
@@ -72,6 +122,7 @@ ScriptEngineService::ScriptEngineService(const std::filesystem::path& scriptPath
                                          std::shared_ptr<IPhysicsBridgeService> physicsBridgeService,
                                          std::shared_ptr<IInputService> inputService,
                                          std::shared_ptr<IWindowService> windowService,
+                                         std::shared_ptr<IConfigService> configService,
                                          bool debugEnabled)
     : logger_(std::move(logger)),
       meshService_(std::move(meshService)),
@@ -79,6 +130,7 @@ ScriptEngineService::ScriptEngineService(const std::filesystem::path& scriptPath
       physicsBridgeService_(std::move(physicsBridgeService)),
       inputService_(std::move(inputService)),
       windowService_(std::move(windowService)),
+      configService_(std::move(configService)),
       scriptPath_(scriptPath),
       debugEnabled_(debugEnabled) {
     if (logger_) {
@@ -89,7 +141,8 @@ ScriptEngineService::ScriptEngineService(const std::filesystem::path& scriptPath
                        ", audioCommandService=" + std::string(audioCommandService_ ? "set" : "null") +
                        ", physicsBridgeService=" + std::string(physicsBridgeService_ ? "set" : "null") +
                        ", inputService=" + std::string(inputService_ ? "set" : "null") +
-                       ", windowService=" + std::string(windowService_ ? "set" : "null"));
+                       ", windowService=" + std::string(windowService_ ? "set" : "null") +
+                       ", configService=" + std::string(configService_ ? "set" : "null"));
     }
 }
 
@@ -116,6 +169,7 @@ void ScriptEngineService::Initialize() {
     bindingContext_->physicsBridgeService = physicsBridgeService_;
     bindingContext_->inputService = inputService_;
     bindingContext_->windowService = windowService_;
+    bindingContext_->configService = configService_;
     bindingContext_->logger = logger_;
 
     luaState_ = luaL_newstate();
@@ -129,6 +183,25 @@ void ScriptEngineService::Initialize() {
 
     lua_pushboolean(luaState_, debugEnabled_);
     lua_setglobal(luaState_, "lua_debug");
+
+    if (configService_) {
+        std::string error;
+        if (PushConfigTableFromJson(luaState_, configService_->GetConfigJson(), error)) {
+            lua_setglobal(luaState_, "config");
+        } else {
+            if (logger_) {
+                logger_->Error("ScriptEngineService: " + error);
+            }
+            lua_newtable(luaState_);
+            lua_setglobal(luaState_, "config");
+        }
+    } else {
+        if (logger_) {
+            logger_->Error("ScriptEngineService: Config service not available");
+        }
+        lua_newtable(luaState_);
+        lua_setglobal(luaState_, "config");
+    }
 
     scriptDirectory_ = scriptPath_.parent_path();
     if (!scriptDirectory_.empty()) {
@@ -227,6 +300,8 @@ void ScriptEngineService::RegisterBindings(lua_State* L) {
     bind("input_is_action_down", &ScriptEngineService::InputIsActionDown);
     bind("input_is_mouse_down", &ScriptEngineService::InputIsMouseDown);
     bind("input_get_text", &ScriptEngineService::InputGetText);
+    bind("config_get_json", &ScriptEngineService::ConfigGetJson);
+    bind("config_get_table", &ScriptEngineService::ConfigGetTable);
     bind("window_get_size", &ScriptEngineService::WindowGetSize);
     bind("window_set_title", &ScriptEngineService::WindowSetTitle);
     bind("window_is_minimized", &ScriptEngineService::WindowIsMinimized);
@@ -561,6 +636,39 @@ int ScriptEngineService::InputGetText(lua_State* L) {
     }
     const auto& state = context->inputService->GetState();
     lua_pushstring(L, state.textInput.c_str());
+    return 1;
+}
+
+int ScriptEngineService::ConfigGetJson(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    if (!context || !context->configService) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Config service not available");
+        return 2;
+    }
+    const std::string& json = context->configService->GetConfigJson();
+    if (json.empty()) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Config JSON not available");
+        return 2;
+    }
+    lua_pushlstring(L, json.c_str(), json.size());
+    return 1;
+}
+
+int ScriptEngineService::ConfigGetTable(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    if (!context || !context->configService) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Config service not available");
+        return 2;
+    }
+    std::string error;
+    if (!PushConfigTableFromJson(L, context->configService->GetConfigJson(), error)) {
+        lua_pushnil(L);
+        lua_pushstring(L, error.c_str());
+        return 2;
+    }
     return 1;
 }
 

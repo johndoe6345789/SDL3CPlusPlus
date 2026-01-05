@@ -6,6 +6,7 @@
 #include "../interfaces/i_physics_bridge_service.hpp"
 #include "../interfaces/i_input_service.hpp"
 #include "../interfaces/i_window_service.hpp"
+#include "../interfaces/i_config_service.hpp"
 #include "../interfaces/i_logger.hpp"
 #include "../../di/lifecycle.hpp"
 #include <filesystem>
@@ -29,6 +30,7 @@ public:
                         std::shared_ptr<IPhysicsBridgeService> physicsBridgeService,
                         std::shared_ptr<IInputService> inputService,
                         std::shared_ptr<IWindowService> windowService,
+                        std::shared_ptr<IConfigService> configService,
                         bool debugEnabled = false);
     ~ScriptEngineService() override;
 
@@ -53,6 +55,7 @@ private:
         std::shared_ptr<IPhysicsBridgeService> physicsBridgeService;
         std::shared_ptr<IInputService> inputService;
         std::shared_ptr<IWindowService> windowService;
+        std::shared_ptr<IConfigService> configService;
         std::shared_ptr<ILogger> logger;
     };
 
@@ -72,6 +75,8 @@ private:
     static int InputIsActionDown(lua_State* L);
     static int InputIsMouseDown(lua_State* L);
     static int InputGetText(lua_State* L);
+    static int ConfigGetJson(lua_State* L);
+    static int ConfigGetTable(lua_State* L);
     static int WindowGetSize(lua_State* L);
     static int WindowSetTitle(lua_State* L);
     static int WindowIsMinimized(lua_State* L);
@@ -88,6 +93,7 @@ private:
     std::shared_ptr<IPhysicsBridgeService> physicsBridgeService_;
     std::shared_ptr<IInputService> inputService_;
     std::shared_ptr<IWindowService> windowService_;
+    std::shared_ptr<IConfigService> configService_;
     std::filesystem::path scriptPath_;
     std::filesystem::path scriptDirectory_;
     bool debugEnabled_ = false;

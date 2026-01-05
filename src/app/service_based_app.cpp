@@ -264,6 +264,7 @@ void ServiceBasedApp::RegisterServices() {
         registry_.GetService<services::IPhysicsBridgeService>(),
         registry_.GetService<services::IInputService>(),
         registry_.GetService<services::IWindowService>(),
+        registry_.GetService<services::IConfigService>(),
         runtimeConfig_.luaDebug);
 
     // Script-facing services
