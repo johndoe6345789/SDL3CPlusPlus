@@ -275,6 +275,34 @@ local function forward_from_angles(yaw, pitch)
     }
 end
 
+local atan2_available = type(math.atan2) == "function"
+if not atan2_available then
+    log_debug("math.atan2 unavailable; using fallback for compass heading")
+end
+
+local function atan2(y, x)
+    if atan2_available then
+        return math.atan2(y, x)
+    end
+    if x == 0.0 then
+        if y > 0.0 then
+            return math.pi / 2.0
+        elseif y < 0.0 then
+            return -math.pi / 2.0
+        end
+        return 0.0
+    end
+    local angle = math.atan(y / x)
+    if x < 0.0 then
+        if y >= 0.0 then
+            angle = angle + math.pi
+        else
+            angle = angle - math.pi
+        end
+    end
+    return angle
+end
+
 local function update_camera(dt)
     if not gui_input then
         return
@@ -382,7 +410,7 @@ end
 
 local function heading_from_yaw(yaw)
     local forward = forward_from_angles(yaw, 0.0)
-    local heading = math.deg(math.atan2(forward[1], -forward[3])) % 360
+    local heading = math.deg(atan2(forward[1], -forward[3])) % 360
     return heading
 end
 
