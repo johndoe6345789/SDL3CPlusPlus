@@ -250,7 +250,7 @@ local player_state = {
 
 camera.position[1] = 0.0
 camera.position[2] = room.floor_top + player_state.eye_height
-camera.position[3] = 0.0
+camera.position[3] = 4.0
 
 local function clamp(value, minValue, maxValue)
     if value < minValue then
@@ -491,7 +491,7 @@ local rotation_speed = 0.9
 local function create_spinning_cube()
     local function compute_model_matrix(time)
         local rotation = math3d.rotation_y(time * rotation_speed)
-        local position = math3d.translation(0.0, 1.5, 0.0)
+        local position = math3d.translation(0.0, 3.4, 0.0)
         return math3d.multiply(position, rotation)
     end
 
@@ -537,6 +537,13 @@ local function create_static_cube(position, scale, color)
     }
 end
 
+local function create_lantern(x, z)
+    local lantern_height = 4.5
+    local lantern_size = 0.2
+    return create_static_cube({x, lantern_height, z},
+        {lantern_size, lantern_size, lantern_size}, {1.0, 0.9, 0.6})
+end
+
 local function create_room_objects()
     local floor_center_y = room.floor_top - room.floor_half_thickness
     local wall_center_y = room.floor_top + room.wall_height
@@ -547,7 +554,7 @@ local function create_room_objects()
     local green_wall = {0.2, 0.7, 0.3}
     local light_gray = {0.7, 0.7, 0.7}
 
-    return {
+    local objects = {
         create_static_cube({0.0, floor_center_y, 0.0},
             {room.half_size, room.floor_half_thickness, room.half_size}, blue_floor),
         create_static_cube({0.0, ceiling_y, 0.0},
@@ -561,6 +568,21 @@ local function create_room_objects()
         create_static_cube({wall_offset, wall_center_y, 0.0},
             {room.wall_thickness, room.wall_height, room.half_size}, green_wall),
     }
+
+    -- Add lanterns in the four corners
+    local lantern_offset = 4.0
+    objects[#objects + 1] = create_lantern(lantern_offset, lantern_offset)
+    objects[#objects + 1] = create_lantern(-lantern_offset, lantern_offset)
+    objects[#objects + 1] = create_lantern(lantern_offset, -lantern_offset)
+    objects[#objects + 1] = create_lantern(-lantern_offset, -lantern_offset)
+
+    -- Add lanterns on the walls (midpoints)
+    objects[#objects + 1] = create_lantern(0.0, lantern_offset)
+    objects[#objects + 1] = create_lantern(0.0, -lantern_offset)
+    objects[#objects + 1] = create_lantern(lantern_offset, 0.0)
+    objects[#objects + 1] = create_lantern(-lantern_offset, 0.0)
+
+    return objects
 end
 
 local room_objects = create_room_objects()
