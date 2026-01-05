@@ -196,10 +196,15 @@ function Context:applyBackgroundOpacity(color)
     -- For full transparency (opacity = 0), set alpha to 0
     -- For partial transparency, multiply the existing alpha
     local result = {color[1], color[2], color[3], color[4] or 1.0}
+    local originalAlpha = result[4]
     if self.opacity == 0 then
         result[4] = 0
     else
         result[4] = result[4] * self.opacity
+    end
+    if lua_debug then
+        print(string.format("[GUI] applyBackgroundOpacity: opacity=%.2f, original alpha=%.2f, new alpha=%.2f",
+                           self.opacity, originalAlpha, result[4]))
     end
     return result
 end
@@ -208,6 +213,12 @@ function Context:pushRect(rect, params)
     params = params or {}
     -- Only apply opacity to the background color, not borders or other elements
     local color = params.color and self:applyBackgroundOpacity(params.color) or params.color
+
+    -- Skip drawing background rect entirely if it would be fully transparent
+    if color and color[4] == 0 and (not params.borderColor or params.borderWidth == 0) then
+        return
+    end
+
     local command = {
         type = "rect",
         x = rect.x,

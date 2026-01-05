@@ -5,6 +5,7 @@
 #include <cmath>
 #include <cctype>
 #include <cstdio>
+#include <cstring>
 #include <fstream>
 #include <iterator>
 #include <stdexcept>
@@ -479,12 +480,22 @@ GuiRenderer::GuiRenderer(VkDevice device, VkPhysicalDevice physicalDevice, VkFor
         const auto& pixels = canvas_->Pixels();
         size_t pixelCount = static_cast<size_t>(canvasWidth_) * canvasHeight_;
         uint8_t* dest = reinterpret_cast<uint8_t*>(stagingMapped_);
+
+        // Clear destination to fully transparent so pixels with alpha=0 don't overwrite the scene
+        std::memset(dest, 0, pixelCount * 4);
+
         for (size_t i = 0; i < pixelCount; ++i) {
             size_t offset = i * 4;
             uint8_t r = pixels[offset];
             uint8_t g = pixels[offset + 1];
             uint8_t b = pixels[offset + 2];
             uint8_t a = pixels[offset + 3];
+
+            // Skip fully transparent pixels to avoid overwriting the 3D scene
+            if (a == 0) {
+                continue;
+            }
+
             switch (swapchainFormat_) {
                 case VK_FORMAT_B8G8R8A8_UNORM:
                 case VK_FORMAT_B8G8R8A8_SRGB:
