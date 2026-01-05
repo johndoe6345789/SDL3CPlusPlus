@@ -8,6 +8,26 @@ local cube_mesh_info = {
 
 local cube_vertices = {}
 local cube_indices = {}
+local cube_indices_double_sided = {}
+
+local function build_double_sided_indices(indices)
+    local doubled = {}
+    for i = 1, #indices, 3 do
+        local a = indices[i]
+        local b = indices[i + 1]
+        local c = indices[i + 2]
+        if not (a and b and c) then
+            break
+        end
+        doubled[#doubled + 1] = a
+        doubled[#doubled + 1] = b
+        doubled[#doubled + 1] = c
+        doubled[#doubled + 1] = c
+        doubled[#doubled + 1] = b
+        doubled[#doubled + 1] = a
+    end
+    return doubled
+end
 
 local function load_cube_mesh()
     if type(load_mesh_from_file) ~= "function" then
@@ -28,6 +48,7 @@ local function load_cube_mesh()
 
     cube_vertices = mesh.vertices
     cube_indices = mesh.indices
+    cube_indices_double_sided = build_double_sided_indices(cube_indices)
     cube_mesh_info.loaded = true
     cube_mesh_info.vertex_count = #mesh.vertices
     cube_mesh_info.index_count = #mesh.indices
@@ -197,6 +218,10 @@ end
 if cube_mesh_info.loaded then
     log_debug("Loaded cube mesh from %s (%d vertices, %d indices)",
         cube_mesh_info.path, cube_mesh_info.vertex_count, cube_mesh_info.index_count)
+    if #cube_indices_double_sided > 0 then
+        log_debug("Built double-sided cube indices (%d -> %d)",
+            cube_mesh_info.index_count, #cube_indices_double_sided)
+    end
 end
 
 local function build_static_shader_variants()
@@ -628,7 +653,7 @@ local function create_spinning_cube()
 
     return {
         vertices = cube_vertices,
-        indices = cube_indices,
+        indices = (#cube_indices_double_sided > 0) and cube_indices_double_sided or cube_indices,
         compute_model_matrix = compute_model_matrix,
         shader_key = "default",
     }
