@@ -54,4 +54,4 @@ class SDL3CppConan(ConanFile):
         self.requires("rapidjson/cci.20230929")
         self.requires("bgfx/1.129.8930-495")
         self.requires("entt/3.16.0")
-        self.requires("thorvg/0.15.9")
+        self.requires("lunasvg/3.0.1")
