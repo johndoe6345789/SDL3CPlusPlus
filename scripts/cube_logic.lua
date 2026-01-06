@@ -849,15 +849,190 @@ local function resolve_number(value, fallback)
     return fallback
 end
 
+local function resolve_string(value, fallback)
+    if type(value) == "string" then
+        return value
+    end
+    return fallback
+end
+
+local function resolve_boolean(value, fallback)
+    if type(value) == "boolean" then
+        return value
+    end
+    return fallback
+end
+
 function get_render_graph()
     local atmospherics = {}
-    if type(config) == "table" and type(config.atmospherics) == "table" then
-        atmospherics = config.atmospherics
+    local rendering = {}
+    if type(config) == "table" then
+        if type(config.atmospherics) == "table" then
+            atmospherics = config.atmospherics
+        end
+        if type(config.rendering) == "table" then
+            rendering = config.rendering
+        end
     end
 
     local exposure = resolve_number(atmospherics.exposure, 1.0)
     local gamma = resolve_number(atmospherics.gamma, 2.2)
     local fog_density = resolve_number(atmospherics.fog_density, 0.003)
+    local enable_shadows = resolve_boolean(atmospherics.enable_shadows, true)
+    local enable_volumetrics = resolve_boolean(atmospherics.enable_volumetric_lighting, true)
+    local enable_tonemap = resolve_boolean(atmospherics.enable_tone_mapping, true)
+    local pipeline_mode = resolve_string(rendering.pipeline, "deferred")
+    local use_forward_plus = pipeline_mode == "forward_plus"
+        or pipeline_mode == "forward+"
+        or pipeline_mode == "forward"
+
+    local passes = {
+        {
+            name = "shadow_csm",
+            kind = "shadow_csm",
+            output = "shadow_atlas",
+            settings = {enabled = enable_shadows, cascades = 4, bias = 0.002, normal_bias = 0.02, pcf = 5},
+        },
+        {
+            name = "shadow_spot",
+            kind = "shadow_spot",
+            output = "shadow_atlas",
+            settings = {enabled = enable_shadows, lights = 4, atlas_slice = 1, bias = 0.0015, pcf = 3},
+        },
+        {
+            name = "shadow_point",
+            kind = "shadow_point",
+            output = "shadow_atlas",
+            settings = {enabled = enable_shadows, lights = 2, atlas_slice = 2, bias = 0.002, pcf = 3},
+        },
+    }
+
+    if use_forward_plus then
+        table.insert(passes, {
+            name = "depth_normals",
+            kind = "depth_prepass",
+            shader = "depth_normals",
+            outputs = {
+                depth = "depth",
+                normal = "normal_rough",
+                motion = "motion",
+            },
+        })
+        table.insert(passes, {
+            name = "ssao",
+            kind = "fullscreen",
+            shader = "ssao",
+            inputs = {depth = "depth", normal = "normal_rough"},
+            output = "ao",
+            settings = {radius = 0.5, power = 1.3},
+        })
+        table.insert(passes, {
+            name = "forward_plus",
+            kind = "forward_plus",
+            shader = "forward_plus",
+            inputs = {
+                depth = "depth",
+                normal = "normal_rough",
+                ao = "ao",
+                shadow = "shadow_atlas",
+            },
+            output = "scene_hdr",
+            settings = {clustered = true},
+        })
+    else
+        table.insert(passes, {
+            name = "gbuffer",
+            kind = "gbuffer",
+            shader = "pbr",
+            outputs = {
+                albedo = "gbuffer_albedo",
+                depth = "depth",
+                normal = "normal_rough",
+                motion = "motion",
+            },
+        })
+        table.insert(passes, {
+            name = "ssao",
+            kind = "fullscreen",
+            shader = "ssao",
+            inputs = {depth = "depth", normal = "normal_rough"},
+            output = "ao",
+            settings = {radius = 0.5, power = 1.3},
+        })
+        table.insert(passes, {
+            name = "lighting",
+            kind = "lighting",
+            shader = "deferred_lighting",
+            inputs = {
+                albedo = "gbuffer_albedo",
+                depth = "depth",
+                normal = "normal_rough",
+                ao = "ao",
+                shadow = "shadow_atlas",
+            },
+            output = "scene_hdr",
+        })
+    end
+
+    table.insert(passes, {
+        name = "ssr",
+        kind = "fullscreen",
+        shader = "ssr",
+        inputs = {scene = "scene_hdr", depth = "depth", normal = "normal_rough"},
+        output = "scene_hdr",
+        settings = {max_steps = 64, thickness = 0.1, roughness_fallback = 0.7},
+    })
+    table.insert(passes, {
+        name = "volumetric_fog",
+        kind = "fullscreen",
+        shader = "volumetric",
+        inputs = {scene = "scene_hdr", depth = "depth", shadow = "shadow_atlas"},
+        output = "scene_hdr",
+        settings = {enabled = enable_volumetrics, density = fog_density * 8.0},
+    })
+    table.insert(passes, {
+        name = "transparent",
+        kind = "transparent",
+        shader = "transparent",
+        inputs = {scene = "scene_hdr", depth = "depth", shadow = "shadow_atlas"},
+        output = "scene_hdr",
+    })
+    table.insert(passes, {
+        name = "taa",
+        kind = "taa",
+        inputs = {scene = "scene_hdr", history = "taa_history", motion = "motion"},
+        output = "scene_hdr",
+        settings = {feedback = 0.9, sharpen = 0.2},
+    })
+    table.insert(passes, {
+        name = "bloom",
+        kind = "bloom",
+        input = "scene_hdr",
+        output = "bloom",
+        settings = {threshold = 1.0, intensity = 0.7},
+    })
+    table.insert(passes, {
+        name = "color_grade",
+        kind = "fullscreen",
+        shader = "color_grade",
+        inputs = {scene = "scene_hdr", bloom = "bloom"},
+        output = "scene_hdr",
+        settings = {grade = "warm", exposure = exposure},
+    })
+    table.insert(passes, {
+        name = "tonemap",
+        kind = "fullscreen",
+        shader = "tonemap",
+        input = "scene_hdr",
+        output = "swapchain",
+        settings = {enabled = enable_tonemap, exposure = exposure, gamma = gamma, curve = "aces"},
+    })
+    table.insert(passes, {
+        name = "ui_composite",
+        kind = "ui_composite",
+        inputs = {scene = "swapchain"},
+        output = "swapchain",
+    })
 
     return {
         resources = {
@@ -865,86 +1040,13 @@ function get_render_graph()
             depth = {type = "depth", format = "d32", size = "swapchain"},
             normal_rough = {type = "color", format = "a2b10g10r10", size = "swapchain"},
             motion = {type = "color", format = "rg16f", size = "swapchain"},
-            shadow_csm = {type = "depth_array", format = "d32", size = {2048, 2048}, layers = 4},
+            gbuffer_albedo = {type = "color", format = "rgba8", size = "swapchain"},
+            shadow_atlas = {type = "depth_array", format = "d32", size = {4096, 4096}, layers = 8},
             ao = {type = "color", format = "r8", size = "half"},
-            ssr = {type = "color", format = "rgba16f", size = "swapchain"},
-            volumetric = {type = "color", format = "rgba16f", size = "half"},
             taa_history = {type = "color", format = "rgba16f", size = "swapchain"},
             bloom = {type = "color", format = "rgba16f", size = "half", mips = 5},
         },
-        passes = {
-            {
-                name = "shadow",
-                kind = "shadow_csm",
-                output = "shadow_csm",
-                settings = {cascades = 4, bias = 0.002, normal_bias = 0.02, pcf = 5},
-            },
-            {
-                name = "gbuffer",
-                kind = "gbuffer",
-                shader = "pbr",
-                outputs = {
-                    color = "scene_hdr",
-                    depth = "depth",
-                    normal = "normal_rough",
-                    motion = "motion",
-                },
-            },
-            {
-                name = "ssao",
-                kind = "fullscreen",
-                shader = "ssao",
-                inputs = {depth = "depth", normal = "normal_rough"},
-                output = "ao",
-                settings = {radius = 0.5, power = 1.3},
-            },
-            {
-                name = "ssr",
-                kind = "fullscreen",
-                shader = "ssr",
-                inputs = {scene = "scene_hdr", depth = "depth", normal = "normal_rough"},
-                output = "ssr",
-                settings = {max_steps = 64, thickness = 0.1, roughness_fallback = 0.7},
-            },
-            {
-                name = "volumetric",
-                kind = "fullscreen",
-                shader = "volumetric",
-                inputs = {scene = "scene_hdr", depth = "depth"},
-                output = "volumetric",
-                settings = {density = 0.02},
-            },
-            {
-                name = "height_fog",
-                kind = "fullscreen",
-                shader = "height_fog",
-                inputs = {scene = "scene_hdr", depth = "depth"},
-                output = "scene_hdr",
-                settings = {height = 2.5, falloff = fog_density * 80.0},
-            },
-            {
-                name = "taa",
-                kind = "taa",
-                inputs = {scene = "scene_hdr", history = "taa_history", motion = "motion"},
-                output = "scene_hdr",
-                settings = {feedback = 0.9, sharpen = 0.2},
-            },
-            {
-                name = "bloom",
-                kind = "bloom",
-                input = "scene_hdr",
-                output = "scene_hdr",
-                settings = {threshold = 1.0, intensity = 0.7},
-            },
-            {
-                name = "tonemap",
-                kind = "fullscreen",
-                shader = "tonemap",
-                input = "scene_hdr",
-                output = "swapchain",
-                settings = {exposure = exposure, gamma = gamma, curve = "aces", grade = "warm"},
-            },
-        },
+        passes = passes,
     }
 end
 
