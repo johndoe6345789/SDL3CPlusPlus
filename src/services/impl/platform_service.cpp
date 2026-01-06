@@ -610,7 +610,8 @@ void PlatformService::LogSystemInfo() const {
         values.sdlRevision = revision;
     }
 
-    const int cpuCount = SDL_GetCPUCount();
+    logger_->Trace("PlatformService", "Querying CPU count with SDL_GetNumLogicalCPUCores");
+    const int cpuCount = SDL_GetNumLogicalCPUCores();
     const int cpuCacheLineSize = SDL_GetCPUCacheLineSize();
     const int systemRamMb = SDL_GetSystemRAM();
     logger_->TraceVariable("platform.cpu.count", cpuCount);
