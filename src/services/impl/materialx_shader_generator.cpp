@@ -18,6 +18,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <tuple>
 #include <vector>
 
@@ -126,6 +127,11 @@ std::string JoinTokens(const std::vector<std::string>& tokens, size_t limit) {
     return result;
 }
 
+template <typename T>
+constexpr bool HasHwAiryFresnelIterations = requires(const T& options) {
+    options.hwAiryFresnelIterations;
+};
+
 void ApplyTokenSubstitutions(const mx::ShaderGenerator& generator,
                              std::string& source,
                              const std::string& stageLabel,
@@ -171,9 +177,14 @@ unsigned int ResolveAiryFresnelIterations(const mx::GenContext& context,
     constexpr unsigned int kDefaultAiryFresnelIterations = 4;
     unsigned int iterations = kDefaultAiryFresnelIterations;
     bool fromOptions = false;
-    if constexpr (requires { context.getOptions().hwAiryFresnelIterations; }) {
+    using OptionsType = std::remove_reference_t<decltype(context.getOptions())>;
+    constexpr bool kHasHwAiryFresnelIterations = HasHwAiryFresnelIterations<OptionsType>;
+    if constexpr (kHasHwAiryFresnelIterations) {
         iterations = context.getOptions().hwAiryFresnelIterations;
         fromOptions = true;
+    } else if (logger) {
+        logger->Trace("MaterialXShaderGenerator", "Generate",
+                      "airyFresnelIterationsOption=unavailable");
     }
     if (logger) {
         logger->Trace("MaterialXShaderGenerator", "Generate",
