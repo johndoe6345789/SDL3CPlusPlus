@@ -71,12 +71,21 @@ struct AtmosphericsConfig {
     float fogDensity = 0.003f;
     std::array<float, 3> fogColor = {0.05f, 0.05f, 0.08f};
     float gamma = 2.2f;
+    float exposure = 1.0f;
     bool enableToneMapping = true;
     bool enableShadows = true;
     bool enableSSGI = true;
     bool enableVolumetricLighting = true;
     float pbrRoughness = 0.3f;
     float pbrMetallic = 0.1f;
+};
+
+/**
+ * @brief Lua-defined render graph configuration.
+ */
+struct RenderGraphConfig {
+    bool enabled = false;
+    std::string functionName = "get_render_graph";
 };
 
 /**
@@ -91,6 +100,7 @@ struct RuntimeConfig {
     MouseGrabConfig mouseGrab{};
     InputBindings inputBindings{};
     AtmosphericsConfig atmospherics{};
+    RenderGraphConfig renderGraph{};
     float guiOpacity = 1.0f;
 };
 

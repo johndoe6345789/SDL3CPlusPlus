@@ -67,6 +67,12 @@ public:
     virtual const MouseGrabConfig& GetMouseGrabConfig() const = 0;
 
     /**
+     * @brief Get render graph settings.
+     * @return Render graph configuration
+     */
+    virtual const RenderGraphConfig& GetRenderGraphConfig() const = 0;
+
+    /**
      * @brief Get the full JSON configuration as a string.
      *
      * @return JSON string (may be empty if unavailable)

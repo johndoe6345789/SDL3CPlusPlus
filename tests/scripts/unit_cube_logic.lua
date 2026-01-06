@@ -40,3 +40,19 @@ end
 function compute_model_matrix(time)
     return identity_matrix()
 end
+
+function get_render_graph()
+    return {
+        resources = {
+            scene_hdr = {type = "color", format = "rgba16f", size = "swapchain"},
+            depth = {type = "depth", format = "d32", size = "swapchain"},
+        },
+        passes = {
+            {
+                name = "gbuffer",
+                kind = "gbuffer",
+                outputs = {color = "scene_hdr", depth = "depth"},
+            },
+        },
+    }
+end

@@ -106,6 +106,19 @@ void GraphicsService::LoadShaders(const std::unordered_map<std::string, ShaderPa
     }
 }
 
+void GraphicsService::SetRenderGraphDefinition(const RenderGraphDefinition& definition) {
+    logger_->Trace("GraphicsService", "SetRenderGraphDefinition",
+                   "resources=" + std::to_string(definition.resources.size()) +
+                   ", passes=" + std::to_string(definition.passes.size()));
+
+    renderGraphDefinition_ = definition;
+}
+
+const RenderGraphDefinition& GraphicsService::GetRenderGraphDefinition() const {
+    logger_->Trace("GraphicsService", "GetRenderGraphDefinition");
+    return renderGraphDefinition_;
+}
+
 void GraphicsService::UploadVertexData(const std::vector<core::Vertex>& vertices) {
     logger_->Trace("GraphicsService", "UploadVertexData",
                    "vertices.size=" + std::to_string(vertices.size()));

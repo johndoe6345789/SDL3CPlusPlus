@@ -5,6 +5,7 @@
 #include "../interfaces/i_gui_script_service.hpp"
 #include "../interfaces/i_gui_service.hpp"
 #include "../interfaces/i_logger.hpp"
+#include "../interfaces/i_render_graph_script_service.hpp"
 #include "../interfaces/i_scene_script_service.hpp"
 #include "../interfaces/i_scene_service.hpp"
 #include "../interfaces/i_shader_script_service.hpp"
@@ -18,6 +19,7 @@ public:
                              std::shared_ptr<IGraphicsService> graphicsService,
                              std::shared_ptr<ISceneScriptService> sceneScriptService,
                              std::shared_ptr<IShaderScriptService> shaderScriptService,
+                             std::shared_ptr<IRenderGraphScriptService> renderGraphScriptService,
                              std::shared_ptr<IGuiScriptService> guiScriptService,
                              std::shared_ptr<IGuiService> guiService,
                              std::shared_ptr<ISceneService> sceneService);
@@ -30,6 +32,7 @@ private:
     std::shared_ptr<IGraphicsService> graphicsService_;
     std::shared_ptr<ISceneScriptService> sceneScriptService_;
     std::shared_ptr<IShaderScriptService> shaderScriptService_;
+    std::shared_ptr<IRenderGraphScriptService> renderGraphScriptService_;
     std::shared_ptr<IGuiScriptService> guiScriptService_;
     std::shared_ptr<IGuiService> guiService_;
     std::shared_ptr<ISceneService> sceneService_;
@@ -37,6 +40,7 @@ private:
     size_t lastIndexCount_ = 0;
     bool shadersLoaded_ = false;
     bool geometryUploaded_ = false;
+    bool renderGraphInitialized_ = false;
 };
 
 }  // namespace sdl3cpp::services::impl

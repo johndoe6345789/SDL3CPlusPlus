@@ -22,6 +22,7 @@
 #include "services/impl/script_engine_service.hpp"
 #include "services/impl/scene_script_service.hpp"
 #include "services/impl/shader_script_service.hpp"
+#include "services/impl/render_graph_script_service.hpp"
 #include "services/impl/gui_script_service.hpp"
 #include "services/impl/audio_command_service.hpp"
 #include "services/impl/physics_bridge_service.hpp"
@@ -276,6 +277,10 @@ void ServiceBasedApp::RegisterServices() {
     registry_.RegisterService<services::IShaderScriptService, services::impl::ShaderScriptService>(
         registry_.GetService<services::IScriptEngineService>(),
         registry_.GetService<services::ILogger>());
+    registry_.RegisterService<services::IRenderGraphScriptService, services::impl::RenderGraphScriptService>(
+        registry_.GetService<services::IScriptEngineService>(),
+        registry_.GetService<services::IConfigService>(),
+        registry_.GetService<services::ILogger>());
     registry_.RegisterService<services::IGuiScriptService, services::impl::GuiScriptService>(
         registry_.GetService<services::IScriptEngineService>(),
         registry_.GetService<services::ILogger>());
@@ -356,6 +361,7 @@ void ServiceBasedApp::RegisterServices() {
         registry_.GetService<services::IGraphicsService>(),
         registry_.GetService<services::ISceneScriptService>(),
         registry_.GetService<services::IShaderScriptService>(),
+        registry_.GetService<services::IRenderGraphScriptService>(),
         registry_.GetService<services::IGuiScriptService>(),
         registry_.GetService<services::IGuiService>(),
         registry_.GetService<services::ISceneService>());

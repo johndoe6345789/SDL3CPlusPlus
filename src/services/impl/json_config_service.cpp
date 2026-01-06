@@ -353,12 +353,36 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
         readFloat("fog_density", config.atmospherics.fogDensity);
         readFloatArray3("fog_color", config.atmospherics.fogColor);
         readFloat("gamma", config.atmospherics.gamma);
+        readFloat("exposure", config.atmospherics.exposure);
         readBool("enable_tone_mapping", config.atmospherics.enableToneMapping);
         readBool("enable_shadows", config.atmospherics.enableShadows);
         readBool("enable_ssgi", config.atmospherics.enableSSGI);
         readBool("enable_volumetric_lighting", config.atmospherics.enableVolumetricLighting);
         readFloat("pbr_roughness", config.atmospherics.pbrRoughness);
         readFloat("pbr_metallic", config.atmospherics.pbrMetallic);
+    }
+
+    if (document.HasMember("render_graph")) {
+        const auto& renderGraphValue = document["render_graph"];
+        if (!renderGraphValue.IsObject()) {
+            throw std::runtime_error("JSON member 'render_graph' must be an object");
+        }
+
+        if (renderGraphValue.HasMember("enabled")) {
+            const auto& value = renderGraphValue["enabled"];
+            if (!value.IsBool()) {
+                throw std::runtime_error("JSON member 'render_graph.enabled' must be a boolean");
+            }
+            config.renderGraph.enabled = value.GetBool();
+        }
+
+        if (renderGraphValue.HasMember("function")) {
+            const auto& value = renderGraphValue["function"];
+            if (!value.IsString()) {
+                throw std::runtime_error("JSON member 'render_graph.function' must be a string");
+            }
+            config.renderGraph.functionName = value.GetString();
+        }
     }
 
     if (document.HasMember("gui_opacity")) {
@@ -409,6 +433,13 @@ std::string JsonConfigService::BuildConfigJson(const RuntimeConfig& config,
                               rapidjson::Value(config.mouseGrab.releaseKey.c_str(), allocator),
                               allocator);
     document.AddMember("mouse_grab", mouseGrabObject, allocator);
+
+    rapidjson::Value renderGraphObject(rapidjson::kObjectType);
+    renderGraphObject.AddMember("enabled", config.renderGraph.enabled, allocator);
+    renderGraphObject.AddMember("function",
+                                rapidjson::Value(config.renderGraph.functionName.c_str(), allocator),
+                                allocator);
+    document.AddMember("render_graph", renderGraphObject, allocator);
 
     rapidjson::Value bindingsObject(rapidjson::kObjectType);
     auto addBindingMember = [&](const char* name, const std::string& value) {

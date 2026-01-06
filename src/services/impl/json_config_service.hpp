@@ -88,6 +88,12 @@ public:
         }
         return config_.mouseGrab;
     }
+    const RenderGraphConfig& GetRenderGraphConfig() const override {
+        if (logger_) {
+            logger_->Trace("JsonConfigService", "GetRenderGraphConfig");
+        }
+        return config_.renderGraph;
+    }
     const std::string& GetConfigJson() const override {
         if (logger_) {
             logger_->Trace("JsonConfigService", "GetConfigJson");

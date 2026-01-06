@@ -9,8 +9,6 @@ local cube_mesh_info = {
 local cube_vertices = {}
 local cube_indices = {}
 local cube_indices_double_sided = {}
-local cube_indices_active = {}
-local use_double_sided_indices = false
 
 local function build_double_sided_indices(indices)
     local doubled = {}
@@ -51,8 +49,6 @@ local function load_cube_mesh()
     cube_vertices = mesh.vertices
     cube_indices = mesh.indices
     cube_indices_double_sided = build_double_sided_indices(cube_indices)
-    use_double_sided_indices = #cube_indices_double_sided > 0
-    cube_indices_active = use_double_sided_indices and cube_indices_double_sided or cube_indices
     cube_mesh_info.loaded = true
     cube_mesh_info.vertex_count = #mesh.vertices
     cube_mesh_info.index_count = #mesh.indices
@@ -222,8 +218,8 @@ end
 if cube_mesh_info.loaded then
     log_debug("Loaded cube mesh from %s (%d vertices, %d indices)",
         cube_mesh_info.path, cube_mesh_info.vertex_count, cube_mesh_info.index_count)
-    if use_double_sided_indices then
-        log_debug("Using double-sided cube indices (%d -> %d)",
+    if #cube_indices_double_sided > 0 then
+        log_debug("Built double-sided cube indices (%d -> %d)",
             cube_mesh_info.index_count, #cube_indices_double_sided)
     end
 end
@@ -339,7 +335,7 @@ local camera = {
 }
 
 local controls = {
-    move_speed = 4.0,
+    move_speed = 16.0,
     fly_speed = 3.0,
     jump_speed = 5.5,
     gravity = -12.0,
@@ -640,7 +636,7 @@ local function create_static_cube(position, scale, color, shader_key)
 
     return {
         vertices = vertices,
-        indices = cube_indices_active,
+        indices = cube_indices,
         compute_model_matrix = compute_model_matrix,
         shader_key = resolved_shader,
     }
@@ -657,7 +653,7 @@ local function create_spinning_cube()
 
     return {
         vertices = cube_vertices,
-        indices = cube_indices_active,
+        indices = (#cube_indices_double_sided > 0) and cube_indices_double_sided or cube_indices,
         compute_model_matrix = compute_model_matrix,
         shader_key = "default",
     }
@@ -844,6 +840,114 @@ end
 function get_shader_paths()
     return shader_variants
 end
+
+
+local function resolve_number(value, fallback)
+    if type(value) == "number" then
+        return value
+    end
+    return fallback
+end
+
+function get_render_graph()
+    local atmospherics = {}
+    if type(config) == "table" and type(config.atmospherics) == "table" then
+        atmospherics = config.atmospherics
+    end
+
+    local exposure = resolve_number(atmospherics.exposure, 1.0)
+    local gamma = resolve_number(atmospherics.gamma, 2.2)
+    local fog_density = resolve_number(atmospherics.fog_density, 0.003)
+
+    return {
+        resources = {
+            scene_hdr = {type = "color", format = "rgba16f", size = "swapchain"},
+            depth = {type = "depth", format = "d32", size = "swapchain"},
+            normal_rough = {type = "color", format = "a2b10g10r10", size = "swapchain"},
+            motion = {type = "color", format = "rg16f", size = "swapchain"},
+            shadow_csm = {type = "depth_array", format = "d32", size = {2048, 2048}, layers = 4},
+            ao = {type = "color", format = "r8", size = "half"},
+            ssr = {type = "color", format = "rgba16f", size = "swapchain"},
+            volumetric = {type = "color", format = "rgba16f", size = "half"},
+            taa_history = {type = "color", format = "rgba16f", size = "swapchain"},
+            bloom = {type = "color", format = "rgba16f", size = "half", mips = 5},
+        },
+        passes = {
+            {
+                name = "shadow",
+                kind = "shadow_csm",
+                output = "shadow_csm",
+                settings = {cascades = 4, bias = 0.002, normal_bias = 0.02, pcf = 5},
+            },
+            {
+                name = "gbuffer",
+                kind = "gbuffer",
+                shader = "pbr",
+                outputs = {
+                    color = "scene_hdr",
+                    depth = "depth",
+                    normal = "normal_rough",
+                    motion = "motion",
+                },
+            },
+            {
+                name = "ssao",
+                kind = "fullscreen",
+                shader = "ssao",
+                inputs = {depth = "depth", normal = "normal_rough"},
+                output = "ao",
+                settings = {radius = 0.5, power = 1.3},
+            },
+            {
+                name = "ssr",
+                kind = "fullscreen",
+                shader = "ssr",
+                inputs = {scene = "scene_hdr", depth = "depth", normal = "normal_rough"},
+                output = "ssr",
+                settings = {max_steps = 64, thickness = 0.1, roughness_fallback = 0.7},
+            },
+            {
+                name = "volumetric",
+                kind = "fullscreen",
+                shader = "volumetric",
+                inputs = {scene = "scene_hdr", depth = "depth"},
+                output = "volumetric",
+                settings = {density = 0.02},
+            },
+            {
+                name = "height_fog",
+                kind = "fullscreen",
+                shader = "height_fog",
+                inputs = {scene = "scene_hdr", depth = "depth"},
+                output = "scene_hdr",
+                settings = {height = 2.5, falloff = fog_density * 80.0},
+            },
+            {
+                name = "taa",
+                kind = "taa",
+                inputs = {scene = "scene_hdr", history = "taa_history", motion = "motion"},
+                output = "scene_hdr",
+                settings = {feedback = 0.9, sharpen = 0.2},
+            },
+            {
+                name = "bloom",
+                kind = "bloom",
+                input = "scene_hdr",
+                output = "scene_hdr",
+                settings = {threshold = 1.0, intensity = 0.7},
+            },
+            {
+                name = "tonemap",
+                kind = "fullscreen",
+                shader = "tonemap",
+                input = "scene_hdr",
+                output = "swapchain",
+                settings = {exposure = exposure, gamma = gamma, curve = "aces", grade = "warm"},
+            },
+        },
+    }
+end
+
 
 function get_view_projection(aspect)
     local now = os.clock()

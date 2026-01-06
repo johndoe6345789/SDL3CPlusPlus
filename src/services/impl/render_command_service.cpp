@@ -204,7 +204,7 @@ void RenderCommandService::RecordCommands(uint32_t imageIndex,
                         pushConstants.fogEnd = 100.0f;
                         pushConstants.fogColor = config.atmospherics.fogColor;
                         pushConstants.gamma = config.atmospherics.gamma;
-                        pushConstants.exposure = 1.0f;
+                        pushConstants.exposure = config.atmospherics.exposure;
                         pushConstants.enableShadows = config.atmospherics.enableShadows ? 1 : 0;
                         pushConstants.enableFog = 1; // Enable fog for PBR
                     }
