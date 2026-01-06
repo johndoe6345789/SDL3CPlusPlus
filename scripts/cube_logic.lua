@@ -237,6 +237,125 @@ local function resolve_color3(value, fallback)
     return {fallback[1], fallback[2], fallback[3]}
 end
 
+local function resolve_number_optional(value)
+    if type(value) == "number" then
+        return value
+    end
+    return nil
+end
+
+local function resolve_color3_optional(value)
+    if type(value) == "table" then
+        local r = tonumber(value[1])
+        local g = tonumber(value[2])
+        local b = tonumber(value[3])
+        if r and g and b then
+            return {r, g, b}
+        end
+    end
+    return nil
+end
+
+local function format_optional_number(value)
+    if type(value) == "number" then
+        return string_format("%.3f", value)
+    end
+    return "default"
+end
+
+local function format_optional_color(value)
+    if type(value) == "table"
+        and type(value[1]) == "number"
+        and type(value[2]) == "number"
+        and type(value[3]) == "number" then
+        return string_format("{%.2f, %.2f, %.2f}", value[1], value[2], value[3])
+    end
+    return "default"
+end
+
+local function build_shader_parameter_overrides()
+    if type(config) ~= "table" or type(config.atmospherics) ~= "table" then
+        return {}
+    end
+
+    local atmospherics = config.atmospherics
+    local ambient_strength = resolve_number_optional(atmospherics.ambient_strength)
+    local light_intensity = resolve_number_optional(atmospherics.light_intensity)
+    local key_intensity = resolve_number_optional(atmospherics.key_light_intensity)
+    local fill_intensity = resolve_number_optional(atmospherics.fill_light_intensity)
+    local light_color = resolve_color3_optional(atmospherics.light_color)
+    local pbr_roughness = resolve_number_optional(atmospherics.pbr_roughness)
+    local pbr_metallic = resolve_number_optional(atmospherics.pbr_metallic)
+
+    local parameters = {}
+
+    local function apply_common(key)
+        if ambient_strength == nil and light_intensity == nil and light_color == nil then
+            return
+        end
+        local entry = {}
+        if ambient_strength ~= nil then
+            entry.ambient_strength = ambient_strength
+        end
+        if light_intensity ~= nil then
+            entry.light_intensity = light_intensity
+        end
+        if light_color ~= nil then
+            entry.light_color = light_color
+        end
+        parameters[key] = entry
+    end
+
+    apply_common("solid")
+    apply_common("floor")
+    apply_common("wall")
+    apply_common("ceiling")
+
+    if ambient_strength ~= nil or key_intensity ~= nil or fill_intensity ~= nil or light_intensity ~= nil then
+        local entry = {}
+        if ambient_strength ~= nil then
+            entry.ambient_strength = ambient_strength
+        end
+        if key_intensity ~= nil then
+            entry.key_intensity = key_intensity
+        elseif light_intensity ~= nil then
+            entry.key_intensity = light_intensity
+        end
+        if fill_intensity ~= nil then
+            entry.fill_intensity = fill_intensity
+        elseif light_intensity ~= nil then
+            entry.fill_intensity = light_intensity * 0.45
+        end
+        parameters.default = entry
+    end
+
+    if light_intensity ~= nil or light_color ~= nil or pbr_roughness ~= nil or pbr_metallic ~= nil then
+        local entry = {}
+        if light_intensity ~= nil then
+            entry.light_intensity = light_intensity
+        end
+        if light_color ~= nil then
+            entry.light_color = light_color
+        end
+        if pbr_roughness ~= nil then
+            entry.material_roughness = pbr_roughness
+        end
+        if pbr_metallic ~= nil then
+            entry.material_metallic = pbr_metallic
+        end
+        parameters.pbr = entry
+    end
+
+    if next(parameters) ~= nil then
+        log_debug("Shader lighting overrides: ambient=%s light_intensity=%s light_color=%s",
+            format_optional_number(ambient_strength),
+            format_optional_number(light_intensity),
+            format_optional_color(light_color))
+    end
+
+    return parameters
+end
+
 local function apply_skybox_color_from_config()
     if type(config) ~= "table" then
         return
@@ -335,6 +454,7 @@ end
 
 local function build_shader_variants()
     apply_skybox_color_from_config()
+    local shader_parameters = build_shader_parameter_overrides()
 
     local ok, toolkit = pcall(require, "shader_toolkit")
     if not ok then
@@ -345,7 +465,7 @@ local function build_shader_variants()
     local output_mode = "source"
     local compile = false
     local ok_generate, generated = pcall(toolkit.generate_cube_demo_variants,
-        {compile = compile, output_mode = output_mode})
+        {compile = compile, output_mode = output_mode, parameters = shader_parameters})
     if not ok_generate then
         log_debug("Shader generation failed: %s", tostring(generated))
         return build_static_shader_variants()

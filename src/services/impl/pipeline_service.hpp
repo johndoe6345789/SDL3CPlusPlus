@@ -33,6 +33,10 @@ public:
         logger_->Trace("PipelineService", "GetPipelineLayout");
         return pipelineLayout_;
     }
+    VkDescriptorSetLayout GetDescriptorSetLayout() const override {
+        logger_->Trace("PipelineService", "GetDescriptorSetLayout");
+        return descriptorSetLayout_;
+    }
     bool HasShader(const std::string& key) const override;
     size_t GetShaderCount() const override {
         logger_->Trace("PipelineService", "GetShaderCount");
@@ -47,6 +51,7 @@ private:
     std::shared_ptr<ILogger> logger_;
 
     VkPipelineLayout pipelineLayout_ = VK_NULL_HANDLE;
+    VkDescriptorSetLayout descriptorSetLayout_ = VK_NULL_HANDLE;
     std::unordered_map<std::string, ShaderPaths> shaderPathMap_;
     std::unordered_map<std::string, VkPipeline> pipelines_;
 

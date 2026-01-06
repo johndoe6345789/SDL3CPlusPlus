@@ -463,6 +463,10 @@ void GxmGraphicsBackend::SetViewProjection(const std::array<float, 16>& viewProj
     // Matrix will be set when drawing with specific pipeline
 }
 
+void GxmGraphicsBackend::SetRenderGraphDefinition(const RenderGraphDefinition& definition) {
+    (void)definition;
+}
+
 void GxmGraphicsBackend::Draw(GraphicsDeviceHandle device, GraphicsPipelineHandle pipeline,
                               GraphicsBufferHandle vertexBuffer, GraphicsBufferHandle indexBuffer,
                               uint32_t indexCount, const std::array<float, 16>& modelMatrix) {

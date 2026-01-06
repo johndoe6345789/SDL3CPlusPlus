@@ -54,6 +54,10 @@ public:
         logger_->Trace("SwapchainService", "GetSwapchainImageFormat");
         return imageFormat_;
     }
+    VkFormat GetDepthFormat() const override {
+        logger_->Trace("SwapchainService", "GetDepthFormat");
+        return depthFormat_;
+    }
     VkExtent2D GetSwapchainExtent() const override {
         logger_->Trace("SwapchainService", "GetSwapchainExtent");
         return extent_;

@@ -220,7 +220,12 @@ bool VulkanGraphicsBackend::EndFrame(GraphicsDeviceHandle device) {
     logger_->Trace("VulkanGraphicsBackend", "EndFrame");
 
     // Record all accumulated commands
-    renderCommandService_->RecordCommands(currentImageIndex_, frameCommands_, currentViewProj_);
+    if (renderGraphEnabled_) {
+        renderCommandService_->RecordRenderGraph(currentImageIndex_, renderGraphDefinition_,
+                                                 frameCommands_, currentViewProj_);
+    } else {
+        renderCommandService_->RecordCommands(currentImageIndex_, frameCommands_, currentViewProj_);
+    }
     
     // End the frame
     return renderCommandService_->EndFrame(currentImageIndex_);
@@ -229,6 +234,14 @@ bool VulkanGraphicsBackend::EndFrame(GraphicsDeviceHandle device) {
 void VulkanGraphicsBackend::SetViewProjection(const std::array<float, 16>& viewProj) {
     logger_->Trace("VulkanGraphicsBackend", "SetViewProjection");
     currentViewProj_ = viewProj;
+}
+
+void VulkanGraphicsBackend::SetRenderGraphDefinition(const RenderGraphDefinition& definition) {
+    logger_->Trace("VulkanGraphicsBackend", "SetRenderGraphDefinition",
+                   "resources=" + std::to_string(definition.resources.size()) +
+                   ", passes=" + std::to_string(definition.passes.size()));
+    renderGraphDefinition_ = definition;
+    renderGraphEnabled_ = !definition.passes.empty();
 }
 
 void VulkanGraphicsBackend::Draw(GraphicsDeviceHandle device, GraphicsPipelineHandle pipeline,

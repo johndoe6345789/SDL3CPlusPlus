@@ -147,6 +147,13 @@ public:
     virtual void SetViewProjection(const std::array<float, 16>& viewProj) = 0;
 
     /**
+     * @brief Set the render graph definition (optional).
+     *
+     * @param definition Render graph definition
+     */
+    virtual void SetRenderGraphDefinition(const RenderGraphDefinition& definition) = 0;
+
+    /**
      * @brief Draw with a pipeline.
      *
      * @param device Device handle

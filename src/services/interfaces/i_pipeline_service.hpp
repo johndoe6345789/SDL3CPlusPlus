@@ -67,6 +67,13 @@ public:
     virtual VkPipelineLayout GetPipelineLayout() const = 0;
 
     /**
+     * @brief Get the descriptor set layout used by pipelines.
+     *
+     * @return VkDescriptorSetLayout handle
+     */
+    virtual VkDescriptorSetLayout GetDescriptorSetLayout() const = 0;
+
+    /**
      * @brief Check if a shader exists.
      *
      * @param key Shader identifier

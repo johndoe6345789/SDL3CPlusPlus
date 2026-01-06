@@ -48,6 +48,7 @@ public:
     bool EndFrame(GraphicsDeviceHandle device) override;
 
     void SetViewProjection(const std::array<float, 16>& viewProj) override;
+    void SetRenderGraphDefinition(const RenderGraphDefinition& definition) override;
 
     void Draw(GraphicsDeviceHandle device, GraphicsPipelineHandle pipeline,
               GraphicsBufferHandle vertexBuffer, GraphicsBufferHandle indexBuffer,
@@ -72,6 +73,8 @@ private:
     uint32_t currentImageIndex_;
     std::vector<RenderCommand> frameCommands_;
     std::array<float, 16> currentViewProj_;
+    RenderGraphDefinition renderGraphDefinition_{};
+    bool renderGraphEnabled_ = false;
     std::unordered_map<GraphicsPipelineHandle, std::string> pipelineToShaderKey_;
 };
 

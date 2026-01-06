@@ -46,6 +46,19 @@ public:
                                const std::array<float, 16>& viewProj) = 0;
 
     /**
+     * @brief Record rendering commands using a render graph.
+     *
+     * @param imageIndex Swapchain image index
+     * @param graph Render graph definition
+     * @param commands Render commands to execute for scene passes
+     * @param viewProj View-projection matrix
+     */
+    virtual void RecordRenderGraph(uint32_t imageIndex,
+                                   const RenderGraphDefinition& graph,
+                                   const std::vector<RenderCommand>& commands,
+                                   const std::array<float, 16>& viewProj) = 0;
+
+    /**
      * @brief End the frame and present.
      *
      * Submits command buffers and presents the image.

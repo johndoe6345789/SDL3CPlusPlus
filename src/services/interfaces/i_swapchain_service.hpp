@@ -105,6 +105,13 @@ public:
     virtual VkFormat GetSwapchainImageFormat() const = 0;
 
     /**
+     * @brief Get the depth buffer format.
+     *
+     * @return VkFormat of depth images
+     */
+    virtual VkFormat GetDepthFormat() const = 0;
+
+    /**
      * @brief Get the swapchain extent (size).
      *
      * @return VkExtent2D with width and height

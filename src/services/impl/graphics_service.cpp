@@ -112,6 +112,9 @@ void GraphicsService::SetRenderGraphDefinition(const RenderGraphDefinition& defi
                    ", passes=" + std::to_string(definition.passes.size()));
 
     renderGraphDefinition_ = definition;
+    if (backend_) {
+        backend_->SetRenderGraphDefinition(definition);
+    }
 }
 
 const RenderGraphDefinition& GraphicsService::GetRenderGraphDefinition() const {
