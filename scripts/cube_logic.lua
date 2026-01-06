@@ -688,7 +688,8 @@ local function create_static_cube(position, scale, color, shader_key)
 end
 
 local function create_skybox()
-    local skybox_scale = camera.far * 0.85
+    local room_extent = room.half_size + room.wall_thickness
+    local skybox_scale = room_extent * 2.5
     local function compute_model_matrix()
         local translation = math3d.translation(camera.position[1], camera.position[2], camera.position[3])
         local scaling = scale_matrix(skybox_scale, skybox_scale, skybox_scale)
