@@ -17,6 +17,10 @@ public:
     virtual bool LoadFromFile(const std::string& requestedPath,
                               MeshPayload& outPayload,
                               std::string& outError) = 0;
+    virtual bool LoadFromArchive(const std::string& archivePath,
+                                 const std::string& entryPath,
+                                 MeshPayload& outPayload,
+                                 std::string& outError) = 0;
     virtual void PushMeshToLua(lua_State* L, const MeshPayload& payload) = 0;
 };
 

@@ -61,6 +61,7 @@ private:
 
     void RegisterBindings(lua_State* L);
     static int LoadMeshFromFile(lua_State* L);
+    static int LoadMeshFromArchive(lua_State* L);
     static int PhysicsCreateBox(lua_State* L);
     static int PhysicsStepSimulation(lua_State* L);
     static int PhysicsGetTransform(lua_State* L);

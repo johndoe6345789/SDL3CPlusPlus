@@ -1,0 +1,83 @@
+{
+  "launcher": {
+    "name": "Quake 3 Arena",
+    "description": "Loads a Quake 3 BSP from a PK3 archive",
+    "enabled": true
+  },
+  "window_width": 1280,
+  "window_height": 720,
+  "lua_script": "scripts/quake3_arena.lua",
+  "scripts_directory": "scripts",
+  "project_root": "../",
+  "shaders_directory": "shaders",
+  "bgfx": {
+    "renderer": "vulkan"
+  },
+  "mouse_grab": {
+    "enabled": true,
+    "grab_on_click": true,
+    "release_on_escape": true,
+    "start_grabbed": false,
+    "hide_cursor": true,
+    "relative_mode": true,
+    "grab_mouse_button": "left",
+    "release_key": "escape"
+  },
+  "input_bindings": {
+    "move_forward": "W",
+    "move_back": "S",
+    "move_left": "A",
+    "move_right": "D",
+    "fly_up": "Q",
+    "fly_down": "Z",
+    "jump": "Space",
+    "noclip_toggle": "N",
+    "music_toggle": "M",
+    "music_toggle_gamepad": "start",
+    "gamepad_move_x_axis": "leftx",
+    "gamepad_move_y_axis": "lefty",
+    "gamepad_look_x_axis": "rightx",
+    "gamepad_look_y_axis": "righty",
+    "gamepad_dpad_up": "dpup",
+    "gamepad_dpad_down": "dpdown",
+    "gamepad_dpad_left": "dpleft",
+    "gamepad_dpad_right": "dpright",
+    "gamepad_button_actions": {
+      "a": "gamepad_a",
+      "b": "gamepad_b",
+      "x": "gamepad_x",
+      "y": "gamepad_y",
+      "leftshoulder": "gamepad_lb",
+      "rightshoulder": "gamepad_rb",
+      "leftstick": "gamepad_ls",
+      "rightstick": "gamepad_rs",
+      "back": "gamepad_back",
+      "start": "gamepad_start"
+    },
+    "gamepad_axis_actions": {
+      "lefttrigger": "gamepad_lt",
+      "righttrigger": "gamepad_rt"
+    },
+    "gamepad_axis_action_threshold": 0.5
+  },
+  "quake3": {
+    "pk3_path": "/home/rewrich/Documents/GitHub/q3/pak0.pk3",
+    "map_path": "q3dm1",
+    "scale": 0.01,
+    "rotate_x_degrees": -90.0,
+    "offset": [0.0, 0.0, 0.0],
+    "shader_key": "pbr",
+    "move_speed": 14.0,
+    "fly_speed": 10.0,
+    "mouse_sensitivity": 0.0025,
+    "camera": {
+      "position": [0.0, 48.0, 0.0],
+      "yaw_degrees": 0.0,
+      "pitch_degrees": 0.0,
+      "fov": 0.85,
+      "near": 0.1,
+      "far": 2000.0
+    }
+  },
+  "config_file": "config/quake3_runtime.json"
+}

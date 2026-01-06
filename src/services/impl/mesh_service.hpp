@@ -3,6 +3,7 @@
 #include "../interfaces/i_mesh_service.hpp"
 #include "../interfaces/i_config_service.hpp"
 #include "../interfaces/i_logger.hpp"
+#include <filesystem>
 #include <memory>
 
 namespace sdl3cpp::services::impl {
@@ -18,9 +19,17 @@ public:
     bool LoadFromFile(const std::string& requestedPath,
                       MeshPayload& outPayload,
                       std::string& outError) override;
+    bool LoadFromArchive(const std::string& archivePath,
+                         const std::string& entryPath,
+                         MeshPayload& outPayload,
+                         std::string& outError) override;
     void PushMeshToLua(lua_State* L, const MeshPayload& payload) override;
 
 private:
+    bool ResolvePath(const std::string& requestedPath,
+                     std::filesystem::path& resolvedPath,
+                     std::string& outError) const;
+
     std::shared_ptr<IConfigService> configService_;
     std::shared_ptr<ILogger> logger_;
 };

@@ -13,39 +13,52 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 
 namespace sdl3cpp::services::impl {
 namespace mx = MaterialX;
 
 namespace {
 
-bool HasVertexDataBlock(const std::string& source) {
-    return source.find("VertexData") != std::string::npos
-        && source.find("vd;") != std::string::npos;
+std::optional<std::string> FindVertexDataBlock(const std::string& source) {
+    const std::string blockName = "VertexData";
+    const std::string instanceToken = "vd;";
+    size_t searchPos = 0;
+    while (true) {
+        size_t blockPos = source.find(blockName, searchPos);
+        if (blockPos == std::string::npos) {
+            return std::nullopt;
+        }
+        size_t lineStart = source.rfind('\n', blockPos);
+        if (lineStart == std::string::npos) {
+            lineStart = 0;
+        } else {
+            ++lineStart;
+        }
+        size_t lineEnd = source.find('\n', blockPos);
+        if (lineEnd == std::string::npos) {
+            lineEnd = source.size();
+        }
+        std::string_view header(source.data() + lineStart, lineEnd - lineStart);
+        if (header.find("layout") == std::string_view::npos) {
+            searchPos = blockPos + blockName.size();
+            continue;
+        }
+        size_t instancePos = source.find(instanceToken, blockPos);
+        if (instancePos == std::string::npos) {
+            searchPos = blockPos + blockName.size();
+            continue;
+        }
+        size_t blockEnd = source.find('\n', instancePos);
+        if (blockEnd == std::string::npos) {
+            blockEnd = source.size();
+        }
+        return source.substr(lineStart, blockEnd - lineStart);
+    }
 }
 
-std::optional<std::string> ExtractVertexDataBlock(const std::string& source) {
-    const std::string marker = "VertexData";
-    const std::string instance = "vd;";
-    size_t blockPos = source.find(marker);
-    if (blockPos == std::string::npos) {
-        return std::nullopt;
-    }
-    size_t instancePos = source.find(instance, blockPos);
-    if (instancePos == std::string::npos) {
-        return std::nullopt;
-    }
-    size_t lineStart = source.rfind('\n', blockPos);
-    if (lineStart == std::string::npos) {
-        lineStart = 0;
-    } else {
-        ++lineStart;
-    }
-    size_t lineEnd = source.find('\n', instancePos);
-    if (lineEnd == std::string::npos) {
-        lineEnd = source.size();
-    }
-    return source.substr(lineStart, lineEnd - lineStart);
+bool UsesVertexDataInstance(const std::string& source) {
+    return source.find("vd.") != std::string::npos;
 }
 
 std::string ToVertexOutputBlock(std::string block) {
@@ -73,6 +86,15 @@ void InsertAfterVersion(std::string& source, const std::string& block) {
     }
     ++lineEnd;
     source.insert(lineEnd, block + "\n");
+}
+
+bool ReplaceFirstOccurrence(std::string& source, const std::string& before, const std::string& after) {
+    size_t pos = source.find(before);
+    if (pos == std::string::npos) {
+        return false;
+    }
+    source.replace(pos, before.size(), after);
+    return true;
 }
 
 }  // namespace
@@ -222,25 +244,40 @@ ShaderPaths MaterialXShaderGenerator::Generate(const MaterialXConfig& config,
     paths.vertexSource = shader->getSourceCode(mx::Stage::VERTEX);
     paths.fragmentSource = shader->getSourceCode(mx::Stage::PIXEL);
 
-    const bool vertexHasBlock = HasVertexDataBlock(paths.vertexSource);
-    const bool fragmentHasBlock = HasVertexDataBlock(paths.fragmentSource);
-    if (!vertexHasBlock && fragmentHasBlock) {
-        auto fragmentBlock = ExtractVertexDataBlock(paths.fragmentSource);
-        if (fragmentBlock) {
-            std::string vertexBlock = ToVertexOutputBlock(*fragmentBlock);
-            InsertAfterVersion(paths.vertexSource, vertexBlock);
-            if (logger_) {
-                logger_->Trace("MaterialXShaderGenerator", "Generate",
-                               "vertexDataBlock=inserted");
+    auto vertexBlock = FindVertexDataBlock(paths.vertexSource);
+    auto fragmentBlock = FindVertexDataBlock(paths.fragmentSource);
+    const bool vertexUsesInstance = UsesVertexDataInstance(paths.vertexSource);
+    bool vertexHasBlock = vertexBlock.has_value();
+    const bool fragmentHasBlock = fragmentBlock.has_value();
+
+    if (vertexHasBlock) {
+        std::string normalizedBlock = ToVertexOutputBlock(*vertexBlock);
+        if (normalizedBlock != *vertexBlock) {
+            if (ReplaceFirstOccurrence(paths.vertexSource, *vertexBlock, normalizedBlock)) {
+                if (logger_) {
+                    logger_->Trace("MaterialXShaderGenerator", "Generate",
+                                   "vertexDataBlock=normalized");
+                }
             }
-        } else if (logger_) {
+        }
+    } else if (fragmentHasBlock) {
+        std::string vertexOutBlock = ToVertexOutputBlock(*fragmentBlock);
+        InsertAfterVersion(paths.vertexSource, vertexOutBlock);
+        vertexHasBlock = true;
+        if (logger_) {
             logger_->Trace("MaterialXShaderGenerator", "Generate",
-                           "vertexDataBlock=missing");
+                           "vertexDataBlock=inserted");
         }
     } else if (logger_) {
         logger_->Trace("MaterialXShaderGenerator", "Generate",
+                       "vertexDataBlock=missing, fragmentVertexDataBlock=missing");
+    }
+
+    if (logger_) {
+        logger_->Trace("MaterialXShaderGenerator", "Generate",
                        "vertexDataBlock=" + std::string(vertexHasBlock ? "present" : "absent") +
-                       ", fragmentVertexDataBlock=" + std::string(fragmentHasBlock ? "present" : "absent"));
+                       ", fragmentVertexDataBlock=" + std::string(fragmentHasBlock ? "present" : "absent") +
+                       ", vertexUsesVertexData=" + std::string(vertexUsesInstance ? "true" : "false"));
     }
     return paths;
 }

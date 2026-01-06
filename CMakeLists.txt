@@ -137,6 +137,7 @@ find_package(bgfx CONFIG REQUIRED)
 find_package(MaterialX CONFIG REQUIRED)
 find_package(Freetype CONFIG REQUIRED)
 find_package(assimp CONFIG REQUIRED)
+find_package(libzip CONFIG REQUIRED)
 find_package(Bullet CONFIG REQUIRED)
 find_package(Vorbis CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
@@ -180,6 +181,13 @@ if(TARGET Freetype::Freetype)
     list(APPEND SDL3CPP_FREETYPE_LIBS Freetype::Freetype)
 elseif(TARGET freetype::freetype)
     list(APPEND SDL3CPP_FREETYPE_LIBS freetype::freetype)
+endif()
+
+set(SDL3CPP_ZIP_LIBS)
+if(TARGET libzip::zip)
+    list(APPEND SDL3CPP_ZIP_LIBS libzip::zip)
+elseif(TARGET libzip::libzip)
+    list(APPEND SDL3CPP_ZIP_LIBS libzip::libzip)
 endif()
 endif()
 
@@ -226,6 +234,7 @@ if(BUILD_SDL3_APP)
         rapidjson
         ${SDL3CPP_RENDER_STACK_LIBS}
         ${SDL3CPP_FREETYPE_LIBS}
+        ${SDL3CPP_ZIP_LIBS}
         assimp::assimp
         Bullet::Bullet
         glm::glm

@@ -471,6 +471,7 @@ void ScriptEngineService::RegisterBindings(lua_State* L) {
     };
 
     bind("load_mesh_from_file", &ScriptEngineService::LoadMeshFromFile);
+    bind("load_mesh_from_pk3", &ScriptEngineService::LoadMeshFromArchive);
     bind("physics_create_box", &ScriptEngineService::PhysicsCreateBox);
     bind("physics_step_simulation", &ScriptEngineService::PhysicsStepSimulation);
     bind("physics_get_transform", &ScriptEngineService::PhysicsGetTransform);
@@ -518,6 +519,36 @@ int ScriptEngineService::LoadMeshFromFile(lua_State* L) {
     MeshPayload payload;
     std::string error;
     if (!context->meshService->LoadFromFile(path, payload, error)) {
+        lua_pushnil(L);
+        lua_pushstring(L, error.c_str());
+        return 2;
+    }
+
+    context->meshService->PushMeshToLua(L, payload);
+    lua_pushnil(L);
+    return 2;
+}
+
+int ScriptEngineService::LoadMeshFromArchive(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    auto logger = context ? context->logger : nullptr;
+    if (!context || !context->meshService) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Mesh service not available");
+        return 2;
+    }
+
+    const char* archivePath = luaL_checkstring(L, 1);
+    const char* entryPath = luaL_checkstring(L, 2);
+    if (logger) {
+        logger->Trace("ScriptEngineService", "LoadMeshFromArchive",
+                      "archivePath=" + std::string(archivePath) +
+                      ", entryPath=" + std::string(entryPath));
+    }
+
+    MeshPayload payload;
+    std::string error;
+    if (!context->meshService->LoadFromArchive(archivePath, entryPath, payload, error)) {
         lua_pushnil(L);
         lua_pushstring(L, error.c_str());
         return 2;
