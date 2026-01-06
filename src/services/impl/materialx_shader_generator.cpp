@@ -10,11 +10,16 @@
 #include <MaterialXGenShader/Util.h>
 #include <MaterialXRender/Util.h>
 
+#include <algorithm>
+#include <cctype>
 #include <fstream>
 #include <optional>
+#include <unordered_set>
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <tuple>
+#include <vector>
 
 namespace sdl3cpp::services::impl {
 namespace mx = MaterialX;
@@ -89,27 +94,75 @@ void InsertAfterVersion(std::string& source, const std::string& block) {
     source.insert(lineEnd, block + "\n");
 }
 
-void ReplaceUnsubstitutedTokens(std::string& source) {
-    // Manually replace common MaterialX tokens that might not have been substituted
-    const std::map<std::string, std::string> tokenMap = {
-        {"$texSamplerSignature", "sampler2D tex_sampler"},
-        {"$texSamplerSampler2D", "tex_sampler"},
-        {"$closureDataConstructor", "ClosureData(closureType, L, V, N, P, occlusion)"},
-    };
-    
-    for (const auto& [token, replacement] : tokenMap) {
-        size_t pos = 0;
-        while ((pos = source.find(token, pos)) != std::string::npos) {
-            source.replace(pos, token.length(), replacement);
-            pos += replacement.length();
+std::vector<std::string> CollectMaterialXTokens(const std::string& source) {
+    std::vector<std::string> tokens;
+    std::unordered_set<std::string> seen;
+    size_t pos = 0;
+    while ((pos = source.find('$', pos)) != std::string::npos) {
+        size_t start = pos;
+        size_t end = pos + 1;
+        while (end < source.size() &&
+               std::isalnum(static_cast<unsigned char>(source[end]))) {
+            ++end;
         }
+        std::string token = end > start + 1 ? source.substr(start, end - start) : "$";
+        if (seen.insert(token).second) {
+            tokens.emplace_back(token);
+        }
+        pos = end;
     }
-    
-    // Add missing constants if not present
+    return tokens;
+}
+
+std::string JoinTokens(const std::vector<std::string>& tokens, size_t limit) {
+    const size_t count = std::min(tokens.size(), limit);
+    std::string result;
+    for (size_t i = 0; i < count; ++i) {
+        if (i > 0) {
+            result += ", ";
+        }
+        result += tokens[i];
+    }
+    return result;
+}
+
+void ApplyTokenSubstitutions(const mx::ShaderGenerator& generator,
+                             std::string& source,
+                             const std::string& stageLabel,
+                             unsigned int airyIterations,
+                             const std::shared_ptr<ILogger>& logger) {
+    auto tokensBefore = CollectMaterialXTokens(source);
+    mx::tokenSubstitution(generator.getTokenSubstitutions(), source);
+    auto tokensAfter = CollectMaterialXTokens(source);
+
+    if (logger && (!tokensBefore.empty() || !tokensAfter.empty())) {
+        logger->Trace("MaterialXShaderGenerator", "Generate",
+                      "tokenSubstitution stage=" + stageLabel +
+                          ", tokensBefore=" + std::to_string(tokensBefore.size()) +
+                          ", tokensAfter=" + std::to_string(tokensAfter.size()));
+    }
+    if (logger && !tokensAfter.empty()) {
+        constexpr size_t kTokenLimit = 8;
+        std::string message = "unresolvedTokens=" + JoinTokens(tokensAfter, kTokenLimit);
+        if (tokensAfter.size() > kTokenLimit) {
+            message += ", total=" + std::to_string(tokensAfter.size());
+        }
+        logger->Trace("MaterialXShaderGenerator", "Generate",
+                      "tokenSubstitution stage=" + stageLabel,
+                      message);
+        logger->Error("MaterialX token substitution left unresolved tokens for " +
+                      stageLabel + ": " + JoinTokens(tokensAfter, kTokenLimit));
+    }
+
+    // Add missing constants if not present.
     if (source.find("AIRY_FRESNEL_ITERATIONS") != std::string::npos &&
         source.find("#define AIRY_FRESNEL_ITERATIONS") == std::string::npos) {
-        // Insert the constant definition after the version directive
-        InsertAfterVersion(source, "#define AIRY_FRESNEL_ITERATIONS 10");
+        InsertAfterVersion(source, "#define AIRY_FRESNEL_ITERATIONS " + std::to_string(airyIterations));
+        if (logger) {
+            logger->Trace("MaterialXShaderGenerator", "Generate",
+                          "tokenSubstitution stage=" + stageLabel,
+                          "insertedDefine=AIRY_FRESNEL_ITERATIONS");
+        }
     }
 }
 
@@ -467,10 +520,10 @@ ShaderPaths MaterialXShaderGenerator::Generate(const MaterialXConfig& config,
     // Fix fragment shader inputs: convert individual layout inputs to VertexData block
     paths.fragmentSource = ConvertIndividualInputsToBlock(paths.fragmentSource);
     
-    // Replace any remaining unsubstituted tokens
-    // Some MaterialX tokens don't get properly substituted, particularly in library includes
-    ReplaceUnsubstitutedTokens(paths.vertexSource);
-    ReplaceUnsubstitutedTokens(paths.fragmentSource);
+    // Ensure any remaining MaterialX tokens are substituted using the generator's map.
+    const unsigned int airyIterations = context.getOptions().hwAiryFresnelIterations;
+    ApplyTokenSubstitutions(context.getShaderGenerator(), paths.vertexSource, "vertex", airyIterations, logger_);
+    ApplyTokenSubstitutions(context.getShaderGenerator(), paths.fragmentSource, "fragment", airyIterations, logger_);
 
     auto vertexBlock = FindVertexDataBlock(paths.vertexSource);
     auto fragmentBlock = FindVertexDataBlock(paths.fragmentSource);
