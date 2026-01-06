@@ -12,6 +12,7 @@
 #include "../../di/lifecycle.hpp"
 #include <memory>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace sdl3cpp::services::impl {
@@ -103,6 +104,9 @@ private:
     VkExtent2D renderGraphExtent_{};
     size_t renderGraphResourceCount_ = 0;
     size_t renderGraphPassCount_ = 0;
+    std::unordered_set<std::string> warnedPassesWithoutShader_;
+    std::unordered_set<std::string> warnedMissingPipelines_;
+    std::unordered_set<std::string> warnedMissingTargets_;
 
     uint32_t currentFrame_ = 0;
     uint32_t maxFramesInFlight_ = 1;  // Single frame in flight for simplicity

@@ -150,6 +150,19 @@ void RenderCommandService::RecordCommands(uint32_t imageIndex,
     renderPassInfo.pClearValues = clearValues.data();
 
     vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    VkViewport viewport{};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = static_cast<float>(extent.width);
+    viewport.height = static_cast<float>(extent.height);
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+    VkRect2D scissor{};
+    scissor.offset = {0, 0};
+    scissor.extent = extent;
+    vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
     if (commands.empty()) {
         logger_->Trace("RenderCommandService", "RecordCommands",
@@ -289,6 +302,7 @@ void RenderCommandService::RecordRenderGraph(uint32_t imageIndex,
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     vkBeginCommandBuffer(commandBuffer, &beginInfo);
+    EnsureDummyImageLayout(commandBuffer);
 
     VkPipelineLayout pipelineLayout = pipelineService_->GetPipelineLayout();
     if (pipelineLayout == VK_NULL_HANDLE) {
@@ -333,8 +347,13 @@ void RenderCommandService::RecordRenderGraph(uint32_t imageIndex,
             }
             continue;
         }
-        if (pass.shader.empty()) {
-            if (logger_) {
+        bool scenePass = IsScenePass(pass);
+        std::string shaderKey = pass.shader;
+        if (shaderKey.empty() && !scenePass) {
+            shaderKey = pass.kind;
+        }
+        if (shaderKey.empty() && !scenePass) {
+            if (logger_ && warnedPassesWithoutShader_.insert(pass.name).second) {
                 logger_->Warn("RenderCommandService: Render graph pass '" + pass.name + "' has no shader");
             }
             continue;
@@ -372,7 +391,7 @@ void RenderCommandService::RecordRenderGraph(uint32_t imageIndex,
         } else {
             target = FindRenderTarget(outputName);
             if (!target || target->framebuffer == VK_NULL_HANDLE) {
-                if (logger_) {
+                if (logger_ && warnedMissingTargets_.insert("output:" + outputName).second) {
                     logger_->Warn("RenderCommandService: Render target not found for '" + outputName + "'");
                 }
                 continue;
@@ -386,7 +405,7 @@ void RenderCommandService::RecordRenderGraph(uint32_t imageIndex,
                 TransitionImageLayout(commandBuffer, *depthTarget,
                                       VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
                                       VK_IMAGE_ASPECT_DEPTH_BIT);
-            } else if (logger_) {
+            } else if (logger_ && warnedMissingTargets_.insert("depth:" + outputName).second) {
                 logger_->Warn("RenderCommandService: Depth target not found for '" + outputName + "'");
             }
         }
@@ -398,23 +417,36 @@ void RenderCommandService::RecordRenderGraph(uint32_t imageIndex,
         renderPassInfo.renderArea.offset = {0, 0};
         renderPassInfo.renderArea.extent = targetExtent;
 
-        const auto& clearValues = IsScenePass(pass) ? sceneClear : postClear;
+        const auto& clearValues = scenePass ? sceneClear : postClear;
         renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
         renderPassInfo.pClearValues = clearValues.data();
 
         vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-        bool scenePass = IsScenePass(pass);
+        VkViewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = static_cast<float>(targetExtent.width);
+        viewport.height = static_cast<float>(targetExtent.height);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+        VkRect2D scissor{};
+        scissor.offset = {0, 0};
+        scissor.extent = targetExtent;
+        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
         if (!scenePass) {
-            if (!pipelineService_->HasShader(pass.shader)) {
-                if (logger_) {
-                    logger_->Warn("RenderCommandService: Missing pipeline for shader key: " + pass.shader);
+            if (!pipelineService_->HasShader(shaderKey)) {
+                if (logger_ && warnedMissingPipelines_.insert(shaderKey).second) {
+                    logger_->Warn("RenderCommandService: Missing pipeline for shader key: " + shaderKey);
                 }
                 vkCmdEndRenderPass(commandBuffer);
                 continue;
             }
 
-            VkPipeline pipeline = pipelineService_->GetPipeline(pass.shader);
+            VkPipeline pipeline = pipelineService_->GetPipeline(shaderKey);
             vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
         }
 
@@ -503,12 +535,12 @@ void RenderCommandService::RecordRenderGraph(uint32_t imageIndex,
             VkImageView inputView = VK_NULL_HANDLE;
             if (inputName.empty()) {
                 hasInput = false;
-                if (logger_) {
+                if (logger_ && warnedMissingTargets_.insert("input:" + pass.name).second) {
                     logger_->Warn("RenderCommandService: Pass '" + pass.name + "' missing input");
                 }
             } else if (inputName == "swapchain") {
                 hasInput = false;
-                if (logger_) {
+                if (logger_ && warnedMissingTargets_.insert("input:" + pass.name + ":swapchain").second) {
                     logger_->Warn("RenderCommandService: Pass '" + pass.name +
                                   "' cannot sample from swapchain output");
                 }
@@ -520,7 +552,7 @@ void RenderCommandService::RecordRenderGraph(uint32_t imageIndex,
                     inputView = inputTarget->view;
                 } else {
                     hasInput = false;
-                    if (logger_) {
+                    if (logger_ && warnedMissingTargets_.insert("input:" + inputName).second) {
                         logger_->Warn("RenderCommandService: Input target not found for '" + inputName + "'");
                     }
                 }
@@ -1021,28 +1053,25 @@ void RenderCommandService::EnsureRenderGraphResources(const RenderGraphDefinitio
     }
 
     for (const auto& resource : graph.resources) {
-        if (resource.type != "color" || resource.name == "swapchain") {
-            continue;
-        }
-        if (resource.layers > 1 || resource.mips > 1) {
-            if (logger_) {
-                logger_->Warn("RenderCommandService: Skipping layered/mipped resource '" + resource.name + "'");
-            }
+        if (resource.name == "swapchain") {
             continue;
         }
 
         VkExtent2D targetExtent = ResolveExtent(resource);
-        if (targetExtent.width != extent.width || targetExtent.height != extent.height) {
-            if (logger_) {
-                logger_->Warn("RenderCommandService: Skipping resource '" + resource.name +
-                              "' due to unsupported extent");
-            }
-            continue;
+        if ((resource.layers > 1 || resource.mips > 1) && logger_) {
+            logger_->Warn("RenderCommandService: Resource '" + resource.name +
+                          "' uses layers/mips; allocating a single-layer image");
         }
         VkFormat targetFormat = ResolveColorFormat(resource.format);
         if (targetFormat != colorFormat && logger_) {
             logger_->Trace("RenderCommandService", "EnsureRenderGraphResources",
                            "Resource '" + resource.name + "' format overridden to swapchain format");
+        }
+        if (logger_) {
+            logger_->Trace("RenderCommandService", "EnsureRenderGraphResources",
+                           "Creating resource '" + resource.name + "' type=" + resource.type +
+                           ", extent=" + std::to_string(targetExtent.width) + "x" +
+                           std::to_string(targetExtent.height));
         }
 
         RenderGraphImage color{};
@@ -1119,6 +1148,10 @@ void RenderCommandService::CleanupRenderGraphResources() {
         vkDestroyRenderPass(device, offscreenRenderPass_, nullptr);
         offscreenRenderPass_ = VK_NULL_HANDLE;
     }
+
+    warnedPassesWithoutShader_.clear();
+    warnedMissingPipelines_.clear();
+    warnedMissingTargets_.clear();
 
     renderGraphResourceCount_ = 0;
     renderGraphPassCount_ = 0;
@@ -1220,24 +1253,34 @@ void main() {
 
     bool registered = false;
     for (const auto& pass : graph.passes) {
-        if (pass.shader.empty()) {
-            continue;
-        }
         if (IsScenePass(pass)) {
             continue;
         }
-        if (pipelineService_->HasShader(pass.shader)) {
+
+        std::string shaderKey = pass.shader;
+        if (shaderKey.empty()) {
+            shaderKey = pass.kind;
+        }
+        if (shaderKey.empty()) {
+            continue;
+        }
+        if (pipelineService_->HasShader(shaderKey)) {
             continue;
         }
 
         ShaderPaths paths{};
         paths.vertexSource = kFullscreenVertex;
-        if (pass.shader == "tonemap") {
+        if (shaderKey == "tonemap") {
             paths.fragmentSource = kTonemapFragment;
         } else {
             paths.fragmentSource = kPostProcessFragment;
         }
-        pipelineService_->RegisterShader(pass.shader, paths);
+        if (logger_) {
+            logger_->Trace("RenderCommandService", "RegisterRenderGraphShaders",
+                           "Registering fallback shader for pass=" + pass.name +
+                           ", key=" + shaderKey);
+        }
+        pipelineService_->RegisterShader(shaderKey, paths);
         registered = true;
     }
 
@@ -1394,7 +1437,13 @@ void RenderCommandService::TransitionImageLayout(VkCommandBuffer commandBuffer,
 }
 
 bool RenderCommandService::IsScenePass(const RenderGraphPass& pass) const {
-    return pass.kind == "gbuffer" || pass.kind == "forward_plus" || pass.kind == "transparent";
+    return pass.kind == "gbuffer" ||
+           pass.kind == "forward_plus" ||
+           pass.kind == "transparent" ||
+           pass.kind == "depth_prepass" ||
+           pass.kind == "shadow_csm" ||
+           pass.kind == "shadow_spot" ||
+           pass.kind == "shadow_point";
 }
 
 bool RenderCommandService::IsPassEnabled(const RenderGraphPass& pass) const {
