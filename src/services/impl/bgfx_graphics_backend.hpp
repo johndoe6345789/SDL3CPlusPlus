@@ -113,6 +113,7 @@ private:
     bool initialized_ = false;
     bgfx::ViewId viewId_ = 0;
     PlatformHandleInfo platformHandleInfo_{};
+    bgfx::PlatformData platformData_{};
     bool loggedInitFailureDiagnostics_ = false;
 };
 

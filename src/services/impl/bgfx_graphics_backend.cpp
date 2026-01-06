@@ -298,7 +298,8 @@ BgfxGraphicsBackend::~BgfxGraphicsBackend() {
 }
 
 void BgfxGraphicsBackend::SetupPlatformData(void* window) {
-    bgfx::PlatformData pd{};
+    platformData_ = bgfx::PlatformData{};
+    auto& pd = platformData_;
     platformHandleInfo_ = PlatformHandleInfo{};
     platformHandleInfo_.handleType = bgfx::NativeWindowHandleType::Default;
     SDL_Window* sdlWindow = static_cast<SDL_Window*>(window);
@@ -484,6 +485,13 @@ void BgfxGraphicsBackend::Initialize(void* window, const GraphicsConfig& config)
     init.resolution.width = viewportWidth_;
     init.resolution.height = viewportHeight_;
     init.resolution.reset = BGFX_RESET_VSYNC;
+    init.platformData = platformData_;
+    if (logger_) {
+        logger_->Trace("BgfxGraphicsBackend", "Initialize",
+                       "initPlatformData.nwh=" + std::to_string(reinterpret_cast<uintptr_t>(init.platformData.nwh)) +
+                       ", initPlatformData.ndt=" + std::to_string(reinterpret_cast<uintptr_t>(init.platformData.ndt)) +
+                       ", initPlatformData.type=" + std::string(HandleTypeName(init.platformData.type)));
+    }
 
     std::vector<bgfx::RendererType::Enum> candidates;
     auto addCandidate = [&candidates](bgfx::RendererType::Enum type) {
