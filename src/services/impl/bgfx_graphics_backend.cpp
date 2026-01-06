@@ -16,6 +16,7 @@
 #include <glm/gtc/matrix_inverse.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <iterator>
+#include <optional>
 #include <string>
 #include <stdexcept>
 #include <vector>
@@ -54,15 +55,41 @@ void SetUniformIfValid(bgfx::UniformHandle handle, const void* data, uint16_t co
     }
 }
 
-bgfx::RendererType::Enum RendererFromString(const std::string& value) {
+bool TryParseRendererType(const std::string& value, bgfx::RendererType::Enum& out) {
     const std::string lower = ToLower(value);
-    if (lower == "vulkan") {
-        return bgfx::RendererType::Vulkan;
-    }
     if (lower == "auto") {
-        return bgfx::RendererType::Count;
+        out = bgfx::RendererType::Count;
+        return true;
     }
-    return bgfx::RendererType::Vulkan;
+    if (lower == "vulkan") {
+        out = bgfx::RendererType::Vulkan;
+        return true;
+    }
+    if (lower == "opengl") {
+        out = bgfx::RendererType::OpenGL;
+        return true;
+    }
+    if (lower == "opengles" || lower == "opengles2") {
+        out = bgfx::RendererType::OpenGLES;
+        return true;
+    }
+    if (lower == "direct3d11" || lower == "d3d11") {
+        out = bgfx::RendererType::Direct3D11;
+        return true;
+    }
+    if (lower == "direct3d12" || lower == "d3d12") {
+        out = bgfx::RendererType::Direct3D12;
+        return true;
+    }
+    if (lower == "metal") {
+        out = bgfx::RendererType::Metal;
+        return true;
+    }
+    if (lower == "noop") {
+        out = bgfx::RendererType::Noop;
+        return true;
+    }
+    return false;
 }
 
 std::string RendererTypeName(bgfx::RendererType::Enum type) {
@@ -100,15 +127,148 @@ std::string JoinRendererNames(const std::vector<bgfx::RendererType::Enum>& rende
     return result;
 }
 
+const char* HandleTypeName(bgfx::NativeWindowHandleType::Enum type) {
+    switch (type) {
+        case bgfx::NativeWindowHandleType::Default:
+            return "default";
+        case bgfx::NativeWindowHandleType::Wayland:
+            return "wayland";
+        case bgfx::NativeWindowHandleType::Count:
+            return "count";
+        default:
+            return "unknown";
+    }
+}
+
+const char* RendererConfigName(bgfx::RendererType::Enum type) {
+    switch (type) {
+        case bgfx::RendererType::Vulkan:
+            return "vulkan";
+        case bgfx::RendererType::OpenGL:
+            return "opengl";
+        case bgfx::RendererType::OpenGLES:
+            return "opengles";
+        case bgfx::RendererType::Direct3D11:
+            return "direct3d11";
+        case bgfx::RendererType::Direct3D12:
+            return "direct3d12";
+        case bgfx::RendererType::Metal:
+            return "metal";
+        case bgfx::RendererType::Noop:
+            return "noop";
+        case bgfx::RendererType::Count:
+        default:
+            return "auto";
+    }
+}
+
+bool IsNoopRenderer(bgfx::RendererType::Enum type) {
+    return type == bgfx::RendererType::Noop;
+}
+
+bool ContainsRenderer(const std::vector<bgfx::RendererType::Enum>& renderers,
+                      bgfx::RendererType::Enum type) {
+    return std::find(renderers.begin(), renderers.end(), type) != renderers.end();
+}
+
+bool IsRendererAllowedOnPlatform(bgfx::RendererType::Enum type, const std::string& platformName) {
+    if (type == bgfx::RendererType::Count || type == bgfx::RendererType::Noop) {
+        return true;
+    }
+    const std::string platformLower = ToLower(platformName);
+    if (platformLower.find("windows") != std::string::npos) {
+        return type == bgfx::RendererType::Direct3D11 ||
+               type == bgfx::RendererType::Direct3D12 ||
+               type == bgfx::RendererType::Vulkan ||
+               type == bgfx::RendererType::OpenGL ||
+               type == bgfx::RendererType::OpenGLES;
+    }
+    if (platformLower.find("mac") != std::string::npos ||
+        platformLower.find("darwin") != std::string::npos) {
+        return type == bgfx::RendererType::Metal ||
+               type == bgfx::RendererType::OpenGL ||
+               type == bgfx::RendererType::Vulkan;
+    }
+    return type == bgfx::RendererType::Vulkan ||
+           type == bgfx::RendererType::OpenGL ||
+           type == bgfx::RendererType::OpenGLES;
+}
+
+void AddRendererIfSupported(std::vector<bgfx::RendererType::Enum>& ordered,
+                            const std::vector<bgfx::RendererType::Enum>& supported,
+                            bgfx::RendererType::Enum type) {
+    if (IsNoopRenderer(type) || type == bgfx::RendererType::Count) {
+        return;
+    }
+    if (!ContainsRenderer(supported, type)) {
+        return;
+    }
+    if (!ContainsRenderer(ordered, type)) {
+        ordered.push_back(type);
+    }
+}
+
+std::vector<bgfx::RendererType::Enum> BuildPreferredRenderers(
+    const std::vector<bgfx::RendererType::Enum>& supportedRenderers,
+    const std::string& platformName,
+    const std::string& videoDriverName) {
+    std::vector<bgfx::RendererType::Enum> preferred;
+    const std::string platformLower = ToLower(platformName);
+    const std::string videoLower = ToLower(videoDriverName);
+
+    if (platformLower.find("windows") != std::string::npos) {
+        AddRendererIfSupported(preferred, supportedRenderers, bgfx::RendererType::Direct3D12);
+        AddRendererIfSupported(preferred, supportedRenderers, bgfx::RendererType::Direct3D11);
+        AddRendererIfSupported(preferred, supportedRenderers, bgfx::RendererType::Vulkan);
+        AddRendererIfSupported(preferred, supportedRenderers, bgfx::RendererType::OpenGL);
+    } else if (platformLower.find("mac") != std::string::npos ||
+               platformLower.find("darwin") != std::string::npos) {
+        AddRendererIfSupported(preferred, supportedRenderers, bgfx::RendererType::Metal);
+        AddRendererIfSupported(preferred, supportedRenderers, bgfx::RendererType::OpenGL);
+        AddRendererIfSupported(preferred, supportedRenderers, bgfx::RendererType::Vulkan);
+    } else {
+        const bool waylandOrX11 = (videoLower == "wayland") || (videoLower == "x11");
+        const bool kmsdrm = (videoLower == "kmsdrm");
+        if (waylandOrX11 || kmsdrm) {
+            AddRendererIfSupported(preferred, supportedRenderers, bgfx::RendererType::Vulkan);
+            AddRendererIfSupported(preferred, supportedRenderers, bgfx::RendererType::OpenGL);
+            AddRendererIfSupported(preferred, supportedRenderers, bgfx::RendererType::OpenGLES);
+        } else {
+            AddRendererIfSupported(preferred, supportedRenderers, bgfx::RendererType::Vulkan);
+            AddRendererIfSupported(preferred, supportedRenderers, bgfx::RendererType::OpenGL);
+            AddRendererIfSupported(preferred, supportedRenderers, bgfx::RendererType::OpenGLES);
+        }
+    }
+
+    return preferred;
+}
+
+std::optional<bgfx::RendererType::Enum> RecommendFallbackRenderer(
+    bgfx::RendererType::Enum requested,
+    const std::vector<bgfx::RendererType::Enum>& supportedRenderers,
+    const std::string& platformName,
+    const std::string& videoDriverName) {
+    const auto preferred = BuildPreferredRenderers(supportedRenderers, platformName, videoDriverName);
+    for (bgfx::RendererType::Enum type : preferred) {
+        if (type != requested) {
+            return type;
+        }
+    }
+    return std::nullopt;
+}
+
 }  // namespace
 
 BgfxGraphicsBackend::BgfxGraphicsBackend(std::shared_ptr<IConfigService> configService,
+                                         std::shared_ptr<IPlatformService> platformService,
                                          std::shared_ptr<ILogger> logger)
     : configService_(std::move(configService)),
+      platformService_(std::move(platformService)),
       logger_(std::move(logger)) {
     if (logger_) {
         logger_->Trace("BgfxGraphicsBackend", "BgfxGraphicsBackend",
-                       "configService=" + std::string(configService_ ? "set" : "null"));
+                       "configService=" + std::string(configService_ ? "set" : "null") +
+                       ", platformService=" + std::string(platformService_ ? "set" : "null"));
     }
     vertexLayout_.begin()
         .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
@@ -139,8 +299,15 @@ BgfxGraphicsBackend::~BgfxGraphicsBackend() {
 
 void BgfxGraphicsBackend::SetupPlatformData(void* window) {
     bgfx::PlatformData pd{};
+    platformHandleInfo_ = PlatformHandleInfo{};
+    platformHandleInfo_.handleType = bgfx::NativeWindowHandleType::Default;
     SDL_Window* sdlWindow = static_cast<SDL_Window*>(window);
     if (!sdlWindow) {
+        if (logger_) {
+            logger_->Trace("BgfxGraphicsBackend", "SetupPlatformData", "windowIsNull=true");
+        }
+        platformHandleInfo_.hasWindowHandle = false;
+        platformHandleInfo_.hasDisplayHandle = false;
         bgfx::setPlatformData(pd);
         return;
     }
@@ -153,20 +320,45 @@ void BgfxGraphicsBackend::SetupPlatformData(void* window) {
 #elif defined(__linux__)
     void* wlDisplay = SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WAYLAND_DISPLAY_POINTER, nullptr);
     void* wlSurface = SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WAYLAND_SURFACE_POINTER, nullptr);
-    if (wlDisplay && wlSurface) {
+    void* x11Display = SDL_GetPointerProperty(props, SDL_PROP_WINDOW_X11_DISPLAY_POINTER, nullptr);
+    Sint64 x11Window = SDL_GetNumberProperty(props, SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0);
+    const bool hasWayland = wlDisplay && wlSurface;
+    const bool hasX11 = x11Display && x11Window != 0;
+    platformHandleInfo_.hasWayland = hasWayland;
+    platformHandleInfo_.hasX11 = hasX11;
+    if (logger_) {
+        logger_->Trace("BgfxGraphicsBackend", "SetupPlatformData",
+                       "waylandAvailable=" + std::string(hasWayland ? "true" : "false") +
+                       ", x11Available=" + std::string(hasX11 ? "true" : "false"));
+    }
+    if (hasWayland) {
         pd.ndt = wlDisplay;
         pd.nwh = wlSurface;
-    } else {
-        void* x11Display = SDL_GetPointerProperty(props, SDL_PROP_WINDOW_X11_DISPLAY_POINTER, nullptr);
-        Sint64 x11Window = SDL_GetNumberProperty(props, SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0);
-        if (x11Display && x11Window != 0) {
-            pd.ndt = x11Display;
-            pd.nwh = reinterpret_cast<void*>(static_cast<uintptr_t>(x11Window));
+        pd.type = bgfx::NativeWindowHandleType::Wayland;
+        platformHandleInfo_.handleType = bgfx::NativeWindowHandleType::Wayland;
+        if (logger_) {
+            logger_->Trace("BgfxGraphicsBackend", "SetupPlatformData", "selectedHandleType=Wayland");
+        }
+    } else if (hasX11) {
+        pd.ndt = x11Display;
+        pd.nwh = reinterpret_cast<void*>(static_cast<uintptr_t>(x11Window));
+        pd.type = bgfx::NativeWindowHandleType::Default;
+        platformHandleInfo_.handleType = bgfx::NativeWindowHandleType::Default;
+        if (logger_) {
+            logger_->Trace("BgfxGraphicsBackend", "SetupPlatformData", "selectedHandleType=X11");
         }
     }
 #else
     pd.nwh = SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
 #endif
+    platformHandleInfo_.hasWindowHandle = pd.nwh != nullptr;
+    platformHandleInfo_.hasDisplayHandle = pd.ndt != nullptr;
+    if (logger_) {
+        logger_->Trace("BgfxGraphicsBackend", "SetupPlatformData",
+                       "nwh=" + std::to_string(reinterpret_cast<uintptr_t>(pd.nwh)) +
+                       ", ndt=" + std::to_string(reinterpret_cast<uintptr_t>(pd.ndt)) +
+                       ", handleType=" + std::string(HandleTypeName(platformHandleInfo_.handleType)));
+    }
     bgfx::setPlatformData(pd);
 }
 
@@ -175,7 +367,67 @@ bgfx::RendererType::Enum BgfxGraphicsBackend::ResolveRendererType() const {
         return bgfx::RendererType::Vulkan;
     }
     const auto& config = configService_->GetBgfxConfig();
-    return RendererFromString(config.renderer);
+    bgfx::RendererType::Enum resolved = bgfx::RendererType::Vulkan;
+    const bool parsed = TryParseRendererType(config.renderer, resolved);
+    if (logger_) {
+        logger_->Trace("BgfxGraphicsBackend", "ResolveRendererType",
+                       "renderer=" + config.renderer +
+                       ", resolved=" + RendererTypeName(resolved) +
+                       ", parsed=" + std::string(parsed ? "true" : "false"));
+    }
+    if (!parsed && logger_) {
+        logger_->Warn("BgfxGraphicsBackend::ResolveRendererType: Unknown renderer '" +
+                      config.renderer + "', defaulting to Vulkan");
+    }
+    return resolved;
+}
+
+void BgfxGraphicsBackend::LogRendererFailureDetails(
+    bgfx::RendererType::Enum renderer,
+    const std::vector<bgfx::RendererType::Enum>& supportedRenderers,
+    const std::string& platformName,
+    const std::string& videoDriverName) {
+    if (!logger_) {
+        return;
+    }
+
+    logger_->Warn("BgfxGraphicsBackend::Initialize: Renderer " +
+                  RendererTypeName(renderer) + " failed (platform=" +
+                  platformName + ", videoDriver=" + videoDriverName +
+                  ", handleType=" +
+                  std::string(HandleTypeName(platformHandleInfo_.handleType)) +
+                  ", windowHandle=" +
+                  std::string(platformHandleInfo_.hasWindowHandle ? "set" : "null") +
+                  ", displayHandle=" +
+                  std::string(platformHandleInfo_.hasDisplayHandle ? "set" : "null") +
+                  ", supportedRenderers=" + JoinRendererNames(supportedRenderers) + ")");
+
+    const auto fallback = RecommendFallbackRenderer(renderer, supportedRenderers,
+                                                   platformName, videoDriverName);
+    if (fallback.has_value()) {
+        logger_->Warn("BgfxGraphicsBackend::Initialize: Recommended fallback renderer=" +
+                      RendererTypeName(fallback.value()) +
+                      " (set bgfx.renderer=" + std::string(RendererConfigName(fallback.value())) + ")");
+    }
+
+    if (renderer == bgfx::RendererType::Vulkan) {
+        if (!platformHandleInfo_.hasWindowHandle) {
+            logger_->Warn("BgfxGraphicsBackend::Initialize: Vulkan requires a native window handle");
+        }
+        if (videoDriverName == "wayland" && !platformHandleInfo_.hasWayland) {
+            logger_->Warn("BgfxGraphicsBackend::Initialize: SDL reports Wayland, but no Wayland "
+                          "window handle was provided");
+        }
+        if (videoDriverName == "x11" && !platformHandleInfo_.hasX11) {
+            logger_->Warn("BgfxGraphicsBackend::Initialize: SDL reports X11, but no X11 "
+                          "window handle was provided");
+        }
+    }
+
+    if (platformService_ && !loggedInitFailureDiagnostics_) {
+        platformService_->LogSystemInfo();
+        loggedInitFailureDiagnostics_ = true;
+    }
 }
 
 void BgfxGraphicsBackend::Initialize(void* window, const GraphicsConfig& config) {
@@ -200,10 +452,32 @@ void BgfxGraphicsBackend::Initialize(void* window, const GraphicsConfig& config)
 
     const auto requestedRenderer = ResolveRendererType();
     const auto supportedRenderers = GetSupportedRenderers();
+    const std::string platformName = platformService_
+        ? platformService_->GetPlatformName()
+        : "unknown";
+    const std::string videoDriverName = platformService_
+        ? platformService_->GetCurrentVideoDriverName()
+        : "unknown";
     if (logger_) {
         logger_->Trace("BgfxGraphicsBackend", "Initialize",
                        "requestedRenderer=" + RendererTypeName(requestedRenderer) +
-                       ", supportedRenderers=" + JoinRendererNames(supportedRenderers));
+                       ", supportedRenderers=" + JoinRendererNames(supportedRenderers) +
+                       ", platform=" + platformName +
+                       ", videoDriver=" + videoDriverName);
+    }
+    if (requestedRenderer != bgfx::RendererType::Count &&
+        !ContainsRenderer(supportedRenderers, requestedRenderer) &&
+        logger_) {
+        logger_->Warn("BgfxGraphicsBackend::Initialize: Requested renderer=" +
+                      RendererTypeName(requestedRenderer) +
+                      " is not in the supported renderers list");
+    }
+    if (requestedRenderer != bgfx::RendererType::Count &&
+        !IsRendererAllowedOnPlatform(requestedRenderer, platformName) &&
+        logger_) {
+        logger_->Warn("BgfxGraphicsBackend::Initialize: Requested renderer=" +
+                      RendererTypeName(requestedRenderer) +
+                      " is not recommended for platform=" + platformName);
     }
 
     bgfx::Init init{};
@@ -218,17 +492,38 @@ void BgfxGraphicsBackend::Initialize(void* window, const GraphicsConfig& config)
         }
     };
 
-    if (requestedRenderer == bgfx::RendererType::Count) {
-        addCandidate(bgfx::RendererType::Count);
-    } else {
+    const auto preferredRenderers =
+        BuildPreferredRenderers(supportedRenderers, platformName, videoDriverName);
+    if (logger_) {
+        logger_->Trace("BgfxGraphicsBackend", "Initialize",
+                       "preferredRenderers=" + JoinRendererNames(preferredRenderers));
+    }
+
+    if (requestedRenderer != bgfx::RendererType::Count) {
         addCandidate(requestedRenderer);
     }
-    for (bgfx::RendererType::Enum renderer : supportedRenderers) {
+    for (bgfx::RendererType::Enum renderer : preferredRenderers) {
         addCandidate(renderer);
     }
+    for (bgfx::RendererType::Enum renderer : supportedRenderers) {
+        if (!IsNoopRenderer(renderer) && renderer != bgfx::RendererType::Count &&
+            IsRendererAllowedOnPlatform(renderer, platformName)) {
+            addCandidate(renderer);
+        }
+    }
     addCandidate(bgfx::RendererType::Count);
+    if (ContainsRenderer(supportedRenderers, bgfx::RendererType::Noop) ||
+        requestedRenderer == bgfx::RendererType::Noop) {
+        addCandidate(bgfx::RendererType::Noop);
+    }
+    if (logger_) {
+        logger_->Trace("BgfxGraphicsBackend", "Initialize",
+                       "candidateRenderers=" + JoinRendererNames(candidates));
+    }
 
     bool initialized = false;
+    bool requestedFailed = false;
+    const bool requestedExplicit = requestedRenderer != bgfx::RendererType::Count;
     for (bgfx::RendererType::Enum renderer : candidates) {
         init.type = renderer;
         if (logger_) {
@@ -243,14 +538,30 @@ void BgfxGraphicsBackend::Initialize(void* window, const GraphicsConfig& config)
             logger_->Warn("BgfxGraphicsBackend::Initialize: bgfx init failed for renderer=" +
                           RendererTypeName(renderer));
         }
+        if (renderer == requestedRenderer && !requestedFailed) {
+            requestedFailed = true;
+            LogRendererFailureDetails(renderer, supportedRenderers, platformName, videoDriverName);
+        }
     }
 
     if (!initialized) {
+        if (platformService_ && !loggedInitFailureDiagnostics_) {
+            platformService_->LogSystemInfo();
+            loggedInitFailureDiagnostics_ = true;
+        }
         throw std::runtime_error("Failed to initialize bgfx");
     }
     if (logger_) {
         logger_->Trace("BgfxGraphicsBackend", "Initialize",
                        "selectedRenderer=" + RendererTypeName(bgfx::getRendererType()));
+    }
+    if (requestedExplicit && bgfx::getRendererType() != requestedRenderer && logger_) {
+        logger_->Warn("BgfxGraphicsBackend::Initialize: Requested renderer=" +
+                      RendererTypeName(requestedRenderer) + ", using=" +
+                      RendererTypeName(bgfx::getRendererType()));
+    }
+    if (bgfx::getRendererType() == bgfx::RendererType::Noop && logger_) {
+        logger_->Warn("BgfxGraphicsBackend::Initialize: Noop renderer selected; rendering disabled");
     }
 
     bgfx::setViewClear(viewId_, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x1f1f1fff, 1.0f, 0);

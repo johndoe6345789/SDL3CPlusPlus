@@ -13,6 +13,11 @@ public:
 
     std::optional<std::filesystem::path> GetUserConfigDirectory() const override;
     std::string GetPlatformError() const override;
+    std::string GetPlatformName() const override;
+    std::string GetCurrentVideoDriverName() const override;
+    std::vector<std::string> GetAvailableVideoDrivers() const override;
+    std::vector<std::string> GetAvailableRenderDrivers() const override;
+    void LogSystemInfo() const override;
 
 private:
     std::shared_ptr<ILogger> logger_;

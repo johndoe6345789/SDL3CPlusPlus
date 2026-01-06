@@ -3,6 +3,7 @@
 #include "../interfaces/i_config_service.hpp"
 #include "../interfaces/i_graphics_backend.hpp"
 #include "../interfaces/i_logger.hpp"
+#include "../interfaces/i_platform_service.hpp"
 #include "../../core/vertex.hpp"
 #include <bgfx/bgfx.h>
 #include <array>
@@ -15,6 +16,7 @@ namespace sdl3cpp::services::impl {
 class BgfxGraphicsBackend : public IGraphicsBackend {
 public:
     BgfxGraphicsBackend(std::shared_ptr<IConfigService> configService,
+                        std::shared_ptr<IPlatformService> platformService,
                         std::shared_ptr<ILogger> logger);
     ~BgfxGraphicsBackend() override;
 
@@ -72,8 +74,20 @@ private:
         bgfx::UniformHandle viewPosition = BGFX_INVALID_HANDLE;
     };
 
+    struct PlatformHandleInfo {
+        bool hasWayland = false;
+        bool hasX11 = false;
+        bool hasWindowHandle = false;
+        bool hasDisplayHandle = false;
+        bgfx::NativeWindowHandleType::Enum handleType = bgfx::NativeWindowHandleType::Default;
+    };
+
     void SetupPlatformData(void* window);
     bgfx::RendererType::Enum ResolveRendererType() const;
+    void LogRendererFailureDetails(bgfx::RendererType::Enum renderer,
+                                   const std::vector<bgfx::RendererType::Enum>& supportedRenderers,
+                                   const std::string& platformName,
+                                   const std::string& videoDriverName);
     std::vector<uint8_t> ReadShaderSource(const std::string& path,
                                           const std::string& source) const;
     bgfx::ShaderHandle CreateShader(const std::string& label,
@@ -86,6 +100,7 @@ private:
     void DestroyBuffers();
 
     std::shared_ptr<IConfigService> configService_;
+    std::shared_ptr<IPlatformService> platformService_;
     std::shared_ptr<ILogger> logger_;
     bgfx::VertexLayout vertexLayout_;
     std::unordered_map<GraphicsPipelineHandle, std::unique_ptr<PipelineEntry>> pipelines_;
@@ -97,6 +112,8 @@ private:
     uint32_t viewportHeight_ = 0;
     bool initialized_ = false;
     bgfx::ViewId viewId_ = 0;
+    PlatformHandleInfo platformHandleInfo_{};
+    bool loggedInitFailureDiagnostics_ = false;
 };
 
 }  // namespace sdl3cpp::services::impl

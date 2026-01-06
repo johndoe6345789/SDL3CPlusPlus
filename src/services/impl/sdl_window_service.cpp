@@ -174,6 +174,10 @@ void SdlWindowService::CreateWindow(const WindowConfig& config) {
         }
     }
 
+    if (platformService_) {
+        platformService_->LogSystemInfo();
+    }
+
     uint32_t flags = 0;
     if (config.resizable) {
         flags |= SDL_WINDOW_RESIZABLE;

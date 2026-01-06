@@ -271,6 +271,7 @@ void ServiceBasedApp::RegisterServices() {
 
     auto graphicsBackend = std::make_shared<services::impl::BgfxGraphicsBackend>(
         registry_.GetService<services::IConfigService>(),
+        registry_.GetService<services::IPlatformService>(),
         registry_.GetService<services::ILogger>());
 
     // Graphics service (facade)
