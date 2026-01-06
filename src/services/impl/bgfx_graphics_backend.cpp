@@ -18,6 +18,7 @@
 #include <iterator>
 #include <string>
 #include <stdexcept>
+#include <vector>
 
 namespace sdl3cpp::services::impl {
 namespace {
@@ -62,6 +63,41 @@ bgfx::RendererType::Enum RendererFromString(const std::string& value) {
         return bgfx::RendererType::Count;
     }
     return bgfx::RendererType::Vulkan;
+}
+
+std::string RendererTypeName(bgfx::RendererType::Enum type) {
+    if (type == bgfx::RendererType::Count) {
+        return "auto";
+    }
+    const char* name = bgfx::getRendererName(type);
+    if (!name || name[0] == '\0') {
+        return "unknown";
+    }
+    return name;
+}
+
+std::vector<bgfx::RendererType::Enum> GetSupportedRenderers() {
+    const uint8_t count = bgfx::getSupportedRenderers();
+    std::vector<bgfx::RendererType::Enum> renderers;
+    renderers.resize(count);
+    if (count > 0) {
+        bgfx::getSupportedRenderers(count, renderers.data());
+    }
+    return renderers;
+}
+
+std::string JoinRendererNames(const std::vector<bgfx::RendererType::Enum>& renderers) {
+    if (renderers.empty()) {
+        return "none";
+    }
+    std::string result;
+    for (size_t i = 0; i < renderers.size(); ++i) {
+        if (i > 0) {
+            result += ", ";
+        }
+        result += RendererTypeName(renderers[i]);
+    }
+    return result;
 }
 
 }  // namespace
@@ -162,14 +198,59 @@ void BgfxGraphicsBackend::Initialize(void* window, const GraphicsConfig& config)
 
     SetupPlatformData(window);
 
+    const auto requestedRenderer = ResolveRendererType();
+    const auto supportedRenderers = GetSupportedRenderers();
+    if (logger_) {
+        logger_->Trace("BgfxGraphicsBackend", "Initialize",
+                       "requestedRenderer=" + RendererTypeName(requestedRenderer) +
+                       ", supportedRenderers=" + JoinRendererNames(supportedRenderers));
+    }
+
     bgfx::Init init{};
-    init.type = ResolveRendererType();
     init.resolution.width = viewportWidth_;
     init.resolution.height = viewportHeight_;
     init.resolution.reset = BGFX_RESET_VSYNC;
 
-    if (!bgfx::init(init)) {
+    std::vector<bgfx::RendererType::Enum> candidates;
+    auto addCandidate = [&candidates](bgfx::RendererType::Enum type) {
+        if (std::find(candidates.begin(), candidates.end(), type) == candidates.end()) {
+            candidates.push_back(type);
+        }
+    };
+
+    if (requestedRenderer == bgfx::RendererType::Count) {
+        addCandidate(bgfx::RendererType::Count);
+    } else {
+        addCandidate(requestedRenderer);
+    }
+    for (bgfx::RendererType::Enum renderer : supportedRenderers) {
+        addCandidate(renderer);
+    }
+    addCandidate(bgfx::RendererType::Count);
+
+    bool initialized = false;
+    for (bgfx::RendererType::Enum renderer : candidates) {
+        init.type = renderer;
+        if (logger_) {
+            logger_->Trace("BgfxGraphicsBackend", "Initialize",
+                           "attemptingRenderer=" + RendererTypeName(renderer));
+        }
+        if (bgfx::init(init)) {
+            initialized = true;
+            break;
+        }
+        if (logger_) {
+            logger_->Warn("BgfxGraphicsBackend::Initialize: bgfx init failed for renderer=" +
+                          RendererTypeName(renderer));
+        }
+    }
+
+    if (!initialized) {
         throw std::runtime_error("Failed to initialize bgfx");
+    }
+    if (logger_) {
+        logger_->Trace("BgfxGraphicsBackend", "Initialize",
+                       "selectedRenderer=" + RendererTypeName(bgfx::getRendererType()));
     }
 
     bgfx::setViewClear(viewId_, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x1f1f1fff, 1.0f, 0);
