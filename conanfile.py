@@ -2,10 +2,6 @@ from conan import ConanFile
 from conan.tools.cmake import cmake_layout
 
 class SDL3CppConan(ConanFile):
-    requires = (
-        "wayland/1.23.92"
-    )
-
     name = "sdl3cpp"
     version = "0.1"
     settings = "os", "arch", "compiler", "build_type"
