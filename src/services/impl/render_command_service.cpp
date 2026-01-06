@@ -1272,7 +1272,7 @@ VkExtent2D RenderCommandService::ResolveExtent(const RenderGraphResource& resour
     return swapchainExtent;
 }
 
-RenderGraphImage* RenderCommandService::FindRenderTarget(const std::string& name) {
+RenderCommandService::RenderGraphImage* RenderCommandService::FindRenderTarget(const std::string& name) {
     auto it = renderGraphTargets_.find(name);
     if (it == renderGraphTargets_.end()) {
         return nullptr;
@@ -1280,7 +1280,7 @@ RenderGraphImage* RenderCommandService::FindRenderTarget(const std::string& name
     return &it->second;
 }
 
-RenderGraphImage* RenderCommandService::FindDepthTarget(const std::string& name) {
+RenderCommandService::RenderGraphImage* RenderCommandService::FindDepthTarget(const std::string& name) {
     auto it = renderGraphDepth_.find(name);
     if (it == renderGraphDepth_.end()) {
         return nullptr;
@@ -1288,7 +1288,7 @@ RenderGraphImage* RenderCommandService::FindDepthTarget(const std::string& name)
     return &it->second;
 }
 
-void RenderCommandService::CreateRenderGraphImage(RenderGraphImage& image, VkFormat format,
+void RenderCommandService::CreateRenderGraphImage(RenderCommandService::RenderGraphImage& image, VkFormat format,
                                                   VkExtent2D extent, VkImageUsageFlags usage,
                                                   VkImageAspectFlags aspectMask) {
     auto device = deviceService_->GetDevice();
@@ -1347,7 +1347,8 @@ void RenderCommandService::CreateRenderGraphImage(RenderGraphImage& image, VkFor
     image.layout = VK_IMAGE_LAYOUT_UNDEFINED;
 }
 
-void RenderCommandService::TransitionImageLayout(VkCommandBuffer commandBuffer, RenderGraphImage& image,
+void RenderCommandService::TransitionImageLayout(VkCommandBuffer commandBuffer,
+                                                 RenderCommandService::RenderGraphImage& image,
                                                  VkImageLayout newLayout, VkImageAspectFlags aspectMask) {
     if (image.layout == newLayout || image.image == VK_NULL_HANDLE) {
         return;
