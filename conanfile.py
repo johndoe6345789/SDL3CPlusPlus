@@ -55,3 +55,6 @@ class SDL3CppConan(ConanFile):
         self.requires("bgfx/1.129.8930-495")
         self.requires("entt/3.16.0")
         self.requires("lunasvg/3.0.1")
+        self.requires("libvips/8.16.0")
+        self.requires("freetype/2.14.1")
+        self.requires("ffmpeg/8.0.1")
