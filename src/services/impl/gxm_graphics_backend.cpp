@@ -1,4 +1,5 @@
 #include "gxm_graphics_backend.hpp"
+#include "../../core/vertex.hpp"
 #include <psp2/gxm.h>
 #include <psp2/display.h>
 #include <psp2/kernel/sysmem.h>
@@ -469,8 +470,10 @@ void GxmGraphicsBackend::SetRenderGraphDefinition(const RenderGraphDefinition& d
 
 void GxmGraphicsBackend::Draw(GraphicsDeviceHandle device, GraphicsPipelineHandle pipeline,
                               GraphicsBufferHandle vertexBuffer, GraphicsBufferHandle indexBuffer,
-                              uint32_t indexCount, const std::array<float, 16>& modelMatrix) {
-    std::cout << "GXM: Drawing " << indexCount << " indices" << std::endl;
+                              uint32_t indexOffset, uint32_t indexCount, int32_t vertexOffset,
+                              const std::array<float, 16>& modelMatrix) {
+    std::cout << "GXM: Drawing " << indexCount << " indices (indexOffset=" << indexOffset
+              << ", vertexOffset=" << vertexOffset << ")" << std::endl;
 
     if (!pipeline || !vertexBuffer || !indexBuffer) {
         std::cerr << "Invalid pipeline or buffer handles" << std::endl;
@@ -502,11 +505,16 @@ void GxmGraphicsBackend::Draw(GraphicsDeviceHandle device, GraphicsPipelineHandl
         sceGxmSetUniformDataF(uniformBuffer, nullptr, 0, 16, modelMatrix.data());
     }
 
-    // Set vertex stream (simplified - assumes single stream)
-    sceGxmSetVertexStream(context_, 0, vbHandle->data);
+    // Set vertex stream with base vertex offset
+    const auto vertexStride = static_cast<uint32_t>(sizeof(core::Vertex));
+    uint8_t* vertexBase = static_cast<uint8_t*>(vbHandle->data);
+    vertexBase += static_cast<size_t>(vertexOffset) * vertexStride;
+    sceGxmSetVertexStream(context_, 0, vertexBase);
 
     // Draw
-    err = sceGxmDraw(context_, SCE_GXM_PRIMITIVE_TRIANGLES, SCE_GXM_INDEX_FORMAT_U16, ibHandle->data, indexCount);
+    uint8_t* indexBase = static_cast<uint8_t*>(ibHandle->data);
+    indexBase += static_cast<size_t>(indexOffset) * sizeof(uint16_t);
+    err = sceGxmDraw(context_, SCE_GXM_PRIMITIVE_TRIANGLES, SCE_GXM_INDEX_FORMAT_U16, indexBase, indexCount);
     if (err != SCE_OK) {
         std::cerr << "Draw failed: " << err << std::endl;
     }

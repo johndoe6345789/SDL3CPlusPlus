@@ -246,8 +246,12 @@ void VulkanGraphicsBackend::SetRenderGraphDefinition(const RenderGraphDefinition
 
 void VulkanGraphicsBackend::Draw(GraphicsDeviceHandle device, GraphicsPipelineHandle pipeline,
                                  GraphicsBufferHandle vertexBuffer, GraphicsBufferHandle indexBuffer,
-                                 uint32_t indexCount, const std::array<float, 16>& modelMatrix) {
-    logger_->Trace("VulkanGraphicsBackend", "Draw", "indexCount=" + std::to_string(indexCount));
+                                 uint32_t indexOffset, uint32_t indexCount, int32_t vertexOffset,
+                                 const std::array<float, 16>& modelMatrix) {
+    logger_->Trace("VulkanGraphicsBackend", "Draw",
+                   "indexOffset=" + std::to_string(indexOffset) +
+                   ", indexCount=" + std::to_string(indexCount) +
+                   ", vertexOffset=" + std::to_string(vertexOffset));
 
     // Find the shader key for this pipeline
     auto it = pipelineToShaderKey_.find(pipeline);
@@ -258,9 +262,9 @@ void VulkanGraphicsBackend::Draw(GraphicsDeviceHandle device, GraphicsPipelineHa
 
     // Create a render command
     RenderCommand command;
-    command.indexOffset = 0;  // TODO: Calculate proper offset
+    command.indexOffset = indexOffset;
     command.indexCount = indexCount;
-    command.vertexOffset = 0;  // TODO: Calculate proper offset
+    command.vertexOffset = vertexOffset;
     command.shaderKey = it->second;
     command.modelMatrix = modelMatrix;
 

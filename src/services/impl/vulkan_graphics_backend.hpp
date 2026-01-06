@@ -52,7 +52,8 @@ public:
 
     void Draw(GraphicsDeviceHandle device, GraphicsPipelineHandle pipeline,
               GraphicsBufferHandle vertexBuffer, GraphicsBufferHandle indexBuffer,
-              uint32_t indexCount, const std::array<float, 16>& modelMatrix) override;
+              uint32_t indexOffset, uint32_t indexCount, int32_t vertexOffset,
+              const std::array<float, 16>& modelMatrix) override;
 
     GraphicsDeviceHandle GetPhysicalDevice() const override;
     std::pair<uint32_t, uint32_t> GetSwapchainExtent() const override;

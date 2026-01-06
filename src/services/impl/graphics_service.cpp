@@ -178,7 +178,8 @@ void GraphicsService::RenderScene(const std::vector<RenderCommand>& commands,
         auto it = pipelines_.find(command.shaderKey);
         if (it != pipelines_.end()) {
             backend_->Draw(device_, it->second, vertexBuffer_, indexBuffer_,
-                          command.indexCount, command.modelMatrix);
+                           command.indexOffset, command.indexCount, command.vertexOffset,
+                           command.modelMatrix);
         }
     }
 }

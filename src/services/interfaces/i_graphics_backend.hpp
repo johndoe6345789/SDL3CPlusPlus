@@ -160,12 +160,15 @@ public:
      * @param pipeline Pipeline handle
      * @param vertexBuffer Vertex buffer handle
      * @param indexBuffer Index buffer handle
+     * @param indexOffset Starting index offset
      * @param indexCount Number of indices
+     * @param vertexOffset Base vertex offset
      * @param modelMatrix Model transformation matrix
      */
     virtual void Draw(GraphicsDeviceHandle device, GraphicsPipelineHandle pipeline,
                       GraphicsBufferHandle vertexBuffer, GraphicsBufferHandle indexBuffer,
-                      uint32_t indexCount, const std::array<float, 16>& modelMatrix) = 0;
+                      uint32_t indexOffset, uint32_t indexCount, int32_t vertexOffset,
+                      const std::array<float, 16>& modelMatrix) = 0;
 
     /**
      * @brief Get the physical device handle.
