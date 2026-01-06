@@ -5,11 +5,13 @@
 #include <MaterialXFormat/Util.h>
 #include <MaterialXFormat/XmlIo.h>
 #include <MaterialXGenGlsl/VkShaderGenerator.h>
+#include <MaterialXGenHw/HwConstants.h>
 #include <MaterialXGenShader/GenContext.h>
 #include <MaterialXGenShader/Shader.h>
 #include <MaterialXGenShader/Util.h>
 #include <MaterialXRender/Util.h>
 
+#include <array>
 #include <algorithm>
 #include <cctype>
 #include <fstream>
@@ -153,13 +155,45 @@ unsigned int ResolveAiryFresnelIterationsFromOptions(const Options& options,
     return defaultIterations;
 }
 
+mx::StringMap BuildTokenSubstitutionsWithFallback(const mx::ShaderGenerator& generator,
+                                                  const std::string& stageLabel,
+                                                  const std::shared_ptr<ILogger>& logger) {
+    auto substitutions = generator.getTokenSubstitutions();
+    struct TokenFallback {
+        std::string token;
+        std::string replacement;
+    };
+
+    const std::array<TokenFallback, 3> fallbackTokens = {{
+        {mx::HW::T_TEX_SAMPLER_SIGNATURE, mx::HW::TEX_SAMPLER_SIGNATURE},
+        {mx::HW::T_TEX_SAMPLER_SAMPLER2D, mx::HW::TEX_SAMPLER_SAMPLER2D},
+        {mx::HW::T_CLOSURE_DATA_CONSTRUCTOR, mx::HW::CLOSURE_DATA_CONSTRUCTOR}
+    }};
+
+    for (const auto& fallback : fallbackTokens) {
+        auto it = substitutions.find(fallback.token);
+        if (it == substitutions.end() || it->second.empty()) {
+            substitutions[fallback.token] = fallback.replacement;
+            if (logger) {
+                logger->Trace("MaterialXShaderGenerator", "Generate",
+                              "tokenSubstitution fallback stage=" + stageLabel +
+                                  ", token=" + fallback.token +
+                                  ", value=" + fallback.replacement);
+            }
+        }
+    }
+
+    return substitutions;
+}
+
 void ApplyTokenSubstitutions(const mx::ShaderGenerator& generator,
                              std::string& source,
                              const std::string& stageLabel,
                              unsigned int airyIterations,
                              const std::shared_ptr<ILogger>& logger) {
     auto tokensBefore = CollectMaterialXTokens(source);
-    mx::tokenSubstitution(generator.getTokenSubstitutions(), source);
+    mx::StringMap substitutions = BuildTokenSubstitutionsWithFallback(generator, stageLabel, logger);
+    mx::tokenSubstitution(substitutions, source);
     auto tokensAfter = CollectMaterialXTokens(source);
 
     if (logger && (!tokensBefore.empty() || !tokensAfter.empty())) {
