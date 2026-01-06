@@ -166,6 +166,23 @@ void ApplyTokenSubstitutions(const mx::ShaderGenerator& generator,
     }
 }
 
+unsigned int ResolveAiryFresnelIterations(const mx::GenContext& context,
+                                          const std::shared_ptr<ILogger>& logger) {
+    constexpr unsigned int kDefaultAiryFresnelIterations = 4;
+    unsigned int iterations = kDefaultAiryFresnelIterations;
+    bool fromOptions = false;
+    if constexpr (requires { context.getOptions().hwAiryFresnelIterations; }) {
+        iterations = context.getOptions().hwAiryFresnelIterations;
+        fromOptions = true;
+    }
+    if (logger) {
+        logger->Trace("MaterialXShaderGenerator", "Generate",
+                      "airyFresnelIterations=" + std::to_string(iterations) +
+                          ", source=" + std::string(fromOptions ? "options" : "default"));
+    }
+    return iterations;
+}
+
 bool ReplaceFirstOccurrence(std::string& source, const std::string& before, const std::string& after) {
     size_t pos = source.find(before);
     if (pos == std::string::npos) {
@@ -521,7 +538,7 @@ ShaderPaths MaterialXShaderGenerator::Generate(const MaterialXConfig& config,
     paths.fragmentSource = ConvertIndividualInputsToBlock(paths.fragmentSource);
     
     // Ensure any remaining MaterialX tokens are substituted using the generator's map.
-    const unsigned int airyIterations = context.getOptions().hwAiryFresnelIterations;
+    const unsigned int airyIterations = ResolveAiryFresnelIterations(context, logger_);
     ApplyTokenSubstitutions(context.getShaderGenerator(), paths.vertexSource, "vertex", airyIterations, logger_);
     ApplyTokenSubstitutions(context.getShaderGenerator(), paths.fragmentSource, "fragment", airyIterations, logger_);
 
