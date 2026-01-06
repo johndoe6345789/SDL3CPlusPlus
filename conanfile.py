@@ -17,6 +17,8 @@ class SDL3CppConan(ConanFile):
 
     def configure(self):
         self.requires("wayland/1.23.92", override=True)
+        self.requires("libalsa/1.2.13", override=True)
+        self.requires("pulseaudio/17.0", override=True)
 
     def layout(self):
         cmake_layout(self)
@@ -56,5 +58,5 @@ class SDL3CppConan(ConanFile):
         self.requires("entt/3.16.0")
         self.requires("lunasvg/3.0.1")
         self.requires("libvips/8.16.0")
-        self.requires("freetype/2.14.1")
+        self.requires("freetype/2.13.2")
         self.requires("ffmpeg/8.0.1")
