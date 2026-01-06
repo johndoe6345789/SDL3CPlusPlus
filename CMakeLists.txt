@@ -134,7 +134,7 @@ find_package(CLI11 CONFIG REQUIRED)
 find_package(RapidJSON CONFIG REQUIRED)
 find_package(EnTT CONFIG REQUIRED)
 find_package(bgfx CONFIG REQUIRED)
-find_package(MaterialX CONFIG REQUIRED)
+find_package(materialx CONFIG REQUIRED)
 find_package(Freetype CONFIG REQUIRED)
 find_package(assimp CONFIG REQUIRED)
 find_package(libzip CONFIG REQUIRED)
@@ -155,24 +155,22 @@ if(TARGET bimg::bimg)
 endif()
 
 set(SDL3CPP_MATERIALX_LIBS)
-foreach(candidate IN ITEMS
-        MaterialX::MaterialX
-        materialx::MaterialX
-        MaterialX::MaterialXCore
-        MaterialX::MaterialXFormat
-        MaterialX::MaterialXGenShader
-        MaterialX::MaterialXGenGlsl
-        MaterialX::MaterialXRender
-        materialx::MaterialXCore
-        materialx::MaterialXFormat
-        materialx::MaterialXGenShader
-        materialx::MaterialXGenGlsl
-        materialx::MaterialXRender)
-    if(TARGET ${candidate})
-        list(APPEND SDL3CPP_MATERIALX_LIBS ${candidate})
-    endif()
-endforeach()
+if(TARGET materialx::materialx)
+    list(APPEND SDL3CPP_MATERIALX_LIBS materialx::materialx)
+else()
+    foreach(candidate IN ITEMS
+            materialx::MaterialXCore
+            materialx::MaterialXFormat
+            materialx::MaterialXGenShader
+            materialx::MaterialXGenGlsl
+            materialx::MaterialXRender)
+        if(TARGET ${candidate})
+            list(APPEND SDL3CPP_MATERIALX_LIBS ${candidate})
+        endif()
+    endforeach()
+endif()
 if(SDL3CPP_MATERIALX_LIBS)
+    message(TRACE "MaterialX targets selected: ${SDL3CPP_MATERIALX_LIBS}")
     list(APPEND SDL3CPP_RENDER_STACK_LIBS ${SDL3CPP_MATERIALX_LIBS})
 endif()
 
