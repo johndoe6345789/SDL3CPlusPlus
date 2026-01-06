@@ -1288,10 +1288,13 @@ void main() {
         } else {
             paths.fragmentSource = kPostProcessFragment;
         }
+        paths.disableCulling = true;
+        paths.disableDepthTest = true;
         if (logger_) {
             logger_->Trace("RenderCommandService", "RegisterRenderGraphShaders",
                            "Registering fallback shader for pass=" + pass.name +
-                           ", key=" + shaderKey);
+                           ", key=" + shaderKey +
+                           ", cull=none, depthTest=off");
         }
         pipelineService_->RegisterShader(shaderKey, paths);
         registered = true;

@@ -49,3 +49,5 @@ class SDL3CppConan(ConanFile):
         self.requires("glm/1.0.1")
         self.requires("vorbis/1.3.7")
         self.requires("rapidjson/cci.20230929")
+        self.requires("bgfx/1.129.8930-495")
+        self.requires("entt/3.16.0")

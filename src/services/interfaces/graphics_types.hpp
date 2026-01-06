@@ -33,6 +33,8 @@ struct ShaderPaths {
     std::string tessEvalSource;
     std::string compute;
     std::string computeSource;
+    bool disableCulling = false;
+    bool disableDepthTest = false;
 };
 
 /**

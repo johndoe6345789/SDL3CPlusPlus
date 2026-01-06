@@ -336,6 +336,22 @@ void PipelineService::CreatePipelinesInternal(VkRenderPass renderPass, VkExtent2
             requireShader("Tessellation evaluation", paths.tessEval, paths.tessEvalSource);
         }
 
+        VkPipelineRasterizationStateCreateInfo rasterizerState = rasterizer;
+        VkPipelineDepthStencilStateCreateInfo depthStencilState = depthStencil;
+        if (paths.disableCulling) {
+            rasterizerState.cullMode = VK_CULL_MODE_NONE;
+        }
+        if (paths.disableDepthTest) {
+            depthStencilState.depthTestEnable = VK_FALSE;
+            depthStencilState.depthWriteEnable = VK_FALSE;
+        }
+        if (logger_ && (paths.disableCulling || paths.disableDepthTest)) {
+            logger_->Trace("PipelineService", "CreatePipelinesInternal",
+                           "shaderKey=" + key +
+                           ", cullMode=" + std::string(paths.disableCulling ? "none" : "back") +
+                           ", depthTest=" + std::string(paths.disableDepthTest ? "off" : "on"));
+        }
+
         std::vector<VkShaderModule> shaderModules;
         std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
         shaderStages.reserve(2 + (hasGeometry ? 1 : 0) + (hasTessControl ? 2 : 0));
@@ -387,6 +403,8 @@ void PipelineService::CreatePipelinesInternal(VkRenderPass renderPass, VkExtent2
             VkGraphicsPipelineCreateInfo pipelineCreateInfo = pipelineInfo;
             pipelineCreateInfo.pInputAssemblyState = &inputAssemblyState;
             pipelineCreateInfo.pTessellationState = useTessellation ? &tessellationState : nullptr;
+            pipelineCreateInfo.pRasterizationState = &rasterizerState;
+            pipelineCreateInfo.pDepthStencilState = &depthStencilState;
             pipelineCreateInfo.stageCount = static_cast<uint32_t>(shaderStages.size());
             pipelineCreateInfo.pStages = shaderStages.data();
 
