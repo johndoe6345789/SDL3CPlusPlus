@@ -57,6 +57,13 @@ ShaderPaths MaterialXShaderGenerator::Generate(const MaterialXConfig& config,
     if (!libraryPath.empty()) {
         searchPath.append(mx::FilePath(libraryPath.string()));
     }
+    mx::FileSearchPath sourceSearchPath = searchPath;
+    if (!libraryPath.empty() && libraryPath.filename() == "libraries") {
+        std::filesystem::path libraryRoot = libraryPath.parent_path();
+        if (!libraryRoot.empty()) {
+            sourceSearchPath.append(mx::FilePath(libraryRoot.string()));
+        }
+    }
     if (logger_) {
         logger_->Trace("MaterialXShaderGenerator", "Generate",
                        "libraryPath=" + libraryPath.string() +
@@ -74,7 +81,7 @@ ShaderPaths MaterialXShaderGenerator::Generate(const MaterialXConfig& config,
 
     mx::ShaderGeneratorPtr generator = mx::VkShaderGenerator::create();
     mx::GenContext context(generator);
-    context.registerSourceCodeSearchPath(searchPath);
+    context.registerSourceCodeSearchPath(sourceSearchPath);
 
     mx::ShaderPtr shader;
     if (config.useConstantColor) {
