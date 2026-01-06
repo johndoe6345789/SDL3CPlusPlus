@@ -132,6 +132,27 @@ constexpr bool HasHwAiryFresnelIterations = requires(const T& options) {
     options.hwAiryFresnelIterations;
 };
 
+template <typename Options>
+unsigned int ResolveAiryFresnelIterationsFromOptions(const Options& options,
+                                                     unsigned int defaultIterations,
+                                                     bool& fromOptions,
+                                                     const std::shared_ptr<ILogger>& logger) {
+    if constexpr (HasHwAiryFresnelIterations<Options>) {
+        fromOptions = true;
+        if (logger) {
+            logger->Trace("MaterialXShaderGenerator", "Generate",
+                          "airyFresnelIterationsOption=hwAiryFresnelIterations");
+        }
+        return options.hwAiryFresnelIterations;
+    }
+
+    if (logger) {
+        logger->Trace("MaterialXShaderGenerator", "Generate",
+                      "airyFresnelIterationsOption=unavailable");
+    }
+    return defaultIterations;
+}
+
 void ApplyTokenSubstitutions(const mx::ShaderGenerator& generator,
                              std::string& source,
                              const std::string& stageLabel,
@@ -175,17 +196,12 @@ void ApplyTokenSubstitutions(const mx::ShaderGenerator& generator,
 unsigned int ResolveAiryFresnelIterations(const mx::GenContext& context,
                                           const std::shared_ptr<ILogger>& logger) {
     constexpr unsigned int kDefaultAiryFresnelIterations = 4;
-    unsigned int iterations = kDefaultAiryFresnelIterations;
     bool fromOptions = false;
-    using OptionsType = std::remove_reference_t<decltype(context.getOptions())>;
-    constexpr bool kHasHwAiryFresnelIterations = HasHwAiryFresnelIterations<OptionsType>;
-    if constexpr (kHasHwAiryFresnelIterations) {
-        iterations = context.getOptions().hwAiryFresnelIterations;
-        fromOptions = true;
-    } else if (logger) {
-        logger->Trace("MaterialXShaderGenerator", "Generate",
-                      "airyFresnelIterationsOption=unavailable");
-    }
+    const auto& options = context.getOptions();
+    unsigned int iterations = ResolveAiryFresnelIterationsFromOptions(options,
+                                                                      kDefaultAiryFresnelIterations,
+                                                                      fromOptions,
+                                                                      logger);
     if (logger) {
         logger->Trace("MaterialXShaderGenerator", "Generate",
                       "airyFresnelIterations=" + std::to_string(iterations) +
