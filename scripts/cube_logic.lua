@@ -660,7 +660,7 @@ local function create_spinning_cube()
 end
 
 local function create_lantern(x, z)
-    local lantern_height = 9
+    local lantern_height = 8
     local lantern_size = 0.2
     return create_static_cube({x, lantern_height, z},
         {lantern_size, lantern_size, lantern_size}, {1.0, 0.9, 0.6})
@@ -881,12 +881,12 @@ function get_render_graph()
     local enable_shadows = resolve_boolean(atmospherics.enable_shadows, true)
     local enable_volumetrics = resolve_boolean(atmospherics.enable_volumetric_lighting, true)
     local enable_tonemap = resolve_boolean(atmospherics.enable_tone_mapping, true)
-    local enable_sdf = resolve_boolean(rendering.enable_sdf, false)
+    local enable_sdf = resolve_boolean(rendering.enable_sdf, true)
     local enable_ssgi = resolve_boolean(rendering.enable_ssgi, false)
-    local enable_ddgi = resolve_boolean(rendering.enable_ddgi, false)
+    local enable_ddgi = resolve_boolean(rendering.enable_ddgi, true)
     local enable_vxgi = resolve_boolean(rendering.enable_vxgi, false)
-    local enable_depth_of_field = resolve_boolean(rendering.enable_depth_of_field, false)
-    local enable_motion_blur = resolve_boolean(rendering.enable_motion_blur, false)
+    local enable_depth_of_field = resolve_boolean(rendering.enable_depth_of_field, true)
+    local enable_motion_blur = resolve_boolean(rendering.enable_motion_blur, true)
     local pipeline_mode = resolve_string(rendering.pipeline, "deferred")
     local use_forward_plus = pipeline_mode == "forward_plus"
         or pipeline_mode == "forward+"
