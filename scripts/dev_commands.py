@@ -58,6 +58,9 @@ DEFAULT_VCVARSALL = (
     "C:\\Program Files\\Microsoft Visual Studio\\2022\\Professional"
     "\\VC\\Auxiliary\\Build\\vcvarsall.bat"
 )
+VITA_ENV_VAR = "VITASDK"
+DEFAULT_VITA_SDK_PATH = "/usr/local/vitasdk"
+VITA_PRESETS = {"vita-release"}
 
 
 def _sh_quote(s: str) -> str:
@@ -114,17 +117,31 @@ def _has_runtime_config_arg(args: Sequence[str] | None) -> bool:
     return False
 
 
-def run_argvs(argvs: Iterable[Sequence[str]], dry_run: bool, cwd: str | None = None) -> None:
+def _merge_env(env_overrides: dict[str, str] | None) -> dict[str, str] | None:
+    if not env_overrides:
+        return None
+    merged = os.environ.copy()
+    merged.update(env_overrides)
+    return merged
+
+
+def run_argvs(
+    argvs: Iterable[Sequence[str]],
+    dry_run: bool,
+    cwd: str | None = None,
+    env_overrides: dict[str, str] | None = None,
+) -> None:
     """
     Run a sequence of commands represented as lists of arguments. Each command
     is printed before execution. If `dry_run` is True, commands are printed
     but not executed.
     """
+    merged_env = _merge_env(env_overrides)
     for argv in argvs:
         _print_cmd(argv)
         if dry_run:
             continue
-        subprocess.run(list(argv), check=True, cwd=cwd)
+        subprocess.run(list(argv), check=True, cwd=cwd, env=merged_env)
 
 
 def _as_build_dir(path_str: str | None, fallback: str) -> str:
@@ -142,6 +159,74 @@ def _has_cache_arg(cmake_args: Sequence[str] | None, name: str) -> bool:
         if arg == key or arg.startswith(prefix):
             return True
     return False
+
+
+def _cmake_cache_arg_value(cmake_args: Sequence[str] | None, name: str) -> str | None:
+    if not cmake_args:
+        return None
+    key = f"-D{name}"
+    for arg in cmake_args:
+        if not arg.startswith(key):
+            continue
+        if "=" not in arg:
+            return ""
+        return arg.split("=", 1)[1]
+    return None
+
+
+def _cmake_cache_enabled(cmake_args: Sequence[str] | None, name: str) -> bool:
+    value = _cmake_cache_arg_value(cmake_args, name)
+    if value is None:
+        return False
+    return value.strip().upper() in {"ON", "TRUE", "1", "YES"}
+
+
+def _read_cmake_cache_value(build_dir: str, name: str) -> str | None:
+    cache_path = Path(build_dir) / "CMakeCache.txt"
+    if not cache_path.is_file():
+        return None
+    try:
+        content = cache_path.read_text(encoding="utf-8", errors="ignore")
+    except OSError as exc:
+        _trace(f"Unable to read CMake cache at {cache_path}: {exc}")
+        return None
+    needle = f"{name}:"
+    for line in content.splitlines():
+        if not line.startswith(needle):
+            continue
+        if "=" not in line:
+            return ""
+        return line.split("=", 1)[1].strip()
+    return None
+
+
+def _is_vita_build_dir(build_dir: str) -> bool:
+    value = _read_cmake_cache_value(build_dir, "ENABLE_VITA")
+    if not value:
+        return False
+    return value.upper() in {"ON", "TRUE", "1", "YES"}
+
+
+def _vita_env_overrides(reason: str) -> dict[str, str]:
+    _trace(f"Setting {VITA_ENV_VAR} for {reason}: {DEFAULT_VITA_SDK_PATH}")
+    return {VITA_ENV_VAR: DEFAULT_VITA_SDK_PATH}
+
+
+def _resolve_vita_env_for_configure(
+    preset: str | None,
+    cmake_args: Sequence[str] | None,
+) -> dict[str, str] | None:
+    if preset in VITA_PRESETS:
+        return _vita_env_overrides(f"preset {preset}")
+    if _cmake_cache_enabled(cmake_args, "ENABLE_VITA"):
+        return _vita_env_overrides("explicit ENABLE_VITA cache arg")
+    return None
+
+
+def _resolve_vita_env_for_build(build_dir: str) -> dict[str, str] | None:
+    if _is_vita_build_dir(build_dir):
+        return _vita_env_overrides(f"build dir {build_dir}")
+    return None
 
 
 def _find_conan_toolchain(build_type: str) -> Path | None:
@@ -185,7 +270,8 @@ def configure(args: argparse.Namespace) -> None:
         cmake_extra_args = _strip_leading_double_dash(args.cmake_args)
         if cmake_extra_args:
             cmake_args.extend(cmake_extra_args)
-        run_argvs([cmake_args], args.dry_run)
+        vita_env = _resolve_vita_env_for_configure(args.preset, cmake_extra_args)
+        run_argvs([cmake_args], args.dry_run, env_overrides=vita_env)
         return
     generator = args.generator or DEFAULT_GENERATOR
     build_dir = _as_build_dir(
@@ -210,7 +296,8 @@ def configure(args: argparse.Namespace) -> None:
     cmake_extra_args = _strip_leading_double_dash(args.cmake_args)
     if cmake_extra_args:
         cmake_args.extend(cmake_extra_args)
-    run_argvs([cmake_args], args.dry_run)
+    vita_env = _resolve_vita_env_for_configure(None, cmake_extra_args)
+    run_argvs([cmake_args], args.dry_run, env_overrides=vita_env)
 
 
 def build(args: argparse.Namespace) -> None:
@@ -224,7 +311,8 @@ def build(args: argparse.Namespace) -> None:
     if build_tool_args:
         cmd.append("--")
         cmd.extend(build_tool_args)
-    run_argvs([cmd], args.dry_run)
+    vita_env = _resolve_vita_env_for_build(args.build_dir)
+    run_argvs([cmd], args.dry_run, env_overrides=vita_env)
 
 
 def _cmd_one_liner_vcvars_then(bat: str, arch: str, then_parts: Sequence[str]) -> list[str]:
@@ -362,7 +450,7 @@ def gui(args: argparse.Namespace) -> None:
             QSplitter, QMenuBar, QDialog, QDialogButtonBox, QFormLayout, QMessageBox,
             QPlainTextEdit, QTabWidget, QLineEdit
         )
-        from PyQt6.QtCore import Qt, QProcess, QSize, QTimer
+        from PyQt6.QtCore import Qt, QProcess, QProcessEnvironment, QSize, QTimer
         from PyQt6.QtGui import QFont, QPalette, QColor, QAction, QSyntaxHighlighter, QTextCharFormat, QTextCursor, QTextDocument
     except ImportError:
         raise SystemExit(
@@ -1521,7 +1609,7 @@ return {{
                 self.console.verticalScrollBar().maximum()
             )
 
-        def run_command(self, args: list[str]):
+        def run_command(self, args: list[str], env_overrides: dict[str, str] | None = None):
             """Execute a command using QProcess"""
             if self.process and self.process.state() == QProcess.ProcessState.Running:
                 self.log("⚠️  A process is already running. Stop it first.")
@@ -1531,6 +1619,11 @@ return {{
             self.log(f"▶ Running: {' '.join(args)}\n")
 
             self.process = QProcess(self)
+            if env_overrides:
+                env = QProcessEnvironment.systemEnvironment()
+                for key, value in env_overrides.items():
+                    env.insert(key, value)
+                self.process.setProcessEnvironment(env)
             self.process.readyReadStandardOutput.connect(self.handle_stdout)
             self.process.readyReadStandardError.connect(self.handle_stderr)
             self.process.finished.connect(self.process_finished)
@@ -1567,21 +1660,25 @@ return {{
         def run_dependencies(self):
             """Run conan dependencies installation"""
             cmd = [sys.executable, __file__, "dependencies"]
+            vita_env = None
             if self.preset == "vita-release":
                 cmd.extend(["--conan-install-args", "--profile", "profiles/vita"])
-            self.run_command(cmd)
+                vita_env = _vita_env_overrides(f"preset {self.preset}")
+            self.run_command(cmd, env_overrides=vita_env)
 
         def run_configure(self):
             """Run CMake configuration"""
             cmd = [sys.executable, __file__, "configure"]
+            vita_env = None
             if self.preset != "default":
                 cmd.extend(["--preset", self.preset])
+                vita_env = _resolve_vita_env_for_configure(self.preset, None)
             else:
                 cmd.extend([
                     "--generator", self.generator,
                     "--build-type", self.build_type
                 ])
-            self.run_command(cmd)
+            self.run_command(cmd, env_overrides=vita_env)
 
         def run_build(self):
             """Run build command"""
@@ -1594,7 +1691,12 @@ return {{
                 "--build-dir", build_dir,
                 "--target", self.target
             ]
-            self.run_command(cmd)
+            vita_env = None
+            if self.preset in VITA_PRESETS:
+                vita_env = _vita_env_overrides(f"preset {self.preset}")
+            else:
+                vita_env = _resolve_vita_env_for_build(build_dir)
+            self.run_command(cmd, env_overrides=vita_env)
 
         def sync_assets(self):
             """Sync assets into the active build directory"""
