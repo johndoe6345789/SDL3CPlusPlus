@@ -101,9 +101,9 @@ void RenderCoordinatorService::RenderFrame(float time) {
         auto extent = graphicsService_->GetSwapchainExtent();
         float aspect = extent.second == 0 ? 1.0f
                                           : static_cast<float>(extent.first) / static_cast<float>(extent.second);
-        auto viewProj = sceneScriptService_->GetViewProjectionMatrix(aspect);
+        auto viewState = sceneScriptService_->GetViewState(aspect);
 
-        graphicsService_->RenderScene(renderCommands, viewProj);
+        graphicsService_->RenderScene(renderCommands, viewState);
     }
 
     if (!graphicsService_->EndFrame()) {

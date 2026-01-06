@@ -1,7 +1,7 @@
 #pragma once
 
 #include "scene_types.hpp"
-#include <array>
+#include "graphics_types.hpp"
 #include <vector>
 
 namespace sdl3cpp::services {
@@ -15,7 +15,7 @@ public:
 
     virtual std::vector<SceneObject> LoadSceneObjects() = 0;
     virtual std::array<float, 16> ComputeModelMatrix(int functionRef, float time) = 0;
-    virtual std::array<float, 16> GetViewProjectionMatrix(float aspect) = 0;
+    virtual ViewState GetViewState(float aspect) = 0;
 };
 
 }  // namespace sdl3cpp::services

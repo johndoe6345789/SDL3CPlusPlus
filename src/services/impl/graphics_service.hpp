@@ -38,7 +38,7 @@ public:
     void UploadIndexData(const std::vector<uint16_t>& indices) override;
     bool BeginFrame() override;
     void RenderScene(const std::vector<RenderCommand>& commands,
-                    const std::array<float, 16>& viewProj) override;
+                     const ViewState& viewState) override;
     bool EndFrame() override;
     void WaitIdle() override;
     GraphicsDeviceHandle GetDevice() const override;

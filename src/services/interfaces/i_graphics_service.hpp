@@ -91,7 +91,7 @@ public:
      * @param viewProj View-projection matrix
      */
     virtual void RenderScene(const std::vector<RenderCommand>& commands,
-                            const std::array<float, 16>& viewProj) = 0;
+                            const ViewState& viewState) = 0;
 
     /**
      * @brief End the frame and present the rendered image.

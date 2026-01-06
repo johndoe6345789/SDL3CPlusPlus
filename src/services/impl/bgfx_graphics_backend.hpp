@@ -35,7 +35,7 @@ public:
     void DestroyBuffer(GraphicsDeviceHandle device, GraphicsBufferHandle buffer) override;
     bool BeginFrame(GraphicsDeviceHandle device) override;
     bool EndFrame(GraphicsDeviceHandle device) override;
-    void SetViewProjection(const std::array<float, 16>& viewProj) override;
+    void SetViewState(const ViewState& viewState) override;
     void Draw(GraphicsDeviceHandle device, GraphicsPipelineHandle pipeline,
               GraphicsBufferHandle vertexBuffer, GraphicsBufferHandle indexBuffer,
               uint32_t indexOffset, uint32_t indexCount, int32_t vertexOffset,
@@ -61,6 +61,17 @@ private:
         uint32_t indexCount = 0;
     };
 
+    struct MaterialXUniforms {
+        bgfx::UniformHandle worldMatrix = BGFX_INVALID_HANDLE;
+        bgfx::UniformHandle viewMatrix = BGFX_INVALID_HANDLE;
+        bgfx::UniformHandle projectionMatrix = BGFX_INVALID_HANDLE;
+        bgfx::UniformHandle viewProjectionMatrix = BGFX_INVALID_HANDLE;
+        bgfx::UniformHandle worldViewMatrix = BGFX_INVALID_HANDLE;
+        bgfx::UniformHandle worldViewProjectionMatrix = BGFX_INVALID_HANDLE;
+        bgfx::UniformHandle worldInverseTransposeMatrix = BGFX_INVALID_HANDLE;
+        bgfx::UniformHandle viewPosition = BGFX_INVALID_HANDLE;
+    };
+
     void SetupPlatformData(void* window);
     bgfx::RendererType::Enum ResolveRendererType() const;
     std::vector<uint8_t> ReadShaderSource(const std::string& path,
@@ -68,6 +79,9 @@ private:
     bgfx::ShaderHandle CreateShader(const std::string& label,
                                     const std::string& source,
                                     bool isVertex) const;
+    void InitializeUniforms();
+    void DestroyUniforms();
+    void ApplyMaterialXUniforms(const std::array<float, 16>& modelMatrix);
     void DestroyPipelines();
     void DestroyBuffers();
 
@@ -77,7 +91,8 @@ private:
     std::unordered_map<GraphicsPipelineHandle, std::unique_ptr<PipelineEntry>> pipelines_;
     std::unordered_map<GraphicsBufferHandle, std::unique_ptr<VertexBufferEntry>> vertexBuffers_;
     std::unordered_map<GraphicsBufferHandle, std::unique_ptr<IndexBufferEntry>> indexBuffers_;
-    std::array<float, 16> viewProj_{};
+    ViewState viewState_{};
+    MaterialXUniforms materialXUniforms_{};
     uint32_t viewportWidth_ = 0;
     uint32_t viewportHeight_ = 0;
     bool initialized_ = false;

@@ -510,6 +510,21 @@ local function update_audio_controls()
 end
 
 local rotation_speed = 0.9
+local default_material_shader = "pbr"
+
+local function resolve_material_shader()
+    if type(config) ~= "table" then
+        return default_material_shader
+    end
+    local materialx = config.materialx
+    if type(materialx) ~= "table" or not materialx.enabled then
+        return default_material_shader
+    end
+    if type(materialx.shader_key) == "string" and materialx.shader_key ~= "" then
+        return materialx.shader_key
+    end
+    return "materialx"
+end
 
 local function build_static_model_matrix(position, scale)
     local translation = math3d.translation(position[1], position[2], position[3])
@@ -523,6 +538,7 @@ local function apply_color_to_vertices(color)
         local v = cube_vertices[i]
         colored_vertices[i] = {
             position = v.position,
+            normal = v.normal,
             color = color,
         }
     end
@@ -564,7 +580,8 @@ local function create_skybox()
 end
 
 local function create_spinning_cube()
-    log_debug("Spinning cube shader=pbr (MaterialX-driven)")
+    local shader_key = resolve_material_shader()
+    log_debug("Spinning cube shader=%s", shader_key)
     local function compute_model_matrix(time)
         local rotation = math3d.rotation_y(time * rotation_speed)
         local scale = scale_matrix(1.5, 1.5, 1.5)  -- Make cube 3x3x3 units
@@ -576,7 +593,7 @@ local function create_spinning_cube()
         vertices = cube_vertices,
         indices = (#cube_indices_double_sided > 0) and cube_indices_double_sided or cube_indices,
         compute_model_matrix = compute_model_matrix,
-        shader_key = "pbr",
+        shader_key = shader_key,
     }
 end
 
@@ -764,7 +781,7 @@ function get_shader_paths()
 end
 
 
-function get_view_projection(aspect)
+local function build_view_state(aspect)
     local now = os.clock()
     local dt = 0.0
     if last_frame_time then
@@ -789,7 +806,21 @@ function get_view_projection(aspect)
 
     local view = math3d.look_at(camera.position, center, world_up)
     local projection = math3d.perspective(camera.fov, aspect, camera.near, camera.far)
-    return math3d.multiply(projection, view)
+    return {
+        view = view,
+        proj = projection,
+        view_proj = math3d.multiply(projection, view),
+        camera_pos = {camera.position[1], camera.position[2], camera.position[3]},
+    }
+end
+
+function get_view_state(aspect)
+    return build_view_state(aspect)
+end
+
+function get_view_projection(aspect)
+    local state = build_view_state(aspect)
+    return state.view_proj
 end
 
 function get_gui_commands()

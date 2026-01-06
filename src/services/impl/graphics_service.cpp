@@ -144,17 +144,17 @@ bool GraphicsService::BeginFrame() {
 }
 
 void GraphicsService::RenderScene(const std::vector<RenderCommand>& commands,
-                                 const std::array<float, 16>& viewProj) {
+                                 const ViewState& viewState) {
     logger_->Trace("GraphicsService", "RenderScene",
                    "commands.size=" + std::to_string(commands.size()) +
-                   ", viewProj.size=" + std::to_string(viewProj.size()));
+                   ", viewProj.size=" + std::to_string(viewState.viewProj.size()));
 
     if (!initialized_) {
         return;
     }
 
     // Set the view-projection matrix for the frame
-    backend_->SetViewProjection(viewProj);
+    backend_->SetViewState(viewState);
 
     // Execute draw calls
     for (const auto& command : commands) {

@@ -315,7 +315,8 @@ local vertex_color_source = [[
 #version 450
 
 layout(location = 0) in vec3 inPos;
-layout(location = 1) in vec3 inColor;
+layout(location = 1) in vec3 inNormal;
+layout(location = 2) in vec3 inColor;
 
 layout(location = 0) out vec3 fragColor;
 
@@ -389,8 +390,8 @@ local shadow_vertex_source = [[
 #version 450
 
 layout(location = 0) in vec3 inPosition;
-layout(location = 1) in vec3 inColor;
-// layout(location = 2) in vec2 inTexCoord;  // Not used
+layout(location = 1) in vec3 inNormal;
+layout(location = 2) in vec3 inColor;
 
 layout(push_constant) uniform PushConstants {
     mat4 model;
@@ -594,7 +595,8 @@ local vertex_world_color_source = [[
 #version 450
 
 layout(location = 0) in vec3 inPos;
-layout(location = 1) in vec3 inColor;
+layout(location = 1) in vec3 inNormal;
+layout(location = 2) in vec3 inColor;
 
 layout(location = 0) out vec3 fragColor;
 layout(location = 1) out vec3 fragWorldPos;
@@ -1027,8 +1029,8 @@ local pbr_vertex_source = [[
 #version 450
 
 layout(location = 0) in vec3 inPosition;
-layout(location = 1) in vec3 inColor;  // Color instead of normal
-layout(location = 2) in vec2 inTexCoord;  // Not used for now
+layout(location = 1) in vec3 inNormal;
+layout(location = 2) in vec3 inColor;
 
 layout(location = 0) out vec3 fragColor;
 layout(location = 1) out vec3 fragWorldPos;
@@ -1061,8 +1063,8 @@ void main() {
     gl_Position = pc.proj * pc.view * worldPos;
 
     fragWorldPos = worldPos.xyz;
-    fragNormal = normalize(mat3(pc.model) * vec3(0.0, 0.0, 1.0));  // Simple normal for flat shading
-    fragTexCoord = vec2(0.0, 0.0);  // Not used
+    fragNormal = normalize(mat3(pc.model) * inNormal);
+    fragTexCoord = vec2(0.0, 0.0);
     fragColor = inColor;  // Use vertex color
 }
 ]]

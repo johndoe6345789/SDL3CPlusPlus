@@ -140,11 +140,11 @@ public:
     virtual bool EndFrame(GraphicsDeviceHandle device) = 0;
 
     /**
-     * @brief Set the view-projection matrix for the current frame.
+     * @brief Set the view state for the current frame.
      *
-     * @param viewProj View-projection matrix
+     * @param viewState Per-frame view state
      */
-    virtual void SetViewProjection(const std::array<float, 16>& viewProj) = 0;
+    virtual void SetViewState(const ViewState& viewState) = 0;
 
     /**
      * @brief Draw with a pipeline.

@@ -12,6 +12,9 @@
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_inverse.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <iterator>
 #include <string>
 #include <stdexcept>
@@ -23,6 +26,31 @@ std::string ToLower(std::string value) {
     std::transform(value.begin(), value.end(), value.begin(),
                    [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
     return value;
+}
+
+glm::mat4 ToMat4(const std::array<float, 16>& value) {
+    return glm::make_mat4(value.data());
+}
+
+bool IsIdentityMatrix(const std::array<float, 16>& value) {
+    const float identity[16] = {
+        1.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f
+    };
+    for (size_t i = 0; i < 16; ++i) {
+        if (value[i] != identity[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void SetUniformIfValid(bgfx::UniformHandle handle, const void* data, uint16_t count = 1) {
+    if (bgfx::isValid(handle)) {
+        bgfx::setUniform(handle, data, count);
+    }
 }
 
 bgfx::RendererType::Enum RendererFromString(const std::string& value) {
@@ -48,8 +76,20 @@ BgfxGraphicsBackend::BgfxGraphicsBackend(std::shared_ptr<IConfigService> configS
     }
     vertexLayout_.begin()
         .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+        .add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float)
         .add(bgfx::Attrib::Color0, 3, bgfx::AttribType::Float)
         .end();
+
+    const std::array<float, 16> identity = {
+        1.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f
+    };
+    viewState_.view = identity;
+    viewState_.proj = identity;
+    viewState_.viewProj = identity;
+    viewState_.cameraPosition = {0.0f, 0.0f, 0.0f};
 }
 
 BgfxGraphicsBackend::~BgfxGraphicsBackend() {
@@ -134,6 +174,7 @@ void BgfxGraphicsBackend::Initialize(void* window, const GraphicsConfig& config)
 
     bgfx::setViewClear(viewId_, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x1f1f1fff, 1.0f, 0);
     bgfx::setDebug(BGFX_DEBUG_TEXT);
+    InitializeUniforms();
 
     initialized_ = true;
 }
@@ -148,6 +189,7 @@ void BgfxGraphicsBackend::Shutdown() {
 
     DestroyPipelines();
     DestroyBuffers();
+    DestroyUniforms();
     bgfx::shutdown();
     initialized_ = false;
 }
@@ -233,6 +275,64 @@ bgfx::ShaderHandle BgfxGraphicsBackend::CreateShader(const std::string& label,
     const bgfx::Memory* mem = bgfx::copy(spirv.data(),
                                          static_cast<uint32_t>(spirv.size() * sizeof(uint32_t)));
     return bgfx::createShader(mem);
+}
+
+void BgfxGraphicsBackend::InitializeUniforms() {
+    materialXUniforms_.worldMatrix = bgfx::createUniform("u_worldMatrix", bgfx::UniformType::Mat4);
+    materialXUniforms_.viewMatrix = bgfx::createUniform("u_viewMatrix", bgfx::UniformType::Mat4);
+    materialXUniforms_.projectionMatrix = bgfx::createUniform("u_projectionMatrix", bgfx::UniformType::Mat4);
+    materialXUniforms_.viewProjectionMatrix = bgfx::createUniform("u_viewProjectionMatrix", bgfx::UniformType::Mat4);
+    materialXUniforms_.worldViewMatrix = bgfx::createUniform("u_worldViewMatrix", bgfx::UniformType::Mat4);
+    materialXUniforms_.worldViewProjectionMatrix = bgfx::createUniform("u_worldViewProjectionMatrix", bgfx::UniformType::Mat4);
+    materialXUniforms_.worldInverseTransposeMatrix = bgfx::createUniform("u_worldInverseTransposeMatrix", bgfx::UniformType::Mat4);
+    materialXUniforms_.viewPosition = bgfx::createUniform("u_viewPosition", bgfx::UniformType::Vec4);
+}
+
+void BgfxGraphicsBackend::DestroyUniforms() {
+    bgfx::UniformHandle handles[] = {
+        materialXUniforms_.worldMatrix,
+        materialXUniforms_.viewMatrix,
+        materialXUniforms_.projectionMatrix,
+        materialXUniforms_.viewProjectionMatrix,
+        materialXUniforms_.worldViewMatrix,
+        materialXUniforms_.worldViewProjectionMatrix,
+        materialXUniforms_.worldInverseTransposeMatrix,
+        materialXUniforms_.viewPosition
+    };
+    for (bgfx::UniformHandle handle : handles) {
+        if (bgfx::isValid(handle)) {
+            bgfx::destroy(handle);
+        }
+    }
+    materialXUniforms_ = MaterialXUniforms{};
+}
+
+void BgfxGraphicsBackend::ApplyMaterialXUniforms(const std::array<float, 16>& modelMatrix) {
+    glm::mat4 model = ToMat4(modelMatrix);
+    glm::mat4 view = ToMat4(viewState_.view);
+    glm::mat4 proj = ToMat4(viewState_.proj);
+    glm::mat4 viewProj = (IsIdentityMatrix(viewState_.view) && IsIdentityMatrix(viewState_.proj))
+        ? ToMat4(viewState_.viewProj)
+        : proj * view;
+    glm::mat4 worldView = view * model;
+    glm::mat4 worldViewProj = viewProj * model;
+    glm::mat4 worldInverseTranspose = glm::transpose(glm::inverse(model));
+
+    SetUniformIfValid(materialXUniforms_.worldMatrix, glm::value_ptr(model));
+    SetUniformIfValid(materialXUniforms_.viewMatrix, glm::value_ptr(view));
+    SetUniformIfValid(materialXUniforms_.projectionMatrix, glm::value_ptr(proj));
+    SetUniformIfValid(materialXUniforms_.viewProjectionMatrix, glm::value_ptr(viewProj));
+    SetUniformIfValid(materialXUniforms_.worldViewMatrix, glm::value_ptr(worldView));
+    SetUniformIfValid(materialXUniforms_.worldViewProjectionMatrix, glm::value_ptr(worldViewProj));
+    SetUniformIfValid(materialXUniforms_.worldInverseTransposeMatrix, glm::value_ptr(worldInverseTranspose));
+
+    float viewPosition[4] = {
+        viewState_.cameraPosition[0],
+        viewState_.cameraPosition[1],
+        viewState_.cameraPosition[2],
+        1.0f
+    };
+    SetUniformIfValid(materialXUniforms_.viewPosition, viewPosition);
 }
 
 GraphicsPipelineHandle BgfxGraphicsBackend::CreatePipeline(GraphicsDeviceHandle device,
@@ -339,14 +439,7 @@ bool BgfxGraphicsBackend::BeginFrame(GraphicsDeviceHandle device) {
     if (!initialized_) {
         return false;
     }
-    const float identity[16] = {
-        1.0f, 0.0f, 0.0f, 0.0f,
-        0.0f, 1.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 1.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 1.0f
-    };
     bgfx::setViewRect(viewId_, 0, 0, viewportWidth_, viewportHeight_);
-    bgfx::setViewTransform(viewId_, viewProj_.data(), identity);
     bgfx::touch(viewId_);
     return true;
 }
@@ -359,8 +452,9 @@ bool BgfxGraphicsBackend::EndFrame(GraphicsDeviceHandle device) {
     return true;
 }
 
-void BgfxGraphicsBackend::SetViewProjection(const std::array<float, 16>& viewProj) {
-    viewProj_ = viewProj;
+void BgfxGraphicsBackend::SetViewState(const ViewState& viewState) {
+    viewState_ = viewState;
+    bgfx::setViewTransform(viewId_, viewState_.view.data(), viewState_.proj.data());
 }
 
 void BgfxGraphicsBackend::Draw(GraphicsDeviceHandle device, GraphicsPipelineHandle pipeline,
@@ -394,6 +488,7 @@ void BgfxGraphicsBackend::Draw(GraphicsDeviceHandle device, GraphicsPipelineHand
     }
 
     bgfx::setTransform(modelMatrix.data());
+    ApplyMaterialXUniforms(modelMatrix);
     bgfx::setVertexBuffer(0, vb->handle, startVertex, availableVertices);
     bgfx::setIndexBuffer(ib->handle, indexOffset, indexCount);
     bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z |

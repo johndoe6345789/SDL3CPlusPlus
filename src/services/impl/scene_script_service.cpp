@@ -6,6 +6,9 @@
 #include <lua.hpp>
 
 #include <array>
+#include <cstring>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -13,6 +16,46 @@
 
 namespace sdl3cpp::services::impl {
 namespace {
+
+std::array<float, 16> MultiplyMatrices(const std::array<float, 16>& left,
+                                       const std::array<float, 16>& right) {
+    glm::mat4 leftMat = glm::make_mat4(left.data());
+    glm::mat4 rightMat = glm::make_mat4(right.data());
+    glm::mat4 combined = leftMat * rightMat;
+    std::array<float, 16> result{};
+    std::memcpy(result.data(), glm::value_ptr(combined), sizeof(float) * result.size());
+    return result;
+}
+
+bool ReadMatrixField(lua_State* L, int tableIndex, const char* field, std::array<float, 16>& target) {
+    lua_getfield(L, tableIndex, field);
+    if (lua_isnil(L, -1)) {
+        lua_pop(L, 1);
+        return false;
+    }
+    if (!lua_istable(L, -1)) {
+        lua_pop(L, 1);
+        throw std::runtime_error(std::string("Field '") + field + "' must be a 4x4 matrix");
+    }
+    target = lua::ReadMatrix(L, -1);
+    lua_pop(L, 1);
+    return true;
+}
+
+bool ReadVector3Field(lua_State* L, int tableIndex, const char* field, std::array<float, 3>& target) {
+    lua_getfield(L, tableIndex, field);
+    if (lua_isnil(L, -1)) {
+        lua_pop(L, 1);
+        return false;
+    }
+    if (!lua_istable(L, -1)) {
+        lua_pop(L, 1);
+        throw std::runtime_error(std::string("Field '") + field + "' must be a vec3");
+    }
+    target = lua::ReadVector3(L, -1);
+    lua_pop(L, 1);
+    return true;
+}
 
 std::vector<core::Vertex> ReadVertexArray(lua_State* L, int index, const std::shared_ptr<ILogger>& logger) {
     int absIndex = lua_absindex(L, index);
@@ -42,6 +85,14 @@ std::vector<core::Vertex> ReadVertexArray(lua_State* L, int index, const std::sh
 
         lua_getfield(L, vertexIndex, "position");
         vertex.position = lua::ReadVector3(L, -1);
+        lua_pop(L, 1);
+
+        lua_getfield(L, vertexIndex, "normal");
+        if (lua_istable(L, -1)) {
+            vertex.normal = lua::ReadVector3(L, -1);
+        } else {
+            vertex.normal = {0.0f, 0.0f, 1.0f};
+        }
         lua_pop(L, 1);
 
         lua_getfield(L, vertexIndex, "color");
@@ -232,12 +283,66 @@ std::array<float, 16> SceneScriptService::ComputeModelMatrix(int functionRef, fl
     return matrix;
 }
 
-std::array<float, 16> SceneScriptService::GetViewProjectionMatrix(float aspect) {
+ViewState SceneScriptService::GetViewState(float aspect) {
     if (logger_) {
-        logger_->Trace("SceneScriptService", "GetViewProjectionMatrix", "aspect=" + std::to_string(aspect));
+        logger_->Trace("SceneScriptService", "GetViewState", "aspect=" + std::to_string(aspect));
     }
     lua_State* L = GetLuaState();
 
+    ViewState state;
+    state.view = lua::IdentityMatrix();
+    state.proj = lua::IdentityMatrix();
+    state.viewProj = lua::IdentityMatrix();
+    state.cameraPosition = {0.0f, 0.0f, 0.0f};
+
+    lua_getglobal(L, "get_view_state");
+    if (lua_isfunction(L, -1)) {
+        lua_pushnumber(L, aspect);
+        if (lua_pcall(L, 1, 1, 0) != LUA_OK) {
+            std::string message = lua::GetLuaError(L);
+            lua_pop(L, 1);
+            if (logger_) {
+                logger_->Error("Lua get_view_state failed: " + message);
+            }
+            throw std::runtime_error("Lua get_view_state failed: " + message);
+        }
+        if (!lua_istable(L, -1)) {
+            lua_pop(L, 1);
+            if (logger_) {
+                logger_->Error("'get_view_state' did not return a table");
+            }
+            throw std::runtime_error("'get_view_state' did not return a table");
+        }
+        bool hasView = false;
+        bool hasProj = false;
+        bool hasViewProj = false;
+
+        try {
+            hasView = ReadMatrixField(L, -1, "view", state.view);
+            hasProj = ReadMatrixField(L, -1, "proj", state.proj);
+            hasViewProj = ReadMatrixField(L, -1, "view_proj", state.viewProj);
+            if (!hasViewProj) {
+                hasViewProj = ReadMatrixField(L, -1, "viewProj", state.viewProj);
+            }
+            ReadVector3Field(L, -1, "camera_pos", state.cameraPosition);
+            ReadVector3Field(L, -1, "camera_position", state.cameraPosition);
+        } catch (const std::exception& ex) {
+            lua_pop(L, 1);
+            if (logger_) {
+                logger_->Error("Lua get_view_state returned invalid data: " + std::string(ex.what()));
+            }
+            throw;
+        }
+
+        lua_pop(L, 1);
+
+        if (!hasViewProj && hasView && hasProj) {
+            state.viewProj = MultiplyMatrices(state.proj, state.view);
+        }
+        return state;
+    }
+
+    lua_pop(L, 1);
     lua_getglobal(L, "get_view_projection");
     if (!lua_isfunction(L, -1)) {
         lua_pop(L, 1);
@@ -262,9 +367,9 @@ std::array<float, 16> SceneScriptService::GetViewProjectionMatrix(float aspect) 
         }
         throw std::runtime_error("'get_view_projection' did not return a table");
     }
-    std::array<float, 16> matrix = lua::ReadMatrix(L, -1);
+    state.viewProj = lua::ReadMatrix(L, -1);
     lua_pop(L, 1);
-    return matrix;
+    return state;
 }
 
 lua_State* SceneScriptService::GetLuaState() const {

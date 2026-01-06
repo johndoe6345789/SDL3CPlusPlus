@@ -19,7 +19,7 @@ public:
 
     std::vector<SceneObject> LoadSceneObjects() override;
     std::array<float, 16> ComputeModelMatrix(int functionRef, float time) override;
-    std::array<float, 16> GetViewProjectionMatrix(float aspect) override;
+    ViewState GetViewState(float aspect) override;
 
 private:
     lua_State* GetLuaState() const;

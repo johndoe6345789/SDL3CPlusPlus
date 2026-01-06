@@ -35,6 +35,16 @@ struct ShaderPaths {
 };
 
 /**
+ * @brief View state used for per-frame uniforms.
+ */
+struct ViewState {
+    std::array<float, 16> view{};
+    std::array<float, 16> proj{};
+    std::array<float, 16> viewProj{};
+    std::array<float, 3> cameraPosition{};
+};
+
+/**
  * @brief Render command for a single draw call.
  */
 struct RenderCommand {

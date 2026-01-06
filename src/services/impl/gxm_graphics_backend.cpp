@@ -461,8 +461,9 @@ bool GxmGraphicsBackend::EndFrame(GraphicsDeviceHandle device) {
     return true;
 }
 
-void GxmGraphicsBackend::SetViewProjection(const std::array<float, 16>& viewProj) {
-    std::cout << "GXM: Setting view-projection matrix" << std::endl;
+void GxmGraphicsBackend::SetViewState(const ViewState& viewState) {
+    std::cout << "GXM: Setting view state" << std::endl;
+    (void)viewState;
     // Matrix will be set when drawing with specific pipeline
 }
 

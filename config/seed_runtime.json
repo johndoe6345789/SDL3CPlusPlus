@@ -61,7 +61,7 @@
     "renderer": "vulkan"
   },
   "materialx": {
-    "enabled": false,
+    "enabled": true,
     "parameters_enabled": true,
     "document": "MaterialX/resources/Materials/Examples/StandardSurface/standard_surface_carpaint.mtlx",
     "shader_key": "materialx",

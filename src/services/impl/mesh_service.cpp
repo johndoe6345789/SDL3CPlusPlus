@@ -53,7 +53,8 @@ bool MeshService::LoadFromFile(const std::string& requestedPath,
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile(
         resolved.string(),
-        aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_PreTransformVertices);
+        aiProcess_Triangulate | aiProcess_JoinIdenticalVertices |
+        aiProcess_PreTransformVertices | aiProcess_GenNormals);
 
     if (!scene) {
         outError = importer.GetErrorString() ? importer.GetErrorString() : "Assimp failed to load mesh";
@@ -72,9 +73,11 @@ bool MeshService::LoadFromFile(const std::string& requestedPath,
     }
 
     outPayload.positions.clear();
+    outPayload.normals.clear();
     outPayload.colors.clear();
     outPayload.indices.clear();
     outPayload.positions.reserve(mesh->mNumVertices);
+    outPayload.normals.reserve(mesh->mNumVertices);
     outPayload.colors.reserve(mesh->mNumVertices);
     outPayload.indices.reserve(mesh->mNumFaces * 3);
 
@@ -92,6 +95,12 @@ bool MeshService::LoadFromFile(const std::string& requestedPath,
     for (unsigned i = 0; i < mesh->mNumVertices; ++i) {
         const aiVector3D& vertex = mesh->mVertices[i];
         outPayload.positions.push_back({vertex.x, vertex.y, vertex.z});
+
+        aiVector3D normal(0.0f, 0.0f, 1.0f);
+        if (mesh->HasNormals()) {
+            normal = mesh->mNormals[i];
+        }
+        outPayload.normals.push_back({normal.x, normal.y, normal.z});
 
         aiColor3D color = materialColor;
         if (mesh->HasVertexColors(0) && mesh->mColors[0]) {
@@ -123,6 +132,7 @@ void MeshService::PushMeshToLua(lua_State* L, const MeshPayload& payload) {
     if (logger_) {
         logger_->Trace("MeshService", "PushMeshToLua",
                        "positions.size=" + std::to_string(payload.positions.size()) +
+                       ", normals.size=" + std::to_string(payload.normals.size()) +
                        ", colors.size=" + std::to_string(payload.colors.size()) +
                        ", indices.size=" + std::to_string(payload.indices.size()) +
                        ", luaStateIsNull=" + std::string(L ? "false" : "true"));
@@ -139,6 +149,17 @@ void MeshService::PushMeshToLua(lua_State* L, const MeshPayload& payload) {
             lua_rawseti(L, -2, component + 1);
         }
         lua_setfield(L, -2, "position");
+
+        lua_newtable(L);
+        std::array<float, 3> normal = {0.0f, 0.0f, 1.0f};
+        if (vertexIndex < payload.normals.size()) {
+            normal = payload.normals[vertexIndex];
+        }
+        for (int component = 0; component < 3; ++component) {
+            lua_pushnumber(L, normal[component]);
+            lua_rawseti(L, -2, component + 1);
+        }
+        lua_setfield(L, -2, "normal");
 
         lua_newtable(L);
         for (int component = 0; component < 3; ++component) {
