@@ -13,7 +13,7 @@
                 "ENABLE_VITA": "ON"
             },
             "environment": {
-                "VITASDK": "/home/rewrich/vita-toolchain"
+                "VITASDK": "/usr/local/vitasdk/arm-vita-eabi"
             }
         }
     ],
