@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 namespace sdl3cpp::services {
 
@@ -89,6 +90,41 @@ struct RenderGraphConfig {
     std::string functionName = "get_render_graph";
 };
 
+enum class GraphicsBackendType {
+    Vulkan,
+    Bgfx
+};
+
+struct GraphicsBackendConfig {
+    GraphicsBackendType backend = GraphicsBackendType::Vulkan;
+    std::string bgfxRenderer = "vulkan";
+};
+
+struct MaterialXConfig {
+    bool enabled = false;
+    std::filesystem::path documentPath;
+    std::string shaderKey = "materialx";
+    std::string materialName;
+    std::filesystem::path libraryPath;
+    std::vector<std::string> libraryFolders = {
+        "stdlib",
+        "pbrlib",
+        "lights",
+        "bxdf",
+        "cmlib",
+        "nprlib",
+        "targets"
+    };
+    bool useConstantColor = false;
+    std::array<float, 3> constantColor = {1.0f, 1.0f, 1.0f};
+};
+
+struct GuiFontConfig {
+    bool useFreeType = false;
+    std::filesystem::path fontPath;
+    float fontSize = 18.0f;
+};
+
 /**
  * @brief Runtime configuration values used across services.
  */
@@ -102,6 +138,9 @@ struct RuntimeConfig {
     InputBindings inputBindings{};
     AtmosphericsConfig atmospherics{};
     RenderGraphConfig renderGraph{};
+    GraphicsBackendConfig graphicsBackend{};
+    MaterialXConfig materialX{};
+    GuiFontConfig guiFont{};
     float guiOpacity = 1.0f;
 };
 

@@ -5,9 +5,11 @@
 #include <memory>
 #include <unordered_map>
 #include <vector>
+#include <cstdint>
 
 #include <vulkan/vulkan.h>
 
+#include "services/interfaces/config_types.hpp"
 #include "services/interfaces/gui_types.hpp"
 #include "services/interfaces/i_buffer_service.hpp"
 #include "services/interfaces/i_logger.hpp"
@@ -36,6 +38,7 @@ class GuiRenderer {
 public:
     GuiRenderer(VkDevice device, VkPhysicalDevice physicalDevice, VkFormat swapchainFormat,
                 VkRenderPass renderPass, const std::filesystem::path& scriptDirectory,
+                const GuiFontConfig& fontConfig,
                 std::shared_ptr<IBufferService> bufferService, std::shared_ptr<ILogger> logger);
     ~GuiRenderer();
 
@@ -49,7 +52,26 @@ public:
     bool IsReady() const;
 
 private:
+    struct GlyphBitmap {
+        int width = 0;
+        int height = 0;
+        int pitch = 0;
+        int bearingX = 0;
+        int bearingY = 0;
+        int advance = 0;
+        std::vector<uint8_t> pixels;
+    };
+
     const ParsedSvg* LoadSvg(const std::string& relativePath);
+    bool EnsureFreeTypeReady();
+    std::filesystem::path ResolveFontPath() const;
+    const GlyphBitmap* LoadGlyph(char c, int pixelSize);
+    void RenderFreeTypeText(const GuiCommand& cmd,
+                            const GuiCommand::RectData& activeClip,
+                            const GuiCommand::RectData& bounds);
+    void AddQuad(const GuiCommand::RectData& rect,
+                 const GuiColor& color,
+                 const GuiCommand::RectData& clipRect);
 
     void CreatePipeline(VkRenderPass renderPass, VkExtent2D extent);
     void CreateVertexAndIndexBuffers(size_t vertexCount, size_t indexCount);
@@ -68,6 +90,7 @@ private:
     VkFormat swapchainFormat_;
     VkRenderPass renderPass_;
     std::filesystem::path scriptDirectory_;
+    GuiFontConfig fontConfig_;
 
     // Pipeline resources
     VkPipeline pipeline_ = VK_NULL_HANDLE;
@@ -89,6 +112,11 @@ private:
     uint32_t viewportHeight_ = 0;
     std::unordered_map<std::string, ParsedSvg> svgCache_;
     std::unordered_map<std::string, std::vector<uint8_t>> shaderSpirvCache_;
+    std::unordered_map<uint64_t, GlyphBitmap> glyphCache_;
+    void* ftLibrary_ = nullptr;
+    void* ftFace_ = nullptr;
+    int currentFontSize_ = 0;
+    bool freetypeReady_ = false;
     std::shared_ptr<IBufferService> bufferService_;
     std::shared_ptr<ILogger> logger_;
 };

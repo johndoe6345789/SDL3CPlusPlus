@@ -136,8 +136,9 @@ find_package(lua CONFIG REQUIRED)
 find_package(CLI11 CONFIG REQUIRED)
 find_package(RapidJSON CONFIG REQUIRED)
 find_package(EnTT CONFIG REQUIRED)
-find_package(bgfx CONFIG QUIET)
-find_package(MaterialX CONFIG QUIET)
+find_package(bgfx CONFIG REQUIRED)
+find_package(MaterialX CONFIG REQUIRED)
+find_package(Freetype CONFIG REQUIRED)
 find_package(assimp CONFIG REQUIRED)
 find_package(Bullet CONFIG REQUIRED)
 find_package(Vorbis CONFIG REQUIRED)
@@ -159,10 +160,12 @@ set(SDL3CPP_MATERIALX_LIBS)
 if(TARGET MaterialX::MaterialX)
     list(APPEND SDL3CPP_MATERIALX_LIBS MaterialX::MaterialX)
 else()
-    foreach(candidate IN ITEMS
-            MaterialX::MaterialXCore
-            MaterialX::MaterialXFormat
-            MaterialX::MaterialXGenShader)
+foreach(candidate IN ITEMS
+        MaterialX::MaterialXCore
+        MaterialX::MaterialXFormat
+        MaterialX::MaterialXGenShader
+        MaterialX::MaterialXGenGlsl
+        MaterialX::MaterialXRender)
         if(TARGET ${candidate})
             list(APPEND SDL3CPP_MATERIALX_LIBS ${candidate})
         endif()
@@ -170,6 +173,13 @@ else()
 endif()
 if(SDL3CPP_MATERIALX_LIBS)
     list(APPEND SDL3CPP_RENDER_STACK_LIBS ${SDL3CPP_MATERIALX_LIBS})
+endif()
+
+set(SDL3CPP_FREETYPE_LIBS)
+if(TARGET Freetype::Freetype)
+    list(APPEND SDL3CPP_FREETYPE_LIBS Freetype::Freetype)
+elseif(TARGET freetype::freetype)
+    list(APPEND SDL3CPP_FREETYPE_LIBS freetype::freetype)
 endif()
 endif()
 
@@ -188,6 +198,7 @@ if(BUILD_SDL3_APP)
             src/services/impl/lua_helpers.cpp
             src/services/impl/scene_script_service.cpp
             src/services/impl/shader_script_service.cpp
+            src/services/impl/materialx_shader_generator.cpp
             src/services/impl/render_graph_script_service.cpp
             src/services/impl/gui_script_service.cpp
             src/services/impl/audio_command_service.cpp
@@ -207,10 +218,12 @@ if(BUILD_SDL3_APP)
             src/services/impl/render_coordinator_service.cpp
             src/services/impl/gui_renderer_service.cpp
             src/services/impl/vulkan_gui_service.cpp
+            src/services/impl/null_gui_service.cpp
             src/services/impl/bullet_physics_service.cpp
             src/services/impl/scene_service.cpp
             src/services/impl/graphics_service.cpp
             $<$<NOT:$<BOOL:${ENABLE_VITA}>>:src/services/impl/vulkan_graphics_backend.cpp>
+            $<$<NOT:$<BOOL:${ENABLE_VITA}>>:src/services/impl/bgfx_graphics_backend.cpp>
             $<$<BOOL:${ENABLE_VITA}>:src/services/impl/gxm_graphics_backend.cpp>
             src/app/service_based_app.cpp
             src/services/impl/gui_renderer.cpp
@@ -223,6 +236,7 @@ if(BUILD_SDL3_APP)
         CLI11::CLI11
         rapidjson
         ${SDL3CPP_RENDER_STACK_LIBS}
+        ${SDL3CPP_FREETYPE_LIBS}
         assimp::assimp
         Bullet::Bullet
         glm::glm
@@ -285,11 +299,13 @@ add_executable(script_engine_tests
     src/services/impl/lua_helpers.cpp
     src/services/impl/scene_script_service.cpp
     src/services/impl/shader_script_service.cpp
+    src/services/impl/materialx_shader_generator.cpp
 )
 target_include_directories(script_engine_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(script_engine_tests PRIVATE
     ${SDL_TARGET}
     lua::lua
+    ${SDL3CPP_RENDER_STACK_LIBS}
     assimp::assimp
     Bullet::Bullet
     glm::glm

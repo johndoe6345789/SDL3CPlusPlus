@@ -6,9 +6,11 @@
 namespace sdl3cpp::services::impl {
 
 GuiRendererService::GuiRendererService(std::shared_ptr<ILogger> logger,
-                                       std::shared_ptr<IBufferService> bufferService)
+                                       std::shared_ptr<IBufferService> bufferService,
+                                       std::shared_ptr<IConfigService> configService)
     : logger_(std::move(logger)),
-      bufferService_(std::move(bufferService)) {
+      bufferService_(std::move(bufferService)),
+      configService_(std::move(configService)) {
     if (logger_) {
         logger_->Trace("GuiRendererService", "GuiRendererService",
                        "bufferService=" + std::string(bufferService_ ? "set" : "null"));
@@ -28,8 +30,13 @@ void GuiRendererService::Initialize(VkDevice device,
                        ", renderPassIsNull=" + std::string(renderPass == VK_NULL_HANDLE ? "true" : "false") +
                        ", resourcePath=" + resourcePath.string());
     }
+    GuiFontConfig fontConfig;
+    if (configService_) {
+        fontConfig = configService_->GetGuiFontConfig();
+    }
     renderer_ = std::make_unique<GuiRenderer>(
-        device, physicalDevice, format, renderPass, resourcePath, bufferService_, logger_);
+        device, physicalDevice, format, renderPass, resourcePath, fontConfig,
+        bufferService_, logger_);
 }
 
 void GuiRendererService::PrepareFrame(const std::vector<GuiCommand>& commands,

@@ -94,6 +94,24 @@ public:
         }
         return config_.renderGraph;
     }
+    const GraphicsBackendConfig& GetGraphicsBackendConfig() const override {
+        if (logger_) {
+            logger_->Trace("JsonConfigService", "GetGraphicsBackendConfig");
+        }
+        return config_.graphicsBackend;
+    }
+    const MaterialXConfig& GetMaterialXConfig() const override {
+        if (logger_) {
+            logger_->Trace("JsonConfigService", "GetMaterialXConfig");
+        }
+        return config_.materialX;
+    }
+    const GuiFontConfig& GetGuiFontConfig() const override {
+        if (logger_) {
+            logger_->Trace("JsonConfigService", "GetGuiFontConfig");
+        }
+        return config_.guiFont;
+    }
     const std::string& GetConfigJson() const override {
         if (logger_) {
             logger_->Trace("JsonConfigService", "GetConfigJson");

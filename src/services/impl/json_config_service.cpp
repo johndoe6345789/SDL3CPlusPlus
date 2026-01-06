@@ -7,6 +7,8 @@
 #include <rapidjson/prettywriter.h>
 #include <vulkan/vulkan.h>
 #include <array>
+#include <algorithm>
+#include <cctype>
 #include <fstream>
 #include <iostream>
 #include <optional>
@@ -18,6 +20,29 @@ namespace sdl3cpp::services::impl {
 static const std::vector<const char*> kDeviceExtensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 };
+
+GraphicsBackendType ParseBackendType(const std::string& value) {
+    std::string lower = value;
+    std::transform(lower.begin(), lower.end(), lower.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    if (lower == "vulkan") {
+        return GraphicsBackendType::Vulkan;
+    }
+    if (lower == "bgfx") {
+        return GraphicsBackendType::Bgfx;
+    }
+    throw std::runtime_error("graphics_backend.type must be 'vulkan' or 'bgfx'");
+}
+
+std::string BackendTypeToString(GraphicsBackendType type) {
+    switch (type) {
+        case GraphicsBackendType::Vulkan:
+            return "vulkan";
+        case GraphicsBackendType::Bgfx:
+            return "bgfx";
+    }
+    return "vulkan";
+}
 
 JsonConfigService::JsonConfigService(std::shared_ptr<ILogger> logger, const char* argv0)
     : logger_(std::move(logger)), configJson_(), config_(RuntimeConfig{}) {
@@ -386,6 +411,129 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
         }
     }
 
+    if (document.HasMember("graphics_backend")) {
+        const auto& backendValue = document["graphics_backend"];
+        if (!backendValue.IsObject()) {
+            throw std::runtime_error("JSON member 'graphics_backend' must be an object");
+        }
+        if (backendValue.HasMember("type")) {
+            const auto& value = backendValue["type"];
+            if (!value.IsString()) {
+                throw std::runtime_error("JSON member 'graphics_backend.type' must be a string");
+            }
+            config.graphicsBackend.backend = ParseBackendType(value.GetString());
+        }
+        if (backendValue.HasMember("bgfx_renderer")) {
+            const auto& value = backendValue["bgfx_renderer"];
+            if (!value.IsString()) {
+                throw std::runtime_error("JSON member 'graphics_backend.bgfx_renderer' must be a string");
+            }
+            config.graphicsBackend.bgfxRenderer = value.GetString();
+        }
+    }
+
+    if (document.HasMember("materialx")) {
+        const auto& materialValue = document["materialx"];
+        if (!materialValue.IsObject()) {
+            throw std::runtime_error("JSON member 'materialx' must be an object");
+        }
+        if (materialValue.HasMember("enabled")) {
+            const auto& value = materialValue["enabled"];
+            if (!value.IsBool()) {
+                throw std::runtime_error("JSON member 'materialx.enabled' must be a boolean");
+            }
+            config.materialX.enabled = value.GetBool();
+        }
+        if (materialValue.HasMember("document")) {
+            const auto& value = materialValue["document"];
+            if (!value.IsString()) {
+                throw std::runtime_error("JSON member 'materialx.document' must be a string");
+            }
+            config.materialX.documentPath = value.GetString();
+        }
+        if (materialValue.HasMember("shader_key")) {
+            const auto& value = materialValue["shader_key"];
+            if (!value.IsString()) {
+                throw std::runtime_error("JSON member 'materialx.shader_key' must be a string");
+            }
+            config.materialX.shaderKey = value.GetString();
+        }
+        if (materialValue.HasMember("material")) {
+            const auto& value = materialValue["material"];
+            if (!value.IsString()) {
+                throw std::runtime_error("JSON member 'materialx.material' must be a string");
+            }
+            config.materialX.materialName = value.GetString();
+        }
+        if (materialValue.HasMember("library_path")) {
+            const auto& value = materialValue["library_path"];
+            if (!value.IsString()) {
+                throw std::runtime_error("JSON member 'materialx.library_path' must be a string");
+            }
+            config.materialX.libraryPath = value.GetString();
+        }
+        if (materialValue.HasMember("library_folders")) {
+            const auto& value = materialValue["library_folders"];
+            if (!value.IsArray()) {
+                throw std::runtime_error("JSON member 'materialx.library_folders' must be an array");
+            }
+            config.materialX.libraryFolders.clear();
+            for (rapidjson::SizeType i = 0; i < value.Size(); ++i) {
+                if (!value[i].IsString()) {
+                    throw std::runtime_error("JSON member 'materialx.library_folders[" + std::to_string(i) + "]' must be a string");
+                }
+                config.materialX.libraryFolders.emplace_back(value[i].GetString());
+            }
+        }
+        if (materialValue.HasMember("use_constant_color")) {
+            const auto& value = materialValue["use_constant_color"];
+            if (!value.IsBool()) {
+                throw std::runtime_error("JSON member 'materialx.use_constant_color' must be a boolean");
+            }
+            config.materialX.useConstantColor = value.GetBool();
+        }
+        if (materialValue.HasMember("constant_color")) {
+            const auto& value = materialValue["constant_color"];
+            if (!value.IsArray() || value.Size() != 3) {
+                throw std::runtime_error("JSON member 'materialx.constant_color' must be an array of 3 numbers");
+            }
+            for (rapidjson::SizeType i = 0; i < 3; ++i) {
+                if (!value[i].IsNumber()) {
+                    throw std::runtime_error("JSON member 'materialx.constant_color[" + std::to_string(i) + "]' must be a number");
+                }
+                config.materialX.constantColor[i] = static_cast<float>(value[i].GetDouble());
+            }
+        }
+    }
+
+    if (document.HasMember("gui_font")) {
+        const auto& fontValue = document["gui_font"];
+        if (!fontValue.IsObject()) {
+            throw std::runtime_error("JSON member 'gui_font' must be an object");
+        }
+        if (fontValue.HasMember("use_freetype")) {
+            const auto& value = fontValue["use_freetype"];
+            if (!value.IsBool()) {
+                throw std::runtime_error("JSON member 'gui_font.use_freetype' must be a boolean");
+            }
+            config.guiFont.useFreeType = value.GetBool();
+        }
+        if (fontValue.HasMember("font_path")) {
+            const auto& value = fontValue["font_path"];
+            if (!value.IsString()) {
+                throw std::runtime_error("JSON member 'gui_font.font_path' must be a string");
+            }
+            config.guiFont.fontPath = value.GetString();
+        }
+        if (fontValue.HasMember("font_size")) {
+            const auto& value = fontValue["font_size"];
+            if (!value.IsNumber()) {
+                throw std::runtime_error("JSON member 'gui_font.font_size' must be a number");
+            }
+            config.guiFont.fontSize = static_cast<float>(value.GetDouble());
+        }
+    }
+
     if (document.HasMember("gui_opacity")) {
         const auto& value = document["gui_opacity"];
         if (!value.IsNumber()) {
@@ -441,6 +589,50 @@ std::string JsonConfigService::BuildConfigJson(const RuntimeConfig& config,
                                 rapidjson::Value(config.renderGraph.functionName.c_str(), allocator),
                                 allocator);
     document.AddMember("render_graph", renderGraphObject, allocator);
+
+    rapidjson::Value backendObject(rapidjson::kObjectType);
+    backendObject.AddMember("type",
+                            rapidjson::Value(BackendTypeToString(config.graphicsBackend.backend).c_str(), allocator),
+                            allocator);
+    backendObject.AddMember("bgfx_renderer",
+                            rapidjson::Value(config.graphicsBackend.bgfxRenderer.c_str(), allocator),
+                            allocator);
+    document.AddMember("graphics_backend", backendObject, allocator);
+
+    rapidjson::Value materialObject(rapidjson::kObjectType);
+    materialObject.AddMember("enabled", config.materialX.enabled, allocator);
+    materialObject.AddMember("document",
+                             rapidjson::Value(config.materialX.documentPath.string().c_str(), allocator),
+                             allocator);
+    materialObject.AddMember("shader_key",
+                             rapidjson::Value(config.materialX.shaderKey.c_str(), allocator),
+                             allocator);
+    materialObject.AddMember("material",
+                             rapidjson::Value(config.materialX.materialName.c_str(), allocator),
+                             allocator);
+    materialObject.AddMember("library_path",
+                             rapidjson::Value(config.materialX.libraryPath.string().c_str(), allocator),
+                             allocator);
+    rapidjson::Value libraryFolders(rapidjson::kArrayType);
+    for (const auto& folder : config.materialX.libraryFolders) {
+        libraryFolders.PushBack(rapidjson::Value(folder.c_str(), allocator), allocator);
+    }
+    materialObject.AddMember("library_folders", libraryFolders, allocator);
+    materialObject.AddMember("use_constant_color", config.materialX.useConstantColor, allocator);
+    rapidjson::Value constantColor(rapidjson::kArrayType);
+    constantColor.PushBack(config.materialX.constantColor[0], allocator);
+    constantColor.PushBack(config.materialX.constantColor[1], allocator);
+    constantColor.PushBack(config.materialX.constantColor[2], allocator);
+    materialObject.AddMember("constant_color", constantColor, allocator);
+    document.AddMember("materialx", materialObject, allocator);
+
+    rapidjson::Value fontObject(rapidjson::kObjectType);
+    fontObject.AddMember("use_freetype", config.guiFont.useFreeType, allocator);
+    fontObject.AddMember("font_path",
+                         rapidjson::Value(config.guiFont.fontPath.string().c_str(), allocator),
+                         allocator);
+    fontObject.AddMember("font_size", config.guiFont.fontSize, allocator);
+    document.AddMember("gui_font", fontObject, allocator);
 
     rapidjson::Value bindingsObject(rapidjson::kObjectType);
     auto addBindingMember = [&](const char* name, const std::string& value) {

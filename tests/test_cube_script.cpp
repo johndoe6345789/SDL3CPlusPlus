@@ -2,6 +2,7 @@
 #include "services/impl/script_engine_service.hpp"
 #include "services/impl/scene_script_service.hpp"
 #include "services/impl/shader_script_service.hpp"
+#include "services/interfaces/i_config_service.hpp"
 
 #include <array>
 #include <cmath>
@@ -68,7 +69,8 @@ int main() {
         engineService->Initialize();
 
         sdl3cpp::services::impl::SceneScriptService sceneService(engineService, logger);
-        sdl3cpp::services::impl::ShaderScriptService shaderService(engineService, logger);
+        std::shared_ptr<sdl3cpp::services::IConfigService> configService;
+        sdl3cpp::services::impl::ShaderScriptService shaderService(engineService, configService, logger);
 
         auto objects = sceneService.LoadSceneObjects();
         Assert(objects.size() == 1, "expected exactly one scene object", failures);

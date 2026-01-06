@@ -15,12 +15,16 @@
 namespace sdl3cpp::services::impl {
 
 ShaderScriptService::ShaderScriptService(std::shared_ptr<IScriptEngineService> engineService,
+                                         std::shared_ptr<IConfigService> configService,
                                          std::shared_ptr<ILogger> logger)
     : engineService_(std::move(engineService)),
-      logger_(std::move(logger)) {
+      configService_(std::move(configService)),
+      logger_(std::move(logger)),
+      materialxGenerator_(logger_) {
     if (logger_) {
         logger_->Trace("ShaderScriptService", "ShaderScriptService",
-                       "engineService=" + std::string(engineService_ ? "set" : "null"));
+                       "engineService=" + std::string(engineService_ ? "set" : "null") +
+                       ", configService=" + std::string(configService_ ? "set" : "null"));
     }
 }
 
@@ -65,12 +69,32 @@ std::unordered_map<std::string, ShaderPaths> ShaderScriptService::LoadShaderPath
     }
 
     lua_pop(L, 1);
+
+    if (configService_) {
+        const auto& materialConfig = configService_->GetMaterialXConfig();
+        if (materialConfig.enabled) {
+            try {
+                ShaderPaths materialShader = materialxGenerator_.Generate(
+                    materialConfig,
+                    engineService_ ? engineService_->GetScriptDirectory() : std::filesystem::path{});
+                if (!materialConfig.shaderKey.empty()) {
+                    shaderMap[materialConfig.shaderKey] = std::move(materialShader);
+                }
+            } catch (const std::exception& ex) {
+                if (logger_) {
+                    logger_->Error("MaterialX shader generation failed: " + std::string(ex.what()));
+                }
+            }
+        }
+    }
+
     if (shaderMap.empty()) {
         if (logger_) {
             logger_->Error("'get_shader_paths' did not return any shader variants");
         }
         throw std::runtime_error("'get_shader_paths' did not return any shader variants");
     }
+
     return shaderMap;
 }
 

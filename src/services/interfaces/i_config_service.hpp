@@ -73,6 +73,24 @@ public:
     virtual const RenderGraphConfig& GetRenderGraphConfig() const = 0;
 
     /**
+     * @brief Get graphics backend settings.
+     * @return Graphics backend configuration
+     */
+    virtual const GraphicsBackendConfig& GetGraphicsBackendConfig() const = 0;
+
+    /**
+     * @brief Get MaterialX settings.
+     * @return MaterialX configuration
+     */
+    virtual const MaterialXConfig& GetMaterialXConfig() const = 0;
+
+    /**
+     * @brief Get GUI font settings.
+     * @return GUI font configuration
+     */
+    virtual const GuiFontConfig& GetGuiFontConfig() const = 0;
+
+    /**
      * @brief Get the full JSON configuration as a string.
      *
      * @return JSON string (may be empty if unavailable)

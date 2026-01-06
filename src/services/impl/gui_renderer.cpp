@@ -1,5 +1,8 @@
 #include "gui_renderer.hpp"
 
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -407,6 +410,7 @@ void main() {
 
 GuiRenderer::GuiRenderer(VkDevice device, VkPhysicalDevice physicalDevice, VkFormat swapchainFormat,
                          VkRenderPass renderPass, const std::filesystem::path& scriptDirectory,
+                         const GuiFontConfig& fontConfig,
                          std::shared_ptr<IBufferService> bufferService,
                          std::shared_ptr<ILogger> logger)
     : device_(device),
@@ -414,6 +418,7 @@ GuiRenderer::GuiRenderer(VkDevice device, VkPhysicalDevice physicalDevice, VkFor
       swapchainFormat_(swapchainFormat),
       renderPass_(renderPass),
       scriptDirectory_(scriptDirectory),
+      fontConfig_(fontConfig),
       bufferService_(std::move(bufferService)),
       logger_(std::move(logger)) {
 }
@@ -421,6 +426,16 @@ GuiRenderer::GuiRenderer(VkDevice device, VkPhysicalDevice physicalDevice, VkFor
 GuiRenderer::~GuiRenderer() {
     CleanupBuffers();
     CleanupPipeline();
+    if (freetypeReady_) {
+        FT_Face face = reinterpret_cast<FT_Face>(ftFace_);
+        FT_Library library = reinterpret_cast<FT_Library>(ftLibrary_);
+        if (face) {
+            FT_Done_Face(face);
+        }
+        if (library) {
+            FT_Done_FreeType(library);
+        }
+    }
 }
 
 bool GuiRenderer::IsReady() const {
@@ -504,6 +519,218 @@ void GuiRenderer::Resize(uint32_t width, uint32_t height, VkFormat format, VkRen
     }
 }
 
+bool GuiRenderer::EnsureFreeTypeReady() {
+    if (freetypeReady_ || !fontConfig_.useFreeType) {
+        return freetypeReady_;
+    }
+
+    FT_Library library = nullptr;
+    if (FT_Init_FreeType(&library) != 0) {
+        if (logger_) {
+            logger_->Warn("GuiRenderer: FreeType initialization failed");
+        }
+        return false;
+    }
+
+    std::filesystem::path fontPath = ResolveFontPath();
+    if (fontPath.empty()) {
+        if (logger_) {
+            logger_->Warn("GuiRenderer: FreeType font path not set or not found");
+        }
+        FT_Done_FreeType(library);
+        return false;
+    }
+
+    FT_Face face = nullptr;
+    if (FT_New_Face(library, fontPath.string().c_str(), 0, &face) != 0) {
+        if (logger_) {
+            logger_->Warn("GuiRenderer: Failed to load FreeType font at " + fontPath.string());
+        }
+        FT_Done_FreeType(library);
+        return false;
+    }
+
+    ftLibrary_ = library;
+    ftFace_ = face;
+    freetypeReady_ = true;
+    return true;
+}
+
+std::filesystem::path GuiRenderer::ResolveFontPath() const {
+    if (!fontConfig_.fontPath.empty()) {
+        std::filesystem::path candidate = fontConfig_.fontPath;
+        if (candidate.is_absolute()) {
+            return candidate;
+        }
+        if (!scriptDirectory_.empty()) {
+            auto projectRoot = scriptDirectory_.parent_path();
+            if (!projectRoot.empty()) {
+                return std::filesystem::weakly_canonical(projectRoot / candidate);
+            }
+            return std::filesystem::weakly_canonical(scriptDirectory_ / candidate);
+        }
+    }
+
+    if (!scriptDirectory_.empty()) {
+        auto fallback = scriptDirectory_ / "assets" / "fonts" / "Roboto-Regular.ttf";
+        if (std::filesystem::exists(fallback)) {
+            return std::filesystem::weakly_canonical(fallback);
+        }
+    }
+    return {};
+}
+
+const GuiRenderer::GlyphBitmap* GuiRenderer::LoadGlyph(char c, int pixelSize) {
+    if (!EnsureFreeTypeReady()) {
+        return nullptr;
+    }
+    if (pixelSize <= 0) {
+        pixelSize = 1;
+    }
+    uint64_t key = (static_cast<uint64_t>(static_cast<uint32_t>(pixelSize)) << 32) |
+                   static_cast<uint8_t>(c);
+    auto it = glyphCache_.find(key);
+    if (it != glyphCache_.end()) {
+        return &it->second;
+    }
+
+    FT_Face face = reinterpret_cast<FT_Face>(ftFace_);
+    if (!face) {
+        return nullptr;
+    }
+    if (currentFontSize_ != pixelSize) {
+        FT_Set_Pixel_Sizes(face, 0, static_cast<FT_UInt>(pixelSize));
+        currentFontSize_ = pixelSize;
+    }
+
+    if (FT_Load_Char(face, static_cast<FT_ULong>(static_cast<unsigned char>(c)), FT_LOAD_RENDER) != 0) {
+        return nullptr;
+    }
+
+    const FT_GlyphSlot slot = face->glyph;
+    GlyphBitmap glyph;
+    glyph.width = static_cast<int>(slot->bitmap.width);
+    glyph.height = static_cast<int>(slot->bitmap.rows);
+    glyph.pitch = static_cast<int>(slot->bitmap.pitch);
+    glyph.bearingX = slot->bitmap_left;
+    glyph.bearingY = slot->bitmap_top;
+    glyph.advance = static_cast<int>(slot->advance.x >> 6);
+    int pitch = glyph.pitch;
+    if (pitch < 0) {
+        pitch = -pitch;
+    }
+    glyph.pixels.assign(slot->bitmap.buffer, slot->bitmap.buffer + pitch * glyph.height);
+
+    auto inserted = glyphCache_.emplace(key, std::move(glyph));
+    return &inserted.first->second;
+}
+
+void GuiRenderer::RenderFreeTypeText(const GuiCommand& cmd,
+                                     const GuiCommand::RectData& activeClip,
+                                     const GuiCommand::RectData& bounds) {
+    FT_Face face = reinterpret_cast<FT_Face>(ftFace_);
+    if (!face) {
+        return;
+    }
+    int pixelSize = static_cast<int>(std::max(1.0f, cmd.fontSize));
+    if (currentFontSize_ != pixelSize) {
+        FT_Set_Pixel_Sizes(face, 0, static_cast<FT_UInt>(pixelSize));
+        currentFontSize_ = pixelSize;
+    }
+
+    float ascender = face->size ? static_cast<float>(face->size->metrics.ascender) / 64.0f : cmd.fontSize;
+    float lineHeight = face->size ? static_cast<float>(face->size->metrics.height) / 64.0f : cmd.fontSize;
+
+    float textWidth = 0.0f;
+    for (char c : cmd.text) {
+        const GlyphBitmap* glyph = LoadGlyph(c, pixelSize);
+        if (glyph) {
+            textWidth += static_cast<float>(glyph->advance);
+        }
+    }
+
+    float startX = bounds.x;
+    float startY = bounds.y;
+    if (cmd.alignX == "center") {
+        startX += (bounds.width - textWidth) * 0.5f;
+    } else if (cmd.alignX == "right") {
+        startX += bounds.width - textWidth;
+    }
+    if (cmd.alignY == "center") {
+        startY += (bounds.height - lineHeight) * 0.5f;
+    } else if (cmd.alignY == "bottom") {
+        startY += bounds.height - lineHeight;
+    }
+
+    float penX = startX;
+    float baseline = startY + ascender;
+
+    for (char c : cmd.text) {
+        const GlyphBitmap* glyph = LoadGlyph(c, pixelSize);
+        if (!glyph || glyph->pixels.empty()) {
+            penX += static_cast<float>(glyph ? glyph->advance : pixelSize / 2);
+            continue;
+        }
+
+        float glyphX = penX + static_cast<float>(glyph->bearingX);
+        float glyphY = baseline - static_cast<float>(glyph->bearingY);
+
+        int pitch = glyph->pitch < 0 ? -glyph->pitch : glyph->pitch;
+        for (int row = 0; row < glyph->height; ++row) {
+            for (int col = 0; col < glyph->width; ++col) {
+                uint8_t alpha = glyph->pixels[row * pitch + col];
+                if (alpha == 0) {
+                    continue;
+                }
+                float a = cmd.color.a * (static_cast<float>(alpha) / 255.0f);
+                GuiColor color{cmd.color.r, cmd.color.g, cmd.color.b, a};
+                GuiCommand::RectData pixelRect{
+                    glyphX + static_cast<float>(col),
+                    glyphY + static_cast<float>(row),
+                    1.0f,
+                    1.0f
+                };
+                AddQuad(pixelRect, color, activeClip);
+            }
+        }
+        penX += static_cast<float>(glyph->advance);
+    }
+}
+
+void GuiRenderer::AddQuad(const GuiCommand::RectData& rect,
+                          const GuiColor& color,
+                          const GuiCommand::RectData& clipRect) {
+    GuiCommand::RectData clipped = IntersectRect(rect, clipRect);
+    if (!RectHasArea(clipped)) {
+        return;
+    }
+
+    auto toNDC = [this](float x, float y) -> std::pair<float, float> {
+        float width = viewportWidth_ == 0 ? 1.0f : static_cast<float>(viewportWidth_);
+        float height = viewportHeight_ == 0 ? 1.0f : static_cast<float>(viewportHeight_);
+        return {
+            (x / width) * 2.0f - 1.0f,
+            (y / height) * 2.0f - 1.0f
+        };
+    };
+
+    auto [x1, y1] = toNDC(clipped.x, clipped.y);
+    auto [x2, y2] = toNDC(clipped.x + clipped.width, clipped.y + clipped.height);
+
+    size_t baseIndex = vertices_.size();
+    vertices_.push_back({x1, y1, 0.0f, color.r, color.g, color.b, color.a});
+    vertices_.push_back({x2, y1, 0.0f, color.r, color.g, color.b, color.a});
+    vertices_.push_back({x2, y2, 0.0f, color.r, color.g, color.b, color.a});
+    vertices_.push_back({x1, y2, 0.0f, color.r, color.g, color.b, color.a});
+
+    indices_.push_back(static_cast<uint32_t>(baseIndex + 0));
+    indices_.push_back(static_cast<uint32_t>(baseIndex + 1));
+    indices_.push_back(static_cast<uint32_t>(baseIndex + 2));
+    indices_.push_back(static_cast<uint32_t>(baseIndex + 0));
+    indices_.push_back(static_cast<uint32_t>(baseIndex + 2));
+    indices_.push_back(static_cast<uint32_t>(baseIndex + 3));
+}
+
 void GuiRenderer::GenerateGuiGeometry(const std::vector<GuiCommand>& commands, uint32_t width, uint32_t height) {
     vertices_.clear();
     indices_.clear();
@@ -518,29 +745,6 @@ void GuiRenderer::GenerateGuiGeometry(const std::vector<GuiCommand>& commands, u
 
     std::vector<GuiCommand::RectData> clipStack;
     clipStack.push_back({0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height)});
-
-    auto addQuad = [&](const GuiCommand::RectData& rect, const GuiColor& color,
-                       const GuiCommand::RectData& clipRect) {
-        GuiCommand::RectData clipped = IntersectRect(rect, clipRect);
-        if (!RectHasArea(clipped)) {
-            return;
-        }
-        auto [x0, y0] = toNDC(clipped.x, clipped.y);
-        auto [x1, y1] = toNDC(clipped.x + clipped.width, clipped.y + clipped.height);
-
-        uint32_t baseIndex = static_cast<uint32_t>(vertices_.size());
-        vertices_.push_back({x0, y0, 0.0f, color.r, color.g, color.b, color.a});
-        vertices_.push_back({x1, y0, 0.0f, color.r, color.g, color.b, color.a});
-        vertices_.push_back({x1, y1, 0.0f, color.r, color.g, color.b, color.a});
-        vertices_.push_back({x0, y1, 0.0f, color.r, color.g, color.b, color.a});
-
-        indices_.push_back(baseIndex + 0);
-        indices_.push_back(baseIndex + 1);
-        indices_.push_back(baseIndex + 2);
-        indices_.push_back(baseIndex + 0);
-        indices_.push_back(baseIndex + 2);
-        indices_.push_back(baseIndex + 3);
-    };
 
     auto addClippedPolygon = [&](const std::vector<ClipPoint>& polygon,
                                  const GuiColor& color,
@@ -580,7 +784,7 @@ void GuiRenderer::GenerateGuiGeometry(const std::vector<GuiCommand>& commands, u
         }
 
         if (cmd.type == GuiCommand::Type::Rect) {
-            addQuad(cmd.rect, cmd.color, activeClip);
+            AddQuad(cmd.rect, cmd.color, activeClip);
             if (cmd.borderWidth > 0.0f && cmd.borderColor.a > 0.0f) {
                 float border = std::min(cmd.borderWidth, std::min(cmd.rect.width, cmd.rect.height));
                 if (border > 0.0f) {
@@ -591,14 +795,13 @@ void GuiRenderer::GenerateGuiGeometry(const std::vector<GuiCommand>& commands, u
                     GuiCommand::RectData left{cmd.rect.x, cmd.rect.y + border, border, innerHeight};
                     GuiCommand::RectData right{cmd.rect.x + cmd.rect.width - border,
                                                cmd.rect.y + border, border, innerHeight};
-                    addQuad(top, cmd.borderColor, activeClip);
-                    addQuad(bottom, cmd.borderColor, activeClip);
-                    addQuad(left, cmd.borderColor, activeClip);
-                    addQuad(right, cmd.borderColor, activeClip);
+                    AddQuad(top, cmd.borderColor, activeClip);
+                    AddQuad(bottom, cmd.borderColor, activeClip);
+                    AddQuad(left, cmd.borderColor, activeClip);
+                    AddQuad(right, cmd.borderColor, activeClip);
                 }
             }
         } else if (cmd.type == GuiCommand::Type::Text) {
-            // Render text using 8x8 bitmap font
             if (cmd.text.empty()) {
                 continue;
             }
@@ -646,36 +849,31 @@ void GuiRenderer::GenerateGuiGeometry(const std::vector<GuiCommand>& commands, u
                 continue;
             }
 
-            // Render each character as a small quad
-            float x = startX;
-            for (char c : cmd.text) {
-                // Only render printable ASCII characters
-                if (c >= 32 && c < 127) {
-                    // Get character bitmap from font8x8_basic
-                    const uint8_t* glyph = font8x8_basic[static_cast<unsigned char>(c)];
-
-                    // Render each pixel of the 8x8 glyph
-                    for (int row = 0; row < 8; ++row) {
-                        uint8_t rowData = glyph[row];
-                        for (int col = 0; col < 8; ++col) {
-                            if (rowData & (1 << col)) {
-                                // This pixel is on, render a small quad
-                                // Add slight overlap (1.15x) for smoother appearance
-                                const float pixelScale = 1.15f;
-                                float pixelWidth = (charWidth / 8.0f) * pixelScale;
-                                float pixelHeight = (charHeight / 8.0f) * pixelScale;
-                                float px = x + col * (charWidth / 8.0f) - (pixelWidth - charWidth / 8.0f) * 0.5f;
-                                float py = startY + row * (charHeight / 8.0f) - (pixelHeight - charHeight / 8.0f) * 0.5f;
-                                float pw = pixelWidth;
-                                float ph = pixelHeight;
-
-                                GuiCommand::RectData pixelRect{px, py, pw, ph};
-                                addQuad(pixelRect, cmd.color, textClip);
+            if (fontConfig_.useFreeType && EnsureFreeTypeReady()) {
+                RenderFreeTypeText(cmd, textClip, textBounds);
+            } else {
+                // Render text using 8x8 bitmap font
+                float x = startX;
+                for (char c : cmd.text) {
+                    if (c >= 32 && c < 127) {
+                        const uint8_t* glyph = font8x8_basic[static_cast<unsigned char>(c)];
+                        for (int row = 0; row < 8; ++row) {
+                            uint8_t rowData = glyph[row];
+                            for (int col = 0; col < 8; ++col) {
+                                if (rowData & (1 << col)) {
+                                    const float pixelScale = 1.15f;
+                                    float pixelWidth = (charWidth / 8.0f) * pixelScale;
+                                    float pixelHeight = (charHeight / 8.0f) * pixelScale;
+                                    float px = x + col * (charWidth / 8.0f) - (pixelWidth - charWidth / 8.0f) * 0.5f;
+                                    float py = startY + row * (charHeight / 8.0f) - (pixelHeight - charHeight / 8.0f) * 0.5f;
+                                    GuiCommand::RectData pixelRect{px, py, pixelWidth, pixelHeight};
+                                    AddQuad(pixelRect, cmd.color, textClip);
+                                }
                             }
                         }
                     }
+                    x += charWidth + charSpacing;
                 }
-                x += charWidth + charSpacing;
             }
         } else if (cmd.type == GuiCommand::Type::Svg) {
             if (cmd.svgPath.empty()) {
