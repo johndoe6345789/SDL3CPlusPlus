@@ -233,14 +233,14 @@ def _find_conan_toolchain(build_type: str) -> Path | None:
     """
     Look for the Conan toolchain file in common output locations.
 
-    The default `conan install -of build` + `cmake_layout()` layout produces
-    `build/build/<build_type>/generators/conan_toolchain.cmake`.
+    The default `conan install -of build-ninja` + `cmake_layout()` layout produces
+    `build-ninja/build/<build_type>/generators/conan_toolchain.cmake`.
     """
     candidates = [
-        Path("build") / "build" / build_type / "generators" / "conan_toolchain.cmake",
-        Path("build") / build_type / "generators" / "conan_toolchain.cmake",
-        Path("build") / "generators" / "conan_toolchain.cmake",
-        Path("build") / "conan_toolchain.cmake",
+        Path("build-ninja") / "build" / build_type / "generators" / "conan_toolchain.cmake",
+        Path("build-ninja") / build_type / "generators" / "conan_toolchain.cmake",
+        Path("build-ninja") / "generators" / "conan_toolchain.cmake",
+        Path("build-ninja") / "conan_toolchain.cmake",
     ]
     for candidate in candidates:
         if candidate.is_file():
@@ -256,7 +256,7 @@ def _has_cmake_cache(build_dir: str) -> bool:
 def dependencies(args: argparse.Namespace) -> None:
     """Run Conan profile detection and install dependencies."""
     cmd_detect = ["conan", "profile", "detect", "-f"]
-    cmd_install = ["conan", "install", ".", "-of", "build", "-b", "missing", "-c", "tools.build:cxxflags=[\"-include\",\"cstdint\"]"]
+    cmd_install = ["conan", "install", ".", "-of", "build-ninja", "-b", "missing", "-c", "tools.build:cxxflags=[\"-include\",\"cstdint\"]"]
     conan_install_args = _strip_leading_double_dash(args.conan_install_args)
     if conan_install_args:
         cmd_install.extend(conan_install_args)
