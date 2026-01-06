@@ -70,6 +70,7 @@ struct AtmosphericsConfig {
     float ambientStrength = 0.01f;
     float fogDensity = 0.003f;
     std::array<float, 3> fogColor = {0.05f, 0.05f, 0.08f};
+    std::array<float, 3> skyColor = {0.1f, 0.1f, 0.15f};
     float gamma = 2.2f;
     float exposure = 1.0f;
     bool enableToneMapping = true;

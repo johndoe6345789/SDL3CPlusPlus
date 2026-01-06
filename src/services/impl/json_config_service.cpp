@@ -352,6 +352,7 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
         readFloat("ambient_strength", config.atmospherics.ambientStrength);
         readFloat("fog_density", config.atmospherics.fogDensity);
         readFloatArray3("fog_color", config.atmospherics.fogColor);
+        readFloatArray3("sky_color", config.atmospherics.skyColor);
         readFloat("gamma", config.atmospherics.gamma);
         readFloat("exposure", config.atmospherics.exposure);
         readBool("enable_tone_mapping", config.atmospherics.enableToneMapping);

@@ -126,9 +126,18 @@ void RenderCommandService::RecordCommands(uint32_t imageIndex,
     renderPassInfo.renderArea.offset = {0, 0};
     renderPassInfo.renderArea.extent = extent;
 
+    const auto& config = configService_->GetConfig();
     std::array<VkClearValue, 2> clearValues{};
-    clearValues[0].color = {{0.1f, 0.1f, 0.15f, 1.0f}};  // Color clear
+    const auto& skyColor = config.atmospherics.skyColor;
+    clearValues[0].color = {{skyColor[0], skyColor[1], skyColor[2], 1.0f}};  // Skybox clear
     clearValues[1].depthStencil = {1.0f, 0};  // Depth clear
+
+    if (logger_) {
+        logger_->Trace("RenderCommandService", "RecordCommands",
+                       "clearColor=" + std::to_string(skyColor[0]) + "," +
+                       std::to_string(skyColor[1]) + "," +
+                       std::to_string(skyColor[2]));
+    }
 
     renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
     renderPassInfo.pClearValues = clearValues.data();
@@ -181,9 +190,6 @@ void RenderCommandService::RecordCommands(uint32_t imageIndex,
 
                     // For PBR shaders, populate extended push constants
                     if (command.shaderKey.find("pbr") != std::string::npos) {
-                        // Get atmospherics config
-                        auto config = configService_->GetConfig();
-
                         // For now, use identity for view and proj (since viewProj is already combined)
                         // In a full implementation, we'd need separate view/proj matrices
                         pushConstants.view = {1.0f, 0.0f, 0.0f, 0.0f,

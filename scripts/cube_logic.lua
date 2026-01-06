@@ -9,6 +9,7 @@ local cube_mesh_info = {
 local cube_vertices = {}
 local cube_indices = {}
 local cube_indices_double_sided = {}
+local skybox_color = {0.04, 0.05, 0.08}
 
 local function build_double_sided_indices(indices)
     local doubled = {}
@@ -224,6 +225,29 @@ if cube_mesh_info.loaded then
     end
 end
 
+local function resolve_color3(value, fallback)
+    if type(value) == "table" then
+        local r = tonumber(value[1])
+        local g = tonumber(value[2])
+        local b = tonumber(value[3])
+        if r and g and b then
+            return {r, g, b}
+        end
+    end
+    return {fallback[1], fallback[2], fallback[3]}
+end
+
+local function apply_skybox_color_from_config()
+    if type(config) ~= "table" then
+        return
+    end
+    local atmospherics = config.atmospherics
+    if type(atmospherics) ~= "table" then
+        return
+    end
+    skybox_color = resolve_color3(atmospherics.sky_color, skybox_color)
+end
+
 local function build_static_shader_variants()
     local fallback_vertex_source = [[
 #version 450
@@ -294,6 +318,10 @@ void main() {
             vertex_source = fallback_vertex_source,
             fragment_source = fallback_fragment_source,
         },
+        skybox = {
+            vertex_source = fallback_vertex_source,
+            fragment_source = fallback_fragment_source,
+        },
     }
 end
 
@@ -306,17 +334,34 @@ local function count_shader_variants(variants)
 end
 
 local function build_shader_variants()
+    apply_skybox_color_from_config()
+
     local ok, toolkit = pcall(require, "shader_toolkit")
     if not ok then
         log_debug("Shader toolkit unavailable: %s", tostring(toolkit))
         return build_static_shader_variants()
     end
 
+    local output_mode = "source"
+    local compile = false
     local ok_generate, generated = pcall(toolkit.generate_cube_demo_variants,
-        {compile = false, output_mode = "source"})
+        {compile = compile, output_mode = output_mode})
     if not ok_generate then
         log_debug("Shader generation failed: %s", tostring(generated))
         return build_static_shader_variants()
+    end
+
+    local ok_skybox, skybox_variant = pcall(toolkit.generate_variant, {
+        key = "skybox",
+        template = "solid_color",
+        output_mode = output_mode,
+        compile = compile,
+        parameters = {color = skybox_color},
+    })
+    if ok_skybox then
+        generated.skybox = skybox_variant
+    else
+        log_debug("Skybox shader generation failed: %s", tostring(skybox_variant))
     end
 
     log_debug("Generated %d shader variants", count_shader_variants(generated))
@@ -642,6 +687,22 @@ local function create_static_cube(position, scale, color, shader_key)
     }
 end
 
+local function create_skybox()
+    local skybox_scale = camera.far * 0.85
+    local function compute_model_matrix()
+        local translation = math3d.translation(camera.position[1], camera.position[2], camera.position[3])
+        local scaling = scale_matrix(skybox_scale, skybox_scale, skybox_scale)
+        return math3d.multiply(translation, scaling)
+    end
+
+    return {
+        vertices = apply_color_to_vertices(skybox_color),
+        indices = (#cube_indices_double_sided > 0) and cube_indices_double_sided or cube_indices,
+        compute_model_matrix = compute_model_matrix,
+        shader_key = "skybox",
+    }
+end
+
 local function create_spinning_cube()
     log_debug("Spinning cube shader=default (rainbow wrap)")
     local function compute_model_matrix(time)
@@ -830,6 +891,7 @@ end
 
 function get_scene_objects()
     local objects = {}
+    objects[#objects + 1] = create_skybox()
     for i = 1, #room_objects do
         objects[#objects + 1] = room_objects[i]
     end

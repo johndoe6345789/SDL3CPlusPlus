@@ -64,6 +64,7 @@
     "ambient_strength": 0.01,
     "fog_density": 0.003,
     "fog_color": [0.05, 0.05, 0.08],
+    "sky_color": [0.04, 0.05, 0.08],
     "gamma": 2.2,
     "exposure": 1.0,
     "enable_tone_mapping": true,
