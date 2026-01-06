@@ -14,6 +14,36 @@ class SDL3CppConan(ConanFile):
         "lua/*:with_tools": False,
     }
     generators = "CMakeDeps", "VirtualRunEnv"
+    BASE_REQUIRES = (
+        "lua/5.4.8",
+        "sdl/3.2.20",
+        "vulkan-loader/1.4.313.0",
+        "vulkan-headers/1.4.313.0",
+        "vulkan-memory-allocator/3.3.0",
+        "spirv-tools/1.4.313.0",
+        "spirv-headers/1.4.313.0",
+        "shaderc/2025.3",
+        "cpptrace/1.0.4",
+        "ogg/1.3.5",
+        "theora/1.1.1",
+        "cli11/2.6.0",
+        "bullet3/3.25",
+        "box2d/3.1.1",
+        "assimp/6.0.2",
+        "glm/1.0.1",
+        "vorbis/1.3.7",
+        "rapidjson/cci.20230929",
+        "lunasvg/3.0.1",
+        "libvips/8.16.0",
+        "freetype/2.13.2",
+        "ffmpeg/8.0.1",
+        "cairo/1.18.0",
+    )
+    RENDER_STACK_REQUIRES = (
+        "bgfx/1.129.8930-495",
+        "entt/3.16.0",
+        "materialx/1.39.1",
+    )
 
     def configure(self):
         self.requires("wayland/1.23.92", override=True)
@@ -36,29 +66,9 @@ class SDL3CppConan(ConanFile):
         tc.generate()
 
     def requirements(self):
-        self.requires("lua/5.4.8")
-        self.requires("sdl/3.2.20")
-        self.requires("vulkan-loader/1.4.313.0")
-        self.requires("vulkan-headers/1.4.313.0")
-        self.requires("vulkan-memory-allocator/3.3.0")
-        self.requires("spirv-tools/1.4.313.0")
-        self.requires("spirv-headers/1.4.313.0")
-        self.requires("shaderc/2025.3")
-        self.requires("cpptrace/1.0.4")
-        self.requires("ogg/1.3.5")
-        self.requires("theora/1.1.1")
-        self.requires("cli11/2.6.0")
-        self.requires("bullet3/3.25")
-        self.requires("box2d/3.1.1")
-        self.requires("assimp/6.0.2")
-        self.requires("glm/1.0.1")
-        self.requires("vorbis/1.3.7")
-        self.requires("rapidjson/cci.20230929")
-        self.requires("bgfx/1.129.8930-495")
-        self.requires("entt/3.16.0")
-        self.requires("lunasvg/3.0.1")
-        self.requires("libvips/8.16.0")
-        self.requires("freetype/2.13.2")
-        self.requires("ffmpeg/8.0.1")
-        self.requires("materialx/1.39.1")
-        self.requires("cairo/1.18.0")
+        self._add_requirements(self.BASE_REQUIRES)
+        self._add_requirements(self.RENDER_STACK_REQUIRES)
+
+    def _add_requirements(self, requirements):
+        for requirement in requirements:
+            self.requires(requirement)

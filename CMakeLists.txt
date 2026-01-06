@@ -136,11 +136,41 @@ find_package(lua CONFIG REQUIRED)
 find_package(CLI11 CONFIG REQUIRED)
 find_package(RapidJSON CONFIG REQUIRED)
 find_package(EnTT CONFIG REQUIRED)
+find_package(bgfx CONFIG QUIET)
+find_package(MaterialX CONFIG QUIET)
 find_package(assimp CONFIG REQUIRED)
 find_package(Bullet CONFIG REQUIRED)
 find_package(Vorbis CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(cpptrace REQUIRED)
+
+set(SDL3CPP_RENDER_STACK_LIBS EnTT::EnTT)
+if(TARGET bgfx::bgfx)
+    list(APPEND SDL3CPP_RENDER_STACK_LIBS bgfx::bgfx)
+endif()
+if(TARGET bx::bx)
+    list(APPEND SDL3CPP_RENDER_STACK_LIBS bx::bx)
+endif()
+if(TARGET bimg::bimg)
+    list(APPEND SDL3CPP_RENDER_STACK_LIBS bimg::bimg)
+endif()
+
+set(SDL3CPP_MATERIALX_LIBS)
+if(TARGET MaterialX::MaterialX)
+    list(APPEND SDL3CPP_MATERIALX_LIBS MaterialX::MaterialX)
+else()
+    foreach(candidate IN ITEMS
+            MaterialX::MaterialXCore
+            MaterialX::MaterialXFormat
+            MaterialX::MaterialXGenShader)
+        if(TARGET ${candidate})
+            list(APPEND SDL3CPP_MATERIALX_LIBS ${candidate})
+        endif()
+    endforeach()
+endif()
+if(SDL3CPP_MATERIALX_LIBS)
+    list(APPEND SDL3CPP_RENDER_STACK_LIBS ${SDL3CPP_MATERIALX_LIBS})
+endif()
 endif()
 
 if(BUILD_SDL3_APP)
@@ -192,7 +222,7 @@ if(BUILD_SDL3_APP)
         lua::lua
         CLI11::CLI11
         rapidjson
-        EnTT::EnTT
+        ${SDL3CPP_RENDER_STACK_LIBS}
         assimp::assimp
         Bullet::Bullet
         glm::glm
