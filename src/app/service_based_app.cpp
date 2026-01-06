@@ -12,6 +12,7 @@
 #include "services/impl/platform_service.hpp"
 #include "services/impl/sdl_window_service.hpp"
 #include "services/impl/sdl_input_service.hpp"
+#include "services/impl/ecs_service.hpp"
 #include "services/impl/vulkan_device_service.hpp"
 #include "services/impl/swapchain_service.hpp"
 #include "services/impl/pipeline_service.hpp"
@@ -231,6 +232,10 @@ void ServiceBasedApp::RegisterServices() {
     registry_.RegisterService<services::IConfigService, services::impl::JsonConfigService>(
         registry_.GetService<services::ILogger>(), runtimeConfig_);
 
+    // ECS service (entt registry)
+    registry_.RegisterService<services::IEcsService, services::impl::EcsService>(
+        registry_.GetService<services::ILogger>());
+
     // Window service
     registry_.RegisterService<services::IWindowService, services::impl::SdlWindowService>(
         registry_.GetService<services::ILogger>(),
@@ -346,6 +351,7 @@ void ServiceBasedApp::RegisterServices() {
     // Scene service
     registry_.RegisterService<services::ISceneService, services::impl::SceneService>(
         registry_.GetService<services::ISceneScriptService>(),
+        registry_.GetService<services::IEcsService>(),
         registry_.GetService<services::ILogger>());
 
     // GUI service

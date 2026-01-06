@@ -2,10 +2,13 @@
 
 #include "../interfaces/i_scene_service.hpp"
 #include "../interfaces/i_scene_script_service.hpp"
+#include "../interfaces/i_ecs_service.hpp"
 #include "../interfaces/i_logger.hpp"
 #include "../../di/lifecycle.hpp"
-#include <vector>
+#include <entt/entt.hpp>
 #include <memory>
+#include <string>
+#include <vector>
 
 namespace sdl3cpp::services::impl {
 
@@ -18,7 +21,9 @@ namespace sdl3cpp::services::impl {
 class SceneService : public ISceneService,
                      public di::IShutdownable {
 public:
-    explicit SceneService(std::shared_ptr<ISceneScriptService> scriptService, std::shared_ptr<ILogger> logger);
+    SceneService(std::shared_ptr<ISceneScriptService> scriptService,
+                 std::shared_ptr<IEcsService> ecsService,
+                 std::shared_ptr<ILogger> logger);
     ~SceneService() override;
 
     // ISceneService interface
@@ -34,6 +39,18 @@ public:
     void Shutdown() noexcept override;
 
 private:
+    struct SceneTag {};
+
+    struct MeshComponent {
+        std::vector<core::Vertex> vertices;
+        std::vector<uint16_t> indices;
+    };
+
+    struct RenderComponent {
+        int computeModelMatrixRef = -1;
+        std::string shaderKey;
+    };
+
     struct SceneDrawInfo {
         uint32_t indexOffset = 0;
         uint32_t indexCount = 0;
@@ -42,8 +59,13 @@ private:
         std::string shaderKey;
     };
 
+    void ClearSceneEntities();
+
     std::shared_ptr<ISceneScriptService> scriptService_;
+    std::shared_ptr<IEcsService> ecsService_;
     std::shared_ptr<ILogger> logger_;
+    entt::registry* registry_ = nullptr;
+    std::vector<entt::entity> sceneEntities_;
     std::vector<core::Vertex> combinedVertices_;
     std::vector<uint16_t> combinedIndices_;
     std::vector<SceneDrawInfo> drawInfos_;

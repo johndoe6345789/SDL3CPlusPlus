@@ -224,27 +224,7 @@ local cubeIndices = {
     1, 2, 6, 6, 5, 1,
 }
 
-local function build_shader_variants()
-    local ok, toolkit = pcall(require, "shader_toolkit")
-    if not ok then
-        error("Shader toolkit unavailable: " .. tostring(toolkit))
-    end
-
-    local ok_generate, variant = pcall(toolkit.generate_variant, {
-        key = "default",
-        template = "cube_rainbow",
-        output_name = "cube",
-        output_mode = "source",
-        compile = false,
-    })
-    if not ok_generate then
-        error("Shader generation failed: " .. tostring(variant))
-    end
-
-    return {default = variant}
-end
-
-local shaderVariants = build_shader_variants()
+local shaderVariants = require("shader_variants").build_soundboard_variants()
 
 local camera = {
     eye = { 2.0, 2.0, 3.0 },

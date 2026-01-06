@@ -60,3 +60,5 @@ class SDL3CppConan(ConanFile):
         self.requires("libvips/8.16.0")
         self.requires("freetype/2.13.2")
         self.requires("ffmpeg/8.0.1")
+        self.requires("materialx/1.39.1")
+        self.requires("cairo/1.18.0")

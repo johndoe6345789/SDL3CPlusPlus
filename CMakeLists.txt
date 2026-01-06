@@ -135,6 +135,7 @@ if(NOT ENABLE_VITA)
 find_package(lua CONFIG REQUIRED)
 find_package(CLI11 CONFIG REQUIRED)
 find_package(RapidJSON CONFIG REQUIRED)
+find_package(EnTT CONFIG REQUIRED)
 find_package(assimp CONFIG REQUIRED)
 find_package(Bullet CONFIG REQUIRED)
 find_package(Vorbis CONFIG REQUIRED)
@@ -151,6 +152,7 @@ if(BUILD_SDL3_APP)
             src/services/impl/command_line_service.cpp
             src/services/impl/json_config_writer_service.cpp
             src/services/impl/logger_service.cpp
+            src/services/impl/ecs_service.cpp
             src/services/impl/platform_service.cpp
             src/services/impl/script_engine_service.cpp
             src/services/impl/lua_helpers.cpp
@@ -190,6 +192,7 @@ if(BUILD_SDL3_APP)
         lua::lua
         CLI11::CLI11
         rapidjson
+        EnTT::EnTT
         assimp::assimp
         Bullet::Bullet
         glm::glm

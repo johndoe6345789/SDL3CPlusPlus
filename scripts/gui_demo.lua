@@ -66,26 +66,7 @@ local function updateFpsModeToggle()
     end
 end
 
-local function build_shader_variants()
-    local ok, toolkit = pcall(require, "shader_toolkit")
-    if not ok then
-        error("Shader toolkit unavailable: " .. tostring(toolkit))
-    end
-
-    local ok_generate, variant = pcall(toolkit.generate_variant, {
-        key = "default",
-        template = "gui_2d",
-        output_mode = "source",
-        compile = false,
-    })
-    if not ok_generate then
-        error("Shader generation failed: " .. tostring(variant))
-    end
-
-    return {default = variant}
-end
-
-local shader_variants = build_shader_variants()
+local shader_variants = require("shader_variants").build_gui_variants()
 
 local function drawTestButtons()
     -- Background panel

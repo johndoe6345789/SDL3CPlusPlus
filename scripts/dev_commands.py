@@ -256,7 +256,7 @@ def _has_cmake_cache(build_dir: str) -> bool:
 def dependencies(args: argparse.Namespace) -> None:
     """Run Conan profile detection and install dependencies."""
     cmd_detect = ["conan", "profile", "detect", "-f"]
-    cmd_install = ["conan", "install", ".", "-of", "build", "-b", "missing"]
+    cmd_install = ["conan", "install", ".", "-of", "build", "-b", "missing", "-c", "tools.build:cxxflags=[\"-include\",\"cstdint\"]"]
     conan_install_args = _strip_leading_double_dash(args.conan_install_args)
     if conan_install_args:
         cmd_install.extend(conan_install_args)

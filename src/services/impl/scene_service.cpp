@@ -1,17 +1,24 @@
 #include "scene_service.hpp"
 #include <limits>
 #include <stdexcept>
+#include <utility>
 
 namespace sdl3cpp::services::impl {
 
-SceneService::SceneService(std::shared_ptr<ISceneScriptService> scriptService, std::shared_ptr<ILogger> logger)
-    : scriptService_(scriptService), logger_(logger) {
+SceneService::SceneService(std::shared_ptr<ISceneScriptService> scriptService,
+                           std::shared_ptr<IEcsService> ecsService,
+                           std::shared_ptr<ILogger> logger)
+    : scriptService_(std::move(scriptService)),
+      ecsService_(std::move(ecsService)),
+      logger_(std::move(logger)) {
     logger_->Trace("SceneService", "SceneService",
-                   "scriptService=" + std::string(scriptService_ ? "set" : "null"));
+                   "scriptService=" + std::string(scriptService_ ? "set" : "null") +
+                   ", ecsService=" + std::string(ecsService_ ? "set" : "null"));
 
-    if (!scriptService_) {
-        throw std::invalid_argument("Scene script service cannot be null");
+    if (!scriptService_ || !ecsService_) {
+        throw std::invalid_argument("Scene script service and ECS service cannot be null");
     }
+    registry_ = &ecsService_->GetRegistry();
 }
 
 SceneService::~SceneService() {
@@ -25,6 +32,7 @@ void SceneService::LoadScene(const std::vector<SceneObject>& objects) {
     logger_->Trace("SceneService", "LoadScene",
                    "objects.size=" + std::to_string(objects.size()));
 
+    ClearSceneEntities();
     combinedVertices_.clear();
     combinedIndices_.clear();
     drawInfos_.clear();
@@ -32,6 +40,10 @@ void SceneService::LoadScene(const std::vector<SceneObject>& objects) {
     if (objects.empty()) {
         initialized_ = false;
         return;
+    }
+
+    if (!registry_) {
+        throw std::runtime_error("ECS registry is not available");
     }
 
     size_t totalVertices = 0;
@@ -52,6 +64,7 @@ void SceneService::LoadScene(const std::vector<SceneObject>& objects) {
     combinedVertices_.reserve(totalVertices);
     combinedIndices_.reserve(totalIndices);
     drawInfos_.reserve(objects.size());
+    sceneEntities_.reserve(objects.size());
 
     for (const auto& obj : objects) {
         if (obj.vertices.empty() || obj.indices.empty()) {
@@ -61,8 +74,19 @@ void SceneService::LoadScene(const std::vector<SceneObject>& objects) {
             throw std::runtime_error("Scene object missing vertex or index data");
         }
 
+        auto entity = registry_->create();
+        sceneEntities_.push_back(entity);
+        registry_->emplace<SceneTag>(entity);
+        registry_->emplace<MeshComponent>(entity, obj.vertices, obj.indices);
+        registry_->emplace<RenderComponent>(entity, obj.computeModelMatrixRef, obj.shaderKey);
+    }
+
+    for (const auto entity : sceneEntities_) {
+        const auto& mesh = registry_->get<MeshComponent>(entity);
+        const auto& render = registry_->get<RenderComponent>(entity);
+
         size_t vertexOffset = combinedVertices_.size();
-        if (vertexOffset + obj.vertices.size() > kMaxIndexValue) {
+        if (vertexOffset + mesh.vertices.size() > kMaxIndexValue) {
             if (logger_) {
                 logger_->Error("Scene vertex data exceeds uint16_t index range");
             }
@@ -70,9 +94,15 @@ void SceneService::LoadScene(const std::vector<SceneObject>& objects) {
         }
 
         uint32_t indexOffset = static_cast<uint32_t>(combinedIndices_.size());
-        combinedVertices_.insert(combinedVertices_.end(), obj.vertices.begin(), obj.vertices.end());
-        combinedIndices_.reserve(combinedIndices_.size() + obj.indices.size());
-        for (uint16_t index : obj.indices) {
+        combinedVertices_.insert(combinedVertices_.end(), mesh.vertices.begin(), mesh.vertices.end());
+        combinedIndices_.reserve(combinedIndices_.size() + mesh.indices.size());
+        if (logger_) {
+            logger_->Trace("SceneService", "LoadScene",
+                           "Remapping indices for entity=" + std::to_string(entt::to_integral(entity)) +
+                           ", vertexOffset=" + std::to_string(vertexOffset) +
+                           ", indexCount=" + std::to_string(mesh.indices.size()));
+        }
+        for (uint16_t index : mesh.indices) {
             uint32_t adjusted = static_cast<uint32_t>(index) + static_cast<uint32_t>(vertexOffset);
             if (adjusted > kMaxIndexValue) {
                 if (logger_) {
@@ -80,15 +110,15 @@ void SceneService::LoadScene(const std::vector<SceneObject>& objects) {
                 }
                 throw std::runtime_error("Index offset exceeds uint16_t range");
             }
-            combinedIndices_.push_back(index);
+            combinedIndices_.push_back(static_cast<uint16_t>(adjusted));
         }
 
         SceneDrawInfo drawInfo;
         drawInfo.indexOffset = indexOffset;
-        drawInfo.indexCount = static_cast<uint32_t>(obj.indices.size());
+        drawInfo.indexCount = static_cast<uint32_t>(mesh.indices.size());
         drawInfo.vertexOffset = static_cast<int32_t>(vertexOffset);
-        drawInfo.computeModelMatrixRef = obj.computeModelMatrixRef;
-        drawInfo.shaderKey = obj.shaderKey;
+        drawInfo.computeModelMatrixRef = render.computeModelMatrixRef;
+        drawInfo.shaderKey = render.shaderKey;
         drawInfos_.push_back(std::move(drawInfo));
     }
 
@@ -147,6 +177,7 @@ const std::vector<uint16_t>& SceneService::GetCombinedIndices() const {
 void SceneService::Clear() {
     logger_->Trace("SceneService", "Clear");
 
+    ClearSceneEntities();
     combinedVertices_.clear();
     combinedIndices_.clear();
     drawInfos_.clear();
@@ -156,13 +187,27 @@ void SceneService::Clear() {
 size_t SceneService::GetObjectCount() const {
     logger_->Trace("SceneService", "GetObjectCount");
 
-    return drawInfos_.size();
+    return sceneEntities_.size();
 }
 
 void SceneService::Shutdown() noexcept {
     logger_->Trace("SceneService", "Shutdown");
 
     Clear();
+}
+
+void SceneService::ClearSceneEntities() {
+    if (!registry_ || sceneEntities_.empty()) {
+        sceneEntities_.clear();
+        return;
+    }
+
+    for (const auto entity : sceneEntities_) {
+        if (registry_->valid(entity)) {
+            registry_->destroy(entity);
+        }
+    }
+    sceneEntities_.clear();
 }
 
 }  // namespace sdl3cpp::services::impl

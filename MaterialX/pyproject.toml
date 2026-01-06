@@ -1,0 +1,98 @@
+[build-system]
+# Use a fixed version because we use an experimental feature
+# (a custom plugin) and for now that functionality has
+# no compatibility promises.
+requires = ["scikit-build-core>=0.10.7"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "MaterialX"
+dynamic = ["version"]
+
+authors = [
+  { name="Contributors to the MaterialX project", email="materialx-discussion@lists.aswf.io" },
+]
+readme = "README.md"
+requires-python = ">=3.9"
+
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://materialx.org"
+"Source" = "https://github.com/AcademySoftwareFoundation/MaterialX"
+"Bug Tracker" = "https://github.com/AcademySoftwareFoundation/MaterialX/issues"
+
+[project.scripts]
+baketextures = "MaterialX._scripts.baketextures:main"
+generateshader = "MaterialX._scripts.generateshader:main"
+genmdl = "MaterialX._scripts.genmdl:main"
+mxdoc = "MaterialX._scripts.mxdoc:main"
+mxupdate = "MaterialX._scripts.mxupdate:main"
+mxvalidate = "MaterialX._scripts.mxvalidate:main"
+translateshader = "MaterialX._scripts.translateshader:main"
+writenodegraphs = "MaterialX._scripts.writenodegraphs:main"
+
+[tool.scikit-build]
+# Minimum version of scikit-build-core (in case someone builds without isolation)
+minimum-version = "build-system.requires"
+
+# Read minimum cmake from CMakeLists.txt
+cmake.version = "CMakeLists.txt"
+
+cmake.build-type = "Release"
+build.verbose = false
+
+# Uncomment when developing locally to enable in-place builds.
+# build-dir = "build/"
+
+logging.level = "DEBUG"
+
+# Since the python package doesn't live in a standard directory
+# in the source (i.e ./src or ./), we need to manually specify
+# where the package is.
+wheel.packages = ["python/MaterialX"]
+
+sdist.include = [
+    "/documents",
+]
+
+sdist.exclude = [
+    "/build",
+    "/dist",
+    "/resources",
+    "/javascript",
+    "/.github",
+    "MANIFEST.in",
+    "/source/JsMaterialX",
+]
+
+wheel.exclude = [
+    "/documents",
+    "documents/",
+]
+
+[tool.scikit-build.metadata.version]
+# https://scikit-build-core.readthedocs.io/en/latest/configuration.html#dynamic-metadata
+provider = "scikit_build_core.metadata.regex"
+input = "CMakeLists.txt"
+regex = '''(?sx)
+set\(MATERIALX_MAJOR_VERSION\s+(?P<major>\d+)\).*
+set\(MATERIALX_MINOR_VERSION\s+(?P<minor>\d+)\).*
+set\(MATERIALX_BUILD_VERSION\s+(?P<build>\d+)\).*
+'''
+result = "{major}.{minor}.{build}"
+
+[tool.scikit-build.cmake.define]
+MATERIALX_BUILD_SHARED_LIBS = 'OFF' # Be explicit
+MATERIALX_BUILD_PYTHON = 'ON'
+MATERIALX_BUILD_DOCS = 'ON'
+MATERIALX_PYTHON_FORCE_REPLACE_DOCS = 'ON'
+MATERIALX_TEST_RENDER = 'OFF'
+MATERIALX_WARNINGS_AS_ERRORS = 'ON'
+MATERIALX_BUILD_TESTS = 'OFF'
+# TODO: How could we harmonize this variable with SKBUILD?
+MATERIALX_INSTALL_PYTHON = 'OFF'

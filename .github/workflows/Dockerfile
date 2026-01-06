@@ -45,7 +45,7 @@ RUN if ! getent group "${USERNAME}" >/dev/null 2>&1; then \
 WORKDIR /workspace
 COPY . /workspace
 RUN conan profile detect
-RUN conan install . --output-folder /conan_build --build=missing -c tools.system.package_manager:mode=install
+RUN conan install . --output-folder /conan_build --build=missing -c tools.system.package_manager:mode=install -c tools.build:cxxflags='["-include","cstdint"]'
 RUN chown -R ${USERNAME}:${USERNAME} /workspace /conan_build
 
 USER ${USERNAME}
