@@ -5,6 +5,9 @@
 
 #include <btBulletDynamicsCommon.h>
 #include <lua.hpp>
+#include <MaterialXCore/Document.h>
+#include <MaterialXCore/Types.h>
+#include <MaterialXFormat/File.h>
 #include <SDL3/SDL.h>
 #include <rapidjson/document.h>
 #include <rapidjson/error/en.h>
@@ -12,11 +15,191 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <filesystem>
 #include <stdexcept>
 #include <string>
 #include <utility>
 
 namespace {
+namespace mx = MaterialX;
+
+struct MaterialXSurfaceParameters {
+    std::array<float, 3> albedo = {1.0f, 1.0f, 1.0f};
+    float roughness = 0.3f;
+    float metallic = 0.0f;
+    bool hasAlbedo = false;
+    bool hasRoughness = false;
+    bool hasMetallic = false;
+};
+
+std::filesystem::path ResolveMaterialXPath(const std::filesystem::path& path,
+                                           const std::filesystem::path& scriptDirectory) {
+    if (path.empty()) {
+        return {};
+    }
+    if (path.is_absolute()) {
+        return path;
+    }
+    if (!scriptDirectory.empty()) {
+        auto projectRoot = scriptDirectory.parent_path();
+        if (!projectRoot.empty()) {
+            std::error_code ec;
+            auto resolved = std::filesystem::weakly_canonical(projectRoot / path, ec);
+            if (!ec) {
+                return resolved;
+            }
+        }
+    }
+    std::error_code ec;
+    auto resolved = std::filesystem::weakly_canonical(path, ec);
+    if (ec) {
+        return {};
+    }
+    return resolved;
+}
+
+mx::FileSearchPath BuildMaterialXSearchPath(const sdl3cpp::services::MaterialXConfig& config,
+                                            const std::filesystem::path& scriptDirectory) {
+    mx::FileSearchPath searchPath;
+    std::filesystem::path libraryPath = ResolveMaterialXPath(config.libraryPath, scriptDirectory);
+    if (libraryPath.empty() && !scriptDirectory.empty()) {
+        auto fallback = scriptDirectory.parent_path() / "MaterialX" / "libraries";
+        if (std::filesystem::exists(fallback)) {
+            libraryPath = fallback;
+        }
+    }
+    if (!libraryPath.empty()) {
+        searchPath.append(mx::FilePath(libraryPath.string()));
+    }
+    return searchPath;
+}
+
+mx::DocumentPtr LoadMaterialXDocument(const std::filesystem::path& documentPath,
+                                      const sdl3cpp::services::MaterialXConfig& config,
+                                      const std::filesystem::path& scriptDirectory) {
+    mx::DocumentPtr document = mx::createDocument();
+    mx::FileSearchPath searchPath = BuildMaterialXSearchPath(config, scriptDirectory);
+    mx::readFromXmlFile(document, mx::FilePath(documentPath.string()), &searchPath);
+
+    if (!config.libraryFolders.empty()) {
+        mx::DocumentPtr stdLib = mx::createDocument();
+        mx::FilePathVec folders;
+        folders.reserve(config.libraryFolders.size());
+        for (const auto& folder : config.libraryFolders) {
+            folders.emplace_back(folder);
+        }
+        mx::loadLibraries(folders, searchPath, stdLib);
+        document->importLibrary(stdLib);
+    }
+
+    return document;
+}
+
+mx::NodePtr ResolveSurfaceNode(const mx::DocumentPtr& document, const std::string& materialName) {
+    if (!materialName.empty()) {
+        mx::NodePtr candidate = document->getNode(materialName);
+        if (candidate && candidate->getCategory() == "surfacematerial") {
+            mx::NodePtr surfaceNode = candidate->getConnectedNode("surfaceshader");
+            if (surfaceNode) {
+                return surfaceNode;
+            }
+        }
+        if (candidate && (candidate->getCategory() == "standard_surface"
+            || candidate->getCategory() == "usd_preview_surface")) {
+            return candidate;
+        }
+    }
+
+    for (const auto& node : document->getNodes()) {
+        if (node->getCategory() == "surfacematerial") {
+            mx::NodePtr surfaceNode = node->getConnectedNode("surfaceshader");
+            if (surfaceNode) {
+                return surfaceNode;
+            }
+        }
+    }
+
+    for (const auto& node : document->getNodes()) {
+        if (node->getCategory() == "standard_surface"
+            || node->getCategory() == "usd_preview_surface") {
+            return node;
+        }
+    }
+
+    return {};
+}
+
+bool TryReadColor3(const mx::NodePtr& node, const char* name, std::array<float, 3>& outColor) {
+    if (!node) {
+        return false;
+    }
+    mx::InputPtr input = node->getInput(name);
+    if (!input || !input->hasValueString()) {
+        return false;
+    }
+    mx::ValuePtr value = input->getValue();
+    if (!value || !value->isA<mx::Color3>()) {
+        return false;
+    }
+    const mx::Color3& color = value->asA<mx::Color3>();
+    outColor = {color[0], color[1], color[2]};
+    return true;
+}
+
+bool TryReadFloat(const mx::NodePtr& node, const char* name, float& outValue) {
+    if (!node) {
+        return false;
+    }
+    mx::InputPtr input = node->getInput(name);
+    if (!input || !input->hasValueString()) {
+        return false;
+    }
+    mx::ValuePtr value = input->getValue();
+    if (!value || !value->isA<float>()) {
+        return false;
+    }
+    outValue = value->asA<float>();
+    return true;
+}
+
+MaterialXSurfaceParameters ReadStandardSurfaceParameters(const mx::NodePtr& node) {
+    MaterialXSurfaceParameters parameters;
+    std::array<float, 3> baseColor = parameters.albedo;
+    bool hasBaseColor = TryReadColor3(node, "base_color", baseColor);
+    if (!hasBaseColor) {
+        hasBaseColor = TryReadColor3(node, "diffuse_color", baseColor);
+    }
+    float baseStrength = 1.0f;
+    bool hasBaseStrength = TryReadFloat(node, "base", baseStrength);
+    if (hasBaseColor) {
+        parameters.albedo = {
+            baseColor[0] * baseStrength,
+            baseColor[1] * baseStrength,
+            baseColor[2] * baseStrength
+        };
+        parameters.hasAlbedo = true;
+    } else if (hasBaseStrength) {
+        parameters.albedo = {baseStrength, baseStrength, baseStrength};
+        parameters.hasAlbedo = true;
+    }
+
+    float roughness = parameters.roughness;
+    if (TryReadFloat(node, "specular_roughness", roughness)
+        || TryReadFloat(node, "roughness", roughness)) {
+        parameters.roughness = roughness;
+        parameters.hasRoughness = true;
+    }
+
+    float metallic = parameters.metallic;
+    if (TryReadFloat(node, "metalness", metallic)
+        || TryReadFloat(node, "metallic", metallic)) {
+        parameters.metallic = metallic;
+        parameters.hasMetallic = true;
+    }
+
+    return parameters;
+}
+
 bool TryParseMouseButtonName(const char* name, uint8_t& button) {
     if (!name) {
         return false;
@@ -302,6 +485,7 @@ void ScriptEngineService::RegisterBindings(lua_State* L) {
     bind("input_get_text", &ScriptEngineService::InputGetText);
     bind("config_get_json", &ScriptEngineService::ConfigGetJson);
     bind("config_get_table", &ScriptEngineService::ConfigGetTable);
+    bind("materialx_get_surface_parameters", &ScriptEngineService::MaterialXGetSurfaceParameters);
     bind("window_get_size", &ScriptEngineService::WindowGetSize);
     bind("window_set_title", &ScriptEngineService::WindowSetTitle);
     bind("window_is_minimized", &ScriptEngineService::WindowIsMinimized);
@@ -671,6 +855,87 @@ int ScriptEngineService::ConfigGetTable(lua_State* L) {
         return 2;
     }
     return 1;
+}
+
+int ScriptEngineService::MaterialXGetSurfaceParameters(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    auto logger = context ? context->logger : nullptr;
+    if (!context || !context->configService) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Config service not available");
+        return 2;
+    }
+
+    const char* documentArg = luaL_checkstring(L, 1);
+    const char* materialArg = luaL_optstring(L, 2, "");
+    std::filesystem::path scriptDirectory = context->configService->GetScriptPath().parent_path();
+    if (logger) {
+        logger->Trace("ScriptEngineService", "MaterialXGetSurfaceParameters",
+                      "document=" + std::string(documentArg ? documentArg : "") +
+                      ", material=" + std::string(materialArg ? materialArg : ""));
+    }
+
+    std::filesystem::path documentPath = ResolveMaterialXPath(documentArg ? documentArg : "", scriptDirectory);
+    if (documentPath.empty()) {
+        lua_pushnil(L);
+        lua_pushstring(L, "MaterialX document path could not be resolved");
+        return 2;
+    }
+    if (!std::filesystem::exists(documentPath)) {
+        lua_pushnil(L);
+        std::string message = "MaterialX document not found: " + documentPath.string();
+        lua_pushstring(L, message.c_str());
+        return 2;
+    }
+
+    const auto& materialConfig = context->configService->GetMaterialXConfig();
+    mx::DocumentPtr document;
+    try {
+        document = LoadMaterialXDocument(documentPath, materialConfig, scriptDirectory);
+    } catch (const std::exception& ex) {
+        lua_pushnil(L);
+        std::string message = "MaterialX document load failed: ";
+        message += ex.what();
+        lua_pushstring(L, message.c_str());
+        return 2;
+    }
+
+    mx::NodePtr surfaceNode = ResolveSurfaceNode(document, materialArg ? materialArg : "");
+    if (!surfaceNode) {
+        lua_pushnil(L);
+        lua_pushstring(L, "MaterialX document has no standard_surface material");
+        return 2;
+    }
+
+    MaterialXSurfaceParameters parameters = ReadStandardSurfaceParameters(surfaceNode);
+    if (!parameters.hasAlbedo && !parameters.hasRoughness && !parameters.hasMetallic) {
+        lua_pushnil(L);
+        lua_pushstring(L, "MaterialX material does not expose supported PBR parameters");
+        return 2;
+    }
+
+    lua_newtable(L);
+    if (parameters.hasAlbedo) {
+        lua_newtable(L);
+        lua_pushnumber(L, parameters.albedo[0]);
+        lua_rawseti(L, -2, 1);
+        lua_pushnumber(L, parameters.albedo[1]);
+        lua_rawseti(L, -2, 2);
+        lua_pushnumber(L, parameters.albedo[2]);
+        lua_rawseti(L, -2, 3);
+        lua_setfield(L, -2, "material_albedo");
+    }
+    if (parameters.hasRoughness) {
+        lua_pushnumber(L, parameters.roughness);
+        lua_setfield(L, -2, "material_roughness");
+    }
+    if (parameters.hasMetallic) {
+        lua_pushnumber(L, parameters.metallic);
+        lua_setfield(L, -2, "material_metallic");
+    }
+
+    lua_pushnil(L);
+    return 2;
 }
 
 int ScriptEngineService::WindowGetSize(lua_State* L) {

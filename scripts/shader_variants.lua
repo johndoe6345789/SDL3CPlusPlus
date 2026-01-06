@@ -141,6 +141,51 @@ local function build_shader_parameter_overrides(config, log_debug)
     return parameters
 end
 
+local function load_materialx_parameters(config, log_debug)
+    if type(config) ~= "table" then
+        return nil
+    end
+    local materialx = config.materialx
+    if type(materialx) ~= "table" then
+        return nil
+    end
+    local enabled = materialx.enabled
+    if type(materialx.parameters_enabled) == "boolean" then
+        enabled = materialx.parameters_enabled
+    end
+    if not enabled then
+        return nil
+    end
+    if type(materialx.document) ~= "string" or materialx.document == "" then
+        log_debug("MaterialX enabled but document path is missing")
+        return nil
+    end
+    if type(materialx_get_surface_parameters) ~= "function" then
+        log_debug("MaterialX loader unavailable (materialx_get_surface_parameters missing)")
+        return nil
+    end
+
+    local material_name = nil
+    if type(materialx.material) == "string" and materialx.material ~= "" then
+        material_name = materialx.material
+    end
+
+    local ok, result, err = pcall(materialx_get_surface_parameters, materialx.document, material_name)
+    if not ok then
+        log_debug("MaterialX parameter load failed: %s", tostring(result))
+        return nil
+    end
+    if result == nil then
+        log_debug("MaterialX parameter load failed: %s", tostring(err))
+        return nil
+    end
+    if type(result) ~= "table" then
+        log_debug("MaterialX parameter load returned unexpected result")
+        return nil
+    end
+    return result
+end
+
 local function resolve_skybox_color(config, default_color)
     if type(config) ~= "table" then
         return default_color
@@ -241,6 +286,29 @@ function M.build_cube_variants(config, log_debug, base_skybox_color)
     local logger = get_logger(log_debug)
     local skybox_color = resolve_skybox_color(config, base_skybox_color or {0.04, 0.05, 0.08})
     local shader_parameters = build_shader_parameter_overrides(config, logger)
+    local materialx_parameters = load_materialx_parameters(config, logger)
+    if materialx_parameters then
+        local entry = shader_parameters.pbr or {}
+        local albedo = resolve_color3_optional(materialx_parameters.material_albedo)
+        local roughness = resolve_number_optional(materialx_parameters.material_roughness)
+        local metallic = resolve_number_optional(materialx_parameters.material_metallic)
+        if albedo ~= nil then
+            entry.material_albedo = albedo
+        end
+        if roughness ~= nil then
+            entry.material_roughness = roughness
+        end
+        if metallic ~= nil then
+            entry.material_metallic = metallic
+        end
+        if next(entry) ~= nil then
+            shader_parameters.pbr = entry
+            logger("MaterialX PBR overrides: albedo=%s roughness=%s metallic=%s",
+                format_optional_color(albedo),
+                format_optional_number(roughness),
+                format_optional_number(metallic))
+        end
+    end
 
     local ok, toolkit = pcall(require, "shader_toolkit")
     if not ok then

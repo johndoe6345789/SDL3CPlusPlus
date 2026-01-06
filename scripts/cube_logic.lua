@@ -564,7 +564,7 @@ local function create_skybox()
 end
 
 local function create_spinning_cube()
-    log_debug("Spinning cube shader=default (rainbow wrap)")
+    log_debug("Spinning cube shader=pbr (MaterialX-driven)")
     local function compute_model_matrix(time)
         local rotation = math3d.rotation_y(time * rotation_speed)
         local scale = scale_matrix(1.5, 1.5, 1.5)  -- Make cube 3x3x3 units
@@ -576,7 +576,7 @@ local function create_spinning_cube()
         vertices = cube_vertices,
         indices = (#cube_indices_double_sided > 0) and cube_indices_double_sided or cube_indices,
         compute_model_matrix = compute_model_matrix,
-        shader_key = "default",
+        shader_key = "pbr",
     }
 end
 

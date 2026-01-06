@@ -60,19 +60,42 @@
   "bgfx": {
     "renderer": "vulkan"
   },
+  "materialx": {
+    "enabled": false,
+    "parameters_enabled": true,
+    "document": "MaterialX/resources/Materials/Examples/StandardSurface/standard_surface_carpaint.mtlx",
+    "shader_key": "materialx",
+    "material": "Car_Paint",
+    "library_path": "MaterialX/libraries",
+    "library_folders": [
+      "stdlib",
+      "pbrlib",
+      "lights",
+      "bxdf",
+      "cmlib",
+      "nprlib",
+      "targets"
+    ],
+    "use_constant_color": false,
+    "constant_color": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
   "atmospherics": {
-    "ambient_strength": 0.01,
-    "fog_density": 0.003,
-    "fog_color": [0.05, 0.05, 0.08],
-    "sky_color": [0.04, 0.05, 0.08],
+    "ambient_strength": 0.006,
+    "fog_density": 0.006,
+    "fog_color": [0.03, 0.04, 0.06],
+    "sky_color": [0.02, 0.03, 0.05],
     "gamma": 2.2,
-    "exposure": 1.0,
+    "exposure": 1.15,
     "enable_tone_mapping": true,
     "enable_shadows": true,
     "enable_ssgi": true,
     "enable_volumetric_lighting": true,
-    "pbr_roughness": 0.3,
-    "pbr_metallic": 0.1
+    "pbr_roughness": 0.28,
+    "pbr_metallic": 0.08
   },
   "gui_opacity": 1.0,
   "config_file": "config/seed_runtime.json"
