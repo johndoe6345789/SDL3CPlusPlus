@@ -360,6 +360,14 @@ void RenderCommandService::RecordRenderGraph(uint32_t imageIndex,
         }
 
         std::string outputName = ResolvePassOutput(pass);
+        if (logger_) {
+            logger_->Trace("RenderCommandService", "RecordRenderGraph",
+                           "pass=" + pass.name +
+                           ", kind=" + pass.kind +
+                           ", scenePass=" + std::string(scenePass ? "true" : "false") +
+                           ", shaderKey=" + (shaderKey.empty() ? "<none>" : shaderKey) +
+                           ", output=" + (outputName.empty() ? "<none>" : outputName));
+        }
         if (outputName.empty()) {
             if (logger_) {
                 logger_->Warn("RenderCommandService: Render graph pass '" + pass.name + "' has no output");
@@ -522,6 +530,11 @@ void RenderCommandService::RecordRenderGraph(uint32_t imageIndex,
             }
         } else {
             std::string inputName = ResolvePassInput(pass);
+            if (logger_) {
+                logger_->Trace("RenderCommandService", "RecordRenderGraph",
+                               "pass=" + pass.name +
+                               ", input=" + (inputName.empty() ? "<none>" : inputName));
+            }
             if (inputName == "swapchain" && outputSwapchain) {
                 if (logger_) {
                     logger_->Trace("RenderCommandService", "RecordRenderGraph",
@@ -1270,7 +1283,7 @@ void main() {
 
         ShaderPaths paths{};
         paths.vertexSource = kFullscreenVertex;
-        if (shaderKey == "tonemap") {
+        if (shaderKey == "tonemap" || shaderKey == "tonemap_fallback") {
             paths.fragmentSource = kTonemapFragment;
         } else {
             paths.fragmentSource = kPostProcessFragment;

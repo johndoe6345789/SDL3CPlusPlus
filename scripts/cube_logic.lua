@@ -1046,6 +1046,44 @@ local function resolve_boolean(value, fallback)
     return fallback
 end
 
+local function build_compat_render_graph(enable_tonemap, exposure, gamma)
+    local resources = {}
+    local passes = {}
+
+    if enable_tonemap then
+        resources.scene_hdr = {type = "color", format = "rgba16f", size = "swapchain"}
+        table.insert(passes, {
+            name = "scene",
+            kind = "forward_plus",
+            output = "scene_hdr",
+        })
+        table.insert(passes, {
+            name = "tonemap",
+            kind = "fullscreen",
+            shader = "tonemap_fallback",
+            input = "scene_hdr",
+            output = "swapchain",
+            settings = {
+                exposure = exposure,
+                gamma = gamma,
+                curve = "aces",
+                highlight_rolloff = 0.85,
+            },
+        })
+    else
+        table.insert(passes, {
+            name = "scene",
+            kind = "forward_plus",
+            output = "swapchain",
+        })
+    end
+
+    return {
+        resources = resources,
+        passes = passes,
+    }
+end
+
 function get_render_graph()
     local atmospherics = {}
     local rendering = {}
@@ -1070,10 +1108,16 @@ function get_render_graph()
     local enable_vxgi = resolve_boolean(rendering.enable_vxgi, false)
     local enable_depth_of_field = resolve_boolean(rendering.enable_depth_of_field, true)
     local enable_motion_blur = resolve_boolean(rendering.enable_motion_blur, true)
+    local render_graph_profile = resolve_string(rendering.render_graph_profile, "compat")
     local pipeline_mode = resolve_string(rendering.pipeline, "deferred")
     local use_forward_plus = pipeline_mode == "forward_plus"
         or pipeline_mode == "forward+"
         or pipeline_mode == "forward"
+
+    if render_graph_profile ~= "full" then
+        log_debug("Render graph profile '%s' using compatibility graph", render_graph_profile)
+        return build_compat_render_graph(enable_tonemap, exposure, gamma)
+    end
 
     local passes = {
         {
