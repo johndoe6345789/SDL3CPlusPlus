@@ -2,8 +2,11 @@
 
 #include <MaterialXCore/Document.h>
 #include <MaterialXFormat/File.h>
+#include <MaterialXFormat/Util.h>
+#include <MaterialXFormat/XmlIo.h>
 #include <MaterialXGenGlsl/VkShaderGenerator.h>
 #include <MaterialXGenShader/GenContext.h>
+#include <MaterialXGenShader/Shader.h>
 #include <MaterialXGenShader/Util.h>
 #include <MaterialXRender/Util.h>
 
@@ -39,6 +42,9 @@ ShaderPaths MaterialXShaderGenerator::Generate(const MaterialXConfig& config,
     if (!config.enabled) {
         return {};
     }
+    if (logger_) {
+        logger_->Trace("MaterialXShaderGenerator", "Generate", "enabled=true");
+    }
 
     mx::FileSearchPath searchPath;
     std::filesystem::path libraryPath = ResolvePath(config.libraryPath, scriptDirectory);
@@ -50,6 +56,11 @@ ShaderPaths MaterialXShaderGenerator::Generate(const MaterialXConfig& config,
     }
     if (!libraryPath.empty()) {
         searchPath.append(mx::FilePath(libraryPath.string()));
+    }
+    if (logger_) {
+        logger_->Trace("MaterialXShaderGenerator", "Generate",
+                       "libraryPath=" + libraryPath.string() +
+                       ", libraryFolders=" + std::to_string(config.libraryFolders.size()));
     }
 
     mx::DocumentPtr stdLib = mx::createDocument();
@@ -69,6 +80,10 @@ ShaderPaths MaterialXShaderGenerator::Generate(const MaterialXConfig& config,
     if (config.useConstantColor) {
         mx::Color3 color(config.constantColor[0], config.constantColor[1], config.constantColor[2]);
         shader = mx::createConstantShader(context, stdLib, config.shaderKey, color);
+        if (logger_) {
+            logger_->Trace("MaterialXShaderGenerator", "Generate",
+                           "usingConstantColor=true, shaderKey=" + config.shaderKey);
+        }
     } else {
         if (config.documentPath.empty()) {
             throw std::runtime_error("MaterialX document path is required when use_constant_color is false");
@@ -78,14 +93,38 @@ ShaderPaths MaterialXShaderGenerator::Generate(const MaterialXConfig& config,
         if (documentPath.empty()) {
             throw std::runtime_error("MaterialX document path could not be resolved");
         }
+        if (logger_) {
+            logger_->Trace("MaterialXShaderGenerator", "Generate",
+                           "documentPath=" + documentPath.string() +
+                           ", materialName=" + config.materialName);
+        }
 
         mx::DocumentPtr document = mx::createDocument();
-        mx::readFromXmlFile(document, mx::FilePath(documentPath.string()), &searchPath);
+        mx::readFromXmlFile(document, mx::FilePath(documentPath.string()), searchPath);
         document->importLibrary(stdLib);
 
         mx::TypedElementPtr element;
         if (!config.materialName.empty()) {
-            element = document->getMaterial(config.materialName);
+            auto renderables = mx::findRenderableElements(document);
+            for (const auto& candidate : renderables) {
+                if (candidate && candidate->getName() == config.materialName) {
+                    element = candidate;
+                    break;
+                }
+            }
+            if (!element) {
+                mx::NodePtr node = document->getNode(config.materialName);
+                if (node && (node->getCategory() == "surfacematerial"
+                    || node->getType() == "surfaceshader")) {
+                    element = node;
+                }
+            }
+            if (!element) {
+                mx::OutputPtr output = document->getOutput(config.materialName);
+                if (output) {
+                    element = output;
+                }
+            }
         }
         if (!element) {
             auto renderables = mx::findRenderableElements(document);
@@ -95,6 +134,12 @@ ShaderPaths MaterialXShaderGenerator::Generate(const MaterialXConfig& config,
         }
         if (!element) {
             throw std::runtime_error("MaterialX document has no renderable elements");
+        }
+        if (logger_) {
+            logger_->Trace("MaterialXShaderGenerator", "Generate",
+                           "selectedElement=" + element->getName() +
+                           ", category=" + element->getCategory() +
+                           ", type=" + element->getType());
         }
 
         shader = mx::createShader(config.shaderKey, context, element);

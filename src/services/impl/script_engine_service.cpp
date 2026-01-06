@@ -8,6 +8,8 @@
 #include <MaterialXCore/Document.h>
 #include <MaterialXCore/Types.h>
 #include <MaterialXFormat/File.h>
+#include <MaterialXFormat/Util.h>
+#include <MaterialXFormat/XmlIo.h>
 #include <SDL3/SDL.h>
 #include <rapidjson/document.h>
 #include <rapidjson/error/en.h>
@@ -79,7 +81,7 @@ mx::DocumentPtr LoadMaterialXDocument(const std::filesystem::path& documentPath,
                                       const std::filesystem::path& scriptDirectory) {
     mx::DocumentPtr document = mx::createDocument();
     mx::FileSearchPath searchPath = BuildMaterialXSearchPath(config, scriptDirectory);
-    mx::readFromXmlFile(document, mx::FilePath(documentPath.string()), &searchPath);
+    mx::readFromXmlFile(document, mx::FilePath(documentPath.string()), searchPath);
 
     if (!config.libraryFolders.empty()) {
         mx::DocumentPtr stdLib = mx::createDocument();

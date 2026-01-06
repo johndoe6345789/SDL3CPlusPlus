@@ -154,20 +154,23 @@ if(TARGET bimg::bimg)
 endif()
 
 set(SDL3CPP_MATERIALX_LIBS)
-if(TARGET MaterialX::MaterialX)
-    list(APPEND SDL3CPP_MATERIALX_LIBS MaterialX::MaterialX)
-else()
 foreach(candidate IN ITEMS
+        MaterialX::MaterialX
+        materialx::MaterialX
         MaterialX::MaterialXCore
         MaterialX::MaterialXFormat
         MaterialX::MaterialXGenShader
         MaterialX::MaterialXGenGlsl
-        MaterialX::MaterialXRender)
-        if(TARGET ${candidate})
-            list(APPEND SDL3CPP_MATERIALX_LIBS ${candidate})
-        endif()
-    endforeach()
-endif()
+        MaterialX::MaterialXRender
+        materialx::MaterialXCore
+        materialx::MaterialXFormat
+        materialx::MaterialXGenShader
+        materialx::MaterialXGenGlsl
+        materialx::MaterialXRender)
+    if(TARGET ${candidate})
+        list(APPEND SDL3CPP_MATERIALX_LIBS ${candidate})
+    endif()
+endforeach()
 if(SDL3CPP_MATERIALX_LIBS)
     list(APPEND SDL3CPP_RENDER_STACK_LIBS ${SDL3CPP_MATERIALX_LIBS})
 endif()

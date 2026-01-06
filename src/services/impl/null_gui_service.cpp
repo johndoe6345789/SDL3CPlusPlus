@@ -1,5 +1,7 @@
 #include "null_gui_service.hpp"
 
+#include "../interfaces/gui_types.hpp"
+
 #include <string>
 
 namespace sdl3cpp::services::impl {
