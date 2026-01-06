@@ -10,6 +10,7 @@
 #include <MaterialXGenShader/Util.h>
 #include <MaterialXRender/Util.h>
 
+#include <fstream>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -88,6 +89,30 @@ void InsertAfterVersion(std::string& source, const std::string& block) {
     source.insert(lineEnd, block + "\n");
 }
 
+void ReplaceUnsubstitutedTokens(std::string& source) {
+    // Manually replace common MaterialX tokens that might not have been substituted
+    const std::map<std::string, std::string> tokenMap = {
+        {"$texSamplerSignature", "sampler2D tex_sampler"},
+        {"$texSamplerSampler2D", "tex_sampler"},
+        {"$closureDataConstructor", "ClosureData(closureType, L, V, N, P, occlusion)"},
+    };
+    
+    for (const auto& [token, replacement] : tokenMap) {
+        size_t pos = 0;
+        while ((pos = source.find(token, pos)) != std::string::npos) {
+            source.replace(pos, token.length(), replacement);
+            pos += replacement.length();
+        }
+    }
+    
+    // Add missing constants if not present
+    if (source.find("AIRY_FRESNEL_ITERATIONS") != std::string::npos &&
+        source.find("#define AIRY_FRESNEL_ITERATIONS") == std::string::npos) {
+        // Insert the constant definition after the version directive
+        InsertAfterVersion(source, "#define AIRY_FRESNEL_ITERATIONS 10");
+    }
+}
+
 bool ReplaceFirstOccurrence(std::string& source, const std::string& before, const std::string& after) {
     size_t pos = source.find(before);
     if (pos == std::string::npos) {
@@ -95,6 +120,195 @@ bool ReplaceFirstOccurrence(std::string& source, const std::string& before, cons
     }
     source.replace(pos, before.size(), after);
     return true;
+}
+
+std::string ConvertIndividualOutputsToBlock(const std::string& source) {
+    // Find individual output declarations like:
+    // layout (location = N) out vec3 varname;
+    // And convert them to a VertexData block
+
+    std::vector<std::tuple<int, std::string, std::string>> outputs;  // location, type, name
+    size_t searchPos = 0;
+    size_t firstOutputStart = std::string::npos;
+    size_t lastOutputEnd = 0;
+    
+    while (true) {
+        size_t layoutPos = source.find("layout (location =", searchPos);
+        if (layoutPos == std::string::npos) break;
+        
+        // Check if this line contains "out" (to confirm it's an output)
+        size_t lineEnd = source.find('\n', layoutPos);
+        if (lineEnd == std::string::npos) lineEnd = source.size();
+        std::string line = source.substr(layoutPos, lineEnd - layoutPos);
+        
+        if (line.find(" out ") == std::string::npos) {
+            searchPos = lineEnd;
+            continue;
+        }
+        
+        // Extract location number
+        size_t locStart = layoutPos + 18;  // after "layout (location ="
+        while (locStart < source.size() && std::isspace(source[locStart])) ++locStart;
+        size_t locEnd = locStart;
+        while (locEnd < source.size() && std::isdigit(source[locEnd])) ++locEnd;
+        if (locStart == locEnd) {
+            searchPos = lineEnd;
+            continue;
+        }
+        int location = std::stoi(source.substr(locStart, locEnd - locStart));
+        
+        // Find "out"
+        size_t outPos = line.find(" out ");
+        if (outPos == std::string::npos) {
+            searchPos = lineEnd;
+            continue;
+        }
+        outPos += layoutPos;  // Make absolute
+        
+        // Skip "out " and whitespace
+        size_t typeStart = outPos + 5;  // after " out "
+        while (typeStart < source.size() && std::isspace(source[typeStart])) ++typeStart;
+        
+        // Extract type
+        size_t typeEnd = typeStart;
+        while (typeEnd < source.size() && !std::isspace(source[typeEnd]) && source[typeEnd] != ';') ++typeEnd;
+        std::string type = source.substr(typeStart, typeEnd - typeStart);
+        
+        // Extract variable name
+        size_t nameStart = typeEnd;
+        while (nameStart < source.size() && std::isspace(source[nameStart])) ++nameStart;
+        size_t nameEnd = nameStart;
+        while (nameEnd < source.size() && !std::isspace(source[nameEnd]) && source[nameEnd] != ';') ++nameEnd;
+        std::string name = source.substr(nameStart, nameEnd - nameStart);
+        
+        if (name.empty() || type.empty()) {
+            searchPos = lineEnd;
+            continue;
+        }
+        
+        outputs.push_back({location, type, name});
+        
+        // Track the range to replace
+        if (firstOutputStart == std::string::npos) {
+            firstOutputStart = layoutPos;
+        }
+        lastOutputEnd = lineEnd + 1;  // Include the newline
+        
+        searchPos = lastOutputEnd;
+    }
+    
+    if (outputs.empty()) {
+        return source;
+    }
+    
+    // Build the VertexData block
+    std::string block = "layout (location = 0) out VertexData\n{\n";
+    for (const auto& [loc, type, name] : outputs) {
+        block += "    " + type + " " + name + ";\n";
+    }
+    block += "} vd;\n\n";
+    
+    // Replace the individual outputs with the block
+    std::string result = source.substr(0, firstOutputStart);
+    result += block;
+    result += source.substr(lastOutputEnd);
+    
+    return result;
+}
+
+std::string ConvertIndividualInputsToBlock(const std::string& source) {
+    // Find individual input declarations like:
+    // layout (location = N) in vec3 varname;
+    // And convert them to a VertexData block
+
+    std::vector<std::tuple<int, std::string, std::string>> inputs;  // location, type, name
+    size_t searchPos = 0;
+    size_t firstInputStart = std::string::npos;
+    size_t lastInputEnd = 0;
+    
+    while (true) {
+        size_t layoutPos = source.find("layout (location =", searchPos);
+        if (layoutPos == std::string::npos) break;
+        
+        // Check if this line contains "in" (to confirm it's an input)
+        size_t lineEnd = source.find('\n', layoutPos);
+        if (lineEnd == std::string::npos) lineEnd = source.size();
+        std::string line = source.substr(layoutPos, lineEnd - layoutPos);
+        
+        // Skip lines with "in vec3 i_" (vertex inputs)
+        if (line.find(" in ") == std::string::npos || line.find(" in vec3 i_") != std::string::npos) {
+            searchPos = lineEnd;
+            continue;
+        }
+        
+        // Extract location number
+        size_t locStart = layoutPos + 18;  // after "layout (location ="
+        while (locStart < source.size() && std::isspace(source[locStart])) ++locStart;
+        size_t locEnd = locStart;
+        while (locEnd < source.size() && std::isdigit(source[locEnd])) ++locEnd;
+        if (locStart == locEnd) {
+            searchPos = lineEnd;
+            continue;
+        }
+        int location = std::stoi(source.substr(locStart, locEnd - locStart));
+        
+        // Find "in"
+        size_t inPos = line.find(" in ");
+        if (inPos == std::string::npos) {
+            searchPos = lineEnd;
+            continue;
+        }
+        inPos += layoutPos;  // Make absolute
+        
+        // Skip "in " and whitespace
+        size_t typeStart = inPos + 4;  // after " in "
+        while (typeStart < source.size() && std::isspace(source[typeStart])) ++typeStart;
+        
+        // Extract type
+        size_t typeEnd = typeStart;
+        while (typeEnd < source.size() && !std::isspace(source[typeEnd]) && source[typeEnd] != ';') ++typeEnd;
+        std::string type = source.substr(typeStart, typeEnd - typeStart);
+        
+        // Extract variable name
+        size_t nameStart = typeEnd;
+        while (nameStart < source.size() && std::isspace(source[nameStart])) ++nameStart;
+        size_t nameEnd = nameStart;
+        while (nameEnd < source.size() && !std::isspace(source[nameEnd]) && source[nameEnd] != ';') ++nameEnd;
+        std::string name = source.substr(nameStart, nameEnd - nameStart);
+        
+        if (name.empty() || type.empty()) {
+            searchPos = lineEnd;
+            continue;
+        }
+        
+        inputs.push_back({location, type, name});
+        
+        // Track the range to replace
+        if (firstInputStart == std::string::npos) {
+            firstInputStart = layoutPos;
+        }
+        lastInputEnd = lineEnd + 1;  // Include the newline
+        
+        searchPos = lastInputEnd;
+    }
+    
+    if (inputs.empty()) {
+        return source;
+    }
+    
+    // Build the VertexData block
+    std::string block = "layout (location = 0) in VertexData\n{\n";
+    for (const auto& [loc, type, name] : inputs) {
+        block += "    " + type + " " + name + ";\n";
+    }
+    block += "} vd;\n\n";
+    
+    // Replace the individual inputs with the block
+    std::string result = source.substr(0, firstInputStart);
+    result += block;
+    result += source.substr(lastInputEnd);
+    
+    return result;
 }
 
 }  // namespace
@@ -243,6 +457,20 @@ ShaderPaths MaterialXShaderGenerator::Generate(const MaterialXConfig& config,
     ShaderPaths paths;
     paths.vertexSource = shader->getSourceCode(mx::Stage::VERTEX);
     paths.fragmentSource = shader->getSourceCode(mx::Stage::PIXEL);
+
+    // Fix vertex shader outputs: convert individual layout outputs to VertexData block
+    // MaterialX VkShaderGenerator incorrectly emits individual out variables instead of
+    // a VertexData struct block, which causes compilation errors when the shader code
+    // references vd.normalWorld etc. We convert them here as a workaround.
+    paths.vertexSource = ConvertIndividualOutputsToBlock(paths.vertexSource);
+    
+    // Fix fragment shader inputs: convert individual layout inputs to VertexData block
+    paths.fragmentSource = ConvertIndividualInputsToBlock(paths.fragmentSource);
+    
+    // Replace any remaining unsubstituted tokens
+    // Some MaterialX tokens don't get properly substituted, particularly in library includes
+    ReplaceUnsubstitutedTokens(paths.vertexSource);
+    ReplaceUnsubstitutedTokens(paths.fragmentSource);
 
     auto vertexBlock = FindVertexDataBlock(paths.vertexSource);
     auto fragmentBlock = FindVertexDataBlock(paths.fragmentSource);
