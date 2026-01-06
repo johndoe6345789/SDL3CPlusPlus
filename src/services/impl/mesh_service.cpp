@@ -1,11 +1,16 @@
 #include "mesh_service.hpp"
 #include <utility>
 
+#include <assimp/DefaultIOSystem.h>
 #include <assimp/Importer.hpp>
 #include <assimp/material.h>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
+#include <algorithm>
+#include <chrono>
+#include <cctype>
 #include <filesystem>
+#include <fstream>
 #include <limits>
 #include <lua.hpp>
 #include <system_error>
@@ -64,6 +69,78 @@ std::string GetExtensionHint(const std::string& entryPath, const std::string& fa
         return ext;
     }
     return fallback;
+}
+
+std::string NormalizeExtension(std::string extension) {
+    std::transform(extension.begin(), extension.end(), extension.begin(),
+                   [](unsigned char value) { return static_cast<char>(std::tolower(value)); });
+    return extension;
+}
+
+class ArchiveMapAwareIOSystem : public Assimp::DefaultIOSystem {
+public:
+    bool Exists(const char* pFile) const override {
+        const std::string trimmed = TrimArchiveSuffix(pFile);
+        return Assimp::DefaultIOSystem::Exists(trimmed.c_str());
+    }
+
+    Assimp::IOStream* Open(const char* pFile, const char* pMode = "rb") override {
+        const std::string trimmed = TrimArchiveSuffix(pFile);
+        return Assimp::DefaultIOSystem::Open(trimmed.c_str(), pMode);
+    }
+
+private:
+    static std::string TrimArchiveSuffix(const char* path) {
+        if (!path) {
+            return std::string();
+        }
+        std::string trimmed(path);
+        const std::string::size_type comma = trimmed.find(',');
+        if (comma != std::string::npos) {
+            trimmed.erase(comma);
+        }
+        return trimmed;
+    }
+};
+
+bool WriteArchiveEntryToTempFile(const std::vector<uint8_t>& buffer,
+                                 const std::string& entryPath,
+                                 const std::string& extensionHint,
+                                 std::filesystem::path& outPath,
+                                 std::string& outError) {
+    std::error_code tempError;
+    std::filesystem::path tempDirectory = std::filesystem::temp_directory_path(tempError);
+    if (tempError) {
+        outError = "Failed to resolve temp directory: " + tempError.message();
+        return false;
+    }
+
+    std::filesystem::path entryName(entryPath);
+    std::string baseName = entryName.stem().string();
+    if (baseName.empty()) {
+        baseName = "archive_entry";
+    }
+
+    auto timestampMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    std::string fileName = "sdl3cpp_" + baseName + "_" + std::to_string(timestampMs);
+    if (!extensionHint.empty()) {
+        fileName += "." + extensionHint;
+    }
+
+    outPath = tempDirectory / fileName;
+    std::ofstream output(outPath, std::ios::binary | std::ios::trunc);
+    if (!output) {
+        outError = "Failed to create temp file: " + outPath.string();
+        return false;
+    }
+    output.write(reinterpret_cast<const char*>(buffer.data()),
+                 static_cast<std::streamsize>(buffer.size()));
+    if (!output) {
+        outError = "Failed to write temp file: " + outPath.string();
+        return false;
+    }
+    return true;
 }
 
 aiColor3D ResolveMaterialColor(const aiScene* scene, const aiMesh* mesh) {
@@ -265,6 +342,20 @@ bool MeshService::LoadFromArchive(const std::string& archivePath,
         return false;
     }
 
+    std::string extensionHint = GetExtensionHint(entryPath, "bsp");
+    std::string normalizedExtension = NormalizeExtension(extensionHint);
+    auto buildPayload = [&](const aiScene* loadedScene, std::string& error) -> bool {
+        if (!BuildPayloadFromScene(loadedScene, true, outPayload, error, logger_)) {
+            return false;
+        }
+        if (outPayload.positions.size() > std::numeric_limits<uint16_t>::max()) {
+            error = "Mesh vertex count exceeds uint16_t index range: " +
+                    std::to_string(outPayload.positions.size());
+            return false;
+        }
+        return true;
+    };
+
     int errorCode = 0;
     std::unique_ptr<zip_t, ZipArchiveDeleter> archive(
         zip_open(resolvedArchive.string().c_str(), ZIP_RDONLY, &errorCode));
@@ -278,6 +369,31 @@ bool MeshService::LoadFromArchive(const std::string& archivePath,
         outError = "Archive entry not found: " + entryPath;
         return false;
     }
+
+    if (normalizedExtension == "bsp") {
+        if (entryStat.size == 0) {
+            outError = "Archive entry is empty: " + entryPath;
+            return false;
+        }
+        if (logger_) {
+            logger_->Trace("MeshService", "LoadFromArchive",
+                           "Detected BSP entry; using archive importer. archive=" +
+                           resolvedArchive.string() + ", entry=" + entryPath);
+        }
+
+        std::string importName = resolvedArchive.string() + "," + entryPath;
+        Assimp::Importer importer;
+        importer.SetIOHandler(new ArchiveMapAwareIOSystem());
+        const aiScene* scene = importer.ReadFile(importName, kAssimpLoadFlags);
+        if (!scene) {
+            std::string importError = importer.GetErrorString() ? importer.GetErrorString()
+                                                                : "Assimp failed to load BSP from archive";
+            outError = "Assimp failed to load BSP from archive: " + importError;
+            return false;
+        }
+        return buildPayload(scene, outError);
+    }
+
     if (entryStat.size == 0) {
         outError = "Archive entry is empty: " + entryPath;
         return false;
@@ -315,7 +431,6 @@ bool MeshService::LoadFromArchive(const std::string& archivePath,
         return false;
     }
 
-    std::string extensionHint = GetExtensionHint(entryPath, "bsp");
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFileFromMemory(
         buffer.data(),
@@ -323,17 +438,54 @@ bool MeshService::LoadFromArchive(const std::string& archivePath,
         kAssimpLoadFlags,
         extensionHint.c_str());
     if (!scene) {
-        outError = importer.GetErrorString() ? importer.GetErrorString()
-                                             : "Assimp failed to load archive entry";
-        return false;
+        std::string memoryError = importer.GetErrorString() ? importer.GetErrorString()
+                                                            : "Assimp failed to load archive entry";
+        if (logger_) {
+            logger_->Trace("MeshService", "LoadFromArchive",
+                           "ReadFileFromMemory failed: " + memoryError +
+                           ", entryPath=" + entryPath +
+                           ", extensionHint=" + extensionHint);
+        }
+
+        std::filesystem::path tempPath;
+        std::string tempError;
+        if (!WriteArchiveEntryToTempFile(buffer, entryPath, extensionHint, tempPath, tempError)) {
+            outError = "Assimp failed to load archive entry from memory: " + memoryError +
+                       "; " + tempError;
+            return false;
+        }
+        if (logger_) {
+            logger_->Trace("MeshService", "LoadFromArchive",
+                           "Falling back to temp file: " + tempPath.string());
+        }
+
+        Assimp::Importer fallbackImporter;
+        const aiScene* fallbackScene = fallbackImporter.ReadFile(tempPath.string(), kAssimpLoadFlags);
+
+        std::error_code removeError;
+        std::filesystem::remove(tempPath, removeError);
+        if (removeError && logger_) {
+            logger_->Trace("MeshService", "LoadFromArchive",
+                           "Failed to remove temp file: " + tempPath.string() +
+                           ", error=" + removeError.message());
+        }
+
+        if (!fallbackScene) {
+            std::string fallbackError = fallbackImporter.GetErrorString() ? fallbackImporter.GetErrorString()
+                                                                          : "Assimp failed to load temp file";
+            outError = "Assimp failed to load archive entry from memory: " + memoryError +
+                       "; fallback to temp file failed: " + fallbackError;
+            return false;
+        }
+
+        if (!buildPayload(fallbackScene, outError)) {
+            return false;
+        }
+
+        return true;
     }
 
-    if (!BuildPayloadFromScene(scene, true, outPayload, outError, logger_)) {
-        return false;
-    }
-    if (outPayload.positions.size() > std::numeric_limits<uint16_t>::max()) {
-        outError = "Mesh vertex count exceeds uint16_t index range: " +
-                   std::to_string(outPayload.positions.size());
+    if (!buildPayload(scene, outError)) {
         return false;
     }
 
