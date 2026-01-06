@@ -156,6 +156,7 @@ if(BUILD_SDL3_APP)
             src/services/impl/lua_helpers.cpp
             src/services/impl/scene_script_service.cpp
             src/services/impl/shader_script_service.cpp
+            src/services/impl/render_graph_script_service.cpp
             src/services/impl/gui_script_service.cpp
             src/services/impl/audio_command_service.cpp
             src/services/impl/physics_bridge_service.cpp

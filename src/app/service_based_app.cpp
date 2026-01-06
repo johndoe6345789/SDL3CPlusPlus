@@ -281,6 +281,8 @@ void ServiceBasedApp::RegisterServices() {
         registry_.GetService<services::IScriptEngineService>(),
         registry_.GetService<services::IConfigService>(),
         registry_.GetService<services::ILogger>());
+    logger_->Trace("ServiceBasedApp", "RegisterServices",
+                   "Registered render graph script service");
     registry_.RegisterService<services::IGuiScriptService, services::impl::GuiScriptService>(
         registry_.GetService<services::IScriptEngineService>(),
         registry_.GetService<services::ILogger>());
