@@ -1,6 +1,5 @@
-// Copyright Contributors to the Open Shading Language project.
-// SPDX-License-Identifier: BSD-3-Clause
-// https://github.com/AcademySoftwareFoundation/OpenShadingLanguage
+// Open Shading Language : Copyright (c) 2009-2017 Sony Pictures Imageworks Inc., et al.
+// https://github.com/imageworks/OpenShadingLanguage/blob/master/LICENSE
 
 #pragma once
 #define VECTOR4_H
@@ -108,13 +107,13 @@ vector4 __operator__div__(vector4 a, vector4 b)
 
 vector4 __operator__div__(vector4 a, int b)
 {
-    float b_inv = 1.0 / float(b);
+    float b_inv = 1.0/b;
     return a * vector4(b_inv, b_inv, b_inv, b_inv);
 }
 
 vector4 __operator__div__(vector4 a, float b)
 {
-    float b_inv = 1.0 / b;
+    float b_inv = 1.0/b;
     return a * vector4(b_inv, b_inv, b_inv, b_inv);
 }
 
@@ -133,7 +132,7 @@ int __operator__eq__(vector4 a, vector4 b)
     return (a.x == b.x) && (a.y == b.y) && (a.z == b.z) && (a.w == b.w);
 }
 
-int __operator__neq__(vector4 a, vector4 b)
+int __operator__ne__(vector4 a, vector4 b)
 {
     return (a.x != b.x) || (a.y != b.y) || (a.z != b.z) || (a.w != b.w);
 }
@@ -285,6 +284,11 @@ vector4 max(vector4 a, float b)
     return max(a, vector4(b, b, b, b));
 }
 
+vector4 normalize(vector4 a)
+{
+    return a / length(a);
+}
+
 vector4 min(vector4 a, vector4 b)
 {
     return vector4 (min(a.x, b.x),
@@ -296,11 +300,6 @@ vector4 min(vector4 a, vector4 b)
 vector4 min(vector4 a, float b)
 {
     return min(a, vector4(b, b, b, b));
-}
-
-vector4 normalize(vector4 a)
-{
-    return a / length(a);
 }
 
 vector4 mod(vector4 a, vector4 b)

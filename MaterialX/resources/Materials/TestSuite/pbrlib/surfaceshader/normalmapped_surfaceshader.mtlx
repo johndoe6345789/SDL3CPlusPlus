@@ -7,7 +7,7 @@
     <input name="coat" type="float" value="1" />
     <input name="normal" type="vector3" nodegraph="NormalMapGraph" />
   </standard_surface>
-  <surfacematerial name="NormalMappedMaterial" type="material">
+  <surfacematerial name="NormalMappedShaderMaterial" type="material">
     <input name="surfaceshader" type="surfaceshader" nodename="NormalMappedShader" />
     <input name="displacementshader" type="displacementshader" value="" />
   </surfacematerial>
@@ -17,7 +17,7 @@
       <input name="scale" type="float" value="1.1" />
     </normalmap>
     <tiledimage name="tiledimage" type="vector3">
-      <input name="file" type="filename" value="resources/Images/mesh_wire_norm.png" />
+      <input name="file" type="filename" value="resources/images/mesh_wire_norm.png" />
       <input name="realworldimagesize" type="vector2" value="1.0, 2.0" unit="centimeter" unittype="distance" />
       <input name="realworldtilesize" type="vector2" value="3.0, 2.0" unit="centimeter" unittype="distance" />
       <input name="uvtiling" type="vector2" value="12, 10" />
@@ -31,7 +31,7 @@
     <input name="coat" type="float" value="1" />
     <input name="normal" type="vector3" nodegraph="NormalMapGraph2" />
   </standard_surface>
-  <surfacematerial name="NormalMappedMaterial2" type="material">
+  <surfacematerial name="NormalMappedShaderMaterial2" type="material">
     <input name="surfaceshader" type="surfaceshader" nodename="NormalMappedShader2" />
     <input name="displacementshader" type="displacementshader" value="" />
   </surfacematerial>
@@ -41,7 +41,7 @@
       <input name="scale" type="vector2" value="1.1, 1.1" />
     </normalmap>
     <tiledimage name="tiledimage2" type="vector3">
-      <input name="file" type="filename" value="resources/Images/mesh_wire_norm.png" />
+      <input name="file" type="filename" value="resources/images/mesh_wire_norm.png" />
       <input name="realworldimagesize" type="vector2" value="1.0, 2.0" unit="centimeter" unittype="distance" />
       <input name="realworldtilesize" type="vector2" value="3.0, 2.0" unit="centimeter" unittype="distance" />
       <input name="uvtiling" type="vector2" value="12, 10" />

@@ -16,8 +16,13 @@ def main():
     parser.add_argument(dest="inputFilename", help="Filename of the input document.")
     opts = parser.parse_args()
 
-    # Load standard libraries if requested.
-    stdlib = None
+    doc = mx.createDocument()
+    try:
+        mx.readFromXmlFile(doc, opts.inputFilename)
+    except mx.ExceptionFileMissing as err:
+        print(err)
+        sys.exit(0)
+
     if opts.stdlib:
         stdlib = mx.createDocument()
         try:
@@ -25,24 +30,15 @@ def main():
         except Exception as err:
             print(err)
             sys.exit(0)
+        doc.importLibrary(stdlib)
 
-    # Read and validate the source document.
-    doc = mx.createDocument()
-    try:
-        mx.readFromXmlFile(doc, opts.inputFilename)
-        if stdlib:
-            doc.setDataLibrary(stdlib)
-    except mx.ExceptionFileMissing as err:
-        print(err)
-        sys.exit(0)
-    valid, message = doc.validate()
+    (valid, message) = doc.validate()
     if (valid):
         print("%s is a valid MaterialX document in v%s" % (opts.inputFilename, mx.getVersionString()))
     else:
         print("%s is not a valid MaterialX document in v%s" % (opts.inputFilename, mx.getVersionString()))
         print(message)
 
-    # Generate verbose output if requested.
     if opts.verbose:
         nodegraphs = doc.getNodeGraphs()
         materials = doc.getMaterialNodes()

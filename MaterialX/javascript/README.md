@@ -8,17 +8,13 @@ This folder contains tests and examples that leverage the JavaScript bindings fo
 
 The emscripten SDK is required to generate the JavaScript bindings. There are several ways of using the SDK on different platforms. In general, we recommend to install the SDK directly, following the instructions below. Alternative options are explained [below](#alternative-options-to-use-the-emscripten-sdk).
 
-To install the SDK directly, follow the instructions of the [emscripten SDK installation Guide](https://emscripten.org/docs/getting_started/downloads.html#installation-instructions-using-the-emsdk-recommended). Make sure to install prerequisites depending on your platform and read usage hints first (e.g. differences between Unix / Windows scripts). 
+To install the SDK directly, follow the instructions of the [emscripten SDK installation Guide](https://emscripten.org/docs/getting_started/downloads.html#installation-instructions-using-the-emsdk-recommended). Make sure to install prerequisites depending on your platform and read usage hints first (e.g. differences between Unix / Windows scripts).
 
-The recommended version is `4.0.8`. Do not automatically update to the latest version to avoid build issues.
-
-Note that following the instructions will set some environment variables that are required to use the  SDK. These variables are only set temporarily for the current terminal, though. Setting the environment variables in other terminals can be achieved by running
+Note that following the instructions will set some environment variables that are required to use the SDK. These variables are only set temporarily for the current terminal, though. Setting the environment variables in other terminals can be achieved by running
 ```sh
 source ./emsdk_env.sh
 ```
 inside of the `emsdk` folder (check the documentation for the Windows equivalent). In case of the MaterialX project, it is not required to have these environment variables set. You can also use a CMake build flag instead, as described in the [build instructions](#build-steps) below.
-
-Emscripten installs its own Node.js runtime. We recommend using the Node.js bundled with your active emsdk to avoid package/runtime mismatches.
 
 Setting the environment variables permanently is also possible, either by adding a `--permanent` flag to the `activate` command, or by sourcing the `emsdk_env` script every time a shell is launched, e.g. by adding the `source` call to `~/.bash_profile` or an equivalent file. Note however, that the environment variables set by the emscripten SDK might override existing system settings, like the default Python, Java or NodeJs version, so setting them permanently might not be desired on all systems.
 
@@ -70,7 +66,7 @@ After building the project the `JsMaterialXCore.wasm`, `JsMaterialXCore.js`, `Js
 JavaScript unit tests are located in the `MaterialXTest` folder and use the `.spec.js` suffix. A sample browser is located in the `MaterialXView` folder which allows preview of some of provided sample MaterialX materials.
 
 ### Unit Tests 
-These tests require `node.js`, which is shipped with the emscripten environment. Make sure to `source` the `emsdk/emsdk_env.sh` script before running the steps described below, if you don't have NodeJs installed on your system already (running the command is not required otherwise). 
+These tests require `node.js`, which is shipped with the emscripten environment. Make sure to `source` the `emsdk/emsdk_env.sh` script before running the steps described below, if you don't have NodeJs installed on your system already (running the command is not required otherwise).
 
 1. From the `MaterialXTest` directory, install the npm packages.
     ```sh
@@ -102,7 +98,7 @@ Note that a sample build script is provided in
 `javascript/build_javascript_win.bat` with a corresponding script to clean the build area in
 `javascript/clean_javascript_win.bat`. Modify the Emscripten SDK and MaterialX build locations as needed.
 
-Additionally the github actions workflow YAML file (`.github/workflows/main.yml`) can be examined as well.
+Additionaly the github actions workflow YAML file (`.github/workflows/main.yml`) can be examined as well.
 
 ## Using the Bindings
 ### Consuming the Module
@@ -143,40 +139,8 @@ Functions that handle generic types in C++ via templates are mapped to JavaScrip
 #### Iterators
 MaterialX comes with a number of iterators (e.g. `TreeIterator`, `GraphIterator`). These iterators implement the iterable (and iterator) protocol in JS, and can therefore be used in `for ... of` loops.
 
-#### Memory Management (Embind)
-Objects that originate from C++ (e.g. `Document`, `Node`, `Shader`, `GenContext`) are backed by C++ instances. When you're done with them, explicitly call `.delete()` to release the underlying C++ object. This is especially important for objects returned as smart pointers in C++ (such as elements yielded by iterators or getters), otherwise you may see warnings like "Embind found a leaked C++ instance".
-
-Examples:
-
-```javascript
-// Documents and elements
-const doc = mx.createDocument();
-const node = doc.addNode('image');
-// ... use node ...
-node.delete();
-doc.delete();
-
-// Iterator-yielded elements
-for (const elem of doc.traverseTree()) {
-    // ... use elem ...
-    elem.delete();
-}
-
-// Edges in graph traversal
-for (const edge of output.traverseGraph()) {
-    const up = edge.getUpstreamElement();
-    const conn = edge.getConnectingElement();
-    const down = edge.getDownstreamElement();
-    // ... use them ...
-    up.delete();
-    conn.delete();
-    down.delete();
-    edge.delete();
-}
-```
-
 #### Exception Handling
-When a C++ function throws an exception, the JS binding throws as well. Depending on the Emscripten version, the caught value may be either a numeric pointer to the C++ exception (legacy) or an exception object (Error-like). Use `getExceptionMessage` on the caught value in both cases:
+When a C++ function throws an exception, this exception will also be thrown by the corresponding JS function. However, you will only get a pointer (i.e. a number in JS) to the C++ exception object in a `try ... catch ...` block, due to some exception handling limitations of emscripten. The helper method `getExceptionMessage` can be used to extract the exception message from that pointer:
 
 ```javascript
 const doc = mx.createDocument();
@@ -184,9 +148,9 @@ doc.addNode('category', 'node1');
 
 try {
     doc.addNode('category', 'node1');
-} catch (err) {
-    // Works with both a numeric pointer and an exception object
-    console.log(mx.getExceptionMessage(err)); // 'Child name is not unique: node1'
+} catch (errPtr) {
+    // typeof errPtr === 'number' yields 'true'
+    console.log(mx.getExceptionMessage(errPtr)); // Prints 'Child name is not unique: node1'
 }
 ```
 
@@ -215,7 +179,7 @@ Make sure to consume `JsMaterialXGenShader.js` instead of `JsMaterialXCore.js` a
 #### Generating Essl Shader Code & Compiling with WebGL
 To generate WebGL 2 compatible shader code a generator context and an instance of the `EsslShaderGenerator` class is required. 
 ```javascript
-const gen = mx.EsslShaderGenerator.create();
+const gen = new mx.EsslShaderGenerator();
 const genContext = new mx.GenContext(gen);
 ```
 The standard libraries need to be loaded and imported into the document. This step is required as the standard libraries contain all the definitions and snippets needed for assembly of the shader code.
@@ -231,11 +195,6 @@ const elem = mx.findRenderableElement(doc);
 const shader = gen.generate(elem.getNamePath(), elem, genContext);
 const fShader = shader.getSourceCode("pixel");    
 const vShader = shader.getSourceCode("vertex");
-// Cleanup when done
-shader.delete();
-stdlib.delete();
-genContext.delete();
-gen.delete();
 ```
 Shader generation options may be changed by getting the options from the context and altering its properties. Changes to these options must occur after the standard libraries have been loaded as the call to `mx.loadStandardLibraries(genContext)` sets the options to some defaults.
 ```javascript
@@ -262,7 +221,7 @@ Each entry corresponds to a uniform name and the value is an object which contai
 An example that parses the JSON and feeds the uniform data to a three.js based application can be found in the [Web Viewer Sample App](./MaterialXView/src/index.js).
 
 ## Maintaining the Bindings
-This section provides some background on binding creation for contributors. In general, we recommend to look at existing bindings for examples.
+This section provides some background on binding creation for contributors. In general, we recommed to look at existing bindings for examples.
 
 ### What to Bind?
 In general, we aim for 100% coverage of the MaterialX API, at least for the Core and Format packages. However, there are functions and even classes where creating bindings wouldn't make much sense. The `splitString` utility function is such an example, because the JavaScript string class does already have a `split` method. The `FilePath` and `FileSearchPath` classes of the Format package are simply represented as strings on the JavaScript side, even though they provide complex APIs in C++. This is because most of their APIs do not apply to browsers, since they are specific to file system operations. In NodeJs, they would present a competing implementation of the core `fs` module, and therefore be redundant (even though they might be convenient in some cases).
@@ -272,7 +231,7 @@ The examples above illustrate that it does not always make sense to create bindi
 ### Emscripten's optional_override
 Emscripten's `optional_override` allows to provide custom binding implementations in-place and enables function overloading by parameter count, which is otherwise not supported in JavaScript. Contributors need to be careful when using it, though, since there is a small pitfall.
 
-If a function binding has multiple overloads defined via `optional_override` to support optional parameters, this binding must only be defined once on the base class (i.e. the class that defines the function initially). Virtual functions that are overridden in deriving classes must not be bound again when creating bindings for these derived classes. Doing so can lead to the wrong function (i.e. base class' vs derived class' implementation) being called at runtime.
+If a function binding has multiple overloads defined via `optional_override` to support optional parameters, this binding must only be defined once on the base class (i.e. the class that defines the function initially). Virtual functions that are overriden in deriving classes must not be bound again when creating bindings for these derived classes. Doing so can lead to the wrong function (i.e. base class' vs derived class' implementation) being called at runtime.
 
 ### Optional Parameters
 Many C++ functions have optional parameters. Unfortunately, emscripten does not automatically deal with optional parameters. Binding these functions the 'normal' way will require users to provide all parameters in JavaScript, including optional ones. We provide helper macros to cicumvent this issue. Different flavors of the `BIND_*_FUNC` macros defined in `Helpers.h` can be used to conveniently bind functions with optional parameters. See uses of these macros in the existing bindings for examples.

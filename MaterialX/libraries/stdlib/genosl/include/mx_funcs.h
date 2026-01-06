@@ -307,57 +307,6 @@ vector4 mx_noise(string noisetype, point position)
     return vector4 (cnoise[0], cnoise[1], cnoise[2], fnoise);
 }
 
-float mx_fbm(float x, float y, int octaves, float lacunarity, float diminish, string noisetype)
-{
-    float out = 0;
-    float amp = 1.0;
-    float xx = x;
-    float yy = y;
-
-    for (int i = 0;  i < octaves;  i += 1) {
-        out += amp * noise(noisetype, xx, yy);
-        amp *= diminish;
-        xx *= lacunarity;
-        yy *= lacunarity;
-    }
-    return out;
-}
-
-color mx_fbm(float x, float y, int octaves, float lacunarity, float diminish, string noisetype)
-{
-    color out = 0;
-    float amp = 1.0;
-    float xx = x;
-    float yy = y;
-
-    for (int i = 0;  i < octaves;  i += 1) {
-        out += amp * (color)noise(noisetype, xx, yy);
-        amp *= diminish;
-        xx *= lacunarity;
-        yy *= lacunarity;
-    }
-    return out;
-}
-
-vector2 mx_fbm(float x, float y, int octaves, float lacunarity, float diminish, string noisetype)
-{
-    return vector2((float) mx_fbm(x, y, octaves, lacunarity, diminish, noisetype),
-                   (float) mx_fbm(x+19, y+193, octaves, lacunarity, diminish, noisetype));
-}
-
-color4 mx_fbm(float x, float y, int octaves, float lacunarity, float diminish, string noisetype)
-{
-    color c = (color) mx_fbm(x, y, octaves, lacunarity, diminish, noisetype);
-    float f = (float) mx_fbm(x+19, y+193, octaves, lacunarity, diminish, noisetype);
-    return color4 (c, f);
-}
-
-vector4 mx_fbm(float x, float y, int octaves, float lacunarity, float diminish, string noisetype)
-{
-    color c = (color) mx_fbm(x, y, octaves, lacunarity, diminish, noisetype);
-    float f = (float) mx_fbm(x+19, y+193, octaves, lacunarity, diminish, noisetype);
-    return vector4 (c[0], c[1], c[2], f);
-}
 
 float mx_fbm(point position, int octaves, float lacunarity, float diminish, string noisetype)
 {
@@ -407,41 +356,36 @@ vector4 mx_fbm(point position, int octaves, float lacunarity, float diminish, st
     return vector4 (c[0], c[1], c[2], f);
 }
 
-vector2 mx_worley_cell_position(int x, int y, int xoff, int yoff, float jitter)
-{
-    vector  tmp = cellnoise(x+xoff, y+yoff);
-    vector2 off = vector2(tmp.x, tmp.y);
-    off -= 0.5;
-    off *= jitter;
-    off += 0.5;
-    return vector2(x, y) + off;
-}
 
-vector mx_worley_cell_position(int x, int y, int z, int xoff, int yoff, int zoff, float jitter)
+void mx_split_float(output float x, output int ix)
 {
-    vector off = cellnoise(vector(x+xoff, y+yoff, z+zoff));
-    off -= 0.5;
-    off *= jitter;
-    off += 0.5;
-    return vector(x,y,z) + off;
+    ix = int(floor(x));
+    x -= ix;
 }
 
 float mx_worley_distance(vector2 p, int x, int y, int X, int Y, float jitter, int metric)
 {
-    vector2 cellpos = mx_worley_cell_position(x,y,X,Y,jitter);
-    vector2 diff = cellpos - p;
+    vector o = cellnoise(x+X, y+Y);
+    o = (o - .5)*jitter + .5;
+    float cposx = x + o[0];
+    float cposy = y + o[1];
+    float diffx = cposx - p.x;
+    float diffy = cposy - p.y;
 
     if (metric == 2)
-        return abs(diff.x) + abs(diff.y);     // Manhattan distance
+        return abs(diffx) + abs(diffy);     // Manhattan distance
     if (metric == 3)
-        return max(abs(diff.x), abs(diff.y)); // Chebyshev distance
-    return diff.x*diff.x + diff.y*diff.y;       // Euclidean or distance^2
+        return max(abs(diffx), abs(diffy)); // Chebyshev distance
+    return diffx*diffx + diffy*diffy;       // Euclidean or distance^2
 }
 
 float mx_worley_distance(vector p, int x, int y, int z, int X, int Y, int Z, float jitter, int metric)
 {
-    vector cellpos = mx_worley_cell_position(x,y,z,X,Y,Z,jitter);
-    vector diff = cellpos - p;
+    vector o = cellnoise(vector(x+X, y+Y, z+Z));
+    o = (o - .5)*jitter + .5;
+    vector cpos = vector(x, y, z) + o;
+    vector diff = cpos - p;
+
     if (metric == 2)
         return abs(diff[0]) + abs(diff[1]);     // Manhattan distance
     if (metric == 3)
@@ -481,244 +425,140 @@ void mx_sort_distance(float dist, output vector result)
     }
 }
 
-// return floor as well as the fractional remainder
-float mx_floorfrac(float x, output int i)
-{
-    i = (int)floor(x);
-    return x - float(i);
-}
-
-float mx_worley_noise_float(vector2 p, float jitter, int style, int metric)
+float mx_worley_noise_float(vector2 p, float jitter, int metric)
 {
     int X, Y;
-    float sqdist = 1e6;
-    vector2 localpos = vector2(mx_floorfrac(p.x, X), mx_floorfrac(p.y, Y));
-    vector2 minpos = vector2(0.0, 0.0);
+    vector2 seed = p;
+    float result = 1e6;
 
+    mx_split_float(seed.x, X);
+    mx_split_float(seed.y, Y);
     for (int x = -1; x <= 1; ++x)
     {
         for (int y = -1; y <= 1; ++y)
         {
-            float dist = mx_worley_distance(localpos, x, y, X, Y, jitter, metric);
-            vector2 cellpos = mx_worley_cell_position(x, y, X, Y, jitter) - localpos;
-            if (dist < sqdist)
-            {
-                sqdist = dist;
-                minpos = cellpos;
-            }
+            float d = mx_worley_distance(seed, x, y, X, Y, jitter, metric);
+            result = min(result, d);
         }
     }
-    if (style == 1)
-    {
-        vector2 tmpP = minpos + p;
-        return cellnoise(tmpP.x, tmpP.y);
-    }
-    else
-    {
-        if (metric == 0)
-            sqdist = sqrt(sqdist);
-        return sqdist;
-    }
+    if (metric == 0)
+        result = sqrt(result);
+    return result;
 }
 
-vector2 mx_worley_noise_vector2(vector2 p, float jitter, int style, int metric)
+vector2 mx_worley_noise_vector2(vector2 p, float jitter, int metric)
 {
     int X, Y;
-    vector2 sqdist = vector2(1e6, 1e6);
-    vector2 localpos = vector2(mx_floorfrac(p.x, X), mx_floorfrac(p.y, Y));
-    vector2 minpos = vector2(0.0, 0.0);
+    vector2 seed = p;
+    vector2 result = vector2(1e6, 1e6);
 
+    mx_split_float(seed.x, X);
+    mx_split_float(seed.y, Y);
     for (int x = -1; x <= 1; ++x)
     {
         for (int y = -1; y <= 1; ++y)
         {
-            float dist = mx_worley_distance(localpos, x, y, X, Y, jitter, metric);
-            vector2 cellpos = mx_worley_cell_position(x, y, X, Y, jitter) - localpos;
-            if (dist < sqdist.x)
-            {
-                sqdist.y = sqdist.x;
-                sqdist.x = dist;
-                minpos = cellpos;
-            }
-            else if (dist < sqdist.y)
-            {
-                sqdist.y = dist;
-            }
+            float d = mx_worley_distance(seed, x, y, X, Y, jitter, metric);
+            mx_sort_distance(d, result);
         }
     }
-
-    if (style == 1)
-    {
-        vector2 tmpP = minpos + p;
-        vector tmp = cellnoise(tmpP.x, tmpP.y);
-        return vector2(tmp.x, tmp.y);
-    }
-    else
-    {
-        if (metric == 0)
-            sqdist = sqrt(sqdist);
-        return sqdist;
-    }
+    if (metric == 0)
+        result = sqrt(result);
+    return result;
 }
 
-vector mx_worley_noise_vector3(vector2 p, float jitter, int style, int metric)
+vector mx_worley_noise_vector3(vector2 p, float jitter, int metric)
 {
     int X, Y;
-    vector sqdist = vector(1e6, 1e6, 1e6);
-    vector2 localpos = vector2(mx_floorfrac(p.x, X), mx_floorfrac(p.y, Y));
-    vector2 minpos = vector2(0.0, 0.0);
+    vector2 seed = p;
+    vector result = vector(1e6, 1e6, 1e6);
 
+    mx_split_float(seed.x, X);
+    mx_split_float(seed.y, Y);
     for (int x = -1; x <= 1; ++x)
     {
         for (int y = -1; y <= 1; ++y)
         {
-            float dist = mx_worley_distance(localpos, x, y, X, Y, jitter, metric);
-            vector2 cellpos = mx_worley_cell_position(x, y, X, Y, jitter) - localpos;
-            if (dist < sqdist.x)
-            {
-                sqdist.z = sqdist.y;
-                sqdist.y = sqdist.x;
-                sqdist.x = dist;
-                minpos = cellpos;
-            }
-            else if (dist < sqdist.y)
-            {
-                sqdist.z = sqdist.y;
-                sqdist.y = dist;
-            }
-            else if (dist < sqdist.z)
-            {
-                sqdist.z = dist;
-            }
+            float d = mx_worley_distance(seed, x, y, X, Y, jitter, metric);
+            mx_sort_distance(d, result);
         }
     }
-    if (style == 1)
-    {
-        vector2 tmpP = minpos + p;
-        return cellnoise(tmpP.x, tmpP.y);
-    }
-    else
-    {
-        if (metric == 0)
-            sqdist = sqrt(sqdist);
-        return sqdist;
-    }
+    if (metric == 0)
+        result = sqrt(result);
+    return result;
 }
 
-float mx_worley_noise_float(vector p, float jitter, int style, int metric)
+float mx_worley_noise_float(vector p, float jitter, int metric)
 {
     int X, Y, Z;
     vector seed = p;
-    float sqdist = 1e6;
-    vector localpos = vector(mx_floorfrac(p.x, X), mx_floorfrac(p.y, Y), mx_floorfrac(p.z, Z));
-    vector minpos = vector(0.0, 0.0, 0.0);
+    float result = 1e6;
+
+    mx_split_float(seed[0], X);
+    mx_split_float(seed[1], Y);
+    mx_split_float(seed[2], Z);
     for (int x = -1; x <= 1; ++x)
     {
         for (int y = -1; y <= 1; ++y)
         {
             for (int z = -1; z <= 1; ++z)
             {
-                float dist = mx_worley_distance(localpos, x, y, z, X, Y, Z, jitter, metric);
-                vector cellpos = mx_worley_cell_position(x, y, z, X, Y, Z, jitter) - localpos;
-                if(dist < sqdist)
-                {
-                    sqdist = dist;
-                    minpos = cellpos;
-                }
+                float d = mx_worley_distance(seed, x, y, z, X, Y, Z, jitter, metric);
+                result = min(result, d);
             }
         }
     }
-    if (style == 1)
-        return cellnoise(minpos + p);
-    else
-    {
-        if (metric == 0)
-            sqdist = sqrt(sqdist);
-        return sqdist;
-    }
+    if (metric == 0)
+        result = sqrt(result);
+    return result;
 }
 
-vector2 mx_worley_noise_vector2(vector p, float jitter, int style, int metric)
+vector2 mx_worley_noise_vector2(vector p, float jitter, int metric)
 {
     int X, Y, Z;
-    vector2 sqdist = vector2(1e6, 1e6);
-    vector localpos = vector(mx_floorfrac(p.x, X), mx_floorfrac(p.y, Y), mx_floorfrac(p.z, Z));
-    vector minpos = vector(0.0, 0.0, 0.0);
+    vector seed = p;
+    vector2 result = vector2(1e6, 1e6);
 
+    mx_split_float(seed[0], X);
+    mx_split_float(seed[1], Y);
+    mx_split_float(seed[2], Z);
     for (int x = -1; x <= 1; ++x)
     {
         for (int y = -1; y <= 1; ++y)
         {
             for (int z = -1; z <= 1; ++z)
             {
-                float dist = mx_worley_distance(localpos, x, y, z, X, Y, Z, jitter, metric);
-                vector cellpos = mx_worley_cell_position(x, y, z, X, Y, Z, jitter) - localpos;
-                if (dist < sqdist.x)
-                {
-                    sqdist.y = sqdist.x;
-                    sqdist.x = dist;
-                    minpos = cellpos;
-                }
-                else if (dist < sqdist.y)
-                {
-                    sqdist.y = dist;
-                }
+                float d = mx_worley_distance(seed, x, y, z, X, Y, Z, jitter, metric);
+                mx_sort_distance(d, result);
             }
         }
     }
-    if (style == 1)
-    {
-        vector tmp = cellnoise(minpos + p);
-        return vector2(tmp.x,tmp.y);
-    }
-    else
-    {
-        if (metric == 0)
-            sqdist = sqrt(sqdist);
-        return sqdist;
-    }
+    if (metric == 0)
+        result = sqrt(result);
+    return result;
 }
 
-vector mx_worley_noise_vector3(vector p, float jitter, int style, int metric)
+vector mx_worley_noise_vector3(vector p, float jitter, int metric)
 {
     int X, Y, Z;
-    vector sqdist = 1e6;
-    vector localpos = vector(mx_floorfrac(p.x, X), mx_floorfrac(p.y, Y), mx_floorfrac(p.z, Z));
-    vector minpos = vector(0.0, 0.0, 0.0);
+    vector result = 1e6;
+    vector seed = p;
 
+    mx_split_float(seed[0], X);
+    mx_split_float(seed[1], Y);
+    mx_split_float(seed[2], Z);
     for (int x = -1; x <= 1; ++x)
     {
         for (int y = -1; y <= 1; ++y)
         {
             for (int z = -1; z <= 1; ++z)
             {
-                float dist = mx_worley_distance(localpos, x, y, z, X, Y, Z, jitter, metric);
-                vector cellpos = mx_worley_cell_position(x, y, z, X, Y, Z, jitter) - localpos;
-                if (dist < sqdist.x)
-                {
-                    sqdist.z = sqdist.y;
-                    sqdist.y = sqdist.x;
-                    sqdist.x = dist;
-                    minpos = cellpos;
-                }
-                else if (dist < sqdist.y)
-                {
-                    sqdist.z = sqdist.y;
-                    sqdist.y = dist;
-                }
-                else if (dist < sqdist.z)
-                {
-                    sqdist.z = dist;
-                }
+                float d = mx_worley_distance(seed, x, y, z, X, Y, Z, jitter, metric);
+                mx_sort_distance(d, result);
             }
         }
     }
-    if (style == 1)
-        return cellnoise(minpos + p);
-    else
-    {
-        if (metric == 0)
-            sqdist = sqrt(sqdist);
-        return sqdist;
-    }
+    if (metric == 0)
+        result = sqrt(result);
+    return result;
 }

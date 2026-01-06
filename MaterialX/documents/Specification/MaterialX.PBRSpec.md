@@ -9,7 +9,7 @@ MaterialX Physically Based Shading Nodes v1.39
 Niklas Harrysson - Lumiere Software  
 Doug Smythe - Industrial Light & Magic  
 Jonathan Stone - Lucasfilm Advanced Development Group  
-December 22, 2025
+June 29, 2024
 
 # Introduction
 
@@ -48,7 +48,6 @@ This document describes a number of shader-semantic nodes implementing widely-us
 
 **[References](#references)**
 
-<br>
 
 
 # Physical Material Model
@@ -81,7 +80,7 @@ In general, a color given as input to the renderer is considered to represent a 
 
 MaterialX supports the use of [color management systems](./MaterialX.Specification.md#color-spaces-and-color-management-systems) to associate colors with specific color spaces. A MaterialX document typically specifies the working color space that is to be used for the document as well as the color space in which input values and textures are given. If these color spaces are different from the working color space, it is the application's and shader generator's responsibility to transform them.
 
-The ShaderGen module has an interface that can be used to integrate support for different color management systems. A simplified implementation with some popular and commonly used color transformations is supplied and enabled by default. An integration with the relevant portions of OpenColorIO ([http://opencolorio.org](http://opencolorio.org)) is planned for the future.
+The ShaderGen module has an interface that can be used to integrate support for different color management systems. A simplified implementation with some popular and commonly used color transformations is supplied and enabled by default. A full integration of OpenColorIO ([http://opencolorio.org](http://opencolorio.org)) is planned for the future.
 
 
 ## Surfaces
@@ -136,7 +135,6 @@ Local lights are specified as light shaders assigned to a locator, modeling an e
 
 Light contributions coming from far away are handled by environment lights. These are typically photographically-captured or procedurally-generated images that surround the whole scene. This category of lights also includes sources like the sun, where the long distance traveled makes the light essentially directional and without falloff. For all shading points, an environment is seen as being infinitely far away.
 
-<br>
 
 
 # MaterialX PBS Library
@@ -162,465 +160,225 @@ The PBS nodes also make use of the following standard MaterialX types:
 
 <a id="node-oren-nayar-diffuse-bsdf"> </a>
 
-### `oren_nayar_diffuse_bsdf`
-Constructs a diffuse reflection BSDF based on the Oren-Nayar reflectance model.
-
-A `roughness` of 0.0 gives Lambertian reflectance.
-
-An `energy_compensation` boolean selects between the Qualitative Oren-Nayar[^Oren1994] and Energy-Preserving Oren-Nayar[^Portsmouth2025] models of diffuse reflectance.
-
-|Port                 |Description                            |Type   |Default         |Accepted Values|
-|---------------------|---------------------------------------|-------|----------------|---------------|
-|`weight`             |Weight of the BSDF contribution        |float  |1.0             |[0, 1]         |
-|`color`              |Diffuse reflectivity or albedo         |color3 |0.18, 0.18, 0.18|               |
-|`roughness`          |Surface roughness                      |float  |0.0             |[0, 1]         |
-|`normal`             |Normal vector of the surface           |vector3|Nworld          |               |
-|`energy_compensation`|Enable energy compensation for the BSDF|boolean|false           |               |
-|`out`                |Output: the computed BSDF              |BSDF   |                |               |
+* **`oren_nayar_diffuse_bsdf`**: Constructs a diffuse reflection BSDF based on the Oren-Nayar reflectance model. A `roughness` of 0.0 gives Lambertian reflectance. An `energy_compensation` boolean selects between classic Oren-Nayar behavior[^Oren1994] and the energy-compensated Oren-Nayar in OpenPBR[^Andersson2024].
+    * `weight` (float): Weight for this BSDF’s contribution, range [0.0, 1.0]. Defaults to 1.0.
+    * `color` (color3): Diffuse reflectivity (albedo). Defaults to (0.18, 0.18, 0.18).
+    * `roughness `(float): Surface roughness, range [0.0, 1.0]. Defaults to 0.0.
+    * `normal` (vector3): Normal vector of the surface. Defaults to world space normal.
+    * `energy_compensation` (uniform boolean): Set to `true` to enable energy compensation. Defaults to `false`.
 
 <a id="node-burley-diffuse-bsdf"> </a>
 
-### `burley_diffuse_bsdf`
-Constructs a diffuse reflection BSDF based on the corresponding component of the Disney Principled model[^Burley2012].
-
-|Port       |Description                    |Type    |Default         |Accepted Values|
-|-----------|-------------------------------|--------|----------------|---------------|
-|`weight`   |Weight of the BSDF contribution|float   |1.0             |[0, 1]         |
-|`color`    |Diffuse reflectivity or albedo |color3  |0.18, 0.18, 0.18|               |
-|`roughness`|Surface roughness              |float   |0.0             |[0, 1]         |
-|`normal`   |Normal vector of the surface   |vector3 |Nworld          |               |
-|`out`      |Output: the computed BSDF      |BSDF    |                |               |
+* **`burley_diffuse_bsdf`**: Constructs a diffuse reflection BSDF based on the corresponding component of the Disney Principled model[^Burley2012].
+    * `weight` (float): Weight for this BSDF’s contribution, range [0.0, 1.0]. Defaults to 1.0.
+    * `color` (color3): Diffuse reflectivity (albedo). Defaults to (0.18, 0.18, 0.18).
+    * `roughness` (float): Surface roughness, range [0.0, 1.0]. Defaults to 0.0.
+    * `normal` (vector3): Normal vector of the surface. Defaults to world space normal.
 
 <a id="node-dielectric-bsdf"> </a>
 
-### `dielectric_bsdf`
-Constructs a reflection and/or transmission BSDF based on a microfacet reflectance model and a Fresnel curve for dielectrics[^Walter2007]. If reflection scattering is enabled the node may be layered vertically over a base BSDF for the surface beneath the dielectric layer. By chaining multiple &lt;dielectric_bsdf> nodes you can describe a surface with multiple specular lobes. If transmission scattering is enabled the node may be layered over a VDF describing the surface interior to handle absorption and scattering inside the medium, useful for colored glass, turbid water, etc.
-
-Implementations are expected to preserve energy as the roughness of the surface increases, with multiple scattering compensation[^Turquin2019] being a popular implementation strategy.
-
-The `tint` input colors the reflected and transmitted light but should be left at white (1,1,1) for physically correct results. Setting the `ior` input to zero disables the Fresnel curve, allowing reflectivity to be controlled purely by weight and tint.
-
-The `scatter_mode` controls whether the surface reflects light (`R`), transmits light (`T`), or both (`RT`). In `RT` mode, reflection and transmission occur both when entering and leaving a surface, with their respective intensities controlled by the Fresnel curve. Depending on the IOR and incident angle, total internal reflection may occur even when transmission modes are selected.
-
-Thin-film iridescence effects[^Belcour2017] may be enabled by setting `thinfilm_thickness` to a non-zero value.
-
-|Port                |Description                                                    |Type   |Default      |Accepted Values|
-|--------------------|---------------------------------------------------------------|-------|-------------|---------------|
-|`weight`            |Weight of the BSDF contribution                                |float  |1.0          |[0, 1]         |
-|`tint`              |Color weight to tint the reflected and transmitted light       |color3 |1.0, 1.0, 1.0|               |
-|`ior`               |Index of refraction of the surface                             |float  |1.5          |               |
-|`roughness`         |Surface roughness along the tangent and bitangent              |vector2|0.05, 0.05   |[0, 1]         |
-|`thinfilm_thickness`|Thickness of the iridescent thin-film layer in nanometers      |float  |0.0          |               |
-|`thinfilm_ior`      |Index of refraction of the thin-film layer                     |float  |1.5          |               |
-|`normal`            |Normal vector of the surface                                   |vector3|Nworld       |               |
-|`tangent`           |Tangent vector of the surface                                  |vector3|Tworld       |               |
-|`distribution`      |Microfacet distribution type                                   |string |ggx          |ggx            |
-|`scatter_mode`      |Surface Scatter mode, specifying reflection and/or transmission|string |R            |R, T, RT       |
-|`out`               |Output: the computed BSDF                                      |BSDF   |             |               |
+* **`dielectric_bsdf`**: Constructs a reflection and/or transmission BSDF based on a microfacet reflectance model and a Fresnel curve for dielectrics[^Walter2007]. If reflection scattering is enabled the node may be layered vertically over a base BSDF for the surface beneath the dielectric layer. By chaining multiple &lt;dielectric_bsdf> nodes you can describe a surface with multiple specular lobes. If transmission scattering is enabled the node may be layered over a VDF describing the surface interior to handle absorption and scattering inside the medium, useful for colored glass, turbid water, etc.
+    * `weight` (float): Weight for this BSDF’s contribution, range [0.0, 1.0]. Defaults to 1.0.
+    * `tint` (color3): Color weight to tint the reflected and transmitted light. Defaults to (1.0, 1.0, 1.0). Note that changing the tint gives non-physical results and should only be done when needed for artistic purposes.
+    * `ior` (float): Index of refraction of the surface. Defaults to 1.5. If set to 0.0 the Fresnel curve is disabled and reflectivity is controlled only by weight and tint.
+    * `roughness` (vector2): Surface roughness. Defaults to (0.05, 0.05).
+    * `thinfilm_thickness` (float): The thickness of an iridescent thin film layer[^Belcour2017] applied over the base bsdf, expressed in nanometers. Defaults to 0.0, for no thin film.
+    * `thinfilm_ior` (float): The index of refraction of the thin film layer. Defaults to 1.5.
+    * `normal` (vector3): Normal vector of the surface. Defaults to world space normal.
+    * `tangent` (vector3): Tangent vector of the surface. Defaults to world space tangent.
+    * `distribution` (uniform string): Microfacet distribution type. Defaults to `ggx`.
+    * `scatter_mode` (uniform string): Scattering mode, specifying whether the BSDF supports reflection `R`, transmission `T` or both reflection and transmission `RT`. With `RT`, reflection and transmission occur both when entering and leaving a surface, with their respective intensities controlled by the Fresnel curve. Depending on the IOR and incident angle, it is possible for total internal reflection to occur, generating no transmission even if `T` or `RT` is selected. Defaults to `R`.
 
 <a id="node-conductor-bsdf"> </a>
 
-### `conductor_bsdf`
-Constructs a reflection BSDF based on a microfacet reflectance model[^Burley2012]. Uses a Fresnel curve with complex refraction index for conductors/metals. If an artistic parametrization[^Gulbrandsen2014] is needed the [&lt;artistic_ior>](#node-artistic-ior) utility node can be connected to handle this.
-
-Implementations are expected to preserve energy as the roughness of the surface increases, with multiple scattering compensation[^Turquin2019] being a popular implementation strategy.
-
-The default values for `ior` and `extinction` represent approximate values for gold.
-
-Thin-film iridescence effects[^Belcour2017] may be enabled by setting `thinfilm_thickness` to a non-zero value.
-
-|Port                |Description                                              |Type   |Default               |Accepted Values|
-|--------------------|---------------------------------------------------------|-------|----------------------|---------------|
-|`weight`            |Weight of the BSDF contribution                          |float  |1.0                   |[0, 1]         |
-|`ior`               |Index of refraction                                      |color3 |0.183, 0.421, 1.373   |               |
-|`extinction`        |Extinction coefficient                                   |color3 |3.424, 2.346, 1.770   |               |
-|`roughness`         |Surface roughness                                        |vector2|0.05, 0.05            |[0, 1]         |
-|`thinfilm_thickness`|Thickness of the iridescent thin-film layer in nanometers|float  |0.0                   |               |
-|`thinfilm_ior`      |Index of refraction of the thin-film layer               |float  |1.5                   |               |
-|`normal`            |Normal vector of the surface                             |vector3|Nworld                |               |
-|`tangent`           |Tangent vector of the surface                            |vector3|Tworld                |               |
-|`distribution`      |Microfacet distribution type                             |string |ggx                   |ggx            |
-|`out`               |Output: the computed BSDF                                |BSDF   |                      |               |
+* **`conductor_bsdf`**: Constructs a reflection BSDF based on a microfacet reflectance model[^Burley2012]. Uses a Fresnel curve with complex refraction index for conductors/metals. If an artistic parametrization[^Gulbrandsen2014] is needed the [&lt;artistic_ior>](#node-artistic-ior) utility node can be connected to handle this.
+    * `weight` (float): Weight for this BSDF’s contribution, range [0.0, 1.0]. Defaults to 1.0.
+    * `ior `(color3): Index of refraction. Defaults to (0.18, 0.42, 1.37) (approximate IOR for gold).
+    * `extinction` (color3): Extinction coefficient. Defaults to (3.42, 2.35, 1.77) (approximate extinction coefficients for gold).
+    * `roughness` (vector2): Surface roughness. Defaults to (0.05, 0.05).
+    * `thinfilm_thickness` (float): The thickness of an iridescent thin film layer[^Belcour2017] applied over the base bsdf, expressed in nanometers. Defaults to 0.0, for no thin film.
+    * `thinfilm_ior` (float): The index of refraction of the thin film layer. Defaults to 1.5.
+    * `normal` (vector3): Normal vector of the surface. Defaults to world space normal.
+    * `tangent` (vector3): Tangent vector of the surface. Defaults to world space tangent.
+    * `distribution` (uniform string): Microfacet distribution type. Defaults to `ggx`.
 
 <a id="node-generalized-schlick-bsdf"> </a>
 
-### `generalized_schlick_bsdf`
-Constructs a reflection and/or transmission BSDF based on a microfacet model and a generalized Schlick Fresnel curve[^Hoffman2023]. If reflection scattering is enabled the node may be layered vertically over a base BSDF for the surface beneath the dielectric layer. By chaining multiple &lt;generalized_schlick_bsdf> nodes you can describe a surface with multiple specular lobes. If transmission scattering is enabled the node may be layered over a VDF describing the surface interior to handle absorption and scattering inside the medium, useful for colored glass, turbid water, etc.
-
-Implementations are expected to preserve energy as the roughness of the surface increases, with multiple scattering compensation[^Turquin2019] being a popular implementation strategy.
-
-The `color82` input provides a multiplier on reflectivity at 82 degrees, useful for capturing the characteristic "dip" in the reflectance curve of metallic surfaces. Setting it to (1,1,1) effectively disables this feature for backward compatibility.
-
-The `scatter_mode` behavior matches that of `dielectric_bsdf`: in `RT` mode, reflection and transmission occur both when entering and leaving a surface, with intensities controlled by the Fresnel curve. Total internal reflection may occur depending on the incident angle.
-
-Thin-film iridescence effects[^Belcour2017] may be enabled by setting `thinfilm_thickness` to a non-zero value.
-
-|Port                |Description                                                    |Type   |Default      |Accepted Values|
-|--------------------|---------------------------------------------------------------|-------|-------------|---------------|
-|`weight`            |Weight of the BSDF contribution                                |float  |1.0          |[0, 1]         |
-|`color0`            |Reflectivity per color component at facing angles              |color3 |1.0, 1.0, 1.0|               |
-|`color82`           |Reflectivity multiplier at 82 degrees                          |color3 |1.0, 1.0, 1.0|               |
-|`color90`           |Reflectivity per color component at grazing angles             |color3 |1.0, 1.0, 1.0|               |
-|`exponent`          |Exponent for Schlick blending between color0 and color90       |float  |5.0          |               |
-|`roughness`         |Surface roughness along the tangent and bitangent              |vector2|0.05, 0.05   |[0, 1]         |
-|`thinfilm_thickness`|Thickness of the iridescent thin-film layer in nanometers      |float  |0.0          |               |
-|`thinfilm_ior`      |Index of refraction of the thin-film layer                     |float  |1.5          |               |
-|`normal`            |Normal vector of the surface                                   |vector3|Nworld       |               |
-|`tangent`           |Tangent vector of the surface                                  |vector3|Tworld       |               |
-|`distribution`      |Microfacet distribution type                                   |string |ggx          |ggx            |
-|`scatter_mode`      |Surface Scatter mode, specifying reflection and/or transmission|string |R            |R, T, RT       |
-|`out`               |Output: the computed BSDF                                      |BSDF   |             |               |
+* **`generalized_schlick_bsdf`**: Constructs a reflection and/or transmission BSDF based on a microfacet model and a generalized Schlick Fresnel curve[^Hoffman2023]. If reflection scattering is enabled the node may be layered vertically over a base BSDF for the surface beneath the dielectric layer. By chaining multiple &lt;generalized_schlick_bsdf> nodes you can describe a surface with multiple specular lobes. If transmission scattering is enabled the node may be layered over a VDF describing the surface interior to handle absorption and scattering inside the medium, useful for colored glass, turbid water, etc.
+    * `weight` (float): Weight for this BSDF’s contribution, range [0.0, 1.0]. Defaults to 1.0.
+    * `color0` (color3): Reflectivity per color component at facing angles. Defaults to (1.0, 1.0, 1.0).
+    * `color82` (color3): A multiplier on the reflectivity per color component at 82 degrees, useful for capturing the "dip" in the reflectance curve of metallic surfaces. Defaults to (1.0, 1.0, 1.0), which effectively disables "color82" for backward compatibility.
+    * `color90` (color3): Reflectivity per color component at grazing angles. Defaults to (1.0, 1.0, 1.0).
+    * `exponent` (float): Exponent for the Schlick blending between `color0` and `color90`. Defaults to 5.0.
+    * `roughness` (vector2): Surface roughness. Defaults to (0.05, 0.05).
+    * `thinfilm_thickness` (float): The thickness of an iridescent thin film layer[^Belcour2017] applied over the base bsdf, expressed in nanometers. Defaults to 0.0, for no thin film.
+    * `thinfilm_ior` (float): The index of refraction of the thin film layer. Defaults to 1.5.
+    * `normal` (vector3): Normal vector of the surface. Defaults to world space normal.
+    * `tangent` (vector3): Tangent vector of the surface. Defaults to world space tangent.
+    * `distribution` (uniform string): Microfacet distribution type. Defaults to `ggx`.
+    * `scatter_mode` (uniform string): Scattering mode, specifying whether the BSDF supports reflection `R`, transmission `T` or both reflection and transmission `RT`. With `RT`, reflection and transmission occur both when entering and leaving a surface, with their respective intensities controlled by the Fresnel curve. Depending on the IOR and incident angle, it is possible for total internal reflection to occur, generating no transmission even if `T` or `RT` is selected. Defaults to `R`.
 
 <a id="node-translucent-bsdf"> </a>
 
-### `translucent_bsdf`
-Constructs a translucent (diffuse transmission) BSDF based on the Lambert reflectance model.
-
-|Port     |Description                    |Type   |Default      |Accepted Values|
-|---------|-------------------------------|-------|-------------|---------------|
-|`weight` |Weight of the BSDF contribution|float  |1.0          |[0, 1]         |
-|`color`  |Diffuse transmittance          |color3 |1.0, 1.0, 1.0|               |
-|`normal` |Normal vector of the surface   |vector3|Nworld       |               |
-|`out`    |Output: the computed BSDF      |BSDF   |             |               |
+* **`translucent_bsdf`**: Constructs a translucent (diffuse transmission) BSDF based on the Lambert reflectance model.
+    * `weight` (float): Weight for this BSDF’s contribution, range [0.0, 1.0]. Defaults to 1.0.
+    * `color` (color3): Diffuse transmittance. Defaults to (1.0, 1.0, 1.0).
+    * `normal` (vector3): Normal vector of the surface. Defaults to world space normal.
 
 <a id="node-subsurface-bsdf"> </a>
 
-### `subsurface_bsdf`
-Constructs a subsurface scattering BSDF for subsurface scattering within a homogeneous medium. The parameterization is chosen to match random walk Monte Carlo methods as well as approximate empirical methods[^Christensen2015]. Note that this category of subsurface scattering can be defined more rigorously as a BSDF vertically layered over an [<anisotropic_vdf>](#node-anisotropic-vdf), and we expect these two descriptions of the scattering-surface distribution function to be unified in future versions of MaterialX.
-
-The `radius` input sets the average distance (mean free path) that light propagates below the surface before scattering back out, and can be set independently for each color channel.
-
-The `anisotropy` input controls the scattering direction: negative values produce backwards scattering, positive values produce forward scattering, and zero produces uniform scattering.
-
-|Port        |Description                               |Type   |Default         |Accepted Values|
-|------------|------------------------------------------|-------|----------------|---------------|
-|`weight`    |Weight of the BSDF contribution           |float  |1.0             |[0, 1]         |
-|`color`     |Diffuse reflectivity (albedo)             |color3 |0.18, 0.18, 0.18|               |
-|`radius`    |Mean free path per color channel          |color3 |1.0, 1.0, 1.0   |               |
-|`anisotropy`|Anisotropy factor for scattering direction|float  |0.0             |[-1, 1]        |
-|`normal`    |Normal vector of the surface              |vector3|Nworld          |               |
-|`out`       |Output: the computed BSDF                 |BSDF   |                |               |
+* **`subsurface_bsdf`**: Constructs a subsurface scattering BSDF for subsurface scattering within a homogeneous medium. The parameterization is chosen to match random walk Monte Carlo methods as well as approximate empirical methods[^Christensen2015]. Note that this category of subsurface scattering can be defined more rigorously as a BSDF vertically layered over an [<anisotropic_vdf>](#node-anisotropic-vdf), and we expect these two descriptions of the scattering-surface distribution function to be unified in future versions of MaterialX.
+    * `weight` (float): Weight for this BSDF’s contribution, range [0.0, 1.0]. Defaults to 1.0.
+    * `color` (color3): Diffuse reflectivity (albedo). Defaults to (0.18, 0.18, 0.18).
+    * `radius` (color3): Sets the average distance that light might propagate below the surface before scattering back out. This is also known as the mean free path of the material. The radius can be set for each color component separately. Defaults to (1, 1, 1).
+    * `anisotropy` (float): Anisotropy factor, controlling the scattering direction, range [-1.0, 1.0]. Negative values give backwards scattering, positive values give forward scattering, and a value of zero gives uniform scattering. Defaults to 0.0.
+    * `normal` (vector3): Normal vector of the surface. Defaults to world space normal.
 
 <a id="node-sheen-bsdf"> </a>
 
-### `sheen_bsdf`
-Constructs a microfacet BSDF for the back-scattering properties of cloth-like materials. This node may be layered vertically over a base BSDF using a [&lt;layer>](#node-layer) node. All energy that is not reflected will be transmitted to the base layer. A `mode` option selects between two available sheen models, Conty-Kulla[^Conty2017] and Zeltner[^Zeltner2022].
-
-|Port       |Description                                             |Type   |Default      |Accepted Values     |
-|-----------|--------------------------------------------------------|-------|-------------|--------------------|
-|`weight`   |Weight of the BSDF contribution                         |float  |1.0          |[0, 1]              |
-|`color`    |Sheen reflectivity                                      |color3 |1.0, 1.0, 1.0|                    |
-|`roughness`|Surface roughness                                       |float  |0.3          |                    |
-|`normal`   |Normal vector of the surface                            |vector3|Nworld       |                    |
-|`mode`     |Selects between `conty_kulla` and `zeltner` sheen models|string |conty_kulla  |conty_kulla, zeltner|
-|`out`      |Output: the computed BSDF                               |BSDF   |             |                    |
-
-<a id="node-chiang-hair-bsdf"> </a>
-
-### `chiang_hair_bsdf`
-Constructs a hair BSDF based on the Chiang hair shading model[^Chiang2016]. This node does not support vertical layering.
-
-The roughness inputs control longitudinal (ν) and azimuthal (s) roughness for each lobe, with (0,0) specifying pure specular scattering. The default `ior` of 1.55 represents the index of refraction for keratin. The `cuticle_angle` is in radians, with 0.5 representing no tilt, and values above 0.5 tilting the scales toward the root of the fiber.
-
-|Port                    |Description                                             |Type   |Default      |Accepted Values|
-|------------------------|--------------------------------------------------------|-------|-------------|---------------|
-|`tint_R`                |Color multiplier for the first R-lobe                   |color3 |1.0, 1.0, 1.0|               |
-|`tint_TT`               |Color multiplier for the first TT-lobe                  |color3 |1.0, 1.0, 1.0|               |
-|`tint_TRT`              |Color multiplier for the first TRT-lobe                 |color3 |1.0, 1.0, 1.0|               |
-|`ior`                   |Index of refraction                                     |float  |1.55         |               |
-|`roughness_R`           |Longitudinal and azimuthal roughness for R-lobe         |vector2|0.1, 0.1     |[0, ∞)         |
-|`roughness_TT`          |Longitudinal and azimuthal roughness for TT-lobe        |vector2|0.05, 0.05   |[0, ∞)         |
-|`roughness_TRT`         |Longitudinal and azimuthal roughness for TRT-lobe       |vector2|0.2, 0.2     |[0, ∞)         |
-|`cuticle_angle`         |Cuticle angle in radians                                |float  |0.5          |[0, 1]         |
-|`absorption_coefficient`|Absorption coefficient normalized to hair fiber diameter|vector3|0.0, 0.0, 0.0|               |
-|`normal`                |Normal vector of the surface                            |vector3|Nworld       |               |
-|`curve_direction`       |Direction of the hair geometry                          |vector3|Tworld       |               |
-|`out`                   |Output: the computed BSDF                               |BSDF   |             |               |
+* **`sheen_bsdf`**: Constructs a microfacet BSDF for the back-scattering properties of cloth-like materials. This node may be layered vertically over a base BSDF using a [&lt;layer>](#node-layer) node. All energy that is not reflected will be transmitted to the base layer. A `mode` option selects between two available sheen models, Conty-Kulla[^Conty2017] and Zeltner[^Zeltner2022].
+    * `weight` (float): Weight for this BSDF’s contribution, range [0.0, 1.0]. Defaults to 1.0.
+    * `color` (color3): Sheen reflectivity. Defaults to (1.0, 1.0, 1.0).
+    * `roughness` (float): Surface roughness, range [0.0, 1.0]. Defaults to 0.3.
+    * `normal` (vector3): Normal vector of the surface. Defaults to world space normal.
+    * `mode` (uniform string): Selects between `conty_kulla` and `zeltner` sheen models. Defaults to `conty_kulla`.
 
 
 ## EDF Nodes
 
 <a id="node-uniform-edf"> </a>
 
-### `uniform_edf`
-Constructs an EDF emitting light uniformly in all directions.
-
-|Port    |Description                                   |Type   |Default      |
-|--------|----------------------------------------------|-------|-------------|
-|`color` |Radiant emittance of light leaving the surface|color3 |1.0, 1.0, 1.0|
-|`out`   |Output: the computed EDF                      |EDF    |             |
+* **`uniform_edf`**: Constructs an EDF emitting light uniformly in all directions.
+    * `color` (color3): Radiant emittance of light leaving the surface. Defaults to (1, 1, 1).
 
 <a id="node-conical-edf"> </a>
 
-### `conical_edf`
-Constructs an EDF emitting light inside a cone around the normal direction.
-
-Light intensity begins to fall off at the `inner_angle` and reaches zero at the `outer_angle` (both specified in degrees). If the `outer_angle` is smaller than the `inner_angle`, no falloff occurs within the cone.
-
-|Port         |Description                                       |Type   |Default      |
-|-------------|--------------------------------------------------|-------|-------------|
-|`color`      |Radiant emittance of light leaving the surface    |color3 |1.0, 1.0, 1.0|
-|`normal`     |Normal vector of the surface                      |vector3|Nworld       |
-|`inner_angle`|Angle of inner cone where intensity falloff starts|float  |60.0         |
-|`outer_angle`|Angle of outer cone where intensity goes to zero  |float  |0.0          |
-|`out`        |Output: the computed EDF                          |EDF    |             |
+* **`conical_edf`**: Constructs an EDF emitting light inside a cone around the normal direction.
+    * `color` (color3): Radiant emittance of light leaving the surface. Defaults to (1, 1, 1).
+    * `normal` (vector3): Normal vector of the surface. Defaults to world space normal.
+    * `inner_angle` (uniform float): Angle of inner cone where intensity falloff starts (given in degrees). Defaults to 60.
+    * `outer_angle` (uniform float): Angle of outer cone where intensity goes to zero (given in degrees). If set to a smaller value than inner angle no falloff will occur within the cone. Defaults to 0.
 
 <a id="node-measured-edf"> </a>
 
-### `measured_edf`
-Constructs an EDF emitting light according to a measured IES light profile.
-
-|Port    |Description                                       |Type    |Default      |
-|--------|--------------------------------------------------|--------|-------------|
-|`color` |Radiant emittance of light leaving the surface    |color3  |1.0, 1.0, 1.0|
-|`normal`|Normal vector of the surface                      |vector3 |Nworld       |
-|`file`  |Path to a file containing IES light profile data  |filename|__empty__    |
-|`out`   |Output: the computed EDF                          |EDF     |             |
+* **`measured_edf`**: Constructs an EDF emitting light according to a measured IES light profile.
+    * `color` (color3): Radiant emittance of light leaving the surface. Defaults to (1, 1, 1).
+    * `normal` (vector3): Normal vector of the surface. Defaults to world space normal.
+    * `file` (uniform filename): Path to a file containing IES light profile data. Defaults to "".
 
 <a id="node-generalized-schlick-edf"> </a>
 
-### `generalized_schlick_edf`
-Adds a directionally varying factor to an EDF. Scales the emission distribution of the base EDF according to a generalized Schlick Fresnel curve.
-
-|Port      |Description                                                  |Type  |Default      |
-|----------|-------------------------------------------------------------|------|-------------|
-|`color0`  |Scale factor for emittance at facing angles                  |color3|1.0, 1.0, 1.0|
-|`color90` |Scale factor for emittance at grazing angles                 |color3|1.0, 1.0, 1.0|
-|`exponent`|Exponent for the Schlick blending between color0 and color90 |float |5.0          |
-|`base`    |The base EDF to be modified                                  |EDF   |__zero__     |
-|`out`     |Output: the computed EDF                                     |EDF   |             |
+* **`generalized_schlick_edf`**: Adds a directionally varying factor to an EDF. Scales the emission distribution of the base EDF according to a generalized Schlick Fresnel curve.
+    * `color0` (color3): Scale factor for emittance at facing angles. Defaults to (1, 1, 1).
+    * `color90` (color3): Scale factor for emittance at grazing angles. Defaults to (1, 1, 1).
+    * `exponent` (float): Exponent for the Schlick blending between `color0` and `color90`. Defaults to 5.0.
+    * `base` (EDF): The base EDF to be modified. Defaults to "".
 
 
 ## VDF Nodes
 
 <a id="node-absorption-vdf"> </a>
 
-### `absorption_vdf`
-Constructs a VDF for pure light absorption.
-
-The `absorption` input represents the absorption rate per distance traveled in the medium, stated in _m<sup>−1</sup>_, with independent control for each wavelength.
-
-|Port        |Description                   |Type   |Default      |
-|------------|------------------------------|-------|-------------|
-|`absorption`|Absorption rate for the medium|vector3|0.0, 0.0, 0.0|
-|`out`       |Output: the computed VDF      |VDF    |             |
+* **`absorption_vdf`**: Constructs a VDF for pure light absorption.
+    * `absorption` (color3): Absorption rate for the medium (rate per distance traveled in the medium, given in _m<sup>−1</sup>_). Set for each color component/wavelength separately. Defaults to (0, 0, 0).
 
 <a id="node-anisotropic-vdf"> </a>
 
-### `anisotropic_vdf`
-Constructs a VDF scattering light for a participating medium, based on the Henyey-Greenstein phase function[^Pharr2023]. Forward, backward and uniform scattering is supported and controlled by the anisotropy input.
-
-The `absorption` input represents the absorption rate per distance traveled in the medium, stated in _m<sup>−1</sup>_, with independent control for each wavelength.
-
-The `anisotropy` input controls the scattering direction: negative values produce backwards scattering, positive values produce forward scattering, and 0.0 produces uniform scattering. Both absorption and scattering rates are specified per wavelength.
-
-|Port        |Description                               |Type   |Default      |Accepted Values|
-|------------|------------------------------------------|-------|-------------|---------------|
-|`absorption`|Absorption rate for the medium            |vector3|0.0, 0.0, 0.0|               |
-|`scattering`|Scattering rate for the medium            |vector3|0.0, 0.0, 0.0|               |
-|`anisotropy`|Anisotropy factor for scattering direction|float  |0.0          |[-1, 1]        |
-|`out`       |Output: the computed VDF                  |VDF    |             |               |
+* **`anisotropic_vdf`**: Constructs a VDF scattering light for a participating medium, based on the Henyey-Greenstein phase function[^Pharr2023]. Forward, backward and uniform scattering is supported and controlled by the anisotropy input.
+    * `absorption` (color3): Absorption rate for the medium (rate per distance traveled in the medium, given in _m<sup>−1</sup>_). Set for each color component/wavelength separately. Defaults to (0, 0, 0).
+    * `scattering` (color3): Scattering rate for the medium (rate per distance traveled in the medium, given in _m<sup>−1</sup>_). Set for each color component/wavelength separately. Defaults to (0, 0, 0).
+    * `anisotropy` (float): Anisotropy factor, controlling the scattering direction, range [-1.0, 1.0]. Negative values give backwards scattering, positive values give forward scattering, and a value of 0.0 (the default) gives uniform scattering.
 
 
 ## PBR Shader Nodes
 
 <a id="node-surface"> </a>
 
-### `surface`
-Constructs a surface shader describing light scattering and emission for surfaces. By default the node will construct a shader for a closed surface, representing an interface to a solid volume. In this mode refraction and scattering is enabled for any transmissive BSDFs connected to this surface. By setting thin_walled to "true" the node will instead construct a thin-walled surface, representing a surface with an infinitely thin volume. In thin-walled mode refraction and scattering will be disabled. Thin-walled mode must be enabled to construct a double-sided material with different surface shaders on the front and back side of geometry (using [&lt;surfacematerial>](./MaterialX.Specification.md#node-surfacematerial) in the standard library).
-
-If the `edf` input is left unconnected, no emission will occur from the surface.
-
-|Port         |Description                                   |Type         |Default |
-|-------------|----------------------------------------------|-------------|--------|
-|`bsdf`       |Bidirectional scattering distribution function|BSDF         |__zero__|
-|`edf`        |Emission distribution function for the surface|EDF          |__zero__|
-|`opacity`    |Cutout opacity for the surface                |float        |1.0     |
-|`thin_walled`|Set to true to make the surface thin-walled   |boolean      |false   |
-|`out`        |Output: the computed surface shader           |surfaceshader|        |
+* **`surface`**: Constructs a surface shader describing light scattering and emission for surfaces. By default the node will construct a shader for a closed surface, representing an interface to a solid volume. In this mode refraction and scattering is enabled for any transmissive BSDFs connected to this surface. By setting thin_walled to "true" the node will instead construct a thin-walled surface, representing a surface with an infinitely thin volume. In thin-walled mode refraction and scattering will be disabled. Thin-walled mode must be enabled to construct a double-sided material with different surface shaders on the front and back side of geometry (using [&lt;surfacematerial>](./MaterialX.Specification.md#node-surfacematerial) in the standard library). Output type "surfaceshader".
+    * `bsdf` (BSDF): Bidirectional scattering distribution function for the surface. Defaults to "".
+    * `edf` (EDF): Emission distribution function for the surface. If unconnected, then no emission will occur.
+    * `opacity` (float): Cutout opacity for the surface. Defaults to 1.0.
+    * `thin_walled` (boolean): Set to `true` to make the surface thin-walled. Defaults to `false`.
 
 <a id="node-volume"> </a>
 
-### `volume`
-Constructs a volume shader describing a participating medium.
-
-If the `edf` input is left unconnected, no emission will occur from the medium.
-
-|Port  |Description                                  |Type        |Default |
-|------|---------------------------------------------|------------|--------|
-|`vdf` |Volume distribution function for the medium  |VDF         |__zero__|
-|`edf` |Emission distribution function for the medium|EDF         |__zero__|
-|`out` |Output: the computed volume shader           |volumeshader|        |
+* **`volume`**: Constructs a volume shader describing a participating medium. Output type "volumeshader".
+    * `vdf` (VDF): Volume distribution function for the medium. Defaults to "".
+    * `edf` (EDF): Emission distribution function for the medium. If unconnected, then no emission will occur.
 
 <a id="node-light"> </a>
 
-### `light`
-Constructs a light shader describing an explicit light source. The light shader will emit light according to the connected EDF. If the shader is attached to geometry both sides will be considered for light emission and the EDF controls if light is emitted from both sides or not.
-
-|Port       |Description                                        |Type        |Default |
-|-----------|---------------------------------------------------|------------|--------|
-|`edf`      |Emission distribution function for the light source|EDF         |__zero__|
-|`intensity`|Intensity multiplier for the EDF's emittance       |float       |1.0     |
-|`exposure` |Exposure control for the EDF's emittance           |float       |0.0     |
-|`out`      |Output: the computed light shader                  |lightshader |        |
+* **`light`**: Constructs a light shader describing an explicit light source. The light shader will emit light according to the connected EDF. If the shader is attached to geometry both sides will be considered for light emission and the EDF controls if light is emitted from both sides or not. Output type "lightshader".
+    * `edf` (EDF): Emission distribution function for the light source. Defaults to no emission.
+    * `intensity` (color3): Intensity multiplier for the EDF’s emittance. Defaults to (1.0, 1.0, 1.0).
+    * `exposure` (float): Exposure control for the EDF’s emittance. Defaults to 0.0.
 
 Note that the standard library includes definitions for [**`displacement`**](./MaterialX.Specification.md#node-displacement) and [**`surface_unlit`**](./MaterialX.Specification.md#node-surfaceunlit) shader nodes.
+
 
 
 ## Utility Nodes
 
 <a id="node-mix"> </a>
 
-### `mix`
-Mix two same-type distribution functions according to a weight. Performs horizontal layering by linear interpolation between the two inputs, using the function "bg∗(1−mix) + fg∗mix".
-
-|Port  |Description                                |Type                |Default |Accepted Values|
-|------|-------------------------------------------|--------------------|--------|---------------|
-|`bg`  |The first distribution function            |BSDF, EDF, or VDF   |__zero__|               |
-|`fg`  |The second distribution function           |Same as `bg`        |__zero__|               |
-|`mix` |The mixing weight                          |float               |0.0     |[0, 1]         |
-|`out` |Output: the mixed distribution function    |Same as `bg`        |        |               |
+* **`mix`**: Mix two same-type distribution functions according to a weight. Performs horizontal layering by linear interpolation between the two inputs, using the function "bg∗(1−mix) + fg∗mix".
+    * `bg` (BSDF or EDF or VDF): The first distribution function. Defaults to "".
+    * `fg` (same type as `bg`): The second distribution function. Defaults to "".
+    * `mix` (float): The mixing weight, range [0.0, 1.0]. Defaults to 0.
 
 <a id="node-layer"> </a>
 
-### `layer`
-Vertically layer a layerable BSDF such as [&lt;dielectric_bsdf>](#node-dielectric-bsdf), [&lt;generalized_schlick_bsdf>](#node-generalized-schlick-bsdf) or [&lt;sheen_bsdf>](#node-sheen-bsdf) over a BSDF or VDF. The implementation is target specific, but a standard way of handling this is by albedo scaling, using the function "base*(1-reflectance(top)) + top", where the reflectance function calculates the directional albedo of a given BSDF.
-
-|Port  |Description                     |Type       |Default |
-|------|--------------------------------|-----------|--------|
-|`top` |The top BSDF                    |BSDF       |__zero__|
-|`base`|The base BSDF or VDF            |BSDF or VDF|__zero__|
-|`out` |Output: the layered distribution|BSDF       |        |
+* **`layer`**: Vertically layer a layerable BSDF such as [&lt;dielectric_bsdf>](#node-dielectric-bsdf), [&lt;generalized_schlick_bsdf>](#node-generalized-schlick-bsdf) or [&lt;sheen_bsdf>](#node-sheen-bsdf) over a BSDF or VDF. The implementation is target specific, but a standard way of handling this is by albedo scaling, using the function "base*(1-reflectance(top)) + top", where the reflectance function calculates the directional albedo of a given BSDF.
+    * `top` (BSDF): The top BSDF. Defaults to "".
+    * `base` (BSDF or VDF): The base BSDF or VDF. Defaults to "".
 
 <a id="node-add"> </a>
 
-### `add`
-Additively blend two distribution functions of the same type.
-
-|Port  |Description                                |Type             |Default |
-|------|-------------------------------------------|-----------------|--------|
-|`in1` |The first distribution function            |BSDF, EDF, or VDF|__zero__|
-|`in2` |The second distribution function           |Same as `in1`    |__zero__|
-|`out` |Output: the added distribution functions   |Same as `in1`    |        |
+* **`add`**: Additively blend two distribution functions of the same type.
+    * `in1` (BSDF or EDF or VDF): The first distribution function. Defaults to "".
+    * `in2` (same type as `in1`): The second distribution function. Defaults to "".
 
 <a id="node-multiply"> </a>
 
-### `multiply`
-Multiply the contribution of a distribution function by a scaling weight. The weight is either a float to attenuate the channels uniformly, or a color which can attenuate the channels separately. To be energy conserving the scaling weight should be no more than 1.0 in any channel.
-
-|Port  |Description                              |Type                |Default |
-|------|-----------------------------------------|--------------------|--------|
-|`in1` |The distribution function to scale       |BSDF, EDF, or VDF   |__zero__|
-|`in2` |The scaling weight                       |float or color3     |1.0     |
-|`out` |Output: the scaled distribution function |Same as `in1`       |        |
+* **`multiply`**: Multiply the contribution of a distribution function by a scaling weight. The weight is either a float to attenuate the channels uniformly, or a color which can attenuate the channels separately. To be energy conserving the scaling weight should be no more than 1.0 in any channel.
+    * `in1` (BSDF or EDF or VDF): The distribution function to scale. Defaults to "".
+    * `in2` (float or color3): The scaling weight. Defaults to 1.0.
 
 <a id="node-roughness-anisotropy"> </a>
 
-### `roughness_anisotropy`
-Calculates anisotropic surface roughness from a scalar roughness and anisotropy parameterization. An anisotropy value above 0.0 stretches the roughness in the direction of the surface's "tangent" vector. An anisotropy value of 0.0 gives isotropic roughness. The roughness value is squared to achieve a more linear roughness look over the input range [0,1].
-
-|Port        |Description                       |Type    |Default |Accepted Values|
-|------------|----------------------------------|--------|--------|---------------|
-|`roughness` |Roughness value                   |float   |0.0     |[0, 1]         |
-|`anisotropy`|Amount of anisotropy              |float   |0.0     |[0, 1]         |
-|`out`       |Output: the computed roughness    |vector2 |0.0, 0.0|               |
+* **`roughness_anisotropy`**: Calculates anisotropic surface roughness from a scalar roughness and anisotropy parameterization. An anisotropy value above 0.0 stretches the roughness in the direction of the surface's "tangent" vector. An anisotropy value of 0.0 gives isotropic roughness. The roughness value is squared to achieve a more linear roughness look over the input range [0,1]. Output type `vector2`.
+    * `roughness` (float): Roughness value, range [0.0, 1.0]. Defaults to 0.0.
+    * `anisotropy` (float): Amount of anisotropy, range [0.0, 1.0]. Defaults to 0.0.
 
 <a id="node-roughness-dual"> </a>
 
-### `roughness_dual`
-Calculates anisotropic surface roughness from a dual surface roughness parameterization. The roughness is squared to achieve a more linear roughness look over the input range [0,1].
-
-|Port       |Description                             |Type    |Default |Accepted Values|
-|-----------|----------------------------------------|--------|--------|---------------|
-|`roughness`|Roughness in x and y directions         |vector2 |0.0, 0.0|[0, 1]         |
-|`out`      |Output: the computed roughness          |vector2 |0.0, 0.0|               |
+* **`roughness_dual`**: Calculates anisotropic surface roughness from a dual surface roughness parameterization. The roughness is squared to achieve a more linear roughness look over the input range [0,1]. Output type `vector2`.
+    * `roughness` (vector2): Roughness in x and y directions, range [0.0, 1.0]. Defaults to (0.0, 0.0).
 
 <a id="node-glossiness-anisotropy"> </a>
 
-### `glossiness_anisotropy`
-Calculates anisotropic surface roughness from a scalar glossiness and anisotropy parameterization. This node gives the same result as roughness anisotropy except that the glossiness value is an inverted roughness value. To be used as a convenience for shading models using the glossiness parameterization.
-
-|Port        |Description                       |Type    |Default|Accepted Values|
-|------------|----------------------------------|--------|-------|---------------|
-|`glossiness`|Glossiness value                  |float   |0.0    |[0, 1]         |
-|`anisotropy`|Amount of anisotropy              |float   |0.0    |[0, 1]         |
-|`out`       |Output: the computed roughness    |vector2 |       |               |
+* **`glossiness_anisotropy`**: Calculates anisotropic surface roughness from a scalar glossiness and anisotropy parameterization. This node gives the same result as roughness anisotropy except that the glossiness value is an inverted roughness value. To be used as a convenience for shading models using the glossiness parameterization. Output type `vector2`.
+    * `glossiness` (float): Roughness value, range [0.0, 1.0]. Defaults to 0.0.
+    * `anisotropy` (float): Amount of anisotropy, range [0.0, 1.0]. Defaults to 0.0.
 
 <a id="node-blackbody"> </a>
 
-### `blackbody`
-Returns the radiant emittance of a blackbody radiator with the given temperature.
-
-|Port         |Description                  |Type  |Default|
-|-------------|-----------------------------|------|-------|
-|`temperature`|Temperature in Kelvin        |float |5000.0 |
-|`out`        |Output: the radiant emittance|color3|       |
+* **`blackbody`**: Returns the radiant emittance of a blackbody radiator with the given temperature. Output type `color3`.
+    * `temperature` (float): Temperature in Kelvin. Defaults to 5000.
 
 <a id="node-artistic-ior"> </a>
 
-### `artistic_ior`
-Converts the artistic parameterization reflectivity and edge_color to complex IOR values. To be used with the [&lt;conductor_bsdf>](#node-conductor-bsdf) node.
+* **`artistic_ior`**: Converts the artistic parameterization reflectivity and edge_color to complex IOR values. To be used with the [&lt;conductor_bsdf>](#node-conductor-bsdf) node.
+    * `reflectivity` (color3): Reflectivity per color component at facing angles. Defaults to (0.947, 0.776, 0.371).
+    * `edge_color` (color3): Reflectivity per color component at grazing angles. Defaults to (1.0, 0.982, 0.753).
+    * `ior` (**output**, vector3): Computed index of refraction.
+    * `extinction` (**output**, vector3): Computed extinction coefficient.
 
-|Port          |Description                                          |Type  |Default            |
-|--------------|-----------------------------------------------------|------|-------------------|
-|`reflectivity`|Reflectivity per color component at facing angles    |color3|0.947, 0.776, 0.371|
-|`edge_color`  |Reflectivity per color component at grazing angles   |color3|1.0, 0.982, 0.753  |
-|`ior`         |Output: Computed index of refraction                 |color3|                   |
-|`extinction`  |Output: Computed extinction coefficient              |color3|                   |
-
-<a id="node-chiang-hair-roughness"> </a>
-
-### `chiang_hair_roughness`
-Converts the artistic parameterization hair roughness to roughness for R, TT and TRT lobes, as described in [^Chiang2016].
-
-|Port            |Description                                             |Type    |Default|Accepted Values|
-|----------------|--------------------------------------------------------|--------|-------|---------------|
-|`longitudinal`  |Longitudinal roughness                                  |float   |0.1    |[0, 1]         |
-|`azimuthal`     |Azimuthal roughness                                     |float   |0.2    |[0, 1]         |
-|`scale_TT`      |Roughness scale for TT lobe[^Marschner2003]             |float   |0.5    |               |
-|`scale_TRT`     |Roughness scale for TRT lobe[^Marschner2003]            |float   |2.0    |               |
-|`roughness_R`   |Output: Roughness for R lobe                            |vector2 |       |               |
-|`roughness_TT`  |Output: Roughness for TT lobe                           |vector2 |       |               |
-|`roughness_TRT` |Output: Roughness for TRT lobe                          |vector2 |       |               |
-
-<a id="node-deon-hair-absorption-from-melanin"> </a>
-
-### `deon_hair_absorption_from_melanin`
-Converts the hair melanin parameterization to absorption coefficient based on pigments eumelanin and pheomelanin using the mapping method described in [^d'Eon2011]. The default of `eumelanin_color` and `pheomelanin_color` are `lin_rec709` color converted from the constants[^d'Eon2011] via `exp(-c)`. They may be transformed to scene-linear rendering color space.
-
-|Port                   |Description                                         |Type   |Default                     |Accepted Values|
-|-----------------------|----------------------------------------------------|-------|----------------------------|---------------|
-|`melanin_concentration`|Amount of melanin affected to the output            |float  |0.25                        |[0, 1]         |
-|`melanin_redness`      |Amount of redness affected to the output            |float  |0.5                         |[0, 1]         |
-|`eumelanin_color`      |Eumelanin color                                     |color3 |0.657704, 0.498077, 0.254107|               |
-|`pheomelanin_color`    |Pheomelanin color                                   |color3 |0.829444, 0.67032, 0.349938 |               |
-|`absorption`           |Output: the computed absorption coefficient         |vector3|                            |               |
-
-<a id="node-chiang-hair-absorption-from-color"> </a>
-
-### `chiang_hair_absorption_from_color`
-Converts the hair scattering color to absorption coefficient using the mapping method described in [^Chiang2016].
-
-|Port                 |Description                                     |Type   |Default      |Accepted Values|
-|---------------------|------------------------------------------------|-------|-------------|---------------|
-|`color`              |Scattering color                                |color3 |1.0, 1.0, 1.0|               |
-|`azimuthal_roughness`|Azimuthal roughness                             |float  |0.2          |[0, 1]         |
-|`absorption`         |Output: the computed absorption coefficient     |vector3|             |               |
-
-<br>
 
 
 # Shading Model Examples
 
 This section contains examples of shading model implementations using the MaterialX PBS library. For all examples, the shading model is defined via a &lt;nodedef> interface plus a nodegraph implementation. The resulting nodes can be used as shaders by a MaterialX material definition.
-
-
-## Disney Principled BSDF
-
-This shading model was presented by Brent Burley from Walt Disney Animation Studios in 2012[^Burley2012], with additional refinements presented in 2015[^Burley2015].
-
-A MaterialX definition and nodegraph implementation of the Disney Principled BSDF can be found here:  
-[https://github.com/AcademySoftwareFoundation/MaterialX/blob/main/libraries/bxdf/disney_principled.mtlx](https://github.com/AcademySoftwareFoundation/MaterialX/blob/main/libraries/bxdf/disney_principled.mtlx)
 
 
 ## Autodesk Standard Surface
@@ -654,7 +412,6 @@ This is an open surface shading model that was designed as a collaboration betwe
 A MaterialX definition and nodegraph implementation of OpenPBR Surface can be found here:  
 [https://github.com/AcademySoftwareFoundation/MaterialX/blob/main/libraries/bxdf/open_pbr_surface.mtlx](https://github.com/AcademySoftwareFoundation/MaterialX/blob/main/libraries/bxdf/open_pbr_surface.mtlx)
 
-<br>
 
 
 # Shading Translation Graphs
@@ -663,8 +420,6 @@ The MaterialX PBS Library includes a number of nodegraphs that can be used to ap
 
 * Autodesk Standard Surface to UsdPreviewSurface
 * Autodesk Standard Surface to glTF
-
-<br>
 
 
 # References
@@ -675,16 +430,9 @@ The MaterialX PBS Library includes a number of nodegraphs that can be used to ap
 
 [^Burley2012]: Brent Burley, **Physically-Based Shading at Disney**, <https://media.disneyanimation.com/uploads/production/publication_asset/48/asset/s2012_pbs_disney_brdf_notes_v3.pdf>, 2012
 
-[^Burley2015]: Brent Burley, **Extending the Disney BRDF to a BSDF with Integrated Subsurface Scattering**, <https://blog.selfshadow.com/publications/s2015-shading-course/burley/s2015_pbs_disney_bsdf_notes.pdf>, 2015
-
-[^Chiang2016]: Matt Jen-Yuan Chiang et al., **A Practical and Controllable Hair and Fur Model for Production
-Path Tracing**, <https://media.disneyanimation.com/uploads/production/publication_asset/152/asset/eurographics2016Fur_Smaller.pdf>, 2016
-
 [^Christensen2015]: Per H. Christensen, Brent Burley, **Approximate Reflectance Profiles for Efficient Subsurface Scattering**, <http://graphics.pixar.com/library/ApproxBSSRDF/> 2015
 
 [^Conty2017]: Alejandro Conty, Christopher Kulla, **Production Friendly Microfacet Sheen BRDF**, <https://fpsunflower.github.io/ckulla/data/s2017_pbs_imageworks_sheen.pdf>, 2017
-
-[^d'Eon2011]: Eugene d'Eon et al., **An Energy-Conserving Hair Reflectance Model**, <https://eugenedeon.com/pdfs/egsrhair.pdf>, 2011
 
 [^Georgiev2019]: Iliyan Georgiev et al., **Autodesk Standard Surface**, <https://autodesk.github.io/standard-surface/>, 2019.
 
@@ -692,17 +440,11 @@ Path Tracing**, <https://media.disneyanimation.com/uploads/production/publicatio
 
 [^Hoffman2023]: Naty Hoffman, **Generalization of Adobe's Fresnel Model**, <https://renderwonk.com/publications/wp-generalization-adobe/gen-adobe.pdf> 2023
 
-[^Marschner2003]: Stephen R. Marschner et al., **Light Scattering from Human Hair Fibers**, <http://www.graphics.stanford.edu/papers/hair/hair-sg03final.pdf>, 2003
-
-[^Oren1994]: Michael Oren, Shree K. Nayar, **Generalization of Lambert’s Reflectance Model**, <https://dl.acm.org/doi/10.1145/192161.192213>, 1994
+[^Oren1994]: Michael Oren, Shree K. Nayar, **Generalization of Lambert’s Reflectance Model**, <https://www1.cs.columbia.edu/CAVE/publications/pdfs/Oren_SIGGRAPH94.pdf>, 1994
 
 [^Pharr2023]: Matt Pharr et al., **Physically Based Rendering: From Theory To Implementation**, <https://www.pbr-book.org/>, 2023
 
 [^Pixar2019]: Pixar Animation Studios, **UsdPreviewSurface Specification**, <https://openusd.org/release/spec_usdpreviewsurface.html>, 2019.
-
-[^Portsmouth2025]: Portsmouth et al., **EON: A practical energy-preserving rough diffuse BRDF**, <https://www.jcgt.org/published/0014/01/06/>, 2025.
-
-[^Turquin2019]: Emmanuel Turquin, **Practical multiple scattering compensation for microfacet models**, <https://blog.selfshadow.com/publications/turquin/ms_comp_final.pdf>, 2019.
 
 [^Walter2007]: Bruce Walter et al., **Microfacet Models for Refraction through Rough Surfaces**, <https://www.graphics.cornell.edu/~bjw/microfacetbsdf.pdf>, 2007
 

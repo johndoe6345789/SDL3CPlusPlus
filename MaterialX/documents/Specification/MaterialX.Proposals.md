@@ -6,7 +6,7 @@ MaterialX Proposals v1.39
 # MaterialX: Proposed Additions and Changes
 
 **Proposals for Version 1.39**  
-September 15, 2024
+July 26, 2024
 
 
 # Introduction
@@ -53,11 +53,6 @@ MaterialX should also support the following color spaces:
 
 
 ### AOV Output Elements
-
-(Summary for README.md: **New Support for Shader AOVs**
-
-Previously, MaterialX used custom types with a structure of output variables to define shader AOVs.  But this approach was not very flexible and in fact had not been implemented.  In v1.39, nodegraph-based shader implementations can include new [&lt;aovoutput> elements](./MaterialX.Specification.md#aov-output-elements) to define AOVs which renderers can use to output additional channels of information in addition to the final shading result, while file-based &lt;implementation>s can similarly define AOVs using [&lt;aov> elements](./MaterialX.Specification.md#implementation-aov-elements).
-)
 
 A functional nodegraph with either a "shader" or "material"-semantic output type may contain a number of &lt;aovoutput> elements to declare arbitrary output variables ("AOVs") which the renderer can see and output as additional streams of information.  AOVoutputs must be of type float, color3 or vector3 for pre-shading "pattern" values, or BSDF or EDF for shader-node output values; the renderer is expected to extract the appropriate color-like information from BSDF and EDF types.  AOVs defined within a shader-semantic node instantiated within this functional nodegraph may be "passed along" and potentially renamed (but may not be modified or operated on in any way) by providing a sourceaov attribute in the &lt;aovoutput>.
 
@@ -173,6 +168,18 @@ Inheritance of material-type custom nodes is also allowed, so that new or change
 
 ### Noise Nodes
 
+<a id="node-fractal2d"> </a>
+
+We have a standard 3d fractal noise, but a 2d variant would be useful as well.
+
+* **`fractal2d`**: Zero-centered 2D Fractal noise in 1, 2, 3 or 4 channels, created by summing several octaves of 2D Perlin noise, increasing the frequency and decreasing the amplitude at each octave.
+    * `amplitude` (float or vector<em>N</em>): the center-to-peak amplitude of the noise (peak-to-peak amplitude is 2x this value).  Default is 1.0.
+    * `octaves` (integer): the number of octaves of noise to be summed.  Default is 3.
+    * `lacunarity` (float or vector<em>N</em>): the exponential scale between successive octaves of noise; must be an integer value if period is non-zero so the result is properly tileable.  VectorN-output types can provide either a float (isotropic) or vector<em>N</em> (anisotropic) values for lacunarity and diminish.  Default is 2.0.
+    * `diminish` (float or vector<em>N</em>): the rate at which noise amplitude is diminished for each octave.  Should be between 0.0 and 1.0; default is 0.5.  VectorN-output types can provide either a float (isotropic) or vector<em>N</em> (anisotropic) values for lacunarity and diminish.
+    * `period` (float or vector<em>N</em>): the positive integer distance at which the noise function returns the same value for texture coordinates repeated at that step.  Default is 0, meaning the noise is not periodic.
+    * `texcoord` (vector2): the 2D texture coordinate at which the noise is evaluated.  Default is to use the first set of texture coordinates.
+
 <a id="node-cellnoise1d"> </a>
 
 1D Cell noise was proposed an an alternative approach to random value generation.
@@ -181,25 +188,7 @@ Inheritance of material-type custom nodes is also allowed, so that new or change
     * `period` (float or vector3): the positive integer distance at which the noise function returns the same value for input coordinate repeated at that step.  Default is 0, meaning the noise is not periodic.
     * `in` (float): the 1D coordinate at which the noise is evaluated.
 
-<a id="node-worleynoise2d"> </a>
 
-Expanded 2D Worley noise to support different distance metrics and periodicity. 
-
-* **`worleynoise2d`**: 2D Worley noise using centered jitter, outputting float (distance metric to closest feature), vector2 (distance metrics to closest 2 features) or vector3 (distance metrics to closest 3 features).
-    * `metric` (uniform string): the distance metric to return, one of "distance" (Euclidean distance to feature), "distance2" (Euclidean distance squared), "manhattan" or "chebyshev".  Default is "distance".
-    * `period` (float or vector3): the positive integer distance at which the noise function returns the same value for texture coordinates repeated at that step.  Default is 0, meaning the noise is not periodic.
-
-<a id="node-worleynoise3d"> </a>
-
-Expanded 3D Worley noise to support different distance metrics and periodicity.
-
-* **`worleynoise3d`**: 3D Worley noise using centered jitter, outputting float (distance metric to closest feature), vector2 (distance metrics to closest 2 features) or vector3 (distance metrics to closest 3 features).
-    * `metric` (uniform string): the distance metric to return, one of "distance" (Euclidean distance to feature), "distance2" (Euclidean distance squared), "manhattan" or "chebyshev".  Default is "distance".
-    * `period` (float or vector3): the positive integer distance at which the noise function returns the same value for position coordinates repeated at that step.  Default is 0, meaning the noise is not periodic.
-
-#### Periodic Noises
-
-In #1201 it was decided that separate periodic versions of all of the noises is preferred to adding it to the existing noises.
 
 ### Shape Nodes
 
@@ -212,7 +201,12 @@ In #1201 it was decided that separate periodic versions of all of the noises is 
 
 * **`bump`**: Existing node, proposal to add a vector3 `bitangent` input
 
-Note: when &lt;geompropvalueuniform> is added, the text in the first paragraph of the Specification about Node Inputs should be revised to include "&lt;geompropvalueuniform>" as an example of "or any other node whose output is explicitly declared to be uniform".
+<a id="node-geompropvalueuniform"> </a>
+
+* **`geompropvalueuniform`**: the value of the specified uniform geometric property (defined using &lt;geompropdef>) of the currently-bound geometry.  This node's type must match that of the referenced geomprop.
+    * `geomprop` (uniform string): the geometric property to be referenced.
+    * `default` (same type as the geomprop's value): a value to return if the specified `geomprop` is not defined on the current geometry.
+
 
 
 ### Global Nodes

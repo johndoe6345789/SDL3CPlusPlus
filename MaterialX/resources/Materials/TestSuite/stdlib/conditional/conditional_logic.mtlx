@@ -24,7 +24,7 @@
     </xor>
     <output name="out" type="boolean" nodename="xor" />
   </nodegraph>
-  <nodegraph name="not_boolean">
+  <nodegraph name="and_boolean">
     <not name="not" type="boolean">
       <input name="in" type="boolean" value="false" />
     </not>

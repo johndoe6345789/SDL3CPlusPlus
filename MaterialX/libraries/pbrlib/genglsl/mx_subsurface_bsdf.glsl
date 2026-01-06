@@ -1,7 +1,6 @@
-#include "lib/mx_closure_type.glsl"
 #include "lib/mx_microfacet_diffuse.glsl"
 
-void mx_subsurface_bsdf(ClosureData closureData, float weight, vec3 color, vec3 radius, float anisotropy, vec3 N, inout BSDF bsdf)
+void mx_subsurface_bsdf_reflection(vec3 L, vec3 V, vec3 P, float occlusion, float weight, vec3 color, vec3 radius, float anisotropy, vec3 normal, inout BSDF bsdf)
 {
     bsdf.throughput = vec3(0.0);
 
@@ -10,24 +9,26 @@ void mx_subsurface_bsdf(ClosureData closureData, float weight, vec3 color, vec3 
         return;
     }
 
-    vec3 V = closureData.V;
-    vec3 L = closureData.L;
-    vec3 P = closureData.P;
-    float occlusion = closureData.occlusion;
+    normal = mx_forward_facing_normal(normal, V);
 
-    N = mx_forward_facing_normal(N, V);
+    vec3 sss = mx_subsurface_scattering_approx(normal, L, P, color, radius);
+    float NdotL = clamp(dot(normal, L), M_FLOAT_EPS, 1.0);
+    float visibleOcclusion = 1.0 - NdotL * (1.0 - occlusion);
+    bsdf.response = sss * visibleOcclusion * weight;
+}
 
-    if (closureData.closureType == CLOSURE_TYPE_REFLECTION)
+void mx_subsurface_bsdf_indirect(vec3 V, float weight, vec3 color, vec3 radius, float anisotropy, vec3 normal, inout BSDF bsdf)
+{
+    bsdf.throughput = vec3(0.0);
+
+    if (weight < M_FLOAT_EPS)
     {
-        vec3 sss = mx_subsurface_scattering_approx(N, L, P, color, radius);
-        float NdotL = clamp(dot(N, L), M_FLOAT_EPS, 1.0);
-        float visibleOcclusion = 1.0 - NdotL * (1.0 - occlusion);
-        bsdf.response = sss * visibleOcclusion * weight;
+        return;
     }
-    else if (closureData.closureType == CLOSURE_TYPE_INDIRECT)
-    {
-        // For now, we render indirect subsurface as simple indirect diffuse.
-        vec3 Li = mx_environment_irradiance(N);
-        bsdf.response = Li * color * weight;
-    }
+
+    normal = mx_forward_facing_normal(normal, V);
+
+    // For now, we render indirect subsurface as simple indirect diffuse.
+    vec3 Li = mx_environment_irradiance(normal);
+    bsdf.response = Li * color * weight;
 }

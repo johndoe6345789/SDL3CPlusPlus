@@ -166,7 +166,7 @@
   </nodegraph>
 
   <nodegraph name="NG_srgb_texture_to_lin_rec709_color3" nodedef="ND_srgb_texture_to_lin_rec709_color3">
-    <constant name="threshold" type="float">
+    <constant name="threshhold" type="float">
       <input name="value" type="float" value="0.04045" />
     </constant>
     <separate3 name="colorSeparate" type="multioutput">
@@ -174,19 +174,19 @@
     </separate3>
     <ifgreater name="isAboveR" type="float">
       <input name="value1" type="float" nodename="colorSeparate" output="outr" />
-      <input name="value2" type="float" nodename="threshold" />
+      <input name="value2" type="float" nodename="threshhold" />
       <input name="in1" type="float" value="1" />
       <input name="in2" type="float" value="0" />
     </ifgreater>
     <ifgreater name="isAboveG" type="float">
       <input name="value1" type="float" nodename="colorSeparate" output="outg" />
-      <input name="value2" type="float" nodename="threshold" />
+      <input name="value2" type="float" nodename="threshhold" />
       <input name="in1" type="float" value="1" />
       <input name="in2" type="float" value="0" />
     </ifgreater>
     <ifgreater name="isAboveB" type="float">
       <input name="value1" type="float" nodename="colorSeparate" output="outb" />
-      <input name="value2" type="float" nodename="threshold" />
+      <input name="value2" type="float" nodename="threshhold" />
       <input name="in1" type="float" value="1" />
       <input name="in2" type="float" value="0" />
     </ifgreater>
@@ -315,7 +315,8 @@
 
   <nodegraph name="NG_srgb_displayp3_to_lin_rec709_color3" nodedef="ND_srgb_displayp3_to_lin_rec709_color3">
     <constant name="mat" type="matrix33">
-      <input name="value" type="matrix33" value="1.22493029, -0.04205868, -0.01964128, -0.22492968, 1.04205894, -0.07864794, 0.00000006,-0.00000001, 1.09828925" />
+      <input name="value" type="matrix33"
+             value="1.22493029, -0.04205868, -0.01964128, -0.22492968, 1.04205894, -0.07864794, 0.00000006,-0.00000001, 1.09828925"/>
     </constant>
     <!--  Use srgb_texture_to_lin_rec709 to convert from sRGB to Lin before passing to the mat conversion -->
     <srgb_texture_to_lin_rec709 name="srgb_transform" type="color3">
@@ -354,7 +355,8 @@
 
   <nodegraph name="NG_lin_displayp3_to_lin_rec709_color3" nodedef="ND_lin_displayp3_to_lin_rec709_color3">
     <constant name="mat" type="matrix33">
-      <input name="value" type="matrix33" value="1.22493029, -0.04205868, -0.01964128, -0.22492968, 1.04205894, -0.07864794, 0.00000006,-0.00000001, 1.09828925" />
+      <input name="value" type="matrix33"
+             value="1.22493029, -0.04205868, -0.01964128, -0.22492968, 1.04205894, -0.07864794, 0.00000006,-0.00000001, 1.09828925"/>
     </constant>
     <convert name="asVec" type="vector3">
       <input name="in" type="color3" interfacename="in" />

@@ -123,7 +123,7 @@ mat3 mx_orthonormal_basis_ltc(vec3 V, vec3 N, float NdotV)
     float lenSqr = dot(X, X);
     if (lenSqr > 0.0)
     {
-        X *= mx_inversesqrt(lenSqr);
+        X *= inversesqrt(lenSqr);
         vec3 Y = cross(N, X);
         return mat3(X, Y, N);
     }
@@ -136,7 +136,7 @@ mat3 mx_orthonormal_basis_ltc(vec3 V, vec3 N, float NdotV)
 float mx_zeltner_sheen_brdf(vec3 L, vec3 V, vec3 N, float NdotV, float roughness)
 {
     mat3 toLTC = transpose(mx_orthonormal_basis_ltc(V, N, NdotV));
-    vec3 w = mx_matrix_mul(toLTC, L);
+    vec3 w = toLTC * L;
 
     float aInv = mx_zeltner_sheen_ltc_aInv(NdotV, roughness);
     float bInv = mx_zeltner_sheen_ltc_bInv(NdotV, roughness);
@@ -173,7 +173,7 @@ vec3 mx_zeltner_sheen_importance_sample(vec2 Xi, vec3 V, vec3 N, float roughness
     vec3 w = vec3(wo.x/aInv - wo.z*bInv/aInv, wo.y / aInv, wo.z);
 
     float lenSqr = dot(w, w);
-    w *= mx_inversesqrt(lenSqr);
+    w *= inversesqrt(lenSqr);
 
     // D(w) = Do(wo) . ||M.wo||^3 / |M|
     //      = Do(wo / ||M.wo||) . ||M.wo||^4 / |M| 
@@ -183,7 +183,7 @@ vec3 mx_zeltner_sheen_importance_sample(vec2 Xi, vec3 V, vec3 N, float roughness
     pdf = max(w.z, 0.0) * M_PI_INV * mx_square(aInv * lenSqr);
 
     mat3 fromLTC = mx_orthonormal_basis_ltc(V, N, NdotV);
-    w = mx_matrix_mul(fromLTC, w);
+    w = fromLTC * w;
 
     return w;
 }

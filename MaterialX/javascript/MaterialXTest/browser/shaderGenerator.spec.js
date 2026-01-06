@@ -12,10 +12,6 @@ function createStandardSurfaceMaterial(mx)
     shaderElement.setType('surfaceshader');
     shaderElement.setNodeName(ssName);
     expect(doc.validate()).to.be.true;
-    // Release local wrappers
-    shaderElement.delete();
-    smNode.delete();
-    ssNode.delete();
     return doc;
 }
 
@@ -38,21 +34,17 @@ describe('Generate Shaders', function ()
 
         const generators = []
         if (typeof mx.EsslShaderGenerator != 'undefined')
-            generators.push(mx.EsslShaderGenerator.create());
+            generators.push(new mx.EsslShaderGenerator());
         if (typeof mx.GlslShaderGenerator != 'undefined')
-            generators.push(mx.GlslShaderGenerator.create());
+            generators.push(new mx.GlslShaderGenerator());
         if (typeof mx.MslShaderGenerator != 'undefined')
-            generators.push(mx.MslShaderGenerator.create());
+            generators.push(new mx.MslShaderGenerator());
         if (typeof mx.OslShaderGenerator != 'undefined')
-            generators.push(mx.OslShaderGenerator.create());
+            generators.push(new mx.OslShaderGenerator());
         if (typeof mx.VkShaderGenerator != 'undefined')
-            generators.push(mx.VkShaderGenerator.create());
-        if (typeof mx.WgslShaderGenerator != 'undefined')
-            generators.push(mx.WgslShaderGenerator.create());
+            generators.push(new mx.VkShaderGenerator());
         if (typeof mx.MdlShaderGenerator != 'undefined')
-            generators.push(mx.MdlShaderGenerator.create());
-        if (typeof mx.SlangShaderGenerator != 'undefined')
-            generators.push(mx.SlangShaderGenerator.create());
+            generators.push(new mx.MdlShaderGenerator());
 
         const elem = mx.findRenderableElement(doc);
         for (let gen of generators)
@@ -100,32 +92,13 @@ describe('Generate Shaders', function ()
                         console.error("--- PIXEL SHADER END ---");
                     }
                     expect(gl.getShaderParameter(glPixelShader, gl.COMPILE_STATUS)).to.equal(true);
-                    // Cleanup GL shaders
-                    gl.deleteShader(glVertexShader);
-                    gl.deleteShader(glPixelShader);
                 }
-                // Cleanup shader wrapper
-                mxShader.delete();
             }
             catch (errPtr)
             {
                 console.error("-------- Failed code generation: ----------------");
-                if (typeof mx.getExceptionMessage === 'function')
-                {
-                    console.error(mx.getExceptionMessage(errPtr));
-                }
-                else
-                {
-                    console.error(errPtr);
-                }
+                console.error(mx.getExceptionMessage(errPtr));
             }
-            // Cleanup per-generator wrappers
-            stdlib.delete();
-            genContext.delete();
-            gen.delete();
         }
-        // Cleanup element and document
-        elem.delete();
-        doc.delete();
     });
 });

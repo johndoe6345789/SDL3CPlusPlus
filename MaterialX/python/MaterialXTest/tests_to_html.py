@@ -6,13 +6,13 @@ import datetime
 import argparse
 
 try:
-    # Install pillow via pip to enable image differencing and statistics.
-    from PIL import Image, ImageChops, ImageStat
+    # Use pip to install Pillow and Image to enable image diffs
+    from PIL import Image, ImageChops
     DIFF_ENABLED = True
 except Exception:
     DIFF_ENABLED = False
 
-def computeDiff(image1Path, image2Path, imageDiffPath):
+def createDiff(image1Path, image2Path, imageDiffPath):
     try:
         if os.path.exists(imageDiffPath):
             os.remove(imageDiffPath)
@@ -29,8 +29,6 @@ def computeDiff(image1Path, image2Path, imageDiffPath):
         image2 = Image.open(image2Path).convert('RGB')
         diff = ImageChops.difference(image1, image2)
         diff.save(imageDiffPath)
-        diffStat = ImageStat.Stat(diff)
-        return sum(diffStat.rms) / (3.0 * 255.0)
     except Exception:
         if os.path.exists(imageDiffPath):
             os.remove(imageDiffPath)
@@ -52,7 +50,6 @@ def main(args=None):
     parser.add_argument('-l1', '--lang1', dest='lang1', action='store', help='First target language for comparison. Default is glsl', default="glsl")
     parser.add_argument('-l2', '--lang2', dest='lang2', action='store', help='Second target language for comparison. Default is osl', default="osl")
     parser.add_argument('-l3', '--lang3', dest='lang3', action='store', help='Third target language for comparison. Default is empty', default="")
-    parser.add_argument('-e', '--error', dest='error', action='store', help='Filter out results with RMS less than this. Negative means all results are kept.', default=-1, type=float)
 
     args = parser.parse_args(args)
 
@@ -85,7 +82,7 @@ def main(args=None):
         args.inputdir3 = args.inputdir1
 
     useThirdLang = args.lang3
-
+    
     if useThirdLang:
         fh.write("<h3>" + args.lang1 + " (in: " + args.inputdir1 + ") vs "+ args.lang2 + " (in: " + args.inputdir2 + ") vs "+ args.lang3 + " (in: " + args.inputdir3 + ")</h3>\n")
     else:
@@ -121,7 +118,7 @@ def main(args=None):
     for file1, path1 in zip(langFiles1, langPaths1):
         # Allow for just one language to be shown if source and dest are the same.
         # Otherwise add in equivalent name with dest language replacement if
-        # pointing to the same directory
+        # pointing to the same directory 
         if args.inputdir1 != args.inputdir2 or args.lang1 != args.lang2:
             file2 = file1[:-len(postFix)] + args.lang2 + ".png"
             path2 = os.path.join(args.inputdir2, path1[len(args.inputdir1)+1:])
@@ -147,25 +144,9 @@ def main(args=None):
             fullPath1 = os.path.join(path1, file1) if file1 else None
             fullPath2 = os.path.join(path2, file2) if file2 else None
             fullPath3 = os.path.join(path3, file3) if file3 else None
-            diffPath1 = diffPath2 = diffPath3 = None
-            diffRms1 = diffRms2 = diffRms3 = None
-
-            if file1 and file2 and DIFF_ENABLED and args.CREATE_DIFF:
-                diffPath1 = fullPath1[0:-8] + "_" + args.lang1 + "-1_vs_" + args.lang2 + "-2_diff.png"
-                diffRms1 = computeDiff(fullPath1, fullPath2, diffPath1)
-
-            if useThirdLang and file1 and file3 and DIFF_ENABLED and args.CREATE_DIFF:
-                diffPath2 = fullPath1[0:-8] + "_" + args.lang1 + "-1_vs_" + args.lang3 + "-3_diff.png"
-                diffRms2 = computeDiff(fullPath1, fullPath3, diffPath2)
-                diffPath3 = fullPath1[0:-8] + "_" + args.lang2 + "-2_vs_" + args.lang3 + "-3_diff.png"
-                diffRms3 = computeDiff(fullPath2, fullPath3, diffPath3)
-
-            if args.error >= 0:
-                ok1 = (not diffPath1) or (not diffRms1) or (diffRms1 and diffRms1 <= args.error)
-                ok2 = (not diffPath2) or (not diffRms2) or (diffRms2 and diffRms2 <= args.error)
-                ok3 = (not diffPath3) or (not diffRms3) or (diffRms3 and diffRms3 <= args.error)
-                if ok1 and ok2 and ok3:
-                    continue
+            diffPath1 = None
+            diffPath2 = None
+            diffPath3 = None
 
             if curPath != path1:
                 if curPath != "":
@@ -173,6 +154,16 @@ def main(args=None):
                 fh.write("<p>" + os.path.normpath(path1) + ":</p>\n")
                 fh.write("<table>\n")
                 curPath = path1
+
+            if file1 and file2 and DIFF_ENABLED and args.CREATE_DIFF:
+                diffPath1 = fullPath1[0:-8] + "_" + args.lang1 + "-1_vs_" + args.lang2 + "-2_diff.png"
+                createDiff(fullPath1, fullPath2, diffPath1)
+
+            if useThirdLang and file1 and file3 and DIFF_ENABLED and args.CREATE_DIFF:
+                diffPath2 = fullPath1[0:-8] + "_" + args.lang1 + "-1_vs_" + args.lang3 + "-3_diff.png"
+                createDiff(fullPath1, fullPath3, diffPath2)
+                diffPath3 = fullPath1[0:-8] + "_" + args.lang2 + "-2_vs_" + args.lang3 + "-3_diff.png"
+                createDiff(fullPath2, fullPath3, diffPath3)
 
             def prependFileUri(filepath: str) -> str:
                 if os.path.isabs(filepath):
@@ -212,14 +203,11 @@ def main(args=None):
                     fh.write("<br>(" + str(datetime.datetime.fromtimestamp(os.path.getmtime(fullPath3))) + ")")
                 fh.write("</td>\n")
             if diffPath1:
-                rms = " (RMS " + "%.5f" % diffRms1 + ")" if diffRms1 else ""
-                fh.write("<td align='center'>" + args.lang1.upper() + " vs. " + args.lang2.upper() + rms + "</td>\n")
+                fh.write("<td align='center'>Difference " + args.lang1 + " vs. " + args.lang2 + " </td>\n")
             if diffPath2:
-                rms = " (RMS " + "%.5f" % diffRms2 + ")" if diffRms2 else ""
-                fh.write("<td align='center'>" + args.lang1.upper() + " vs. " + args.lang3.upper() + rms + "</td>\n")
+                fh.write("<td align='center'>Difference " + args.lang1 + " vs. " + args.lang3 + " </td>\n")
             if diffPath3:
-                rms = " (RMS " + "%.5f" % diffRms3 + ")" if diffRms3 else ""
-                fh.write("<td align='center'>" + args.lang2.upper() + " vs. " + args.lang3.upper() + rms + "</td>\n")
+                fh.write("<td align='center'>Difference " + args.lang2 + " vs. " + args.lang3 + " </td>\n")
             fh.write("</tr>\n")
 
     fh.write("</table>\n")

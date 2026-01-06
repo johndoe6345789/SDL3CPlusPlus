@@ -76,12 +76,6 @@ describe('Code Examples', () =>
 
         // // Validate the value of roughness in the context of this material.
         // expect(roughness.getBoundValue(material).getValueString()).to.equal('0.5');
-        // Cleanup wrappers
-        nodeDefs.forEach(nd => nd.delete());
-        output.delete();
-        image.delete();
-        nodeGraph.delete();
-        doc.delete();
     });
 
     it('Traversing a Document Tree', async () =>
@@ -98,16 +92,29 @@ describe('Code Examples', () =>
 
         // Traverse the document tree in depth-first order.
         const elements = doc.traverseTree();
-        let imageCount = 0;
+        let elementCount = 0;
+        let nodeCount = 0;
+        let fileCount = 0;
         for (let elem of elements)
         {
+            elementCount++;
+            // Display the filename of each image node.
             if (elem.isANode('image'))
             {
-                imageCount++;
+                nodeCount++;
+                const input = elem.getInput('file');
+                if (input)
+                {
+                    fileCount++;
+                    const filename = input.getValueString();
+                    expect(elem.getName()).to.equal('image1');
+                    expect(filename).to.equal('greysphere_calibration.png');
+                }
             }
         }
-        expect(imageCount).to.greaterThan(0);
-        doc.delete();
+        expect(elementCount).to.equal(21);
+        expect(nodeCount).to.equal(1);
+        expect(fileCount).to.equal(1);
     });
 
     it('Building a MaterialX Document', async () =>
@@ -140,6 +147,5 @@ describe('Code Examples', () =>
 
         // expect(materialCount).to.equal(0);
         // expect(shaderInputCount).to.equal(0);
-        doc.delete();
     });
 });

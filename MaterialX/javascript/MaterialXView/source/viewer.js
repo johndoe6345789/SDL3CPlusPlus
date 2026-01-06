@@ -43,8 +43,7 @@ export class Scene
         const cameraFarDist = 100.0;
         const cameraFOV = 60.0;
         this._camera = new THREE.PerspectiveCamera(cameraFOV, aspectRatio, cameraNearDist, cameraFarDist);
-        this._frame = 0;
-        
+
         this.#_gltfLoader = new GLTFLoader();
 
         this.#_normalMat = new THREE.Matrix3();
@@ -91,29 +90,20 @@ export class Scene
         }
 
         this.#_rootNode = null;
-        let model = gltfData.scene;
+        const model = gltfData.scene;
         if (!model)
         {
             const geometry = new THREE.BoxGeometry(1, 1, 1);
             const material = new THREE.MeshBasicMaterial({ color: 0xdddddd });
             const cube = new THREE.Mesh(geometry, material);
-            model = new Group();
-            model.add(cube);
+            obj = new Group();
+            obj.add(geometry);
         }
         else
         {
             this.#_rootNode = model;
         }
         scene.add(model);
-
-        // Set up onBeforeRender callbacks so that we can update uniforms per object right before rendering.
-        model.traverse((child) =>
-        {
-            child.onBeforeRender = (_renderer, _scene, camera, _geometry, material, _group) =>
-            {
-                this.updateObjectUniforms(child, material, camera);
-            };
-        })
 
         console.log("- Scene load time: ", performance.now() - geomLoadTime, "ms");
 
@@ -125,6 +115,7 @@ export class Scene
 
         viewer.getMaterial().clearSoloMaterialUI();
         viewer.getMaterial().updateMaterialAssignments(viewer, "");
+        this.setUpdateTransforms();
     }
 
     //
@@ -182,7 +173,7 @@ export class Scene
 
                 if (!child.geometry.attributes.normal)
                 {
-                    var startNormalTime = performance.now();
+                    var startNormalTime = performance.new();
                     child.geometry.computeVertexNormals();
                     normalTime += performance.now() - startNormalTime;
                 }
@@ -200,20 +191,9 @@ export class Scene
                 // Use default MaterialX naming convention.
                 var startStreamTime = performance.now();
                 child.geometry.attributes.i_position = child.geometry.attributes.position;
-                if (child.geometry.attributes.normal)
-                    child.geometry.attributes.i_normal = child.geometry.attributes.normal;
-                if (child.geometry.attributes.tangent)
-                    child.geometry.attributes.i_tangent = child.geometry.attributes.tangent;
-                if (child.geometry.attributes.color)
-                    child.geometry.attributes.i_color_0 = child.geometry.attributes.color;
-                if (child.geometry.attributes.color_1)
-                    child.geometry.attributes.i_color_1 = child.geometry.attributes.color_1;
-                if (child.geometry.attributes.uv)
-                    child.geometry.attributes.i_texcoord_0 = child.geometry.attributes.uv;
-                if (child.geometry.attributes.uv1)
-                    child.geometry.attributes.i_texcoord_1 = child.geometry.attributes.uv1;
-                if (child.geometry.attributes.uv2)
-                    child.geometry.attributes.i_texcoord_2 = child.geometry.attributes.uv2;
+                child.geometry.attributes.i_normal = child.geometry.attributes.normal;
+                child.geometry.attributes.i_tangent = child.geometry.attributes.tangent;
+                child.geometry.attributes.i_texcoord_0 = child.geometry.attributes.uv;
                 streamTime += performance.now() - startStreamTime;
             }
         });
@@ -241,47 +221,40 @@ export class Scene
         orbitControls.update();
     }
 
-    updateObjectUniforms(child, material, camera)
+    setUpdateTransforms()
     {
-        if (!child || !material || !camera) return;
-        const uniforms = material.uniforms;
-        if (!uniforms) return;
-
-        uniforms.u_worldMatrix.value = child.matrixWorld;
-        uniforms.u_viewProjectionMatrix.value = this.#_viewProjMat.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
-
-        if (uniforms.u_viewPosition)
-            uniforms.u_viewPosition.value = camera.getWorldPosition(this.#_worldViewPos);
-
-        if (uniforms.u_worldInverseTransposeMatrix)
-            uniforms.u_worldInverseTransposeMatrix.value =
-                new THREE.Matrix4().setFromMatrix3(this.#_normalMat.getNormalMatrix(child.matrixWorld));
-
-        material.uniformsNeedUpdate = true;
+        this.#_updateTransforms = true;
     }
 
-    /**
-     * Update uniforms for all scene objects. This is called once per frame
-     * and updates time and frame count uniforms.
-     */
-    updateTimeUniforms() {
-        this._frame++;
+    updateTransforms()
+    {
+        // Only update on demand versus continuously.
+        // Call setUpdateTransforms() to trigger an update here.
+        // Required for: scene geometry, camera change and viewport resize. 
+        if (!this.#_updateTransforms)
+        {
+            return;
+        }
+        this.#_updateTransforms = false;
 
         const scene = this.getScene();
-        const time = performance.now() / 1000.0;
-        const frame = this._frame;
-
+        const camera = this.getCamera();
         scene.traverse((child) =>
         {
-            if (child.isMesh && child.material && child.material.uniforms)
+            if (child.isMesh)
             {
                 const uniforms = child.material.uniforms;
                 if (uniforms)
                 {
-                    if (uniforms.u_time)
-                        uniforms.u_time.value = time;
-                    if (uniforms.u_frame)
-                        uniforms.u_frame.value = frame;
+                    uniforms.u_worldMatrix.value = child.matrixWorld;
+                    uniforms.u_viewProjectionMatrix.value = this.#_viewProjMat.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+
+                    if (uniforms.u_viewPosition)
+                        uniforms.u_viewPosition.value = camera.getWorldPosition(this.#_worldViewPos);
+
+                    if (uniforms.u_worldInverseTransposeMatrix)
+                        uniforms.u_worldInverseTransposeMatrix.value =
+                            new THREE.Matrix4().setFromMatrix3(this.#_normalMat.getNormalMatrix(child.matrixWorld));
                 }
             }
         });
@@ -292,7 +265,7 @@ export class Scene
     {
         const rootNode = this.#_rootNode;
 
-        let path = [node.userData?.name || node.name];
+        let path = [node.name];
         while (node.parent)
         {
             node = node.parent;
@@ -303,7 +276,7 @@ export class Scene
                 {
                     break;
                 }
-                path.unshift(node.userData?.name || node.name);
+                path.unshift(node.name);
             }
         }
         return path;
@@ -451,6 +424,7 @@ export class Scene
     #_normalMat = new THREE.Matrix3();
     #_viewProjMat = new THREE.Matrix4();
     #_worldViewPos = new THREE.Vector3();
+    #_updateTransforms = true;
 
     // Root node of imported scene
     #_rootNode = null;
@@ -627,7 +601,7 @@ export class Material
         // Re-initialize document
         var startDocTime = performance.now();
         var doc = mx.createDocument();
-        doc.setDataLibrary(viewer.getLibrary());
+        doc.importLibrary(viewer.getLibrary());
         viewer.setDocument(doc);
 
         const fileloader = viewer.getFileLoader();
@@ -648,12 +622,7 @@ export class Material
 
         // Load material
         if (mtlxMaterial)
-            try {                
-                await mx.readFromXmlString(doc, mtlxMaterial, searchPath);
-            }
-            catch (error) {
-                console.log('Error loading material file: ', error);
-            }
+            await mx.readFromXmlString(doc, mtlxMaterial, searchPath);
         else
             Material.createFallbackMaterial(doc);
 
@@ -845,6 +814,9 @@ export class Material
         // Update scene shader assignments
         this.updateMaterialAssignments(viewer, "");
 
+        // Mark transform update
+        viewer.getScene().setUpdateTransforms();
+
         console.log("Total material time: ", (performance.now() - startTime), "ms");
     }
 
@@ -875,7 +847,7 @@ export class Material
                         assigned += viewer.getScene().updateMaterial(matassign);
                         matassign.setGeometry(temp);
                         assignedSolo = true;
-                        break;
+                        break
                     }
                 }
                 else
@@ -968,8 +940,7 @@ export class Material
             blendEquation: THREE.AddEquation,
             blendSrc: THREE.OneMinusSrcAlphaFactor,
             blendDst: THREE.SrcAlphaFactor,
-            side: THREE.DoubleSide,
-            name: elem.getName(),
+            side: THREE.DoubleSide
         });
 
         if (logDetailedTime)
@@ -1037,6 +1008,7 @@ export class Material
             }
         }
         viewer.getMaterial().updateMaterialAssignments(viewer, this._soloMaterial);
+        viewer.getScene().setUpdateTransforms();
     }
 
     //
@@ -1432,40 +1404,6 @@ export class Material
                             break;
 
                         case 'color4':
-                            uniformToUpdate = material.uniforms[name];
-                            if (uniformToUpdate && value != null)
-                            {
-                                var dummy =
-                                {
-                                    color: 0xFF0000
-                                };
-                                // Extract RGB from the color4 value
-                                const color3 = new THREE.Color();
-                                color3.fromArray(material.uniforms[name].value);
-                                dummy.color = color3.getHex();
-                                let alphaValue = material.uniforms[name].value[3]; // Get alpha component
-                                
-                                // Add the RGB color picker as one item
-                                let colorPicker = currentFolder.addColor(dummy, 'color').name(path + '.rgb')
-                                    .onChange(function (value)
-                                    {
-                                        const color3 = new THREE.Color(value);
-                                        // Update RGB while preserving alpha
-                                        material.uniforms[name].value[0] = color3.r;
-                                        material.uniforms[name].value[1] = color3.g;
-                                        material.uniforms[name].value[2] = color3.b;
-                                    });
-                                colorPicker.domElement.classList.add('peditoritem');
-                                
-                                // Add the alpha slider as a separate item at the same level
-                                var alphaObj = { value: alphaValue };
-                                let alphaSlider = currentFolder.add(alphaObj, 'value', 0, 1, 0.01).name(path + '.alpha')
-                                    .onChange(function (value)
-                                    {
-                                        material.uniforms[name].value[3] = value;
-                                    });
-                                alphaSlider.domElement.classList.add('peditoritem');
-                            }
                             break;
 
                         case 'matrix33':
@@ -1510,7 +1448,7 @@ export class Material
     Viewer class
 
     Keeps track of local scene, and property editor as well as current MaterialX document 
-    and associated material, shader and lighting information.
+    and assocaited material, shader and lighting information.
 */
 export class Viewer
 {
@@ -1538,12 +1476,12 @@ export class Viewer
         this.mx = mtlxIn;
 
         // Initialize base document
-        this.generator = this.mx.EsslShaderGenerator.create();
+        this.generator = new this.mx.EsslShaderGenerator();
         this.genContext = new this.mx.GenContext(this.generator);
 
         this.document = this.mx.createDocument();
         this.stdlib = this.mx.loadStandardLibraries(this.genContext);
-        this.document.setDataLibrary(this.stdlib);
+        this.document.importLibrary(this.stdlib);
 
         this.initializeLighting(renderer, radianceTexture, irradianceTexture, lightRigXml);
 

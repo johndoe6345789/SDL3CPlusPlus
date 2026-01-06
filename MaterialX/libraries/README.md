@@ -69,11 +69,12 @@ This folder contains the standard data libraries for MaterialX, providing declar
 
 ### Target Support
 - GLSL target support is for version 4.0 or higher.
-- OSL target support is for version 1.12.6 or higher.
-- MDL target support is for version 1.6 or higher.
+- OSL target support is for version 1.9.10 or higher.
+- MDL target support is for version 1.7.
 - Basic GLSL and MSL `lightshader` node definitions and implementations are provided for the following light types:
     - point, directional, spot
 - Shader generation does not currently support:
+    - `ambientocclusion` node.
+    - `arrayappend` node.
+    - `curveadjust` node.
     - `displacementshader` and `volumeshader` nodes for hardware shading targets (GLSL, MSL).
-    - `hextiledimage` and `hextilednormalmap` for OSL and MDL.
-    - `blur` the implementation passes through `in` unmodified in all shading languages.
