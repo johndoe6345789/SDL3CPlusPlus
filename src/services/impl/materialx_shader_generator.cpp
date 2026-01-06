@@ -127,6 +127,46 @@ std::string JoinTokens(const std::vector<std::string>& tokens, size_t limit) {
     return result;
 }
 
+void AddFallbackTokenSubstitutions(mx::StringMap& substitutions,
+                                   const std::vector<std::string>& tokensInSource,
+                                   const std::string& stageLabel,
+                                   const std::shared_ptr<ILogger>& logger) {
+    constexpr const char* kTexSamplerSignatureToken = "$texSamplerSignature";
+    constexpr const char* kTexSamplerSampler2DToken = "$texSamplerSampler2D";
+    constexpr const char* kClosureDataConstructorToken = "$closureDataConstructor";
+    constexpr const char* kTexSamplerParameterName = "tex_sampler";
+    constexpr const char* kTexSamplerSignatureReplacement = "sampler2D tex_sampler";
+    constexpr const char* kClosureDataConstructorReplacement =
+        "ClosureData(closureType, L, V, N, P, occlusion)";
+    constexpr size_t kTokenLimit = 8;
+
+    const auto tokenPresent = [&](const char* token) {
+        return std::find(tokensInSource.begin(), tokensInSource.end(), token) != tokensInSource.end();
+    };
+
+    std::vector<std::string> addedTokens;
+    const auto addIfMissing = [&](const char* token, const char* replacement) {
+        if (!tokenPresent(token)) {
+            return;
+        }
+        if (substitutions.find(token) != substitutions.end()) {
+            return;
+        }
+        substitutions[token] = replacement;
+        addedTokens.emplace_back(token);
+    };
+
+    addIfMissing(kTexSamplerSignatureToken, kTexSamplerSignatureReplacement);
+    addIfMissing(kTexSamplerSampler2DToken, kTexSamplerParameterName);
+    addIfMissing(kClosureDataConstructorToken, kClosureDataConstructorReplacement);
+
+    if (logger && !addedTokens.empty()) {
+        logger->Trace("MaterialXShaderGenerator", "Generate",
+                      "tokenSubstitutionFallback stage=" + stageLabel,
+                      "addedTokens=" + JoinTokens(addedTokens, kTokenLimit));
+    }
+}
+
 template <typename T>
 constexpr bool HasHwAiryFresnelIterations = requires(const T& options) {
     options.hwAiryFresnelIterations;
@@ -160,6 +200,7 @@ void ApplyTokenSubstitutions(const mx::ShaderGenerator& generator,
                              const std::shared_ptr<ILogger>& logger) {
     auto tokensBefore = CollectMaterialXTokens(source);
     mx::StringMap substitutions = generator.getTokenSubstitutions();
+    AddFallbackTokenSubstitutions(substitutions, tokensBefore, stageLabel, logger);
     mx::tokenSubstitution(substitutions, source);
     auto tokensAfter = CollectMaterialXTokens(source);
 
