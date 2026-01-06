@@ -1,6 +1,5 @@
 #include "sdl_window_service.hpp"
 #include "../interfaces/i_logger.hpp"
-#include <SDL3/SDL_vulkan.h>
 #include <algorithm>
 #include <cctype>
 #include <chrono>
@@ -132,7 +131,6 @@ void SdlWindowService::Shutdown() noexcept {
         DestroyWindow();
     }
 
-    SDL_Vulkan_UnloadLibrary();
     SDL_Quit();
     initialized_ = false;
 }
@@ -176,16 +174,7 @@ void SdlWindowService::CreateWindow(const WindowConfig& config) {
         }
     }
 
-    try {
-        logger_->Trace("SdlWindowService", "CreateWindow", "SDL_Vulkan_LoadLibrary(nullptr)");
-        ThrowSdlErrorIfFailed(SDL_Vulkan_LoadLibrary(nullptr), "SDL_Vulkan_LoadLibrary failed", platformService_);
-    } catch (const std::exception& e) {
-        ShowErrorDialog("Vulkan Library Load Failed",
-            std::string("Failed to load Vulkan library. Make sure Vulkan drivers are installed.\n\nError: ") + e.what());
-        throw;
-    }
-
-    uint32_t flags = SDL_WINDOW_VULKAN;
+    uint32_t flags = 0;
     if (config.resizable) {
         flags |= SDL_WINDOW_RESIZABLE;
     }

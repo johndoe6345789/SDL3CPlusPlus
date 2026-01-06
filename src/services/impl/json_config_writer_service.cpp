@@ -3,14 +3,12 @@
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
-#include <vulkan/vulkan.h>
 
 #include <array>
 #include <filesystem>
 #include <fstream>
 #include <stdexcept>
 #include <utility>
-#include <vector>
 
 namespace sdl3cpp::services::impl {
 
@@ -125,13 +123,11 @@ void JsonConfigWriterService::WriteConfig(const RuntimeConfig& config, const std
         addStringMember("shaders_directory", "shaders");
     }
 
-    std::vector<const char*> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
-    rapidjson::Value extensionArray(rapidjson::kArrayType);
-    for (const char* extension : deviceExtensions) {
-        rapidjson::Value extensionValue(extension, allocator);
-        extensionArray.PushBack(extensionValue, allocator);
-    }
-    document.AddMember("device_extensions", extensionArray, allocator);
+    rapidjson::Value bgfxObject(rapidjson::kObjectType);
+    bgfxObject.AddMember("renderer",
+                         rapidjson::Value(config.bgfx.renderer.c_str(), allocator),
+                         allocator);
+    document.AddMember("bgfx", bgfxObject, allocator);
     addStringMember("config_file", configPath.string());
 
     rapidjson::StringBuffer buffer;

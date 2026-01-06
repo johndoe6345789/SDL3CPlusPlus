@@ -62,18 +62,6 @@ public:
     virtual void LoadShaders(const std::unordered_map<std::string, ShaderPaths>& shaders) = 0;
 
     /**
-     * @brief Store the Lua-defined render graph definition.
-     *
-     * @param definition Render graph definition
-     */
-    virtual void SetRenderGraphDefinition(const RenderGraphDefinition& definition) = 0;
-
-    /**
-     * @brief Get the current render graph definition.
-     */
-    virtual const RenderGraphDefinition& GetRenderGraphDefinition() const = 0;
-
-    /**
      * @brief Upload vertex data to GPU buffer.
      *
      * @param vertices Vector of vertex data

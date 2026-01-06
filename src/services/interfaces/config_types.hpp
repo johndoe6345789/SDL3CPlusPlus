@@ -82,22 +82,8 @@ struct AtmosphericsConfig {
     float pbrMetallic = 0.1f;
 };
 
-/**
- * @brief Lua-defined render graph configuration.
- */
-struct RenderGraphConfig {
-    bool enabled = false;
-    std::string functionName = "get_render_graph";
-};
-
-enum class GraphicsBackendType {
-    Vulkan,
-    Bgfx
-};
-
-struct GraphicsBackendConfig {
-    GraphicsBackendType backend = GraphicsBackendType::Vulkan;
-    std::string bgfxRenderer = "vulkan";
+struct BgfxConfig {
+    std::string renderer = "vulkan";
 };
 
 struct MaterialXConfig {
@@ -133,12 +119,11 @@ struct RuntimeConfig {
     uint32_t height = 768;
     std::filesystem::path scriptPath;
     bool luaDebug = false;
-    std::string windowTitle = "SDL3 Vulkan Demo";
+    std::string windowTitle = "SDL3 Bgfx Demo";
     MouseGrabConfig mouseGrab{};
     InputBindings inputBindings{};
     AtmosphericsConfig atmospherics{};
-    RenderGraphConfig renderGraph{};
-    GraphicsBackendConfig graphicsBackend{};
+    BgfxConfig bgfx{};
     MaterialXConfig materialX{};
     GuiFontConfig guiFont{};
     float guiOpacity = 1.0f;

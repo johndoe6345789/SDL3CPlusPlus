@@ -36,7 +36,6 @@ public:
     bool BeginFrame(GraphicsDeviceHandle device) override;
     bool EndFrame(GraphicsDeviceHandle device) override;
     void SetViewProjection(const std::array<float, 16>& viewProj) override;
-    void SetRenderGraphDefinition(const RenderGraphDefinition& definition) override;
     void Draw(GraphicsDeviceHandle device, GraphicsPipelineHandle pipeline,
               GraphicsBufferHandle vertexBuffer, GraphicsBufferHandle indexBuffer,
               uint32_t indexOffset, uint32_t indexCount, int32_t vertexOffset,

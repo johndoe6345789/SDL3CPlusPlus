@@ -47,6 +47,8 @@ void GxmGraphicsBackend::Initialize(void* window, const GraphicsConfig& config) 
     std::cout << "GXM: Initializing GXM graphics backend" << std::endl;
 
     int err;
+    (void)window;
+    (void)config;
 
     // Initialize GXM
     SceGxmInitializeParams gxmInitParams;
@@ -462,10 +464,6 @@ bool GxmGraphicsBackend::EndFrame(GraphicsDeviceHandle device) {
 void GxmGraphicsBackend::SetViewProjection(const std::array<float, 16>& viewProj) {
     std::cout << "GXM: Setting view-projection matrix" << std::endl;
     // Matrix will be set when drawing with specific pipeline
-}
-
-void GxmGraphicsBackend::SetRenderGraphDefinition(const RenderGraphDefinition& definition) {
-    (void)definition;
 }
 
 void GxmGraphicsBackend::Draw(GraphicsDeviceHandle device, GraphicsPipelineHandle pipeline,

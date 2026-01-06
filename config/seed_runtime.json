@@ -57,9 +57,9 @@
   },
   "project_root": "../",
   "shaders_directory": "shaders",
-  "device_extensions": [
-    "VK_KHR_swapchain"
-  ],
+  "bgfx": {
+    "renderer": "vulkan"
+  },
   "atmospherics": {
     "ambient_strength": 0.01,
     "fog_density": 0.003,
@@ -73,10 +73,6 @@
     "enable_volumetric_lighting": true,
     "pbr_roughness": 0.3,
     "pbr_metallic": 0.1
-  },
-  "render_graph": {
-    "enabled": true,
-    "function": "get_render_graph"
   },
   "gui_opacity": 1.0,
   "config_file": "config/seed_runtime.json"

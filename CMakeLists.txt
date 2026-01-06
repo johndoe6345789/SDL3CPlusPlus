@@ -8,7 +8,7 @@ if(ENABLE_VITA)
     include_directories("$ENV{VITASDK}/arm-vita-eabi/include")
     link_directories("$ENV{VITASDK}/arm-vita-eabi/lib")
     # Disable SDL3 app when building for Vita
-    set(BUILD_SDL3_APP OFF CACHE BOOL "Build the SDL3 Vulkan demo" FORCE)
+    set(BUILD_SDL3_APP OFF CACHE BOOL "Build the SDL3 bgfx demo" FORCE)
     set(BUILD_SCRIPT_TESTS OFF CACHE BOOL "Build script engine tests" FORCE)
 endif()
 if(CMAKE_GENERATOR MATCHES "Ninja")
@@ -67,13 +67,13 @@ if(ENABLE_VITA)
     set(VITA_APP_NAME "SDL3App")
     set(VITA_TITLEID "ABCD00001")
 endif()
-option(BUILD_SDL3_APP "Build the SDL3 Vulkan demo" ON)
+option(BUILD_SDL3_APP "Build the SDL3 bgfx demo" ON)
 set(SDL_VERSION "SDL3" CACHE STRING "SDL version to use: SDL3 or sdl")
 set_property(CACHE SDL_VERSION PROPERTY STRINGS "SDL3" "sdl")
 
 if(BUILD_SDL3_APP AND NOT SDL_VERSION STREQUAL "SDL3")
     message(STATUS "Disabling BUILD_SDL3_APP because SDL_VERSION is set to '${SDL_VERSION}' instead of SDL3")
-    set(BUILD_SDL3_APP OFF CACHE BOOL "Build the SDL3 Vulkan demo" FORCE)
+    set(BUILD_SDL3_APP OFF CACHE BOOL "Build the SDL3 bgfx demo" FORCE)
 endif()
 
 if(ENABLE_VITA)
@@ -113,11 +113,8 @@ if(CMAKE_GENERATOR MATCHES "Ninja" OR CMAKE_GENERATOR MATCHES "Ninja Multi-Confi
     endif()
 endif()
 
-if(BUILD_SDL3_APP)
-    find_package(Vulkan REQUIRED)
-    if(NOT ENABLE_VITA)
-        find_package(shaderc CONFIG REQUIRED)
-    endif()
+if(BUILD_SDL3_APP AND NOT ENABLE_VITA)
+    find_package(shaderc CONFIG REQUIRED)
 endif()
 
 # SDL is required for both the demo app and cube_script_tests (used by audio_player)
@@ -199,39 +196,28 @@ if(BUILD_SDL3_APP)
             src/services/impl/scene_script_service.cpp
             src/services/impl/shader_script_service.cpp
             src/services/impl/materialx_shader_generator.cpp
-            src/services/impl/render_graph_script_service.cpp
             src/services/impl/gui_script_service.cpp
             src/services/impl/audio_command_service.cpp
             src/services/impl/physics_bridge_service.cpp
             src/services/impl/mesh_service.cpp
             src/services/impl/sdl_window_service.cpp
             src/services/impl/sdl_input_service.cpp
-            src/services/impl/vulkan_device_service.cpp
-            src/services/impl/swapchain_service.cpp
-            src/services/impl/pipeline_service.cpp
-            src/services/impl/buffer_service.cpp
-            src/services/impl/render_command_service.cpp
             src/services/impl/sdl_audio_service.cpp
             src/services/impl/crash_recovery_service.cpp
             src/services/impl/lifecycle_service.cpp
             src/services/impl/application_loop_service.cpp
             src/services/impl/render_coordinator_service.cpp
-            src/services/impl/gui_renderer_service.cpp
-            src/services/impl/vulkan_gui_service.cpp
             src/services/impl/null_gui_service.cpp
             src/services/impl/bullet_physics_service.cpp
             src/services/impl/scene_service.cpp
             src/services/impl/graphics_service.cpp
-            $<$<NOT:$<BOOL:${ENABLE_VITA}>>:src/services/impl/vulkan_graphics_backend.cpp>
             $<$<NOT:$<BOOL:${ENABLE_VITA}>>:src/services/impl/bgfx_graphics_backend.cpp>
             $<$<BOOL:${ENABLE_VITA}>:src/services/impl/gxm_graphics_backend.cpp>
             src/app/service_based_app.cpp
-            src/services/impl/gui_renderer.cpp
         )
     target_include_directories(sdl3_app PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
     target_link_libraries(sdl3_app PRIVATE
         ${SDL_TARGET}
-        Vulkan::Vulkan
         lua::lua
         CLI11::CLI11
         rapidjson

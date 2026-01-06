@@ -7,21 +7,7 @@ set -euo pipefail
 # Whitelisted headers that are allowed to contain macros
 # These are primarily include guards and necessary SDK configuration
 WHITELIST=(
-    "src/logging/logger.hpp"
-    "src/logging/string_utils.hpp"
-    "src/core/platform.hpp"
     "src/core/vertex.hpp"
-    "src/app/sdl3_app.hpp"
-    "src/app/sdl_macros.hpp"
-    "src/app/vulkan_api.hpp"
-    "src/app/audio_player.hpp"
-    "src/script/script_engine.hpp"
-    "src/script/mesh_loader.hpp"
-    "src/script/lua_helpers.hpp"
-    "src/script/lua_bindings.hpp"
-    "src/script/physics_bridge.hpp"
-    "src/script/gui_types.hpp"
-    "src/gui/gui_renderer.hpp"
 )
 
 # Function to check if a file is whitelisted

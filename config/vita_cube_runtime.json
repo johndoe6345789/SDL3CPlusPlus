@@ -10,10 +10,6 @@
   "scripts_directory": "scripts",
   "project_root": "../",
   "shaders_directory": "shaders",
-  "render_graph": {
-    "enabled": false,
-    "function": "get_render_graph"
-  },
   "vita_specific": {
     "analog_stick_sensitivity": 1.2,
     "gyroscope_enabled": true,

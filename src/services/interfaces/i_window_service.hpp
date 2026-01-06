@@ -47,8 +47,6 @@ public:
     /**
      * @brief Get the native SDL window handle.
      *
-     * Required for Vulkan surface creation and other low-level operations.
-     *
      * @return Pointer to SDL_Window, or nullptr if no window exists
      */
     virtual SDL_Window* GetNativeHandle() const = 0;

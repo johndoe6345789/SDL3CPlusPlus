@@ -17,11 +17,6 @@ class SDL3CppConan(ConanFile):
     BASE_REQUIRES = (
         "lua/5.4.8",
         "sdl/3.2.20",
-        "vulkan-loader/1.4.313.0",
-        "vulkan-headers/1.4.313.0",
-        "vulkan-memory-allocator/3.3.0",
-        "spirv-tools/1.4.313.0",
-        "spirv-headers/1.4.313.0",
         "shaderc/2025.3",
         "cpptrace/1.0.4",
         "ogg/1.3.5",

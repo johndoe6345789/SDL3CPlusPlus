@@ -13,26 +13,17 @@
 #include "services/impl/sdl_window_service.hpp"
 #include "services/impl/sdl_input_service.hpp"
 #include "services/impl/ecs_service.hpp"
-#include "services/impl/vulkan_device_service.hpp"
-#include "services/impl/swapchain_service.hpp"
-#include "services/impl/pipeline_service.hpp"
-#include "services/impl/buffer_service.hpp"
-#include "services/impl/render_command_service.hpp"
 #include "services/impl/graphics_service.hpp"
-#include "services/impl/vulkan_graphics_backend.hpp"
 #include "services/impl/bgfx_graphics_backend.hpp"
 #include "services/impl/script_engine_service.hpp"
 #include "services/impl/scene_script_service.hpp"
 #include "services/impl/shader_script_service.hpp"
-#include "services/impl/render_graph_script_service.hpp"
 #include "services/impl/gui_script_service.hpp"
 #include "services/impl/audio_command_service.hpp"
 #include "services/impl/physics_bridge_service.hpp"
 #include "services/impl/mesh_service.hpp"
 #include "services/impl/scene_service.hpp"
-#include "services/impl/gui_renderer_service.hpp"
 #include "services/impl/sdl_audio_service.hpp"
-#include "services/impl/vulkan_gui_service.hpp"
 #include "services/impl/null_gui_service.hpp"
 #include "services/impl/bullet_physics_service.hpp"
 #include "services/impl/crash_recovery_service.hpp"
@@ -131,34 +122,8 @@ void ServiceBasedApp::Run() {
         auto graphicsService = registry_.GetService<services::IGraphicsService>();
         if (graphicsService && windowService) {
             services::GraphicsConfig graphicsConfig;
-            if (configService) {
-                graphicsConfig.deviceExtensions = configService->GetDeviceExtensions();
-            } else {
-                graphicsConfig.deviceExtensions = {"VK_KHR_swapchain"};
-            }
-            graphicsConfig.enableValidationLayers = false;
             graphicsService->InitializeDevice(windowService->GetNativeHandle(), graphicsConfig);
             graphicsService->InitializeSwapchain();
-        }
-
-        // Initialize GUI service after graphics
-        auto guiService = registry_.GetService<services::IGuiService>();
-        bool useBgfx = false;
-        if (configService) {
-            useBgfx = configService->GetGraphicsBackendConfig().backend == services::GraphicsBackendType::Bgfx;
-        }
-        if (!useBgfx &&
-            registry_.HasService<services::IVulkanDeviceService>() &&
-            registry_.HasService<services::ISwapchainService>()) {
-            auto vulkanDeviceService = registry_.GetService<services::IVulkanDeviceService>();
-            auto swapchainService = registry_.GetService<services::ISwapchainService>();
-            if (guiService && vulkanDeviceService && swapchainService) {
-                guiService->Initialize(vulkanDeviceService->GetDevice(),
-                                     vulkanDeviceService->GetPhysicalDevice(),
-                                     swapchainService->GetSwapchainImageFormat(),
-                                     swapchainService->GetRenderPass(),
-                                     runtimeConfig_.scriptPath.parent_path());
-            }
         }
 
         // Run the main application loop with crash recovery
@@ -242,11 +207,6 @@ void ServiceBasedApp::RegisterServices() {
     registry_.RegisterService<services::IConfigService, services::impl::JsonConfigService>(
         registry_.GetService<services::ILogger>(), runtimeConfig_);
     auto configService = registry_.GetService<services::IConfigService>();
-    bool useBgfx = false;
-    if (configService) {
-        useBgfx = configService->GetGraphicsBackendConfig().backend == services::GraphicsBackendType::Bgfx;
-    }
-
     // ECS service (entt registry)
     registry_.RegisterService<services::IEcsService, services::impl::EcsService>(
         registry_.GetService<services::ILogger>());
@@ -298,12 +258,6 @@ void ServiceBasedApp::RegisterServices() {
         registry_.GetService<services::IScriptEngineService>(),
         registry_.GetService<services::IConfigService>(),
         registry_.GetService<services::ILogger>());
-    registry_.RegisterService<services::IRenderGraphScriptService, services::impl::RenderGraphScriptService>(
-        registry_.GetService<services::IScriptEngineService>(),
-        registry_.GetService<services::IConfigService>(),
-        registry_.GetService<services::ILogger>());
-    logger_->Trace("ServiceBasedApp", "RegisterServices",
-                   "Registered render graph script service");
     registry_.RegisterService<services::IGuiScriptService, services::impl::GuiScriptService>(
         registry_.GetService<services::IScriptEngineService>(),
         registry_.GetService<services::ILogger>());
@@ -315,58 +269,9 @@ void ServiceBasedApp::RegisterServices() {
         inputService->SetGuiScriptService(guiScriptService.get());
     }
 
-    std::shared_ptr<services::IGraphicsBackend> graphicsBackend;
-    if (!useBgfx) {
-        // Vulkan device service
-        registry_.RegisterService<services::IVulkanDeviceService, services::impl::VulkanDeviceService>(
-            registry_.GetService<services::ILogger>());
-
-        // Swapchain service
-        registry_.RegisterService<services::ISwapchainService, services::impl::SwapchainService>(
-            registry_.GetService<services::IVulkanDeviceService>(),
-            registry_.GetService<events::IEventBus>(),
-            registry_.GetService<services::ILogger>());
-
-        // Pipeline service
-        registry_.RegisterService<services::IPipelineService, services::impl::PipelineService>(
-            registry_.GetService<services::IVulkanDeviceService>(),
-            registry_.GetService<services::ILogger>());
-
-        // Buffer service
-        registry_.RegisterService<services::IBufferService, services::impl::BufferService>(
-            registry_.GetService<services::IVulkanDeviceService>(),
-            registry_.GetService<services::ILogger>());
-
-        // GUI renderer service (needed by render command service and GUI service)
-        registry_.RegisterService<services::IGuiRendererService, services::impl::GuiRendererService>(
-            registry_.GetService<services::ILogger>(),
-            registry_.GetService<services::IBufferService>(),
-            registry_.GetService<services::IConfigService>());
-        logger_->Trace("ServiceBasedApp", "RegisterServices",
-                       "Registered GUI renderer service before render command service");
-
-        // Render command service
-        registry_.RegisterService<services::IRenderCommandService, services::impl::RenderCommandService>(
-            registry_.GetService<services::IVulkanDeviceService>(),
-            registry_.GetService<services::ISwapchainService>(),
-            registry_.GetService<services::IPipelineService>(),
-            registry_.GetService<services::IBufferService>(),
-            registry_.GetService<services::IGuiRendererService>(),
-            std::static_pointer_cast<services::impl::JsonConfigService>(registry_.GetService<services::IConfigService>()),
-            registry_.GetService<services::ILogger>());
-
-        graphicsBackend = std::make_shared<services::impl::VulkanGraphicsBackend>(
-            registry_.GetService<services::IVulkanDeviceService>(),
-            registry_.GetService<services::ISwapchainService>(),
-            registry_.GetService<services::IRenderCommandService>(),
-            registry_.GetService<services::IPipelineService>(),
-            registry_.GetService<services::IBufferService>(),
-            registry_.GetService<services::ILogger>());
-    } else {
-        graphicsBackend = std::make_shared<services::impl::BgfxGraphicsBackend>(
-            registry_.GetService<services::IConfigService>(),
-            registry_.GetService<services::ILogger>());
-    }
+    auto graphicsBackend = std::make_shared<services::impl::BgfxGraphicsBackend>(
+        registry_.GetService<services::IConfigService>(),
+        registry_.GetService<services::ILogger>());
 
     // Graphics service (facade)
     registry_.RegisterService<services::IGraphicsService, services::impl::GraphicsService>(
@@ -381,14 +286,8 @@ void ServiceBasedApp::RegisterServices() {
         registry_.GetService<services::ILogger>());
 
     // GUI service
-    if (!useBgfx) {
-        registry_.RegisterService<services::IGuiService, services::impl::VulkanGuiService>(
-            registry_.GetService<services::ILogger>(),
-            registry_.GetService<services::IGuiRendererService>());
-    } else {
-        registry_.RegisterService<services::IGuiService, services::impl::NullGuiService>(
-            registry_.GetService<services::ILogger>());
-    }
+    registry_.RegisterService<services::IGuiService, services::impl::NullGuiService>(
+        registry_.GetService<services::ILogger>());
 
     // Physics service
     registry_.RegisterService<services::IPhysicsService, services::impl::BulletPhysicsService>(
@@ -400,7 +299,6 @@ void ServiceBasedApp::RegisterServices() {
         registry_.GetService<services::IGraphicsService>(),
         registry_.GetService<services::ISceneScriptService>(),
         registry_.GetService<services::IShaderScriptService>(),
-        registry_.GetService<services::IRenderGraphScriptService>(),
         registry_.GetService<services::IGuiScriptService>(),
         registry_.GetService<services::IGuiService>(),
         registry_.GetService<services::ISceneService>());

@@ -98,15 +98,8 @@ bgfx::RendererType::Enum BgfxGraphicsBackend::ResolveRendererType() const {
     if (!configService_) {
         return bgfx::RendererType::Vulkan;
     }
-    const auto& config = configService_->GetGraphicsBackendConfig();
-    bgfx::RendererType::Enum renderer = RendererFromString(config.bgfxRenderer);
-    if (renderer != bgfx::RendererType::Vulkan) {
-        if (logger_) {
-            logger_->Warn("BgfxGraphicsBackend: Forcing bgfx renderer to Vulkan");
-        }
-        renderer = bgfx::RendererType::Vulkan;
-    }
-    return renderer;
+    const auto& config = configService_->GetBgfxConfig();
+    return RendererFromString(config.renderer);
 }
 
 void BgfxGraphicsBackend::Initialize(void* window, const GraphicsConfig& config) {
@@ -116,6 +109,7 @@ void BgfxGraphicsBackend::Initialize(void* window, const GraphicsConfig& config)
     if (initialized_) {
         return;
     }
+    (void)config;
 
     SDL_Window* sdlWindow = static_cast<SDL_Window*>(window);
     int width = 0;
@@ -367,13 +361,6 @@ bool BgfxGraphicsBackend::EndFrame(GraphicsDeviceHandle device) {
 
 void BgfxGraphicsBackend::SetViewProjection(const std::array<float, 16>& viewProj) {
     viewProj_ = viewProj;
-}
-
-void BgfxGraphicsBackend::SetRenderGraphDefinition(const RenderGraphDefinition& definition) {
-    if (logger_) {
-        logger_->Trace("BgfxGraphicsBackend", "SetRenderGraphDefinition",
-                       "passes=" + std::to_string(definition.passes.size()));
-    }
 }
 
 void BgfxGraphicsBackend::Draw(GraphicsDeviceHandle device, GraphicsPipelineHandle pipeline,

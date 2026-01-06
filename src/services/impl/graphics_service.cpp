@@ -50,8 +50,7 @@ void GraphicsService::Shutdown() noexcept {
 void GraphicsService::InitializeDevice(SDL_Window* window, const GraphicsConfig& config) {
     logger_->Trace("GraphicsService", "InitializeDevice",
                    "windowIsNull=" + std::string(window ? "false" : "true") +
-                   ", deviceExtensions.size=" + std::to_string(config.deviceExtensions.size()) +
-                   ", enableValidationLayers=" + std::string(config.enableValidationLayers ? "true" : "false"));
+                   ", preferredFormat=" + std::to_string(config.preferredFormat));
 
     if (!initialized_) {
         throw std::runtime_error("Graphics service not initialized");
@@ -104,22 +103,6 @@ void GraphicsService::LoadShaders(const std::unordered_map<std::string, ShaderPa
         auto pipeline = backend_->CreatePipeline(device_, key, paths);
         pipelines_[key] = pipeline;
     }
-}
-
-void GraphicsService::SetRenderGraphDefinition(const RenderGraphDefinition& definition) {
-    logger_->Trace("GraphicsService", "SetRenderGraphDefinition",
-                   "resources=" + std::to_string(definition.resources.size()) +
-                   ", passes=" + std::to_string(definition.passes.size()));
-
-    renderGraphDefinition_ = definition;
-    if (backend_) {
-        backend_->SetRenderGraphDefinition(definition);
-    }
-}
-
-const RenderGraphDefinition& GraphicsService::GetRenderGraphDefinition() const {
-    logger_->Trace("GraphicsService", "GetRenderGraphDefinition");
-    return renderGraphDefinition_;
 }
 
 void GraphicsService::UploadVertexData(const std::vector<core::Vertex>& vertices) {

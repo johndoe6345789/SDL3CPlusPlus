@@ -33,7 +33,7 @@ using GraphicsTextureHandle = void*;
  * @brief Graphics backend interface for abstracted rendering.
  *
  * Provides backend-agnostic methods for device management, pipelines, buffers, and rendering.
- * Implementations handle Vulkan or GXM specifics.
+ * Implementations handle platform-specific details (bgfx, GXM, etc.).
  */
 class IGraphicsBackend {
 public:
@@ -145,13 +145,6 @@ public:
      * @param viewProj View-projection matrix
      */
     virtual void SetViewProjection(const std::array<float, 16>& viewProj) = 0;
-
-    /**
-     * @brief Set the render graph definition (optional).
-     *
-     * @param definition Render graph definition
-     */
-    virtual void SetRenderGraphDefinition(const RenderGraphDefinition& definition) = 0;
 
     /**
      * @brief Draw with a pipeline.

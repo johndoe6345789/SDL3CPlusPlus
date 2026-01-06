@@ -10,9 +10,9 @@
   "scripts_directory": "scripts",
   "project_root": "../",
   "shaders_directory": "shaders",
-  "device_extensions": [
-    "VK_KHR_swapchain"
-  ],
+  "bgfx": {
+    "renderer": "vulkan"
+  },
   "mouse_grab": {
     "enabled": true,
     "grab_on_click": false,

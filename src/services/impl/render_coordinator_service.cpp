@@ -6,7 +6,6 @@ RenderCoordinatorService::RenderCoordinatorService(std::shared_ptr<ILogger> logg
                                                    std::shared_ptr<IGraphicsService> graphicsService,
                                                    std::shared_ptr<ISceneScriptService> sceneScriptService,
                                                    std::shared_ptr<IShaderScriptService> shaderScriptService,
-                                                   std::shared_ptr<IRenderGraphScriptService> renderGraphScriptService,
                                                    std::shared_ptr<IGuiScriptService> guiScriptService,
                                                    std::shared_ptr<IGuiService> guiService,
                                                    std::shared_ptr<ISceneService> sceneService)
@@ -14,7 +13,6 @@ RenderCoordinatorService::RenderCoordinatorService(std::shared_ptr<ILogger> logg
       graphicsService_(std::move(graphicsService)),
       sceneScriptService_(std::move(sceneScriptService)),
       shaderScriptService_(std::move(shaderScriptService)),
-      renderGraphScriptService_(std::move(renderGraphScriptService)),
       guiScriptService_(std::move(guiScriptService)),
       guiService_(std::move(guiService)),
       sceneService_(std::move(sceneService)) {
@@ -23,7 +21,6 @@ RenderCoordinatorService::RenderCoordinatorService(std::shared_ptr<ILogger> logg
                        "graphicsService=" + std::string(graphicsService_ ? "set" : "null") +
                        ", sceneScriptService=" + std::string(sceneScriptService_ ? "set" : "null") +
                        ", shaderScriptService=" + std::string(shaderScriptService_ ? "set" : "null") +
-                       ", renderGraphScriptService=" + std::string(renderGraphScriptService_ ? "set" : "null") +
                        ", guiScriptService=" + std::string(guiScriptService_ ? "set" : "null") +
                        ", guiService=" + std::string(guiService_ ? "set" : "null") +
                        ", sceneService=" + std::string(sceneService_ ? "set" : "null"),
@@ -42,21 +39,6 @@ void RenderCoordinatorService::RenderFrame(float time) {
             logger_->Trace("RenderCoordinatorService", "RenderFrame", "", "Exiting");
         }
         return;
-    }
-
-    if (!renderGraphInitialized_) {
-        renderGraphInitialized_ = true;
-        if (renderGraphScriptService_ && renderGraphScriptService_->IsEnabled()) {
-            if (logger_) {
-                logger_->Trace("RenderCoordinatorService", "RenderFrame",
-                               "Loading render graph from Lua");
-            }
-            auto graph = renderGraphScriptService_->LoadRenderGraph();
-            graphicsService_->SetRenderGraphDefinition(graph);
-        } else if (logger_) {
-            logger_->Trace("RenderCoordinatorService", "RenderFrame",
-                           "Render graph disabled or unavailable");
-        }
     }
 
     if (!shadersLoaded_) {

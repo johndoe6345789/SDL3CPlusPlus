@@ -50,7 +50,7 @@ CommandLineOptions CommandLineService::Parse(int argc, char** argv) {
     bool dumpRuntimeJson = false;
     bool traceRuntime = false;
 
-    CLI::App app("SDL3 + Vulkan runtime helper");
+    CLI::App app("SDL3 + bgfx runtime helper");
     app.add_option("-j,--json-file-in", jsonInputText, "Path to a runtime JSON config")
         ->check(CLI::ExistingFile);
     app.add_option("-s,--create-seed-json", seedOutputText,

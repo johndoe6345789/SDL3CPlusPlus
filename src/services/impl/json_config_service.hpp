@@ -75,7 +75,6 @@ public:
         }
         return config_.windowTitle;
     }
-    std::vector<const char*> GetDeviceExtensions() const override;
     const InputBindings& GetInputBindings() const override {
         if (logger_) {
             logger_->Trace("JsonConfigService", "GetInputBindings");
@@ -88,17 +87,11 @@ public:
         }
         return config_.mouseGrab;
     }
-    const RenderGraphConfig& GetRenderGraphConfig() const override {
+    const BgfxConfig& GetBgfxConfig() const override {
         if (logger_) {
-            logger_->Trace("JsonConfigService", "GetRenderGraphConfig");
+            logger_->Trace("JsonConfigService", "GetBgfxConfig");
         }
-        return config_.renderGraph;
-    }
-    const GraphicsBackendConfig& GetGraphicsBackendConfig() const override {
-        if (logger_) {
-            logger_->Trace("JsonConfigService", "GetGraphicsBackendConfig");
-        }
-        return config_.graphicsBackend;
+        return config_.bgfx;
     }
     const MaterialXConfig& GetMaterialXConfig() const override {
         if (logger_) {

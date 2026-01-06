@@ -5,7 +5,6 @@
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
 #include <rapidjson/prettywriter.h>
-#include <vulkan/vulkan.h>
 #include <array>
 #include <algorithm>
 #include <cctype>
@@ -15,34 +14,6 @@
 #include <stdexcept>
 
 namespace sdl3cpp::services::impl {
-
-// Default Vulkan device extensions
-static const std::vector<const char*> kDeviceExtensions = {
-    VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-};
-
-GraphicsBackendType ParseBackendType(const std::string& value) {
-    std::string lower = value;
-    std::transform(lower.begin(), lower.end(), lower.begin(),
-                   [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-    if (lower == "vulkan") {
-        return GraphicsBackendType::Vulkan;
-    }
-    if (lower == "bgfx") {
-        return GraphicsBackendType::Bgfx;
-    }
-    throw std::runtime_error("graphics_backend.type must be 'vulkan' or 'bgfx'");
-}
-
-std::string BackendTypeToString(GraphicsBackendType type) {
-    switch (type) {
-        case GraphicsBackendType::Vulkan:
-            return "vulkan";
-        case GraphicsBackendType::Bgfx:
-            return "bgfx";
-    }
-    return "vulkan";
-}
 
 JsonConfigService::JsonConfigService(std::shared_ptr<ILogger> logger, const char* argv0)
     : logger_(std::move(logger)), configJson_(), config_(RuntimeConfig{}) {
@@ -78,13 +49,6 @@ JsonConfigService::JsonConfigService(std::shared_ptr<ILogger> logger, const Runt
                        ", config.windowTitle=" + config.windowTitle);
     }
     logger_->Info("JsonConfigService initialized with explicit configuration");
-}
-
-std::vector<const char*> JsonConfigService::GetDeviceExtensions() const {
-    if (logger_) {
-        logger_->Trace("JsonConfigService", "GetDeviceExtensions");
-    }
-    return kDeviceExtensions;
 }
 
 std::filesystem::path JsonConfigService::FindScriptPath(const char* argv0) {
@@ -388,47 +352,17 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
         readFloat("pbr_metallic", config.atmospherics.pbrMetallic);
     }
 
-    if (document.HasMember("render_graph")) {
-        const auto& renderGraphValue = document["render_graph"];
-        if (!renderGraphValue.IsObject()) {
-            throw std::runtime_error("JSON member 'render_graph' must be an object");
+    if (document.HasMember("bgfx")) {
+        const auto& bgfxValue = document["bgfx"];
+        if (!bgfxValue.IsObject()) {
+            throw std::runtime_error("JSON member 'bgfx' must be an object");
         }
-
-        if (renderGraphValue.HasMember("enabled")) {
-            const auto& value = renderGraphValue["enabled"];
-            if (!value.IsBool()) {
-                throw std::runtime_error("JSON member 'render_graph.enabled' must be a boolean");
-            }
-            config.renderGraph.enabled = value.GetBool();
-        }
-
-        if (renderGraphValue.HasMember("function")) {
-            const auto& value = renderGraphValue["function"];
+        if (bgfxValue.HasMember("renderer")) {
+            const auto& value = bgfxValue["renderer"];
             if (!value.IsString()) {
-                throw std::runtime_error("JSON member 'render_graph.function' must be a string");
+                throw std::runtime_error("JSON member 'bgfx.renderer' must be a string");
             }
-            config.renderGraph.functionName = value.GetString();
-        }
-    }
-
-    if (document.HasMember("graphics_backend")) {
-        const auto& backendValue = document["graphics_backend"];
-        if (!backendValue.IsObject()) {
-            throw std::runtime_error("JSON member 'graphics_backend' must be an object");
-        }
-        if (backendValue.HasMember("type")) {
-            const auto& value = backendValue["type"];
-            if (!value.IsString()) {
-                throw std::runtime_error("JSON member 'graphics_backend.type' must be a string");
-            }
-            config.graphicsBackend.backend = ParseBackendType(value.GetString());
-        }
-        if (backendValue.HasMember("bgfx_renderer")) {
-            const auto& value = backendValue["bgfx_renderer"];
-            if (!value.IsString()) {
-                throw std::runtime_error("JSON member 'graphics_backend.bgfx_renderer' must be a string");
-            }
-            config.graphicsBackend.bgfxRenderer = value.GetString();
+            config.bgfx.renderer = value.GetString();
         }
     }
 
@@ -583,21 +517,11 @@ std::string JsonConfigService::BuildConfigJson(const RuntimeConfig& config,
                               allocator);
     document.AddMember("mouse_grab", mouseGrabObject, allocator);
 
-    rapidjson::Value renderGraphObject(rapidjson::kObjectType);
-    renderGraphObject.AddMember("enabled", config.renderGraph.enabled, allocator);
-    renderGraphObject.AddMember("function",
-                                rapidjson::Value(config.renderGraph.functionName.c_str(), allocator),
-                                allocator);
-    document.AddMember("render_graph", renderGraphObject, allocator);
-
-    rapidjson::Value backendObject(rapidjson::kObjectType);
-    backendObject.AddMember("type",
-                            rapidjson::Value(BackendTypeToString(config.graphicsBackend.backend).c_str(), allocator),
-                            allocator);
-    backendObject.AddMember("bgfx_renderer",
-                            rapidjson::Value(config.graphicsBackend.bgfxRenderer.c_str(), allocator),
-                            allocator);
-    document.AddMember("graphics_backend", backendObject, allocator);
+    rapidjson::Value bgfxObject(rapidjson::kObjectType);
+    bgfxObject.AddMember("renderer",
+                         rapidjson::Value(config.bgfx.renderer.c_str(), allocator),
+                         allocator);
+    document.AddMember("bgfx", bgfxObject, allocator);
 
     rapidjson::Value materialObject(rapidjson::kObjectType);
     materialObject.AddMember("enabled", config.materialX.enabled, allocator);
@@ -696,12 +620,6 @@ std::string JsonConfigService::BuildConfigJson(const RuntimeConfig& config,
 
     document.AddMember("gui_opacity", config.guiOpacity, allocator);
 
-    rapidjson::Value extensionArray(rapidjson::kArrayType);
-    for (const char* extension : kDeviceExtensions) {
-        rapidjson::Value extensionValue(extension, allocator);
-        extensionArray.PushBack(extensionValue, allocator);
-    }
-    document.AddMember("device_extensions", extensionArray, allocator);
     if (!configPath.empty()) {
         addStringMember("config_file", configPath.string());
     }

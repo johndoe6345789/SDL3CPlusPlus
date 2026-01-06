@@ -1268,7 +1268,9 @@ return {{
                         "scripts_directory": "scripts",
                         "project_root": "../",
                         "shaders_directory": "shaders",
-                        "device_extensions": ["VK_KHR_swapchain"],
+                        "bgfx": {
+                            "renderer": "vulkan"
+                        },
                         "mouse_grab": {
                             "enabled": False
                         }
@@ -1329,7 +1331,9 @@ return {{
                         "scripts_directory": "scripts",
                         "project_root": "../",
                         "shaders_directory": "shaders",
-                        "device_extensions": ["VK_KHR_swapchain"],
+                        "bgfx": {
+                            "renderer": "vulkan"
+                        },
                         "config_file": f"config/{project_id}_runtime.json",
                         "mouse_grab": {
                             "enabled": False

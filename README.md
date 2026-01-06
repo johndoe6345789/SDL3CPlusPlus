@@ -1,8 +1,8 @@
 # SDL3CPlusPlus
-SDL3 + Vulkan demo app with Lua-driven runtime configuration, audio playback, and a small GUI sample.
+SDL3 + bgfx demo app with Lua-driven runtime configuration, audio playback, and a small GUI sample.
 
 ## Overview
-- Renders a spinning cube with Vulkan via SDL3.
+- Renders a spinning cube with bgfx (Vulkan renderer by default) via SDL3.
 - Lua scripts control behavior under `scripts/`.
 - JSON runtime configs live in `config/`.
 - Optional helpers for audio asset generation and workflow diagnostics.
@@ -12,7 +12,7 @@ SDL3 + Vulkan demo app with Lua-driven runtime configuration, audio playback, an
 - Conan for dependency resolution.
 - CMake and a C++ compiler.
 - Ninja (default generator) or Visual Studio 2022 on Windows.
-- Vulkan runtime/driver to run the demo.
+- Vulkan runtime/driver for the default bgfx renderer (or set `bgfx.renderer` in config).
 
 ## Quick start
 1. `python scripts/dev_commands.py dependencies`
@@ -88,7 +88,7 @@ Example:
 ```
 
 ## GUI demo
-`scripts/gui_demo.lua` paints the Lua GUI framework on top of the Vulkan scene. Launch it as `python scripts/dev_commands.py run -- --json-file-in config/gui_runtime.json` or register that config via `sdl3_app --set-default-json`.
+`scripts/gui_demo.lua` exercises the Lua GUI framework; rendering hooks are currently stubbed while bgfx GUI integration is wired up. Launch it as `python scripts/dev_commands.py run -- --json-file-in config/gui_runtime.json` or register that config via `sdl3_app --set-default-json`.
 
 ## Audio assets
 Install the dependencies that power `scripts/generate_audio_assets.py`:

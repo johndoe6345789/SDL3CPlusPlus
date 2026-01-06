@@ -48,11 +48,6 @@ public:
      */
     virtual std::string GetWindowTitle() const = 0;
 
-    /**
-     * @brief Get required Vulkan device extensions.
-     * @return List of extension names
-     */
-    virtual std::vector<const char*> GetDeviceExtensions() const = 0;
 
     /**
      * @brief Get configured input bindings.
@@ -67,16 +62,10 @@ public:
     virtual const MouseGrabConfig& GetMouseGrabConfig() const = 0;
 
     /**
-     * @brief Get render graph settings.
-     * @return Render graph configuration
+     * @brief Get bgfx settings.
+     * @return Bgfx configuration
      */
-    virtual const RenderGraphConfig& GetRenderGraphConfig() const = 0;
-
-    /**
-     * @brief Get graphics backend settings.
-     * @return Graphics backend configuration
-     */
-    virtual const GraphicsBackendConfig& GetGraphicsBackendConfig() const = 0;
+    virtual const BgfxConfig& GetBgfxConfig() const = 0;
 
     /**
      * @brief Get MaterialX settings.
