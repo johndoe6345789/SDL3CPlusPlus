@@ -7,6 +7,7 @@
 
 #include <bgfx/bgfx.h>
 
+#include <array>
 #include <cstdint>
 #include <filesystem>
 #include <functional>
@@ -147,10 +148,12 @@ private:
 
     bgfx::ProgramHandle program_ = BGFX_INVALID_HANDLE;
     bgfx::UniformHandle sampler_ = BGFX_INVALID_HANDLE;
+    bgfx::UniformHandle modelViewProjUniform_ = BGFX_INVALID_HANDLE;
     bgfx::TextureHandle whiteTexture_ = BGFX_INVALID_HANDLE;
     bgfx::VertexLayout layout_;
 
     std::vector<ScissorRect> scissorStack_;
+    std::array<float, 16> viewProjection_{};
     int defaultFontSize_ = 16;
     uint32_t frameWidth_ = 0;
     uint32_t frameHeight_ = 0;

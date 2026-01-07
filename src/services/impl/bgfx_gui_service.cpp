@@ -35,7 +35,9 @@ layout(location = 2) in vec2 inTexCoord;
 layout(location = 0) out vec4 fragColor;
 layout(location = 1) out vec2 fragTexCoord;
 
-uniform mat4 u_modelViewProj;
+layout(set = 0, binding = 1) uniform GuiUniforms {
+    mat4 u_modelViewProj;
+};
 
 void main() {
     fragColor = inColor;
@@ -193,6 +195,10 @@ void BgfxGuiService::Shutdown() noexcept {
         bgfx::destroy(sampler_);
         sampler_ = BGFX_INVALID_HANDLE;
     }
+    if (bgfx::isValid(modelViewProjUniform_)) {
+        bgfx::destroy(modelViewProjUniform_);
+        modelViewProjUniform_ = BGFX_INVALID_HANDLE;
+    }
 
     if (freeType_) {
         if (freeType_->face) {
@@ -214,12 +220,17 @@ void BgfxGuiService::InitializeResources() {
         return;
     }
 
+    if (logger_) {
+        logger_->Trace("BgfxGuiService", "InitializeResources", "Creating GUI shader uniforms");
+    }
+
     layout_.begin()
         .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
         .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Float)
         .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
         .end();
 
+    modelViewProjUniform_ = bgfx::createUniform("u_modelViewProj", bgfx::UniformType::Mat4);
     sampler_ = bgfx::createUniform("s_tex", bgfx::UniformType::Sampler);
     program_ = CreateProgram(kGuiVertexSource, kGuiFragmentSource);
 
@@ -295,6 +306,8 @@ void BgfxGuiService::EnsureFontReady() {
 }
 
 void BgfxGuiService::ApplyGuiView(uint32_t width, uint32_t height) {
+    const uint32_t previousWidth = frameWidth_;
+    const uint32_t previousHeight = frameHeight_;
     frameWidth_ = width;
     frameHeight_ = height;
 
@@ -311,6 +324,12 @@ void BgfxGuiService::ApplyGuiView(uint32_t width, uint32_t height) {
                  100.0f,
                  0.0f,
                  homogeneousDepth);
+    std::copy(std::begin(proj), std::end(proj), viewProjection_.begin());
+
+    if (logger_ && (previousWidth != width || previousHeight != height)) {
+        logger_->Trace("BgfxGuiService", "ApplyGuiView",
+                       "viewport=" + std::to_string(width) + "x" + std::to_string(height));
+    }
 
     bgfx::setViewTransform(viewId_, view, proj);
     bgfx::setViewRect(viewId_, 0, 0,
@@ -593,6 +612,9 @@ void BgfxGuiService::SubmitQuad(const GuiVertex& v0,
 
     SetScissor(scissor);
     bgfx::setTransform(identity);
+    if (bgfx::isValid(modelViewProjUniform_)) {
+        bgfx::setUniform(modelViewProjUniform_, viewProjection_.data());
+    }
     bgfx::setTexture(0, sampler_, texture);
     bgfx::setVertexBuffer(0, &tvb, 0, 4);
     bgfx::setIndexBuffer(&tib, 0, 6);
@@ -808,6 +830,11 @@ bgfx::ShaderHandle BgfxGuiService::CreateShader(const std::string& label,
     shaderc::Compiler compiler;
     shaderc::CompileOptions options;
     options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
+
+    if (logger_) {
+        logger_->Trace("BgfxGuiService", "CreateShader",
+                       "label=" + label + ", sourceLength=" + std::to_string(source.size()));
+    }
 
     shaderc_shader_kind kind = isVertex ? shaderc_vertex_shader : shaderc_fragment_shader;
     auto result = compiler.CompileGlslToSpv(source, kind, label.c_str(), options);
