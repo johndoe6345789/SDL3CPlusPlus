@@ -1,3 +1,6 @@
+local scene_framework = require("scene_framework")
+local math3d = require("math3d")
+
 local cube_mesh_info = {
     path = "models/cube.stl",
     loaded = false,
@@ -30,50 +33,14 @@ local function build_double_sided_indices(indices)
     return doubled
 end
 
--- Generate a tessellated plane for floor/ceiling with proper vertex count
+-- Delegate to framework for plane mesh generation
 local function generate_plane_mesh(width, depth, subdivisions, color)
-    local vertices = {}
+    -- Framework returns 0-based indices, convert to 1-based for Lua
+    local vertices, indices_zero = scene_framework.generate_plane_mesh(width, depth, subdivisions, color)
     local indices = {}
-    
-    local step_x = width / subdivisions
-    local step_z = depth / subdivisions
-    local half_width = width * 0.5
-    local half_depth = depth * 0.5
-    
-    -- Generate vertices (Lua is 1-indexed)
-    for z = 0, subdivisions do
-        for x = 0, subdivisions do
-            local px = -half_width + x * step_x
-            local pz = -half_depth + z * step_z
-            vertices[#vertices + 1] = {
-                position = {px, 0.0, pz},
-                normal = {0.0, 1.0, 0.0},  -- Up normal
-                color = color or {1.0, 1.0, 1.0},
-                texcoord = {x / subdivisions, z / subdivisions},
-            }
-        end
+    for i = 1, #indices_zero do
+        indices[i] = indices_zero[i] + 1
     end
-    
-    -- Generate indices (two triangles per quad, convert to 1-based for Lua)
-    for z = 0, subdivisions - 1 do
-        for x = 0, subdivisions - 1 do
-            -- Calculate 0-based indices first
-            local i0 = z * (subdivisions + 1) + x
-            local i1 = i0 + 1
-            local i2 = i0 + (subdivisions + 1)
-            local i3 = i2 + 1
-            
-            -- Convert to 1-based indices for Lua
-            indices[#indices + 1] = i0 + 1
-            indices[#indices + 1] = i2 + 1
-            indices[#indices + 1] = i1 + 1
-            
-            indices[#indices + 1] = i1 + 1
-            indices[#indices + 1] = i2 + 1
-            indices[#indices + 1] = i3 + 1
-        end
-    end
-    
     return vertices, indices
 end
 
@@ -758,24 +725,14 @@ local function resolve_material_shader()
     error("MaterialX enabled but no materialx_materials shader_key found")
 end
 
+-- Delegate to framework
 local function build_static_model_matrix(position, scale)
-    local translation = math3d.translation(position[1], position[2], position[3])
-    local scaling = scale_matrix(scale[1], scale[2], scale[3])
-    return math3d.multiply(translation, scaling)
+    return scene_framework.build_static_model_matrix(position, scale)
 end
 
+-- Apply color using current cube_vertices
 local function apply_color_to_vertices(color)
-    local colored_vertices = {}
-    for i = 1, #cube_vertices do
-        local v = cube_vertices[i]
-        colored_vertices[i] = {
-            position = v.position,
-            normal = v.normal,
-            color = color,
-            texcoord = v.texcoord,
-        }
-    end
-    return colored_vertices
+    return scene_framework.apply_color_to_vertices(cube_vertices, color)
 end
 
 local function create_static_cube(position, scale, color, shader_key, object_type)
