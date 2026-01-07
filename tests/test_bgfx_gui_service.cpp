@@ -211,11 +211,32 @@ int main() {
         Assert(service.IsWhiteTextureReady(), "white texture should be created", failures);
         Assert(logger->HasSubstring("Using MaterialX GUI shaders"),
                "expected MaterialX GUI shader path", failures);
+        
+        // Critical: Check that uniforms are initialized before actual rendering
+        Assert(!logger->HasErrorSubstring("modelViewProjUniform_ is invalid"),
+               "modelViewProj uniform should be valid after initialization", failures);
 
         if (!service.IsProgramReady() &&
             !logger->HasErrorSubstring("bgfx::createProgram failed to link shaders")) {
             Assert(false, "missing bgfx::createProgram link failure log", failures);
         }
+        
+        // Test actual rendering to catch uniform issues
+        std::vector<sdl3cpp::services::GuiCommand> testCommands;
+        sdl3cpp::services::GuiCommand cmd;
+        cmd.type = sdl3cpp::services::GuiCommand::Type::Rect;
+        cmd.rect.x = 10.0f;
+        cmd.rect.y = 10.0f;
+        cmd.rect.width = 100.0f;
+        cmd.rect.height = 50.0f;
+        cmd.color = {1.0f, 1.0f, 1.0f, 1.0f};
+        testCommands.push_back(cmd);
+        
+        service.PrepareFrame(testCommands, 800, 600);
+        
+        // After rendering, the uniform should still be valid
+        Assert(!logger->HasErrorSubstring("modelViewProjUniform_ is invalid"),
+               "modelViewProj uniform should remain valid during rendering", failures);
 
         service.Shutdown();
     } catch (const std::exception& ex) {
