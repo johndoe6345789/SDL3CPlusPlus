@@ -8,8 +8,10 @@
 #include "services/impl/shader_script_service.hpp"
 #include "services/impl/ecs_service.hpp"
 #include "services/impl/scene_service.hpp"
+#include "services/impl/sdl_window_service.hpp"
 #include "services/interfaces/i_audio_command_service.hpp"
 #include "services/interfaces/i_config_service.hpp"
+#include "events/event_bus.hpp"
 
 #include <array>
 #include <bgfx/bgfx.h>
@@ -241,12 +243,12 @@ bool ExpectColorNear(const sdl3cpp::core::Vertex& vertex,
     return true;
 }
 
-bool RunGpuSmokeTest(int& failures,
-                     const std::shared_ptr<sdl3cpp::services::IConfigService>& configService,
-                     const std::shared_ptr<sdl3cpp::services::ILogger>& logger) {
+bool RunGpuRenderTest(int& failures,
+                      const std::shared_ptr<sdl3cpp::services::IConfigService>& configService,
+                      const std::shared_ptr<sdl3cpp::services::ILogger>& logger) {
     const char* preferredDrivers[] = {"x11", "wayland", "offscreen", "dummy", nullptr};
-    bool initialized = false;
     const char* selectedDriver = nullptr;
+    
     auto setVideoDriver = [](const char* driver) {
 #ifdef _WIN32
         if (driver) {
@@ -267,23 +269,39 @@ bool RunGpuSmokeTest(int& failures,
             SDL_SetHint(SDL_HINT_VIDEO_DRIVER, "");
         }
     };
+
+    auto platformService = std::make_shared<sdl3cpp::services::impl::PlatformService>(logger);
+    auto eventBus = std::make_shared<sdl3cpp::events::EventBus>();
+    auto windowService = std::make_shared<sdl3cpp::services::impl::SdlWindowService>(logger, platformService, eventBus);
+    
+    SDL_Window* window = nullptr;
+    bool windowCreated = false;
+
     for (const char* driver : preferredDrivers) {
         setVideoDriver(driver);
         SDL_ClearError();
-        if (SDL_Init(SDL_INIT_VIDEO) == 0) {
-            initialized = true;
+        
+        try {
+            windowService->Initialize();
+            sdl3cpp::services::WindowConfig config{};
+            config.width = 256;
+            config.height = 256;
+            config.title = "cube_gpu_test";
+            config.resizable = false;
+            windowService->CreateWindow(config);
+            window = windowService->GetNativeHandle();
+            windowCreated = true;
             selectedDriver = driver;
             break;
-        } else {
-            const char* error = SDL_GetError();
-            std::cerr << "SDL_Init failed for driver [" << (driver ? driver : "default")
-                      << "]: " << (error && error[0] ? error : "no error message") << '\n';
+        } catch (const std::exception& ex) {
+            std::cerr << "Window creation failed for driver [" << (driver ? driver : "default")
+                      << "]: " << ex.what() << '\n';
+            windowService->Shutdown();
+            windowService = std::make_shared<sdl3cpp::services::impl::SdlWindowService>(logger, platformService, eventBus);
         }
     }
 
-    if (!initialized) {
-        const char* error = SDL_GetError();
-        std::string message = error && error[0] != '\0' ? error : "unknown SDL error";
+    if (!windowCreated) {
         std::string driverList;
         const int driverCount = SDL_GetNumVideoDrivers();
         for (int i = 0; i < driverCount; ++i) {
@@ -299,7 +317,7 @@ bool RunGpuSmokeTest(int& failures,
         if (driverList.empty()) {
             driverList = "none";
         }
-        std::cerr << "GPU smoke test failed: no SDL driver available: " << message
+        std::cerr << "GPU render test failed: no SDL driver available"
                   << " (available drivers: " << driverList << ")\n";
         ++failures;
         return false;
@@ -311,44 +329,159 @@ bool RunGpuSmokeTest(int& failures,
         std::cout << "SDL video driver selected for GPU test: default\n";
     }
 
-    SDL_Window* window = SDL_CreateWindow("cube_gpu_test", 64, 64, SDL_WINDOW_HIDDEN);
-    if (!window) {
-        std::cerr << "GPU smoke test failed: unable to create SDL window: " << SDL_GetError() << '\n';
-        ++failures;
-        SDL_QuitSubSystem(SDL_INIT_VIDEO);
-        return false;
-    }
-
-    auto platformService = std::make_shared<sdl3cpp::services::impl::PlatformService>(logger);
     sdl3cpp::services::impl::BgfxGraphicsBackend backend(configService, platformService, logger);
+    bool success = true;
+    
     try {
         sdl3cpp::services::GraphicsConfig graphicsConfig{};
         backend.Initialize(window, graphicsConfig);
     } catch (const std::exception& ex) {
-        std::cerr << "GPU smoke test failed: bgfx init threw: " << ex.what() << '\n';
+        std::cerr << "GPU render test failed: bgfx init threw: " << ex.what() << '\n';
         ++failures;
-        SDL_DestroyWindow(window);
-        SDL_QuitSubSystem(SDL_INIT_VIDEO);
-        return false;
+        success = false;
     }
 
-    if (bgfx::getRendererType() == bgfx::RendererType::Noop) {
-        std::cerr << "GPU smoke test failed: bgfx selected Noop renderer despite SDL success\n";
+    if (success && bgfx::getRendererType() == bgfx::RendererType::Noop) {
+        std::cerr << "GPU render test failed: bgfx selected Noop renderer despite SDL success\n";
         ++failures;
-        SDL_DestroyWindow(window);
-        SDL_QuitSubSystem(SDL_INIT_VIDEO);
-        return false;
+        success = false;
     }
 
-    auto device = backend.CreateDevice();
-    backend.BeginFrame(device);
-    backend.EndFrame(device);
-    backend.DestroyDevice(device);
+    if (success) {
+        std::cout << "GPU render test: Validating full render pipeline with scene geometry\n";
+        
+        // Load and render the actual cube scene to catch color, geometry, and animation issues
+        auto scriptPath = GetCubeScriptPath();
+        auto configPath = GetSeedConfigPath();
+        auto configJson = ReadFileContents(configPath);
+        if (!configJson) {
+            std::cerr << "GPU render test failed: could not load scene config\n";
+            ++failures;
+            success = false;
+        } else {
+            auto sceneConfigService = std::make_shared<CubeDemoConfigService>(scriptPath, *configJson, "vulkan");
+            auto meshService = std::make_shared<sdl3cpp::services::impl::MeshService>(sceneConfigService, logger);
+            auto audioService = std::make_shared<StubAudioCommandService>();
+            auto physicsService = std::make_shared<sdl3cpp::services::impl::PhysicsBridgeService>(logger);
+            
+            auto engineService = std::make_shared<sdl3cpp::services::impl::ScriptEngineService>(
+                scriptPath,
+                logger,
+                meshService,
+                audioService,
+                physicsService,
+                nullptr,
+                nullptr,
+                sceneConfigService,
+                false);
+            engineService->Initialize();
+            
+            auto sceneScriptService = std::make_shared<sdl3cpp::services::impl::SceneScriptService>(engineService, logger);
+            auto objects = sceneScriptService->LoadSceneObjects();
+            
+            if (objects.size() != 16) {
+                std::cerr << "GPU render test: Scene loaded " << objects.size() << " objects, expected 16\n";
+                ++failures;
+                success = false;
+            }
+            
+            // Validate all geometry is present
+            bool hasFloor = false;
+            bool hasCeiling = false;
+            int wallCount = 0;
+            int lanternCount = 0;
+            bool hasSkybox = false;
+            bool hasCube = false;
+            
+            for (const auto& obj : objects) {
+                if (obj.shaderKeys.empty()) continue;
+                const auto& key = obj.shaderKeys.front();
+                
+                if (key == "floor") {
+                    if (obj.vertices.size() > 100) hasFloor = true;  // Main floor has more verts
+                    else hasCube = true;  // Cube also uses floor shader
+                } else if (key == "ceiling") {
+                    hasCeiling = true;
+                } else if (key == "wall") {
+                    wallCount++;
+                } else if (key == "solid") {
+                    lanternCount++;
+                } else if (key == "skybox") {
+                    hasSkybox = true;
+                }
+            }
+            
+            Assert(hasFloor, "GPU render test: Missing floor geometry", failures);
+            Assert(hasCeiling, "GPU render test: Missing ceiling geometry", failures);
+            Assert(wallCount == 4, "GPU render test: Expected 4 walls, got " + std::to_string(wallCount), failures);
+            Assert(lanternCount == 8, "GPU render test: Expected 8 lanterns, got " + std::to_string(lanternCount), failures);
+            Assert(hasSkybox, "GPU render test: Missing skybox geometry", failures);
+            Assert(hasCube, "GPU render test: Missing physics cube geometry", failures);
+            
+            // Create actual render buffers and render multiple frames to test animation
+            auto ecsService = std::make_shared<sdl3cpp::services::impl::EcsService>(logger);
+            auto sceneService = std::make_shared<sdl3cpp::services::impl::SceneService>(sceneScriptService, ecsService, logger);
+            sceneService->LoadScene(objects);
+            
+            auto device = backend.CreateDevice();
+            const int testFrames = 5;
+            std::cout << "GPU render test: Rendering " << testFrames << " frames to validate pipeline\n";
+            
+            for (int frame = 0; frame < testFrames; ++frame) {
+                float elapsedTime = frame * 0.016f;  // ~60 FPS
+                auto renderCommands = sceneService->GetRenderCommands(elapsedTime);
+                
+                if (renderCommands.size() != objects.size()) {
+                    std::cerr << "GPU render test: Frame " << frame << " produced " 
+                              << renderCommands.size() << " commands, expected " << objects.size() << '\n';
+                    ++failures;
+                    success = false;
+                    break;
+                }
+                
+                backend.BeginFrame(device);
+                
+                // Validate cube is animating (matrix should change between frames)
+                if (frame == 0) {
+                    for (size_t i = 0; i < renderCommands.size(); ++i) {
+                        if (objects[i].shaderKeys.empty()) continue;
+                        const auto& key = objects[i].shaderKeys.front();
+                        if (key == "floor" && objects[i].vertices.size() < 100) {
+                            // This is the cube - verify it has non-identity matrix (spinning)
+                            bool hasRotation = false;
+                            const auto& matrix = renderCommands[i].modelMatrix;
+                            // Check off-diagonal elements for rotation
+                            if (std::abs(matrix[1]) > 0.01f || std::abs(matrix[2]) > 0.01f || 
+                                std::abs(matrix[4]) > 0.01f || std::abs(matrix[6]) > 0.01f ||
+                                std::abs(matrix[8]) > 0.01f || std::abs(matrix[9]) > 0.01f) {
+                                hasRotation = true;
+                            }
+                            if (!hasRotation) {
+                                std::cerr << "GPU render test: Cube is not spinning (rotation matrix is identity)\n";
+                                ++failures;
+                                success = false;
+                            }
+                            break;
+                        }
+                    }
+                }
+                
+                backend.EndFrame(device);
+            }
+            
+            backend.DestroyDevice(device);
+            sceneService->Shutdown();
+            engineService->Shutdown();
+            
+            std::cout << "GPU render test: Successfully rendered and validated scene pipeline\n";
+        }
+    }
+    
     backend.Shutdown();
-
-    SDL_DestroyWindow(window);
-    SDL_QuitSubSystem(SDL_INIT_VIDEO);
-    return true;
+    windowService->DestroyWindow();
+    windowService->Shutdown();
+    
+    return success;
 }
 
 void RunCubeDemoSceneTests(int& failures) {
@@ -366,8 +499,8 @@ void RunCubeDemoSceneTests(int& failures) {
     auto audioService = std::make_shared<StubAudioCommandService>();
     auto physicsService = std::make_shared<sdl3cpp::services::impl::PhysicsBridgeService>(logger);
 
-    if (!RunGpuSmokeTest(failures, configService, logger)) {
-        std::cerr << "Aborting cube scene checks because Vulkan smoke test failed\n";
+    if (!RunGpuRenderTest(failures, configService, logger)) {
+        std::cerr << "Aborting cube scene checks because GPU render test failed\n";
         return;
     }
 

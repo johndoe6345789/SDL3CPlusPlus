@@ -318,6 +318,10 @@ add_executable(script_engine_tests
     src/services/impl/scene_script_service.cpp
     src/services/impl/shader_script_service.cpp
     src/services/impl/materialx_shader_generator.cpp
+    src/services/impl/sdl_window_service.cpp
+    src/services/impl/ecs_service.cpp
+    src/services/impl/scene_service.cpp
+    src/events/event_bus.cpp
     src/stb_image.cpp
 )
 target_include_directories(script_engine_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
