@@ -10,6 +10,11 @@
 
 namespace {
 
+constexpr uint8_t kShaderBinVersion = 11;
+constexpr uint32_t kChunkMagicVsh = BX_MAKEFOURCC('V', 'S', 'H', kShaderBinVersion);
+constexpr uint32_t kChunkMagicFsh = BX_MAKEFOURCC('F', 'S', 'H', kShaderBinVersion);
+constexpr uint32_t kChunkMagicCsh = BX_MAKEFOURCC('C', 'S', 'H', kShaderBinVersion);
+
 // Writer that captures binary output into a std::vector<uint8_t>
 class MemoryWriter : public bx::FileWriter
 {
@@ -29,6 +34,28 @@ public:
 private:
     std::vector<uint8_t> m_buffer;
 };
+
+uint32_t ChunkMagicForType(char shaderType) {
+    switch (shaderType) {
+        case 'v':
+            return kChunkMagicVsh;
+        case 'f':
+            return kChunkMagicFsh;
+        case 'c':
+            return kChunkMagicCsh;
+        default:
+            return kChunkMagicFsh;
+    }
+}
+
+void WriteShaderHeader(MemoryWriter& writer, char shaderType) {
+    bx::ErrorAssert err;
+    const uint32_t magic = ChunkMagicForType(shaderType);
+    const uint32_t hash = 0;
+    bx::write(&writer, magic, &err);
+    bx::write(&writer, hash, &err);
+    bx::write(&writer, hash, &err);
+}
 
 } // anonymous
 
@@ -53,25 +80,27 @@ int shaderc_compile_from_memory(const char* source, size_t source_len, const cha
             opts.shaderType = 'f';
         }
 
+        opts.profile = "glsl";
         // Use SPIR-V target by default (matches CLI's typical default for desktop)
         const uint32_t spirvVersion = 1010;
 
-        MemoryWriter writer;
-        bx::ErrorAssert err;
-        bx::WriterI* messageWriter = &writer; // reuse writer for messages as well
+        MemoryWriter shaderWriter;
+        MemoryWriter messageWriter;
+        bx::WriterI* messageOut = &messageWriter;
 
         const std::string code(source, source_len);
 
-        bool ok = bgfx::compileSPIRVShader(opts, spirvVersion, code, &writer, messageWriter);
+        WriteShaderHeader(shaderWriter, opts.shaderType);
+        bool ok = bgfx::compileSPIRVShader(opts, spirvVersion, code, &shaderWriter, messageOut);
         if (!ok) {
             // capture any message buffer
-            const auto& msg = writer.data();
+            const auto& msg = messageWriter.data();
             std::string s(msg.begin(), msg.end());
             if (out_error) *out_error = strdup(s.c_str());
             return -1;
         }
 
-        const auto& out = writer.data();
+        const auto& out = shaderWriter.data();
         if (out.empty()) {
             if (out_error) *out_error = strdup("shaderc: empty output");
             return -1;
@@ -120,20 +149,27 @@ int shaderc_compile_from_memory_with_target(const char* source, size_t source_le
             opts.shaderType = 'f';
         }
 
-        MemoryWriter writer;
-        bx::ErrorAssert err;
-        bx::WriterI* messageWriter = &writer;
+        if (0 == std::strcmp(target, "spirv")) {
+            opts.profile = "glsl";
+        }
+
+        MemoryWriter shaderWriter;
+        MemoryWriter messageWriter;
+        bx::WriterI* messageOut = &messageWriter;
         const std::string code(source, source_len);
 
         bool ok = false;
         uint32_t version = 1010;
         // Dispatch based on target language (in-process supports SPIR-V/MSL/HLSL only).
         if (0 == std::strcmp(target, "spirv")) {
-            ok = bgfx::compileSPIRVShader(opts, version, code, &writer, messageWriter);
+            WriteShaderHeader(shaderWriter, opts.shaderType);
+            ok = bgfx::compileSPIRVShader(opts, version, code, &shaderWriter, messageOut);
         } else if (0 == std::strcmp(target, "msl") || 0 == std::strcmp(target, "metal")) {
-            ok = bgfx::compileMetalShader(opts, version, code, &writer, messageWriter);
+            WriteShaderHeader(shaderWriter, opts.shaderType);
+            ok = bgfx::compileMetalShader(opts, version, code, &shaderWriter, messageOut);
         } else if (0 == std::strcmp(target, "hlsl")) {
-            ok = bgfx::compileHLSLShader(opts, version, code, &writer, messageWriter);
+            WriteShaderHeader(shaderWriter, opts.shaderType);
+            ok = bgfx::compileHLSLShader(opts, version, code, &shaderWriter, messageOut);
         } else {
             if (out_error) {
                 *out_error = strdup("shaderc: target not supported by in-process compiler");
@@ -142,13 +178,13 @@ int shaderc_compile_from_memory_with_target(const char* source, size_t source_le
         }
 
         if (!ok) {
-            const auto& msg = writer.data();
+            const auto& msg = messageWriter.data();
             std::string s(msg.begin(), msg.end());
             if (out_error) *out_error = strdup(s.c_str());
             return -1;
         }
 
-        const auto& out = writer.data();
+        const auto& out = shaderWriter.data();
         if (out.empty()) {
             if (out_error) *out_error = strdup("shaderc: empty output");
             return -1;

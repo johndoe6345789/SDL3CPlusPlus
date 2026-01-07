@@ -208,6 +208,8 @@ target_include_directories(shaderc_local PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_deps/glslang"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_deps/glslang/Include"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_deps/glslang/glslang/Public")
+target_include_directories(shaderc_local PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src")
 if(TARGET bgfx::bx)
     target_link_libraries(shaderc_local PUBLIC bgfx::bx)
 endif()

@@ -1,4 +1,5 @@
 #include "bgfx_graphics_backend.hpp"
+#include "bgfx_shader_compiler.hpp"
 #include "../interfaces/i_pipeline_compiler_service.hpp"
 #include <stb_image.h>
 
@@ -677,67 +678,18 @@ bgfx::ShaderHandle BgfxGraphicsBackend::CreateShader(const std::string& label,
         logger_->Trace("BgfxGraphicsBackend", "CreateShader",
                        "label=" + label +
                            ", renderer=" + RendererTypeName(rendererType) +
-                           ", sourceLength=" + std::to_string(source.size()));
+                           ", sourceLength=" + std::to_string(source.size()) +
+                           ", compiler=BgfxShaderCompiler");
     }
 
-    // For OpenGL, bgfx expects raw GLSL source (no wrapper needed)
-    // For Vulkan/Metal/DX, bgfx expects SPIRV wrapped in binary format
-    const bool isOpenGL = (rendererType == bgfx::RendererType::OpenGL || 
-                           rendererType == bgfx::RendererType::OpenGLES);
-    
-    if (isOpenGL) {
-        // For OpenGL: Just copy GLSL source directly
-        const uint32_t sourceSize = static_cast<uint32_t>(source.size());
-        const bgfx::Memory* mem = bgfx::copy(source.c_str(), sourceSize + 1);  // +1 for null terminator
-        
-        bgfx::ShaderHandle handle = bgfx::createShader(mem);
-        if (!bgfx::isValid(handle) && logger_) {
-            logger_->Error("bgfx::createShader failed for " + label + 
-                          " (renderer=" + RendererTypeName(rendererType) + ")");
-        }
-        return handle;
-    }
-    
-
-    // Use PipelineCompilerService to compile shader via bgfx_tools
-    std::string tempInputPath = "/tmp/" + label + (isVertex ? ".vert.glsl" : ".frag.glsl");
-    std::string tempOutputPath = "/tmp/" + label + (isVertex ? ".vert.bin" : ".frag.bin");
-    // Write source to tempInputPath
-    {
-        std::ofstream ofs(tempInputPath);
-        ofs << source;
-    }
-    std::vector<std::string> args;
-    // Add any required args for bgfx_tools/shaderc here (e.g., profile, macros)
-    bool success = pipelineCompiler_ && pipelineCompiler_->Compile(tempInputPath, tempOutputPath, args);
-    if (!success) {
-        std::string error = pipelineCompiler_ ? pipelineCompiler_->GetLastError().value_or("") : "No compiler service";
+    BgfxShaderCompiler compiler(logger_, pipelineCompiler_);
+    bgfx::ShaderHandle handle = compiler.CompileShader(label, source, isVertex, {}, {});
+    if (!bgfx::isValid(handle)) {
         if (logger_) {
-            logger_->Error("PipelineCompilerService failed: " + label + "\n" + error);
+            logger_->Error("BgfxGraphicsBackend::CreateShader failed for " + label +
+                           " (renderer=" + RendererTypeName(rendererType) + ")");
         }
-        throw std::runtime_error("PipelineCompilerService failed: " + label + "\n" + error);
-    }
-    // Read compiled binary
-    std::ifstream ifs(tempOutputPath, std::ios::binary | std::ios::ate);
-    if (!ifs) {
-        if (logger_) {
-            logger_->Error("Failed to read compiled shader: " + tempOutputPath);
-        }
-        throw std::runtime_error("Failed to read compiled shader: " + tempOutputPath);
-    }
-    std::streamsize size = ifs.tellg();
-    ifs.seekg(0, std::ios::beg);
-    std::vector<char> buffer(size);
-    if (!ifs.read(buffer.data(), size)) {
-        if (logger_) {
-            logger_->Error("Failed to read compiled shader data: " + tempOutputPath);
-        }
-        throw std::runtime_error("Failed to read compiled shader data: " + tempOutputPath);
-    }
-    const bgfx::Memory* mem = bgfx::copy(buffer.data(), static_cast<uint32_t>(size));
-    bgfx::ShaderHandle handle = bgfx::createShader(mem);
-    if (!bgfx::isValid(handle) && logger_) {
-        logger_->Error("bgfx::createShader failed for " + label + " (renderer=" + RendererTypeName(rendererType) + ", binSize=" + std::to_string(size) + ")");
+        throw std::runtime_error("BgfxGraphicsBackend::CreateShader failed for " + label);
     }
     return handle;
 }

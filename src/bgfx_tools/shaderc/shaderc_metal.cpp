@@ -27,7 +27,7 @@ BX_PRAGMA_DIAGNOSTIC_IGNORED_CLANG_GCC("-Wshadow") // warning: declaration of 'u
 #include <spirv-tools/optimizer.hpp>
 BX_PRAGMA_DIAGNOSTIC_POP()
 
-namespace bgfx
+namespace shaderc_local
 {
 	struct TinyStlAllocator
 	{
@@ -35,16 +35,16 @@ namespace bgfx
 		static void static_deallocate(void* _ptr, size_t /*_bytes*/);
 	};
 
-} // namespace bgfx
+} // namespace shaderc_local
 
-#define TINYSTL_ALLOCATOR bgfx::TinyStlAllocator
-#include <tinystl/allocator.h>
-#include <tinystl/string.h>
-#include <tinystl/unordered_map.h>
-#include <tinystl/vector.h>
+#define TINYSTL_ALLOCATOR shaderc_local::TinyStlAllocator
+#include <TINYSTL/allocator.h>
+#include <TINYSTL/string.h>
+#include <TINYSTL/unordered_map.h>
+#include <TINYSTL/vector.h>
 namespace stl = tinystl;
 
-#include "../../src/shader.h"
+#include "../src/shader.h"
 
 namespace bgfx { namespace metal
 {

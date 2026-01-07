@@ -27,10 +27,10 @@ BX_PRAGMA_DIAGNOSTIC_IGNORED_CLANG_GCC("-Wshadow") // warning: declaration of 'u
 #include <spirv-tools/optimizer.hpp>
 BX_PRAGMA_DIAGNOSTIC_POP()
 
-namespace bgfx
+namespace shaderc_local
 {
 	static bx::DefaultAllocator s_allocator;
-	bx::AllocatorI* g_allocator = &s_allocator;
+	static bx::AllocatorI* g_allocator = &s_allocator;
 
 	struct TinyStlAllocator
 	{
@@ -50,18 +50,18 @@ namespace bgfx
 			bx::free(g_allocator, _ptr);
 		}
 	}
-} // namespace bgfx
+} // namespace shaderc_local
 
-#define TINYSTL_ALLOCATOR bgfx::TinyStlAllocator
-#include <tinystl/allocator.h>
-#include <tinystl/string.h>
-#include <tinystl/unordered_map.h>
-#include <tinystl/vector.h>
+#define TINYSTL_ALLOCATOR shaderc_local::TinyStlAllocator
+#include <TINYSTL/allocator.h>
+#include <TINYSTL/string.h>
+#include <TINYSTL/unordered_map.h>
+#include <TINYSTL/vector.h>
 namespace stl = tinystl;
 
-#include "../../src/shader.h"
-#include "../../src/shader_spirv.h"
-#include "../../3rdparty/khronos/vulkan-local/vulkan.h"
+#include "../src/shader.h"
+#include "../src/shader_spirv.h"
+#include "../../bgfx_deps/khronos/vulkan-local/vulkan.h"
 
 namespace bgfx { namespace spirv
 {
@@ -462,20 +462,25 @@ namespace bgfx { namespace spirv
 			return false;
 		}
 
+		const bool useHlslInput = (0 == bx::strCmp(_options.profile.c_str(), "hlsl"));
+
 		glslang::TProgram* program = new glslang::TProgram;
 		glslang::TShader* shader   = new glslang::TShader(stage);
 
 		EShMessages messages = EShMessages(0
 			| EShMsgDefault
-			| EShMsgReadHlsl
 			| EShMsgVulkanRules
 			| EShMsgSpvRules
 			| EShMsgDebugInfo
+			| (useHlslInput ? EShMsgReadHlsl : 0)
 			);
 
 		shader->setEntryPoint("main");
 		shader->setAutoMapBindings(true);
-		shader->setEnvInput(glslang::EShSourceHlsl, stage, glslang::EShClientVulkan, s_GLSL_VULKAN_CLIENT_VERSION);
+		shader->setEnvInput(useHlslInput ? glslang::EShSourceHlsl : glslang::EShSourceGlsl,
+		                    stage,
+		                    glslang::EShClientVulkan,
+		                    s_GLSL_VULKAN_CLIENT_VERSION);
 		shader->setEnvClient(glslang::EShClientVulkan, getGlslangTargetVulkanVersion(_version, _messageWriter));
 		shader->setEnvTarget(glslang::EShTargetSpv, getGlslangTargetSpirvVersion(_version, _messageWriter));
 
@@ -554,7 +559,7 @@ namespace bgfx { namespace spirv
 			{
 				program->buildReflection();
 
-				if (_firstPass)
+				if (_firstPass && useHlslInput)
 				{
 					// first time through, we just find unused uniforms and get rid of them
 					std::string output;
@@ -896,7 +901,8 @@ namespace bgfx { namespace spirv
 
 	bool compileSPIRVShader(const Options& _options, uint32_t _version, const std::string& _code, bx::WriterI* _shaderWriter, bx::WriterI* _messageWriter)
 	{
-		return spirv::compile(_options, _version, _code, _shaderWriter, _messageWriter, true);
+		const bool useHlslInput = (0 == bx::strCmp(_options.profile.c_str(), "hlsl"));
+		return spirv::compile(_options, _version, _code, _shaderWriter, _messageWriter, useHlslInput);
 	}
 
 } // namespace bgfx

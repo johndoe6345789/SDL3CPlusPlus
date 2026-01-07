@@ -9,6 +9,78 @@ namespace bgfx {
 
 bool g_verbose = false;
 
+Options::Options()
+    : shaderType(' ')
+    , disasm(false)
+    , raw(false)
+    , preprocessOnly(false)
+    , depends(false)
+    , debugInformation(false)
+    , avoidFlowControl(false)
+    , noPreshader(false)
+    , partialPrecision(false)
+    , preferFlowControl(false)
+    , backwardsCompatibility(false)
+    , warningsAreErrors(false)
+    , keepIntermediate(false)
+    , optimize(false)
+    , optimizationLevel(3) {
+}
+
+void Options::dump() {
+    BX_TRACE("Options:\n"
+             "\t  shaderType: %c\n"
+             "\t  platform: %s\n"
+             "\t  profile: %s\n"
+             "\t  inputFile: %s\n"
+             "\t  outputFile: %s\n"
+             "\t  disasm: %s\n"
+             "\t  raw: %s\n"
+             "\t  preprocessOnly: %s\n"
+             "\t  depends: %s\n"
+             "\t  debugInformation: %s\n"
+             "\t  avoidFlowControl: %s\n"
+             "\t  noPreshader: %s\n"
+             "\t  partialPrecision: %s\n"
+             "\t  preferFlowControl: %s\n"
+             "\t  backwardsCompatibility: %s\n"
+             "\t  warningsAreErrors: %s\n"
+             "\t  keepIntermediate: %s\n"
+             "\t  optimize: %s\n"
+             "\t  optimizationLevel: %d\n",
+             shaderType,
+             platform.c_str(),
+             profile.c_str(),
+             inputFilePath.c_str(),
+             outputFilePath.c_str(),
+             disasm ? "true" : "false",
+             raw ? "true" : "false",
+             preprocessOnly ? "true" : "false",
+             depends ? "true" : "false",
+             debugInformation ? "true" : "false",
+             avoidFlowControl ? "true" : "false",
+             noPreshader ? "true" : "false",
+             partialPrecision ? "true" : "false",
+             preferFlowControl ? "true" : "false",
+             backwardsCompatibility ? "true" : "false",
+             warningsAreErrors ? "true" : "false",
+             keepIntermediate ? "true" : "false",
+             optimize ? "true" : "false",
+             optimizationLevel);
+
+    for (size_t ii = 0; ii < includeDirs.size(); ++ii) {
+        BX_TRACE("\t  include :%s\n", includeDirs[ii].c_str());
+    }
+
+    for (size_t ii = 0; ii < defines.size(); ++ii) {
+        BX_TRACE("\t  define :%s\n", defines[ii].c_str());
+    }
+
+    for (size_t ii = 0; ii < dependencies.size(); ++ii) {
+        BX_TRACE("\t  dependency :%s\n", dependencies[ii].c_str());
+    }
+}
+
 int32_t writef(bx::WriterI* _writer, const char* _format, ...) {
     va_list argList;
     va_start(argList, _format);
