@@ -1,6 +1,7 @@
 #include "bgfx_shader_compiler.hpp"
 
 #include <algorithm>
+#include <cstdint>
 #include <cstring>
 #include <fstream>
 #include <stdexcept>
@@ -37,6 +38,154 @@ const char* ShadercTargetName(bgfx::RendererType::Enum type) {
         case bgfx::RendererType::OpenGLES: return "glsl";
         default: return "spirv";
     }
+}
+
+bool ValidateBgfxShaderBinary(const std::vector<char>& buffer,
+                              char expectedType,
+                              std::string& error) {
+    if (buffer.size() < sizeof(uint32_t) * 3 + sizeof(uint16_t)) {
+        error = "buffer too small for header";
+        return false;
+    }
+
+    size_t offset = 0;
+    auto readBytes = [&](void* out, size_t size) {
+        if (offset + size > buffer.size()) {
+            return false;
+        }
+        std::memcpy(out, buffer.data() + offset, size);
+        offset += size;
+        return true;
+    };
+
+    uint32_t magic = 0;
+    if (!readBytes(&magic, sizeof(magic))) {
+        error = "failed to read magic";
+        return false;
+    }
+
+    const uint32_t base = magic & 0x00FFFFFFu;
+    const uint32_t vsh = static_cast<uint32_t>('V')
+        | (static_cast<uint32_t>('S') << 8)
+        | (static_cast<uint32_t>('H') << 16);
+    const uint32_t fsh = static_cast<uint32_t>('F')
+        | (static_cast<uint32_t>('S') << 8)
+        | (static_cast<uint32_t>('H') << 16);
+    const uint32_t csh = static_cast<uint32_t>('C')
+        | (static_cast<uint32_t>('S') << 8)
+        | (static_cast<uint32_t>('H') << 16);
+    const uint32_t expectedBase = (expectedType == 'v') ? vsh : (expectedType == 'c' ? csh : fsh);
+    if (base != vsh && base != fsh && base != csh) {
+        error = "invalid magic";
+        return false;
+    }
+    if (base != expectedBase) {
+        error = "shader type mismatch";
+        return false;
+    }
+
+    const uint8_t version = static_cast<uint8_t>(magic >> 24);
+    const bool hasTexData = version >= 8;
+    const bool hasTexFormat = version >= 10;
+
+    uint32_t hashIn = 0;
+    uint32_t hashOut = 0;
+    if (!readBytes(&hashIn, sizeof(hashIn)) || !readBytes(&hashOut, sizeof(hashOut))) {
+        error = "failed to read hashes";
+        return false;
+    }
+
+    uint16_t uniformCount = 0;
+    if (!readBytes(&uniformCount, sizeof(uniformCount))) {
+        error = "failed to read uniform count";
+        return false;
+    }
+
+    for (uint16_t i = 0; i < uniformCount; ++i) {
+        uint8_t nameSize = 0;
+        if (!readBytes(&nameSize, sizeof(nameSize))) {
+            error = "failed to read uniform name size";
+            return false;
+        }
+        if (offset + nameSize > buffer.size()) {
+            error = "uniform name out of bounds";
+            return false;
+        }
+        offset += nameSize;
+
+        uint8_t type = 0;
+        uint8_t num = 0;
+        uint16_t regIndex = 0;
+        uint16_t regCount = 0;
+        if (!readBytes(&type, sizeof(type)) ||
+            !readBytes(&num, sizeof(num)) ||
+            !readBytes(&regIndex, sizeof(regIndex)) ||
+            !readBytes(&regCount, sizeof(regCount))) {
+            error = "failed to read uniform metadata";
+            return false;
+        }
+
+        if (hasTexData) {
+            uint8_t texComponent = 0;
+            uint8_t texDimension = 0;
+            if (!readBytes(&texComponent, sizeof(texComponent)) ||
+                !readBytes(&texDimension, sizeof(texDimension))) {
+                error = "failed to read texture metadata";
+                return false;
+            }
+        }
+        if (hasTexFormat) {
+            uint16_t texFormat = 0;
+            if (!readBytes(&texFormat, sizeof(texFormat))) {
+                error = "failed to read texture format";
+                return false;
+            }
+        }
+    }
+
+    uint32_t shaderSize = 0;
+    if (!readBytes(&shaderSize, sizeof(shaderSize))) {
+        error = "failed to read shader size";
+        return false;
+    }
+    if (shaderSize % 4 != 0) {
+        error = "shader size not aligned";
+        return false;
+    }
+    if (offset + shaderSize + 1 > buffer.size()) {
+        error = "shader code out of bounds";
+        return false;
+    }
+
+    if (shaderSize >= sizeof(uint32_t)) {
+        uint32_t spirvMagic = 0;
+        std::memcpy(&spirvMagic, buffer.data() + offset, sizeof(uint32_t));
+        if (spirvMagic != 0x07230203u) {
+            error = "invalid SPIR-V magic";
+            return false;
+        }
+    }
+
+    offset += shaderSize + 1;
+
+    uint8_t numAttrs = 0;
+    if (!readBytes(&numAttrs, sizeof(numAttrs))) {
+        error = "failed to read attribute count";
+        return false;
+    }
+    if (offset + static_cast<size_t>(numAttrs) * sizeof(uint16_t) > buffer.size()) {
+        error = "attribute list out of bounds";
+        return false;
+    }
+    offset += static_cast<size_t>(numAttrs) * sizeof(uint16_t);
+
+    uint16_t constantSize = 0;
+    if (!readBytes(&constantSize, sizeof(constantSize))) {
+        error = "failed to read constant size";
+        return false;
+    }
+
+    return true;
 }
 
 }  // namespace
@@ -107,6 +256,15 @@ bgfx::ShaderHandle BgfxShaderCompiler::CompileShader(
                            ", target=" + std::string(target) +
                            ", size=" + std::to_string(outSize));
         }
+        std::string validationError;
+        if (!ValidateBgfxShaderBinary(buffer, isVertex ? 'v' : 'f', validationError)) {
+            compiledInMemory = false;
+            buffer.clear();
+            if (logger_) {
+                logger_->Error("BgfxShaderCompiler: invalid shader binary for " + label +
+                               " (" + validationError + ")");
+            }
+        }
     } else if (logger_) {
         logger_->Trace("BgfxShaderCompiler", "CompileShader",
                        "in-memory compile failed for " + label +
@@ -171,6 +329,15 @@ bgfx::ShaderHandle BgfxShaderCompiler::CompileShader(
         remove(tempOutputPath.c_str());
     }
 
+    std::string validationError;
+    if (!ValidateBgfxShaderBinary(buffer, isVertex ? 'v' : 'f', validationError)) {
+        if (logger_) {
+            logger_->Error("BgfxShaderCompiler: invalid shader binary for " + label +
+                           " (" + validationError + ")");
+        }
+        return BGFX_INVALID_HANDLE;
+    }
+
     uint32_t binSize = static_cast<uint32_t>(buffer.size());
     const bgfx::Memory* mem = bgfx::copy(buffer.data(), binSize);
     bgfx::ShaderHandle handle = bgfx::createShader(mem);
@@ -178,6 +345,9 @@ bgfx::ShaderHandle BgfxShaderCompiler::CompileShader(
         logger_->Error("BgfxShaderCompiler: bgfx::createShader failed for " + label +
                       " (binSize=" + std::to_string(binSize) + ")");
     } else if (logger_) {
+        logger_->Info("BgfxShaderCompiler: created shader " + label +
+                      " (binSize=" + std::to_string(binSize) +
+                      ", renderer=" + std::string(RendererTypeName(rendererType)) + ")");
         logger_->Trace("BgfxShaderCompiler", "CompileShader",
                        "label=" + label + " shader created successfully, handle=" + std::to_string(handle.idx));
     }

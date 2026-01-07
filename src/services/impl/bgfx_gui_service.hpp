@@ -143,8 +143,9 @@ private:
                                       uint32_t width,
                                       uint32_t height,
                                       uint64_t flags) const;
-    bgfx::ProgramHandle CreateProgram(const char* vertexSource, const char* fragmentSource) const;
+    bgfx::ProgramHandle CreateProgram(const char* vertexSource, const char* fragmentSource);
     bgfx::ShaderHandle CreateShader(const std::string& label, const std::string& source, bool isVertex) const;
+    void ResolveGuiMatrixUniform(bgfx::ShaderHandle shader);
 
     std::shared_ptr<IConfigService> configService_;
     std::shared_ptr<ILogger> logger_;
@@ -173,6 +174,8 @@ private:
     uint16_t viewId_ = 1;
     bool initialized_ = false;
     bool loggedMissingResources_ = false;
+    bool usesMaterialXShaders_ = false;
+    bool usesPredefinedModelViewProj_ = false;
     uint64_t frameIndex_ = 0;
     size_t maxTextCacheEntries_ = 256;
     size_t maxSvgCacheEntries_ = 64;

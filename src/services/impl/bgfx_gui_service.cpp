@@ -298,7 +298,6 @@ void BgfxGuiService::InitializeResources() {
     if (configService_) {
         const auto& materialConfig = configService_->GetMaterialXConfig();
         if (materialConfig.enabled && materialConfig.shaderKey == "gui") {
-            usingMaterialX = true;
             try {
                 ShaderPaths generated = materialxGenerator_.Generate(materialConfig, {});
                 if (!generated.vertexSource.empty() && !generated.fragmentSource.empty()) {
@@ -306,6 +305,7 @@ void BgfxGuiService::InitializeResources() {
                     guiFragmentSourceOverride_ = std::move(generated.fragmentSource);
                     vertexSource = guiVertexSourceOverride_.c_str();
                     fragmentSource = guiFragmentSourceOverride_.c_str();
+                    usingMaterialX = true;
                     if (logger_) {
                         logger_->Trace("BgfxGuiService", "InitializeResources",
                                        "Using MaterialX GUI shaders");
@@ -321,9 +321,13 @@ void BgfxGuiService::InitializeResources() {
             }
         }
     }
-    
+
+    usesMaterialXShaders_ = usingMaterialX;
+    usesPredefinedModelViewProj_ = false;
+    modelViewProjUniform_ = BGFX_INVALID_HANDLE;
+
     // Create uniforms matching the shader we're using
-    if (usingMaterialX) {
+    if (usesMaterialXShaders_) {
         // MaterialX shaders use separate world and viewProjection matrices
         worldMatrixUniform_ = bgfx::createUniform("u_worldMatrix", bgfx::UniformType::Mat4);
         viewProjMatrixUniform_ = bgfx::createUniform("u_viewProjectionMatrix", bgfx::UniformType::Mat4);
@@ -334,13 +338,13 @@ void BgfxGuiService::InitializeResources() {
                            ", sampler=" + std::to_string(bgfx::isValid(sampler_)));
         }
     } else {
-        // Built-in shader uses combined modelViewProj matrix
-        modelViewProjUniform_ = bgfx::createUniform("u_modelViewProj", bgfx::UniformType::Mat4);
-        if (logger_) {
-            logger_->Trace("BgfxGuiService", "InitializeResources",
-                           "Built-in uniforms: modelViewProj=" + std::to_string(bgfx::isValid(modelViewProjUniform_)) +
-                           ", sampler=" + std::to_string(bgfx::isValid(sampler_)));
-        }
+        modelViewProjUniform_ = BGFX_INVALID_HANDLE;
+        usesPredefinedModelViewProj_ = false;
+    }
+
+    if (logger_) {
+        logger_->Trace("BgfxGuiService", "InitializeResources",
+                       "GUI shader mode=" + std::string(usesMaterialXShaders_ ? "materialx" : "builtin"));
     }
 
     program_ = CreateProgram(vertexSource, fragmentSource);
@@ -743,7 +747,7 @@ void BgfxGuiService::SubmitQuad(const GuiVertex& v0,
                        "], color=[" + std::to_string(v0.r) + "," + std::to_string(v0.g) + "," + std::to_string(v0.b) + "," + std::to_string(v0.a) +
                        "], uv=[" + std::to_string(v0.u) + "," + std::to_string(v0.v) + "]");
         logger_->Trace("BgfxGuiService", "SubmitQuad",
-                       "uniforms: mvp=" + std::to_string(bgfx::isValid(modelViewProjUniform_)) +
+                       "uniforms: mode=" + std::string(usesMaterialXShaders_ ? "materialx" : "builtin") +
                        ", sampler=" + std::to_string(bgfx::isValid(sampler_)) +
                        ", program=" + std::to_string(bgfx::isValid(program_)) +
                        ", texture=" + std::to_string(bgfx::isValid(texture)) +
@@ -755,19 +759,35 @@ void BgfxGuiService::SubmitQuad(const GuiVertex& v0,
                        std::to_string(viewProjection_[3]) + "]");
     }
 
+    if (!bgfx::isValid(sampler_)) {
+        if (logger_) {
+            logger_->Error("BgfxGuiService::SubmitQuad: Sampler uniform not initialized");
+        }
+        return;
+    }
+
     SetScissor(scissor);
     bgfx::setTransform(identity);
     
     // Use appropriate uniforms based on shader type
-    if (bgfx::isValid(modelViewProjUniform_)) {
-        // Built-in shader: single combined matrix
-        bgfx::setUniform(modelViewProjUniform_, viewProjection_.data());
-    } else if (bgfx::isValid(worldMatrixUniform_) && bgfx::isValid(viewProjMatrixUniform_)) {
+    if (usesMaterialXShaders_) {
+        if (!bgfx::isValid(worldMatrixUniform_) || !bgfx::isValid(viewProjMatrixUniform_)) {
+            if (logger_) {
+                logger_->Error("BgfxGuiService::SubmitQuad: MaterialX uniforms not initialized");
+            }
+            return;
+        }
         // MaterialX shader: separate matrices
         bgfx::setUniform(worldMatrixUniform_, identity);
         bgfx::setUniform(viewProjMatrixUniform_, viewProjection_.data());
-    } else if (logger_) {
-        logger_->Error("BgfxGuiService::SubmitQuad: No valid uniforms for shader!");
+    } else if (!usesPredefinedModelViewProj_) {
+        if (!bgfx::isValid(modelViewProjUniform_)) {
+            if (logger_) {
+                logger_->Error("BgfxGuiService::SubmitQuad: GUI modelViewProj uniform not initialized");
+            }
+            return;
+        }
+        bgfx::setUniform(modelViewProjUniform_, viewProjection_.data());
     }
     bgfx::setTexture(0, sampler_, texture);
     bgfx::setVertexBuffer(0, &tvb, 0, 4);
@@ -959,7 +979,7 @@ bgfx::TextureHandle BgfxGuiService::CreateTexture(const uint8_t* rgba,
 }
 
 bgfx::ProgramHandle BgfxGuiService::CreateProgram(const char* vertexSource,
-                                                  const char* fragmentSource) const {
+                                                  const char* fragmentSource) {
     if (!vertexSource || !fragmentSource) {
         if (logger_) {
             logger_->Error("BgfxGuiService::CreateProgram: null shader source");
@@ -987,6 +1007,10 @@ bgfx::ProgramHandle BgfxGuiService::CreateProgram(const char* vertexSource,
             bgfx::destroy(fs);
         }
         return BGFX_INVALID_HANDLE;
+    }
+
+    if (!usesMaterialXShaders_) {
+        ResolveGuiMatrixUniform(vs);
     }
     
     bgfx::ProgramHandle program = bgfx::createProgram(vs, fs, true);
@@ -1036,6 +1060,55 @@ bgfx::ShaderHandle BgfxGuiService::CreateShader(const std::string& label,
     }
     
     return compiler.CompileShader(label, source, isVertex, uniforms, attributes);
+}
+
+void BgfxGuiService::ResolveGuiMatrixUniform(bgfx::ShaderHandle shader) {
+    modelViewProjUniform_ = BGFX_INVALID_HANDLE;
+    usesPredefinedModelViewProj_ = false;
+
+    if (!bgfx::isValid(shader)) {
+        usesPredefinedModelViewProj_ = true;
+        return;
+    }
+
+    const uint16_t uniformCount = bgfx::getShaderUniforms(shader, nullptr, 0);
+    std::string modelViewProjName = "predefined";
+    std::string uniformNames;
+
+    if (uniformCount > 0) {
+        std::vector<bgfx::UniformHandle> uniforms(uniformCount);
+        bgfx::getShaderUniforms(shader, uniforms.data(), uniformCount);
+
+        for (const auto& uniform : uniforms) {
+            bgfx::UniformInfo info{};
+            bgfx::getUniformInfo(uniform, info);
+            if (!uniformNames.empty()) {
+                uniformNames += ", ";
+            }
+            uniformNames += info.name;
+            if (std::strcmp(info.name, "u_modelViewProj") == 0 ||
+                std::strcmp(info.name, "UniformBuffer.u_modelViewProj") == 0) {
+                modelViewProjUniform_ = uniform;
+                modelViewProjName = info.name;
+                break;
+            }
+        }
+    }
+
+    if (!bgfx::isValid(modelViewProjUniform_)) {
+        usesPredefinedModelViewProj_ = true;
+    }
+
+    if (logger_) {
+        logger_->Trace("BgfxGuiService", "ResolveGuiMatrixUniform",
+                       "uniformCount=" + std::to_string(uniformCount) +
+                       ", modelViewProj=" + modelViewProjName +
+                       (uniformNames.empty() ? "" : ", uniforms=[" + uniformNames + "]"));
+        if (!uniformNames.empty() && modelViewProjName == "predefined") {
+            logger_->Warn("BgfxGuiService::ResolveGuiMatrixUniform: u_modelViewProj not found; uniforms=[" +
+                          uniformNames + "]");
+        }
+    }
 }
 
 void BgfxGuiService::PruneTextCache() {
