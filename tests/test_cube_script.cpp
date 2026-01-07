@@ -405,38 +405,20 @@ bool RunGpuRenderTest(int& failures,
             bool hasCube = false;
             
             for (const auto& obj : objects) {
-                if (obj.shaderKeys.empty()) continue;
-                const auto& key = obj.shaderKeys.front();
+                const auto& type = obj.objectType;
                 
-                if (key == "floor") {
-                    if (obj.vertices.size() > 100) hasFloor = true;  // Main floor has many verts from tessellation
-                } else if (key == "ceiling") {
+                if (type == "floor") {
+                    hasFloor = true;
+                } else if (type == "ceiling") {
                     hasCeiling = true;
-                } else if (key == "wall") {
+                } else if (type == "wall") {
                     wallCount++;
-                } else if (key == "solid") {
-                    // Distinguish between lanterns (small cubes) and physics cube (larger)
-                    // Lanterns have ~24 vertices, physics cube has ~24 vertices
-                    // Use vertex count or scale from default transform if available
-                    // For now, count solid objects and check total
-                    if (obj.vertices.size() == 24) {
-                        // Could be either lantern or cube - need to check scale/size
-                        // Lanterns are small (~0.2 scale), physics cube is larger (~1.5 scale)
-                        // Check first vertex position magnitude as heuristic
-                        if (!obj.vertices.empty()) {
-                            float vx = obj.vertices[0].position[0];
-                            float vy = obj.vertices[0].position[1];
-                            float vz = obj.vertices[0].position[2];
-                            float magnitude = std::sqrt(vx*vx + vy*vy + vz*vz);
-                            if (magnitude < 0.5f) {
-                                lanternCount++;  // Small vertex coords = lantern
-                            } else {
-                                hasCube = true;  // Large vertex coords = physics cube
-                            }
-                        }
-                    }
-                } else if (key == "skybox") {
+                } else if (type == "lantern") {
+                    lanternCount++;
+                } else if (type == "skybox") {
                     hasSkybox = true;
+                } else if (type == "physics_cube" || type == "spinning_cube") {
+                    hasCube = true;
                 }
             }
             
