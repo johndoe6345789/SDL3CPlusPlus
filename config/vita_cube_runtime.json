@@ -52,6 +52,11 @@
       "enabled": false
     }
   },
+  "gui_font": {
+    "use_freetype": true,
+    "font_path": "scripts/assets/fonts/Roboto-Regular.ttf",
+    "font_size": 18.0
+  },
   "camera": {
     "fov_degrees": 75,
     "near_clip": 0.1,

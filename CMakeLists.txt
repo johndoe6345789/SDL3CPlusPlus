@@ -136,12 +136,14 @@ find_package(EnTT CONFIG REQUIRED)
 find_package(bgfx CONFIG REQUIRED)
 find_package(materialx CONFIG REQUIRED)
 find_package(Freetype CONFIG REQUIRED)
+find_package(lunasvg CONFIG REQUIRED)
 find_package(assimp CONFIG REQUIRED)
 find_package(libzip CONFIG REQUIRED)
 find_package(Bullet CONFIG REQUIRED)
 find_package(Vorbis CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(cpptrace REQUIRED)
+find_package(stb CONFIG REQUIRED)
 
 set(SDL3CPP_RENDER_STACK_LIBS EnTT::EnTT)
 if(TARGET bgfx::bgfx)
@@ -187,11 +189,21 @@ if(TARGET libzip::zip)
 elseif(TARGET libzip::libzip)
     list(APPEND SDL3CPP_ZIP_LIBS libzip::libzip)
 endif()
+
+set(SDL3CPP_STB_LIBS)
+if(TARGET stb::stb_image)
+    list(APPEND SDL3CPP_STB_LIBS stb::stb_image)
+elseif(TARGET stb::stb)
+    list(APPEND SDL3CPP_STB_LIBS stb::stb)
+elseif(TARGET stb)
+    list(APPEND SDL3CPP_STB_LIBS stb)
+endif()
 endif()
 
 if(BUILD_SDL3_APP)
     add_executable(sdl3_app
             src/main.cpp
+            src/stb_image.cpp
             src/di/service_registry.cpp
             src/events/event_bus.cpp
             src/services/impl/json_config_service.cpp
@@ -206,6 +218,7 @@ if(BUILD_SDL3_APP)
             src/services/impl/shader_script_service.cpp
             src/services/impl/materialx_shader_generator.cpp
             src/services/impl/gui_script_service.cpp
+            $<$<NOT:$<BOOL:${ENABLE_VITA}>>:src/services/impl/bgfx_gui_service.cpp>
             src/services/impl/audio_command_service.cpp
             src/services/impl/physics_bridge_service.cpp
             src/services/impl/mesh_service.cpp
@@ -217,6 +230,7 @@ if(BUILD_SDL3_APP)
             src/services/impl/application_loop_service.cpp
             src/services/impl/render_coordinator_service.cpp
             src/services/impl/null_gui_service.cpp
+            src/services/impl/bgfx_gui_service.cpp
             src/services/impl/bullet_physics_service.cpp
             src/services/impl/scene_service.cpp
             src/services/impl/graphics_service.cpp
@@ -230,14 +244,17 @@ if(BUILD_SDL3_APP)
         lua::lua
         CLI11::CLI11
         rapidjson
+        ${SDL3CPP_STB_LIBS}
         ${SDL3CPP_RENDER_STACK_LIBS}
         ${SDL3CPP_FREETYPE_LIBS}
+        $<$<NOT:$<BOOL:${ENABLE_VITA}>>:lunasvg::lunasvg>
         ${SDL3CPP_ZIP_LIBS}
         assimp::assimp
         Bullet::Bullet
         glm::glm
         Vorbis::vorbisfile
         Vorbis::vorbis
+        lunasvg::lunasvg
         cpptrace::cpptrace
     )
     if(NOT ENABLE_VITA)
@@ -249,7 +266,8 @@ if(BUILD_SDL3_APP)
             message(FATAL_ERROR "shaderc CMake target not found")
         endif()
     endif()
-    target_compile_definitions(sdl3_app PRIVATE SDL_MAIN_HANDLED)
+    target_compile_definitions(sdl3_app PRIVATE SDL_MAIN_HANDLED
+        $<$<BOOL:${ENABLE_VITA}>:SDL3CPP_ENABLE_VITA>)
 
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/shaders")
         file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/shaders" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")

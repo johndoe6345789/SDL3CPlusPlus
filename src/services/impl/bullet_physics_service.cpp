@@ -26,14 +26,24 @@ void BulletPhysicsService::Initialize(const btVector3& gravity) {
                    ", gravity.y=" + std::to_string(gravity.getY()) +
                    ", gravity.z=" + std::to_string(gravity.getZ()));
 
-    if (initialized_) {
-        return;
+    gravity_ = gravity;
+    bool wasInitialized = initialized_;
+
+    if (!initialized_) {
+        physicsBridge_ = std::make_unique<PhysicsBridgeService>(logger_);
+        initialized_ = true;
     }
 
-    physicsBridge_ = std::make_unique<PhysicsBridgeService>(logger_);
-    initialized_ = true;
+    if (physicsBridge_) {
+        std::string error;
+        if (!physicsBridge_->SetGravity(gravity_, error)) {
+            logger_->Warn("SetGravity failed: " + error);
+        }
+    }
 
-    logger_->Info("Physics service initialized");
+    if (!wasInitialized && initialized_) {
+        logger_->Info("Physics service initialized");
+    }
 }
 
 void BulletPhysicsService::Shutdown() noexcept {
@@ -87,17 +97,31 @@ bool BulletPhysicsService::AddSphereRigidBody(const std::string& name,
                    ", origin.y=" + std::to_string(transform.getOrigin().getY()) +
                    ", origin.z=" + std::to_string(transform.getOrigin().getZ()));
 
-    // PhysicsBridgeService doesn't support sphere rigid bodies in current implementation
-    logger_->Warn("AddSphereRigidBody not supported by PhysicsBridgeService");
-    return false;
+    if (!physicsBridge_) {
+        throw std::runtime_error("Physics service not initialized");
+    }
+
+    std::string error;
+    if (!physicsBridge_->AddSphereRigidBody(name, radius, mass, transform, error)) {
+        logger_->Error("AddSphereRigidBody failed: " + error);
+        return false;
+    }
+    return true;
 }
 
 bool BulletPhysicsService::RemoveRigidBody(const std::string& name) {
     logger_->Trace("BulletPhysicsService", "RemoveRigidBody", "name=" + name);
 
-    // PhysicsBridgeService doesn't support removing bodies in current implementation
-    logger_->Warn("RemoveRigidBody not supported by PhysicsBridgeService");
-    return false;
+    if (!physicsBridge_) {
+        throw std::runtime_error("Physics service not initialized");
+    }
+
+    std::string error;
+    if (!physicsBridge_->RemoveRigidBody(name, error)) {
+        logger_->Error("RemoveRigidBody failed: " + error);
+        return false;
+    }
+    return true;
 }
 
 void BulletPhysicsService::StepSimulation(float deltaTime, int maxSubSteps) {
@@ -109,7 +133,7 @@ void BulletPhysicsService::StepSimulation(float deltaTime, int maxSubSteps) {
         throw std::runtime_error("Physics service not initialized");
     }
 
-    physicsBridge_->StepSimulation(deltaTime);
+    physicsBridge_->StepSimulation(deltaTime, maxSubSteps);
 }
 
 bool BulletPhysicsService::GetTransform(const std::string& name, btTransform& outTransform) const {
@@ -135,9 +159,16 @@ bool BulletPhysicsService::SetTransform(const std::string& name, const btTransfo
                    ", origin.y=" + std::to_string(transform.getOrigin().getY()) +
                    ", origin.z=" + std::to_string(transform.getOrigin().getZ()));
 
-    // PhysicsBridgeService doesn't support setting transforms in current implementation
-    logger_->Warn("SetTransform not supported by PhysicsBridgeService");
-    return false;
+    if (!physicsBridge_) {
+        throw std::runtime_error("Physics service not initialized");
+    }
+
+    std::string error;
+    if (!physicsBridge_->SetRigidBodyTransform(name, transform, error)) {
+        logger_->Error("SetTransform failed: " + error);
+        return false;
+    }
+    return true;
 }
 
 bool BulletPhysicsService::ApplyForce(const std::string& name, const btVector3& force) {
@@ -147,9 +178,16 @@ bool BulletPhysicsService::ApplyForce(const std::string& name, const btVector3& 
                    ", force.y=" + std::to_string(force.getY()) +
                    ", force.z=" + std::to_string(force.getZ()));
 
-    // PhysicsBridgeService doesn't support applying forces in current implementation
-    logger_->Warn("ApplyForce not supported by PhysicsBridgeService");
-    return false;
+    if (!physicsBridge_) {
+        throw std::runtime_error("Physics service not initialized");
+    }
+
+    std::string error;
+    if (!physicsBridge_->ApplyForce(name, force, error)) {
+        logger_->Error("ApplyForce failed: " + error);
+        return false;
+    }
+    return true;
 }
 
 bool BulletPhysicsService::ApplyImpulse(const std::string& name, const btVector3& impulse) {
@@ -159,9 +197,16 @@ bool BulletPhysicsService::ApplyImpulse(const std::string& name, const btVector3
                    ", impulse.y=" + std::to_string(impulse.getY()) +
                    ", impulse.z=" + std::to_string(impulse.getZ()));
 
-    // PhysicsBridgeService doesn't support applying impulses in current implementation
-    logger_->Warn("ApplyImpulse not supported by PhysicsBridgeService");
-    return false;
+    if (!physicsBridge_) {
+        throw std::runtime_error("Physics service not initialized");
+    }
+
+    std::string error;
+    if (!physicsBridge_->ApplyImpulse(name, impulse, error)) {
+        logger_->Error("ApplyImpulse failed: " + error);
+        return false;
+    }
+    return true;
 }
 
 bool BulletPhysicsService::SetLinearVelocity(const std::string& name, const btVector3& velocity) {
@@ -171,16 +216,24 @@ bool BulletPhysicsService::SetLinearVelocity(const std::string& name, const btVe
                    ", velocity.y=" + std::to_string(velocity.getY()) +
                    ", velocity.z=" + std::to_string(velocity.getZ()));
 
-    // PhysicsBridgeService doesn't support setting velocity in current implementation
-    logger_->Warn("SetLinearVelocity not supported by PhysicsBridgeService");
-    return false;
+    if (!physicsBridge_) {
+        throw std::runtime_error("Physics service not initialized");
+    }
+
+    std::string error;
+    if (!physicsBridge_->SetLinearVelocity(name, velocity, error)) {
+        logger_->Error("SetLinearVelocity failed: " + error);
+        return false;
+    }
+    return true;
 }
 
 size_t BulletPhysicsService::GetBodyCount() const {
     logger_->Trace("BulletPhysicsService", "GetBodyCount");
-    // PhysicsBridgeService doesn't expose GetBodyCount in current implementation
-    // Returning 0 as stub - could track bodies in wrapper if needed
-    return 0;
+    if (!physicsBridge_) {
+        return 0;
+    }
+    return physicsBridge_->GetBodyCount();
 }
 
 void BulletPhysicsService::Clear() {
@@ -190,10 +243,7 @@ void BulletPhysicsService::Clear() {
         return;
     }
 
-    // PhysicsBridgeService doesn't expose Clear in current implementation
-    // Shutdown and reinitialize to clear all bodies
-    physicsBridge_.reset();
-    physicsBridge_ = std::make_unique<PhysicsBridgeService>(logger_);
+    physicsBridge_->Clear();
 }
 
 }  // namespace sdl3cpp::services::impl

@@ -25,6 +25,9 @@
 #include "services/impl/scene_service.hpp"
 #include "services/impl/sdl_audio_service.hpp"
 #include "services/impl/null_gui_service.hpp"
+#if !defined(SDL3CPP_ENABLE_VITA)
+#include "services/impl/bgfx_gui_service.hpp"
+#endif
 #include "services/impl/bullet_physics_service.hpp"
 #include "services/impl/crash_recovery_service.hpp"
 #include "services/impl/logger_service.hpp"
@@ -287,8 +290,14 @@ void ServiceBasedApp::RegisterServices() {
         registry_.GetService<services::ILogger>());
 
     // GUI service
+#if defined(SDL3CPP_ENABLE_VITA)
     registry_.RegisterService<services::IGuiService, services::impl::NullGuiService>(
         registry_.GetService<services::ILogger>());
+#else
+    registry_.RegisterService<services::IGuiService, services::impl::BgfxGuiService>(
+        registry_.GetService<services::IConfigService>(),
+        registry_.GetService<services::ILogger>());
+#endif
 
     // Physics service
     registry_.RegisterService<services::IPhysicsService, services::impl::BulletPhysicsService>(

@@ -99,6 +99,14 @@ std::vector<core::Vertex> ReadVertexArray(lua_State* L, int index, const std::sh
         vertex.color = lua::ReadVector3(L, -1);
         lua_pop(L, 1);
 
+        lua_getfield(L, vertexIndex, "texcoord");
+        if (lua_istable(L, -1)) {
+            vertex.texcoord = lua::ReadVector2(L, -1);
+        } else {
+            vertex.texcoord = {0.0f, 0.0f};
+        }
+        lua_pop(L, 1);
+
         lua_pop(L, 1);
         vertices.push_back(vertex);
     }

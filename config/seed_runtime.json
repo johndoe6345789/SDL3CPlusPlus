@@ -83,6 +83,28 @@
       1.0
     ]
   },
+  "materialx_materials": [
+    {
+      "shader_key": "floor",
+      "document": "MaterialX/resources/Materials/Examples/StandardSurface/standard_surface_wood_tiled.mtlx",
+      "material": "Tiled_Wood"
+    },
+    {
+      "shader_key": "wall",
+      "document": "MaterialX/resources/Materials/Examples/StandardSurface/standard_surface_brick_procedural.mtlx",
+      "material": "M_BrickPattern"
+    },
+    {
+      "shader_key": "ceiling",
+      "document": "MaterialX/resources/Materials/Examples/StandardSurface/standard_surface_marble_solid.mtlx",
+      "material": "Marble_3D"
+    },
+    {
+      "shader_key": "solid",
+      "document": "MaterialX/resources/Materials/Examples/StandardSurface/standard_surface_brass_tiled.mtlx",
+      "material": "Tiled_Brass"
+    }
+  ],
   "atmospherics": {
     "ambient_strength": 0.006,
     "fog_density": 0.006,
@@ -96,6 +118,11 @@
     "enable_volumetric_lighting": true,
     "pbr_roughness": 0.28,
     "pbr_metallic": 0.08
+  },
+  "gui_font": {
+    "use_freetype": true,
+    "font_path": "scripts/assets/fonts/Roboto-Regular.ttf",
+    "font_size": 18.0
   },
   "gui_opacity": 1.0,
   "config_file": "config/seed_runtime.json"

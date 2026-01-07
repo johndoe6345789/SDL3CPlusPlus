@@ -473,8 +473,24 @@ void ScriptEngineService::RegisterBindings(lua_State* L) {
     bind("load_mesh_from_file", &ScriptEngineService::LoadMeshFromFile);
     bind("load_mesh_from_pk3", &ScriptEngineService::LoadMeshFromArchive);
     bind("physics_create_box", &ScriptEngineService::PhysicsCreateBox);
+    bind("physics_create_sphere", &ScriptEngineService::PhysicsCreateSphere);
+    bind("physics_remove_body", &ScriptEngineService::PhysicsRemoveBody);
+    bind("physics_set_transform", &ScriptEngineService::PhysicsSetTransform);
+    bind("physics_apply_force", &ScriptEngineService::PhysicsApplyForce);
+    bind("physics_apply_impulse", &ScriptEngineService::PhysicsApplyImpulse);
+    bind("physics_set_linear_velocity", &ScriptEngineService::PhysicsSetLinearVelocity);
+    bind("physics_set_gravity", &ScriptEngineService::PhysicsSetGravity);
     bind("physics_step_simulation", &ScriptEngineService::PhysicsStepSimulation);
     bind("physics_get_transform", &ScriptEngineService::PhysicsGetTransform);
+    bind("physics_get_body_count", &ScriptEngineService::PhysicsGetBodyCount);
+    bind("physics_clear", &ScriptEngineService::PhysicsClear);
+    bind("glm_matrix_identity", &ScriptEngineService::GlmMatrixIdentity);
+    bind("glm_matrix_multiply", &ScriptEngineService::GlmMatrixMultiply);
+    bind("glm_matrix_translation", &ScriptEngineService::GlmMatrixTranslation);
+    bind("glm_matrix_rotation_x", &ScriptEngineService::GlmMatrixRotationX);
+    bind("glm_matrix_rotation_y", &ScriptEngineService::GlmMatrixRotationY);
+    bind("glm_matrix_look_at", &ScriptEngineService::GlmMatrixLookAt);
+    bind("glm_matrix_perspective", &ScriptEngineService::GlmMatrixPerspective);
     bind("glm_matrix_from_transform", &ScriptEngineService::GlmMatrixFromTransform);
     bind("audio_play_background", &ScriptEngineService::AudioPlayBackground);
     bind("audio_play_sound", &ScriptEngineService::AudioPlaySound);
@@ -604,6 +620,249 @@ int ScriptEngineService::PhysicsCreateBox(lua_State* L) {
     return 1;
 }
 
+int ScriptEngineService::PhysicsCreateSphere(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    auto logger = context ? context->logger : nullptr;
+    if (!context || !context->physicsBridgeService) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Physics service not available");
+        return 2;
+    }
+
+    const char* name = luaL_checkstring(L, 1);
+    if (logger) {
+        logger->Trace("ScriptEngineService", "PhysicsCreateSphere",
+                      "name=" + std::string(name));
+    }
+
+    if (!lua_istable(L, 4) || !lua_istable(L, 5)) {
+        luaL_error(L, "physics_create_sphere expects vector tables for origin and rotation");
+    }
+
+    float radius = static_cast<float>(luaL_checknumber(L, 2));
+    float mass = static_cast<float>(luaL_checknumber(L, 3));
+    std::array<float, 3> origin = lua::ReadVector3(L, 4);
+    std::array<float, 4> rotation = lua::ReadQuaternion(L, 5);
+
+    btTransform transform;
+    transform.setIdentity();
+    transform.setOrigin(btVector3(origin[0], origin[1], origin[2]));
+    transform.setRotation(btQuaternion(rotation[0], rotation[1], rotation[2], rotation[3]));
+
+    std::string error;
+    if (!context->physicsBridgeService->AddSphereRigidBody(name, radius, mass, transform, error)) {
+        lua_pushnil(L);
+        lua_pushstring(L, error.c_str());
+        return 2;
+    }
+
+    lua_pushboolean(L, 1);
+    return 1;
+}
+
+int ScriptEngineService::PhysicsRemoveBody(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    auto logger = context ? context->logger : nullptr;
+    if (!context || !context->physicsBridgeService) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Physics service not available");
+        return 2;
+    }
+
+    const char* name = luaL_checkstring(L, 1);
+    if (logger) {
+        logger->Trace("ScriptEngineService", "PhysicsRemoveBody",
+                      "name=" + std::string(name));
+    }
+
+    std::string error;
+    if (!context->physicsBridgeService->RemoveRigidBody(name, error)) {
+        lua_pushnil(L);
+        lua_pushstring(L, error.c_str());
+        return 2;
+    }
+
+    lua_pushboolean(L, 1);
+    return 1;
+}
+
+int ScriptEngineService::PhysicsSetTransform(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    auto logger = context ? context->logger : nullptr;
+    if (!context || !context->physicsBridgeService) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Physics service not available");
+        return 2;
+    }
+
+    const char* name = luaL_checkstring(L, 1);
+    if (logger) {
+        logger->Trace("ScriptEngineService", "PhysicsSetTransform",
+                      "name=" + std::string(name));
+    }
+
+    if (!lua_istable(L, 2) || !lua_istable(L, 3)) {
+        luaL_error(L, "physics_set_transform expects vector tables for origin and rotation");
+    }
+
+    std::array<float, 3> origin = lua::ReadVector3(L, 2);
+    std::array<float, 4> rotation = lua::ReadQuaternion(L, 3);
+
+    btTransform transform;
+    transform.setIdentity();
+    transform.setOrigin(btVector3(origin[0], origin[1], origin[2]));
+    transform.setRotation(btQuaternion(rotation[0], rotation[1], rotation[2], rotation[3]));
+
+    std::string error;
+    if (!context->physicsBridgeService->SetRigidBodyTransform(name, transform, error)) {
+        lua_pushnil(L);
+        lua_pushstring(L, error.c_str());
+        return 2;
+    }
+
+    lua_pushboolean(L, 1);
+    return 1;
+}
+
+int ScriptEngineService::PhysicsApplyForce(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    auto logger = context ? context->logger : nullptr;
+    if (!context || !context->physicsBridgeService) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Physics service not available");
+        return 2;
+    }
+
+    const char* name = luaL_checkstring(L, 1);
+    if (logger) {
+        logger->Trace("ScriptEngineService", "PhysicsApplyForce",
+                      "name=" + std::string(name));
+    }
+
+    if (!lua_istable(L, 2)) {
+        luaL_error(L, "physics_apply_force expects a vector table for force");
+    }
+
+    std::array<float, 3> force = lua::ReadVector3(L, 2);
+
+    std::string error;
+    if (!context->physicsBridgeService->ApplyForce(
+            name,
+            btVector3(force[0], force[1], force[2]),
+            error)) {
+        lua_pushnil(L);
+        lua_pushstring(L, error.c_str());
+        return 2;
+    }
+
+    lua_pushboolean(L, 1);
+    return 1;
+}
+
+int ScriptEngineService::PhysicsApplyImpulse(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    auto logger = context ? context->logger : nullptr;
+    if (!context || !context->physicsBridgeService) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Physics service not available");
+        return 2;
+    }
+
+    const char* name = luaL_checkstring(L, 1);
+    if (logger) {
+        logger->Trace("ScriptEngineService", "PhysicsApplyImpulse",
+                      "name=" + std::string(name));
+    }
+
+    if (!lua_istable(L, 2)) {
+        luaL_error(L, "physics_apply_impulse expects a vector table for impulse");
+    }
+
+    std::array<float, 3> impulse = lua::ReadVector3(L, 2);
+
+    std::string error;
+    if (!context->physicsBridgeService->ApplyImpulse(
+            name,
+            btVector3(impulse[0], impulse[1], impulse[2]),
+            error)) {
+        lua_pushnil(L);
+        lua_pushstring(L, error.c_str());
+        return 2;
+    }
+
+    lua_pushboolean(L, 1);
+    return 1;
+}
+
+int ScriptEngineService::PhysicsSetLinearVelocity(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    auto logger = context ? context->logger : nullptr;
+    if (!context || !context->physicsBridgeService) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Physics service not available");
+        return 2;
+    }
+
+    const char* name = luaL_checkstring(L, 1);
+    if (logger) {
+        logger->Trace("ScriptEngineService", "PhysicsSetLinearVelocity",
+                      "name=" + std::string(name));
+    }
+
+    if (!lua_istable(L, 2)) {
+        luaL_error(L, "physics_set_linear_velocity expects a vector table for velocity");
+    }
+
+    std::array<float, 3> velocity = lua::ReadVector3(L, 2);
+
+    std::string error;
+    if (!context->physicsBridgeService->SetLinearVelocity(
+            name,
+            btVector3(velocity[0], velocity[1], velocity[2]),
+            error)) {
+        lua_pushnil(L);
+        lua_pushstring(L, error.c_str());
+        return 2;
+    }
+
+    lua_pushboolean(L, 1);
+    return 1;
+}
+
+int ScriptEngineService::PhysicsSetGravity(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    auto logger = context ? context->logger : nullptr;
+    if (!context || !context->physicsBridgeService) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Physics service not available");
+        return 2;
+    }
+
+    if (!lua_istable(L, 1)) {
+        luaL_error(L, "physics_set_gravity expects a vector table for gravity");
+    }
+
+    std::array<float, 3> gravity = lua::ReadVector3(L, 1);
+    if (logger) {
+        logger->Trace("ScriptEngineService", "PhysicsSetGravity",
+                      "gravity.x=" + std::to_string(gravity[0]) +
+                      ", gravity.y=" + std::to_string(gravity[1]) +
+                      ", gravity.z=" + std::to_string(gravity[2]));
+    }
+
+    std::string error;
+    if (!context->physicsBridgeService->SetGravity(
+            btVector3(gravity[0], gravity[1], gravity[2]),
+            error)) {
+        lua_pushnil(L);
+        lua_pushstring(L, error.c_str());
+        return 2;
+    }
+
+    lua_pushboolean(L, 1);
+    return 1;
+}
+
 int ScriptEngineService::PhysicsStepSimulation(lua_State* L) {
     auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
     auto logger = context ? context->logger : nullptr;
@@ -615,7 +874,11 @@ int ScriptEngineService::PhysicsStepSimulation(lua_State* L) {
         logger->Trace("ScriptEngineService", "PhysicsStepSimulation");
     }
     float deltaTime = static_cast<float>(luaL_checknumber(L, 1));
-    int steps = context->physicsBridgeService->StepSimulation(deltaTime);
+    int maxSubSteps = 10;
+    if (lua_gettop(L) >= 2 && lua_isnumber(L, 2)) {
+        maxSubSteps = static_cast<int>(lua_tointeger(L, 2));
+    }
+    int steps = context->physicsBridgeService->StepSimulation(deltaTime, maxSubSteps);
     lua_pushinteger(L, steps);
     return 1;
 }
@@ -665,6 +928,37 @@ int ScriptEngineService::PhysicsGetTransform(lua_State* L) {
     lua_rawseti(L, -2, 4);
     lua_setfield(L, -2, "rotation");
 
+    return 1;
+}
+
+int ScriptEngineService::PhysicsGetBodyCount(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    auto logger = context ? context->logger : nullptr;
+    if (!context || !context->physicsBridgeService) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Physics service not available");
+        return 2;
+    }
+    if (logger) {
+        logger->Trace("ScriptEngineService", "PhysicsGetBodyCount");
+    }
+    lua_pushinteger(L, static_cast<lua_Integer>(context->physicsBridgeService->GetBodyCount()));
+    return 1;
+}
+
+int ScriptEngineService::PhysicsClear(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    auto logger = context ? context->logger : nullptr;
+    if (!context || !context->physicsBridgeService) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Physics service not available");
+        return 2;
+    }
+    if (logger) {
+        logger->Trace("ScriptEngineService", "PhysicsClear");
+    }
+    context->physicsBridgeService->Clear();
+    lua_pushboolean(L, 1);
     return 1;
 }
 
@@ -1081,6 +1375,69 @@ int ScriptEngineService::WindowIsCursorVisible(lua_State* L) {
     }
     lua_pushboolean(L, context->windowService->IsCursorVisible());
     return 1;
+}
+
+int ScriptEngineService::GlmMatrixIdentity(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    auto logger = context ? context->logger : nullptr;
+    if (logger) {
+        logger->Trace("ScriptEngineService", "GlmMatrixIdentity");
+    }
+    return lua::LuaGlmMatrixIdentity(L);
+}
+
+int ScriptEngineService::GlmMatrixMultiply(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    auto logger = context ? context->logger : nullptr;
+    if (logger) {
+        logger->Trace("ScriptEngineService", "GlmMatrixMultiply");
+    }
+    return lua::LuaGlmMatrixMultiply(L);
+}
+
+int ScriptEngineService::GlmMatrixTranslation(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    auto logger = context ? context->logger : nullptr;
+    if (logger) {
+        logger->Trace("ScriptEngineService", "GlmMatrixTranslation");
+    }
+    return lua::LuaGlmMatrixTranslation(L);
+}
+
+int ScriptEngineService::GlmMatrixRotationX(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    auto logger = context ? context->logger : nullptr;
+    if (logger) {
+        logger->Trace("ScriptEngineService", "GlmMatrixRotationX");
+    }
+    return lua::LuaGlmMatrixRotationX(L);
+}
+
+int ScriptEngineService::GlmMatrixRotationY(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    auto logger = context ? context->logger : nullptr;
+    if (logger) {
+        logger->Trace("ScriptEngineService", "GlmMatrixRotationY");
+    }
+    return lua::LuaGlmMatrixRotationY(L);
+}
+
+int ScriptEngineService::GlmMatrixLookAt(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    auto logger = context ? context->logger : nullptr;
+    if (logger) {
+        logger->Trace("ScriptEngineService", "GlmMatrixLookAt");
+    }
+    return lua::LuaGlmMatrixLookAt(L);
+}
+
+int ScriptEngineService::GlmMatrixPerspective(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    auto logger = context ? context->logger : nullptr;
+    if (logger) {
+        logger->Trace("ScriptEngineService", "GlmMatrixPerspective");
+    }
+    return lua::LuaGlmMatrixPerspective(L);
 }
 
 int ScriptEngineService::GlmMatrixFromTransform(lua_State* L) {

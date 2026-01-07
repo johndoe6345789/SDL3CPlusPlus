@@ -61,6 +61,11 @@
     },
     "gamepad_axis_action_threshold": 0.5
   },
+  "gui_font": {
+    "use_freetype": true,
+    "font_path": "scripts/assets/fonts/Roboto-Regular.ttf",
+    "font_size": 18.0
+  },
   "gui_opacity": 1.0,
   "config_file": "config/gui_runtime.json"
 }

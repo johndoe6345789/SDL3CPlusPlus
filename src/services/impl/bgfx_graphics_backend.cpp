@@ -1,4 +1,5 @@
 #include "bgfx_graphics_backend.hpp"
+#include <stb_image.h>
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_properties.h>
@@ -47,6 +48,18 @@ bool IsIdentityMatrix(const std::array<float, 16>& value) {
         }
     }
     return true;
+}
+
+uint64_t DefaultSamplerFlags() {
+    return BGFX_SAMPLER_U_REPEAT |
+           BGFX_SAMPLER_V_REPEAT |
+           BGFX_SAMPLER_MIN_LINEAR |
+           BGFX_SAMPLER_MAG_LINEAR;
+}
+
+bgfx::TextureHandle CreateSolidTexture(uint32_t rgba, uint64_t flags) {
+    const bgfx::Memory* mem = bgfx::copy(&rgba, sizeof(rgba));
+    return bgfx::createTexture2D(1, 1, false, 1, bgfx::TextureFormat::RGBA8, flags, mem);
 }
 
 void SetUniformIfValid(bgfx::UniformHandle handle, const void* data, uint16_t count = 1) {
@@ -273,6 +286,7 @@ BgfxGraphicsBackend::BgfxGraphicsBackend(std::shared_ptr<IConfigService> configS
     vertexLayout_.begin()
         .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
         .add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float)
+        .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
         .add(bgfx::Attrib::Color0, 3, bgfx::AttribType::Float)
         .end();
 
@@ -677,6 +691,54 @@ bgfx::ShaderHandle BgfxGraphicsBackend::CreateShader(const std::string& label,
     return bgfx::createShader(mem);
 }
 
+bgfx::TextureHandle BgfxGraphicsBackend::LoadTextureFromFile(const std::string& path,
+                                                             uint64_t samplerFlags) const {
+    if (logger_) {
+        logger_->Trace("BgfxGraphicsBackend", "LoadTextureFromFile", "path=" + path);
+    }
+
+    int width = 0;
+    int height = 0;
+    int channels = 0;
+    stbi_uc* pixels = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+    if (!pixels || width <= 0 || height <= 0) {
+        if (logger_) {
+            logger_->Error("BgfxGraphicsBackend::LoadTextureFromFile: failed to load " + path +
+                           " reason=" + (stbi_failure_reason() ? stbi_failure_reason() : "unknown"));
+        }
+        if (pixels) {
+            stbi_image_free(pixels);
+        }
+        return BGFX_INVALID_HANDLE;
+    }
+
+    const uint32_t size = static_cast<uint32_t>(width * height * 4);
+    const bgfx::Memory* mem = bgfx::copy(pixels, size);
+    stbi_image_free(pixels);
+
+    bgfx::TextureHandle handle = bgfx::createTexture2D(
+        static_cast<uint16_t>(width),
+        static_cast<uint16_t>(height),
+        false,
+        1,
+        bgfx::TextureFormat::RGBA8,
+        samplerFlags,
+        mem);
+
+    if (!bgfx::isValid(handle) && logger_) {
+        logger_->Error("BgfxGraphicsBackend::LoadTextureFromFile: createTexture2D failed for " + path);
+    }
+
+    if (logger_) {
+        logger_->Trace("BgfxGraphicsBackend", "LoadTextureFromFile",
+                       "path=" + path +
+                           ", width=" + std::to_string(width) +
+                           ", height=" + std::to_string(height));
+    }
+
+    return handle;
+}
+
 void BgfxGraphicsBackend::InitializeUniforms() {
     materialXUniforms_.worldMatrix = bgfx::createUniform("u_worldMatrix", bgfx::UniformType::Mat4);
     materialXUniforms_.viewMatrix = bgfx::createUniform("u_viewMatrix", bgfx::UniformType::Mat4);
@@ -753,6 +815,40 @@ GraphicsPipelineHandle BgfxGraphicsBackend::CreatePipeline(GraphicsDeviceHandle 
 
     auto entry = std::make_unique<PipelineEntry>();
     entry->program = program;
+    if (!shaderPaths.textures.empty()) {
+        const uint64_t samplerFlags = DefaultSamplerFlags();
+        uint8_t stage = 0;
+        const uint8_t maxStages = BGFX_CONFIG_MAX_TEXTURE_SAMPLERS;
+        for (const auto& texture : shaderPaths.textures) {
+            if (stage >= maxStages) {
+                if (logger_) {
+                    logger_->Warn("BgfxGraphicsBackend::CreatePipeline: texture limit reached for " +
+                                  shaderKey);
+                }
+                break;
+            }
+            if (texture.uniformName.empty() || texture.path.empty()) {
+                continue;
+            }
+            PipelineEntry::TextureBinding binding{};
+            binding.stage = stage++;
+            binding.uniformName = texture.uniformName;
+            binding.sourcePath = texture.path;
+            binding.sampler = bgfx::createUniform(binding.uniformName.c_str(), bgfx::UniformType::Sampler);
+            binding.texture = LoadTextureFromFile(binding.sourcePath, samplerFlags);
+            if (!bgfx::isValid(binding.texture)) {
+                binding.texture = CreateSolidTexture(0xff00ffff, samplerFlags);
+            }
+            if (logger_) {
+                logger_->Trace("BgfxGraphicsBackend", "CreatePipeline",
+                               "shaderKey=" + shaderKey +
+                                   ", textureUniform=" + binding.uniformName +
+                                   ", texturePath=" + binding.sourcePath +
+                                   ", stage=" + std::to_string(binding.stage));
+            }
+            entry->textures.push_back(std::move(binding));
+        }
+    }
     GraphicsPipelineHandle handle = reinterpret_cast<GraphicsPipelineHandle>(entry.get());
     pipelines_.emplace(handle, std::move(entry));
     return handle;
@@ -765,6 +861,14 @@ void BgfxGraphicsBackend::DestroyPipeline(GraphicsDeviceHandle device, GraphicsP
     auto it = pipelines_.find(pipeline);
     if (it == pipelines_.end()) {
         return;
+    }
+    for (const auto& binding : it->second->textures) {
+        if (bgfx::isValid(binding.texture)) {
+            bgfx::destroy(binding.texture);
+        }
+        if (bgfx::isValid(binding.sampler)) {
+            bgfx::destroy(binding.sampler);
+        }
     }
     if (bgfx::isValid(it->second->program)) {
         bgfx::destroy(it->second->program);
@@ -889,6 +993,11 @@ void BgfxGraphicsBackend::Draw(GraphicsDeviceHandle device, GraphicsPipelineHand
 
     bgfx::setTransform(modelMatrix.data());
     ApplyMaterialXUniforms(modelMatrix);
+    for (const auto& binding : pipelineIt->second->textures) {
+        if (bgfx::isValid(binding.sampler) && bgfx::isValid(binding.texture)) {
+            bgfx::setTexture(binding.stage, binding.sampler, binding.texture);
+        }
+    }
     bgfx::setVertexBuffer(0, vb->handle, startVertex, availableVertices);
     bgfx::setIndexBuffer(ib->handle, indexOffset, indexCount);
     bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z |
@@ -918,6 +1027,14 @@ void* BgfxGraphicsBackend::GetGraphicsQueue() const {
 
 void BgfxGraphicsBackend::DestroyPipelines() {
     for (auto& [handle, entry] : pipelines_) {
+        for (const auto& binding : entry->textures) {
+            if (bgfx::isValid(binding.texture)) {
+                bgfx::destroy(binding.texture);
+            }
+            if (bgfx::isValid(binding.sampler)) {
+                bgfx::destroy(binding.sampler);
+            }
+        }
         if (bgfx::isValid(entry->program)) {
             bgfx::destroy(entry->program);
         }

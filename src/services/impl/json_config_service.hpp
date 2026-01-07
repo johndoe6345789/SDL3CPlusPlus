@@ -99,6 +99,12 @@ public:
         }
         return config_.materialX;
     }
+    const std::vector<MaterialXMaterialConfig>& GetMaterialXMaterialConfigs() const override {
+        if (logger_) {
+            logger_->Trace("JsonConfigService", "GetMaterialXMaterialConfigs");
+        }
+        return config_.materialXMaterials;
+    }
     const GuiFontConfig& GetGuiFontConfig() const override {
         if (logger_) {
             logger_->Trace("JsonConfigService", "GetGuiFontConfig");

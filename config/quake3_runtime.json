@@ -60,6 +60,11 @@
     },
     "gamepad_axis_action_threshold": 0.5
   },
+  "gui_font": {
+    "use_freetype": true,
+    "font_path": "scripts/assets/fonts/Roboto-Regular.ttf",
+    "font_size": 18.0
+  },
   "quake3": {
     "pk3_path": "/home/rewrich/Documents/GitHub/q3/pak0.pk3",
     "map_path": "q3dm1",

@@ -30,6 +30,11 @@ struct ShaderPaths {
     std::string tessEvalSource;
     std::string compute;
     std::string computeSource;
+    struct TextureBinding {
+        std::string uniformName;
+        std::string path;
+    };
+    std::vector<TextureBinding> textures{};
     bool disableCulling = false;
     bool disableDepthTest = false;
 };

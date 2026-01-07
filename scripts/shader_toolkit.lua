@@ -316,7 +316,7 @@ local vertex_color_source = [[
 
 layout(location = 0) in vec3 inPos;
 layout(location = 1) in vec3 inNormal;
-layout(location = 2) in vec3 inColor;
+layout(location = 3) in vec3 inColor;
 
 layout(location = 0) out vec3 fragColor;
 
@@ -391,7 +391,7 @@ local shadow_vertex_source = [[
 
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inNormal;
-layout(location = 2) in vec3 inColor;
+layout(location = 3) in vec3 inColor;
 
 layout(push_constant) uniform PushConstants {
     mat4 model;
@@ -596,7 +596,7 @@ local vertex_world_color_source = [[
 
 layout(location = 0) in vec3 inPos;
 layout(location = 1) in vec3 inNormal;
-layout(location = 2) in vec3 inColor;
+layout(location = 3) in vec3 inColor;
 
 layout(location = 0) out vec3 fragColor;
 layout(location = 1) out vec3 fragWorldPos;
@@ -1030,7 +1030,7 @@ local pbr_vertex_source = [[
 
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inNormal;
-layout(location = 2) in vec3 inColor;
+layout(location = 3) in vec3 inColor;
 
 layout(location = 0) out vec3 fragColor;
 layout(location = 1) out vec3 fragWorldPos;

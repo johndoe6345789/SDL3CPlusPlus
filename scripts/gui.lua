@@ -125,6 +125,12 @@ Context.__index = Context
 function Context:new(options)
     options = options or {}
     local style = options.style or DEFAULT_STYLE
+    if options.style == nil and type(config) == "table" then
+        local guiFont = config.gui_font
+        if type(guiFont) == "table" and type(guiFont.font_size) == "number" then
+            style.fontSize = guiFont.font_size
+        end
+    end
     local opacity = 1.0
     if type(config) == "table" and type(config.gui_opacity) == "number" then
         opacity = config.gui_opacity

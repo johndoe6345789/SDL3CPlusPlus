@@ -136,6 +136,24 @@ std::vector<GuiCommand> GuiScriptService::LoadGuiCommands() {
         } else if (std::strcmp(typeName, "text") == 0) {
             command.type = GuiCommand::Type::Text;
             ReadStringField(L, commandIndex, "text", command.text);
+            bool hasX = false;
+            bool hasY = false;
+            lua_getfield(L, commandIndex, "x");
+            if (lua_isnumber(L, -1)) {
+                command.rect.x = static_cast<float>(lua_tonumber(L, -1));
+                hasX = true;
+            }
+            lua_pop(L, 1);
+            lua_getfield(L, commandIndex, "y");
+            if (lua_isnumber(L, -1)) {
+                command.rect.y = static_cast<float>(lua_tonumber(L, -1));
+                hasY = true;
+            }
+            lua_pop(L, 1);
+            if (logger_ && (!hasX || !hasY)) {
+                logger_->Trace("GuiScriptService", "LoadGuiCommands",
+                               "Text command missing x/y; defaulting to 0");
+            }
             lua_getfield(L, commandIndex, "fontSize");
             if (lua_isnumber(L, -1)) {
                 command.fontSize = static_cast<float>(lua_tonumber(L, -1));
@@ -163,7 +181,17 @@ std::vector<GuiCommand> GuiScriptService::LoadGuiCommands() {
             command.color = ReadColorField(L, commandIndex, "color", GuiColor{1.0f, 1.0f, 1.0f, 1.0f});
         } else if (std::strcmp(typeName, "clip_push") == 0) {
             command.type = GuiCommand::Type::ClipPush;
-            command.rect = ReadRect(L, commandIndex);
+            lua_getfield(L, commandIndex, "rect");
+            if (lua_istable(L, -1)) {
+                command.rect = ReadRect(L, -1);
+            } else {
+                command.rect = ReadRect(L, commandIndex);
+                if (logger_) {
+                    logger_->Trace("GuiScriptService", "LoadGuiCommands",
+                                   "clipPushFallback=true");
+                }
+            }
+            lua_pop(L, 1);
         } else if (std::strcmp(typeName, "clip_pop") == 0) {
             command.type = GuiCommand::Type::ClipPop;
         } else if (std::strcmp(typeName, "svg") == 0) {

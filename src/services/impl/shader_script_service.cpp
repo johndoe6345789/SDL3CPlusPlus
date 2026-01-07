@@ -72,7 +72,34 @@ std::unordered_map<std::string, ShaderPaths> ShaderScriptService::LoadShaderPath
 
     if (configService_) {
         const auto& materialConfig = configService_->GetMaterialXConfig();
-        if (materialConfig.enabled) {
+        const auto& materialOverrides = configService_->GetMaterialXMaterialConfigs();
+        if (!materialOverrides.empty()) {
+            for (const auto& overrideConfig : materialOverrides) {
+                if (!overrideConfig.enabled) {
+                    continue;
+                }
+                MaterialXConfig resolvedConfig = materialConfig;
+                resolvedConfig.enabled = true;
+                resolvedConfig.documentPath = overrideConfig.documentPath;
+                resolvedConfig.shaderKey = overrideConfig.shaderKey;
+                resolvedConfig.materialName = overrideConfig.materialName;
+                resolvedConfig.useConstantColor = overrideConfig.useConstantColor;
+                resolvedConfig.constantColor = overrideConfig.constantColor;
+                try {
+                    ShaderPaths materialShader = materialxGenerator_.Generate(
+                        resolvedConfig,
+                        engineService_ ? engineService_->GetScriptDirectory() : std::filesystem::path{});
+                    if (!resolvedConfig.shaderKey.empty()) {
+                        shaderMap[resolvedConfig.shaderKey] = std::move(materialShader);
+                    }
+                } catch (const std::exception& ex) {
+                    if (logger_) {
+                        logger_->Error("MaterialX shader generation failed for key=" +
+                                       overrideConfig.shaderKey + ": " + std::string(ex.what()));
+                    }
+                }
+            }
+        } else if (materialConfig.enabled) {
             try {
                 ShaderPaths materialShader = materialxGenerator_.Generate(
                     materialConfig,

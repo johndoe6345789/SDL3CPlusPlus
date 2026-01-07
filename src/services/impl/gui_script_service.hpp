@@ -31,6 +31,7 @@ public:
 private:
     lua_State* GetLuaState() const;
     GuiCommand::RectData ReadRect(lua_State* L, int index) const;
+    float ReadNumberField(lua_State* L, int index, const char* name, float defaultValue) const;
     GuiColor ReadColor(lua_State* L, int index, const GuiColor& defaultColor) const;
     GuiColor ReadColorField(lua_State* L, int index, const char* name, const GuiColor& defaultColor) const;
     bool ReadStringField(lua_State* L, int index, const char* name, std::string& outString) const;

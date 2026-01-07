@@ -202,6 +202,11 @@ local flight_layout = {
     height = 28,
     spacing = 8,
 }
+local physics_layout = {
+    width = 140,
+    height = 28,
+    spacing = 8,
+}
 local ui_state = {
     flyUpActive = false,
     flyDownActive = false,
@@ -271,6 +276,36 @@ local player_state = {
     noclip_toggle_pressed = false,
 }
 
+local function physics_is_available()
+    return type(physics_create_box) == "function"
+        and type(physics_step_simulation) == "function"
+        and type(physics_get_transform) == "function"
+        and type(math3d.from_transform) == "function"
+end
+
+local physics_cube_half_extents = {1.5, 1.5, 1.5}
+local physics_cube_scale = {physics_cube_half_extents[1], physics_cube_half_extents[2], physics_cube_half_extents[3]}
+local physics_cube_spawn = {
+    0.0,
+    room.floor_top + room.wall_height + physics_cube_half_extents[2] + 0.5,
+    0.0,
+}
+
+local physics_state = {
+    enabled = physics_is_available(),
+    ready = false,
+    last_step_time = nil,
+    max_sub_steps = 10,
+    cube_name = "demo_cube",
+    cube_half_extents = physics_cube_half_extents,
+    cube_scale = physics_cube_scale,
+    cube_mass = 1.0,
+    cube_color = {0.92, 0.34, 0.28},
+    cube_spawn = physics_cube_spawn,
+    kick_strength = 6.0,
+    gravity = {0.0, -9.8, 0.0},
+}
+
 camera.position[1] = 0.0
 camera.position[2] = room.floor_top + player_state.eye_height
 camera.position[3] = 10.0
@@ -292,6 +327,104 @@ local function scale_matrix(x, y, z)
         0.0, 0.0, z, 0.0,
         0.0, 0.0, 0.0, 1.0,
     }
+end
+
+local function ensure_physics_setup()
+    if not physics_state.enabled then
+        return false
+    end
+    if physics_state.ready then
+        return true
+    end
+
+    physics_state.last_step_time = nil
+    if type(physics_clear) == "function" then
+        physics_clear()
+    end
+    if type(physics_set_gravity) == "function" then
+        local ok, err = physics_set_gravity(physics_state.gravity)
+        if not ok then
+            log_debug("Physics gravity failed: %s", err or "unknown")
+        end
+    end
+
+    local rotation = {0.0, 0.0, 0.0, 1.0}
+    local function add_static_body(name, half_extents, origin)
+        local ok, err = physics_create_box(name, half_extents, 0.0, origin, rotation)
+        if not ok then
+            log_debug("Physics static body %s failed: %s", name, err or "unknown")
+        end
+    end
+
+    local floor_center_y = room.floor_top - room.floor_half_thickness
+    local wall_center_y = room.floor_top + room.wall_height
+    local ceiling_y = room.floor_top + room.wall_height * 2 + room.floor_half_thickness
+    local wall_offset = room.half_size + room.wall_thickness
+
+    add_static_body("room_floor",
+        {room.half_size, room.floor_half_thickness, room.half_size},
+        {0.0, floor_center_y, 0.0})
+    add_static_body("room_ceiling",
+        {room.half_size, room.floor_half_thickness, room.half_size},
+        {0.0, ceiling_y, 0.0})
+    add_static_body("room_wall_north",
+        {room.half_size, room.wall_height, room.wall_thickness},
+        {0.0, wall_center_y, -wall_offset})
+    add_static_body("room_wall_south",
+        {room.half_size, room.wall_height, room.wall_thickness},
+        {0.0, wall_center_y, wall_offset})
+    add_static_body("room_wall_west",
+        {room.wall_thickness, room.wall_height, room.half_size},
+        {-wall_offset, wall_center_y, 0.0})
+    add_static_body("room_wall_east",
+        {room.wall_thickness, room.wall_height, room.half_size},
+        {wall_offset, wall_center_y, 0.0})
+
+    local ok, err = physics_create_box(
+        physics_state.cube_name,
+        physics_state.cube_half_extents,
+        physics_state.cube_mass,
+        physics_state.cube_spawn,
+        rotation)
+    if not ok then
+        log_debug("Physics cube create failed: %s", err or "unknown")
+        return false
+    end
+
+    if type(physics_set_linear_velocity) == "function" then
+        physics_set_linear_velocity(physics_state.cube_name, {0.0, 0.0, 0.0})
+    end
+
+    physics_state.ready = true
+    log_debug("Physics demo initialized")
+    return true
+end
+
+local function step_physics(time)
+    if not physics_state.ready then
+        return
+    end
+    if type(time) ~= "number" then
+        return
+    end
+    if physics_state.last_step_time == time then
+        return
+    end
+
+    local dt = 0.0
+    if physics_state.last_step_time then
+        dt = time - physics_state.last_step_time
+    end
+    physics_state.last_step_time = time
+
+    if dt <= 0.0 then
+        return
+    end
+    if dt > 0.1 then
+        dt = 0.1
+    end
+
+    physics_step_simulation(dt, physics_state.max_sub_steps)
 end
 
 local function normalize(vec)
@@ -330,6 +463,49 @@ local function forward_from_angles(yaw, pitch)
         math.sin(pitch),
         math.sin(yaw) * cos_pitch,
     }
+end
+
+local function reset_physics_cube()
+    if not physics_state.ready then
+        return
+    end
+    if type(physics_set_transform) ~= "function" then
+        return
+    end
+    local rotation = {0.0, 0.0, 0.0, 1.0}
+    local ok, err = physics_set_transform(
+        physics_state.cube_name,
+        physics_state.cube_spawn,
+        rotation)
+    if not ok then
+        log_debug("Physics reset failed: %s", err or "unknown")
+        return
+    end
+    if type(physics_set_linear_velocity) == "function" then
+        physics_set_linear_velocity(physics_state.cube_name, {0.0, 0.0, 0.0})
+    end
+    physics_state.last_step_time = nil
+end
+
+local function kick_physics_cube()
+    if not physics_state.ready then
+        return
+    end
+    if type(physics_apply_impulse) ~= "function" then
+        return
+    end
+    local forward = forward_from_angles(camera.yaw, camera.pitch)
+    local lift = math.max(forward[2], 0.2)
+    local direction = normalize({forward[1], lift, forward[3]})
+    local impulse = {
+        direction[1] * physics_state.kick_strength,
+        direction[2] * physics_state.kick_strength,
+        direction[3] * physics_state.kick_strength,
+    }
+    local ok, err = physics_apply_impulse(physics_state.cube_name, impulse)
+    if not ok then
+        log_debug("Physics impulse failed: %s", err or "unknown")
+    end
 end
 
 local atan2_available = type(math.atan2) == "function"
@@ -540,6 +716,7 @@ local function apply_color_to_vertices(color)
             position = v.position,
             normal = v.normal,
             color = color,
+            texcoord = v.texcoord,
         }
     end
     return colored_vertices
@@ -579,6 +756,39 @@ local function create_skybox()
     }
 end
 
+local function create_physics_cube()
+    if not ensure_physics_setup() then
+        return nil
+    end
+    local shader_key = resolve_material_shader()
+    local last_matrix = math3d.identity()
+
+    local function compute_model_matrix(time)
+        step_physics(time)
+        local transform, err = physics_get_transform(physics_state.cube_name)
+        if not transform then
+            if lua_debug then
+                log_debug("physics_get_transform failed: %s", err or "unknown")
+            end
+            return last_matrix
+        end
+        local matrix = math3d.from_transform(transform.position, transform.rotation)
+        matrix = math3d.multiply(matrix, scale_matrix(
+            physics_state.cube_scale[1],
+            physics_state.cube_scale[2],
+            physics_state.cube_scale[3]))
+        last_matrix = matrix
+        return matrix
+    end
+
+    return {
+        vertices = apply_color_to_vertices(physics_state.cube_color),
+        indices = (#cube_indices_double_sided > 0) and cube_indices_double_sided or cube_indices,
+        compute_model_matrix = compute_model_matrix,
+        shader_key = shader_key,
+    }
+end
+
 local function create_spinning_cube()
     local shader_key = resolve_material_shader()
     log_debug("Spinning cube shader=%s", shader_key)
@@ -597,11 +807,19 @@ local function create_spinning_cube()
     }
 end
 
+local function create_dynamic_cube()
+    local physics_cube = create_physics_cube()
+    if physics_cube then
+        return physics_cube
+    end
+    return create_spinning_cube()
+end
+
 local function create_lantern(x, z)
     local lantern_height = 8
     local lantern_size = 0.2
     return create_static_cube({x, lantern_height, z},
-        {lantern_size, lantern_size, lantern_size}, {1.0, 0.9, 0.6})
+        {lantern_size, lantern_size, lantern_size}, {1.0, 0.9, 0.6}, "solid")
 end
 
 local function create_room_objects()
@@ -766,13 +984,53 @@ local function draw_flight_buttons()
     ui_state.flyDownPulse = down_clicked
 end
 
+local function draw_physics_buttons()
+    if not physics_state.enabled then
+        return
+    end
+    local x = ui_layout.width - physics_layout.width - ui_layout.margin
+    local y = ui_layout.margin * 3 + compass_layout.size
+        + flight_layout.height * 2 + flight_layout.spacing
+
+    Gui.text(gui_context, {
+        x = x,
+        y = y,
+        width = physics_layout.width,
+        height = 16,
+    }, "Physics", {
+        fontSize = 12,
+        alignX = "center",
+        color = {0.82, 0.88, 0.95, 1.0},
+    })
+
+    local kick_clicked = Gui.button(gui_context, "physics_kick", {
+        x = x,
+        y = y + 18,
+        width = physics_layout.width,
+        height = physics_layout.height,
+    }, "Kick Cube")
+    if kick_clicked then
+        kick_physics_cube()
+    end
+
+    local reset_clicked = Gui.button(gui_context, "physics_reset", {
+        x = x,
+        y = y + 18 + physics_layout.height + physics_layout.spacing,
+        width = physics_layout.width,
+        height = physics_layout.height,
+    }, "Reset Cube")
+    if reset_clicked then
+        reset_physics_cube()
+    end
+end
+
 function get_scene_objects()
     local objects = {}
     objects[#objects + 1] = create_skybox()
     for i = 1, #room_objects do
         objects[#objects + 1] = room_objects[i]
     end
-    objects[#objects + 1] = create_spinning_cube()
+    objects[#objects + 1] = create_dynamic_cube()
     return objects
 end
 
@@ -827,6 +1085,7 @@ function get_gui_commands()
     gui_context:beginFrame(gui_input)
     draw_compass_widget()
     draw_flight_buttons()
+    draw_physics_buttons()
     gui_context:endFrame()
     return gui_context:getCommands()
 end

@@ -105,8 +105,17 @@ struct MaterialXConfig {
     std::array<float, 3> constantColor = {1.0f, 1.0f, 1.0f};
 };
 
+struct MaterialXMaterialConfig {
+    bool enabled = true;
+    std::filesystem::path documentPath;
+    std::string shaderKey;
+    std::string materialName;
+    bool useConstantColor = false;
+    std::array<float, 3> constantColor = {1.0f, 1.0f, 1.0f};
+};
+
 struct GuiFontConfig {
-    bool useFreeType = false;
+    bool useFreeType = true;
     std::filesystem::path fontPath;
     float fontSize = 18.0f;
 };
@@ -125,6 +134,7 @@ struct RuntimeConfig {
     AtmosphericsConfig atmospherics{};
     BgfxConfig bgfx{};
     MaterialXConfig materialX{};
+    std::vector<MaterialXMaterialConfig> materialXMaterials{};
     GuiFontConfig guiFont{};
     float guiOpacity = 1.0f;
 };

@@ -440,6 +440,87 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
         }
     }
 
+    if (document.HasMember("materialx_materials")) {
+        const auto& materialsValue = document["materialx_materials"];
+        if (!materialsValue.IsArray()) {
+            throw std::runtime_error("JSON member 'materialx_materials' must be an array");
+        }
+        config.materialXMaterials.clear();
+        for (rapidjson::SizeType i = 0; i < materialsValue.Size(); ++i) {
+            const auto& entry = materialsValue[i];
+            if (!entry.IsObject()) {
+                throw std::runtime_error("JSON member 'materialx_materials[" + std::to_string(i) + "]' must be an object");
+            }
+            MaterialXMaterialConfig materialConfig;
+            if (entry.HasMember("enabled")) {
+                const auto& value = entry["enabled"];
+                if (!value.IsBool()) {
+                    throw std::runtime_error("JSON member 'materialx_materials[" + std::to_string(i) +
+                                             "].enabled' must be a boolean");
+                }
+                materialConfig.enabled = value.GetBool();
+            }
+            if (entry.HasMember("document")) {
+                const auto& value = entry["document"];
+                if (!value.IsString()) {
+                    throw std::runtime_error("JSON member 'materialx_materials[" + std::to_string(i) +
+                                             "].document' must be a string");
+                }
+                materialConfig.documentPath = value.GetString();
+            }
+            if (entry.HasMember("shader_key")) {
+                const auto& value = entry["shader_key"];
+                if (!value.IsString()) {
+                    throw std::runtime_error("JSON member 'materialx_materials[" + std::to_string(i) +
+                                             "].shader_key' must be a string");
+                }
+                materialConfig.shaderKey = value.GetString();
+            }
+            if (entry.HasMember("material")) {
+                const auto& value = entry["material"];
+                if (!value.IsString()) {
+                    throw std::runtime_error("JSON member 'materialx_materials[" + std::to_string(i) +
+                                             "].material' must be a string");
+                }
+                materialConfig.materialName = value.GetString();
+            }
+            if (entry.HasMember("use_constant_color")) {
+                const auto& value = entry["use_constant_color"];
+                if (!value.IsBool()) {
+                    throw std::runtime_error("JSON member 'materialx_materials[" + std::to_string(i) +
+                                             "].use_constant_color' must be a boolean");
+                }
+                materialConfig.useConstantColor = value.GetBool();
+            }
+            if (entry.HasMember("constant_color")) {
+                const auto& value = entry["constant_color"];
+                if (!value.IsArray() || value.Size() != 3) {
+                    throw std::runtime_error("JSON member 'materialx_materials[" + std::to_string(i) +
+                                             "].constant_color' must be an array of 3 numbers");
+                }
+                for (rapidjson::SizeType channel = 0; channel < 3; ++channel) {
+                    if (!value[channel].IsNumber()) {
+                        throw std::runtime_error("JSON member 'materialx_materials[" + std::to_string(i) +
+                                                 "].constant_color[" + std::to_string(channel) +
+                                                 "]' must be a number");
+                    }
+                    materialConfig.constantColor[channel] = static_cast<float>(value[channel].GetDouble());
+                }
+            }
+
+            if (materialConfig.shaderKey.empty()) {
+                throw std::runtime_error("JSON member 'materialx_materials[" + std::to_string(i) +
+                                         "].shader_key' must be provided");
+            }
+            if (materialConfig.documentPath.empty() && !materialConfig.useConstantColor) {
+                throw std::runtime_error("JSON member 'materialx_materials[" + std::to_string(i) +
+                                         "].document' is required when use_constant_color is false");
+            }
+
+            config.materialXMaterials.push_back(std::move(materialConfig));
+        }
+    }
+
     if (document.HasMember("gui_font")) {
         const auto& fontValue = document["gui_font"];
         if (!fontValue.IsObject()) {
@@ -549,6 +630,31 @@ std::string JsonConfigService::BuildConfigJson(const RuntimeConfig& config,
     constantColor.PushBack(config.materialX.constantColor[2], allocator);
     materialObject.AddMember("constant_color", constantColor, allocator);
     document.AddMember("materialx", materialObject, allocator);
+
+    if (!config.materialXMaterials.empty()) {
+        rapidjson::Value materialsArray(rapidjson::kArrayType);
+        for (const auto& material : config.materialXMaterials) {
+            rapidjson::Value entry(rapidjson::kObjectType);
+            entry.AddMember("enabled", material.enabled, allocator);
+            entry.AddMember("document",
+                            rapidjson::Value(material.documentPath.string().c_str(), allocator),
+                            allocator);
+            entry.AddMember("shader_key",
+                            rapidjson::Value(material.shaderKey.c_str(), allocator),
+                            allocator);
+            entry.AddMember("material",
+                            rapidjson::Value(material.materialName.c_str(), allocator),
+                            allocator);
+            entry.AddMember("use_constant_color", material.useConstantColor, allocator);
+            rapidjson::Value materialColor(rapidjson::kArrayType);
+            materialColor.PushBack(material.constantColor[0], allocator);
+            materialColor.PushBack(material.constantColor[1], allocator);
+            materialColor.PushBack(material.constantColor[2], allocator);
+            entry.AddMember("constant_color", materialColor, allocator);
+            materialsArray.PushBack(entry, allocator);
+        }
+        document.AddMember("materialx_materials", materialsArray, allocator);
+    }
 
     rapidjson::Value fontObject(rapidjson::kObjectType);
     fontObject.AddMember("use_freetype", config.guiFont.useFreeType, allocator);

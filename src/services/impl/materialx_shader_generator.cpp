@@ -8,6 +8,7 @@
 #include <MaterialXGenShader/GenContext.h>
 #include <MaterialXGenShader/Shader.h>
 #include <MaterialXGenShader/Util.h>
+#include <MaterialXGenShader/HwShaderGenerator.h>
 #include <MaterialXRender/Util.h>
 
 #include <algorithm>
@@ -19,6 +20,7 @@
 #include <string>
 #include <string_view>
 #include <type_traits>
+#include <utility>
 #include <tuple>
 #include <vector>
 
@@ -167,17 +169,19 @@ void AddFallbackTokenSubstitutions(mx::StringMap& substitutions,
     }
 }
 
+template <typename T, typename = void>
+struct HasHwAiryFresnelIterations : std::false_type {};
+
 template <typename T>
-constexpr bool HasHwAiryFresnelIterations = requires(const T& options) {
-    options.hwAiryFresnelIterations;
-};
+struct HasHwAiryFresnelIterations<T, std::void_t<decltype(std::declval<T>().hwAiryFresnelIterations)>>
+    : std::true_type {};
 
 template <typename Options>
 unsigned int ResolveAiryFresnelIterationsFromOptions(const Options& options,
                                                      unsigned int defaultIterations,
                                                      bool& fromOptions,
                                                      const std::shared_ptr<ILogger>& logger) {
-    if constexpr (HasHwAiryFresnelIterations<Options>) {
+    if constexpr (HasHwAiryFresnelIterations<Options>::value) {
         fromOptions = true;
         if (logger) {
             logger->Trace("MaterialXShaderGenerator", "Generate",
@@ -450,6 +454,177 @@ std::string ConvertIndividualInputsToBlock(const std::string& source) {
     return result;
 }
 
+std::vector<std::filesystem::path> BuildTextureSearchRoots(
+    const std::filesystem::path& documentPath,
+    const std::filesystem::path& libraryPath,
+    const std::filesystem::path& scriptDirectory) {
+    std::vector<std::filesystem::path> roots;
+    auto addRoot = [&](const std::filesystem::path& root) {
+        if (root.empty()) {
+            return;
+        }
+        std::error_code ec;
+        auto canonical = std::filesystem::weakly_canonical(root, ec);
+        if (ec) {
+            canonical = root;
+        }
+        roots.push_back(canonical);
+    };
+
+    if (!documentPath.empty()) {
+        addRoot(documentPath.parent_path());
+    }
+    if (!libraryPath.empty()) {
+        addRoot(libraryPath);
+        addRoot(libraryPath.parent_path());
+    }
+    if (!scriptDirectory.empty()) {
+        addRoot(scriptDirectory);
+        addRoot(scriptDirectory.parent_path());
+    }
+    addRoot(std::filesystem::current_path());
+
+    std::unordered_set<std::string> seen;
+    std::vector<std::filesystem::path> unique;
+    for (const auto& root : roots) {
+        auto key = root.string();
+        if (seen.insert(key).second) {
+            unique.push_back(root);
+        }
+    }
+    return unique;
+}
+
+std::filesystem::path ResolveTexturePath(const std::string& filename,
+                                         const std::filesystem::path& documentPath,
+                                         const std::vector<std::filesystem::path>& searchRoots,
+                                         const std::shared_ptr<ILogger>& logger) {
+    if (filename.empty()) {
+        return {};
+    }
+
+    std::filesystem::path candidate(filename);
+    auto tryPath = [&](const std::filesystem::path& path) -> std::filesystem::path {
+        std::error_code ec;
+        if (std::filesystem::exists(path, ec)) {
+            return std::filesystem::weakly_canonical(path, ec);
+        }
+        return {};
+    };
+
+    if (candidate.is_absolute()) {
+        auto resolved = tryPath(candidate);
+        if (!resolved.empty()) {
+            return resolved;
+        }
+    }
+
+    if (!documentPath.empty()) {
+        auto resolved = tryPath(documentPath.parent_path() / candidate);
+        if (!resolved.empty()) {
+            return resolved;
+        }
+    }
+
+    for (const auto& root : searchRoots) {
+        auto resolved = tryPath(root / candidate);
+        if (!resolved.empty()) {
+            return resolved;
+        }
+    }
+
+    if (!candidate.has_parent_path()) {
+        for (const auto& root : searchRoots) {
+            std::error_code ec;
+            for (const auto& entry : std::filesystem::recursive_directory_iterator(root, ec)) {
+                if (ec) {
+                    break;
+                }
+                if (!entry.is_regular_file(ec)) {
+                    continue;
+                }
+                if (entry.path().filename() == candidate) {
+                    return entry.path();
+                }
+            }
+        }
+    }
+
+    if (logger) {
+        logger->Trace("MaterialXShaderGenerator", "Generate",
+                      "texturePathResolutionFailed file=" + filename);
+    }
+    return {};
+}
+
+std::vector<ShaderPaths::TextureBinding> CollectTextureBindings(
+    const mx::Shader& shader,
+    const std::filesystem::path& documentPath,
+    const std::filesystem::path& libraryPath,
+    const std::filesystem::path& scriptDirectory,
+    const std::shared_ptr<ILogger>& logger) {
+    std::vector<ShaderPaths::TextureBinding> bindings;
+    const mx::ShaderStage& pixelStage = shader.getStage(mx::Stage::PIXEL);
+    const auto& uniformBlocks = pixelStage.getUniformBlocks();
+    if (uniformBlocks.empty()) {
+        return bindings;
+    }
+
+    const auto searchRoots = BuildTextureSearchRoots(documentPath, libraryPath, scriptDirectory);
+    std::unordered_set<std::string> seenUniforms;
+
+    for (const auto& entry : uniformBlocks) {
+        const auto& block = entry.second;
+        if (!block) {
+            continue;
+        }
+        for (size_t i = 0; i < block->size(); ++i) {
+            const mx::ShaderPort* port = (*block)[i];
+            if (!port) {
+                continue;
+            }
+            const auto& type = port->getType();
+            if (type.getName() != "filename") {
+                continue;
+            }
+            mx::ValuePtr value = port->getValue();
+            if (!value) {
+                continue;
+            }
+            std::string file = value->getValueString();
+            if (file.empty()) {
+                continue;
+            }
+            std::string uniformName = port->getVariable();
+            if (uniformName.empty()) {
+                uniformName = port->getName();
+            }
+            if (uniformName.empty()) {
+                continue;
+            }
+            if (!seenUniforms.insert(uniformName).second) {
+                continue;
+            }
+            auto resolved = ResolveTexturePath(file, documentPath, searchRoots, logger);
+            if (resolved.empty()) {
+                continue;
+            }
+            ShaderPaths::TextureBinding binding;
+            binding.uniformName = uniformName;
+            binding.path = resolved.string();
+            bindings.push_back(std::move(binding));
+            if (logger) {
+                logger->Trace("MaterialXShaderGenerator", "Generate",
+                              "textureBinding uniform=" + uniformName +
+                                  ", file=" + file +
+                                  ", resolved=" + resolved.string());
+            }
+        }
+    }
+
+    return bindings;
+}
+
 }  // namespace
 
 MaterialXShaderGenerator::MaterialXShaderGenerator(std::shared_ptr<ILogger> logger)
@@ -521,6 +696,7 @@ ShaderPaths MaterialXShaderGenerator::Generate(const MaterialXConfig& config,
     context.registerSourceCodeSearchPath(sourceSearchPath);
 
     mx::ShaderPtr shader;
+    std::filesystem::path documentPath;
     if (config.useConstantColor) {
         mx::Color3 color(config.constantColor[0], config.constantColor[1], config.constantColor[2]);
         shader = mx::createConstantShader(context, stdLib, config.shaderKey, color);
@@ -533,7 +709,7 @@ ShaderPaths MaterialXShaderGenerator::Generate(const MaterialXConfig& config,
             throw std::runtime_error("MaterialX document path is required when use_constant_color is false");
         }
 
-        std::filesystem::path documentPath = ResolvePath(config.documentPath, scriptDirectory);
+        documentPath = ResolvePath(config.documentPath, scriptDirectory);
         if (documentPath.empty()) {
             throw std::runtime_error("MaterialX document path could not be resolved");
         }
@@ -596,6 +772,7 @@ ShaderPaths MaterialXShaderGenerator::Generate(const MaterialXConfig& config,
     ShaderPaths paths;
     paths.vertexSource = shader->getSourceCode(mx::Stage::VERTEX);
     paths.fragmentSource = shader->getSourceCode(mx::Stage::PIXEL);
+    paths.textures = CollectTextureBindings(*shader, documentPath, libraryPath, scriptDirectory, logger_);
 
     // Fix vertex shader outputs: convert individual layout outputs to VertexData block
     // MaterialX VkShaderGenerator incorrectly emits individual out variables instead of

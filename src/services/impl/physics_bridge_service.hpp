@@ -27,15 +27,39 @@ public:
     explicit PhysicsBridgeService(std::shared_ptr<ILogger> logger);
     ~PhysicsBridgeService() override;
 
+    bool SetGravity(const btVector3& gravity,
+                    std::string& error) override;
+
     bool AddBoxRigidBody(const std::string& name,
                          const btVector3& halfExtents,
                          float mass,
                          const btTransform& transform,
                          std::string& error) override;
-    int StepSimulation(float deltaTime) override;
+    bool AddSphereRigidBody(const std::string& name,
+                            float radius,
+                            float mass,
+                            const btTransform& transform,
+                            std::string& error) override;
+    bool RemoveRigidBody(const std::string& name,
+                         std::string& error) override;
+    bool SetRigidBodyTransform(const std::string& name,
+                               const btTransform& transform,
+                               std::string& error) override;
+    bool ApplyForce(const std::string& name,
+                    const btVector3& force,
+                    std::string& error) override;
+    bool ApplyImpulse(const std::string& name,
+                      const btVector3& impulse,
+                      std::string& error) override;
+    bool SetLinearVelocity(const std::string& name,
+                           const btVector3& velocity,
+                           std::string& error) override;
+    int StepSimulation(float deltaTime, int maxSubSteps = 10) override;
     bool GetRigidBodyTransform(const std::string& name,
                                btTransform& outTransform,
                                std::string& error) const override;
+    size_t GetBodyCount() const override;
+    void Clear() override;
 
 private:
     struct BodyRecord {
@@ -43,6 +67,9 @@ private:
         std::unique_ptr<btMotionState> motionState;
         std::unique_ptr<btRigidBody> body;
     };
+
+    BodyRecord* FindBodyRecord(const std::string& name, std::string& error);
+    const BodyRecord* FindBodyRecord(const std::string& name, std::string& error) const;
 
     std::unique_ptr<btDefaultCollisionConfiguration> collisionConfig_;
     std::unique_ptr<btCollisionDispatcher> dispatcher_;

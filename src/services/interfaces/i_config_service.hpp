@@ -74,6 +74,12 @@ public:
     virtual const MaterialXConfig& GetMaterialXConfig() const = 0;
 
     /**
+     * @brief Get MaterialX material overrides.
+     * @return MaterialX material configurations
+     */
+    virtual const std::vector<MaterialXMaterialConfig>& GetMaterialXMaterialConfigs() const = 0;
+
+    /**
      * @brief Get GUI font settings.
      * @return GUI font configuration
      */

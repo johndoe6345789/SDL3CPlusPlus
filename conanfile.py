@@ -34,6 +34,7 @@ class SDL3CppConan(ConanFile):
         "ffmpeg/8.0.1",
         "cairo/1.18.0",
         "libzip/1.10.1",
+        "stb/cci.20230920",
     )
     RENDER_STACK_REQUIRES = (
         "bgfx/1.129.8930-495",

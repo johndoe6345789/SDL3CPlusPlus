@@ -51,6 +51,14 @@ public:
 private:
     struct PipelineEntry {
         bgfx::ProgramHandle program = BGFX_INVALID_HANDLE;
+        struct TextureBinding {
+            bgfx::UniformHandle sampler = BGFX_INVALID_HANDLE;
+            bgfx::TextureHandle texture = BGFX_INVALID_HANDLE;
+            uint8_t stage = 0;
+            std::string uniformName;
+            std::string sourcePath;
+        };
+        std::vector<TextureBinding> textures;
     };
 
     struct VertexBufferEntry {
@@ -93,6 +101,7 @@ private:
     bgfx::ShaderHandle CreateShader(const std::string& label,
                                     const std::string& source,
                                     bool isVertex) const;
+    bgfx::TextureHandle LoadTextureFromFile(const std::string& path, uint64_t samplerFlags) const;
     void InitializeUniforms();
     void DestroyUniforms();
     void ApplyMaterialXUniforms(const std::array<float, 16>& modelMatrix);

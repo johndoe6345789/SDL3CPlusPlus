@@ -58,6 +58,7 @@ public:
 private:
     std::shared_ptr<ILogger> logger_;
     std::unique_ptr<PhysicsBridgeService> physicsBridge_;
+    btVector3 gravity_ = btVector3(0.0f, -9.8f, 0.0f);
     bool initialized_ = false;
 };
 

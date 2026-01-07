@@ -203,7 +203,7 @@ local function build_static_cube_variants()
 
 layout(location = 0) in vec3 inPos;
 layout(location = 1) in vec3 inNormal;
-layout(location = 2) in vec3 inColor;
+layout(location = 3) in vec3 inColor;
 
 layout(location = 0) out vec3 fragColor;
 
@@ -275,72 +275,11 @@ void main() {
     }
 end
 
-local function count_shader_variants(variants)
-    local count = 0
-    for _ in pairs(variants) do
-        count = count + 1
-    end
-    return count
-end
-
 function M.build_cube_variants(config, log_debug, base_skybox_color)
     local logger = get_logger(log_debug)
     local skybox_color = resolve_skybox_color(config, base_skybox_color or {0.04, 0.05, 0.08})
-    local shader_parameters = build_shader_parameter_overrides(config, logger)
-    local materialx_parameters = load_materialx_parameters(config, logger)
-    if materialx_parameters then
-        local entry = shader_parameters.pbr or {}
-        local albedo = resolve_color3_optional(materialx_parameters.material_albedo)
-        local roughness = resolve_number_optional(materialx_parameters.material_roughness)
-        local metallic = resolve_number_optional(materialx_parameters.material_metallic)
-        if albedo ~= nil then
-            entry.material_albedo = albedo
-        end
-        if roughness ~= nil then
-            entry.material_roughness = roughness
-        end
-        if metallic ~= nil then
-            entry.material_metallic = metallic
-        end
-        if next(entry) ~= nil then
-            shader_parameters.pbr = entry
-            logger("MaterialX PBR overrides: albedo=%s roughness=%s metallic=%s",
-                format_optional_color(albedo),
-                format_optional_number(roughness),
-                format_optional_number(metallic))
-        end
-    end
-
-    local ok, toolkit = pcall(require, "shader_toolkit")
-    if not ok then
-        logger("Shader toolkit unavailable: %s", tostring(toolkit))
-        return build_static_cube_variants(), skybox_color
-    end
-
-    local output_mode = "source"
-    local compile = false
-    local ok_generate, generated = pcall(toolkit.generate_cube_demo_variants,
-        {compile = compile, output_mode = output_mode, parameters = shader_parameters})
-    if not ok_generate then
-        logger("Shader generation failed: %s", tostring(generated))
-        return build_static_cube_variants(), skybox_color
-    end
-
-    local ok_skybox, skybox_variant = pcall(toolkit.generate_variant, {
-        key = "skybox",
-        template = "solid_color",
-        output_mode = output_mode,
-        compile = compile,
-        parameters = {color = skybox_color},
-    })
-    if ok_skybox then
-        generated.skybox = skybox_variant
-    else
-        logger("Skybox shader generation failed: %s", tostring(skybox_variant))
-    end
-
-    logger("Generated %d shader variants", count_shader_variants(generated))
-    return generated, skybox_color
+    logger("Cube shaders: using fallback sources; MaterialX provides scene material")
+    return build_static_cube_variants(), skybox_color
 end
 
 function M.build_gui_variants()

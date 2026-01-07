@@ -13,6 +13,11 @@
   "bgfx": {
     "renderer": "vulkan"
   },
+  "gui_font": {
+    "use_freetype": true,
+    "font_path": "scripts/assets/fonts/Roboto-Regular.ttf",
+    "font_size": 18.0
+  },
   "config_file": "config/soundboard_runtime.json",
     "input_bindings": {
     "move_forward": "W",
