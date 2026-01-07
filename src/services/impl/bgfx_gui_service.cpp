@@ -10,7 +10,7 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-#include <lunasvg.h>
+#include <lunasvg/lunasvg.h>
 
 #include <algorithm>
 #include <cctype>
@@ -23,9 +23,7 @@ namespace sdl3cpp::services::impl {
 namespace {
 
 constexpr uint64_t kGuiSamplerFlags = BGFX_SAMPLER_U_CLAMP |
-                                      BGFX_SAMPLER_V_CLAMP |
-                                      BGFX_SAMPLER_MIN_LINEAR |
-                                      BGFX_SAMPLER_MAG_LINEAR;
+                                      BGFX_SAMPLER_V_CLAMP;
 
 const char* kGuiVertexSource = R"(
 #version 450

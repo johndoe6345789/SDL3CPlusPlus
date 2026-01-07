@@ -51,10 +51,8 @@ bool IsIdentityMatrix(const std::array<float, 16>& value) {
 }
 
 uint64_t DefaultSamplerFlags() {
-    return BGFX_SAMPLER_U_REPEAT |
-           BGFX_SAMPLER_V_REPEAT |
-           BGFX_SAMPLER_MIN_LINEAR |
-           BGFX_SAMPLER_MAG_LINEAR;
+    // Repeat + linear are the default sampler state in bgfx; no flags needed.
+    return 0;
 }
 
 bgfx::TextureHandle CreateSolidTexture(uint32_t rgba, uint64_t flags) {
@@ -818,35 +816,51 @@ GraphicsPipelineHandle BgfxGraphicsBackend::CreatePipeline(GraphicsDeviceHandle 
     if (!shaderPaths.textures.empty()) {
         const uint64_t samplerFlags = DefaultSamplerFlags();
         uint8_t stage = 0;
-        const uint8_t maxStages = BGFX_CONFIG_MAX_TEXTURE_SAMPLERS;
-        for (const auto& texture : shaderPaths.textures) {
-            if (stage >= maxStages) {
-                if (logger_) {
-                    logger_->Warn("BgfxGraphicsBackend::CreatePipeline: texture limit reached for " +
-                                  shaderKey);
-                }
-                break;
-            }
-            if (texture.uniformName.empty() || texture.path.empty()) {
-                continue;
-            }
-            PipelineEntry::TextureBinding binding{};
-            binding.stage = stage++;
-            binding.uniformName = texture.uniformName;
-            binding.sourcePath = texture.path;
-            binding.sampler = bgfx::createUniform(binding.uniformName.c_str(), bgfx::UniformType::Sampler);
-            binding.texture = LoadTextureFromFile(binding.sourcePath, samplerFlags);
-            if (!bgfx::isValid(binding.texture)) {
-                binding.texture = CreateSolidTexture(0xff00ffff, samplerFlags);
-            }
+        const bgfx::Caps* caps = bgfx::getCaps();
+        uint8_t maxStages = 0;
+        if (caps) {
+            maxStages = static_cast<uint8_t>(std::min<uint32_t>(caps->limits.maxTextureSamplers, 255u));
+        }
+        if (logger_) {
+            logger_->Trace("BgfxGraphicsBackend", "CreatePipeline",
+                           "maxTextureSamplers=" + std::to_string(maxStages));
+        }
+        if (maxStages == 0) {
             if (logger_) {
-                logger_->Trace("BgfxGraphicsBackend", "CreatePipeline",
-                               "shaderKey=" + shaderKey +
-                                   ", textureUniform=" + binding.uniformName +
-                                   ", texturePath=" + binding.sourcePath +
-                                   ", stage=" + std::to_string(binding.stage));
+                logger_->Warn("BgfxGraphicsBackend::CreatePipeline: maxTextureSamplers unavailable for " +
+                              shaderKey);
             }
-            entry->textures.push_back(std::move(binding));
+        } else {
+            for (const auto& texture : shaderPaths.textures) {
+                if (stage >= maxStages) {
+                    if (logger_) {
+                        logger_->Warn("BgfxGraphicsBackend::CreatePipeline: texture limit reached for " +
+                                      shaderKey);
+                    }
+                    break;
+                }
+                if (texture.uniformName.empty() || texture.path.empty()) {
+                    continue;
+                }
+                PipelineEntry::TextureBinding binding{};
+                binding.stage = stage++;
+                binding.uniformName = texture.uniformName;
+                binding.sourcePath = texture.path;
+                binding.sampler = bgfx::createUniform(binding.uniformName.c_str(),
+                                                      bgfx::UniformType::Sampler);
+                binding.texture = LoadTextureFromFile(binding.sourcePath, samplerFlags);
+                if (!bgfx::isValid(binding.texture)) {
+                    binding.texture = CreateSolidTexture(0xff00ffff, samplerFlags);
+                }
+                if (logger_) {
+                    logger_->Trace("BgfxGraphicsBackend", "CreatePipeline",
+                                   "shaderKey=" + shaderKey +
+                                       ", textureUniform=" + binding.uniformName +
+                                       ", texturePath=" + binding.sourcePath +
+                                       ", stage=" + std::to_string(binding.stage));
+                }
+                entry->textures.push_back(std::move(binding));
+            }
         }
     }
     GraphicsPipelineHandle handle = reinterpret_cast<GraphicsPipelineHandle>(entry.get());
