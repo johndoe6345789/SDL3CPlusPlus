@@ -233,6 +233,7 @@ if(BUILD_SDL3_APP)
             src/services/impl/null_gui_service.cpp
             src/services/impl/bgfx_gui_service.cpp
             src/services/impl/bgfx_shader_compiler.cpp
+            src/services/impl/pipeline_compiler_service.cpp
             src/services/impl/bullet_physics_service.cpp
             src/services/impl/scene_service.cpp
             src/services/impl/graphics_service.cpp
@@ -265,7 +266,7 @@ if(BUILD_SDL3_APP)
         elseif(TARGET shaderc::shaderc_combined)
             target_link_libraries(sdl3_app PRIVATE shaderc::shaderc_combined)
         else()
-            message(FATAL_ERROR "shaderc CMake target not found")
+            message(WARNING "shaderc CMake target not found; skipping link. Using local bgfx_tools for shader compilation at runtime.")
         endif()
     endif()
     target_compile_definitions(sdl3_app PRIVATE SDL_MAIN_HANDLED
@@ -325,6 +326,7 @@ add_executable(script_engine_tests
     src/services/impl/scene_service.cpp
     src/events/event_bus.cpp
     src/stb_image.cpp
+    src/services/impl/pipeline_compiler_service.cpp
 )
 target_include_directories(script_engine_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(script_engine_tests PRIVATE
@@ -344,7 +346,7 @@ if(TARGET shaderc::shaderc)
 elseif(TARGET shaderc::shaderc_combined)
     target_link_libraries(script_engine_tests PRIVATE shaderc::shaderc_combined)
 else()
-    message(FATAL_ERROR "shaderc CMake target not found")
+    message(WARNING "shaderc CMake target not found; skipping link for script_engine_tests.")
 endif()
 add_test(NAME script_engine_tests COMMAND script_engine_tests)
 
@@ -353,6 +355,7 @@ add_executable(bgfx_gui_service_tests
     src/services/impl/bgfx_gui_service.cpp
     src/services/impl/bgfx_shader_compiler.cpp
     src/services/impl/materialx_shader_generator.cpp
+    src/services/impl/pipeline_compiler_service.cpp
 )
 target_include_directories(bgfx_gui_service_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(bgfx_gui_service_tests PRIVATE
@@ -366,7 +369,7 @@ if(TARGET shaderc::shaderc)
 elseif(TARGET shaderc::shaderc_combined)
     target_link_libraries(bgfx_gui_service_tests PRIVATE shaderc::shaderc_combined)
 else()
-    message(FATAL_ERROR "shaderc CMake target not found")
+    message(WARNING "shaderc CMake target not found; skipping link for bgfx_gui_service_tests.")
 endif()
 add_test(NAME bgfx_gui_service_tests COMMAND bgfx_gui_service_tests)
 
@@ -382,6 +385,7 @@ add_executable(vulkan_shader_linking_test
     src/services/impl/sdl_window_service.cpp
     src/events/event_bus.cpp
     src/stb_image.cpp
+    src/services/impl/pipeline_compiler_service.cpp
 )
 target_include_directories(vulkan_shader_linking_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(vulkan_shader_linking_test PRIVATE
@@ -398,7 +402,7 @@ if(TARGET shaderc::shaderc)
 elseif(TARGET shaderc::shaderc_combined)
     target_link_libraries(vulkan_shader_linking_test PRIVATE shaderc::shaderc_combined)
 else()
-    message(FATAL_ERROR "shaderc CMake target not found")
+    message(WARNING "shaderc CMake target not found; skipping link for vulkan_shader_linking_test.")
 endif()
 add_test(NAME vulkan_shader_linking_test COMMAND vulkan_shader_linking_test)
 endif()

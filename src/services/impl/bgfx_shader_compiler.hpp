@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "../interfaces/i_pipeline_compiler_service.hpp"
 
 namespace sdl3cpp::services::impl {
 
@@ -30,7 +31,8 @@ struct BgfxShaderUniform {
  */
 class BgfxShaderCompiler {
 public:
-    explicit BgfxShaderCompiler(std::shared_ptr<ILogger> logger);
+    explicit BgfxShaderCompiler(std::shared_ptr<ILogger> logger,
+                                std::shared_ptr<sdl3cpp::services::IPipelineCompilerService> pipelineCompiler = nullptr);
     
     /**
      * @brief Compile GLSL source to bgfx shader handle.
@@ -53,6 +55,7 @@ public:
 
 private:
     std::shared_ptr<ILogger> logger_;
+    std::shared_ptr<sdl3cpp::services::IPipelineCompilerService> pipelineCompiler_;
 };
 
 }  // namespace sdl3cpp::services::impl

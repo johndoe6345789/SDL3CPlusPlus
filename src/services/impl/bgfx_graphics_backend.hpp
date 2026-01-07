@@ -17,7 +17,8 @@ class BgfxGraphicsBackend : public IGraphicsBackend {
 public:
     BgfxGraphicsBackend(std::shared_ptr<IConfigService> configService,
                         std::shared_ptr<IPlatformService> platformService,
-                        std::shared_ptr<ILogger> logger);
+                        std::shared_ptr<ILogger> logger,
+                        std::shared_ptr<IPipelineCompilerService> pipelineCompiler);
     ~BgfxGraphicsBackend() override;
 
     void Initialize(void* window, const GraphicsConfig& config) override;
@@ -111,6 +112,7 @@ private:
     std::shared_ptr<IConfigService> configService_;
     std::shared_ptr<IPlatformService> platformService_;
     std::shared_ptr<ILogger> logger_;
+    std::shared_ptr<IPipelineCompilerService> pipelineCompiler_;
     bgfx::VertexLayout vertexLayout_;
     std::unordered_map<GraphicsPipelineHandle, std::unique_ptr<PipelineEntry>> pipelines_;
     std::unordered_map<GraphicsBufferHandle, std::unique_ptr<VertexBufferEntry>> vertexBuffers_;

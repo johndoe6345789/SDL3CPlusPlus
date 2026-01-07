@@ -1,11 +1,11 @@
 #include "bgfx_graphics_backend.hpp"
+#include "../interfaces/i_pipeline_compiler_service.hpp"
 #include <stb_image.h>
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_properties.h>
 #include <SDL3/SDL_video.h>
 #include <bgfx/platform.h>
-#include <shaderc/shaderc.hpp>
 
 #include <algorithm>
 #include <cstdint>
@@ -272,10 +272,12 @@ std::optional<bgfx::RendererType::Enum> RecommendFallbackRenderer(
 
 BgfxGraphicsBackend::BgfxGraphicsBackend(std::shared_ptr<IConfigService> configService,
                                          std::shared_ptr<IPlatformService> platformService,
-                                         std::shared_ptr<ILogger> logger)
+                                         std::shared_ptr<ILogger> logger,
+                                         std::shared_ptr<IPipelineCompilerService> pipelineCompiler)
     : configService_(std::move(configService)),
       platformService_(std::move(platformService)),
-      logger_(std::move(logger)) {
+      logger_(std::move(logger)),
+      pipelineCompiler_(std::move(pipelineCompiler)) {
     if (logger_) {
         logger_->Trace("BgfxGraphicsBackend", "BgfxGraphicsBackend",
                        "configService=" + std::string(configService_ ? "set" : "null") +
@@ -696,55 +698,46 @@ bgfx::ShaderHandle BgfxGraphicsBackend::CreateShader(const std::string& label,
         return handle;
     }
     
-    // For Vulkan/Metal/DX: Compile to SPIRV and wrap in bgfx binary format
-    shaderc::Compiler compiler;
-    shaderc::CompileOptions options;
-    options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_1);
-    options.SetAutoBindUniforms(true);
-    // Do NOT use SetAutoMapLocations - it overrides explicit layout(location=N) declarations
-    // and assigns locations alphabetically by variable name, breaking the vertex layout.
-    // MaterialX and other shaders already specify explicit locations matching our VertexLayout.
-    // options.SetAutoMapLocations(true);
 
-    shaderc_shader_kind kind = isVertex ? shaderc_vertex_shader : shaderc_fragment_shader;
-    auto result = compiler.CompileGlslToSpv(source, kind, label.c_str(), options);
-    
-    if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
-        std::string error = result.GetErrorMessage();
-        if (logger_) {
-            logger_->Error("Shader GLSL->SPIRV compilation failed: " + label + "\n" + error);
-        }
-        throw std::runtime_error("Shader GLSL->SPIRV compilation failed: " + label + "\n" + error);
+    // Use PipelineCompilerService to compile shader via bgfx_tools
+    std::string tempInputPath = "/tmp/" + label + (isVertex ? ".vert.glsl" : ".frag.glsl");
+    std::string tempOutputPath = "/tmp/" + label + (isVertex ? ".vert.bin" : ".frag.bin");
+    // Write source to tempInputPath
+    {
+        std::ofstream ofs(tempInputPath);
+        ofs << source;
     }
-
-    std::vector<uint32_t> spirv(result.cbegin(), result.cend());
-    
-    // Wrap SPIRV with bgfx binary format: magic + hashes + uniformCount + spirvSize + spirv + nul
-    constexpr uint8_t kBgfxShaderVersion = 11;
-    constexpr uint32_t kMagicVSH = ('V') | ('S' << 8) | ('H' << 16) | (kBgfxShaderVersion << 24);
-    constexpr uint32_t kMagicFSH = ('F') | ('S' << 8) | ('H' << 16) | (kBgfxShaderVersion << 24);
-    const uint32_t magic = isVertex ? kMagicVSH : kMagicFSH;
-    const uint32_t inputHash = static_cast<uint32_t>(std::hash<std::string>{}(source));
-    const uint32_t spirvSize = static_cast<uint32_t>(spirv.size() * sizeof(uint32_t));
-    const uint16_t uniformCount = 0;
-    const uint32_t totalSize = 4 + 4 + 4 + 2 + 4 + spirvSize + 1;
-    
-    const bgfx::Memory* mem = bgfx::alloc(totalSize);
-    uint8_t* data = mem->data;
-    uint32_t offset = 0;
-    
-    std::memcpy(data + offset, &magic, 4); offset += 4;
-    std::memcpy(data + offset, &inputHash, 4); offset += 4;
-    std::memcpy(data + offset, &inputHash, 4); offset += 4;
-    std::memcpy(data + offset, &uniformCount, 2); offset += 2;
-    std::memcpy(data + offset, &spirvSize, 4); offset += 4;
-    std::memcpy(data + offset, spirv.data(), spirvSize); offset += spirvSize;
-    data[offset] = 0;
-    
+    std::vector<std::string> args;
+    // Add any required args for bgfx_tools/shaderc here (e.g., profile, macros)
+    bool success = pipelineCompiler_ && pipelineCompiler_->Compile(tempInputPath, tempOutputPath, args);
+    if (!success) {
+        std::string error = pipelineCompiler_ ? pipelineCompiler_->GetLastError().value_or("") : "No compiler service";
+        if (logger_) {
+            logger_->Error("PipelineCompilerService failed: " + label + "\n" + error);
+        }
+        throw std::runtime_error("PipelineCompilerService failed: " + label + "\n" + error);
+    }
+    // Read compiled binary
+    std::ifstream ifs(tempOutputPath, std::ios::binary | std::ios::ate);
+    if (!ifs) {
+        if (logger_) {
+            logger_->Error("Failed to read compiled shader: " + tempOutputPath);
+        }
+        throw std::runtime_error("Failed to read compiled shader: " + tempOutputPath);
+    }
+    std::streamsize size = ifs.tellg();
+    ifs.seekg(0, std::ios::beg);
+    std::vector<char> buffer(size);
+    if (!ifs.read(buffer.data(), size)) {
+        if (logger_) {
+            logger_->Error("Failed to read compiled shader data: " + tempOutputPath);
+        }
+        throw std::runtime_error("Failed to read compiled shader data: " + tempOutputPath);
+    }
+    const bgfx::Memory* mem = bgfx::copy(buffer.data(), static_cast<uint32_t>(size));
     bgfx::ShaderHandle handle = bgfx::createShader(mem);
     if (!bgfx::isValid(handle) && logger_) {
-        logger_->Error("bgfx::createShader failed for " + label + 
-                      " (renderer=" + RendererTypeName(rendererType) + ", spirvSize=" + std::to_string(spirv.size()) + " words)");
+        logger_->Error("bgfx::createShader failed for " + label + " (renderer=" + RendererTypeName(rendererType) + ", binSize=" + std::to_string(size) + ")");
     }
     return handle;
 }

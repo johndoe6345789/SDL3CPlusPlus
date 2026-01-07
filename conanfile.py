@@ -17,7 +17,7 @@ class SDL3CppConan(ConanFile):
     BASE_REQUIRES = (
         "lua/5.4.8",
         "sdl/3.2.20",
-        "shaderc/2025.3",
+        # shaderc removed; using local bgfx_tools shaderc executable instead
         "cpptrace/1.0.4",
         "ogg/1.3.5",
         "theora/1.1.1",

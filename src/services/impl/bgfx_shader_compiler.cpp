@@ -1,17 +1,20 @@
 #include "bgfx_shader_compiler.hpp"
 
-#include <shaderc/shaderc.hpp>
 #include <algorithm>
 #include <cstring>
-#include <numeric>
+#include <fstream>
 #include <stdexcept>
+#include <string>
+#include <vector>
+#include <cstdlib>
+// For runtime symbol lookup
+#if defined(__linux__) || defined(__APPLE__)
+#include <dlfcn.h>
+#endif
 
 namespace sdl3cpp::services::impl {
 
 namespace {
-
-constexpr uint8_t kUniformFragmentBit = 0x10;
-constexpr uint8_t kUniformMask = 0x10 | 0x20 | 0x40 | 0x80;
 
 const char* RendererTypeName(bgfx::RendererType::Enum type) {
     switch (type) {
@@ -26,62 +29,11 @@ const char* RendererTypeName(bgfx::RendererType::Enum type) {
     }
 }
 
-uint16_t WriteUniformArray(uint8_t* data,
-                           uint32_t& offset,
-                           const std::vector<BgfxShaderUniform>& uniforms,
-                           bool isFragmentShader) {
-    uint16_t size = 0;
-    const uint16_t count = static_cast<uint16_t>(uniforms.size());
-    std::memcpy(data + offset, &count, sizeof(count));
-    offset += sizeof(count);
-
-    const uint8_t fragmentBit = isFragmentShader ? kUniformFragmentBit : 0;
-    for (const auto& un : uniforms) {
-        if ((static_cast<uint8_t>(un.type) & ~kUniformMask) > bgfx::UniformType::End) {
-            size = std::max<uint16_t>(size, static_cast<uint16_t>(un.regIndex + un.regCount * 16));
-        }
-
-        const uint8_t nameSize = static_cast<uint8_t>(un.name.size());
-        std::memcpy(data + offset, &nameSize, sizeof(nameSize));
-        offset += sizeof(nameSize);
-        std::memcpy(data + offset, un.name.data(), nameSize);
-        offset += nameSize;
-
-        const uint8_t typeByte = static_cast<uint8_t>(un.type) | fragmentBit;
-        std::memcpy(data + offset, &typeByte, sizeof(typeByte));
-        offset += sizeof(typeByte);
-        std::memcpy(data + offset, &un.num, sizeof(un.num));
-        offset += sizeof(un.num);
-        std::memcpy(data + offset, &un.regIndex, sizeof(un.regIndex));
-        offset += sizeof(un.regIndex);
-        std::memcpy(data + offset, &un.regCount, sizeof(un.regCount));
-        offset += sizeof(un.regCount);
-        std::memcpy(data + offset, &un.texComponent, sizeof(un.texComponent));
-        offset += sizeof(un.texComponent);
-        std::memcpy(data + offset, &un.texDimension, sizeof(un.texDimension));
-        offset += sizeof(un.texDimension);
-        std::memcpy(data + offset, &un.texFormat, sizeof(un.texFormat));
-        offset += sizeof(un.texFormat);
-    }
-    return size;
-}
-
-uint16_t AttributeToId(bgfx::Attrib::Enum attr) {
-    switch (attr) {
-        case bgfx::Attrib::Position: return 0x0001;
-        case bgfx::Attrib::Color0: return 0x0005;
-        case bgfx::Attrib::TexCoord0: return 0x0010;
-        case bgfx::Attrib::Normal: return 0x0002;
-        case bgfx::Attrib::Tangent: return 0x0003;
-        case bgfx::Attrib::Bitangent: return 0x0004;
-        default: return 0xFFFF;
-    }
-}
-
 }  // namespace
 
-BgfxShaderCompiler::BgfxShaderCompiler(std::shared_ptr<ILogger> logger)
-    : logger_(std::move(logger)) {
+BgfxShaderCompiler::BgfxShaderCompiler(std::shared_ptr<ILogger> logger,
+                                       std::shared_ptr<sdl3cpp::services::IPipelineCompilerService> pipelineCompiler)
+    : logger_(std::move(logger)), pipelineCompiler_(std::move(pipelineCompiler)) {
 }
 
 bgfx::ShaderHandle BgfxShaderCompiler::CompileShader(
@@ -90,9 +42,9 @@ bgfx::ShaderHandle BgfxShaderCompiler::CompileShader(
     bool isVertex,
     const std::vector<BgfxShaderUniform>& uniforms,
     const std::vector<bgfx::Attrib::Enum>& attributes) const {
-    
+
     const bgfx::RendererType::Enum rendererType = bgfx::getRendererType();
-    
+
     if (logger_) {
         logger_->Trace("BgfxShaderCompiler", "CompileShader",
                        "label=" + label +
@@ -115,63 +67,133 @@ bgfx::ShaderHandle BgfxShaderCompiler::CompileShader(
         }
         return handle;
     }
-    
-    // For Vulkan/Metal/DX: Compile GLSL to SPIRV
-    shaderc::Compiler compiler;
-    shaderc::CompileOptions options;
-    options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_1);
-    options.SetAutoBindUniforms(false);  // We use explicit binding=N in shaders
-    // Do NOT use SetAutoMapLocations - it overrides explicit layout(location=N) declarations
-    
-    shaderc_shader_kind kind = isVertex ? shaderc_vertex_shader : shaderc_fragment_shader;
-    auto result = compiler.CompileGlslToSpv(source, kind, label.c_str(), options);
-    
-    if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
-        if (logger_) {
-            logger_->Error("BgfxShaderCompiler: GLSL->SPIRV compilation failed for " + label + "\n" + result.GetErrorMessage());
+
+    // Try in-memory in-process compilation first (if bgfx_tools provides C API)
+    std::vector<char> buffer;
+    bool compiledInMemory = false;
+
+#if defined(__linux__) || defined(__APPLE__)
+    using shaderc_fn_t = int (*)(const char*, size_t, const char*, uint8_t**, size_t*, char**);
+    using shaderc_with_target_fn_t = int (*)(const char*, size_t, const char*, const char*, uint8_t**, size_t*, char**);
+    void* sym_with_target = dlsym(RTLD_DEFAULT, "shaderc_compile_from_memory_with_target");
+    shaderc_with_target_fn_t shaderc_with_target_fn = reinterpret_cast<shaderc_with_target_fn_t>(sym_with_target);
+
+    void* sym = dlsym(RTLD_DEFAULT, "shaderc_compile_from_memory");
+    shaderc_fn_t shaderc_fn = reinterpret_cast<shaderc_fn_t>(sym);
+
+    if (shaderc_with_target_fn || shaderc_fn) {
+        uint8_t* out_data = nullptr;
+        size_t out_size = 0;
+        char* out_err = nullptr;
+        // profile: choose based on vertex/fragment and renderer; simple heuristic
+        const char* profile = isVertex ? "vertex" : "fragment";
+        int r = -1;
+        if (shaderc_with_target_fn) {
+            // choose target based on renderer
+            const char* target = "spirv";
+            switch (rendererType) {
+                case bgfx::RendererType::Vulkan: target = "spirv"; break;
+                case bgfx::RendererType::Metal: target = "msl"; break;
+                case bgfx::RendererType::Direct3D11:
+                case bgfx::RendererType::Direct3D12: target = "hlsl"; break;
+                case bgfx::RendererType::OpenGL:
+                case bgfx::RendererType::OpenGLES: target = "glsl"; break;
+                default: target = "spirv"; break;
+            }
+            r = shaderc_with_target_fn(source.c_str(), source.size(), profile, target, &out_data, &out_size, &out_err);
+        } else if (shaderc_fn) {
+            r = shaderc_fn(source.c_str(), source.size(), profile, &out_data, &out_size, &out_err);
         }
-        return BGFX_INVALID_HANDLE;
+        if (r == 0 && out_data && out_size > 0) {
+            buffer.resize(out_size);
+            memcpy(buffer.data(), out_data, out_size);
+            // free using provided free if available
+            // try to find free function
+            void* free_sym = dlsym(RTLD_DEFAULT, "shaderc_free_buffer");
+            if (free_sym) {
+                using free_fn_t = void (*)(uint8_t*);
+                reinterpret_cast<free_fn_t>(free_sym)(out_data);
+            } else {
+                free(out_data);
+            }
+            if (out_err) {
+                void* free_err_sym = dlsym(RTLD_DEFAULT, "shaderc_free_error");
+                if (free_err_sym) {
+                    using free_err_fn_t = void (*)(char*);
+                    reinterpret_cast<free_err_fn_t>(free_err_sym)(out_err);
+                } else {
+                    free(out_err);
+                }
+            }
+            compiledInMemory = true;
+            if (logger_) logger_->Trace("BgfxShaderCompiler", "CompileShader", "in-memory compile succeeded for " + label);
+        } else {
+            if (out_err && logger_) {
+                logger_->Error(std::string("BgfxShaderCompiler: in-memory shaderc error: ") + out_err);
+                void* free_err_sym = dlsym(RTLD_DEFAULT, "shaderc_free_error");
+                if (free_err_sym) {
+                    using free_err_fn_t = void (*)(char*);
+                    reinterpret_cast<free_err_fn_t>(free_err_sym)(out_err);
+                } else {
+                    free(out_err);
+                }
+            }
+        }
+    }
+#endif
+
+    if (!compiledInMemory) {
+        // Fallback to temp-file + pipelineCompiler_/executable flow
+        std::string tempInputPath = "/tmp/" + label + (isVertex ? ".vert.glsl" : ".frag.glsl");
+        std::string tempOutputPath = "/tmp/" + label + (isVertex ? ".vert.bin" : ".frag.bin");
+        {
+            std::ofstream ofs(tempInputPath);
+            ofs << source;
+        }
+
+        bool ok = false;
+        if (pipelineCompiler_) {
+            ok = pipelineCompiler_->Compile(tempInputPath, tempOutputPath, {});
+        } else {
+            std::string cmd = "./src/bgfx_tools/shaderc/shaderc -f " + tempInputPath + " -o " + tempOutputPath;
+            if (logger_) logger_->Trace("BgfxShaderCompiler", "CompileShaderCmd", cmd);
+            int rc = std::system(cmd.c_str());
+            ok = (rc == 0);
+        }
+
+        if (!ok) {
+            if (logger_) logger_->Error("BgfxShaderCompiler: shader compilation failed for " + label);
+            return BGFX_INVALID_HANDLE;
+        }
+
+        std::ifstream ifs(tempOutputPath, std::ios::binary | std::ios::ate);
+        if (!ifs) {
+            if (logger_) logger_->Error("BgfxShaderCompiler: Failed to read compiled shader: " + tempOutputPath);
+            return BGFX_INVALID_HANDLE;
+        }
+        std::streamsize size = ifs.tellg();
+        ifs.seekg(0, std::ios::beg);
+        buffer.resize(size);
+        if (!ifs.read(buffer.data(), size)) {
+            if (logger_) logger_->Error("BgfxShaderCompiler: Failed to read compiled shader data");
+            return BGFX_INVALID_HANDLE;
+        }
+        // cleanup temp files
+        remove(tempInputPath.c_str());
+        remove(tempOutputPath.c_str());
     }
 
-    std::vector<uint32_t> spirv(result.cbegin(), result.cend());
-    
-    if (logger_) {
-        logger_->Trace("BgfxShaderCompiler", "CompileShader",
-                       "label=" + label + " SPIRV compiled, " + std::to_string(spirv.size()) + " words");
-    }
-    
-    // Wrap SPIRV with bgfx binary format (simple version without uniform metadata embedding)
-    // bgfx can extract uniform info from SPIRV reflection, so we don't need to embed it
-    constexpr uint8_t kBgfxShaderVersion = 11;
-    constexpr uint32_t kMagicVSH = ('V') | ('S' << 8) | ('H' << 16) | (kBgfxShaderVersion << 24);
-    constexpr uint32_t kMagicFSH = ('F') | ('S' << 8) | ('H' << 16) | (kBgfxShaderVersion << 24);
-    const uint32_t magic = isVertex ? kMagicVSH : kMagicFSH;
-    const uint32_t inputHash = static_cast<uint32_t>(std::hash<std::string>{}(source));
-    const uint32_t spirvSize = static_cast<uint32_t>(spirv.size() * sizeof(uint32_t));
-    const uint16_t uniformCount = 0;  // Let bgfx extract uniforms from SPIRV
-    const uint32_t totalSize = 4 + 4 + 4 + 2 + 4 + spirvSize + 1;
-    
-    const bgfx::Memory* mem = bgfx::alloc(totalSize);
-    uint8_t* data = mem->data;
-    uint32_t offset = 0;
-    
-    std::memcpy(data + offset, &magic, 4); offset += 4;
-    std::memcpy(data + offset, &inputHash, 4); offset += 4;
-    std::memcpy(data + offset, &inputHash, 4); offset += 4;  // outputHash = inputHash
-    std::memcpy(data + offset, &uniformCount, 2); offset += 2;
-    std::memcpy(data + offset, &spirvSize, 4); offset += 4;
-    std::memcpy(data + offset, spirv.data(), spirvSize); offset += spirvSize;
-    data[offset] = 0;  // null terminator
-    
+    uint32_t binSize = static_cast<uint32_t>(buffer.size());
+    const bgfx::Memory* mem = bgfx::copy(buffer.data(), binSize);
     bgfx::ShaderHandle handle = bgfx::createShader(mem);
     if (!bgfx::isValid(handle) && logger_) {
         logger_->Error("BgfxShaderCompiler: bgfx::createShader failed for " + label +
-                      " (spirvSize=" + std::to_string(spirv.size()) + " words)");
+                      " (binSize=" + std::to_string(binSize) + ")");
     } else if (logger_) {
         logger_->Trace("BgfxShaderCompiler", "CompileShader",
                        "label=" + label + " shader created successfully, handle=" + std::to_string(handle.idx));
     }
-    
+
     return handle;
 }
 
