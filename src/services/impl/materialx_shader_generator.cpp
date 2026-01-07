@@ -497,8 +497,8 @@ std::string ConvertIndividualInputsToBlock(const std::string& source,
             newLoc = 3;
         }
         
-        if (logger_ && newLoc != loc) {
-            logger_->Trace("MaterialXShaderGenerator", "ConvertIndividualInputsToBlock",
+        if (logger && newLoc != loc) {
+            logger->Trace("MaterialXShaderGenerator", "ConvertIndividualInputsToBlock",
                            "Remapping " + name + ": location " + std::to_string(loc) + 
                            " -> " + std::to_string(newLoc));
         }
