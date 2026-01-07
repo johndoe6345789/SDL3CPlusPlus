@@ -15,6 +15,7 @@
 #include <cctype>
 #include <fstream>
 #include <optional>
+#include <set>
 #include <unordered_set>
 #include <stdexcept>
 #include <string>
@@ -482,8 +483,12 @@ std::string ConvertIndividualInputsToBlock(const std::string& source,
     // location=0: position (vec3)
     // location=1: normal (vec3)
     // location=2: texcoord (vec2)
-    // location=3: color/tangent (vec3/vec4)
+    // location=3: color (vec3)
+    // Note: tangent is NOT in our Vertex struct, so it gets assigned to location 4+
     std::map<std::string, int> nameToLocation;
+    std::set<int> usedLocations;
+    int nextAvailableLocation = 4;  // Start assigning non-standard attributes from location 4
+    
     for (const auto& [loc, type, name] : inputs) {
         int newLoc = loc;  // default: keep original
         
@@ -493,8 +498,26 @@ std::string ConvertIndividualInputsToBlock(const std::string& source,
             newLoc = 1;
         } else if (name.find("texcoord") != std::string::npos) {
             newLoc = 2;
-        } else if (name.find("color") != std::string::npos || name.find("tangent") != std::string::npos) {
+        } else if (name.find("color") != std::string::npos) {
             newLoc = 3;
+        } else if (name.find("tangent") != std::string::npos) {
+            // Tangent is not in our Vertex struct, assign to unused location
+            newLoc = nextAvailableLocation++;
+            if (logger) {
+                logger->Trace("MaterialXShaderGenerator", "ConvertIndividualInputsToBlock",
+                               "Tangent attribute found but not in Vertex struct, assigning location " + 
+                               std::to_string(newLoc) + " (original was " + std::to_string(loc) + ")");
+            }
+        }
+        
+        // Check for location conflicts and assign a new location if needed
+        while (usedLocations.count(newLoc) > 0) {
+            newLoc = nextAvailableLocation++;
+            if (logger) {
+                logger->Trace("MaterialXShaderGenerator", "ConvertIndividualInputsToBlock",
+                               "Location conflict for " + name + ", assigning location " + 
+                               std::to_string(newLoc));
+            }
         }
         
         if (logger && newLoc != loc) {
@@ -504,6 +527,7 @@ std::string ConvertIndividualInputsToBlock(const std::string& source,
         }
         
         nameToLocation[name] = newLoc;
+        usedLocations.insert(newLoc);
     }
     
     // Sort by remapped location

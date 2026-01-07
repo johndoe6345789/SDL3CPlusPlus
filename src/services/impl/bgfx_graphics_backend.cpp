@@ -282,10 +282,10 @@ BgfxGraphicsBackend::BgfxGraphicsBackend(std::shared_ptr<IConfigService> configS
                        ", platformService=" + std::string(platformService_ ? "set" : "null"));
     }
     vertexLayout_.begin()
-        .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
-        .add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float)
-        .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
-        .add(bgfx::Attrib::Color0, 3, bgfx::AttribType::Float)
+        .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)  // location 0
+        .add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float)    // location 1
+        .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float) // location 2
+        .add(bgfx::Attrib::Color0, 3, bgfx::AttribType::Float)    // location 3
         .end();
 
     const std::array<float, 16> identity = {
@@ -1056,22 +1056,32 @@ void BgfxGraphicsBackend::Draw(GraphicsDeviceHandle device, GraphicsPipelineHand
     const auto& vb = vertexIt->second;
     const auto& ib = indexIt->second;
 
-    uint32_t startVertex = static_cast<uint32_t>(std::max(0, vertexOffset));
-    uint32_t availableVertices = vb->vertexCount > startVertex
-        ? vb->vertexCount - startVertex
-        : 0;
-    if (availableVertices == 0) {
-        return;
+    if (logger_) {
+        logger_->Trace("BgfxGraphicsBackend", "Draw",
+                       "vertexOffset=" + std::to_string(vertexOffset) +
+                       ", indexOffset=" + std::to_string(indexOffset) +
+                       ", indexCount=" + std::to_string(indexCount) +
+                       ", totalVertices=" + std::to_string(vb->vertexCount));
     }
 
-    bgfx::setTransform(modelMatrix.data());
+    // When using indexed rendering with a vertex offset, bgfx expects:
+    // - setVertexBuffer: (handle, startVertex=0, numVertices=all)
+    // - setIndexBuffer: (handle, firstIndex, numIndices)
+    // The indices in the index buffer are already adjusted to reference the correct vertices
+    // in the combined vertex buffer, so we should NOT apply vertexOffset again here.
+    // Using the full vertex buffer ensures all vertex data is accessible.
+    
+    // NOTE: Do NOT call bgfx::setTransform() when using MaterialX shaders with explicit uniforms.
+    // MaterialX shaders receive transformation matrices via explicit uniforms (u_worldMatrix,
+    // u_worldViewProjectionMatrix, etc.) set in ApplyMaterialXUniforms(). Calling setTransform()
+    // causes conflicts, especially with Vulkan, resulting in garbage/rainbow artifacts.
     ApplyMaterialXUniforms(modelMatrix);
     for (const auto& binding : pipelineIt->second->textures) {
         if (bgfx::isValid(binding.sampler) && bgfx::isValid(binding.texture)) {
             bgfx::setTexture(binding.stage, binding.sampler, binding.texture);
         }
     }
-    bgfx::setVertexBuffer(0, vb->handle, startVertex, availableVertices);
+    bgfx::setVertexBuffer(0, vb->handle);
     bgfx::setIndexBuffer(ib->handle, indexOffset, indexCount);
     bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z |
                    BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CW | BGFX_STATE_MSAA);

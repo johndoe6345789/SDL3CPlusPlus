@@ -156,13 +156,34 @@ void GraphicsService::RenderScene(const std::vector<RenderCommand>& commands,
     // Set the view-projection matrix for the frame
     backend_->SetViewState(viewState);
 
-    // Execute draw calls
+    // Execute draw calls with explicit fallback shader support
     for (const auto& command : commands) {
         auto it = pipelines_.find(command.shaderKey);
         if (it != pipelines_.end()) {
             backend_->Draw(device_, it->second, vertexBuffer_, indexBuffer_,
                            command.indexOffset, command.indexCount, command.vertexOffset,
                            command.modelMatrix);
+        } else {
+            // Try explicit fallback shaders in order
+            bool drawn = false;
+            
+            for (const auto& fallbackKey : command.fallbackShaderKeys) {
+                auto fallbackIt = pipelines_.find(fallbackKey);
+                if (fallbackIt != pipelines_.end()) {
+                    logger_->Warn("GraphicsService::RenderScene: Pipeline not found for shaderKey='" + 
+                                  command.shaderKey + "', using fallback='" + fallbackKey + "'");
+                    backend_->Draw(device_, fallbackIt->second, vertexBuffer_, indexBuffer_,
+                                   command.indexOffset, command.indexCount, command.vertexOffset,
+                                   command.modelMatrix);
+                    drawn = true;
+                    break;
+                }
+            }
+            
+            if (!drawn) {
+                logger_->Warn("GraphicsService::RenderScene: Pipeline not found for shaderKey='" + 
+                              command.shaderKey + "' and no fallback shaders available or found");
+            }
         }
     }
 }

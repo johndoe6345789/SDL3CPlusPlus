@@ -58,7 +58,7 @@ layout(location = 2) in vec2 inTexCoord;
 layout(location = 0) out vec4 fragColor;
 layout(location = 1) out vec2 fragTexCoord;
 
-layout(std140) uniform GuiUniforms {
+layout(std140, binding = 0) uniform GuiUniforms {
     mat4 u_modelViewProj;
 };
 
@@ -77,7 +77,7 @@ layout(location = 1) in vec2 fragTexCoord;
 
 layout(location = 0) out vec4 outColor;
 
-uniform sampler2D s_tex;
+layout(binding = 0) uniform sampler2D s_tex;
 
 void main() {
     outColor = fragColor * texture(s_tex, fragTexCoord);
@@ -260,10 +260,23 @@ void BgfxGuiService::InitializeResources() {
 
     modelViewProjUniform_ = bgfx::createUniform("u_modelViewProj", bgfx::UniformType::Mat4);
     sampler_ = bgfx::createUniform("s_tex", bgfx::UniformType::Sampler);
+    
+    if (logger_) {
+        logger_->Trace("BgfxGuiService", "InitializeResources",
+                       "Uniforms created: modelViewProj=" + std::to_string(bgfx::isValid(modelViewProjUniform_)) +
+                       ", sampler=" + std::to_string(bgfx::isValid(sampler_)));
+    }
+    
     program_ = CreateProgram(kGuiVertexSource, kGuiFragmentSource);
 
     const uint32_t whitePixel = 0xffffffff;
     whiteTexture_ = CreateTexture(reinterpret_cast<const uint8_t*>(&whitePixel), 1, 1, kGuiSamplerFlags);
+    
+    if (logger_) {
+        logger_->Trace("BgfxGuiService", "InitializeResources",
+                       "Resources created: program=" + std::to_string(bgfx::isValid(program_)) +
+                       ", whiteTexture=" + std::to_string(bgfx::isValid(whiteTexture_)));
+    }
 
     if (!bgfx::isValid(program_) && logger_) {
         logger_->Error("BgfxGuiService::InitializeResources: Failed to create GUI shader program");
@@ -357,6 +370,16 @@ void BgfxGuiService::ApplyGuiView(uint32_t width, uint32_t height) {
     if (logger_ && (previousWidth != width || previousHeight != height)) {
         logger_->Trace("BgfxGuiService", "ApplyGuiView",
                        "viewport=" + std::to_string(width) + "x" + std::to_string(height));
+        logger_->Trace("BgfxGuiService", "ApplyGuiView",
+                       "projection[0-3]=[" + std::to_string(proj[0]) + "," +
+                       std::to_string(proj[1]) + "," +
+                       std::to_string(proj[2]) + "," +
+                       std::to_string(proj[3]) + "]");
+        logger_->Trace("BgfxGuiService", "ApplyGuiView",
+                       "projection[12-15]=[" + std::to_string(proj[12]) + "," +
+                       std::to_string(proj[13]) + "," +
+                       std::to_string(proj[14]) + "," +
+                       std::to_string(proj[15]) + "]");
     }
 
     bgfx::setViewTransform(viewId_, view, proj);
@@ -638,10 +661,30 @@ void BgfxGuiService::SubmitQuad(const GuiVertex& v0,
     float identity[16];
     bx::mtxIdentity(identity);
 
+    if (logger_) {
+        logger_->Trace("BgfxGuiService", "SubmitQuad",
+                       "vertex[0]: pos=[" + std::to_string(v0.x) + "," + std::to_string(v0.y) + "," + std::to_string(v0.z) +
+                       "], color=[" + std::to_string(v0.r) + "," + std::to_string(v0.g) + "," + std::to_string(v0.b) + "," + std::to_string(v0.a) +
+                       "], uv=[" + std::to_string(v0.u) + "," + std::to_string(v0.v) + "]");
+        logger_->Trace("BgfxGuiService", "SubmitQuad",
+                       "uniforms: mvp=" + std::to_string(bgfx::isValid(modelViewProjUniform_)) +
+                       ", sampler=" + std::to_string(bgfx::isValid(sampler_)) +
+                       ", program=" + std::to_string(bgfx::isValid(program_)) +
+                       ", texture=" + std::to_string(bgfx::isValid(texture)) +
+                       ", viewId=" + std::to_string(viewId_));
+        logger_->Trace("BgfxGuiService", "SubmitQuad",
+                       "viewProjection[0-3]=[" + std::to_string(viewProjection_[0]) + "," +
+                       std::to_string(viewProjection_[1]) + "," +
+                       std::to_string(viewProjection_[2]) + "," +
+                       std::to_string(viewProjection_[3]) + "]");
+    }
+
     SetScissor(scissor);
     bgfx::setTransform(identity);
     if (bgfx::isValid(modelViewProjUniform_)) {
         bgfx::setUniform(modelViewProjUniform_, viewProjection_.data());
+    } else if (logger_) {
+        logger_->Error("BgfxGuiService::SubmitQuad: modelViewProjUniform_ is invalid!");
     }
     bgfx::setTexture(0, sampler_, texture);
     bgfx::setVertexBuffer(0, &tvb, 0, 4);
@@ -835,12 +878,20 @@ bgfx::TextureHandle BgfxGuiService::CreateTexture(const uint8_t* rgba,
 bgfx::ProgramHandle BgfxGuiService::CreateProgram(const char* vertexSource,
                                                   const char* fragmentSource) const {
     if (!vertexSource || !fragmentSource) {
+        if (logger_) {
+            logger_->Error("BgfxGuiService::CreateProgram: null shader source");
+        }
         return BGFX_INVALID_HANDLE;
     }
 
     bgfx::ShaderHandle vs = CreateShader("gui_vertex", vertexSource, true);
     bgfx::ShaderHandle fs = CreateShader("gui_fragment", fragmentSource, false);
     if (!bgfx::isValid(vs) || !bgfx::isValid(fs)) {
+        if (logger_) {
+            logger_->Error("BgfxGuiService::CreateProgram: shader compilation failed (vs=" +
+                          std::to_string(bgfx::isValid(vs)) + ", fs=" +
+                          std::to_string(bgfx::isValid(fs)) + ")");
+        }
         if (bgfx::isValid(vs)) {
             bgfx::destroy(vs);
         }
@@ -849,7 +900,14 @@ bgfx::ProgramHandle BgfxGuiService::CreateProgram(const char* vertexSource,
         }
         return BGFX_INVALID_HANDLE;
     }
-    return bgfx::createProgram(vs, fs, true);
+    
+    bgfx::ProgramHandle program = bgfx::createProgram(vs, fs, true);
+    if (!bgfx::isValid(program) && logger_) {
+        logger_->Error("BgfxGuiService::CreateProgram: bgfx::createProgram failed to link shaders");
+    } else if (logger_) {
+        logger_->Trace("BgfxGuiService", "CreateProgram", "GUI program created successfully");
+    }
+    return program;
 }
 
 bgfx::ShaderHandle BgfxGuiService::CreateShader(const std::string& label,
@@ -884,7 +942,10 @@ bgfx::ShaderHandle BgfxGuiService::CreateShader(const std::string& label,
     shaderc::CompileOptions options;
     options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_1);
     options.SetAutoBindUniforms(true);
-    options.SetAutoMapLocations(true);
+    // Do NOT use SetAutoMapLocations - it overrides explicit layout(location=N) declarations
+    // and assigns locations alphabetically by variable name, breaking the vertex layout.
+    // GUI shaders already specify explicit locations matching the VertexLayout.
+    // options.SetAutoMapLocations(true);
 
     shaderc_shader_kind kind = isVertex ? shaderc_vertex_shader : shaderc_fragment_shader;
     auto result = compiler.CompileGlslToSpv(source, kind, label.c_str(), options);
