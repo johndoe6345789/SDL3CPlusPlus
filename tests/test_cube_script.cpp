@@ -201,7 +201,18 @@ struct MatrixSummary {
 MatrixSummary ExtractMatrixSummary(const std::array<float, 16>& matrix) {
     MatrixSummary summary;
     summary.translation = {matrix[12], matrix[13], matrix[14]};
-    summary.scale = {matrix[0], matrix[5], matrix[10]};
+    
+    // Extract scale as magnitude of basis vectors (correct for rotation+scale matrices)
+    // X-axis: matrix[0,1,2], Y-axis: matrix[4,5,6], Z-axis: matrix[8,9,10]
+    auto length = [](float x, float y, float z) {
+        return std::sqrt(x*x + y*y + z*z);
+    };
+    summary.scale = {
+        length(matrix[0], matrix[1], matrix[2]),
+        length(matrix[4], matrix[5], matrix[6]),
+        length(matrix[8], matrix[9], matrix[10])
+    };
+    
     return summary;
 }
 
@@ -398,14 +409,32 @@ bool RunGpuRenderTest(int& failures,
                 const auto& key = obj.shaderKeys.front();
                 
                 if (key == "floor") {
-                    if (obj.vertices.size() > 100) hasFloor = true;  // Main floor has more verts
-                    else hasCube = true;  // Cube also uses floor shader
+                    if (obj.vertices.size() > 100) hasFloor = true;  // Main floor has many verts from tessellation
                 } else if (key == "ceiling") {
                     hasCeiling = true;
                 } else if (key == "wall") {
                     wallCount++;
                 } else if (key == "solid") {
-                    lanternCount++;
+                    // Distinguish between lanterns (small cubes) and physics cube (larger)
+                    // Lanterns have ~24 vertices, physics cube has ~24 vertices
+                    // Use vertex count or scale from default transform if available
+                    // For now, count solid objects and check total
+                    if (obj.vertices.size() == 24) {
+                        // Could be either lantern or cube - need to check scale/size
+                        // Lanterns are small (~0.2 scale), physics cube is larger (~1.5 scale)
+                        // Check first vertex position magnitude as heuristic
+                        if (!obj.vertices.empty()) {
+                            float vx = obj.vertices[0].position[0];
+                            float vy = obj.vertices[0].position[1];
+                            float vz = obj.vertices[0].position[2];
+                            float magnitude = std::sqrt(vx*vx + vy*vy + vz*vz);
+                            if (magnitude < 0.5f) {
+                                lanternCount++;  // Small vertex coords = lantern
+                            } else {
+                                hasCube = true;  // Large vertex coords = physics cube
+                            }
+                        }
+                    }
                 } else if (key == "skybox") {
                     hasSkybox = true;
                 }
@@ -681,14 +710,13 @@ void RunCubeDemoSceneTests(int& failures) {
     size_t floorObjectIndex = std::numeric_limits<size_t>::max();
     size_t cubeObjectIndex = std::numeric_limits<size_t>::max();
     for (size_t idx : floorIndices) {
-        auto summary = ExtractMatrixSummary(staticCommands[idx].modelMatrix);
-        // Floor now uses tessellated plane with scale 1.0 (size is in vertices)
-        // Cube uses physics with scale 1.5
+        // Floor has many vertices (441 from 20x20 tessellation)
+        // Cube has few vertices (~24 from cube mesh)
         if (objects[idx].vertices.size() > 100) {
             // This is the floor (many vertices from tessellation)
             floorObjectIndex = idx;
         } else {
-            // This is the physics cube (using cube mesh)
+            // This is the physics cube (using cube mesh, should be checking "floor" shader on small object)
             cubeObjectIndex = idx;
         }
     }
@@ -714,8 +742,8 @@ void RunCubeDemoSceneTests(int& failures) {
                "physics cube z translation mismatch", failures);
         Assert(ApproximatelyEqual(summary.translation[1], cubeSpawnY, 0.25f),
                "physics cube y translation mismatch", failures);
-        // Physics cube now has rotation applied, scale comes from physics_state.cube_scale
-        Assert(summary.scale[0] > 1.0f, "physics cube should have scale > 1.0", failures);
+        // Physics cube scale is 1.5, now correctly extracted from rotated matrix
+        Assert(ApproximatelyEqual(summary.scale[0], 1.5f, 0.1f), "physics cube scale mismatch", failures);
         if (!objects[cubeObjectIndex].vertices.empty()) {
             ExpectColorNear(objects[cubeObjectIndex].vertices.front(), cubeColor, "physics cube vertex color", failures);
         }

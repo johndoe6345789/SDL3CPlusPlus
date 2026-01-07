@@ -819,7 +819,8 @@ local function create_physics_cube()
     if not ensure_physics_setup() then
         return nil
     end
-    local shader_key = resolve_material_shader()
+    -- Use "solid" shader for physics cube to distinguish from floor
+    local shader_key = "solid"
     local last_matrix = math3d.identity()
     local base_rotation_offset = math.pi / 4  -- Start with 45 degree rotation so it's visible immediately
 

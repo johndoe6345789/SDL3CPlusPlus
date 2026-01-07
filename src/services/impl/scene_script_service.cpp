@@ -260,6 +260,12 @@ std::vector<SceneObject> SceneScriptService::LoadSceneObjects() {
             lua_pop(L, 1);
         }
 
+        lua_getfield(L, -1, "object_type");
+        if (lua_isstring(L, -1)) {
+            object.objectType = lua_tostring(L, -1);
+        }
+        lua_pop(L, 1);
+
         objects.push_back(std::move(object));
         lua_pop(L, 1);
     }

@@ -12,6 +12,7 @@ struct SceneObject {
     std::vector<uint16_t> indices;
     int computeModelMatrixRef = -1;
     std::vector<std::string> shaderKeys;
+    std::string objectType;  // Semantic object type (e.g., "lantern", "physics_cube", "floor")
 };
 
 }  // namespace sdl3cpp::services
