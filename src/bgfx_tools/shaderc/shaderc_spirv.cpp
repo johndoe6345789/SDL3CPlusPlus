@@ -689,10 +689,13 @@ namespace bgfx { namespace spirv
 						case 0x8B54: // GL_INT_VEC3:
 						case 0x8B55: // GL_INT_VEC4:
 							un.type = UniformType::Vec4;
-							BX_TRACE("shaderc_spirv: int uniform mapped to Vec4 (%s, glType=0x%X, offset=%u)",
-								un.name.c_str(),
-								uniformType,
-								offset);
+							if (bgfx::g_verbose)
+							{
+								BX_TRACE("shaderc_spirv: int uniform mapped to Vec4 (%s, glType=0x%X, offset=%u)",
+									un.name.c_str(),
+									uniformType,
+									offset);
+							}
 							break;
 
 						case 0x8B52: // GL_FLOAT_VEC4:
@@ -710,6 +713,12 @@ namespace bgfx { namespace spirv
 							break;
 
 						default:
+							if (bgfx::g_verbose)
+							{
+								BX_TRACE("shaderc_spirv: skipping uniform %s (glType=0x%X)",
+									un.name.c_str(),
+									uniformType);
+							}
 							continue;
 						}
 

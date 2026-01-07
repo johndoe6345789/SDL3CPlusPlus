@@ -30,12 +30,23 @@ case 0x8B55: // GL_INT_VEC4:
     // Integer uniforms are data uniforms, not texture samplers.
     // Map to Vec4 to match bgfx's data-uniform layout rules.
     un.type = UniformType::Vec4;  // ✅ CORRECT
-    BX_TRACE("shaderc_spirv: int uniform mapped to Vec4 (%s, glType=0x%X, offset=%u)",
-        un.name.c_str(),
-        uniformType,
-        offset);
+    if (bgfx::g_verbose)
+    {
+        BX_TRACE("shaderc_spirv: int uniform mapped to Vec4 (%s, glType=0x%X, offset=%u)",
+            un.name.c_str(),
+            uniformType,
+            offset);
+    }
     break;
 ...
+default:
+    if (bgfx::g_verbose)
+    {
+        BX_TRACE("shaderc_spirv: skipping uniform %s (glType=0x%X)",
+            un.name.c_str(),
+            uniformType);
+    }
+    continue;
 }
 ```
 
@@ -61,7 +72,7 @@ The shader creation path already uses `bgfx::copy(...)` before `bgfx::createShad
    ./scripts/dev_commands.py build --build-dir build-ninja --target sdl3_app
    ```
 2. Run with trace logs and verify:
-   - `shaderc_spirv: int uniform mapped to Vec4 ...` appears for the int uniforms
+   - With verbose enabled, `shaderc_spirv: int uniform mapped to Vec4 ...` appears for the int uniforms
    - The shader uniform list no longer shows those ints as samplers
    - The Vulkan SIGSEGV no longer occurs
 
@@ -243,4 +254,3 @@ This fix addresses:
 - "No valid uniforms" warnings for shaders with integer uniforms
 - Malformed descriptor layouts in Vulkan backend
 - Use-after-free-like symptoms (though actual cause was malformed metadata)
-
