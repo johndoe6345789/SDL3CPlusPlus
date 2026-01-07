@@ -503,6 +503,20 @@ target_link_libraries(shader_pipeline_validator_test PRIVATE
     GTest::gtest_main
 )
 add_test(NAME shader_pipeline_validator_test COMMAND shader_pipeline_validator_test)
+
+# Test: MaterialX Shader Generator Integration (validates shader generation + validation together)
+add_executable(materialx_shader_generator_integration_test
+    tests/materialx_shader_generator_integration_test.cpp
+    src/services/impl/materialx_shader_generator.cpp
+    src/services/impl/shader_pipeline_validator.cpp
+)
+target_include_directories(materialx_shader_generator_integration_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_link_libraries(materialx_shader_generator_integration_test PRIVATE
+    GTest::gtest
+    GTest::gtest_main
+    ${SDL3CPP_MATERIALX_LIBS}
+)
+add_test(NAME materialx_shader_generator_integration_test COMMAND materialx_shader_generator_integration_test)
 endif()
 
 if(ENABLE_VITA)
