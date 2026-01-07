@@ -99,6 +99,17 @@ local function transform_point(matrix, point)
     }
 end
 
+local function transform_direction(matrix, direction)
+    local x = direction[1]
+    local y = direction[2]
+    local z = direction[3]
+    return {
+        matrix[1] * x + matrix[5] * y + matrix[9] * z,
+        matrix[2] * x + matrix[6] * y + matrix[10] * z,
+        matrix[3] * x + matrix[7] * y + matrix[11] * z,
+    }
+end
+
 local function compute_bounds(vertices, matrix)
     if type(vertices) ~= "table" then
         return nil
@@ -143,6 +154,10 @@ local function normalize(vec)
         return {x, y, z}
     end
     return {x / len, y / len, z / len}
+end
+
+local function scale_vec3(vec, scale)
+    return {vec[1] * scale, vec[2] * scale, vec[3] * scale}
 end
 
 local function cross(a, b)
@@ -213,6 +228,7 @@ local function build_map_model_matrix()
 end
 
 local map_model_matrix = build_map_model_matrix()
+local map_up = normalize(transform_direction(map_model_matrix, {0.0, 0.0, 1.0}))
 
 if type(load_mesh_from_pk3) ~= "function" then
     error("load_mesh_from_pk3() is unavailable; rebuild with libzip support")
@@ -259,7 +275,7 @@ local function compute_spawn_position(bounds)
     }
 end
 
-local function is_position_far_from_bounds(position, bounds)
+local function is_position_far_from_bounds(position, bounds, margin_scale)
     if not bounds then
         return false
     end
@@ -268,7 +284,8 @@ local function is_position_far_from_bounds(position, bounds)
     local extent_x = max_bounds[1] - min_bounds[1]
     local extent_y = max_bounds[2] - min_bounds[2]
     local extent_z = max_bounds[3] - min_bounds[3]
-    local margin = math.max(extent_x, extent_y, extent_z) * 0.5
+    local scale = resolve_number(margin_scale, 0.5)
+    local margin = math.max(extent_x, extent_y, extent_z) * scale
     if position[1] < min_bounds[1] - margin or position[1] > max_bounds[1] + margin then
         return true
     end
@@ -282,16 +299,24 @@ local function is_position_far_from_bounds(position, bounds)
 end
 
 local camera_position = resolve_vec3(camera_config.position, {0.0, 48.0, 0.0})
-local spawn_position = compute_spawn_position(map_bounds)
+local default_spawn_position = compute_spawn_position(map_bounds)
+local spawn_position = resolve_vec3(quake3_config.spawn_position, camera_position)
 local auto_spawn = quake3_config.auto_spawn
 if auto_spawn == nil then
     auto_spawn = true
 end
-if auto_spawn and is_position_far_from_bounds(camera_position, map_bounds) then
-    camera_position = {spawn_position[1], spawn_position[2], spawn_position[3]}
+if auto_spawn and is_position_far_from_bounds(camera_position, map_bounds, quake3_config.bounds_margin_scale) then
+    camera_position = {default_spawn_position[1], default_spawn_position[2], default_spawn_position[3]}
+    spawn_position = resolve_vec3(quake3_config.spawn_position, camera_position)
     log_debug("Camera spawn adjusted to map bounds (%.2f, %.2f, %.2f)",
         camera_position[1], camera_position[2], camera_position[3])
 end
+
+local respawn_config = resolve_table(quake3_config.respawn)
+local respawn_enabled = resolve_boolean(respawn_config.enabled, true)
+local respawn_margin_scale = resolve_number(
+    respawn_config.margin_scale,
+    resolve_number(quake3_config.bounds_margin_scale, 0.5))
 
 local camera = {
     position = camera_position,
@@ -322,6 +347,15 @@ if physics_enabled and not physics_available then
     log_debug("Physics disabled: required bindings are unavailable")
 end
 
+local align_gravity_to_map = resolve_boolean(physics_config.align_gravity_to_map, true)
+local default_gravity = {0.0, -9.8, 0.0}
+if align_gravity_to_map then
+    default_gravity = scale_vec3(map_up, -9.8)
+    log_debug("Gravity aligned to map up=(%.2f, %.2f, %.2f) gravity=(%.2f, %.2f, %.2f)",
+        map_up[1], map_up[2], map_up[3],
+        default_gravity[1], default_gravity[2], default_gravity[3])
+end
+
 local physics_state = {
     enabled = physics_enabled and physics_available,
     ready = false,
@@ -331,7 +365,7 @@ local physics_state = {
     player_radius = resolve_number(physics_config.player_radius, resolve_number(quake3_config.player_radius, 0.6)),
     player_mass = resolve_number(physics_config.player_mass, resolve_number(quake3_config.player_mass, 1.0)),
     eye_height = resolve_number(physics_config.eye_height, resolve_number(quake3_config.eye_height, 0.6)),
-    gravity = resolve_vec3(physics_config.gravity, {0.0, -9.8, 0.0}),
+    gravity = resolve_vec3(physics_config.gravity, default_gravity),
     jump_impulse = resolve_number(physics_config.jump_impulse, resolve_number(quake3_config.jump_impulse, 4.5)),
     jump_velocity_threshold = resolve_number(
         physics_config.jump_velocity_threshold,
@@ -340,13 +374,23 @@ local physics_state = {
 }
 
 physics_state.spawn_position = {
-    camera.position[1],
-    camera.position[2] - physics_state.eye_height,
-    camera.position[3],
+    spawn_position[1],
+    spawn_position[2] - physics_state.eye_height,
+    spawn_position[3],
 }
 
 local last_frame_time = nil
 local world_up = {0.0, 1.0, 0.0}
+
+local function get_time_seconds()
+    if type(time_get_seconds) == "function" then
+        local ok, value = pcall(time_get_seconds)
+        if ok and type(value) == "number" then
+            return value
+        end
+    end
+    return os.clock()
+end
 
 local function update_camera_angles()
     local look_delta_x = 0.0
@@ -502,6 +546,45 @@ local function sync_camera_from_physics()
     end
 end
 
+local function reset_player_to_spawn(reason)
+    camera.position[1] = spawn_position[1]
+    camera.position[2] = spawn_position[2]
+    camera.position[3] = spawn_position[3]
+
+    if physics_state.enabled and physics_state.ready and type(physics_set_transform) == "function" then
+        local rotation = {0.0, 0.0, 0.0, 1.0}
+        local reset_position = {
+            spawn_position[1],
+            spawn_position[2] - physics_state.eye_height,
+            spawn_position[3],
+        }
+        local ok, err = physics_set_transform(
+            physics_state.player_body_name,
+            reset_position,
+            rotation)
+        if not ok then
+            log_debug("Physics respawn failed: %s", err or "unknown")
+        elseif type(physics_set_linear_velocity) == "function" then
+            physics_set_linear_velocity(physics_state.player_body_name, {0.0, 0.0, 0.0})
+        end
+    end
+
+    log_debug("Respawned player (%s) at (%.2f, %.2f, %.2f)",
+        tostring(reason or "unknown"),
+        spawn_position[1],
+        spawn_position[2],
+        spawn_position[3])
+end
+
+local function check_respawn(position)
+    if not respawn_enabled then
+        return
+    end
+    if is_position_far_from_bounds(position, map_bounds, respawn_margin_scale) then
+        reset_player_to_spawn("out_of_bounds")
+    end
+end
+
 local shader_variants_module = require("shader_variants")
 local shader_variants = shader_variants_module.build_cube_variants(config, log_debug)
 
@@ -523,7 +606,7 @@ function get_shader_paths()
 end
 
 local function build_view_state(aspect)
-    local now = os.clock()
+    local now = get_time_seconds()
     local dt = 0.0
     if last_frame_time then
         dt = now - last_frame_time
@@ -566,15 +649,18 @@ local function build_view_state(aspect)
         end
         if physics_state.noclip then
             update_free_fly(dt, forward_flat, right)
+            check_respawn(camera.position)
         else
             apply_physics_controls(forward_flat, right)
             if dt > 0.0 then
                 physics_step_simulation(dt, physics_state.max_sub_steps)
             end
             sync_camera_from_physics()
+            check_respawn(camera.position)
         end
     else
         update_free_fly(dt, forward_flat, right)
+        check_respawn(camera.position)
     end
     local center = {
         camera.position[1] + forward[1],

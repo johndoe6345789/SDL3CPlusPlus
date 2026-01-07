@@ -13,6 +13,29 @@
   "bgfx": {
     "renderer": "vulkan"
   },
+  "materialx": {
+    "enabled": true,
+    "parameters_enabled": true,
+    "document": "MaterialX/resources/Materials/Examples/StandardSurface/standard_surface_wood_tiled.mtlx",
+    "shader_key": "pbr",
+    "material": "Tiled_Wood",
+    "library_path": "MaterialX/libraries",
+    "library_folders": [
+      "stdlib",
+      "pbrlib",
+      "lights",
+      "bxdf",
+      "cmlib",
+      "nprlib",
+      "targets"
+    ],
+    "use_constant_color": false,
+    "constant_color": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
   "mouse_grab": {
     "enabled": true,
     "grab_on_click": true,
@@ -68,7 +91,7 @@
   "quake3": {
     "pk3_path": "/home/rewrich/Documents/GitHub/q3/pak0.pk3",
     "map_path": "q3dm1",
-    "scale": 0.01,
+    "scale": 0.03,
     "rotate_x_degrees": -90.0,
     "offset": [0.0, 0.0, 0.0],
     "shader_key": "pbr",

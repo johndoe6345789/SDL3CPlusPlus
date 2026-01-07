@@ -670,9 +670,16 @@ bgfx::ShaderHandle BgfxGraphicsBackend::CreateShader(const std::string& label,
                                                      bool isVertex) const {
     shaderc::Compiler compiler;
     shaderc::CompileOptions options;
-    options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
+    options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_1);
     options.SetAutoBindUniforms(true);
     options.SetAutoMapLocations(true);
+
+    if (logger_) {
+        logger_->Trace("BgfxGraphicsBackend", "CreateShader",
+                       "label=" + label +
+                           ", renderer=" + RendererTypeName(bgfx::getRendererType()) +
+                           ", sourceLength=" + std::to_string(source.size()));
+    }
 
     shaderc_shader_kind kind = isVertex ? shaderc_vertex_shader : shaderc_fragment_shader;
 

@@ -257,6 +257,16 @@ local controls = {
 }
 
 local last_frame_time = nil
+
+local function get_time_seconds()
+    if type(time_get_seconds) == "function" then
+        local ok, value = pcall(time_get_seconds)
+        if ok and type(value) == "number" then
+            return value
+        end
+    end
+    return os.clock()
+end
 local movement_log_cooldown = 0.0
 local world_up = {0.0, 1.0, 0.0}
 local room = {
@@ -1040,7 +1050,7 @@ end
 
 
 local function build_view_state(aspect)
-    local now = os.clock()
+    local now = get_time_seconds()
     local dt = 0.0
     if last_frame_time then
         dt = now - last_frame_time

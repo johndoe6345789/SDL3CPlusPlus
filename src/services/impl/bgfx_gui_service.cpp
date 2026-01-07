@@ -25,6 +25,29 @@ namespace {
 constexpr uint64_t kGuiSamplerFlags = BGFX_SAMPLER_U_CLAMP |
                                       BGFX_SAMPLER_V_CLAMP;
 
+const char* RendererTypeName(bgfx::RendererType::Enum type) {
+    switch (type) {
+        case bgfx::RendererType::Vulkan:
+            return "Vulkan";
+        case bgfx::RendererType::OpenGL:
+            return "OpenGL";
+        case bgfx::RendererType::OpenGLES:
+            return "OpenGLES";
+        case bgfx::RendererType::Direct3D11:
+            return "Direct3D11";
+        case bgfx::RendererType::Direct3D12:
+            return "Direct3D12";
+        case bgfx::RendererType::Metal:
+            return "Metal";
+        case bgfx::RendererType::Noop:
+            return "Noop";
+        case bgfx::RendererType::Count:
+            return "Auto";
+        default:
+            return "Unknown";
+    }
+}
+
 const char* kGuiVertexSource = R"(
 #version 450
 
@@ -35,7 +58,9 @@ layout(location = 2) in vec2 inTexCoord;
 layout(location = 0) out vec4 fragColor;
 layout(location = 1) out vec2 fragTexCoord;
 
-uniform mat4 u_modelViewProj;
+layout(std140) uniform GuiUniforms {
+    mat4 u_modelViewProj;
+};
 
 void main() {
     fragColor = inColor;
@@ -832,13 +857,15 @@ bgfx::ShaderHandle BgfxGuiService::CreateShader(const std::string& label,
                                                 bool isVertex) const {
     shaderc::Compiler compiler;
     shaderc::CompileOptions options;
-    options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
+    options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_1);
     options.SetAutoBindUniforms(true);
     options.SetAutoMapLocations(true);
 
     if (logger_) {
         logger_->Trace("BgfxGuiService", "CreateShader",
-                       "label=" + label + ", sourceLength=" + std::to_string(source.size()));
+                       "label=" + label +
+                           ", renderer=" + std::string(RendererTypeName(bgfx::getRendererType())) +
+                           ", sourceLength=" + std::to_string(source.size()));
     }
 
     shaderc_shader_kind kind = isVertex ? shaderc_vertex_shader : shaderc_fragment_shader;

@@ -520,6 +520,7 @@ void ScriptEngineService::RegisterBindings(lua_State* L) {
     bind("config_get_json", &ScriptEngineService::ConfigGetJson);
     bind("config_get_table", &ScriptEngineService::ConfigGetTable);
     bind("materialx_get_surface_parameters", &ScriptEngineService::MaterialXGetSurfaceParameters);
+    bind("time_get_seconds", &ScriptEngineService::TimeGetSeconds);
     bind("window_get_size", &ScriptEngineService::WindowGetSize);
     bind("window_set_title", &ScriptEngineService::WindowSetTitle);
     bind("window_is_minimized", &ScriptEngineService::WindowIsMinimized);
@@ -1317,6 +1318,23 @@ int ScriptEngineService::ConfigGetTable(lua_State* L) {
         lua_pushstring(L, error.c_str());
         return 2;
     }
+    return 1;
+}
+
+int ScriptEngineService::TimeGetSeconds(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    auto logger = context ? context->logger : nullptr;
+    const Uint64 counter = SDL_GetPerformanceCounter();
+    const Uint64 frequency = SDL_GetPerformanceFrequency();
+    double seconds = 0.0;
+    if (frequency > 0) {
+        seconds = static_cast<double>(counter) / static_cast<double>(frequency);
+    }
+    if (logger) {
+        logger->Trace("ScriptEngineService", "TimeGetSeconds",
+                      "seconds=" + std::to_string(seconds));
+    }
+    lua_pushnumber(L, seconds);
     return 1;
 }
 

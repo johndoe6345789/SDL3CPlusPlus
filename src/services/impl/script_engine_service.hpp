@@ -97,6 +97,7 @@ private:
     static int ConfigGetJson(lua_State* L);
     static int ConfigGetTable(lua_State* L);
     static int MaterialXGetSurfaceParameters(lua_State* L);
+    static int TimeGetSeconds(lua_State* L);
     static int WindowGetSize(lua_State* L);
     static int WindowSetTitle(lua_State* L);
     static int WindowIsMinimized(lua_State* L);

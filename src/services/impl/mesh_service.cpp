@@ -286,6 +286,7 @@ bool BuildPayloadFromBspBuffer(const std::vector<uint8_t>& buffer,
     outPayload.positions.resize(vertexCount);
     outPayload.normals.resize(vertexCount);
     outPayload.colors.resize(vertexCount);
+    outPayload.texcoords.resize(vertexCount);
     outPayload.indices.clear();
 
     for (size_t i = 0; i < vertexCount; ++i) {
@@ -297,6 +298,7 @@ bool BuildPayloadFromBspBuffer(const std::vector<uint8_t>& buffer,
             static_cast<float>(vertex.color[1]) / 255.0f,
             static_cast<float>(vertex.color[2]) / 255.0f
         };
+        outPayload.texcoords[i] = {vertex.texCoord[0], vertex.texCoord[1]};
     }
 
     size_t trianglesBuilt = 0;
@@ -344,6 +346,7 @@ bool BuildPayloadFromBspBuffer(const std::vector<uint8_t>& buffer,
                       ", meshVertCount=" + std::to_string(meshVertCount) +
                       ", faceCount=" + std::to_string(faceCount) +
                       ", trianglesBuilt=" + std::to_string(trianglesBuilt) +
+                      ", texcoordCount=" + std::to_string(outPayload.texcoords.size()) +
                       ", trianglesSkipped=" + std::to_string(trianglesSkipped));
     }
 
