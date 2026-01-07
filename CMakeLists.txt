@@ -128,6 +128,7 @@ find_package(CLI11 CONFIG REQUIRED)
 find_package(RapidJSON CONFIG REQUIRED)
 find_package(EnTT CONFIG REQUIRED)
 find_package(bgfx CONFIG REQUIRED)
+find_package(spirv-cross CONFIG REQUIRED)
 find_package(materialx CONFIG REQUIRED)
 find_package(Freetype CONFIG REQUIRED)
 find_package(lunasvg CONFIG REQUIRED)
@@ -202,19 +203,44 @@ add_library(shaderc_local STATIC
     src/bgfx_tools/shaderc/shaderc_spirv.cpp
     src/bgfx_tools/shaderc/shaderc_utils.cpp
 )
-target_include_directories(shaderc_local PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_tools/shaderc" "${CMAKE_CURRENT_SOURCE_DIR}/src" "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_deps")
+target_include_directories(shaderc_local PUBLIC
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_tools/shaderc"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_deps/glslang"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_deps/glslang/Include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_deps/glslang/glslang/Public")
 if(TARGET bgfx::bx)
     target_link_libraries(shaderc_local PUBLIC bgfx::bx)
 endif()
 if(TARGET bgfx::bgfx)
     target_link_libraries(shaderc_local PUBLIC bgfx::bgfx)
 endif()
+if(TARGET spirv-cross::spirv-cross)
+    target_link_libraries(shaderc_local PUBLIC spirv-cross::spirv-cross)
+    target_include_directories(shaderc_local BEFORE PRIVATE
+        $<TARGET_PROPERTY:spirv-cross::spirv-cross,INTERFACE_INCLUDE_DIRECTORIES>)
+    target_compile_definitions(shaderc_local PRIVATE
+        $<TARGET_PROPERTY:spirv-cross::spirv-cross,INTERFACE_COMPILE_DEFINITIONS>)
+    target_compile_options(shaderc_local PRIVATE
+        $<TARGET_PROPERTY:spirv-cross::spirv-cross,INTERFACE_COMPILE_OPTIONS>)
+endif()
 # Link shaderc dependencies
 if(TARGET glslang::glslang)
     target_link_libraries(shaderc_local PUBLIC glslang::glslang)
+    target_include_directories(shaderc_local PRIVATE
+        $<TARGET_PROPERTY:glslang::glslang,INTERFACE_INCLUDE_DIRECTORIES>)
+    target_compile_definitions(shaderc_local PRIVATE
+        $<TARGET_PROPERTY:glslang::glslang,INTERFACE_COMPILE_DEFINITIONS>)
+    target_compile_options(shaderc_local PRIVATE
+        $<TARGET_PROPERTY:glslang::glslang,INTERFACE_COMPILE_OPTIONS>)
 endif()
 if(TARGET spirv-tools::spirv-tools)
     target_link_libraries(shaderc_local PUBLIC spirv-tools::spirv-tools)
+    target_include_directories(shaderc_local PRIVATE
+        $<TARGET_PROPERTY:spirv-tools::spirv-tools,INTERFACE_INCLUDE_DIRECTORIES>)
+    target_compile_definitions(shaderc_local PRIVATE
+        $<TARGET_PROPERTY:spirv-tools::spirv-tools,INTERFACE_COMPILE_DEFINITIONS>)
+    target_compile_options(shaderc_local PRIVATE
+        $<TARGET_PROPERTY:spirv-tools::spirv-tools,INTERFACE_COMPILE_OPTIONS>)
 endif()
 if(TARGET shaderc::shaderc)
     target_link_libraries(shaderc_local PUBLIC shaderc::shaderc)
