@@ -285,10 +285,11 @@ BgfxGraphicsBackend::BgfxGraphicsBackend(std::shared_ptr<IConfigService> configS
                        ", platformService=" + std::string(platformService_ ? "set" : "null"));
     }
     vertexLayout_.begin()
-        .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)  // location 0
-        .add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float)    // location 1
-        .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float) // location 2
-        .add(bgfx::Attrib::Color0, 3, bgfx::AttribType::Float)    // location 3
+        .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+        .add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float)
+        .add(bgfx::Attrib::Tangent, 3, bgfx::AttribType::Float)
+        .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+        .add(bgfx::Attrib::Color0, 3, bgfx::AttribType::Float)
         .end();
 
     const std::array<float, 16> identity = {

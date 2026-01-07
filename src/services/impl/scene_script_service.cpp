@@ -95,6 +95,14 @@ std::vector<core::Vertex> ReadVertexArray(lua_State* L, int index, const std::sh
         }
         lua_pop(L, 1);
 
+        lua_getfield(L, vertexIndex, "tangent");
+        if (lua_istable(L, -1)) {
+            vertex.tangent = lua::ReadVector3(L, -1);
+        } else {
+            vertex.tangent = {1.0f, 0.0f, 0.0f};
+        }
+        lua_pop(L, 1);
+
         lua_getfield(L, vertexIndex, "color");
         vertex.color = lua::ReadVector3(L, -1);
         lua_pop(L, 1);

@@ -285,6 +285,7 @@ bool BuildPayloadFromBspBuffer(const std::vector<uint8_t>& buffer,
 
     outPayload.positions.resize(vertexCount);
     outPayload.normals.resize(vertexCount);
+    outPayload.tangents.resize(vertexCount);
     outPayload.colors.resize(vertexCount);
     outPayload.texcoords.resize(vertexCount);
     outPayload.indices.clear();
@@ -293,6 +294,29 @@ bool BuildPayloadFromBspBuffer(const std::vector<uint8_t>& buffer,
         const BspVertex& vertex = vertices[i];
         outPayload.positions[i] = {vertex.position[0], vertex.position[1], vertex.position[2]};
         outPayload.normals[i] = {vertex.normal[0], vertex.normal[1], vertex.normal[2]};
+
+        // Compute a simple tangent perpendicular to the normal
+        float nx = vertex.normal[0];
+        float ny = vertex.normal[1];
+        float nz = vertex.normal[2];
+        // Find a vector not parallel to the normal
+        float tx, ty, tz;
+        if (std::fabs(nx) < 0.9f) {
+            tx = 1.0f; ty = 0.0f; tz = 0.0f;
+        } else {
+            tx = 0.0f; ty = 1.0f; tz = 0.0f;
+        }
+        // Cross product: tangent = arbitrary × normal
+        float cx = ty * nz - tz * ny;
+        float cy = tz * nx - tx * nz;
+        float cz = tx * ny - ty * nx;
+        // Normalize
+        float len = std::sqrt(cx*cx + cy*cy + cz*cz);
+        if (len > 0.0001f) {
+            cx /= len; cy /= len; cz /= len;
+        }
+        outPayload.tangents[i] = {cx, cy, cz};
+
         outPayload.colors[i] = {
             static_cast<float>(vertex.color[0]) / 255.0f,
             static_cast<float>(vertex.color[1]) / 255.0f,
@@ -491,12 +515,14 @@ bool AppendMeshPayload(const aiScene* scene,
 
     size_t positionsStart = outPayload.positions.size();
     size_t normalsStart = outPayload.normals.size();
+    size_t tangentsStart = outPayload.tangents.size();
     size_t colorsStart = outPayload.colors.size();
     size_t texcoordsStart = outPayload.texcoords.size();
     size_t indicesStart = outPayload.indices.size();
 
     outPayload.positions.reserve(positionsStart + mesh->mNumVertices);
     outPayload.normals.reserve(normalsStart + mesh->mNumVertices);
+    outPayload.tangents.reserve(tangentsStart + mesh->mNumVertices);
     outPayload.colors.reserve(colorsStart + mesh->mNumVertices);
     outPayload.texcoords.reserve(texcoordsStart + mesh->mNumVertices);
     outPayload.indices.reserve(indicesStart + mesh->mNumFaces * 3);
@@ -510,6 +536,21 @@ bool AppendMeshPayload(const aiScene* scene,
             normal = mesh->mNormals[i];
         }
         outPayload.normals.push_back({normal.x, normal.y, normal.z});
+
+        // Compute tangent
+        aiVector3D tangent(1.0f, 0.0f, 0.0f);
+        if (mesh->HasTangentsAndBitangents()) {
+            tangent = mesh->mTangents[i];
+        } else {
+            // Generate a tangent perpendicular to the normal
+            aiVector3D arbitrary(1.0f, 0.0f, 0.0f);
+            if (std::fabs(normal.x) > 0.9f) {
+                arbitrary = aiVector3D(0.0f, 1.0f, 0.0f);
+            }
+            tangent = (arbitrary ^ normal);  // Cross product
+            tangent.Normalize();
+        }
+        outPayload.tangents.push_back({tangent.x, tangent.y, tangent.z});
 
         aiColor3D color = materialColor;
         if (mesh->HasVertexColors(0) && mesh->mColors[0]) {
@@ -543,6 +584,7 @@ bool AppendMeshPayload(const aiScene* scene,
     if (outIndicesAdded == 0) {
         outPayload.positions.resize(positionsStart);
         outPayload.normals.resize(normalsStart);
+        outPayload.tangents.resize(tangentsStart);
         outPayload.colors.resize(colorsStart);
         outPayload.indices.resize(indicesStart);
         outError = "Mesh contains no triangle faces";
@@ -871,6 +913,17 @@ void MeshService::PushMeshToLua(lua_State* L, const MeshPayload& payload) {
             lua_rawseti(L, -2, component + 1);
         }
         lua_setfield(L, -2, "normal");
+
+        lua_newtable(L);
+        std::array<float, 3> tangent = {1.0f, 0.0f, 0.0f};
+        if (vertexIndex < payload.tangents.size()) {
+            tangent = payload.tangents[vertexIndex];
+        }
+        for (int component = 0; component < 3; ++component) {
+            lua_pushnumber(L, tangent[component]);
+            lua_rawseti(L, -2, component + 1);
+        }
+        lua_setfield(L, -2, "tangent");
 
         lua_newtable(L);
         for (int component = 0; component < 3; ++component) {

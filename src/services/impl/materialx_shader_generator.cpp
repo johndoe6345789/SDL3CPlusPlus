@@ -1,4 +1,6 @@
 #include "materialx_shader_generator.hpp"
+#include "shader_pipeline_validator.hpp"
+#include "../../core/vertex.hpp"
 
 #include <MaterialXCore/Document.h>
 #include <MaterialXFormat/File.h>
@@ -385,6 +387,95 @@ std::string ConvertIndividualOutputsToBlock(const std::string& source,
     return result;
 }
 
+std::string RemapVertexShaderInputLocations(const std::string& source,
+                                             const std::shared_ptr<ILogger>& logger) {
+    // Remap vertex shader input locations to match bgfx vertex layout order
+    // WITHOUT creating an input block (which is not allowed in vertex shaders)
+
+    std::map<std::string, int> bgfxLocationMap;
+    bgfxLocationMap["i_position"] = 0;
+    bgfxLocationMap["i_normal"] = 1;
+    bgfxLocationMap["i_tangent"] = 2;
+    bgfxLocationMap["i_texcoord_0"] = 3;
+    bgfxLocationMap["i_texcoord_1"] = 4;
+    bgfxLocationMap["i_color0"] = 5;
+
+    std::string result = source;
+    const std::string layoutToken = "layout (location =";
+    const std::string layoutTokenCompact = "layout(location =";
+
+    // Find all input declarations and remap their locations
+    size_t searchPos = 0;
+    while (true) {
+        size_t layoutPos = result.find(layoutToken, searchPos);
+        size_t compactPos = result.find(layoutTokenCompact, searchPos);
+        size_t tokenLength = 0;
+
+        if (compactPos != std::string::npos &&
+            (layoutPos == std::string::npos || compactPos < layoutPos)) {
+            layoutPos = compactPos;
+            tokenLength = layoutTokenCompact.size();
+        } else {
+            tokenLength = layoutToken.size();
+        }
+
+        if (layoutPos == std::string::npos) {
+            break;
+        }
+
+        // Check if this line contains " in " (vertex input)
+        size_t lineEnd = result.find('\n', layoutPos);
+        if (lineEnd == std::string::npos) lineEnd = result.size();
+        std::string line = result.substr(layoutPos, lineEnd - layoutPos);
+
+        if (line.find(" in ") == std::string::npos) {
+            searchPos = lineEnd;
+            continue;
+        }
+
+        // Extract variable name
+        size_t inPos = line.find(" in ");
+        size_t typeStart = inPos + 4;
+        while (typeStart < line.size() && std::isspace(line[typeStart])) ++typeStart;
+        size_t typeEnd = typeStart;
+        while (typeEnd < line.size() && !std::isspace(line[typeEnd])) ++typeEnd;
+        size_t nameStart = typeEnd;
+        while (nameStart < line.size() && std::isspace(line[nameStart])) ++nameStart;
+        size_t nameEnd = nameStart;
+        while (nameEnd < line.size() && !std::isspace(line[nameEnd]) && line[nameEnd] != ';') ++nameEnd;
+        std::string name = line.substr(nameStart, nameEnd - nameStart);
+
+        // Check if we need to remap this attribute
+        if (bgfxLocationMap.count(name) > 0) {
+            int newLoc = bgfxLocationMap[name];
+
+            // Find the old location number
+            size_t locStart = layoutPos + tokenLength;
+            while (locStart < result.size() && std::isspace(result[locStart])) ++locStart;
+            size_t locEnd = locStart;
+            while (locEnd < result.size() && std::isdigit(result[locEnd])) ++locEnd;
+
+            std::string oldLocStr = result.substr(locStart, locEnd - locStart);
+            std::string newLocStr = std::to_string(newLoc);
+
+            // Replace the location number
+            result.replace(locStart, locEnd - locStart, newLocStr);
+
+            if (logger) {
+                logger->Trace("MaterialXShaderGenerator", "RemapVertexShaderInputLocations",
+                              "Remapped " + name + ": location " + oldLocStr + " -> " + newLocStr);
+            }
+
+            // Adjust searchPos for the length change
+            searchPos = locStart + newLocStr.size();
+        } else {
+            searchPos = lineEnd;
+        }
+    }
+
+    return result;
+}
+
 std::string ConvertIndividualInputsToBlock(const std::string& source,
                                            const std::shared_ptr<ILogger>& logger) {
     // Find individual input declarations like:
@@ -540,11 +631,39 @@ std::string ConvertIndividualInputsToBlock(const std::string& source,
                   return std::get<0>(left) < std::get<0>(right);
               });
 
-    // Build the VertexData block with remapped locations.
-    std::string block = "in VertexData\n{\n";
+    // Build the VertexData block with locations matching bgfx vertex layout order.
+    // bgfx assigns locations sequentially: Position=0, Normal=1, Tangent=2, TexCoord0=3
+    std::map<std::string, int> bgfxLocationMap;
+    bgfxLocationMap["i_position"] = 0;
+    bgfxLocationMap["i_normal"] = 1;
+    bgfxLocationMap["i_tangent"] = 2;
+    bgfxLocationMap["i_texcoord_0"] = 3;
+    bgfxLocationMap["i_texcoord_1"] = 4;
+    bgfxLocationMap["i_color0"] = 5;
+
+    std::vector<std::tuple<int, std::string, std::string>> bgfxRemapped;
     for (const auto& [loc, type, name] : remapped) {
+        int bgfxLoc = loc;  // default to original
+        if (bgfxLocationMap.count(name) > 0) {
+            bgfxLoc = bgfxLocationMap[name];
+        }
+        bgfxRemapped.push_back({bgfxLoc, type, name});
+    }
+
+    // Sort by bgfx location
+    std::sort(bgfxRemapped.begin(), bgfxRemapped.end(),
+              [](const auto& left, const auto& right) {
+                  return std::get<0>(left) < std::get<0>(right);
+              });
+
+    std::string block = "in VertexData\n{\n";
+    for (const auto& [loc, type, name] : bgfxRemapped) {
         block += "    layout (location = " + std::to_string(loc) + ") " +
             type + " " + name + ";\n";
+        if (logger) {
+            logger->Trace("MaterialXShaderGenerator", "ConvertIndividualInputsToBlock",
+                          "Input " + name + " assigned to location " + std::to_string(loc));
+        }
     }
     block += "} vd;\n\n";
     
@@ -882,16 +1001,20 @@ ShaderPaths MaterialXShaderGenerator::Generate(const MaterialXConfig& config,
 
     // Log raw vertex shader inputs to debug Vulkan vertex attribute location mismatch
     if (logger_) {
-        logger_->Trace("MaterialXShaderGenerator", "Generate", "RAW_VERTEX_SHADER:\n" + 
+        logger_->Trace("MaterialXShaderGenerator", "Generate", "RAW_VERTEX_SHADER:\n" +
                        paths.vertexSource.substr(0, std::min(size_t(800), paths.vertexSource.size())));
     }
+
+    // Fix vertex shader inputs: remap locations to match bgfx vertex layout order
+    // Note: We DON'T create an input block for vertex shaders (GLSL doesn't allow it)
+    paths.vertexSource = RemapVertexShaderInputLocations(paths.vertexSource, logger_);
 
     // Fix vertex shader outputs: convert individual layout outputs to VertexData block
     // MaterialX VkShaderGenerator incorrectly emits individual out variables instead of
     // a VertexData struct block, which causes compilation errors when the shader code
     // references vd.normalWorld etc. We convert them here as a workaround.
     paths.vertexSource = ConvertIndividualOutputsToBlock(paths.vertexSource, logger_);
-    
+
     // Fix fragment shader inputs: convert individual layout inputs to VertexData block
     paths.fragmentSource = ConvertIndividualInputsToBlock(paths.fragmentSource, logger_);
     
@@ -935,6 +1058,42 @@ ShaderPaths MaterialXShaderGenerator::Generate(const MaterialXConfig& config,
                        ", fragmentVertexDataBlock=" + std::string(fragmentHasBlock ? "present" : "absent") +
                        ", vertexUsesVertexData=" + std::string(vertexUsesInstance ? "true" : "false"));
     }
+
+    // ===  MEGA-STRICT SHADER PIPELINE VALIDATION ===
+    // Validate the shader pipeline BEFORE returning to prevent GPU driver crashes
+    ShaderPipelineValidator validator(logger_);
+
+    // Define expected vertex layout (must match bgfx_graphics_backend.cpp)
+    std::vector<ShaderPipelineValidator::AttributeInfo> expectedLayout = {
+        ShaderPipelineValidator::AttributeInfo(0, "vec3", "Position", 12),
+        ShaderPipelineValidator::AttributeInfo(1, "vec3", "Normal", 12),
+        ShaderPipelineValidator::AttributeInfo(2, "vec3", "Tangent", 12),
+        ShaderPipelineValidator::AttributeInfo(3, "vec2", "TexCoord0", 8),
+        ShaderPipelineValidator::AttributeInfo(4, "vec3", "Color0", 12),
+    };
+
+    // Validate the complete pipeline
+    std::string pipelineName = config.documentPath.filename().string();
+    auto result = validator.ValidatePipeline(
+        paths.vertexSource,
+        paths.fragmentSource,
+        expectedLayout,
+        sizeof(core::Vertex),  // Actual vertex struct size
+        pipelineName
+    );
+
+    // Log the validation result
+    validator.LogValidationResult(result, "MaterialX Pipeline: " + pipelineName);
+
+    // CRITICAL: If validation fails, throw an exception to prevent GPU driver crash
+    if (!result.passed) {
+        std::string errorMsg = "Shader pipeline validation failed for '" + pipelineName + "':\n";
+        for (const auto& error : result.errors) {
+            errorMsg += "  - " + error + "\n";
+        }
+        throw std::runtime_error(errorMsg);
+    }
+
     return paths;
 }
 

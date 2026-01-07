@@ -279,6 +279,7 @@ if(BUILD_SDL3_APP)
             src/services/impl/scene_script_service.cpp
             src/services/impl/shader_script_service.cpp
             src/services/impl/materialx_shader_generator.cpp
+            src/services/impl/shader_pipeline_validator.cpp
             src/services/impl/gui_script_service.cpp
             $<$<NOT:$<BOOL:${ENABLE_VITA}>>:src/services/impl/bgfx_gui_service.cpp>
             $<$<NOT:$<BOOL:${ENABLE_VITA}>>:src/services/impl/bgfx_shader_compiler.cpp>

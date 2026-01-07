@@ -8,6 +8,7 @@ namespace sdl3cpp::core {
 struct Vertex {
     std::array<float, 3> position;
     std::array<float, 3> normal;
+    std::array<float, 3> tangent;
     std::array<float, 2> texcoord;
     std::array<float, 3> color;
 };
