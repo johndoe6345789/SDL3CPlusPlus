@@ -299,6 +299,14 @@ void BgfxGuiService::Shutdown() noexcept {
         bgfx::destroy(modelViewProjUniform_);
         modelViewProjUniform_ = BGFX_INVALID_HANDLE;
     }
+    if (bgfx::isValid(worldMatrixUniform_)) {
+        bgfx::destroy(worldMatrixUniform_);
+        worldMatrixUniform_ = BGFX_INVALID_HANDLE;
+    }
+    if (bgfx::isValid(viewProjMatrixUniform_)) {
+        bgfx::destroy(viewProjMatrixUniform_);
+        viewProjMatrixUniform_ = BGFX_INVALID_HANDLE;
+    }
 
     if (freeType_) {
         if (freeType_->face) {
@@ -338,23 +346,18 @@ void BgfxGuiService::InitializeResources() {
         .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
         .end();
 
-    modelViewProjUniform_ = bgfx::createUniform("u_modelViewProj", bgfx::UniformType::Mat4);
     sampler_ = bgfx::createUniform("s_tex", bgfx::UniformType::Sampler);
-    
-    if (logger_) {
-        logger_->Trace("BgfxGuiService", "InitializeResources",
-                       "Uniforms created: modelViewProj=" + std::to_string(bgfx::isValid(modelViewProjUniform_)) +
-                       ", sampler=" + std::to_string(bgfx::isValid(sampler_)));
-    }
     
     const char* vertexSource = kGuiVertexSource;
     const char* fragmentSource = kGuiFragmentSource;
     guiVertexSourceOverride_.clear();
     guiFragmentSourceOverride_.clear();
+    bool usingMaterialX = false;
 
     if (configService_) {
         const auto& materialConfig = configService_->GetMaterialXConfig();
         if (materialConfig.enabled && materialConfig.shaderKey == "gui") {
+            usingMaterialX = true;
             try {
                 ShaderPaths generated = materialxGenerator_.Generate(materialConfig, {});
                 if (!generated.vertexSource.empty() && !generated.fragmentSource.empty()) {
@@ -375,6 +378,27 @@ void BgfxGuiService::InitializeResources() {
                                   std::string(ex.what()));
                 }
             }
+        }
+    }
+    
+    // Create uniforms matching the shader we're using
+    if (usingMaterialX) {
+        // MaterialX shaders use separate world and viewProjection matrices
+        worldMatrixUniform_ = bgfx::createUniform("u_worldMatrix", bgfx::UniformType::Mat4);
+        viewProjMatrixUniform_ = bgfx::createUniform("u_viewProjectionMatrix", bgfx::UniformType::Mat4);
+        if (logger_) {
+            logger_->Trace("BgfxGuiService", "InitializeResources",
+                           "MaterialX uniforms: world=" + std::to_string(bgfx::isValid(worldMatrixUniform_)) +
+                           ", viewProj=" + std::to_string(bgfx::isValid(viewProjMatrixUniform_)) +
+                           ", sampler=" + std::to_string(bgfx::isValid(sampler_)));
+        }
+    } else {
+        // Built-in shader uses combined modelViewProj matrix
+        modelViewProjUniform_ = bgfx::createUniform("u_modelViewProj", bgfx::UniformType::Mat4);
+        if (logger_) {
+            logger_->Trace("BgfxGuiService", "InitializeResources",
+                           "Built-in uniforms: modelViewProj=" + std::to_string(bgfx::isValid(modelViewProjUniform_)) +
+                           ", sampler=" + std::to_string(bgfx::isValid(sampler_)));
         }
     }
 
@@ -792,10 +816,17 @@ void BgfxGuiService::SubmitQuad(const GuiVertex& v0,
 
     SetScissor(scissor);
     bgfx::setTransform(identity);
+    
+    // Use appropriate uniforms based on shader type
     if (bgfx::isValid(modelViewProjUniform_)) {
+        // Built-in shader: single combined matrix
         bgfx::setUniform(modelViewProjUniform_, viewProjection_.data());
+    } else if (bgfx::isValid(worldMatrixUniform_) && bgfx::isValid(viewProjMatrixUniform_)) {
+        // MaterialX shader: separate matrices
+        bgfx::setUniform(worldMatrixUniform_, identity);
+        bgfx::setUniform(viewProjMatrixUniform_, viewProjection_.data());
     } else if (logger_) {
-        logger_->Error("BgfxGuiService::SubmitQuad: modelViewProjUniform_ is invalid!");
+        logger_->Error("BgfxGuiService::SubmitQuad: No valid uniforms for shader!");
     }
     bgfx::setTexture(0, sampler_, texture);
     bgfx::setVertexBuffer(0, &tvb, 0, 4);

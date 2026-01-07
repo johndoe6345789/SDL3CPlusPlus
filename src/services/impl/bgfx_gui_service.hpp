@@ -154,7 +154,9 @@ private:
 
     bgfx::ProgramHandle program_ = BGFX_INVALID_HANDLE;
     bgfx::UniformHandle sampler_ = BGFX_INVALID_HANDLE;
-    bgfx::UniformHandle modelViewProjUniform_ = BGFX_INVALID_HANDLE;
+    bgfx::UniformHandle modelViewProjUniform_ = BGFX_INVALID_HANDLE;  // For built-in shader
+    bgfx::UniformHandle worldMatrixUniform_ = BGFX_INVALID_HANDLE;   // For MaterialX shaders
+    bgfx::UniformHandle viewProjMatrixUniform_ = BGFX_INVALID_HANDLE; // For MaterialX shaders
     bgfx::TextureHandle whiteTexture_ = BGFX_INVALID_HANDLE;
     bgfx::VertexLayout layout_;
     std::string guiVertexSourceOverride_;

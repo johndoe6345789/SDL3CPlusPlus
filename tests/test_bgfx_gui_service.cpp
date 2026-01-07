@@ -200,6 +200,8 @@ int main() {
 
     try {
         auto logger = std::make_shared<TestLogger>();
+        logger->EnableConsoleOutput(true);
+        logger->SetLevel(sdl3cpp::services::LogLevel::TRACE);
         auto configService = std::make_shared<StubConfigService>();
         configService->DisableFreeType();
         configService->EnableMaterialXGuiShader();
