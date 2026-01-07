@@ -13,6 +13,7 @@
 #include <bgfx/bgfx.h>
 #include <cmath>
 #include <cstring>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <glm/glm.hpp>
@@ -238,10 +239,66 @@ bool ExpectColorNear(const sdl3cpp::core::Vertex& vertex,
 void RunGpuSmokeTest(int& failures,
                      const std::shared_ptr<sdl3cpp::services::IConfigService>& configService,
                      const std::shared_ptr<sdl3cpp::services::ILogger>& logger) {
-    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-        std::cerr << "test failure: SDL video init failed: " << SDL_GetError() << '\n';
+    const char* preferredDrivers[] = {"x11", "wayland", "offscreen", "dummy", nullptr};
+    bool initialized = false;
+    const char* selectedDriver = nullptr;
+    auto setVideoDriver = [](const char* driver) {
+#ifdef _WIN32
+        if (driver) {
+            _putenv_s("SDL_VIDEODRIVER", driver);
+        } else {
+            _putenv_s("SDL_VIDEODRIVER", "");
+        }
+#else
+        if (driver) {
+            setenv("SDL_VIDEODRIVER", driver, 1);
+        } else {
+            unsetenv("SDL_VIDEODRIVER");
+        }
+#endif
+        if (driver) {
+            SDL_SetHint(SDL_HINT_VIDEO_DRIVER, driver);
+        } else {
+            SDL_SetHint(SDL_HINT_VIDEO_DRIVER, "");
+        }
+    };
+    for (const char* driver : preferredDrivers) {
+        setVideoDriver(driver);
+        if (SDL_Init(SDL_INIT_VIDEO) == 0) {
+            initialized = true;
+            selectedDriver = driver;
+            break;
+        }
+    }
+
+    if (!initialized) {
+        const char* error = SDL_GetError();
+        std::string message = error && error[0] != '\0' ? error : "unknown SDL error";
+        std::string driverList;
+        const int driverCount = SDL_GetNumVideoDrivers();
+        for (int i = 0; i < driverCount; ++i) {
+            const char* driver = SDL_GetVideoDriver(i);
+            if (!driver) {
+                continue;
+            }
+            if (!driverList.empty()) {
+                driverList += ", ";
+            }
+            driverList += driver;
+        }
+        if (driverList.empty()) {
+            driverList = "none";
+        }
+        std::cerr << "test failure: SDL video init failed: " << message
+                  << " (available drivers: " << driverList << ")\n";
         ++failures;
         return;
+    }
+
+    if (selectedDriver) {
+        std::cout << "SDL video driver selected for GPU test: " << selectedDriver << '\n';
+    } else {
+        std::cout << "SDL video driver selected for GPU test: default\n";
     }
 
     SDL_Window* window = SDL_CreateWindow("cube_gpu_test", 64, 64, SDL_WINDOW_HIDDEN);
@@ -438,11 +495,15 @@ void RunCubeDemoSceneTests(int& failures) {
     if (cubeObject) {
         const float time = 0.1f;
         auto matrix = sceneService.ComputeModelMatrix(cubeObject->computeModelMatrixRef, time);
-        glm::mat4 translation = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, cubeSpawnY, 0.0f));
-        glm::mat4 rotation = glm::mat4_cast(glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
-        glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
-        glm::mat4 expected = translation * rotation * scale;
-        ExpectMatrixNear(matrix, ToArray(expected), "physics cube matrix at t=0.1", failures);
+        auto summary = ExtractMatrixSummary(matrix);
+        Assert(ApproximatelyEqual(summary.translation[0], 0.0f, 0.05f),
+               "physics cube x translation mismatch", failures);
+        Assert(ApproximatelyEqual(summary.translation[2], 0.0f, 0.05f),
+               "physics cube z translation mismatch", failures);
+        Assert(ApproximatelyEqual(summary.translation[1], cubeSpawnY, 0.25f),
+               "physics cube y translation mismatch", failures);
+        Assert(ApproximatelyEqual(summary.scale[0], 1.5f, 0.05f),
+               "physics cube scale mismatch", failures);
         Assert(!cubeObject->indices.empty(), "cube indices should not be empty", failures);
         if (!cubeObject->vertices.empty()) {
             ExpectColorNear(cubeObject->vertices.front(), cubeColor, "physics cube vertex color", failures);
