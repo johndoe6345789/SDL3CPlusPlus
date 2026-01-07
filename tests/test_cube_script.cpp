@@ -6,12 +6,15 @@
 #include "services/impl/script_engine_service.hpp"
 #include "services/impl/scene_script_service.hpp"
 #include "services/impl/shader_script_service.hpp"
+#include "services/impl/ecs_service.hpp"
+#include "services/impl/scene_service.hpp"
 #include "services/interfaces/i_audio_command_service.hpp"
 #include "services/interfaces/i_config_service.hpp"
 
 #include <array>
 #include <bgfx/bgfx.h>
 #include <cmath>
+#include <limits>
 #include <cstring>
 #include <cstdlib>
 #include <filesystem>
@@ -124,14 +127,15 @@ private:
 
 class CubeDemoConfigService final : public sdl3cpp::services::IConfigService {
 public:
-    CubeDemoConfigService(std::filesystem::path scriptPath, std::string configJson)
+    CubeDemoConfigService(std::filesystem::path scriptPath, std::string configJson, std::string renderer = "auto")
         : scriptPath_(std::move(scriptPath)),
           configJson_(std::move(configJson)) {
         materialXConfig_.enabled = true;
         materialXConfig_.useConstantColor = true;
         materialXConfig_.shaderKey = "test";
         materialXConfig_.libraryPath = ResolveMaterialXLibraryPath();
-        bgfxConfig_.renderer = "auto";
+        renderer_ = std::move(renderer);
+        bgfxConfig_.renderer = renderer_;
     }
 
     uint32_t GetWindowWidth() const override { return 1; }
@@ -163,6 +167,7 @@ private:
     sdl3cpp::services::MaterialXConfig materialXConfig_{};
     std::vector<sdl3cpp::services::MaterialXMaterialConfig> materialXMaterials_{};
     sdl3cpp::services::GuiFontConfig guiFontConfig_{};
+    std::string renderer_;
 };
 
 class StubAudioCommandService final : public sdl3cpp::services::IAudioCommandService {
@@ -236,7 +241,7 @@ bool ExpectColorNear(const sdl3cpp::core::Vertex& vertex,
     return true;
 }
 
-void RunGpuSmokeTest(int& failures,
+bool RunGpuSmokeTest(int& failures,
                      const std::shared_ptr<sdl3cpp::services::IConfigService>& configService,
                      const std::shared_ptr<sdl3cpp::services::ILogger>& logger) {
     const char* preferredDrivers[] = {"x11", "wayland", "offscreen", "dummy", nullptr};
@@ -264,10 +269,15 @@ void RunGpuSmokeTest(int& failures,
     };
     for (const char* driver : preferredDrivers) {
         setVideoDriver(driver);
+        SDL_ClearError();
         if (SDL_Init(SDL_INIT_VIDEO) == 0) {
             initialized = true;
             selectedDriver = driver;
             break;
+        } else {
+            const char* error = SDL_GetError();
+            std::cerr << "SDL_Init failed for driver [" << (driver ? driver : "default")
+                      << "]: " << (error && error[0] ? error : "no error message") << '\n';
         }
     }
 
@@ -289,10 +299,10 @@ void RunGpuSmokeTest(int& failures,
         if (driverList.empty()) {
             driverList = "none";
         }
-        std::cerr << "test failure: SDL video init failed: " << message
+        std::cerr << "GPU smoke test failed: no SDL driver available: " << message
                   << " (available drivers: " << driverList << ")\n";
         ++failures;
-        return;
+        return false;
     }
 
     if (selectedDriver) {
@@ -303,10 +313,10 @@ void RunGpuSmokeTest(int& failures,
 
     SDL_Window* window = SDL_CreateWindow("cube_gpu_test", 64, 64, SDL_WINDOW_HIDDEN);
     if (!window) {
-        std::cerr << "test failure: SDL window creation failed: " << SDL_GetError() << '\n';
+        std::cerr << "GPU smoke test failed: unable to create SDL window: " << SDL_GetError() << '\n';
         ++failures;
         SDL_QuitSubSystem(SDL_INIT_VIDEO);
-        return;
+        return false;
     }
 
     auto platformService = std::make_shared<sdl3cpp::services::impl::PlatformService>(logger);
@@ -315,15 +325,20 @@ void RunGpuSmokeTest(int& failures,
         sdl3cpp::services::GraphicsConfig graphicsConfig{};
         backend.Initialize(window, graphicsConfig);
     } catch (const std::exception& ex) {
-        std::cerr << "test failure: bgfx init threw: " << ex.what() << '\n';
+        std::cerr << "GPU smoke test failed: bgfx init threw: " << ex.what() << '\n';
         ++failures;
         SDL_DestroyWindow(window);
         SDL_QuitSubSystem(SDL_INIT_VIDEO);
-        return;
+        return false;
     }
 
-    Assert(bgfx::getRendererType() != bgfx::RendererType::Noop,
-           "bgfx selected Noop renderer; GPU unavailable", failures);
+    if (bgfx::getRendererType() == bgfx::RendererType::Noop) {
+        std::cerr << "GPU smoke test failed: bgfx selected Noop renderer despite SDL success\n";
+        ++failures;
+        SDL_DestroyWindow(window);
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
+        return false;
+    }
 
     auto device = backend.CreateDevice();
     backend.BeginFrame(device);
@@ -333,6 +348,7 @@ void RunGpuSmokeTest(int& failures,
 
     SDL_DestroyWindow(window);
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
+    return true;
 }
 
 void RunCubeDemoSceneTests(int& failures) {
@@ -345,12 +361,16 @@ void RunCubeDemoSceneTests(int& failures) {
     }
 
     auto logger = std::make_shared<sdl3cpp::services::impl::LoggerService>();
-    auto configService = std::make_shared<CubeDemoConfigService>(scriptPath, *configJson);
+    auto configService = std::make_shared<CubeDemoConfigService>(scriptPath, *configJson, "vulkan");
     auto meshService = std::make_shared<sdl3cpp::services::impl::MeshService>(configService, logger);
     auto audioService = std::make_shared<StubAudioCommandService>();
     auto physicsService = std::make_shared<sdl3cpp::services::impl::PhysicsBridgeService>(logger);
 
-    RunGpuSmokeTest(failures, configService, logger);
+    if (!RunGpuSmokeTest(failures, configService, logger)) {
+        std::cerr << "Aborting cube scene checks because Vulkan smoke test failed\n";
+        return;
+    }
+
     auto engineService = std::make_shared<sdl3cpp::services::impl::ScriptEngineService>(
         scriptPath,
         logger,
@@ -363,45 +383,38 @@ void RunCubeDemoSceneTests(int& failures) {
         false);
     engineService->Initialize();
 
-    sdl3cpp::services::impl::SceneScriptService sceneService(engineService, logger);
-    auto objects = sceneService.LoadSceneObjects();
+    auto sceneScriptService = std::make_shared<sdl3cpp::services::impl::SceneScriptService>(engineService, logger);
+    auto objects = sceneScriptService->LoadSceneObjects();
 
     Assert(objects.size() == 16, "cube demo should return 16 scene objects", failures);
-
-    std::vector<const sdl3cpp::services::SceneObject*> floorObjects;
-    std::vector<const sdl3cpp::services::SceneObject*> wallObjects;
-    std::vector<const sdl3cpp::services::SceneObject*> ceilingObjects;
-    std::vector<const sdl3cpp::services::SceneObject*> solidObjects;
-    std::vector<const sdl3cpp::services::SceneObject*> skyboxObjects;
-    std::vector<const sdl3cpp::services::SceneObject*> otherObjects;
-
-    for (const auto& object : objects) {
-        Assert(!object.shaderKeys.empty(), "scene object missing shader key", failures);
-        if (object.shaderKeys.empty()) {
-            continue;
-        }
-        const std::string& shaderKey = object.shaderKeys.front();
-        if (shaderKey == "floor") {
-            floorObjects.push_back(&object);
-        } else if (shaderKey == "wall") {
-            wallObjects.push_back(&object);
-        } else if (shaderKey == "ceiling") {
-            ceilingObjects.push_back(&object);
-        } else if (shaderKey == "solid") {
-            solidObjects.push_back(&object);
-        } else if (shaderKey == "skybox") {
-            skyboxObjects.push_back(&object);
-        } else {
-            otherObjects.push_back(&object);
-        }
+    if (objects.empty()) {
+        engineService->Shutdown();
+        return;
     }
 
-    Assert(ceilingObjects.size() == 1, "expected 1 ceiling object", failures);
-    Assert(wallObjects.size() == 4, "expected 4 wall objects", failures);
-    Assert(solidObjects.size() == 8, "expected 8 lantern objects", failures);
-    Assert(skyboxObjects.size() == 1, "expected 1 skybox object", failures);
-    Assert(floorObjects.size() == 2, "expected 2 floor-key objects (floor + cube)", failures);
-    Assert(otherObjects.empty(), "unexpected shader keys in cube demo scene", failures);
+    for (const auto& object : objects) {
+        Assert(!object.vertices.empty(), "scene object missing vertices", failures);
+        Assert(!object.indices.empty(), "scene object missing indices", failures);
+        Assert(!object.shaderKeys.empty(), "scene object missing shader key", failures);
+        Assert(object.computeModelMatrixRef >= 0, "scene object must keep a Lua reference", failures);
+    }
+
+    auto ecsService = std::make_shared<sdl3cpp::services::impl::EcsService>(logger);
+    auto sceneManager = std::make_shared<sdl3cpp::services::impl::SceneService>(sceneScriptService, ecsService, logger);
+    sceneManager->LoadScene(objects);
+    Assert(sceneManager->GetObjectCount() == objects.size(), "scene service object count mismatch", failures);
+
+    size_t expectedVertexCount = 0;
+    size_t expectedIndexCount = 0;
+    for (const auto& object : objects) {
+        expectedVertexCount += object.vertices.size();
+        expectedIndexCount += object.indices.size();
+    }
+
+    const auto& combinedVertices = sceneManager->GetCombinedVertices();
+    const auto& combinedIndices = sceneManager->GetCombinedIndices();
+    Assert(combinedVertices.size() == expectedVertexCount, "combined vertex count mismatch", failures);
+    Assert(combinedIndices.size() == expectedIndexCount, "combined index count mismatch", failures);
 
     const std::array<float, 3> white = {1.0f, 1.0f, 1.0f};
     const std::array<float, 3> lanternColor = {1.0f, 0.9f, 0.6f};
@@ -422,18 +435,72 @@ void RunCubeDemoSceneTests(int& failures) {
     const float lanternOffset = roomHalfSize - 2.0f;
     const float cubeSpawnY = floorTop + wallHeight + 1.5f + 0.5f;
 
+    auto staticCommands = sceneManager->GetRenderCommands(0.0f);
+    auto dynamicCommands = sceneManager->GetRenderCommands(0.1f);
+    Assert(staticCommands.size() == objects.size(), "render command count mismatch", failures);
+    Assert(dynamicCommands.size() == objects.size(), "dynamic render command count mismatch", failures);
+
+    std::vector<size_t> floorIndices;
+    std::vector<size_t> wallIndices;
+    std::vector<size_t> ceilingIndices;
+    std::vector<size_t> solidIndices;
+    std::vector<size_t> skyboxIndices;
+    std::vector<size_t> otherIndices;
     std::vector<std::array<float, 3>> wallTranslations;
-    wallTranslations.reserve(wallObjects.size());
-    for (const auto* object : wallObjects) {
-        auto matrix = sceneService.ComputeModelMatrix(object->computeModelMatrixRef, 0.0f);
-        auto summary = ExtractMatrixSummary(matrix);
-        wallTranslations.push_back(summary.translation);
-        Assert(ApproximatelyEqual(summary.scale[1], wallHeight), "wall scale height mismatch", failures);
-        Assert(!object->indices.empty(), "wall indices should not be empty", failures);
-        if (!object->vertices.empty()) {
-            ExpectColorNear(object->vertices.front(), white, "wall vertex color", failures);
+    wallTranslations.reserve(4);
+    std::vector<std::array<float, 3>> lanternTranslations;
+    lanternTranslations.reserve(8);
+
+    for (size_t index = 0; index < staticCommands.size(); ++index) {
+        const auto& command = staticCommands[index];
+        const auto& object = objects[index];
+        Assert(!command.shaderKeys.empty(), "scene object missing shader key", failures);
+        Assert(!object.indices.empty(), "scene object should have indices", failures);
+
+        const auto summary = ExtractMatrixSummary(command.modelMatrix);
+        const std::string& shaderKey = command.shaderKeys.front();
+        if (shaderKey == "floor") {
+            floorIndices.push_back(index);
+            if (!object.vertices.empty()) {
+                ExpectColorNear(object.vertices.front(), white, "floor vertex color", failures);
+            }
+        } else if (shaderKey == "wall") {
+            wallIndices.push_back(index);
+            wallTranslations.push_back(summary.translation);
+            Assert(ApproximatelyEqual(summary.scale[1], wallHeight), "wall scale height mismatch", failures);
+            if (!object.vertices.empty()) {
+                ExpectColorNear(object.vertices.front(), white, "wall vertex color", failures);
+            }
+        } else if (shaderKey == "ceiling") {
+            ceilingIndices.push_back(index);
+            Assert(ApproximatelyEqual(summary.translation[1], ceilingY), "ceiling translation mismatch", failures);
+            Assert(ApproximatelyEqual(summary.scale[1], floorHalfThickness), "ceiling thickness mismatch", failures);
+            if (!object.vertices.empty()) {
+                ExpectColorNear(object.vertices.front(), white, "ceiling vertex color", failures);
+            }
+        } else if (shaderKey == "solid") {
+            solidIndices.push_back(index);
+            lanternTranslations.push_back(summary.translation);
+            Assert(ApproximatelyEqual(summary.scale[0], lanternSize), "lantern scale mismatch", failures);
+            if (!object.vertices.empty()) {
+                ExpectColorNear(object.vertices.front(), lanternColor, "lantern vertex color", failures);
+            }
+        } else if (shaderKey == "skybox") {
+            skyboxIndices.push_back(index);
+            if (!object.vertices.empty()) {
+                ExpectColorNear(object.vertices.front(), skyboxColor, "skybox vertex color", failures);
+            }
+        } else {
+            otherIndices.push_back(index);
         }
     }
+
+    Assert(ceilingIndices.size() == 1, "expected 1 ceiling object", failures);
+    Assert(wallIndices.size() == 4, "expected 4 wall objects", failures);
+    Assert(solidIndices.size() == 8, "expected 8 lantern objects", failures);
+    Assert(skyboxIndices.size() == 1, "expected 1 skybox object", failures);
+    Assert(floorIndices.size() == 2, "expected 2 floor-key objects (floor + cube)", failures);
+    Assert(otherIndices.empty(), "unexpected shader keys in cube demo scene", failures);
 
     const std::vector<std::array<float, 3>> expectedWallTranslations = {
         {0.0f, wallCenterY, -wallOffset},
@@ -452,74 +519,6 @@ void RunCubeDemoSceneTests(int& failures) {
             }
         }
         Assert(found, "missing wall at expected translation", failures);
-    }
-
-    if (!ceilingObjects.empty()) {
-        const auto* ceiling = ceilingObjects.front();
-        auto matrix = sceneService.ComputeModelMatrix(ceiling->computeModelMatrixRef, 0.0f);
-        auto summary = ExtractMatrixSummary(matrix);
-        Assert(ApproximatelyEqual(summary.translation[1], ceilingY), "ceiling translation mismatch", failures);
-        Assert(ApproximatelyEqual(summary.scale[1], floorHalfThickness), "ceiling thickness mismatch", failures);
-        Assert(!ceiling->indices.empty(), "ceiling indices should not be empty", failures);
-        if (!ceiling->vertices.empty()) {
-            ExpectColorNear(ceiling->vertices.front(), white, "ceiling vertex color", failures);
-        }
-    }
-
-    const sdl3cpp::services::SceneObject* floorObject = nullptr;
-    const sdl3cpp::services::SceneObject* cubeObject = nullptr;
-    for (const auto* object : floorObjects) {
-        auto matrix = sceneService.ComputeModelMatrix(object->computeModelMatrixRef, 0.0f);
-        auto summary = ExtractMatrixSummary(matrix);
-        if (ApproximatelyEqual(summary.scale[0], roomHalfSize)
-            && ApproximatelyEqual(summary.scale[2], roomHalfSize)) {
-            floorObject = object;
-        } else if (ApproximatelyEqual(summary.scale[0], 1.5f)) {
-            cubeObject = object;
-        }
-    }
-    Assert(floorObject != nullptr, "floor object not found", failures);
-    Assert(cubeObject != nullptr, "dynamic cube object not found", failures);
-
-    if (floorObject) {
-        auto matrix = sceneService.ComputeModelMatrix(floorObject->computeModelMatrixRef, 0.0f);
-        auto summary = ExtractMatrixSummary(matrix);
-        Assert(ApproximatelyEqual(summary.translation[1], floorCenterY), "floor translation mismatch", failures);
-        Assert(ApproximatelyEqual(summary.scale[1], floorHalfThickness), "floor thickness mismatch", failures);
-        Assert(!floorObject->indices.empty(), "floor indices should not be empty", failures);
-        if (!floorObject->vertices.empty()) {
-            ExpectColorNear(floorObject->vertices.front(), white, "floor vertex color", failures);
-        }
-    }
-
-    if (cubeObject) {
-        const float time = 0.1f;
-        auto matrix = sceneService.ComputeModelMatrix(cubeObject->computeModelMatrixRef, time);
-        auto summary = ExtractMatrixSummary(matrix);
-        Assert(ApproximatelyEqual(summary.translation[0], 0.0f, 0.05f),
-               "physics cube x translation mismatch", failures);
-        Assert(ApproximatelyEqual(summary.translation[2], 0.0f, 0.05f),
-               "physics cube z translation mismatch", failures);
-        Assert(ApproximatelyEqual(summary.translation[1], cubeSpawnY, 0.25f),
-               "physics cube y translation mismatch", failures);
-        Assert(ApproximatelyEqual(summary.scale[0], 1.5f, 0.05f),
-               "physics cube scale mismatch", failures);
-        Assert(!cubeObject->indices.empty(), "cube indices should not be empty", failures);
-        if (!cubeObject->vertices.empty()) {
-            ExpectColorNear(cubeObject->vertices.front(), cubeColor, "physics cube vertex color", failures);
-        }
-    }
-
-    std::vector<std::array<float, 3>> lanternTranslations;
-    lanternTranslations.reserve(solidObjects.size());
-    for (const auto* object : solidObjects) {
-        auto matrix = sceneService.ComputeModelMatrix(object->computeModelMatrixRef, 0.0f);
-        auto summary = ExtractMatrixSummary(matrix);
-        lanternTranslations.push_back(summary.translation);
-        Assert(ApproximatelyEqual(summary.scale[0], lanternSize), "lantern scale mismatch", failures);
-        if (!object->vertices.empty()) {
-            ExpectColorNear(object->vertices.front(), lanternColor, "lantern vertex color", failures);
-        }
     }
 
     const std::vector<std::array<float, 3>> expectedLanternTranslations = {
@@ -545,21 +544,61 @@ void RunCubeDemoSceneTests(int& failures) {
         Assert(found, "missing lantern at expected translation", failures);
     }
 
-    if (!skyboxObjects.empty()) {
-        const auto* skybox = skyboxObjects.front();
-        auto matrix = sceneService.ComputeModelMatrix(skybox->computeModelMatrixRef, 0.0f);
-        auto summary = ExtractMatrixSummary(matrix);
+    size_t floorObjectIndex = std::numeric_limits<size_t>::max();
+    size_t cubeObjectIndex = std::numeric_limits<size_t>::max();
+    for (size_t idx : floorIndices) {
+        auto summary = ExtractMatrixSummary(staticCommands[idx].modelMatrix);
+        if (ApproximatelyEqual(summary.scale[0], roomHalfSize)
+            && ApproximatelyEqual(summary.scale[2], roomHalfSize)) {
+            floorObjectIndex = idx;
+        } else if (ApproximatelyEqual(summary.scale[0], 1.5f)) {
+            cubeObjectIndex = idx;
+        }
+    }
+    Assert(floorObjectIndex != std::numeric_limits<size_t>::max(), "floor object not found", failures);
+    Assert(cubeObjectIndex != std::numeric_limits<size_t>::max(), "dynamic cube object not found", failures);
+
+    if (floorObjectIndex != std::numeric_limits<size_t>::max()) {
+        auto summary = ExtractMatrixSummary(staticCommands[floorObjectIndex].modelMatrix);
+        Assert(ApproximatelyEqual(summary.translation[1], floorCenterY), "floor translation mismatch", failures);
+        Assert(ApproximatelyEqual(summary.scale[1], floorHalfThickness), "floor thickness mismatch", failures);
+        if (!objects[floorObjectIndex].vertices.empty()) {
+            ExpectColorNear(objects[floorObjectIndex].vertices.front(), white, "floor vertex color", failures);
+        }
+        Assert(!objects[floorObjectIndex].indices.empty(), "floor indices should not be empty", failures);
+    }
+
+    if (cubeObjectIndex != std::numeric_limits<size_t>::max()) {
+        auto summary = ExtractMatrixSummary(dynamicCommands[cubeObjectIndex].modelMatrix);
+        Assert(ApproximatelyEqual(summary.translation[0], 0.0f, 0.05f),
+               "physics cube x translation mismatch", failures);
+        Assert(ApproximatelyEqual(summary.translation[2], 0.0f, 0.05f),
+               "physics cube z translation mismatch", failures);
+        Assert(ApproximatelyEqual(summary.translation[1], cubeSpawnY, 0.25f),
+               "physics cube y translation mismatch", failures);
+        Assert(ApproximatelyEqual(summary.scale[0], 1.5f, 0.05f),
+               "physics cube scale mismatch", failures);
+        if (!objects[cubeObjectIndex].vertices.empty()) {
+            ExpectColorNear(objects[cubeObjectIndex].vertices.front(), cubeColor, "physics cube vertex color", failures);
+        }
+        Assert(!objects[cubeObjectIndex].indices.empty(), "cube indices should not be empty", failures);
+    }
+
+    if (!skyboxIndices.empty()) {
+        auto summary = ExtractMatrixSummary(staticCommands[skyboxIndices.front()].modelMatrix);
         Assert(ApproximatelyEqual(summary.translation[0], 0.0f), "skybox x translation mismatch", failures);
         Assert(ApproximatelyEqual(summary.translation[1], 1.6f), "skybox y translation mismatch", failures);
         Assert(ApproximatelyEqual(summary.translation[2], 10.0f), "skybox z translation mismatch", failures);
-        Assert(!skybox->indices.empty(), "skybox indices should not be empty", failures);
-        if (!skybox->vertices.empty()) {
-            ExpectColorNear(skybox->vertices.front(), skyboxColor, "skybox vertex color", failures);
-        }
+        Assert(!objects[skyboxIndices.front()].indices.empty(), "skybox indices should not be empty", failures);
     }
+
+    sceneManager->Shutdown();
+    engineService->Shutdown();
 }
 } // namespace
 
+// When invoking this test locally, prefer `python scripts/dev_commands.py cmake -- --target script_engine_tests`
+// so the helper picks the right build dir/generator.
 int main() {
     int failures = 0;
     auto scriptPath = GetTestScriptPath();
