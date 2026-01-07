@@ -135,6 +135,11 @@ bgfx::ShaderHandle BgfxShaderCompiler::CompileShader(
 
     std::vector<uint32_t> spirv(result.cbegin(), result.cend());
     
+    if (logger_) {
+        logger_->Trace("BgfxShaderCompiler", "CompileShader",
+                       "label=" + label + " SPIRV compiled, " + std::to_string(spirv.size()) + " words");
+    }
+    
     // Wrap SPIRV with bgfx binary format including uniform metadata
     constexpr uint8_t kBgfxShaderVersion = 11;
     constexpr uint32_t kMagicVSH = ('V') | ('S' << 8) | ('H' << 16) | (kBgfxShaderVersion << 24);
@@ -196,6 +201,9 @@ bgfx::ShaderHandle BgfxShaderCompiler::CompileShader(
     if (!bgfx::isValid(handle) && logger_) {
         logger_->Error("BgfxShaderCompiler: bgfx::createShader failed for " + label +
                       " (spirvSize=" + std::to_string(spirv.size()) + " words)");
+    } else if (logger_) {
+        logger_->Trace("BgfxShaderCompiler", "CompileShader",
+                       "label=" + label + " shader created successfully, handle=" + std::to_string(handle.idx));
     }
     
     return handle;

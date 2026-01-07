@@ -971,6 +971,11 @@ bgfx::ProgramHandle BgfxGuiService::CreateProgram(const char* vertexSource,
 
     bgfx::ShaderHandle vs = CreateShader("gui_vertex", vertexSource, true);
     bgfx::ShaderHandle fs = CreateShader("gui_fragment", fragmentSource, false);
+    if (logger_) {
+        logger_->Trace("BgfxGuiService", "CreateProgram",
+                       "vs.idx=" + std::to_string(vs.idx) + ", vs.valid=" + std::to_string(bgfx::isValid(vs)) +
+                       ", fs.idx=" + std::to_string(fs.idx) + ", fs.valid=" + std::to_string(bgfx::isValid(fs)));
+    }
     if (!bgfx::isValid(vs) || !bgfx::isValid(fs)) {
         if (logger_) {
             logger_->Error("BgfxGuiService::CreateProgram: shader compilation failed (vs=" +
@@ -990,9 +995,11 @@ bgfx::ProgramHandle BgfxGuiService::CreateProgram(const char* vertexSource,
     if (!bgfx::isValid(program) && logger_) {
         logger_->Error("BgfxGuiService::CreateProgram: bgfx::createProgram failed to link shaders");
         logger_->Trace("BgfxGuiService", "CreateProgram",
-                       "renderer=" + std::string(RendererTypeName(bgfx::getRendererType())));
+                       "renderer=" + std::string(RendererTypeName(bgfx::getRendererType())) +
+                       ", program.idx=" + std::to_string(program.idx));
     } else if (logger_) {
-        logger_->Trace("BgfxGuiService", "CreateProgram", "GUI program created successfully");
+        logger_->Trace("BgfxGuiService", "CreateProgram", 
+                       "GUI program created successfully, program.idx=" + std::to_string(program.idx));
     }
     return program;
 }
