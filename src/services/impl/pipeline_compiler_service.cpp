@@ -40,48 +40,8 @@ bool PipelineCompilerService::Compile(const std::string& inputPath,
     }
     std::string source((std::istreambuf_iterator<char>(inputFile)), std::istreambuf_iterator<char>());
 
-    // Preprocess shader source for bgfx compatibility
+    // For bgfx Vulkan shaders, use the source as-is (it has proper Vulkan syntax)
     std::string processedSource = source;
-    
-    // Replace #version 450 with #version 330 for better compatibility
-    size_t versionPos = processedSource.find("#version 450");
-    if (versionPos != std::string::npos) {
-        processedSource.replace(versionPos, 12, "#version 330");
-    }
-    
-    // Remove layout(location=X) qualifiers for attributes
-    std::string::size_type pos = 0;
-    while ((pos = processedSource.find("layout (location =", pos)) != std::string::npos) {
-        size_t endPos = processedSource.find(")", pos);
-        if (endPos != std::string::npos) {
-            processedSource.erase(pos, endPos - pos + 1);
-        } else {
-            break;
-        }
-    }
-    
-    // Replace 'in' with 'attribute' for vertex shaders
-    if (isVertex) {
-        pos = 0;
-        while ((pos = processedSource.find("in ", pos)) != std::string::npos) {
-            processedSource.replace(pos, 3, "attribute ");
-            pos += 10; // skip past "attribute "
-        }
-        
-        // Replace 'out' with 'varying' for vertex shaders
-        pos = 0;
-        while ((pos = processedSource.find("out ", pos)) != std::string::npos) {
-            processedSource.replace(pos, 4, "varying ");
-            pos += 8; // skip past "varying "
-        }
-    } else {
-        // For fragment shaders, replace 'in' with 'varying'
-        pos = 0;
-        while ((pos = processedSource.find("in ", pos)) != std::string::npos) {
-            processedSource.replace(pos, 3, "varying ");
-            pos += 8; // skip past "varying "
-        }
-    }
 
     // Write output
     std::ofstream outputFile(outputPath, std::ios::binary);
@@ -101,10 +61,9 @@ bool PipelineCompilerService::Compile(const std::string& inputPath,
         shaderc::Compiler compiler;
         shaderc::CompileOptions options;
 
-        // Use default target environment but allow old-style GLSL
+        // Set target environment to Vulkan for Vulkan renderer
+        options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_0);
         options.SetTargetSpirv(shaderc_spirv_version_1_0);
-        // Allow relaxed rules for bgfx compatibility
-        options.SetIncluder(nullptr);
 
         shaderc::SpvCompilationResult result = compiler.CompileGlslToSpv(processedSource, kind, inputPath.c_str(), options);
 
@@ -136,12 +95,12 @@ bool PipelineCompilerService::Compile(const std::string& inputPath,
 
         // Write uniform information (bgfx expects this after the SPIR-V)
         if (isVertex) {
-            // Vertex shader uniforms: u_modelViewProj (mat4)
+            // Vertex shader uniforms: UniformBuffer.u_modelViewProj (mat4)
             uint16_t numUniforms = 1;
             outputFile.write(reinterpret_cast<const char*>(&numUniforms), sizeof(numUniforms));
             
-            // Uniform name (null-terminated)
-            const char* uniformName = "u_modelViewProj";
+            // Uniform name (null-terminated) - include block name for Vulkan
+            const char* uniformName = "UniformBuffer.u_modelViewProj";
             outputFile.write(uniformName, strlen(uniformName) + 1);
             
             // Uniform type (Mat4 = 4)

@@ -62,7 +62,9 @@ out VertexData
     layout (location = 1) vec2 texcoord;
 } vd;
 
-uniform mat4 u_modelViewProj;
+layout (binding = 0) uniform UniformBuffer {
+    mat4 u_modelViewProj;
+};
 
 void main()
 {
@@ -83,7 +85,7 @@ in VertexData
 
 layout (location = 0) out vec4 out_color;
 
-uniform sampler2D s_tex;
+layout (binding = 1) uniform sampler2D s_tex;
 
 void main()
 {
