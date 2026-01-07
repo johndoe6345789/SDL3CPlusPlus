@@ -369,6 +369,38 @@ else()
     message(FATAL_ERROR "shaderc CMake target not found")
 endif()
 add_test(NAME bgfx_gui_service_tests COMMAND bgfx_gui_service_tests)
+
+# Test: Vulkan shader linking (TDD test for walls/ceiling/floor rendering)
+add_executable(vulkan_shader_linking_test
+    tests/test_vulkan_shader_linking.cpp
+    src/services/impl/bgfx_graphics_backend.cpp
+    src/services/impl/bgfx_gui_service.cpp
+    src/services/impl/bgfx_shader_compiler.cpp
+    src/services/impl/json_config_service.cpp
+    src/services/impl/materialx_shader_generator.cpp
+    src/services/impl/platform_service.cpp
+    src/services/impl/sdl_window_service.cpp
+    src/events/event_bus.cpp
+    src/stb_image.cpp
+)
+target_include_directories(vulkan_shader_linking_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_link_libraries(vulkan_shader_linking_test PRIVATE
+    ${SDL_TARGET}
+    ${SDL3CPP_RENDER_STACK_LIBS}
+    ${SDL3CPP_FREETYPE_LIBS}
+    ${SDL3CPP_STB_LIBS}
+    lunasvg::lunasvg
+    rapidjson
+    glm::glm
+)
+if(TARGET shaderc::shaderc)
+    target_link_libraries(vulkan_shader_linking_test PRIVATE shaderc::shaderc)
+elseif(TARGET shaderc::shaderc_combined)
+    target_link_libraries(vulkan_shader_linking_test PRIVATE shaderc::shaderc_combined)
+else()
+    message(FATAL_ERROR "shaderc CMake target not found")
+endif()
+add_test(NAME vulkan_shader_linking_test COMMAND vulkan_shader_linking_test)
 endif()
 
 if(ENABLE_VITA)
