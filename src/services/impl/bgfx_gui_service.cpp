@@ -58,7 +58,7 @@ layout(location = 2) in vec2 inTexCoord;
 layout(location = 0) out vec4 fragColor;
 layout(location = 1) out vec2 fragTexCoord;
 
-layout(std140, binding = 0) uniform GuiUniforms {
+layout(std140) uniform GuiUniforms {
     mat4 u_modelViewProj;
 };
 
@@ -77,7 +77,7 @@ layout(location = 1) in vec2 fragTexCoord;
 
 layout(location = 0) out vec4 outColor;
 
-layout(binding = 0) uniform sampler2D s_tex;
+uniform sampler2D s_tex;
 
 void main() {
     outColor = fragColor * texture(s_tex, fragTexCoord);
@@ -904,6 +904,8 @@ bgfx::ProgramHandle BgfxGuiService::CreateProgram(const char* vertexSource,
     bgfx::ProgramHandle program = bgfx::createProgram(vs, fs, true);
     if (!bgfx::isValid(program) && logger_) {
         logger_->Error("BgfxGuiService::CreateProgram: bgfx::createProgram failed to link shaders");
+        logger_->Trace("BgfxGuiService", "CreateProgram",
+                       "renderer=" + std::string(RendererTypeName(bgfx::getRendererType())));
     } else if (logger_) {
         logger_->Trace("BgfxGuiService", "CreateProgram", "GUI program created successfully");
     }
