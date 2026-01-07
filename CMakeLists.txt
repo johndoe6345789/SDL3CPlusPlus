@@ -139,6 +139,7 @@ find_package(Vorbis CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(cpptrace REQUIRED)
 find_package(stb CONFIG REQUIRED)
+find_package(GTest CONFIG REQUIRED)
 
 set(SDL3CPP_RENDER_STACK_LIBS EnTT::EnTT)
 if(TARGET bgfx::bgfx)
@@ -490,6 +491,18 @@ else()
     message(WARNING "shaderc CMake target not found; skipping link for vulkan_shader_linking_test.")
 endif()
 add_test(NAME vulkan_shader_linking_test COMMAND vulkan_shader_linking_test)
+
+# Test: Shader Pipeline Validator (mega-strict validation system)
+add_executable(shader_pipeline_validator_test
+    tests/shader_pipeline_validator_test.cpp
+    src/services/impl/shader_pipeline_validator.cpp
+)
+target_include_directories(shader_pipeline_validator_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_link_libraries(shader_pipeline_validator_test PRIVATE
+    GTest::gtest
+    GTest::gtest_main
+)
+add_test(NAME shader_pipeline_validator_test COMMAND shader_pipeline_validator_test)
 endif()
 
 if(ENABLE_VITA)

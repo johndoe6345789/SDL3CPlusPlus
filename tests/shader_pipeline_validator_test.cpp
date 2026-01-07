@@ -1,7 +1,7 @@
 #include "services/impl/shader_pipeline_validator.hpp"
+#include "services/interfaces/i_logger.hpp"
 #include "core/vertex.hpp"
-#include <iostream>
-#include <cassert>
+#include <gtest/gtest.h>
 #include <memory>
 
 using namespace sdl3cpp::services;
@@ -9,29 +9,56 @@ using namespace sdl3cpp::services;
 // Mock logger for testing
 class MockLogger : public ILogger {
 public:
+    void SetLevel(LogLevel) override {}
+    LogLevel GetLevel() const override { return LogLevel::INFO; }
+    void SetOutputFile(const std::string&) override {}
+    void SetMaxLinesPerFile(size_t) override {}
+    void EnableConsoleOutput(bool) override {}
+    void Log(LogLevel, const std::string&) override {}
+    void Trace(const std::string&) override {}
+    void Trace(const std::string&, const std::string&, const std::string&, const std::string&) override {}
     void Debug(const std::string&) override {}
     void Info(const std::string&) override {}
     void Warn(const std::string&) override {}
     void Error(const std::string&) override {}
-    void Trace(const std::string&) override {}
+    void TraceFunction(const std::string&) override {}
+    void TraceVariable(const std::string&, const std::string&) override {}
+    void TraceVariable(const std::string&, int) override {}
+    void TraceVariable(const std::string&, size_t) override {}
+    void TraceVariable(const std::string&, bool) override {}
+    void TraceVariable(const std::string&, float) override {}
+    void TraceVariable(const std::string&, double) override {}
 };
 
-int TestExtractShaderInputs() {
-    std::cout << "TEST: ExtractShaderInputs\n";
-    int failures = 0;
+class ShaderPipelineValidatorTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        logger = std::make_shared<MockLogger>();
+        validator = std::make_unique<ShaderPipelineValidator>(logger);
+    }
 
-    auto logger = std::make_shared<MockLogger>();
-    ShaderPipelineValidator validator(logger);
+    std::shared_ptr<MockLogger> logger;
+    std::unique_ptr<ShaderPipelineValidator> validator;
+};
 
-    std::string validGlsl = R"(
-        #version 450
-        layout (location = 0) in vec3 i_position;
-        layout (location = 1) in vec3 i_normal;
-        layout (location = 2) in vec2 i_texcoord_0;
-        void main() {}
-    )";
+// ============================================================================
+// Test: Extract Shader Inputs
+// ============================================================================
 
-    auto inputs = validator.ExtractShaderInputs(validGlsl);
+TEST_F(ShaderPipelineValidatorTest, ExtractShaderInputs_ValidGLSL) {
+    std::string glsl = R"(
+#version 450
+layout (location = 0) in vec3 i_position;
+layout (location = 1) in vec3 i_normal;
+layout (location = 2) in vec3 i_tangent;
+layout (location = 3) in vec2 i_texcoord_0;
+
+void main() {
+    gl_Position = vec4(i_position, 1.0);
+}
+)";
+
+    auto inputs = validator->ExtractShaderInputs(glsl);
 
     ASSERT_EQ(inputs.size(), 4);
 
