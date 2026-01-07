@@ -169,11 +169,6 @@ function get_scene_objects()
     return {}  -- No 3D objects
 end
 
-function get_shader_paths()
-    -- MaterialX shaders are configured via JSON materialx_materials
-    return {}
-end
-
 function get_view_projection(aspect)
     if not viewProjectionLogged then
         log_trace("GUI demo view projection: identity (aspect=%.2f)", aspect)

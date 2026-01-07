@@ -224,8 +224,6 @@ local cubeIndices = {
     1, 2, 6, 6, 5, 1,
 }
 
-local shaderVariants = require("shader_variants").build_soundboard_variants()
-
 local camera = {
     eye = { 2.0, 2.0, 3.0 },
     center = { 0.0, 0.0, 0.0 },
@@ -262,10 +260,6 @@ gui_input = input
 
 function get_scene_objects()
     return { createCube({ 0.0, 0.0, -4.0 }) }
-end
-
-function get_shader_paths()
-    return shaderVariants
 end
 
 function get_view_projection(aspect)

@@ -598,11 +598,6 @@ function get_scene_objects()
     }
 end
 
-function get_shader_paths()
-    -- MaterialX shaders are configured via JSON materialx_materials
-    return {}
-end
-
 local function build_view_state(aspect)
     local now = get_time_seconds()
     local dt = 0.0

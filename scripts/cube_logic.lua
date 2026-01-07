@@ -230,10 +230,6 @@ if cube_mesh_info.loaded then
     end
 end
 
-local shader_variants_module = require("shader_variants")
-local shader_variants
-shader_variants, skybox_color = shader_variants_module.build_cube_variants(config, log_debug, skybox_color)
-
 local camera = {
     position = {0.0, 0.0, 5.0},
     yaw = math.pi,  -- Face toward -Z (center of room)
@@ -1043,11 +1039,6 @@ function get_scene_objects()
     objects[#objects + 1] = create_dynamic_cube()
     return objects
 end
-
-function get_shader_paths()
-    return shader_variants
-end
-
 
 local function build_view_state(aspect)
     local now = get_time_seconds()
