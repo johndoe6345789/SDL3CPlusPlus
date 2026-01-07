@@ -478,14 +478,47 @@ std::string ConvertIndividualInputsToBlock(const std::string& source,
         return source;
     }
     
-    std::sort(inputs.begin(), inputs.end(),
+    // Remap locations to match bgfx VertexLayout order:
+    // location=0: position (vec3)
+    // location=1: normal (vec3)
+    // location=2: texcoord (vec2)
+    // location=3: color/tangent (vec3/vec4)
+    std::map<std::string, int> nameToLocation;
+    for (const auto& [loc, type, name] : inputs) {
+        int newLoc = loc;  // default: keep original
+        
+        if (name.find("position") != std::string::npos) {
+            newLoc = 0;
+        } else if (name.find("normal") != std::string::npos) {
+            newLoc = 1;
+        } else if (name.find("texcoord") != std::string::npos) {
+            newLoc = 2;
+        } else if (name.find("color") != std::string::npos || name.find("tangent") != std::string::npos) {
+            newLoc = 3;
+        }
+        
+        if (logger_ && newLoc != loc) {
+            logger_->Trace("MaterialXShaderGenerator", "ConvertIndividualInputsToBlock",
+                           "Remapping " + name + ": location " + std::to_string(loc) + 
+                           " -> " + std::to_string(newLoc));
+        }
+        
+        nameToLocation[name] = newLoc;
+    }
+    
+    // Sort by remapped location
+    std::vector<std::tuple<int, std::string, std::string>> remapped;
+    for (const auto& [loc, type, name] : inputs) {
+        remapped.push_back({nameToLocation[name], type, name});
+    }
+    std::sort(remapped.begin(), remapped.end(),
               [](const auto& left, const auto& right) {
                   return std::get<0>(left) < std::get<0>(right);
               });
 
-    // Build the VertexData block while preserving explicit locations.
+    // Build the VertexData block with remapped locations.
     std::string block = "in VertexData\n{\n";
-    for (const auto& [loc, type, name] : inputs) {
+    for (const auto& [loc, type, name] : remapped) {
         block += "    layout (location = " + std::to_string(loc) + ") " +
             type + " " + name + ";\n";
     }
@@ -822,6 +855,12 @@ ShaderPaths MaterialXShaderGenerator::Generate(const MaterialXConfig& config,
     paths.vertexSource = shader->getSourceCode(mx::Stage::VERTEX);
     paths.fragmentSource = shader->getSourceCode(mx::Stage::PIXEL);
     paths.textures = CollectTextureBindings(*shader, documentPath, libraryPath, scriptDirectory, logger_);
+
+    // Log raw vertex shader inputs to debug Vulkan vertex attribute location mismatch
+    if (logger_) {
+        logger_->Trace("MaterialXShaderGenerator", "Generate", "RAW_VERTEX_SHADER:\n" + 
+                       paths.vertexSource.substr(0, std::min(size_t(800), paths.vertexSource.size())));
+    }
 
     // Fix vertex shader outputs: convert individual layout outputs to VertexData block
     // MaterialX VkShaderGenerator incorrectly emits individual out variables instead of
