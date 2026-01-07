@@ -1,6 +1,5 @@
-#define private public
 #include "services/impl/bgfx_gui_service.hpp"
-#undef private
+#include "services/interfaces/gui_types.hpp"
 
 #include "services/interfaces/i_config_service.hpp"
 #include "services/interfaces/i_logger.hpp"
@@ -184,12 +183,12 @@ int main() {
         configService->DisableFreeType();
 
         sdl3cpp::services::impl::BgfxGuiService service(configService, logger);
-        service.InitializeResources();
+        service.PrepareFrame({}, 1, 1);
 
-        Assert(bgfx::isValid(service.program_), "GUI shader program should link", failures);
-        Assert(bgfx::isValid(service.whiteTexture_), "white texture should be created", failures);
+        Assert(service.IsProgramReady(), "GUI shader program should link", failures);
+        Assert(service.IsWhiteTextureReady(), "white texture should be created", failures);
 
-        if (!bgfx::isValid(service.program_) &&
+        if (!service.IsProgramReady() &&
             !logger->HasErrorSubstring("bgfx::createProgram failed to link shaders")) {
             Assert(false, "missing bgfx::createProgram link failure log", failures);
         }

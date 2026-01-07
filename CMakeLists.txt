@@ -349,11 +349,11 @@ endif()
 add_test(NAME bgfx_gui_service_tests COMMAND bgfx_gui_service_tests)
 endif()
 
-add_executable(gxm_backend_tests
-    tests/test_gxm_backend.cpp
-    src/services/impl/gxm_graphics_backend.cpp
-)
 if(ENABLE_VITA)
+    add_executable(gxm_backend_tests
+        tests/test_gxm_backend.cpp
+        src/services/impl/gxm_graphics_backend.cpp
+    )
     target_include_directories(gxm_backend_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
     target_link_libraries(gxm_backend_tests PRIVATE
         SceGxm_stub
@@ -361,10 +361,5 @@ if(ENABLE_VITA)
         SceSysmem_stub
         SceLibKernel_stub
     )
-else()
-    target_include_directories(gxm_backend_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-    target_link_libraries(gxm_backend_tests PRIVATE
-        ${SDL_TARGET}
-    )
+    add_test(NAME gxm_backend_tests COMMAND gxm_backend_tests)
 endif()
-add_test(NAME gxm_backend_tests COMMAND gxm_backend_tests)

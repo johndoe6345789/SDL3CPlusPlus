@@ -32,6 +32,9 @@ public:
 
     void Shutdown() noexcept override;
 
+    bool IsProgramReady() const;
+    bool IsWhiteTextureReady() const;
+
 private:
     struct GuiVertex {
         float x = 0.0f;

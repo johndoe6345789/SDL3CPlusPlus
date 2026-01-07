@@ -243,6 +243,14 @@ void BgfxGuiService::Shutdown() noexcept {
     initialized_ = false;
 }
 
+bool BgfxGuiService::IsProgramReady() const {
+    return bgfx::isValid(program_);
+}
+
+bool BgfxGuiService::IsWhiteTextureReady() const {
+    return bgfx::isValid(whiteTexture_);
+}
+
 void BgfxGuiService::InitializeResources() {
     if (initialized_) {
         return;

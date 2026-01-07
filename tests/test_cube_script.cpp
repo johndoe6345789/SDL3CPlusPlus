@@ -41,6 +41,45 @@ std::filesystem::path GetTestScriptPath() {
     return testDir / "scripts" / "unit_cube_logic.lua";
 }
 
+class StubConfigService final : public sdl3cpp::services::IConfigService {
+public:
+    StubConfigService() {
+        materialXConfig_.enabled = true;
+        materialXConfig_.useConstantColor = true;
+        materialXConfig_.shaderKey = "test";
+        materialXConfig_.libraryPath = ResolveMaterialXLibraryPath();
+    }
+
+    uint32_t GetWindowWidth() const override { return 1; }
+    uint32_t GetWindowHeight() const override { return 1; }
+    std::filesystem::path GetScriptPath() const override { return {}; }
+    bool IsLuaDebugEnabled() const override { return false; }
+    std::string GetWindowTitle() const override { return ""; }
+    const sdl3cpp::services::InputBindings& GetInputBindings() const override { return inputBindings_; }
+    const sdl3cpp::services::MouseGrabConfig& GetMouseGrabConfig() const override { return mouseGrabConfig_; }
+    const sdl3cpp::services::BgfxConfig& GetBgfxConfig() const override { return bgfxConfig_; }
+    const sdl3cpp::services::MaterialXConfig& GetMaterialXConfig() const override { return materialXConfig_; }
+    const std::vector<sdl3cpp::services::MaterialXMaterialConfig>& GetMaterialXMaterialConfigs() const override {
+        return materialXMaterials_;
+    }
+    const sdl3cpp::services::GuiFontConfig& GetGuiFontConfig() const override { return guiFontConfig_; }
+    const std::string& GetConfigJson() const override { return configJson_; }
+
+private:
+    static std::filesystem::path ResolveMaterialXLibraryPath() {
+        auto repoRoot = std::filesystem::path(__FILE__).parent_path().parent_path();
+        return repoRoot / "MaterialX" / "libraries";
+    }
+
+    sdl3cpp::services::InputBindings inputBindings_{};
+    sdl3cpp::services::MouseGrabConfig mouseGrabConfig_{};
+    sdl3cpp::services::BgfxConfig bgfxConfig_{};
+    sdl3cpp::services::MaterialXConfig materialXConfig_{};
+    std::vector<sdl3cpp::services::MaterialXMaterialConfig> materialXMaterials_{};
+    sdl3cpp::services::GuiFontConfig guiFontConfig_{};
+    std::string configJson_{};
+};
+
 void Assert(bool condition, const std::string& message, int& failures) {
     if (!condition) {
         std::cerr << "test failure: " << message << '\n';
@@ -56,6 +95,7 @@ int main() {
 
     try {
         auto logger = std::make_shared<sdl3cpp::services::impl::LoggerService>();
+        auto configService = std::make_shared<StubConfigService>();
         auto engineService = std::make_shared<sdl3cpp::services::impl::ScriptEngineService>(
             scriptPath,
             logger,
@@ -64,12 +104,11 @@ int main() {
             nullptr,
             nullptr,
             nullptr,
-            nullptr,
+            configService,
             false);
         engineService->Initialize();
 
         sdl3cpp::services::impl::SceneScriptService sceneService(engineService, logger);
-        std::shared_ptr<sdl3cpp::services::IConfigService> configService;
         sdl3cpp::services::impl::ShaderScriptService shaderService(engineService, configService, logger);
 
         auto objects = sceneService.LoadSceneObjects();
@@ -94,16 +133,16 @@ int main() {
         auto fallbackMatrix = sceneService.ComputeModelMatrix(-1, 1.0f);
         ExpectIdentity(fallbackMatrix, "global compute_model_matrix", failures);
 
-        auto viewProjection = sceneService.GetViewProjectionMatrix(1.33f);
-        ExpectIdentity(viewProjection, "view_projection matrix", failures);
+        auto viewState = sceneService.GetViewState(1.33f);
+        ExpectIdentity(viewState.viewProj, "view_projection matrix", failures);
 
         auto shaderMap = shaderService.LoadShaderPathsMap();
         Assert(shaderMap.size() == 1, "expected a single shader variant", failures);
         auto testEntry = shaderMap.find("test");
         Assert(testEntry != shaderMap.end(), "shader map missing test entry", failures);
         if (testEntry != shaderMap.end()) {
-            Assert(testEntry->second.vertex == "shaders/test.vert", "vertex shader path", failures);
-            Assert(testEntry->second.fragment == "shaders/test.frag", "fragment shader path", failures);
+            Assert(!testEntry->second.vertexSource.empty(), "vertex shader source missing", failures);
+            Assert(!testEntry->second.fragmentSource.empty(), "fragment shader source missing", failures);
         }
     } catch (const std::exception& ex) {
         std::cerr << "exception during tests: " << ex.what() << '\n';
