@@ -778,7 +778,7 @@ local function apply_color_to_vertices(color)
     return colored_vertices
 end
 
-local function create_static_cube(position, scale, color, shader_key)
+local function create_static_cube(position, scale, color, shader_key, object_type)
     local model = build_static_model_matrix(position, scale)
     local function compute_model_matrix()
         return model
@@ -795,6 +795,7 @@ local function create_static_cube(position, scale, color, shader_key)
         indices = cube_indices,
         compute_model_matrix = compute_model_matrix,
         shader_keys = {resolved_shader},
+        object_type = object_type or "cube",
     }
 end
 
@@ -812,6 +813,7 @@ local function create_skybox()
         indices = (#cube_indices_double_sided > 0) and cube_indices_double_sided or cube_indices,
         compute_model_matrix = compute_model_matrix,
         shader_keys = {"skybox"},
+        object_type = "skybox",
     }
 end
 
@@ -854,6 +856,7 @@ local function create_physics_cube()
         indices = (#cube_indices_double_sided > 0) and cube_indices_double_sided or cube_indices,
         compute_model_matrix = compute_model_matrix,
         shader_keys = {shader_key},
+        object_type = "physics_cube",
     }
 end
 
@@ -887,7 +890,7 @@ local function create_lantern(x, z)
     local lantern_height = 8
     local lantern_size = 0.2
     return create_static_cube({x, lantern_height, z},
-        {lantern_size, lantern_size, lantern_size}, {1.0, 0.9, 0.6}, "solid")
+        {lantern_size, lantern_size, lantern_size}, {1.0, 0.9, 0.6}, "solid", "lantern")
 end
 
 local function create_room_objects()
@@ -921,6 +924,7 @@ local function create_room_objects()
             indices = floor_indices,
             compute_model_matrix = compute_model_matrix,
             shader_keys = {"floor"},
+            object_type = "floor",
         }
     end
     
@@ -933,6 +937,7 @@ local function create_room_objects()
             indices = ceiling_indices,
             compute_model_matrix = compute_model_matrix,
             shader_keys = {"ceiling"},
+            object_type = "ceiling",
         }
     end
 
@@ -940,13 +945,13 @@ local function create_room_objects()
         create_floor(),
         create_ceiling(),
         create_static_cube({0.0, wall_center_y, -wall_offset},
-            {room.half_size, room.wall_height, room.wall_thickness}, wall_color, "wall"),
+            {room.half_size, room.wall_height, room.wall_thickness}, wall_color, "wall", "wall"),
         create_static_cube({0.0, wall_center_y, wall_offset},
-            {room.half_size, room.wall_height, room.wall_thickness}, wall_color, "wall"),
+            {room.half_size, room.wall_height, room.wall_thickness}, wall_color, "wall", "wall"),
         create_static_cube({-wall_offset, wall_center_y, 0.0},
-            {room.wall_thickness, room.wall_height, room.half_size}, wall_color, "wall"),
+            {room.wall_thickness, room.wall_height, room.half_size}, wall_color, "wall", "wall"),
         create_static_cube({wall_offset, wall_center_y, 0.0},
-            {room.wall_thickness, room.wall_height, room.half_size}, wall_color, "wall"),
+            {room.wall_thickness, room.wall_height, room.half_size}, wall_color, "wall", "wall"),
     }
 
     -- Add lanterns in the four corners (adjusted for bigger room)
