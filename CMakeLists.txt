@@ -197,14 +197,9 @@ endif()
 ## Local build of bgfx_tools shaderc sources as a library so we can link in-process.
 add_library(shaderc_local STATIC
     src/bgfx_tools/shaderc/shaderc.cpp
-    src/bgfx_tools/shaderc/shaderc_glsl.cpp
-    src/bgfx_tools/shaderc/shaderc_hlsl.cpp
-    src/bgfx_tools/shaderc/shaderc_metal.cpp
-    src/bgfx_tools/shaderc/shaderc_pssl.cpp
-    src/bgfx_tools/shaderc/shaderc_spirv.cpp
     src/bgfx_tools/shaderc/shaderc_mem.cpp
 )
-target_include_directories(shaderc_local PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_tools/shaderc" "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_include_directories(shaderc_local PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_tools/shaderc" "${CMAKE_CURRENT_SOURCE_DIR}/src" "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_deps")
 if(TARGET bgfx::bx)
     target_link_libraries(shaderc_local PUBLIC bgfx::bx)
 endif()
