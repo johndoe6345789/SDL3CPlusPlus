@@ -308,12 +308,17 @@ enable_testing()
 if(NOT ENABLE_VITA)
 add_executable(script_engine_tests
     tests/test_cube_script.cpp
+    src/services/impl/bgfx_graphics_backend.cpp
     src/services/impl/logger_service.cpp
+    src/services/impl/mesh_service.cpp
+    src/services/impl/physics_bridge_service.cpp
+    src/services/impl/platform_service.cpp
     src/services/impl/script_engine_service.cpp
     src/services/impl/lua_helpers.cpp
     src/services/impl/scene_script_service.cpp
     src/services/impl/shader_script_service.cpp
     src/services/impl/materialx_shader_generator.cpp
+    src/stb_image.cpp
 )
 target_include_directories(script_engine_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(script_engine_tests PRIVATE
@@ -325,7 +330,16 @@ target_link_libraries(script_engine_tests PRIVATE
     glm::glm
     Vorbis::vorbisfile
     Vorbis::vorbis
+    zip::zip
+    libzip::zip
 )
+if(TARGET shaderc::shaderc)
+    target_link_libraries(script_engine_tests PRIVATE shaderc::shaderc)
+elseif(TARGET shaderc::shaderc_combined)
+    target_link_libraries(script_engine_tests PRIVATE shaderc::shaderc_combined)
+else()
+    message(FATAL_ERROR "shaderc CMake target not found")
+endif()
 add_test(NAME script_engine_tests COMMAND script_engine_tests)
 
 add_executable(bgfx_gui_service_tests

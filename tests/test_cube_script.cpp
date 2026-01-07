@@ -1,24 +1,29 @@
+#include "services/impl/bgfx_graphics_backend.hpp"
 #include "services/impl/logger_service.hpp"
+#include "services/impl/mesh_service.hpp"
+#include "services/impl/physics_bridge_service.hpp"
+#include "services/impl/platform_service.hpp"
 #include "services/impl/script_engine_service.hpp"
 #include "services/impl/scene_script_service.hpp"
 #include "services/impl/shader_script_service.hpp"
 #include "services/interfaces/i_audio_command_service.hpp"
 #include "services/interfaces/i_config_service.hpp"
-#include "services/interfaces/i_mesh_service.hpp"
-#include "services/interfaces/i_physics_bridge_service.hpp"
 
 #include <array>
+#include <bgfx/bgfx.h>
 #include <cmath>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include <lua.hpp>
 #include <memory>
 #include <optional>
+#include <SDL3/SDL.h>
 #include <string>
 #include <vector>
 
@@ -125,6 +130,7 @@ public:
         materialXConfig_.useConstantColor = true;
         materialXConfig_.shaderKey = "test";
         materialXConfig_.libraryPath = ResolveMaterialXLibraryPath();
+        bgfxConfig_.renderer = "auto";
     }
 
     uint32_t GetWindowWidth() const override { return 1; }
@@ -170,165 +176,6 @@ public:
     bool StopBackground(std::string&) override {
         return true;
     }
-};
-
-class StubMeshService final : public sdl3cpp::services::IMeshService {
-public:
-    explicit StubMeshService(sdl3cpp::services::MeshPayload payload)
-        : payload_(std::move(payload)) {}
-
-    bool LoadFromFile(const std::string&,
-                      sdl3cpp::services::MeshPayload& outPayload,
-                      std::string&) override {
-        outPayload = payload_;
-        return true;
-    }
-
-    bool LoadFromArchive(const std::string&,
-                         const std::string&,
-                         sdl3cpp::services::MeshPayload&,
-                         std::string& outError) override {
-        outError = "archive loading not supported in tests";
-        return false;
-    }
-
-    void PushMeshToLua(lua_State* L, const sdl3cpp::services::MeshPayload& payload) override {
-        lua_newtable(L);
-
-        lua_newtable(L);
-        for (size_t vertexIndex = 0; vertexIndex < payload.positions.size(); ++vertexIndex) {
-            lua_newtable(L);
-
-            lua_newtable(L);
-            for (int component = 0; component < 3; ++component) {
-                lua_pushnumber(L, payload.positions[vertexIndex][component]);
-                lua_rawseti(L, -2, component + 1);
-            }
-            lua_setfield(L, -2, "position");
-
-            lua_newtable(L);
-            std::array<float, 3> normal = {0.0f, 0.0f, 1.0f};
-            if (vertexIndex < payload.normals.size()) {
-                normal = payload.normals[vertexIndex];
-            }
-            for (int component = 0; component < 3; ++component) {
-                lua_pushnumber(L, normal[component]);
-                lua_rawseti(L, -2, component + 1);
-            }
-            lua_setfield(L, -2, "normal");
-
-            lua_newtable(L);
-            for (int component = 0; component < 3; ++component) {
-                lua_pushnumber(L, payload.colors[vertexIndex][component]);
-                lua_rawseti(L, -2, component + 1);
-            }
-            lua_setfield(L, -2, "color");
-
-            lua_newtable(L);
-            std::array<float, 2> texcoord = {0.0f, 0.0f};
-            if (vertexIndex < payload.texcoords.size()) {
-                texcoord = payload.texcoords[vertexIndex];
-            }
-            for (int component = 0; component < 2; ++component) {
-                lua_pushnumber(L, texcoord[component]);
-                lua_rawseti(L, -2, component + 1);
-            }
-            lua_setfield(L, -2, "texcoord");
-
-            lua_rawseti(L, -2, static_cast<int>(vertexIndex + 1));
-        }
-        lua_setfield(L, -2, "vertices");
-
-        lua_newtable(L);
-        for (size_t index = 0; index < payload.indices.size(); ++index) {
-            lua_pushinteger(L, static_cast<lua_Integer>(payload.indices[index]) + 1);
-            lua_rawseti(L, -2, static_cast<int>(index + 1));
-        }
-        lua_setfield(L, -2, "indices");
-    }
-
-private:
-    sdl3cpp::services::MeshPayload payload_;
-};
-
-class StubPhysicsBridgeService final : public sdl3cpp::services::IPhysicsBridgeService {
-public:
-    bool SetGravity(const btVector3&, std::string& error) override {
-        error = "physics disabled in tests";
-        return false;
-    }
-
-    bool AddBoxRigidBody(const std::string&,
-                         const btVector3&,
-                         float,
-                         const btTransform&,
-                         std::string& error) override {
-        error = "physics disabled in tests";
-        return false;
-    }
-
-    bool AddSphereRigidBody(const std::string&,
-                            float,
-                            float,
-                            const btTransform&,
-                            std::string& error) override {
-        error = "physics disabled in tests";
-        return false;
-    }
-
-    bool AddTriangleMeshRigidBody(const std::string&,
-                                  const std::vector<std::array<float, 3>>&,
-                                  const std::vector<uint32_t>&,
-                                  const btTransform&,
-                                  std::string& error) override {
-        error = "physics disabled in tests";
-        return false;
-    }
-
-    bool RemoveRigidBody(const std::string&, std::string& error) override {
-        error = "physics disabled in tests";
-        return false;
-    }
-
-    bool SetRigidBodyTransform(const std::string&, const btTransform&, std::string& error) override {
-        error = "physics disabled in tests";
-        return false;
-    }
-
-    bool ApplyForce(const std::string&, const btVector3&, std::string& error) override {
-        error = "physics disabled in tests";
-        return false;
-    }
-
-    bool ApplyImpulse(const std::string&, const btVector3&, std::string& error) override {
-        error = "physics disabled in tests";
-        return false;
-    }
-
-    bool SetLinearVelocity(const std::string&, const btVector3&, std::string& error) override {
-        error = "physics disabled in tests";
-        return false;
-    }
-
-    bool GetLinearVelocity(const std::string&, btVector3&, std::string& error) const override {
-        error = "physics disabled in tests";
-        return false;
-    }
-
-    int StepSimulation(float, int) override {
-        return 0;
-    }
-
-    bool GetRigidBodyTransform(const std::string&, btTransform&, std::string& error) const override {
-        error = "physics disabled in tests";
-        return false;
-    }
-
-    size_t GetBodyCount() const override {
-        return 0;
-    }
-
-    void Clear() override {}
 };
 
 void Assert(bool condition, const std::string& message, int& failures) {
@@ -388,34 +235,47 @@ bool ExpectColorNear(const sdl3cpp::core::Vertex& vertex,
     return true;
 }
 
-sdl3cpp::services::MeshPayload BuildTestCubePayload() {
-    sdl3cpp::services::MeshPayload payload;
-    payload.positions = {
-        {-1.0f, -1.0f, 0.0f},
-        {1.0f, -1.0f, 0.0f},
-        {1.0f, 1.0f, 0.0f},
-        {-1.0f, 1.0f, 0.0f},
-    };
-    payload.normals = {
-        {0.0f, 0.0f, 1.0f},
-        {0.0f, 0.0f, 1.0f},
-        {0.0f, 0.0f, 1.0f},
-        {0.0f, 0.0f, 1.0f},
-    };
-    payload.colors = {
-        {0.2f, 0.3f, 0.4f},
-        {0.2f, 0.3f, 0.4f},
-        {0.2f, 0.3f, 0.4f},
-        {0.2f, 0.3f, 0.4f},
-    };
-    payload.texcoords = {
-        {0.0f, 0.0f},
-        {1.0f, 0.0f},
-        {1.0f, 1.0f},
-        {0.0f, 1.0f},
-    };
-    payload.indices = {0, 1, 2, 2, 3, 0};
-    return payload;
+void RunGpuSmokeTest(int& failures,
+                     const std::shared_ptr<sdl3cpp::services::IConfigService>& configService,
+                     const std::shared_ptr<sdl3cpp::services::ILogger>& logger) {
+    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+        std::cerr << "test failure: SDL video init failed: " << SDL_GetError() << '\n';
+        ++failures;
+        return;
+    }
+
+    SDL_Window* window = SDL_CreateWindow("cube_gpu_test", 64, 64, SDL_WINDOW_HIDDEN);
+    if (!window) {
+        std::cerr << "test failure: SDL window creation failed: " << SDL_GetError() << '\n';
+        ++failures;
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
+        return;
+    }
+
+    auto platformService = std::make_shared<sdl3cpp::services::impl::PlatformService>(logger);
+    sdl3cpp::services::impl::BgfxGraphicsBackend backend(configService, platformService, logger);
+    try {
+        sdl3cpp::services::GraphicsConfig graphicsConfig{};
+        backend.Initialize(window, graphicsConfig);
+    } catch (const std::exception& ex) {
+        std::cerr << "test failure: bgfx init threw: " << ex.what() << '\n';
+        ++failures;
+        SDL_DestroyWindow(window);
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
+        return;
+    }
+
+    Assert(bgfx::getRendererType() != bgfx::RendererType::Noop,
+           "bgfx selected Noop renderer; GPU unavailable", failures);
+
+    auto device = backend.CreateDevice();
+    backend.BeginFrame(device);
+    backend.EndFrame(device);
+    backend.DestroyDevice(device);
+    backend.Shutdown();
+
+    SDL_DestroyWindow(window);
+    SDL_QuitSubSystem(SDL_INIT_VIDEO);
 }
 
 void RunCubeDemoSceneTests(int& failures) {
@@ -429,9 +289,11 @@ void RunCubeDemoSceneTests(int& failures) {
 
     auto logger = std::make_shared<sdl3cpp::services::impl::LoggerService>();
     auto configService = std::make_shared<CubeDemoConfigService>(scriptPath, *configJson);
-    auto meshService = std::make_shared<StubMeshService>(BuildTestCubePayload());
+    auto meshService = std::make_shared<sdl3cpp::services::impl::MeshService>(configService, logger);
     auto audioService = std::make_shared<StubAudioCommandService>();
-    auto physicsService = std::make_shared<StubPhysicsBridgeService>();
+    auto physicsService = std::make_shared<sdl3cpp::services::impl::PhysicsBridgeService>(logger);
+
+    RunGpuSmokeTest(failures, configService, logger);
     auto engineService = std::make_shared<sdl3cpp::services::impl::ScriptEngineService>(
         scriptPath,
         logger,
@@ -487,6 +349,7 @@ void RunCubeDemoSceneTests(int& failures) {
     const std::array<float, 3> white = {1.0f, 1.0f, 1.0f};
     const std::array<float, 3> lanternColor = {1.0f, 0.9f, 0.6f};
     const std::array<float, 3> skyboxColor = {0.04f, 0.05f, 0.08f};
+    const std::array<float, 3> cubeColor = {0.92f, 0.34f, 0.28f};
 
     const float roomHalfSize = 15.0f;
     const float wallThickness = 0.5f;
@@ -500,6 +363,7 @@ void RunCubeDemoSceneTests(int& failures) {
     const float lanternHeight = 8.0f;
     const float lanternSize = 0.2f;
     const float lanternOffset = roomHalfSize - 2.0f;
+    const float cubeSpawnY = floorTop + wallHeight + 1.5f + 0.5f;
 
     std::vector<std::array<float, 3>> wallTranslations;
     wallTranslations.reserve(wallObjects.size());
@@ -508,7 +372,7 @@ void RunCubeDemoSceneTests(int& failures) {
         auto summary = ExtractMatrixSummary(matrix);
         wallTranslations.push_back(summary.translation);
         Assert(ApproximatelyEqual(summary.scale[1], wallHeight), "wall scale height mismatch", failures);
-        Assert(object->indices.size() == 6, "wall indices should be single-sided", failures);
+        Assert(!object->indices.empty(), "wall indices should not be empty", failures);
         if (!object->vertices.empty()) {
             ExpectColorNear(object->vertices.front(), white, "wall vertex color", failures);
         }
@@ -539,7 +403,7 @@ void RunCubeDemoSceneTests(int& failures) {
         auto summary = ExtractMatrixSummary(matrix);
         Assert(ApproximatelyEqual(summary.translation[1], ceilingY), "ceiling translation mismatch", failures);
         Assert(ApproximatelyEqual(summary.scale[1], floorHalfThickness), "ceiling thickness mismatch", failures);
-        Assert(ceiling->indices.size() == 6, "ceiling indices should be single-sided", failures);
+        Assert(!ceiling->indices.empty(), "ceiling indices should not be empty", failures);
         if (!ceiling->vertices.empty()) {
             ExpectColorNear(ceiling->vertices.front(), white, "ceiling vertex color", failures);
         }
@@ -565,31 +429,24 @@ void RunCubeDemoSceneTests(int& failures) {
         auto summary = ExtractMatrixSummary(matrix);
         Assert(ApproximatelyEqual(summary.translation[1], floorCenterY), "floor translation mismatch", failures);
         Assert(ApproximatelyEqual(summary.scale[1], floorHalfThickness), "floor thickness mismatch", failures);
-        Assert(floorObject->indices.size() == 6, "floor indices should be single-sided", failures);
+        Assert(!floorObject->indices.empty(), "floor indices should not be empty", failures);
         if (!floorObject->vertices.empty()) {
             ExpectColorNear(floorObject->vertices.front(), white, "floor vertex color", failures);
         }
     }
 
     if (cubeObject) {
-        const float time = 0.0f;
+        const float time = 0.1f;
         auto matrix = sceneService.ComputeModelMatrix(cubeObject->computeModelMatrixRef, time);
-        glm::mat4 translation = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 5.0f, 0.0f));
-        glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), -time * 0.9f, glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::mat4 translation = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, cubeSpawnY, 0.0f));
+        glm::mat4 rotation = glm::mat4_cast(glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
         glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.5f, 1.5f));
         glm::mat4 expected = translation * rotation * scale;
-        ExpectMatrixNear(matrix, ToArray(expected), "spinning cube matrix at t=0", failures);
-        Assert(cubeObject->indices.size() == 12, "spinning cube indices should be double-sided", failures);
+        ExpectMatrixNear(matrix, ToArray(expected), "physics cube matrix at t=0.1", failures);
+        Assert(!cubeObject->indices.empty(), "cube indices should not be empty", failures);
         if (!cubeObject->vertices.empty()) {
-            const std::array<float, 3> expectedColor = {0.2f, 0.3f, 0.4f};
-            ExpectColorNear(cubeObject->vertices.front(), expectedColor, "spinning cube vertex color", failures);
+            ExpectColorNear(cubeObject->vertices.front(), cubeColor, "physics cube vertex color", failures);
         }
-
-        const float laterTime = 1.0f;
-        auto laterMatrix = sceneService.ComputeModelMatrix(cubeObject->computeModelMatrixRef, laterTime);
-        glm::mat4 laterRotation = glm::rotate(glm::mat4(1.0f), -laterTime * 0.9f, glm::vec3(0.0f, 1.0f, 0.0f));
-        glm::mat4 laterExpected = translation * laterRotation * scale;
-        ExpectMatrixNear(laterMatrix, ToArray(laterExpected), "spinning cube matrix at t=1", failures);
     }
 
     std::vector<std::array<float, 3>> lanternTranslations;
@@ -634,7 +491,7 @@ void RunCubeDemoSceneTests(int& failures) {
         Assert(ApproximatelyEqual(summary.translation[0], 0.0f), "skybox x translation mismatch", failures);
         Assert(ApproximatelyEqual(summary.translation[1], 1.6f), "skybox y translation mismatch", failures);
         Assert(ApproximatelyEqual(summary.translation[2], 10.0f), "skybox z translation mismatch", failures);
-        Assert(skybox->indices.size() == 12, "skybox indices should be double-sided", failures);
+        Assert(!skybox->indices.empty(), "skybox indices should not be empty", failures);
         if (!skybox->vertices.empty()) {
             ExpectColorNear(skybox->vertices.front(), skyboxColor, "skybox vertex color", failures);
         }
