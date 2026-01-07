@@ -30,6 +30,53 @@ local function build_double_sided_indices(indices)
     return doubled
 end
 
+-- Generate a tessellated plane for floor/ceiling with proper vertex count
+local function generate_plane_mesh(width, depth, subdivisions, color)
+    local vertices = {}
+    local indices = {}
+    
+    local step_x = width / subdivisions
+    local step_z = depth / subdivisions
+    local half_width = width * 0.5
+    local half_depth = depth * 0.5
+    
+    -- Generate vertices (Lua is 1-indexed)
+    for z = 0, subdivisions do
+        for x = 0, subdivisions do
+            local px = -half_width + x * step_x
+            local pz = -half_depth + z * step_z
+            vertices[#vertices + 1] = {
+                position = {px, 0.0, pz},
+                normal = {0.0, 1.0, 0.0},  -- Up normal
+                color = color or {1.0, 1.0, 1.0},
+                texcoord = {x / subdivisions, z / subdivisions},
+            }
+        end
+    end
+    
+    -- Generate indices (two triangles per quad, convert to 1-based for Lua)
+    for z = 0, subdivisions - 1 do
+        for x = 0, subdivisions - 1 do
+            -- Calculate 0-based indices first
+            local i0 = z * (subdivisions + 1) + x
+            local i1 = i0 + 1
+            local i2 = i0 + (subdivisions + 1)
+            local i3 = i2 + 1
+            
+            -- Convert to 1-based indices for Lua
+            indices[#indices + 1] = i0 + 1
+            indices[#indices + 1] = i2 + 1
+            indices[#indices + 1] = i1 + 1
+            
+            indices[#indices + 1] = i1 + 1
+            indices[#indices + 1] = i2 + 1
+            indices[#indices + 1] = i3 + 1
+        end
+    end
+    
+    return vertices, indices
+end
+
 local function load_cube_mesh()
     if type(load_mesh_from_file) ~= "function" then
         cube_mesh_info.error = "load_mesh_from_file() is unavailable"
@@ -774,6 +821,7 @@ local function create_physics_cube()
     end
     local shader_key = resolve_material_shader()
     local last_matrix = math3d.identity()
+    local base_rotation_offset = math.pi / 4  -- Start with 45 degree rotation so it's visible immediately
 
     local function compute_model_matrix(time)
         step_physics(time)
@@ -784,11 +832,18 @@ local function create_physics_cube()
             end
             return last_matrix
         end
-        local matrix = math3d.from_transform(transform.position, transform.rotation)
-        matrix = math3d.multiply(matrix, scale_matrix(
+        
+        -- Add rotation to physics cube so it spins while falling
+        local spin_angle = base_rotation_offset + (time * rotation_speed)
+        local spin_rotation = math3d.rotation_y(spin_angle)
+        local physics_matrix = math3d.from_transform(transform.position, transform.rotation)
+        local scale = scale_matrix(
             physics_state.cube_scale[1],
             physics_state.cube_scale[2],
-            physics_state.cube_scale[3]))
+            physics_state.cube_scale[3])
+        
+        -- Combine: translation from physics, spin rotation, then scale
+        local matrix = math3d.multiply(physics_matrix, math3d.multiply(spin_rotation, scale))
         last_matrix = matrix
         return matrix
     end
@@ -847,11 +902,42 @@ local function create_room_objects()
     local wall_color = {1.0, 1.0, 1.0}
     local ceiling_color = {1.0, 1.0, 1.0}
 
+    -- Generate proper floor and ceiling planes with tessellation (20x20 = 400 triangles, 441 vertices)
+    local floor_vertices, floor_indices = generate_plane_mesh(room.half_size * 2, room.half_size * 2, 20, floor_color)
+    local ceiling_vertices, ceiling_indices = generate_plane_mesh(room.half_size * 2, room.half_size * 2, 20, ceiling_color)
+    
+    -- Flip ceiling normals to face down
+    for i = 1, #ceiling_vertices do
+        ceiling_vertices[i].normal = {0.0, -1.0, 0.0}
+    end
+    
+    local function create_floor()
+        local function compute_model_matrix()
+            return build_static_model_matrix({0.0, floor_center_y, 0.0}, {1.0, 1.0, 1.0})
+        end
+        return {
+            vertices = floor_vertices,
+            indices = floor_indices,
+            compute_model_matrix = compute_model_matrix,
+            shader_keys = {"floor"},
+        }
+    end
+    
+    local function create_ceiling()
+        local function compute_model_matrix()
+            return build_static_model_matrix({0.0, ceiling_y, 0.0}, {1.0, 1.0, 1.0})
+        end
+        return {
+            vertices = ceiling_vertices,
+            indices = ceiling_indices,
+            compute_model_matrix = compute_model_matrix,
+            shader_keys = {"ceiling"},
+        }
+    end
+
     local objects = {
-        create_static_cube({0.0, floor_center_y, 0.0},
-            {room.half_size, room.floor_half_thickness, room.half_size}, floor_color, "floor"),
-        create_static_cube({0.0, ceiling_y, 0.0},
-            {room.half_size, room.floor_half_thickness, room.half_size}, ceiling_color, "ceiling"),
+        create_floor(),
+        create_ceiling(),
         create_static_cube({0.0, wall_center_y, -wall_offset},
             {room.half_size, room.wall_height, room.wall_thickness}, wall_color, "wall"),
         create_static_cube({0.0, wall_center_y, wall_offset},
