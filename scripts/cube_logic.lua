@@ -875,7 +875,7 @@ local function create_spinning_cube()
         indices = cube_indices,
         compute_model_matrix = compute_model_matrix,
         shader_keys = {shader_key},
-        object_type = \"spinning_cube\",
+        object_type = "spinning_cube",
     }
 end
 

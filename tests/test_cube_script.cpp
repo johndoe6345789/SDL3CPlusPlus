@@ -624,18 +624,20 @@ void RunCubeDemoSceneTests(int& failures) {
             if (!object.vertices.empty()) {
                 ExpectColorNear(object.vertices.front(), white, "ceiling vertex color", failures);
             }
-        } else if (shaderKey == "solid") {
+        } else if (objectType == "lantern") {
             solidIndices.push_back(index);
             lanternTranslations.push_back(summary.translation);
             Assert(ApproximatelyEqual(summary.scale[0], lanternSize), "lantern scale mismatch", failures);
             if (!object.vertices.empty()) {
                 ExpectColorNear(object.vertices.front(), lanternColor, "lantern vertex color", failures);
             }
-        } else if (shaderKey == "skybox") {
+        } else if (objectType == "skybox") {
             skyboxIndices.push_back(index);
             if (!object.vertices.empty()) {
                 ExpectColorNear(object.vertices.front(), skyboxColor, "skybox vertex color", failures);
             }
+        } else if (objectType == "physics_cube" || objectType == "spinning_cube") {
+            // Physics cube is tracked separately below
         } else {
             otherIndices.push_back(index);
         }
@@ -645,8 +647,8 @@ void RunCubeDemoSceneTests(int& failures) {
     Assert(wallIndices.size() == 4, "expected 4 wall objects", failures);
     Assert(solidIndices.size() == 8, "expected 8 lantern objects", failures);
     Assert(skyboxIndices.size() == 1, "expected 1 skybox object", failures);
-    Assert(floorIndices.size() == 2, "expected 2 floor-key objects (floor + cube)", failures);
-    Assert(otherIndices.empty(), "unexpected shader keys in cube demo scene", failures);
+    Assert(floorIndices.size() == 1, "expected 1 floor object", failures);
+    Assert(otherIndices.empty(), "unexpected object types in cube demo scene", failures);
 
     const std::vector<std::array<float, 3>> expectedWallTranslations = {
         {0.0f, wallCenterY, -wallOffset},
@@ -690,19 +692,18 @@ void RunCubeDemoSceneTests(int& failures) {
         Assert(found, "missing lantern at expected translation", failures);
     }
 
+    // Find floor and physics cube by object type
     size_t floorObjectIndex = std::numeric_limits<size_t>::max();
     size_t cubeObjectIndex = std::numeric_limits<size_t>::max();
-    for (size_t idx : floorIndices) {
-        // Floor has many vertices (441 from 20x20 tessellation)
-        // Cube has few vertices (~24 from cube mesh)
-        if (objects[idx].vertices.size() > 100) {
-            // This is the floor (many vertices from tessellation)
+    
+    for (size_t idx = 0; idx < objects.size(); ++idx) {
+        if (objects[idx].objectType == "floor") {
             floorObjectIndex = idx;
-        } else {
-            // This is the physics cube (using cube mesh, should be checking "floor" shader on small object)
+        } else if (objects[idx].objectType == "physics_cube" || objects[idx].objectType == "spinning_cube") {
             cubeObjectIndex = idx;
         }
     }
+    
     Assert(floorObjectIndex != std::numeric_limits<size_t>::max(), "floor object not found", failures);
     Assert(cubeObjectIndex != std::numeric_limits<size_t>::max(), "dynamic cube object not found", failures);
 
