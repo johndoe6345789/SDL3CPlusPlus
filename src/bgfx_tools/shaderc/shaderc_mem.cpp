@@ -127,18 +127,18 @@ int shaderc_compile_from_memory_with_target(const char* source, size_t source_le
 
         bool ok = false;
         uint32_t version = 1010;
-        // Dispatch based on target language
+        // Dispatch based on target language (in-process supports SPIR-V/MSL/HLSL only).
         if (0 == std::strcmp(target, "spirv")) {
             ok = bgfx::compileSPIRVShader(opts, version, code, &writer, messageWriter);
-        } else if (0 == std::strcmp(target, "glsl")) {
-            ok = bgfx::compileGLSLShader(opts, version, code, &writer, messageWriter);
         } else if (0 == std::strcmp(target, "msl") || 0 == std::strcmp(target, "metal")) {
             ok = bgfx::compileMetalShader(opts, version, code, &writer, messageWriter);
         } else if (0 == std::strcmp(target, "hlsl")) {
             ok = bgfx::compileHLSLShader(opts, version, code, &writer, messageWriter);
         } else {
-            // Unknown target: fallback to SPIR-V
-            ok = bgfx::compileSPIRVShader(opts, version, code, &writer, messageWriter);
+            if (out_error) {
+                *out_error = strdup("shaderc: target not supported by in-process compiler");
+            }
+            return -1;
         }
 
         if (!ok) {

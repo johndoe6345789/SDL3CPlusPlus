@@ -40,6 +40,7 @@ class SDL3CppConan(ConanFile):
         "bgfx/1.129.8930-495",
         "entt/3.16.0",
         "materialx/1.39.1",
+        "spirv-cross/1.4.321.0"
     )
 
     def configure(self):

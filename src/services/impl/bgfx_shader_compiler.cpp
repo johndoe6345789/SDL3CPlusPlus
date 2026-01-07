@@ -7,10 +7,8 @@
 #include <string>
 #include <vector>
 #include <cstdlib>
-// For runtime symbol lookup
-#if defined(__linux__) || defined(__APPLE__)
-#include <dlfcn.h>
-#endif
+
+#include "shaderc_mem.h"
 
 namespace sdl3cpp::services::impl {
 
@@ -26,6 +24,18 @@ const char* RendererTypeName(bgfx::RendererType::Enum type) {
         case bgfx::RendererType::Metal: return "Metal";
         case bgfx::RendererType::Noop: return "Noop";
         default: return "Unknown";
+    }
+}
+
+const char* ShadercTargetName(bgfx::RendererType::Enum type) {
+    switch (type) {
+        case bgfx::RendererType::Vulkan: return "spirv";
+        case bgfx::RendererType::Metal: return "msl";
+        case bgfx::RendererType::Direct3D11:
+        case bgfx::RendererType::Direct3D12: return "hlsl";
+        case bgfx::RendererType::OpenGL:
+        case bgfx::RendererType::OpenGLES: return "glsl";
+        default: return "spirv";
     }
 }
 
@@ -72,77 +82,54 @@ bgfx::ShaderHandle BgfxShaderCompiler::CompileShader(
     std::vector<char> buffer;
     bool compiledInMemory = false;
 
-#if defined(__linux__) || defined(__APPLE__)
-    using shaderc_fn_t = int (*)(const char*, size_t, const char*, uint8_t**, size_t*, char**);
-    using shaderc_with_target_fn_t = int (*)(const char*, size_t, const char*, const char*, uint8_t**, size_t*, char**);
-    void* sym_with_target = dlsym(RTLD_DEFAULT, "shaderc_compile_from_memory_with_target");
-    shaderc_with_target_fn_t shaderc_with_target_fn = reinterpret_cast<shaderc_with_target_fn_t>(sym_with_target);
+    const char* profile = isVertex ? "vertex" : "fragment";
+    const char* target = ShadercTargetName(rendererType);
+    uint8_t* outData = nullptr;
+    size_t outSize = 0;
+    char* outError = nullptr;
 
-    void* sym = dlsym(RTLD_DEFAULT, "shaderc_compile_from_memory");
-    shaderc_fn_t shaderc_fn = reinterpret_cast<shaderc_fn_t>(sym);
+    int result = shaderc_compile_from_memory_with_target(
+        source.c_str(),
+        source.size(),
+        profile,
+        target,
+        &outData,
+        &outSize,
+        &outError);
 
-    if (shaderc_with_target_fn || shaderc_fn) {
-        uint8_t* out_data = nullptr;
-        size_t out_size = 0;
-        char* out_err = nullptr;
-        // profile: choose based on vertex/fragment and renderer; simple heuristic
-        const char* profile = isVertex ? "vertex" : "fragment";
-        int r = -1;
-        if (shaderc_with_target_fn) {
-            // choose target based on renderer
-            const char* target = "spirv";
-            switch (rendererType) {
-                case bgfx::RendererType::Vulkan: target = "spirv"; break;
-                case bgfx::RendererType::Metal: target = "msl"; break;
-                case bgfx::RendererType::Direct3D11:
-                case bgfx::RendererType::Direct3D12: target = "hlsl"; break;
-                case bgfx::RendererType::OpenGL:
-                case bgfx::RendererType::OpenGLES: target = "glsl"; break;
-                default: target = "spirv"; break;
-            }
-            r = shaderc_with_target_fn(source.c_str(), source.size(), profile, target, &out_data, &out_size, &out_err);
-        } else if (shaderc_fn) {
-            r = shaderc_fn(source.c_str(), source.size(), profile, &out_data, &out_size, &out_err);
+    if (result == 0 && outData && outSize > 0) {
+        buffer.resize(outSize);
+        memcpy(buffer.data(), outData, outSize);
+        compiledInMemory = true;
+        if (logger_) {
+            logger_->Trace("BgfxShaderCompiler", "CompileShader",
+                           "in-memory compile succeeded for " + label +
+                           ", target=" + std::string(target) +
+                           ", size=" + std::to_string(outSize));
         }
-        if (r == 0 && out_data && out_size > 0) {
-            buffer.resize(out_size);
-            memcpy(buffer.data(), out_data, out_size);
-            // free using provided free if available
-            // try to find free function
-            void* free_sym = dlsym(RTLD_DEFAULT, "shaderc_free_buffer");
-            if (free_sym) {
-                using free_fn_t = void (*)(uint8_t*);
-                reinterpret_cast<free_fn_t>(free_sym)(out_data);
-            } else {
-                free(out_data);
-            }
-            if (out_err) {
-                void* free_err_sym = dlsym(RTLD_DEFAULT, "shaderc_free_error");
-                if (free_err_sym) {
-                    using free_err_fn_t = void (*)(char*);
-                    reinterpret_cast<free_err_fn_t>(free_err_sym)(out_err);
-                } else {
-                    free(out_err);
-                }
-            }
-            compiledInMemory = true;
-            if (logger_) logger_->Trace("BgfxShaderCompiler", "CompileShader", "in-memory compile succeeded for " + label);
-        } else {
-            if (out_err && logger_) {
-                logger_->Error(std::string("BgfxShaderCompiler: in-memory shaderc error: ") + out_err);
-                void* free_err_sym = dlsym(RTLD_DEFAULT, "shaderc_free_error");
-                if (free_err_sym) {
-                    using free_err_fn_t = void (*)(char*);
-                    reinterpret_cast<free_err_fn_t>(free_err_sym)(out_err);
-                } else {
-                    free(out_err);
-                }
-            }
+    } else if (logger_) {
+        logger_->Trace("BgfxShaderCompiler", "CompileShader",
+                       "in-memory compile failed for " + label +
+                       ", target=" + std::string(target) +
+                       ", result=" + std::to_string(result) +
+                       ", size=" + std::to_string(outSize));
+        if (outError) {
+            logger_->Error(std::string("BgfxShaderCompiler: in-memory shaderc error: ") + outError);
         }
     }
-#endif
+
+    if (outData) {
+        shaderc_free_buffer(outData);
+    }
+    if (outError) {
+        shaderc_free_error(outError);
+    }
 
     if (!compiledInMemory) {
+        if (logger_) {
+            logger_->Trace("BgfxShaderCompiler", "CompileShader",
+                           "falling back to temp-file compilation for " + label);
+        }
         // Fallback to temp-file + pipelineCompiler_/executable flow
         std::string tempInputPath = "/tmp/" + label + (isVertex ? ".vert.glsl" : ".frag.glsl");
         std::string tempOutputPath = "/tmp/" + label + (isVertex ? ".vert.bin" : ".frag.bin");

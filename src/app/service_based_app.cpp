@@ -31,6 +31,7 @@
 #include "services/impl/bullet_physics_service.hpp"
 #include "services/impl/crash_recovery_service.hpp"
 #include "services/impl/logger_service.hpp"
+#include "services/impl/pipeline_compiler_service.hpp"
 #include "services/interfaces/i_platform_service.hpp"
 #include <iostream>
 #include <stdexcept>
@@ -214,6 +215,10 @@ void ServiceBasedApp::RegisterServices() {
     registry_.RegisterService<services::IEcsService, services::impl::EcsService>(
         registry_.GetService<services::ILogger>());
 
+    // Pipeline compiler service (bgfx shader compilation)
+    registry_.RegisterService<services::IPipelineCompilerService, services::impl::PipelineCompilerService>(
+        registry_.GetService<services::ILogger>());
+
     // Window service
     registry_.RegisterService<services::IWindowService, services::impl::SdlWindowService>(
         registry_.GetService<services::ILogger>(),
@@ -275,7 +280,8 @@ void ServiceBasedApp::RegisterServices() {
     auto graphicsBackend = std::make_shared<services::impl::BgfxGraphicsBackend>(
         registry_.GetService<services::IConfigService>(),
         registry_.GetService<services::IPlatformService>(),
-        registry_.GetService<services::ILogger>());
+        registry_.GetService<services::ILogger>(),
+        registry_.GetService<services::IPipelineCompilerService>());
 
     // Graphics service (facade)
     registry_.RegisterService<services::IGraphicsService, services::impl::GraphicsService>(
@@ -296,7 +302,8 @@ void ServiceBasedApp::RegisterServices() {
 #else
     registry_.RegisterService<services::IGuiService, services::impl::BgfxGuiService>(
         registry_.GetService<services::IConfigService>(),
-        registry_.GetService<services::ILogger>());
+        registry_.GetService<services::ILogger>(),
+        registry_.GetService<services::IPipelineCompilerService>());
 #endif
 
     // Physics service

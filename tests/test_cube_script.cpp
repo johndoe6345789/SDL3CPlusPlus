@@ -1,6 +1,7 @@
 #include "services/impl/bgfx_graphics_backend.hpp"
 #include "services/impl/logger_service.hpp"
 #include "services/impl/mesh_service.hpp"
+#include "services/impl/pipeline_compiler_service.hpp"
 #include "services/impl/physics_bridge_service.hpp"
 #include "services/impl/platform_service.hpp"
 #include "services/impl/script_engine_service.hpp"
@@ -340,7 +341,8 @@ bool RunGpuRenderTest(int& failures,
         std::cout << "SDL video driver selected for GPU test: default\n";
     }
 
-    sdl3cpp::services::impl::BgfxGraphicsBackend backend(configService, platformService, logger);
+    auto pipelineCompiler = std::make_shared<sdl3cpp::services::impl::PipelineCompilerService>(logger);
+    sdl3cpp::services::impl::BgfxGraphicsBackend backend(configService, platformService, logger, pipelineCompiler);
     bool success = true;
     
     try {

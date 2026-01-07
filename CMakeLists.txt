@@ -196,8 +196,11 @@ endif()
 
 ## Local build of bgfx_tools shaderc sources as a library so we can link in-process.
 add_library(shaderc_local STATIC
-    src/bgfx_tools/shaderc/shaderc.cpp
+    src/bgfx_tools/shaderc/shaderc_hlsl.cpp
+    src/bgfx_tools/shaderc/shaderc_metal.cpp
     src/bgfx_tools/shaderc/shaderc_mem.cpp
+    src/bgfx_tools/shaderc/shaderc_spirv.cpp
+    src/bgfx_tools/shaderc/shaderc_utils.cpp
 )
 target_include_directories(shaderc_local PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_tools/shaderc" "${CMAKE_CURRENT_SOURCE_DIR}/src" "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_deps")
 if(TARGET bgfx::bx)
@@ -271,7 +274,6 @@ if(BUILD_SDL3_APP)
             $<$<NOT:$<BOOL:${ENABLE_VITA}>>:src/services/impl/bgfx_graphics_backend.cpp>
             $<$<BOOL:${ENABLE_VITA}>:src/services/impl/gxm_graphics_backend.cpp>
             src/app/service_based_app.cpp
-            src/bgfx_tools/shaderc/shaderc_mem.cpp
         )
     target_include_directories(sdl3_app PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
     target_include_directories(sdl3_app PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_tools/shaderc")
@@ -294,16 +296,17 @@ if(BUILD_SDL3_APP)
         cpptrace::cpptrace
     )
     if(NOT ENABLE_VITA)
+        if(TARGET shaderc_local)
+            target_link_libraries(sdl3_app PRIVATE shaderc_local)
+        else()
+            message(WARNING "shaderc_local target not found; in-process shader compilation will be unavailable.")
+        endif()
         if(TARGET shaderc::shaderc)
             target_link_libraries(sdl3_app PRIVATE shaderc::shaderc)
         elseif(TARGET shaderc::shaderc_combined)
             target_link_libraries(sdl3_app PRIVATE shaderc::shaderc_combined)
         else()
-            if(TARGET shaderc_local)
-                target_link_libraries(sdl3_app PRIVATE shaderc_local)
-            else()
-                message(WARNING "shaderc CMake target not found; skipping link. Using local bgfx_tools executable for shader compilation at runtime.")
-            endif()
+            message(WARNING "shaderc CMake target not found; PipelineCompilerService will be unavailable.")
         endif()
     endif()
     target_compile_definitions(sdl3_app PRIVATE SDL_MAIN_HANDLED
@@ -364,7 +367,6 @@ add_executable(script_engine_tests
     src/events/event_bus.cpp
     src/stb_image.cpp
     src/services/impl/pipeline_compiler_service.cpp
-    src/bgfx_tools/shaderc/shaderc_mem.cpp
 )
 target_include_directories(script_engine_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_include_directories(script_engine_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_tools/shaderc")
@@ -400,7 +402,6 @@ add_executable(bgfx_gui_service_tests
     src/services/impl/bgfx_shader_compiler.cpp
     src/services/impl/materialx_shader_generator.cpp
     src/services/impl/pipeline_compiler_service.cpp
-    src/bgfx_tools/shaderc/shaderc_mem.cpp
 )
 target_include_directories(bgfx_gui_service_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_include_directories(bgfx_gui_service_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_tools/shaderc")
