@@ -602,20 +602,21 @@ void RunCubeDemoSceneTests(int& failures) {
         Assert(!object.indices.empty(), "scene object should have indices", failures);
 
         const auto summary = ExtractMatrixSummary(command.modelMatrix);
-        const std::string& shaderKey = command.shaderKeys.front();
-        if (shaderKey == "floor") {
+        const std::string& objectType = object.objectType;
+        
+        if (objectType == "floor") {
             floorIndices.push_back(index);
             if (!object.vertices.empty()) {
                 ExpectColorNear(object.vertices.front(), white, "floor vertex color", failures);
             }
-        } else if (shaderKey == "wall") {
+        } else if (objectType == "wall") {
             wallIndices.push_back(index);
             wallTranslations.push_back(summary.translation);
             Assert(ApproximatelyEqual(summary.scale[1], wallHeight), "wall scale height mismatch", failures);
             if (!object.vertices.empty()) {
                 ExpectColorNear(object.vertices.front(), white, "wall vertex color", failures);
             }
-        } else if (shaderKey == "ceiling") {
+        } else if (objectType == "ceiling") {
             ceilingIndices.push_back(index);
             Assert(ApproximatelyEqual(summary.translation[1], ceilingY), "ceiling translation mismatch", failures);
             // Ceiling now uses tessellated plane with scale 1.0 (geometry is pre-sized)
