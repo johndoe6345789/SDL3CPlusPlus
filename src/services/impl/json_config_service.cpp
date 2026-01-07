@@ -366,6 +366,7 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
         }
     }
 
+    bool materialShaderKeyProvided = false;
     if (document.HasMember("materialx")) {
         const auto& materialValue = document["materialx"];
         if (!materialValue.IsObject()) {
@@ -391,6 +392,7 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
                 throw std::runtime_error("JSON member 'materialx.shader_key' must be a string");
             }
             config.materialX.shaderKey = value.GetString();
+            materialShaderKeyProvided = true;
         }
         if (materialValue.HasMember("material")) {
             const auto& value = materialValue["material"];
@@ -518,6 +520,15 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
             }
 
             config.materialXMaterials.push_back(std::move(materialConfig));
+        }
+    }
+
+    if (!materialShaderKeyProvided && !config.materialXMaterials.empty()) {
+        config.materialX.shaderKey = config.materialXMaterials.front().shaderKey;
+        if (logger) {
+            logger->Trace("JsonConfigService", "LoadFromJson",
+                          "materialx.shader_key not set; defaulting to first materialx_materials key=" +
+                              config.materialX.shaderKey);
         }
     }
 

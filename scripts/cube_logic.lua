@@ -692,20 +692,23 @@ local function update_audio_controls()
 end
 
 local rotation_speed = 0.9
-local default_material_shader = "pbr"
-
 local function resolve_material_shader()
     if type(config) ~= "table" then
-        return default_material_shader
+        error("Missing config table for MaterialX shader selection")
     end
     local materialx = config.materialx
     if type(materialx) ~= "table" or not materialx.enabled then
-        return default_material_shader
+        error("MaterialX config missing or disabled; shader selection cannot proceed")
     end
-    if type(materialx.shader_key) == "string" and materialx.shader_key ~= "" then
-        return materialx.shader_key
+    local materials = config.materialx_materials
+    if type(materials) == "table" and type(materials[1]) == "table" then
+        local first_key = materials[1].shader_key
+        if type(first_key) == "string" and first_key ~= "" then
+            log_debug("Using first materialx_materials shader_key=%s", first_key)
+            return first_key
+        end
     end
-    return "materialx"
+    error("MaterialX enabled but no materialx_materials shader_key found")
 end
 
 local function build_static_model_matrix(position, scale)
@@ -735,7 +738,10 @@ local function create_static_cube(position, scale, color, shader_key)
     end
 
     local vertices = color and apply_color_to_vertices(color) or cube_vertices
-    local resolved_shader = shader_key or "solid"
+    if type(shader_key) ~= "string" or shader_key == "" then
+        error("create_static_cube requires a shader_key")
+    end
+    local resolved_shader = shader_key
 
     return {
         vertices = vertices,

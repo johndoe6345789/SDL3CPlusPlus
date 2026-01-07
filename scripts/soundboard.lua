@@ -251,7 +251,13 @@ local function createCube(position)
         vertices = cubeVertices,
         indices = cubeIndices,
         compute_model_matrix = computeModel,
-        shader_keys = {"default"},
+        if type(config) ~= "table" or type(config.materialx_materials) ~= "table" or
+            type(config.materialx_materials[1]) ~= "table" or
+            type(config.materialx_materials[1].shader_key) ~= "string" or
+            config.materialx_materials[1].shader_key == "" then
+            error("Soundboard requires materialx_materials[1].shader_key")
+        end
+        shader_keys = {config.materialx_materials[1].shader_key},
     }
 end
 

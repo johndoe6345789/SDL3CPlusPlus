@@ -16,9 +16,6 @@
   "materialx": {
     "enabled": true,
     "parameters_enabled": true,
-    "document": "MaterialX/resources/Materials/Examples/StandardSurface/standard_surface_wood_tiled.mtlx",
-    "shader_key": "pbr",
-    "material": "Tiled_Wood",
     "library_path": "MaterialX/libraries",
     "library_folders": [
       "stdlib",
@@ -29,18 +26,28 @@
       "nprlib",
       "targets"
     ],
-    "use_constant_color": false,
-    "constant_color": [
-      1.0,
-      1.0,
-      1.0
-    ]
+    "use_constant_color": false
   },
   "materialx_materials": [
+    {
+      "shader_key": "pbr",
+      "document": "MaterialX/resources/Materials/Examples/StandardSurface/standard_surface_wood_tiled.mtlx",
+      "material": "Tiled_Wood"
+    },
     {
       "shader_key": "alternative",
       "document": "MaterialX/resources/Materials/Examples/StandardSurface/standard_surface_brass_tiled.mtlx",
       "material": "Tiled_Brass"
+    },
+    {
+      "shader_key": "brick",
+      "document": "MaterialX/resources/Materials/Examples/StandardSurface/standard_surface_brick_procedural.mtlx",
+      "material": "M_BrickPattern"
+    },
+    {
+      "shader_key": "marble",
+      "document": "MaterialX/resources/Materials/Examples/StandardSurface/standard_surface_marble_solid.mtlx",
+      "material": "Marble_3D"
     }
   ],
   "mouse_grab": {

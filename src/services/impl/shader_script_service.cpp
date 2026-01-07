@@ -34,16 +34,64 @@ std::unordered_map<std::string, ShaderPaths> ShaderScriptService::LoadShaderPath
     if (configService_) {
         const auto& materialConfig = configService_->GetMaterialXConfig();
         const auto& materialOverrides = configService_->GetMaterialXMaterialConfigs();
-        if (materialOverrides.empty()) {
-            if (logger_) {
-                logger_->Error("MaterialX shader generation requires materialx_materials entries");
-            }
-            throw std::runtime_error("MaterialX shader generation requires materialx_materials entries");
-        }
         if (logger_) {
             logger_->Trace("ShaderScriptService", "LoadShaderPathsMap",
-                           "materialOverrides=" + std::to_string(materialOverrides.size()));
+                           "materialOverrides=" + std::to_string(materialOverrides.size()) +
+                               ", baseEnabled=" + std::string(materialConfig.enabled ? "true" : "false"));
         }
+
+        const auto scriptDirectory = engineService_
+            ? engineService_->GetScriptDirectory()
+            : std::filesystem::path{};
+
+        const auto addShader = [&](const MaterialXConfig& config, const std::string& sourceLabel) {
+            if (!config.enabled) {
+                if (logger_) {
+                    logger_->Trace("ShaderScriptService", "LoadShaderPathsMap",
+                                   "Skipping MaterialX shader generation (disabled) source=" + sourceLabel);
+                }
+                return;
+            }
+            if (config.shaderKey.empty()) {
+                if (logger_) {
+                    logger_->Error("MaterialX shader generation requires a shaderKey (source=" + sourceLabel + ")");
+                }
+                return;
+            }
+            if (config.documentPath.empty() && !config.useConstantColor) {
+                if (logger_) {
+                    logger_->Trace("ShaderScriptService", "LoadShaderPathsMap",
+                                   "Skipping MaterialX shader generation (no document/constant color) key=" +
+                                       config.shaderKey + ", source=" + sourceLabel);
+                }
+                return;
+            }
+            if (shaderMap.find(config.shaderKey) != shaderMap.end()) {
+                if (logger_) {
+                    logger_->Trace("ShaderScriptService", "LoadShaderPathsMap",
+                                   "Skipping MaterialX shader generation (duplicate key) key=" +
+                                       config.shaderKey + ", source=" + sourceLabel);
+                }
+                return;
+            }
+            if (logger_) {
+                logger_->Trace("ShaderScriptService", "LoadShaderPathsMap",
+                               "Generating MaterialX shader key=" + config.shaderKey +
+                                   ", document=" + config.documentPath.string() +
+                                   ", material=" + config.materialName +
+                                   ", source=" + sourceLabel);
+            }
+            try {
+                ShaderPaths materialShader = materialxGenerator_.Generate(config, scriptDirectory);
+                shaderMap[config.shaderKey] = std::move(materialShader);
+            } catch (const std::exception& ex) {
+                if (logger_) {
+                    logger_->Error("MaterialX shader generation failed for key=" +
+                                   config.shaderKey + ": " + std::string(ex.what()));
+                }
+            }
+        };
+
         for (const auto& overrideConfig : materialOverrides) {
             if (!overrideConfig.enabled) {
                 continue;
@@ -55,26 +103,10 @@ std::unordered_map<std::string, ShaderPaths> ShaderScriptService::LoadShaderPath
             resolvedConfig.materialName = overrideConfig.materialName;
             resolvedConfig.useConstantColor = overrideConfig.useConstantColor;
             resolvedConfig.constantColor = overrideConfig.constantColor;
-            if (logger_) {
-                logger_->Trace("ShaderScriptService", "LoadShaderPathsMap",
-                               "materialKey=" + resolvedConfig.shaderKey +
-                                   ", document=" + resolvedConfig.documentPath.string() +
-                                   ", material=" + resolvedConfig.materialName);
-            }
-            try {
-                ShaderPaths materialShader = materialxGenerator_.Generate(
-                    resolvedConfig,
-                    engineService_ ? engineService_->GetScriptDirectory() : std::filesystem::path{});
-                if (!resolvedConfig.shaderKey.empty()) {
-                    shaderMap[resolvedConfig.shaderKey] = std::move(materialShader);
-                }
-            } catch (const std::exception& ex) {
-                if (logger_) {
-                    logger_->Error("MaterialX shader generation failed for key=" +
-                                   overrideConfig.shaderKey + ": " + std::string(ex.what()));
-                }
-            }
+            addShader(resolvedConfig, "materialx_materials");
         }
+
+        addShader(materialConfig, "materialx");
     }
 
     if (shaderMap.empty()) {

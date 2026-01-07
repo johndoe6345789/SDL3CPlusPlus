@@ -56,7 +56,19 @@ local map_rotate_z = resolve_number(rotation_config.z, resolve_number(quake3_con
 
 local map_scale = resolve_number(quake3_config.scale, 0.01)
 local map_offset = resolve_vec3(quake3_config.offset, {0.0, 0.0, 0.0})
-local map_shader_key = quake3_config.shader_key or "pbr"
+local map_shader_key = nil
+if type(quake3_config.shader_key) == "string" and quake3_config.shader_key ~= "" then
+    map_shader_key = quake3_config.shader_key
+elseif type(config) == "table"
+    and type(config.materialx_materials) == "table"
+    and type(config.materialx_materials[1]) == "table"
+    and type(config.materialx_materials[1].shader_key) == "string"
+    and config.materialx_materials[1].shader_key ~= "" then
+    map_shader_key = config.materialx_materials[1].shader_key
+    log_debug("Using MaterialX shader_key for Quake3 map=%s", map_shader_key)
+else
+    error("Quake3 config requires a shader_key or materialx_materials[1].shader_key")
+end
 
 local function scale_matrix(x, y, z)
     return {
