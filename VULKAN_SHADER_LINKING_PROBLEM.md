@@ -169,6 +169,11 @@ For Vulkan linking to succeed:
 - Manually append uniform information to SPIR-V binaries
 - Tried different uniform naming schemes (`u_modelViewProj` vs `UniformBuffer.u_modelViewProj`)
 
+### 7. In-Memory Shaderc (Present but Not Wired)
+- bgfx_tools provides `shaderc_compile_from_memory[_with_target]` in `src/bgfx_tools/shaderc/shaderc_mem.cpp`
+- The compiler code only tries to `dlsym` these symbols, which fails when they are statically linked and not exported
+- This forces the temp-file + `PipelineCompilerService` path
+
 ## Key Findings
 
 ### Successful Aspects
@@ -178,35 +183,39 @@ For Vulkan linking to succeed:
 
 ### Failure Points
 - **Program Linking**: `bgfx::createProgram()` fails despite valid individual shaders
-- **Uniform Metadata**: Current metadata format may not match bgfx Vulkan expectations
-- **Binding Mismatch**: Possible mismatch between shader bindings and bgfx register assignments
+- **Binary Layout Mismatch**: The custom shader binary layout does not match bgfx shaderc's SPIR-V format
+- **Uniform/Attribute Metadata**: Current metadata encoding (names, flags, reg counts, attr list, size footer) is incomplete or incompatible
 
 ### Technical Insights
 - bgfx Vulkan renderer requires SPIR-V with embedded uniform metadata
 - Uniform blocks in Vulkan need proper binding decoration in SPIR-V
 - bgfx may expect specific uniform naming conventions for Vulkan
 
+## In-Process Shaderc Integration (bgfx_tools)
+
+bgfx already ships an in-process compiler wrapper for its shader binary format:
+
+- `src/bgfx_tools/shaderc/shaderc_mem.h`
+- `src/bgfx_tools/shaderc/shaderc_mem.cpp`
+
+`BgfxShaderCompiler` currently tries to load these functions via `dlsym`, but the symbols are not exported because the code is statically linked into the executable. As a result, it falls back to the custom temp-file + `PipelineCompilerService` path, which writes a shader binary layout that does not match bgfx's SPIR-V format (uniform table, shader size, attribute list, size footer).
+
 ## Root Cause Hypothesis
 
-The most likely cause is incorrect uniform metadata in the shader binaries. For Vulkan uniform blocks:
-
-1. **Expected Format**: bgfx may expect uniform names like `UniformBuffer.u_modelViewProj` instead of just `u_modelViewProj`
-2. **Binding Assignment**: The regIndex values (0, 1) may not correspond to the Vulkan binding locations
-3. **Block vs Individual**: Uniform blocks may require different metadata structure than individual uniforms
+The most likely cause is a shader binary format mismatch. The `PipelineCompilerService` writes a simplified header and uniform metadata that does not match the layout produced by bgfx's own `shaderc_spirv` pipeline (uniform table encoding, shader size, attribute list, and size footer). This causes `bgfx::createProgram()` to fail even though `bgfx::createShader()` succeeds.
 
 ## Next Steps
 
 ### Immediate Actions
-1. **Investigate bgfx Source**: Examine bgfx Vulkan shader loading code
-2. **Uniform Metadata Research**: Find correct format for Vulkan uniform blocks
-3. **SPIR-V Inspection**: Use spirv-dis to examine generated SPIR-V
-4. **bgfx Examples**: Compare with working bgfx Vulkan examples
+1. **Wire In-Process Shaderc**: Call `shaderc_compile_from_memory[_with_target]` directly (no `dlsym`) or export the symbols from the main executable
+2. **Remove Custom Binary Writer**: Stop writing manual uniform metadata once bgfx shaderc output is used
+3. **Validate Binary Layout**: Compare the produced shader blob with a known bgfx SPIR-V blob (`src/bgfx_tools/texturev/*_spv`)
+4. **Keep Vulkan Bindings**: Ensure GLSL bindings match bgfx uniform names (`u_modelViewProj`, `s_tex`)
 
 ### Potential Solutions
-1. **Metadata Format Fix**: Adjust uniform metadata structure for uniform blocks
-2. **Naming Convention**: Try different uniform naming schemes
-3. **Binding Remapping**: Ensure regIndex matches Vulkan binding locations
-4. **SPIR-V Reflection**: Use SPIRV-Cross to extract correct uniform info
+1. **Direct Call Path**: Replace `dlsym` with direct calls to `shaderc_mem` functions
+2. **Symbol Export Path**: Add linker flags to export `shaderc_mem` symbols so `dlsym` works
+3. **Fallback Cleanup**: Retain temp-file compile only for external shaderc usage, not for Vulkan GUI shaders
 
 ### Validation Steps
 1. **Test with OpenGL**: Verify shaders work with OpenGL renderer
@@ -218,6 +227,8 @@ The most likely cause is incorrect uniform metadata in the shader binaries. For 
 - `src/services/impl/pipeline_compiler_service.cpp`: Shader compilation logic
 - `src/services/impl/bgfx_shader_compiler.cpp`: bgfx integration
 - `src/services/impl/bgfx_gui_service.cpp`: Shader sources and program creation (GUI overlay rendering)
+- `src/bgfx_tools/shaderc/shaderc_mem.h`: In-process shaderc API
+- `src/bgfx_tools/shaderc/shaderc_mem.cpp`: In-process shaderc implementation
 - `src/bgfx_deps/`: Required headers for shaderc compilation
 - `tests/test_vulkan_shader_linking.cpp`: Test case that validates GUI shader linking (note: test comments incorrectly suggest this affects 3D scene rendering)
 
