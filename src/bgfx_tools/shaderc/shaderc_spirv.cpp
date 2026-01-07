@@ -305,6 +305,42 @@ namespace bgfx { namespace spirv
 	};
 	static_assert(bgfx::Attrib::Count == BX_COUNTOF(s_attribName) );
 
+	struct AttribAlias
+	{
+		const char* name;
+		bgfx::Attrib::Enum attrib;
+	};
+
+	static const AttribAlias s_attribAlias[] =
+	{
+		{ "i_position",  bgfx::Attrib::Position },
+		{ "i_normal",    bgfx::Attrib::Normal },
+		{ "i_tangent",   bgfx::Attrib::Tangent },
+		{ "i_bitangent", bgfx::Attrib::Bitangent },
+		{ "i_color0",    bgfx::Attrib::Color0 },
+		{ "i_color_0",   bgfx::Attrib::Color0 },
+		{ "i_color1",    bgfx::Attrib::Color1 },
+		{ "i_color_1",   bgfx::Attrib::Color1 },
+		{ "i_indices",   bgfx::Attrib::Indices },
+		{ "i_weight",    bgfx::Attrib::Weight },
+		{ "i_texcoord0",  bgfx::Attrib::TexCoord0 },
+		{ "i_texcoord_0", bgfx::Attrib::TexCoord0 },
+		{ "i_texcoord1",  bgfx::Attrib::TexCoord1 },
+		{ "i_texcoord_1", bgfx::Attrib::TexCoord1 },
+		{ "i_texcoord2",  bgfx::Attrib::TexCoord2 },
+		{ "i_texcoord_2", bgfx::Attrib::TexCoord2 },
+		{ "i_texcoord3",  bgfx::Attrib::TexCoord3 },
+		{ "i_texcoord_3", bgfx::Attrib::TexCoord3 },
+		{ "i_texcoord4",  bgfx::Attrib::TexCoord4 },
+		{ "i_texcoord_4", bgfx::Attrib::TexCoord4 },
+		{ "i_texcoord5",  bgfx::Attrib::TexCoord5 },
+		{ "i_texcoord_5", bgfx::Attrib::TexCoord5 },
+		{ "i_texcoord6",  bgfx::Attrib::TexCoord6 },
+		{ "i_texcoord_6", bgfx::Attrib::TexCoord6 },
+		{ "i_texcoord7",  bgfx::Attrib::TexCoord7 },
+		{ "i_texcoord_7", bgfx::Attrib::TexCoord7 },
+	};
+
 	bgfx::Attrib::Enum toAttribEnum(const bx::StringView& _name)
 	{
 		for (uint8_t ii = 0; ii < Attrib::Count; ++ii)
@@ -315,6 +351,26 @@ namespace bgfx { namespace spirv
 			}
 		}
 
+		for (const auto& alias : s_attribAlias)
+		{
+			if (0 == bx::strCmp(alias.name, _name) )
+			{
+				if (bgfx::g_verbose)
+				{
+					BX_TRACE("shaderc_spirv: mapped attribute %s -> %s",
+						alias.name,
+						s_attribName[alias.attrib]);
+				}
+				return alias.attrib;
+			}
+		}
+
+		if (bgfx::g_verbose)
+		{
+			BX_TRACE("shaderc_spirv: unknown attribute %.*s",
+				_name.getLength(),
+				_name.getPtr());
+		}
 		return bgfx::Attrib::Count;
 	}
 
