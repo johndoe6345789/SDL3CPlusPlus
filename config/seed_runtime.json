@@ -63,9 +63,6 @@
   "materialx": {
     "enabled": true,
     "parameters_enabled": true,
-    "document": "MaterialX/resources/Materials/Examples/StandardSurface/standard_surface_carpaint.mtlx",
-    "shader_key": "materialx",
-    "material": "Car_Paint",
     "library_path": "MaterialX/libraries",
     "library_folders": [
       "stdlib",
@@ -75,12 +72,6 @@
       "cmlib",
       "nprlib",
       "targets"
-    ],
-    "use_constant_color": false,
-    "constant_color": [
-      1.0,
-      1.0,
-      1.0
     ]
   },
   "materialx_materials": [
@@ -103,6 +94,13 @@
       "shader_key": "solid",
       "document": "MaterialX/resources/Materials/Examples/StandardSurface/standard_surface_brass_tiled.mtlx",
       "material": "Tiled_Brass"
+    },
+    {
+      "shader_key": "skybox",
+      "document": "MaterialX/resources/Materials/Examples/StandardSurface/standard_surface_default.mtlx",
+      "material": "Default",
+      "use_constant_color": true,
+      "constant_color": [0.04, 0.05, 0.08]
     }
   ],
   "atmospherics": {
