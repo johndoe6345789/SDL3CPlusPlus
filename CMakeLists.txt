@@ -380,6 +380,7 @@ if(NOT ENABLE_VITA)
 add_executable(script_engine_tests
     tests/test_cube_script.cpp
     src/services/impl/bgfx_graphics_backend.cpp
+    src/services/impl/bgfx_shader_compiler.cpp
     src/services/impl/logger_service.cpp
     src/services/impl/mesh_service.cpp
     src/services/impl/physics_bridge_service.cpp

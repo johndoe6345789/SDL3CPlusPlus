@@ -12,7 +12,6 @@ local cube_mesh_info = {
 local cube_vertices = {}
 local cube_indices = {}
 local cube_indices_double_sided = {}
-local skybox_color = {0.04, 0.05, 0.08}
 
 local function build_double_sided_indices(indices)
     local doubled = {}
@@ -756,23 +755,6 @@ local function create_static_cube(position, scale, color, shader_key, object_typ
     }
 end
 
-local function create_skybox()
-    local room_extent = room.half_size + room.wall_thickness
-    local skybox_scale = room_extent * 2.5
-    local function compute_model_matrix()
-        local translation = math3d.translation(camera.position[1], camera.position[2], camera.position[3])
-        local scaling = scale_matrix(skybox_scale, skybox_scale, skybox_scale)
-        return math3d.multiply(translation, scaling)
-    end
-
-    return {
-        vertices = apply_color_to_vertices(skybox_color),
-        indices = (#cube_indices_double_sided > 0) and cube_indices_double_sided or cube_indices,
-        compute_model_matrix = compute_model_matrix,
-        shader_keys = {"skybox"},
-        object_type = "skybox",
-    }
-end
 
 local function create_physics_cube()
     if not ensure_physics_setup() then
@@ -1088,7 +1070,6 @@ end
 
 function get_scene_objects()
     local objects = {}
-    objects[#objects + 1] = create_skybox()
     for i = 1, #room_objects do
         objects[#objects + 1] = room_objects[i]
     end

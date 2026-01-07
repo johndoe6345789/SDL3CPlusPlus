@@ -94,13 +94,6 @@
       "shader_key": "solid",
       "document": "MaterialX/resources/Materials/Examples/StandardSurface/standard_surface_brass_tiled.mtlx",
       "material": "Tiled_Brass"
-    },
-    {
-      "shader_key": "skybox",
-      "document": "MaterialX/resources/Materials/Examples/StandardSurface/standard_surface_default.mtlx",
-      "material": "Default",
-      "use_constant_color": true,
-      "constant_color": [0.04, 0.05, 0.08]
     }
   ],
   "atmospherics": {

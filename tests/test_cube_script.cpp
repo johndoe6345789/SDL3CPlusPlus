@@ -392,8 +392,8 @@ bool RunGpuRenderTest(int& failures,
             auto sceneScriptService = std::make_shared<sdl3cpp::services::impl::SceneScriptService>(engineService, logger);
             auto objects = sceneScriptService->LoadSceneObjects();
             
-            if (objects.size() != 16) {
-                std::cerr << "GPU render test: Scene loaded " << objects.size() << " objects, expected 16\n";
+            if (objects.size() != 15) {
+                std::cerr << "GPU render test: Scene loaded " << objects.size() << " objects, expected 15\n";
                 ++failures;
                 success = false;
             }
@@ -403,7 +403,6 @@ bool RunGpuRenderTest(int& failures,
             bool hasCeiling = false;
             int wallCount = 0;
             int lanternCount = 0;
-            bool hasSkybox = false;
             bool hasCube = false;
             
             for (const auto& obj : objects) {
@@ -417,8 +416,6 @@ bool RunGpuRenderTest(int& failures,
                     wallCount++;
                 } else if (type == "lantern") {
                     lanternCount++;
-                } else if (type == "skybox") {
-                    hasSkybox = true;
                 } else if (type == "physics_cube" || type == "spinning_cube") {
                     hasCube = true;
                 }
@@ -428,7 +425,6 @@ bool RunGpuRenderTest(int& failures,
             Assert(hasCeiling, "GPU render test: Missing ceiling geometry", failures);
             Assert(wallCount == 4, "GPU render test: Expected 4 walls, got " + std::to_string(wallCount), failures);
             Assert(lanternCount == 8, "GPU render test: Expected 8 lanterns, got " + std::to_string(lanternCount), failures);
-            Assert(hasSkybox, "GPU render test: Missing skybox geometry", failures);
             Assert(hasCube, "GPU render test: Missing physics cube geometry", failures);
             
             // Validate all scene objects have valid shader keys (critical for rendering)
@@ -558,7 +554,7 @@ void RunCubeDemoSceneTests(int& failures) {
     auto sceneScriptService = std::make_shared<sdl3cpp::services::impl::SceneScriptService>(engineService, logger);
     auto objects = sceneScriptService->LoadSceneObjects();
 
-    Assert(objects.size() == 16, "cube demo should return 16 scene objects", failures);
+    Assert(objects.size() == 15, "cube demo should return 15 scene objects", failures);
     if (objects.empty()) {
         engineService->Shutdown();
         return;
@@ -590,7 +586,6 @@ void RunCubeDemoSceneTests(int& failures) {
 
     const std::array<float, 3> white = {1.0f, 1.0f, 1.0f};
     const std::array<float, 3> lanternColor = {1.0f, 0.9f, 0.6f};
-    const std::array<float, 3> skyboxColor = {0.04f, 0.05f, 0.08f};
     const std::array<float, 3> cubeColor = {0.92f, 0.34f, 0.28f};
 
     const float roomHalfSize = 15.0f;
@@ -616,7 +611,6 @@ void RunCubeDemoSceneTests(int& failures) {
     std::vector<size_t> wallIndices;
     std::vector<size_t> ceilingIndices;
     std::vector<size_t> solidIndices;
-    std::vector<size_t> skyboxIndices;
     std::vector<size_t> otherIndices;
     std::vector<std::array<float, 3>> wallTranslations;
     wallTranslations.reserve(4);
@@ -659,11 +653,6 @@ void RunCubeDemoSceneTests(int& failures) {
             if (!object.vertices.empty()) {
                 ExpectColorNear(object.vertices.front(), lanternColor, "lantern vertex color", failures);
             }
-        } else if (objectType == "skybox") {
-            skyboxIndices.push_back(index);
-            if (!object.vertices.empty()) {
-                ExpectColorNear(object.vertices.front(), skyboxColor, "skybox vertex color", failures);
-            }
         } else if (objectType == "physics_cube" || objectType == "spinning_cube") {
             // Physics cube is tracked separately below
         } else {
@@ -674,7 +663,6 @@ void RunCubeDemoSceneTests(int& failures) {
     Assert(ceilingIndices.size() == 1, "expected 1 ceiling object", failures);
     Assert(wallIndices.size() == 4, "expected 4 wall objects", failures);
     Assert(solidIndices.size() == 8, "expected 8 lantern objects", failures);
-    Assert(skyboxIndices.size() == 1, "expected 1 skybox object", failures);
     Assert(floorIndices.size() == 1, "expected 1 floor object", failures);
     Assert(otherIndices.empty(), "unexpected object types in cube demo scene", failures);
 
@@ -760,14 +748,6 @@ void RunCubeDemoSceneTests(int& failures) {
             ExpectColorNear(objects[cubeObjectIndex].vertices.front(), cubeColor, "physics cube vertex color", failures);
         }
         Assert(!objects[cubeObjectIndex].indices.empty(), "cube indices should not be empty", failures);
-    }
-
-    if (!skyboxIndices.empty()) {
-        auto summary = ExtractMatrixSummary(staticCommands[skyboxIndices.front()].modelMatrix);
-        Assert(ApproximatelyEqual(summary.translation[0], 0.0f), "skybox x translation mismatch", failures);
-        Assert(ApproximatelyEqual(summary.translation[1], 1.6f), "skybox y translation mismatch", failures);
-        Assert(ApproximatelyEqual(summary.translation[2], 10.0f), "skybox z translation mismatch", failures);
-        Assert(!objects[skyboxIndices.front()].indices.empty(), "skybox indices should not be empty", failures);
     }
 
     sceneManager->Shutdown();
