@@ -855,18 +855,36 @@ bgfx::ProgramHandle BgfxGuiService::CreateProgram(const char* vertexSource,
 bgfx::ShaderHandle BgfxGuiService::CreateShader(const std::string& label,
                                                 const std::string& source,
                                                 bool isVertex) const {
+    const bgfx::RendererType::Enum rendererType = bgfx::getRendererType();
+    
+    if (logger_) {
+        logger_->Trace("BgfxGuiService", "CreateShader",
+                       "label=" + label +
+                           ", renderer=" + std::string(RendererTypeName(rendererType)) +
+                           ", sourceLength=" + std::to_string(source.size()));
+    }
+
+    const bool isOpenGL = (rendererType == bgfx::RendererType::OpenGL || 
+                           rendererType == bgfx::RendererType::OpenGLES);
+    
+    if (isOpenGL) {
+        // For OpenGL: Just copy GLSL source directly
+        const uint32_t sourceSize = static_cast<uint32_t>(source.size());
+        const bgfx::Memory* mem = bgfx::copy(source.c_str(), sourceSize + 1);
+        
+        bgfx::ShaderHandle handle = bgfx::createShader(mem);
+        if (!bgfx::isValid(handle) && logger_) {
+            logger_->Error("BgfxGuiService: Failed to create shader handle for " + label);
+        }
+        return handle;
+    }
+    
+    // For Vulkan/Metal/DX: Compile to SPIRV and wrap in bgfx binary format
     shaderc::Compiler compiler;
     shaderc::CompileOptions options;
     options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_1);
     options.SetAutoBindUniforms(true);
     options.SetAutoMapLocations(true);
-
-    if (logger_) {
-        logger_->Trace("BgfxGuiService", "CreateShader",
-                       "label=" + label +
-                           ", renderer=" + std::string(RendererTypeName(bgfx::getRendererType())) +
-                           ", sourceLength=" + std::to_string(source.size()));
-    }
 
     shaderc_shader_kind kind = isVertex ? shaderc_vertex_shader : shaderc_fragment_shader;
     auto result = compiler.CompileGlslToSpv(source, kind, label.c_str(), options);
@@ -878,11 +896,32 @@ bgfx::ShaderHandle BgfxGuiService::CreateShader(const std::string& label,
     }
 
     std::vector<uint32_t> spirv(result.cbegin(), result.cend());
-    const bgfx::Memory* mem = bgfx::copy(spirv.data(),
-                                         static_cast<uint32_t>(spirv.size() * sizeof(uint32_t)));
+    
+    // Wrap SPIRV with bgfx binary format
+    constexpr uint8_t kBgfxShaderVersion = 11;
+    constexpr uint32_t kMagicVSH = ('V') | ('S' << 8) | ('H' << 16) | (kBgfxShaderVersion << 24);
+    constexpr uint32_t kMagicFSH = ('F') | ('S' << 8) | ('H' << 16) | (kBgfxShaderVersion << 24);
+    const uint32_t magic = isVertex ? kMagicVSH : kMagicFSH;
+    const uint32_t inputHash = static_cast<uint32_t>(std::hash<std::string>{}(source));
+    const uint32_t spirvSize = static_cast<uint32_t>(spirv.size() * sizeof(uint32_t));
+    const uint16_t uniformCount = 0;
+    const uint32_t totalSize = 4 + 4 + 4 + 2 + 4 + spirvSize + 1;
+    
+    const bgfx::Memory* mem = bgfx::alloc(totalSize);
+    uint8_t* data = mem->data;
+    uint32_t offset = 0;
+    
+    std::memcpy(data + offset, &magic, 4); offset += 4;
+    std::memcpy(data + offset, &inputHash, 4); offset += 4;
+    std::memcpy(data + offset, &inputHash, 4); offset += 4;
+    std::memcpy(data + offset, &uniformCount, 2); offset += 2;
+    std::memcpy(data + offset, &spirvSize, 4); offset += 4;
+    std::memcpy(data + offset, spirv.data(), spirvSize); offset += spirvSize;
+    data[offset] = 0;
+    
     bgfx::ShaderHandle handle = bgfx::createShader(mem);
     if (!bgfx::isValid(handle) && logger_) {
-        logger_->Error("BgfxGuiService::CreateShader: Failed to create shader handle for " + label);
+        logger_->Error("BgfxGuiService: Failed to create shader handle for " + label);
     }
     return handle;
 }
