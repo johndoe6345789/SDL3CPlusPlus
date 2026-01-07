@@ -331,6 +331,7 @@ add_test(NAME script_engine_tests COMMAND script_engine_tests)
 add_executable(bgfx_gui_service_tests
     tests/test_bgfx_gui_service.cpp
     src/services/impl/bgfx_gui_service.cpp
+    src/services/impl/materialx_shader_generator.cpp
 )
 target_include_directories(bgfx_gui_service_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(bgfx_gui_service_tests PRIVATE

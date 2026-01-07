@@ -118,6 +118,15 @@ public:
         return false;
     }
 
+    bool HasSubstring(const std::string& fragment) const {
+        for (const auto& entry : entries_) {
+            if (entry.second.find(fragment) != std::string::npos) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 private:
     sdl3cpp::services::LogLevel level_ = sdl3cpp::services::LogLevel::TRACE;
     bool consoleEnabled_ = false;
@@ -145,7 +154,19 @@ public:
         guiFontConfig_.useFreeType = false;
     }
 
+    void EnableMaterialXGuiShader() {
+        materialXConfig_.enabled = true;
+        materialXConfig_.useConstantColor = true;
+        materialXConfig_.shaderKey = "gui";
+        materialXConfig_.libraryPath = ResolveMaterialXLibraryPath();
+    }
+
 private:
+    static std::filesystem::path ResolveMaterialXLibraryPath() {
+        auto repoRoot = std::filesystem::path(__FILE__).parent_path().parent_path();
+        return repoRoot / "MaterialX" / "libraries";
+    }
+
     sdl3cpp::services::InputBindings inputBindings_{};
     sdl3cpp::services::MouseGrabConfig mouseGrabConfig_{};
     sdl3cpp::services::BgfxConfig bgfxConfig_{};
@@ -181,12 +202,15 @@ int main() {
         auto logger = std::make_shared<TestLogger>();
         auto configService = std::make_shared<StubConfigService>();
         configService->DisableFreeType();
+        configService->EnableMaterialXGuiShader();
 
         sdl3cpp::services::impl::BgfxGuiService service(configService, logger);
         service.PrepareFrame({}, 1, 1);
 
         Assert(service.IsProgramReady(), "GUI shader program should link", failures);
         Assert(service.IsWhiteTextureReady(), "white texture should be created", failures);
+        Assert(logger->HasSubstring("Using MaterialX GUI shaders"),
+               "expected MaterialX GUI shader path", failures);
 
         if (!service.IsProgramReady() &&
             !logger->HasErrorSubstring("bgfx::createProgram failed to link shaders")) {

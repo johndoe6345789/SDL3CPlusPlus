@@ -7,6 +7,8 @@
 
 #include <bgfx/bgfx.h>
 
+#include "materialx_shader_generator.hpp"
+
 #include <array>
 #include <cstdint>
 #include <filesystem>
@@ -144,6 +146,7 @@ private:
 
     std::shared_ptr<IConfigService> configService_;
     std::shared_ptr<ILogger> logger_;
+    MaterialXShaderGenerator materialxGenerator_;
 
     std::unique_ptr<FreeTypeState> freeType_;
     std::unordered_map<TextKey, TextTexture, TextKeyHash> textCache_;
@@ -154,6 +157,8 @@ private:
     bgfx::UniformHandle modelViewProjUniform_ = BGFX_INVALID_HANDLE;
     bgfx::TextureHandle whiteTexture_ = BGFX_INVALID_HANDLE;
     bgfx::VertexLayout layout_;
+    std::string guiVertexSourceOverride_;
+    std::string guiFragmentSourceOverride_;
 
     std::vector<ScissorRect> scissorStack_;
     std::array<float, 16> viewProjection_{};
