@@ -78,7 +78,10 @@ int main() {
             const auto& object = objects.front();
             Assert(object.vertices.size() == 3, "scene object should yield three vertices", failures);
             Assert(object.indices.size() == 3, "scene object should yield three indices", failures);
-            Assert(object.shaderKey == "test", "shader key should match fixture", failures);
+            Assert(object.shaderKeys.size() == 1, "shader keys should contain one entry", failures);
+            if (!object.shaderKeys.empty()) {
+                Assert(object.shaderKeys.front() == "test", "shader key should match fixture", failures);
+            }
             const std::vector<uint16_t> expectedIndices{0, 1, 2};
             Assert(object.indices == expectedIndices, "indices should be zero-based", failures);
             Assert(object.computeModelMatrixRef >= 0,

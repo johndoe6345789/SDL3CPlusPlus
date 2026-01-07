@@ -590,7 +590,7 @@ function get_scene_objects()
         {
             vertices = map_mesh.vertices,
             indices = map_mesh.indices,
-            shader_key = map_shader_key,
+            shader_keys = {map_shader_key},
             compute_model_matrix = function()
                 return map_model_matrix
             end,

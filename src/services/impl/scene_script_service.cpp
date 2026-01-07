@@ -237,11 +237,28 @@ std::vector<SceneObject> SceneScriptService::LoadSceneObjects() {
             object.computeModelMatrixRef = -1;
         }
 
-        lua_getfield(L, -1, "shader_key");
-        if (lua_isstring(L, -1)) {
-            object.shaderKey = lua_tostring(L, -1);
+        object.shaderKeys.clear();
+        lua_getfield(L, -1, "shader_keys");
+        if (lua_istable(L, -1)) {
+            const size_t count = lua_rawlen(L, -1);
+            object.shaderKeys.reserve(count);
+            for (size_t keyIndex = 1; keyIndex <= count; ++keyIndex) {
+                lua_rawgeti(L, -1, static_cast<int>(keyIndex));
+                if (lua_isstring(L, -1)) {
+                    object.shaderKeys.emplace_back(lua_tostring(L, -1));
+                }
+                lua_pop(L, 1);
+            }
         }
         lua_pop(L, 1);
+
+        if (object.shaderKeys.empty()) {
+            lua_getfield(L, -1, "shader_key");
+            if (lua_isstring(L, -1)) {
+                object.shaderKeys.emplace_back(lua_tostring(L, -1));
+            }
+            lua_pop(L, 1);
+        }
 
         objects.push_back(std::move(object));
         lua_pop(L, 1);

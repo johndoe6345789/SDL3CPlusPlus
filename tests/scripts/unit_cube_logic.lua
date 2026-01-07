@@ -19,7 +19,7 @@ function get_scene_objects()
             compute_model_matrix = function(time)
                 return identity_matrix()
             end,
-            shader_key = "test",
+            shader_keys = {"test"},
         },
     }
 end

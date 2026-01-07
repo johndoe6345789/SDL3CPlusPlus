@@ -73,12 +73,18 @@ void SceneService::LoadScene(const std::vector<SceneObject>& objects) {
             }
             throw std::runtime_error("Scene object missing vertex or index data");
         }
+        if (obj.shaderKeys.empty()) {
+            if (logger_) {
+                logger_->Error("Scene object missing shader keys");
+            }
+            throw std::runtime_error("Scene object missing shader keys");
+        }
 
         auto entity = registry_->create();
         sceneEntities_.push_back(entity);
         registry_->emplace<SceneTag>(entity);
         registry_->emplace<MeshComponent>(entity, obj.vertices, obj.indices);
-        registry_->emplace<RenderComponent>(entity, obj.computeModelMatrixRef, obj.shaderKey);
+        registry_->emplace<RenderComponent>(entity, obj.computeModelMatrixRef, obj.shaderKeys);
     }
 
     for (const auto entity : sceneEntities_) {
@@ -118,7 +124,7 @@ void SceneService::LoadScene(const std::vector<SceneObject>& objects) {
         drawInfo.indexCount = static_cast<uint32_t>(mesh.indices.size());
         drawInfo.vertexOffset = static_cast<int32_t>(vertexOffset);
         drawInfo.computeModelMatrixRef = render.computeModelMatrixRef;
-        drawInfo.shaderKey = render.shaderKey;
+        drawInfo.shaderKeys = render.shaderKeys;
         drawInfos_.push_back(std::move(drawInfo));
     }
 
@@ -156,7 +162,7 @@ std::vector<RenderCommand> SceneService::GetRenderCommands(float time) const {
         cmd.indexOffset = drawInfo.indexOffset;
         cmd.indexCount = drawInfo.indexCount;
         cmd.vertexOffset = drawInfo.vertexOffset;
-        cmd.shaderKey = drawInfo.shaderKey;
+        cmd.shaderKeys = drawInfo.shaderKeys;
         cmd.modelMatrix = scriptService_->ComputeModelMatrix(drawInfo.computeModelMatrixRef, time);
         commands.push_back(cmd);
     }

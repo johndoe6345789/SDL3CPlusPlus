@@ -155,6 +155,42 @@ void GraphicsService::RenderScene(const std::vector<RenderCommand>& commands,
 
     // Set the view-projection matrix for the frame
     backend_->SetViewState(viewState);
+
+    if (commands.empty()) {
+        return;
+    }
+    if (!vertexBuffer_ || !indexBuffer_) {
+        logger_->Error("GraphicsService::RenderScene: Vertex/index buffers not uploaded");
+        return;
+    }
+
+    for (size_t commandIndex = 0; commandIndex < commands.size(); ++commandIndex) {
+        const auto& command = commands[commandIndex];
+        if (command.shaderKeys.empty()) {
+            logger_->Error("GraphicsService::RenderScene: Render command missing shader keys");
+            continue;
+        }
+        if (logger_) {
+            logger_->Trace("GraphicsService", "RenderScene",
+                           "commandIndex=" + std::to_string(commandIndex) +
+                           ", shaderKeyCount=" + std::to_string(command.shaderKeys.size()));
+        }
+        for (const auto& shaderKey : command.shaderKeys) {
+            auto it = pipelines_.find(shaderKey);
+            if (it == pipelines_.end()) {
+                logger_->Error("GraphicsService::RenderScene: Missing pipeline for shaderKey=" + shaderKey);
+                continue;
+            }
+            backend_->Draw(device_,
+                           it->second,
+                           vertexBuffer_,
+                           indexBuffer_,
+                           command.indexOffset,
+                           command.indexCount,
+                           command.vertexOffset,
+                           command.modelMatrix);
+        }
+    }
 }
 
 bool GraphicsService::EndFrame() {

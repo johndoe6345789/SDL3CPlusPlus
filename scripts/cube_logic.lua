@@ -741,7 +741,7 @@ local function create_static_cube(position, scale, color, shader_key)
         vertices = vertices,
         indices = cube_indices,
         compute_model_matrix = compute_model_matrix,
-        shader_key = resolved_shader,
+        shader_keys = {resolved_shader},
     }
 end
 
@@ -758,7 +758,7 @@ local function create_skybox()
         vertices = apply_color_to_vertices(skybox_color),
         indices = (#cube_indices_double_sided > 0) and cube_indices_double_sided or cube_indices,
         compute_model_matrix = compute_model_matrix,
-        shader_key = "skybox",
+        shader_keys = {"skybox"},
     }
 end
 
@@ -791,7 +791,7 @@ local function create_physics_cube()
         vertices = apply_color_to_vertices(physics_state.cube_color),
         indices = (#cube_indices_double_sided > 0) and cube_indices_double_sided or cube_indices,
         compute_model_matrix = compute_model_matrix,
-        shader_key = shader_key,
+        shader_keys = {shader_key},
     }
 end
 
@@ -809,7 +809,7 @@ local function create_spinning_cube()
         vertices = cube_vertices,
         indices = (#cube_indices_double_sided > 0) and cube_indices_double_sided or cube_indices,
         compute_model_matrix = compute_model_matrix,
-        shader_key = shader_key,
+        shader_keys = {shader_key},
     }
 end
 

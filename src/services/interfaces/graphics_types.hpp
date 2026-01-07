@@ -56,7 +56,7 @@ struct RenderCommand {
     uint32_t indexOffset;
     uint32_t indexCount;
     int32_t vertexOffset;
-    std::string shaderKey;
+    std::vector<std::string> shaderKeys;
     std::array<float, 16> modelMatrix;
 };
 

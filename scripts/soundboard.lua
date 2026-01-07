@@ -251,7 +251,7 @@ local function createCube(position)
         vertices = cubeVertices,
         indices = cubeIndices,
         compute_model_matrix = computeModel,
-        shader_key = "default",
+        shader_keys = {"default"},
     }
 end
 

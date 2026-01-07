@@ -34,43 +34,44 @@ std::unordered_map<std::string, ShaderPaths> ShaderScriptService::LoadShaderPath
     if (configService_) {
         const auto& materialConfig = configService_->GetMaterialXConfig();
         const auto& materialOverrides = configService_->GetMaterialXMaterialConfigs();
-        if (!materialOverrides.empty()) {
-            for (const auto& overrideConfig : materialOverrides) {
-                if (!overrideConfig.enabled) {
-                    continue;
-                }
-                MaterialXConfig resolvedConfig = materialConfig;
-                resolvedConfig.enabled = true;
-                resolvedConfig.documentPath = overrideConfig.documentPath;
-                resolvedConfig.shaderKey = overrideConfig.shaderKey;
-                resolvedConfig.materialName = overrideConfig.materialName;
-                resolvedConfig.useConstantColor = overrideConfig.useConstantColor;
-                resolvedConfig.constantColor = overrideConfig.constantColor;
-                try {
-                    ShaderPaths materialShader = materialxGenerator_.Generate(
-                        resolvedConfig,
-                        engineService_ ? engineService_->GetScriptDirectory() : std::filesystem::path{});
-                    if (!resolvedConfig.shaderKey.empty()) {
-                        shaderMap[resolvedConfig.shaderKey] = std::move(materialShader);
-                    }
-                } catch (const std::exception& ex) {
-                    if (logger_) {
-                        logger_->Error("MaterialX shader generation failed for key=" +
-                                       overrideConfig.shaderKey + ": " + std::string(ex.what()));
-                    }
-                }
+        if (materialOverrides.empty()) {
+            if (logger_) {
+                logger_->Error("MaterialX shader generation requires materialx_materials entries");
             }
-        } else if (materialConfig.enabled) {
+            throw std::runtime_error("MaterialX shader generation requires materialx_materials entries");
+        }
+        if (logger_) {
+            logger_->Trace("ShaderScriptService", "LoadShaderPathsMap",
+                           "materialOverrides=" + std::to_string(materialOverrides.size()));
+        }
+        for (const auto& overrideConfig : materialOverrides) {
+            if (!overrideConfig.enabled) {
+                continue;
+            }
+            MaterialXConfig resolvedConfig = materialConfig;
+            resolvedConfig.enabled = true;
+            resolvedConfig.documentPath = overrideConfig.documentPath;
+            resolvedConfig.shaderKey = overrideConfig.shaderKey;
+            resolvedConfig.materialName = overrideConfig.materialName;
+            resolvedConfig.useConstantColor = overrideConfig.useConstantColor;
+            resolvedConfig.constantColor = overrideConfig.constantColor;
+            if (logger_) {
+                logger_->Trace("ShaderScriptService", "LoadShaderPathsMap",
+                               "materialKey=" + resolvedConfig.shaderKey +
+                                   ", document=" + resolvedConfig.documentPath.string() +
+                                   ", material=" + resolvedConfig.materialName);
+            }
             try {
                 ShaderPaths materialShader = materialxGenerator_.Generate(
-                    materialConfig,
+                    resolvedConfig,
                     engineService_ ? engineService_->GetScriptDirectory() : std::filesystem::path{});
-                if (!materialConfig.shaderKey.empty()) {
-                    shaderMap[materialConfig.shaderKey] = std::move(materialShader);
+                if (!resolvedConfig.shaderKey.empty()) {
+                    shaderMap[resolvedConfig.shaderKey] = std::move(materialShader);
                 }
             } catch (const std::exception& ex) {
                 if (logger_) {
-                    logger_->Error("MaterialX shader generation failed: " + std::string(ex.what()));
+                    logger_->Error("MaterialX shader generation failed for key=" +
+                                   overrideConfig.shaderKey + ": " + std::string(ex.what()));
                 }
             }
         }

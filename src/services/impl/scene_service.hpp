@@ -48,7 +48,7 @@ private:
 
     struct RenderComponent {
         int computeModelMatrixRef = -1;
-        std::string shaderKey;
+        std::vector<std::string> shaderKeys;
     };
 
     struct SceneDrawInfo {
@@ -56,7 +56,7 @@ private:
         uint32_t indexCount = 0;
         int32_t vertexOffset = 0;
         int computeModelMatrixRef = -1;
-        std::string shaderKey;
+        std::vector<std::string> shaderKeys;
     };
 
     void ClearSceneEntities();

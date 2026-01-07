@@ -52,10 +52,10 @@ private:
     std::shared_ptr<ILogger> logger_;
     std::shared_ptr<IGraphicsBackend> backend_;
     std::shared_ptr<IWindowService> windowService_;
-    GraphicsDeviceHandle device_;
+    GraphicsDeviceHandle device_ = nullptr;
     std::unordered_map<std::string, GraphicsPipelineHandle> pipelines_;
-    GraphicsBufferHandle vertexBuffer_;
-    GraphicsBufferHandle indexBuffer_;
+    GraphicsBufferHandle vertexBuffer_ = nullptr;
+    GraphicsBufferHandle indexBuffer_ = nullptr;
     // Other state
     bool initialized_ = false;
 };

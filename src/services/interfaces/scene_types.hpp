@@ -11,7 +11,7 @@ struct SceneObject {
     std::vector<core::Vertex> vertices;
     std::vector<uint16_t> indices;
     int computeModelMatrixRef = -1;
-    std::string shaderKey = "default";
+    std::vector<std::string> shaderKeys;
 };
 
 }  // namespace sdl3cpp::services
