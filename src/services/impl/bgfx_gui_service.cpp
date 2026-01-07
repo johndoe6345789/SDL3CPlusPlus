@@ -52,27 +52,25 @@ const char* RendererTypeName(bgfx::RendererType::Enum type) {
 const char* kGuiVertexSource = R"(
 #version 450
 
-#pragma shader_stage(vertex)
-
-// Uniform block: PrivateUniforms  
-layout (std140, binding=0) uniform PrivateUniforms_vertex
-{
-    mat4 u_modelViewProj;
-};
-
-// Inputs block: VertexInputs
 layout (location = 0) in vec3 a_position;
 layout (location = 1) in vec4 a_color0;
 layout (location = 2) in vec2 a_texcoord0;
 
-// Outputs block: VertexOutputs
-layout (location = 0) out vec4 v_color0;
-layout (location = 1) out vec2 v_texcoord0;
+out VertexData
+{
+    layout (location = 0) vec4 color;
+    layout (location = 1) vec2 texcoord;
+} vd;
+
+layout (binding=0) uniform GuiUniforms
+{
+    mat4 u_modelViewProj;
+};
 
 void main()
 {
-    v_color0 = a_color0;
-    v_texcoord0 = a_texcoord0;
+    vd.color = a_color0;
+    vd.texcoord = a_texcoord0;
     gl_Position = u_modelViewProj * vec4(a_position, 1.0);
 }
 )";
@@ -80,21 +78,19 @@ void main()
 const char* kGuiFragmentSource = R"(
 #version 450
 
-#pragma shader_stage(fragment)
+in VertexData
+{
+    layout (location = 0) vec4 color;
+    layout (location = 1) vec2 texcoord;
+} vd;
 
-// Inputs block: FragmentInputs
-layout (location = 0) in vec4 v_color0;
-layout (location = 1) in vec2 v_texcoord0;
-
-// Outputs block: FragmentOutputs
 layout (location = 0) out vec4 out_color;
 
-// Texture sampler
-uniform sampler2D s_tex;
+layout (binding=0) uniform sampler2D s_tex;
 
 void main()
 {
-    out_color = v_color0 * texture(s_tex, v_texcoord0);
+    out_color = vd.color * texture(s_tex, vd.texcoord);
 }
 )";
 

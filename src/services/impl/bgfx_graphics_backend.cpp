@@ -498,6 +498,7 @@ void BgfxGraphicsBackend::Initialize(void* window, const GraphicsConfig& config)
     init.resolution.height = viewportHeight_;
     init.resolution.reset = BGFX_RESET_VSYNC;
     init.platformData = platformData_;
+    init.debug = BGFX_DEBUG_TEXT;  // Enable debugging for shader validation
     if (logger_) {
         logger_->Trace("BgfxGraphicsBackend", "Initialize",
                        "initPlatformData.nwh=" + std::to_string(reinterpret_cast<uintptr_t>(init.platformData.nwh)) +

@@ -120,7 +120,7 @@ bgfx::ShaderHandle BgfxShaderCompiler::CompileShader(
     shaderc::Compiler compiler;
     shaderc::CompileOptions options;
     options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_1);
-    options.SetAutoBindUniforms(true);
+    options.SetAutoBindUniforms(false);  // We use explicit binding=N in shaders
     // Do NOT use SetAutoMapLocations - it overrides explicit layout(location=N) declarations
     
     shaderc_shader_kind kind = isVertex ? shaderc_vertex_shader : shaderc_fragment_shader;
@@ -140,62 +140,28 @@ bgfx::ShaderHandle BgfxShaderCompiler::CompileShader(
                        "label=" + label + " SPIRV compiled, " + std::to_string(spirv.size()) + " words");
     }
     
-    // Wrap SPIRV with bgfx binary format including uniform metadata
+    // Wrap SPIRV with bgfx binary format (simple version without uniform metadata embedding)
+    // bgfx can extract uniform info from SPIRV reflection, so we don't need to embed it
     constexpr uint8_t kBgfxShaderVersion = 11;
     constexpr uint32_t kMagicVSH = ('V') | ('S' << 8) | ('H' << 16) | (kBgfxShaderVersion << 24);
     constexpr uint32_t kMagicFSH = ('F') | ('S' << 8) | ('H' << 16) | (kBgfxShaderVersion << 24);
     const uint32_t magic = isVertex ? kMagicVSH : kMagicFSH;
     const uint32_t inputHash = static_cast<uint32_t>(std::hash<std::string>{}(source));
-    const uint32_t outputHash = inputHash;
     const uint32_t spirvSize = static_cast<uint32_t>(spirv.size() * sizeof(uint32_t));
-    
-    // Calculate uniform metadata size
-    const uint32_t uniformDataSize = 2 +  // uniform count
-        static_cast<uint32_t>(uniforms.size()) * (1 + 1 + 1 + 2 + 2 + 1 + 1 + 2) +  // fixed fields per uniform
-        static_cast<uint32_t>(std::accumulate(
-            uniforms.begin(),
-            uniforms.end(),
-            size_t{0},
-            [](size_t total, const auto& un) { return total + un.name.size(); }));  // variable name lengths
-    
-    // Calculate attribute metadata size (vertex shaders only)
-    const uint32_t attribDataSize = 1 + static_cast<uint32_t>(attributes.size()) * 2;
-    
-    const uint32_t totalSize = 4 + 4 + 4 + uniformDataSize + 4 + spirvSize + 1 + attribDataSize + 2;
+    const uint16_t uniformCount = 0;  // Let bgfx extract uniforms from SPIRV
+    const uint32_t totalSize = 4 + 4 + 4 + 2 + 4 + spirvSize + 1;
     
     const bgfx::Memory* mem = bgfx::alloc(totalSize);
     uint8_t* data = mem->data;
     uint32_t offset = 0;
     
-    // Write header
     std::memcpy(data + offset, &magic, 4); offset += 4;
     std::memcpy(data + offset, &inputHash, 4); offset += 4;
-    std::memcpy(data + offset, &outputHash, 4); offset += 4;
-    
-    // Write uniform metadata
-    WriteUniformArray(data, offset, uniforms, !isVertex);
-    
-    // Write SPIRV bytecode
+    std::memcpy(data + offset, &inputHash, 4); offset += 4;  // outputHash = inputHash
+    std::memcpy(data + offset, &uniformCount, 2); offset += 2;
     std::memcpy(data + offset, &spirvSize, 4); offset += 4;
     std::memcpy(data + offset, spirv.data(), spirvSize); offset += spirvSize;
-    data[offset] = 0; offset += 1;
-    
-    // Write attribute metadata (vertex shaders only)
-    if (isVertex && !attributes.empty()) {
-        const uint8_t attribCount = static_cast<uint8_t>(attributes.size());
-        data[offset] = attribCount; offset += 1;
-        for (bgfx::Attrib::Enum attr : attributes) {
-            const uint16_t attribId = AttributeToId(attr);
-            std::memcpy(data + offset, &attribId, 2);
-            offset += 2;
-        }
-    } else {
-        data[offset] = 0; offset += 1;
-    }
-    
-    // Write terminator
-    data[offset] = 0; offset += 1;
-    data[offset] = 0; offset += 1;
+    data[offset] = 0;  // null terminator
     
     bgfx::ShaderHandle handle = bgfx::createShader(mem);
     if (!bgfx::isValid(handle) && logger_) {
