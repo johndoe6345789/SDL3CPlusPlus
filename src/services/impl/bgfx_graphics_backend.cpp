@@ -700,7 +700,10 @@ bgfx::ShaderHandle BgfxGraphicsBackend::CreateShader(const std::string& label,
     shaderc::CompileOptions options;
     options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_1);
     options.SetAutoBindUniforms(true);
-    options.SetAutoMapLocations(true);
+    // Do NOT use SetAutoMapLocations - it overrides explicit layout(location=N) declarations
+    // and assigns locations alphabetically by variable name, breaking the vertex layout.
+    // MaterialX and other shaders already specify explicit locations matching our VertexLayout.
+    // options.SetAutoMapLocations(true);
 
     shaderc_shader_kind kind = isVertex ? shaderc_vertex_shader : shaderc_fragment_shader;
     auto result = compiler.CompileGlslToSpv(source, kind, label.c_str(), options);
