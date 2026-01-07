@@ -8,8 +8,8 @@ std::vector<ShaderPipelineValidator::AttributeInfo>
 ShaderPipelineValidator::ExtractShaderInputs(const std::string& glslSource) const {
     std::vector<AttributeInfo> inputs;
 
-    // Match: layout (location = N) in type name;
-    std::regex pattern(R"(layout\s*\(\s*location\s*=\s*(\d+)\s*\)\s+in\s+(\w+)\s+(\w+)\s*;)");
+    // Match: layout (location = N) in type name; (handles compact syntax too)
+    std::regex pattern(R"(layout\s*\(\s*location\s*=\s*(\d+)\s*\)\s*in\s+(\w+)\s+(\w+)\s*;)");
 
     std::sregex_iterator begin(glslSource.begin(), glslSource.end(), pattern);
     std::sregex_iterator end;
@@ -32,8 +32,8 @@ std::vector<ShaderPipelineValidator::AttributeInfo>
 ShaderPipelineValidator::ExtractShaderOutputs(const std::string& glslSource) const {
     std::vector<AttributeInfo> outputs;
 
-    // Match: layout (location = N) out type name;
-    std::regex pattern(R"(layout\s*\(\s*location\s*=\s*(\d+)\s*\)\s+out\s+(\w+)\s+(\w+)\s*;)");
+    // Match: layout (location = N) out type name; (handles compact syntax too)
+    std::regex pattern(R"(layout\s*\(\s*location\s*=\s*(\d+)\s*\)\s*out\s+(\w+)\s+(\w+)\s*;)");
 
     std::sregex_iterator begin(glslSource.begin(), glslSource.end(), pattern);
     std::sregex_iterator end;
@@ -188,18 +188,30 @@ ShaderPipelineValidator::ValidateSpirvRequirements(
     std::string line;
 
     while (std::getline(stream, line)) {
-        // Skip comments and version directives
-        if (line.find("//") != std::string::npos ||
-            line.find("#version") != std::string::npos ||
+        // Skip version directives and built-ins
+        if (line.find("#version") != std::string::npos ||
             line.find("gl_") != std::string::npos) {
+            lineNum++;
+            continue;
+        }
+
+        // Remove inline comments before checking
+        std::string lineWithoutComments = line;
+        size_t commentPos = line.find("//");
+        if (commentPos != std::string::npos) {
+            lineWithoutComments = line.substr(0, commentPos);
+        }
+
+        // Skip empty lines or pure comment lines
+        if (lineWithoutComments.find_first_not_of(" \t\r\n") == std::string::npos) {
             lineNum++;
             continue;
         }
 
         // Check for in/out without layout
         std::smatch inOutMatch;
-        if (std::regex_search(line, inOutMatch, inOutPattern)) {
-            if (!std::regex_search(line, layoutPattern)) {
+        if (std::regex_search(lineWithoutComments, inOutMatch, inOutPattern)) {
+            if (!std::regex_search(lineWithoutComments, layoutPattern)) {
                 result.AddError(std::string("SPIR-V requires 'layout(location=N)' for all inputs/outputs ") +
                               "at line " + std::to_string(lineNum) + " in shader '" + shaderName + "'");
             }
