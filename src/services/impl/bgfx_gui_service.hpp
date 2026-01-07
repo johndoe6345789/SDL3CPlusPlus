@@ -3,6 +3,7 @@
 #include "../interfaces/i_config_service.hpp"
 #include "../interfaces/i_gui_service.hpp"
 #include "../interfaces/i_logger.hpp"
+#include "../interfaces/i_pipeline_compiler_service.hpp"
 #include "../../di/lifecycle.hpp"
 
 #include <bgfx/bgfx.h>
@@ -25,7 +26,8 @@ class BgfxGuiService final : public IGuiService,
                              public di::IShutdownable {
 public:
     BgfxGuiService(std::shared_ptr<IConfigService> configService,
-                   std::shared_ptr<ILogger> logger);
+                   std::shared_ptr<ILogger> logger,
+                   std::shared_ptr<sdl3cpp::services::IPipelineCompilerService> pipelineCompiler = nullptr);
     ~BgfxGuiService() override;
 
     void PrepareFrame(const std::vector<GuiCommand>& commands,
@@ -146,6 +148,7 @@ private:
 
     std::shared_ptr<IConfigService> configService_;
     std::shared_ptr<ILogger> logger_;
+    std::shared_ptr<sdl3cpp::services::IPipelineCompilerService> pipelineCompiler_;
     MaterialXShaderGenerator materialxGenerator_;
 
     std::unique_ptr<FreeTypeState> freeType_;

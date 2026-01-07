@@ -4,6 +4,7 @@
 #include "../interfaces/i_graphics_backend.hpp"
 #include "../interfaces/i_logger.hpp"
 #include "../interfaces/i_platform_service.hpp"
+#include "../interfaces/i_pipeline_compiler_service.hpp"
 #include "../../core/vertex.hpp"
 #include <bgfx/bgfx.h>
 #include <array>

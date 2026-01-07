@@ -7,7 +7,7 @@
 
 #include <bx/string.h>
 #include <bgfx/bgfx.h>
-#include "../../src/vertexlayout.h"
+#include "../vertexlayout.h"
 
 #include <tinystl/allocator.h>
 #include <tinystl/string.h>

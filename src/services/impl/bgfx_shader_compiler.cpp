@@ -153,7 +153,8 @@ bgfx::ShaderHandle BgfxShaderCompiler::CompileShader(
 
         bool ok = false;
         if (pipelineCompiler_) {
-            ok = pipelineCompiler_->Compile(tempInputPath, tempOutputPath, {});
+            std::vector<std::string> args = {"--type", isVertex ? "vertex" : "fragment", "--profile", "spirv"};
+            ok = pipelineCompiler_->Compile(tempInputPath, tempOutputPath, args);
         } else {
             std::string cmd = "./src/bgfx_tools/shaderc/shaderc -f " + tempInputPath + " -o " + tempOutputPath;
             if (logger_) logger_->Trace("BgfxShaderCompiler", "CompileShaderCmd", cmd);

@@ -62,10 +62,7 @@ out VertexData
     layout (location = 1) vec2 texcoord;
 } vd;
 
-layout (binding=0) uniform GuiUniforms
-{
-    mat4 u_modelViewProj;
-};
+uniform mat4 u_modelViewProj;
 
 void main()
 {
@@ -86,7 +83,7 @@ in VertexData
 
 layout (location = 0) out vec4 out_color;
 
-layout (binding=0) uniform sampler2D s_tex;
+uniform sampler2D s_tex;
 
 void main()
 {
@@ -114,14 +111,17 @@ struct BgfxGuiService::FreeTypeState {
 };
 
 BgfxGuiService::BgfxGuiService(std::shared_ptr<IConfigService> configService,
-                               std::shared_ptr<ILogger> logger)
+                               std::shared_ptr<ILogger> logger,
+                               std::shared_ptr<sdl3cpp::services::IPipelineCompilerService> pipelineCompiler)
     : configService_(std::move(configService)),
       logger_(std::move(logger)),
+      pipelineCompiler_(std::move(pipelineCompiler)),
       materialxGenerator_(logger_),
       freeType_(std::make_unique<FreeTypeState>()) {
     if (logger_) {
         logger_->Trace("BgfxGuiService", "BgfxGuiService",
-                       "configService=" + std::string(configService_ ? "set" : "null"));
+                       "configService=" + std::string(configService_ ? "set" : "null") +
+                       ", pipelineCompiler=" + std::string(pipelineCompiler_ ? "set" : "null"));
     }
 }
 
@@ -1003,7 +1003,7 @@ bgfx::ProgramHandle BgfxGuiService::CreateProgram(const char* vertexSource,
 bgfx::ShaderHandle BgfxGuiService::CreateShader(const std::string& label,
                                                 const std::string& source,
                                                 bool isVertex) const {
-    BgfxShaderCompiler compiler(logger_);
+    BgfxShaderCompiler compiler(logger_, pipelineCompiler_);
     
     std::vector<BgfxShaderUniform> uniforms;
     std::vector<bgfx::Attrib::Enum> attributes;

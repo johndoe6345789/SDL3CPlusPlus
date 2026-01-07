@@ -3,6 +3,7 @@
 #include "services/impl/json_config_service.hpp"
 #include "services/impl/platform_service.hpp"
 #include "services/impl/sdl_window_service.hpp"
+#include "services/impl/pipeline_compiler_service.hpp"
 #include "services/interfaces/i_logger.hpp"
 #include "services/interfaces/gui_types.hpp"
 #include "events/event_bus.hpp"
@@ -119,6 +120,7 @@ int main() {
     std::cout << "Loading config from: " << configPath << '\n';
     auto configService = std::make_shared<sdl3cpp::services::impl::JsonConfigService>(logger, configPath, false);
     auto platformService = std::make_shared<sdl3cpp::services::impl::PlatformService>(logger);
+    auto pipelineCompilerService = std::make_shared<sdl3cpp::services::impl::PipelineCompilerService>(logger);
     
     // Setup window service
     auto eventBus = std::make_shared<sdl3cpp::events::EventBus>();
@@ -162,7 +164,7 @@ int main() {
     }
 
     // Initialize graphics backend (this will init bgfx with production renderer settings)
-    sdl3cpp::services::impl::BgfxGraphicsBackend backend(configService, platformService, logger);
+    sdl3cpp::services::impl::BgfxGraphicsBackend backend(configService, platformService, logger, pipelineCompilerService);
     
     std::cout << "Attempting to initialize bgfx...\n";
     try {
@@ -187,7 +189,7 @@ int main() {
     }
 
     // Now test GUI service shader compilation and linking (same as production)
-    sdl3cpp::services::impl::BgfxGuiService guiService(configService, logger);
+    sdl3cpp::services::impl::BgfxGuiService guiService(configService, logger, pipelineCompilerService);
     
     // This triggers shader compilation and program linking
     const uint32_t width = configService->GetWindowWidth();

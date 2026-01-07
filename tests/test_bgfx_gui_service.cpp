@@ -206,7 +206,7 @@ int main() {
         configService->DisableFreeType();
         configService->EnableMaterialXGuiShader();
 
-        sdl3cpp::services::impl::BgfxGuiService service(configService, logger);
+        sdl3cpp::services::impl::BgfxGuiService service(configService, logger, nullptr);
         service.PrepareFrame({}, 1, 1);
 
         // Noop renderer won't actually create valid shader programs
@@ -246,7 +246,7 @@ int main() {
         configService->DisableFreeType();
         // Don't enable MaterialX for GUI - use built-in shaders
 
-        sdl3cpp::services::impl::BgfxGuiService service(configService, logger);
+        sdl3cpp::services::impl::BgfxGuiService service(configService, logger, nullptr);
         service.PrepareFrame({}, 1, 1);
 
         // Noop renderer won't actually create valid shader programs, so we skip program/texture validation

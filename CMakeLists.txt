@@ -11,14 +11,8 @@ if(ENABLE_VITA)
     set(BUILD_SDL3_APP OFF CACHE BOOL "Build the SDL3 bgfx demo" FORCE)
     set(BUILD_SCRIPT_TESTS OFF CACHE BOOL "Build script engine tests" FORCE)
 endif()
-if(CMAKE_GENERATOR MATCHES "Ninja")
-    if(DEFINED CMAKE_GENERATOR_PLATFORM)
-        set(CMAKE_GENERATOR_PLATFORM "" CACHE STRING "" FORCE)
-    endif()
-    if(DEFINED CMAKE_GENERATOR_TOOLSET)
-        set(CMAKE_GENERATOR_TOOLSET "" CACHE STRING "" FORCE)
-    endif()
-endif()
+
+
 project(SDL3App LANGUAGES CXX)
 list(APPEND CMAKE_PROGRAM_PATH "C:/ProgramData/chocolatey/bin")
 if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
@@ -149,8 +143,8 @@ set(SDL3CPP_RENDER_STACK_LIBS EnTT::EnTT)
 if(TARGET bgfx::bgfx)
     list(APPEND SDL3CPP_RENDER_STACK_LIBS bgfx::bgfx)
 endif()
-if(TARGET bx::bx)
-    list(APPEND SDL3CPP_RENDER_STACK_LIBS bx::bx)
+if(TARGET bgfx::bx)
+    list(APPEND SDL3CPP_RENDER_STACK_LIBS bgfx::bx)
 endif()
 if(TARGET bimg::bimg)
     list(APPEND SDL3CPP_RENDER_STACK_LIBS bimg::bimg)
@@ -200,6 +194,48 @@ elseif(TARGET stb)
 endif()
 endif()
 
+## Local build of bgfx_tools shaderc sources as a library so we can link in-process.
+add_library(shaderc_local STATIC
+    src/bgfx_tools/shaderc/shaderc.cpp
+    src/bgfx_tools/shaderc/shaderc_glsl.cpp
+    src/bgfx_tools/shaderc/shaderc_hlsl.cpp
+    src/bgfx_tools/shaderc/shaderc_metal.cpp
+    src/bgfx_tools/shaderc/shaderc_pssl.cpp
+    src/bgfx_tools/shaderc/shaderc_spirv.cpp
+    src/bgfx_tools/shaderc/shaderc_mem.cpp
+)
+target_include_directories(shaderc_local PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_tools/shaderc" "${CMAKE_CURRENT_SOURCE_DIR}/src")
+if(TARGET bgfx::bx)
+    target_link_libraries(shaderc_local PUBLIC bgfx::bx)
+endif()
+if(TARGET bgfx::bgfx)
+    target_link_libraries(shaderc_local PUBLIC bgfx::bgfx)
+endif()
+# Link shaderc dependencies
+if(TARGET glslang::glslang)
+    target_link_libraries(shaderc_local PUBLIC glslang::glslang)
+endif()
+if(TARGET spirv-tools::spirv-tools)
+    target_link_libraries(shaderc_local PUBLIC spirv-tools::spirv-tools)
+endif()
+if(TARGET shaderc::shaderc)
+    target_link_libraries(shaderc_local PUBLIC shaderc::shaderc)
+endif()
+
+## Build geometryc tool
+# add_executable(geometryc
+#     src/bgfx_tools/geometryc/geometryc.cpp
+# )
+# target_include_directories(geometryc PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+# target_link_libraries(geometryc PRIVATE ${SDL3CPP_RENDER_STACK_LIBS} meshoptimizer::meshoptimizer cgltf::cgltf)
+
+## Build texturev tool
+# add_executable(texturev
+#     src/bgfx_tools/texturev/texturev.cpp
+# )
+# target_include_directories(texturev PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+# target_link_libraries(texturev PRIVATE ${SDL3CPP_RENDER_STACK_LIBS})
+
 if(BUILD_SDL3_APP)
     add_executable(sdl3_app
             src/main.cpp
@@ -240,8 +276,10 @@ if(BUILD_SDL3_APP)
             $<$<NOT:$<BOOL:${ENABLE_VITA}>>:src/services/impl/bgfx_graphics_backend.cpp>
             $<$<BOOL:${ENABLE_VITA}>:src/services/impl/gxm_graphics_backend.cpp>
             src/app/service_based_app.cpp
+            src/bgfx_tools/shaderc/shaderc_mem.cpp
         )
     target_include_directories(sdl3_app PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+    target_include_directories(sdl3_app PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_tools/shaderc")
     target_link_libraries(sdl3_app PRIVATE
         ${SDL_TARGET}
         lua::lua
@@ -266,7 +304,11 @@ if(BUILD_SDL3_APP)
         elseif(TARGET shaderc::shaderc_combined)
             target_link_libraries(sdl3_app PRIVATE shaderc::shaderc_combined)
         else()
-            message(WARNING "shaderc CMake target not found; skipping link. Using local bgfx_tools for shader compilation at runtime.")
+            if(TARGET shaderc_local)
+                target_link_libraries(sdl3_app PRIVATE shaderc_local)
+            else()
+                message(WARNING "shaderc CMake target not found; skipping link. Using local bgfx_tools executable for shader compilation at runtime.")
+            endif()
         endif()
     endif()
     target_compile_definitions(sdl3_app PRIVATE SDL_MAIN_HANDLED
@@ -327,8 +369,10 @@ add_executable(script_engine_tests
     src/events/event_bus.cpp
     src/stb_image.cpp
     src/services/impl/pipeline_compiler_service.cpp
+    src/bgfx_tools/shaderc/shaderc_mem.cpp
 )
 target_include_directories(script_engine_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_include_directories(script_engine_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_tools/shaderc")
 target_link_libraries(script_engine_tests PRIVATE
     ${SDL_TARGET}
     lua::lua
@@ -341,12 +385,17 @@ target_link_libraries(script_engine_tests PRIVATE
     zip::zip
     libzip::zip
 )
-if(TARGET shaderc::shaderc)
-    target_link_libraries(script_engine_tests PRIVATE shaderc::shaderc)
+if(TARGET shaderc_local)
+    target_link_libraries(script_engine_tests PRIVATE shaderc_local)
+elseif(TARGET shaderc::shaderc)
 elseif(TARGET shaderc::shaderc_combined)
     target_link_libraries(script_engine_tests PRIVATE shaderc::shaderc_combined)
 else()
-    message(WARNING "shaderc CMake target not found; skipping link for script_engine_tests.")
+    if(TARGET shaderc_local)
+        target_link_libraries(script_engine_tests PRIVATE shaderc_local)
+    else()
+        message(WARNING "shaderc CMake target not found; skipping link for script_engine_tests.")
+    endif()
 endif()
 add_test(NAME script_engine_tests COMMAND script_engine_tests)
 
@@ -356,20 +405,27 @@ add_executable(bgfx_gui_service_tests
     src/services/impl/bgfx_shader_compiler.cpp
     src/services/impl/materialx_shader_generator.cpp
     src/services/impl/pipeline_compiler_service.cpp
+    src/bgfx_tools/shaderc/shaderc_mem.cpp
 )
 target_include_directories(bgfx_gui_service_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_include_directories(bgfx_gui_service_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_tools/shaderc")
 target_link_libraries(bgfx_gui_service_tests PRIVATE
     ${SDL_TARGET}
     ${SDL3CPP_RENDER_STACK_LIBS}
     ${SDL3CPP_FREETYPE_LIBS}
     lunasvg::lunasvg
 )
-if(TARGET shaderc::shaderc)
-    target_link_libraries(bgfx_gui_service_tests PRIVATE shaderc::shaderc)
+if(TARGET shaderc_local)
+    target_link_libraries(bgfx_gui_service_tests PRIVATE shaderc_local)
+elseif(TARGET shaderc::shaderc)
 elseif(TARGET shaderc::shaderc_combined)
     target_link_libraries(bgfx_gui_service_tests PRIVATE shaderc::shaderc_combined)
 else()
-    message(WARNING "shaderc CMake target not found; skipping link for bgfx_gui_service_tests.")
+    if(TARGET shaderc_local)
+        target_link_libraries(bgfx_gui_service_tests PRIVATE shaderc_local)
+    else()
+        message(WARNING "shaderc CMake target not found; skipping link for bgfx_gui_service_tests.")
+    endif()
 endif()
 add_test(NAME bgfx_gui_service_tests COMMAND bgfx_gui_service_tests)
 
@@ -388,6 +444,7 @@ add_executable(vulkan_shader_linking_test
     src/services/impl/pipeline_compiler_service.cpp
 )
 target_include_directories(vulkan_shader_linking_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_include_directories(vulkan_shader_linking_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_tools/shaderc")
 target_link_libraries(vulkan_shader_linking_test PRIVATE
     ${SDL_TARGET}
     ${SDL3CPP_RENDER_STACK_LIBS}
@@ -397,7 +454,9 @@ target_link_libraries(vulkan_shader_linking_test PRIVATE
     rapidjson
     glm::glm
 )
-if(TARGET shaderc::shaderc)
+if(TARGET shaderc_local)
+    target_link_libraries(vulkan_shader_linking_test PRIVATE shaderc_local)
+elseif(TARGET shaderc::shaderc)
     target_link_libraries(vulkan_shader_linking_test PRIVATE shaderc::shaderc)
 elseif(TARGET shaderc::shaderc_combined)
     target_link_libraries(vulkan_shader_linking_test PRIVATE shaderc::shaderc_combined)
