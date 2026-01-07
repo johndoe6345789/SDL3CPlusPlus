@@ -327,6 +327,26 @@ target_link_libraries(script_engine_tests PRIVATE
     Vorbis::vorbis
 )
 add_test(NAME script_engine_tests COMMAND script_engine_tests)
+
+add_executable(bgfx_gui_service_tests
+    tests/test_bgfx_gui_service.cpp
+    src/services/impl/bgfx_gui_service.cpp
+)
+target_include_directories(bgfx_gui_service_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_link_libraries(bgfx_gui_service_tests PRIVATE
+    ${SDL_TARGET}
+    ${SDL3CPP_RENDER_STACK_LIBS}
+    ${SDL3CPP_FREETYPE_LIBS}
+    lunasvg::lunasvg
+)
+if(TARGET shaderc::shaderc)
+    target_link_libraries(bgfx_gui_service_tests PRIVATE shaderc::shaderc)
+elseif(TARGET shaderc::shaderc_combined)
+    target_link_libraries(bgfx_gui_service_tests PRIVATE shaderc::shaderc_combined)
+else()
+    message(FATAL_ERROR "shaderc CMake target not found")
+endif()
+add_test(NAME bgfx_gui_service_tests COMMAND bgfx_gui_service_tests)
 endif()
 
 add_executable(gxm_backend_tests

@@ -315,6 +315,35 @@ def build(args: argparse.Namespace) -> None:
     run_argvs([cmd], args.dry_run, env_overrides=vita_env)
 
 
+def tests(args: argparse.Namespace) -> None:
+    """Build (optional) and run ctest for a given build directory."""
+    build_dir = _as_build_dir(args.build_dir, DEFAULT_BUILD_DIR)
+    vita_env = _resolve_vita_env_for_build(build_dir)
+    argvs: list[list[str]] = []
+
+    if args.build_first:
+        build_cmd: list[str] = ["cmake", "--build", build_dir]
+        if args.config:
+            build_cmd.extend(["--config", args.config])
+        if args.target:
+            build_cmd.extend(["--target", args.target])
+        build_tool_args = _strip_leading_double_dash(args.build_tool_args)
+        if build_tool_args:
+            build_cmd.append("--")
+            build_cmd.extend(build_tool_args)
+        argvs.append(build_cmd)
+
+    ctest_cmd: list[str] = ["ctest", "--output-on-failure", "--test-dir", build_dir]
+    if args.config:
+        ctest_cmd.extend(["-C", args.config])
+    ctest_args = _strip_leading_double_dash(args.ctest_args)
+    if ctest_args:
+        ctest_cmd.extend(ctest_args)
+    argvs.append(ctest_cmd)
+
+    run_argvs(argvs, args.dry_run, env_overrides=vita_env)
+
+
 def _cmd_one_liner_vcvars_then(bat: str, arch: str, then_parts: Sequence[str]) -> list[str]:
     """
     Construct a command to call a Visual Studio environment setup batch file and
@@ -552,7 +581,13 @@ def gui(args: argparse.Namespace) -> None:
             layout.addRow("Build Type:", self.build_type_combo)
 
             self.target_combo = QComboBox()
-            self.target_combo.addItems(["sdl3_app", "all"])
+            self.target_combo.addItems([
+                "sdl3_app",
+                "all",
+                "script_engine_tests",
+                "gxm_backend_tests",
+                "bgfx_gui_service_tests",
+            ])
             layout.addRow("Target:", self.target_combo)
 
             buttons = QDialogButtonBox(
@@ -1139,6 +1174,10 @@ def gui(args: argparse.Namespace) -> None:
             build_action.triggered.connect(self.run_build)
             dev_menu.addAction(build_action)
 
+            tests_action = QAction("Run Tests", self)
+            tests_action.triggered.connect(self.run_tests)
+            dev_menu.addAction(tests_action)
+
             sync_action = QAction("Sync Assets", self)
             sync_action.triggered.connect(self.sync_assets)
             dev_menu.addAction(sync_action)
@@ -1702,6 +1741,25 @@ return {{
                 vita_env = _resolve_vita_env_for_build(build_dir)
             self.run_command(cmd, env_overrides=vita_env)
 
+        def run_tests(self):
+            """Build (optional) and run tests"""
+            if self.preset != "default":
+                build_dir = f"build-{self.preset.split('-')[0]}"  # e.g., build-vita
+            else:
+                build_dir = GENERATOR_DEFAULT_DIR.get(self.generator, DEFAULT_BUILD_DIR)
+            cmd = [
+                sys.executable, __file__, "tests",
+                "--build-dir", build_dir,
+                "--config", self.build_type,
+                "--target", "all"
+            ]
+            vita_env = None
+            if self.preset in VITA_PRESETS:
+                vita_env = _vita_env_overrides(f"preset {self.preset}")
+            else:
+                vita_env = _resolve_vita_env_for_build(build_dir)
+            self.run_command(cmd, env_overrides=vita_env)
+
         def sync_assets(self):
             """Sync assets into the active build directory"""
             if self.preset != "default":
@@ -1785,6 +1843,40 @@ def main() -> int:
         ),
     )
     bld.set_defaults(func=build)
+    tst = subparsers.add_parser("tests", help="build (optional) and run ctest")
+    tst.add_argument(
+        "--build-dir", default=DEFAULT_BUILD_DIR, help="which directory to test"
+    )
+    tst.add_argument(
+        "--config", default="Release", help="configuration for multi-config generators"
+    )
+    tst.add_argument(
+        "--target",
+        default="all",
+        help="target to build before tests (use --no-build to skip)",
+    )
+    tst.add_argument(
+        "--no-build",
+        action="store_true",
+        help="skip build step and only run tests",
+    )
+    tst.add_argument(
+        "--build-tool-args",
+        nargs=argparse.REMAINDER,
+        help=(
+            "extra args forwarded to the underlying build tool after `--` "
+            "(prefix with '--' before the tool args if needed)"
+        ),
+    )
+    tst.add_argument(
+        "--ctest-args",
+        nargs=argparse.REMAINDER,
+        help=(
+            "extra arguments forwarded to ctest "
+            "(prefix with '--' before ctest flags if needed)"
+        ),
+    )
+    tst.set_defaults(func=tests, build_first=True)
     msvc = subparsers.add_parser(
         "msvc-quick", help="run a VS env setup + follow-on command (README one-liner style)"
     )
@@ -1849,6 +1941,8 @@ def main() -> int:
     )
     guip.set_defaults(func=gui)
     args = parser.parse_args()
+    if hasattr(args, "no_build") and args.no_build:
+        args.build_first = False
     try:
         args.func(args)
     except subprocess.CalledProcessError as exc:
