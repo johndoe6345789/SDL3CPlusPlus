@@ -64,11 +64,13 @@ private:
     static int LoadMeshFromArchive(lua_State* L);
     static int PhysicsCreateBox(lua_State* L);
     static int PhysicsCreateSphere(lua_State* L);
+    static int PhysicsCreateStaticMesh(lua_State* L);
     static int PhysicsRemoveBody(lua_State* L);
     static int PhysicsSetTransform(lua_State* L);
     static int PhysicsApplyForce(lua_State* L);
     static int PhysicsApplyImpulse(lua_State* L);
     static int PhysicsSetLinearVelocity(lua_State* L);
+    static int PhysicsGetLinearVelocity(lua_State* L);
     static int PhysicsSetGravity(lua_State* L);
     static int PhysicsStepSimulation(lua_State* L);
     static int PhysicsGetTransform(lua_State* L);

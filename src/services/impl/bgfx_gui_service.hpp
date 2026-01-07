@@ -159,6 +159,7 @@ private:
     uint32_t frameHeight_ = 0;
     uint16_t viewId_ = 1;
     bool initialized_ = false;
+    bool loggedMissingResources_ = false;
     uint64_t frameIndex_ = 0;
     size_t maxTextCacheEntries_ = 256;
     size_t maxSvgCacheEntries_ = 64;

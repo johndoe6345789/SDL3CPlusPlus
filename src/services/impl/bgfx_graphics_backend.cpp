@@ -671,6 +671,8 @@ bgfx::ShaderHandle BgfxGraphicsBackend::CreateShader(const std::string& label,
     shaderc::Compiler compiler;
     shaderc::CompileOptions options;
     options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
+    options.SetAutoBindUniforms(true);
+    options.SetAutoMapLocations(true);
 
     shaderc_shader_kind kind = isVertex ? shaderc_vertex_shader : shaderc_fragment_shader;
 
@@ -686,7 +688,11 @@ bgfx::ShaderHandle BgfxGraphicsBackend::CreateShader(const std::string& label,
     std::vector<uint32_t> spirv(result.cbegin(), result.cend());
     const bgfx::Memory* mem = bgfx::copy(spirv.data(),
                                          static_cast<uint32_t>(spirv.size() * sizeof(uint32_t)));
-    return bgfx::createShader(mem);
+    bgfx::ShaderHandle handle = bgfx::createShader(mem);
+    if (!bgfx::isValid(handle) && logger_) {
+        logger_->Error("BgfxGraphicsBackend::CreateShader: Failed to create shader handle for " + label);
+    }
+    return handle;
 }
 
 bgfx::TextureHandle BgfxGraphicsBackend::LoadTextureFromFile(const std::string& path,

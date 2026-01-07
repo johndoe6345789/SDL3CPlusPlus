@@ -265,32 +265,47 @@ bool ReplaceFirstOccurrence(std::string& source, const std::string& before, cons
     return true;
 }
 
-std::string ConvertIndividualOutputsToBlock(const std::string& source) {
+std::string ConvertIndividualOutputsToBlock(const std::string& source,
+                                            const std::shared_ptr<ILogger>& logger) {
     // Find individual output declarations like:
     // layout (location = N) out vec3 varname;
     // And convert them to a VertexData block
 
     std::vector<std::tuple<int, std::string, std::string>> outputs;  // location, type, name
+    const std::string layoutToken = "layout (location =";
+    const std::string layoutTokenCompact = "layout(location =";
     size_t searchPos = 0;
     size_t firstOutputStart = std::string::npos;
     size_t lastOutputEnd = 0;
     
     while (true) {
-        size_t layoutPos = source.find("layout (location =", searchPos);
-        if (layoutPos == std::string::npos) break;
+        size_t layoutPos = source.find(layoutToken, searchPos);
+        size_t compactPos = source.find(layoutTokenCompact, searchPos);
+        size_t tokenLength = 0;
+        if (compactPos != std::string::npos &&
+            (layoutPos == std::string::npos || compactPos < layoutPos)) {
+            layoutPos = compactPos;
+            tokenLength = layoutTokenCompact.size();
+        } else {
+            tokenLength = layoutToken.size();
+        }
+        if (layoutPos == std::string::npos) {
+            break;
+        }
         
         // Check if this line contains "out" (to confirm it's an output)
         size_t lineEnd = source.find('\n', layoutPos);
         if (lineEnd == std::string::npos) lineEnd = source.size();
         std::string line = source.substr(layoutPos, lineEnd - layoutPos);
         
-        if (line.find(" out ") == std::string::npos) {
+        if (line.find(" out ") == std::string::npos ||
+            line.find("VertexData") != std::string::npos) {
             searchPos = lineEnd;
             continue;
         }
         
         // Extract location number
-        size_t locStart = layoutPos + 18;  // after "layout (location ="
+        size_t locStart = layoutPos + tokenLength;  // after "layout (location ="
         while (locStart < source.size() && std::isspace(source[locStart])) ++locStart;
         size_t locEnd = locStart;
         while (locEnd < source.size() && std::isdigit(source[locEnd])) ++locEnd;
@@ -344,10 +359,16 @@ std::string ConvertIndividualOutputsToBlock(const std::string& source) {
         return source;
     }
     
-    // Build the VertexData block
-    std::string block = "layout (location = 0) out VertexData\n{\n";
+    std::sort(outputs.begin(), outputs.end(),
+              [](const auto& left, const auto& right) {
+                  return std::get<0>(left) < std::get<0>(right);
+              });
+
+    // Build the VertexData block while preserving explicit locations.
+    std::string block = "out VertexData\n{\n";
     for (const auto& [loc, type, name] : outputs) {
-        block += "    " + type + " " + name + ";\n";
+        block += "    layout (location = " + std::to_string(loc) + ") " +
+            type + " " + name + ";\n";
     }
     block += "} vd;\n\n";
     
@@ -356,36 +377,54 @@ std::string ConvertIndividualOutputsToBlock(const std::string& source) {
     result += block;
     result += source.substr(lastOutputEnd);
     
+    if (logger) {
+        logger->Trace("MaterialXShaderGenerator", "Generate",
+                      "vertexOutputsConverted=" + std::to_string(outputs.size()));
+    }
     return result;
 }
 
-std::string ConvertIndividualInputsToBlock(const std::string& source) {
+std::string ConvertIndividualInputsToBlock(const std::string& source,
+                                           const std::shared_ptr<ILogger>& logger) {
     // Find individual input declarations like:
     // layout (location = N) in vec3 varname;
     // And convert them to a VertexData block
 
     std::vector<std::tuple<int, std::string, std::string>> inputs;  // location, type, name
+    const std::string layoutToken = "layout (location =";
+    const std::string layoutTokenCompact = "layout(location =";
     size_t searchPos = 0;
     size_t firstInputStart = std::string::npos;
     size_t lastInputEnd = 0;
     
     while (true) {
-        size_t layoutPos = source.find("layout (location =", searchPos);
-        if (layoutPos == std::string::npos) break;
+        size_t layoutPos = source.find(layoutToken, searchPos);
+        size_t compactPos = source.find(layoutTokenCompact, searchPos);
+        size_t tokenLength = 0;
+        if (compactPos != std::string::npos &&
+            (layoutPos == std::string::npos || compactPos < layoutPos)) {
+            layoutPos = compactPos;
+            tokenLength = layoutTokenCompact.size();
+        } else {
+            tokenLength = layoutToken.size();
+        }
+        if (layoutPos == std::string::npos) {
+            break;
+        }
         
         // Check if this line contains "in" (to confirm it's an input)
         size_t lineEnd = source.find('\n', layoutPos);
         if (lineEnd == std::string::npos) lineEnd = source.size();
         std::string line = source.substr(layoutPos, lineEnd - layoutPos);
         
-        // Skip lines with "in vec3 i_" (vertex inputs)
-        if (line.find(" in ") == std::string::npos || line.find(" in vec3 i_") != std::string::npos) {
+        if (line.find(" in ") == std::string::npos ||
+            line.find("VertexData") != std::string::npos) {
             searchPos = lineEnd;
             continue;
         }
         
         // Extract location number
-        size_t locStart = layoutPos + 18;  // after "layout (location ="
+        size_t locStart = layoutPos + tokenLength;  // after "layout (location ="
         while (locStart < source.size() && std::isspace(source[locStart])) ++locStart;
         size_t locEnd = locStart;
         while (locEnd < source.size() && std::isdigit(source[locEnd])) ++locEnd;
@@ -439,10 +478,16 @@ std::string ConvertIndividualInputsToBlock(const std::string& source) {
         return source;
     }
     
-    // Build the VertexData block
-    std::string block = "layout (location = 0) in VertexData\n{\n";
+    std::sort(inputs.begin(), inputs.end(),
+              [](const auto& left, const auto& right) {
+                  return std::get<0>(left) < std::get<0>(right);
+              });
+
+    // Build the VertexData block while preserving explicit locations.
+    std::string block = "in VertexData\n{\n";
     for (const auto& [loc, type, name] : inputs) {
-        block += "    " + type + " " + name + ";\n";
+        block += "    layout (location = " + std::to_string(loc) + ") " +
+            type + " " + name + ";\n";
     }
     block += "} vd;\n\n";
     
@@ -451,6 +496,10 @@ std::string ConvertIndividualInputsToBlock(const std::string& source) {
     result += block;
     result += source.substr(lastInputEnd);
     
+    if (logger) {
+        logger->Trace("MaterialXShaderGenerator", "Generate",
+                      "fragmentInputsConverted=" + std::to_string(inputs.size()));
+    }
     return result;
 }
 
@@ -778,10 +827,10 @@ ShaderPaths MaterialXShaderGenerator::Generate(const MaterialXConfig& config,
     // MaterialX VkShaderGenerator incorrectly emits individual out variables instead of
     // a VertexData struct block, which causes compilation errors when the shader code
     // references vd.normalWorld etc. We convert them here as a workaround.
-    paths.vertexSource = ConvertIndividualOutputsToBlock(paths.vertexSource);
+    paths.vertexSource = ConvertIndividualOutputsToBlock(paths.vertexSource, logger_);
     
     // Fix fragment shader inputs: convert individual layout inputs to VertexData block
-    paths.fragmentSource = ConvertIndividualInputsToBlock(paths.fragmentSource);
+    paths.fragmentSource = ConvertIndividualInputsToBlock(paths.fragmentSource, logger_);
     
     // Ensure any remaining MaterialX tokens are substituted using the generator's map.
     const unsigned int airyIterations = ResolveAiryFresnelIterations(context, logger_);

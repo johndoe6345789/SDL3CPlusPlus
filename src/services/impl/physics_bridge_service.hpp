@@ -2,15 +2,18 @@
 
 #include "../interfaces/i_physics_bridge_service.hpp"
 #include "../interfaces/i_logger.hpp"
+#include <array>
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 class btVector3;
 class btTransform;
 class btCollisionShape;
 class btMotionState;
 class btRigidBody;
+class btTriangleMesh;
 class btDefaultCollisionConfiguration;
 class btCollisionDispatcher;
 class btBroadphaseInterface;
@@ -40,6 +43,11 @@ public:
                             float mass,
                             const btTransform& transform,
                             std::string& error) override;
+    bool AddTriangleMeshRigidBody(const std::string& name,
+                                  const std::vector<std::array<float, 3>>& vertices,
+                                  const std::vector<uint32_t>& indices,
+                                  const btTransform& transform,
+                                  std::string& error) override;
     bool RemoveRigidBody(const std::string& name,
                          std::string& error) override;
     bool SetRigidBodyTransform(const std::string& name,
@@ -54,6 +62,9 @@ public:
     bool SetLinearVelocity(const std::string& name,
                            const btVector3& velocity,
                            std::string& error) override;
+    bool GetLinearVelocity(const std::string& name,
+                           btVector3& outVelocity,
+                           std::string& error) const override;
     int StepSimulation(float deltaTime, int maxSubSteps = 10) override;
     bool GetRigidBodyTransform(const std::string& name,
                                btTransform& outTransform,
@@ -66,6 +77,7 @@ private:
         std::unique_ptr<btCollisionShape> shape;
         std::unique_ptr<btMotionState> motionState;
         std::unique_ptr<btRigidBody> body;
+        std::unique_ptr<btTriangleMesh> triangleMesh;
     };
 
     BodyRecord* FindBodyRecord(const std::string& name, std::string& error);

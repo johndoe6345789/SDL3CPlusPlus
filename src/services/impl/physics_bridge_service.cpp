@@ -105,6 +105,7 @@ bool PhysicsBridgeService::AddBoxRigidBody(const std::string& name,
         std::move(shape),
         std::move(motionState),
         std::move(body),
+        nullptr,
     });
     return true;
 }
@@ -160,6 +161,84 @@ bool PhysicsBridgeService::AddSphereRigidBody(const std::string& name,
         std::move(shape),
         std::move(motionState),
         std::move(body),
+        nullptr,
+    });
+    return true;
+}
+
+bool PhysicsBridgeService::AddTriangleMeshRigidBody(const std::string& name,
+                                                    const std::vector<std::array<float, 3>>& vertices,
+                                                    const std::vector<uint32_t>& indices,
+                                                    const btTransform& transform,
+                                                    std::string& error) {
+    if (logger_) {
+        logger_->Trace("PhysicsBridgeService", "AddTriangleMeshRigidBody",
+                       "name=" + name +
+                       ", vertexCount=" + std::to_string(vertices.size()) +
+                       ", indexCount=" + std::to_string(indices.size()) +
+                       ", origin.x=" + std::to_string(transform.getOrigin().getX()) +
+                       ", origin.y=" + std::to_string(transform.getOrigin().getY()) +
+                       ", origin.z=" + std::to_string(transform.getOrigin().getZ()));
+    }
+    if (name.empty()) {
+        error = "Rigid body name must not be empty";
+        return false;
+    }
+    if (vertices.empty()) {
+        error = "Triangle mesh vertices must not be empty";
+        return false;
+    }
+    if (indices.empty()) {
+        error = "Triangle mesh indices must not be empty";
+        return false;
+    }
+    if (indices.size() % 3 != 0) {
+        error = "Triangle mesh indices must be a multiple of 3";
+        return false;
+    }
+    if (!world_) {
+        error = "Physics world is not initialized";
+        return false;
+    }
+    if (bodies_.count(name)) {
+        error = "Rigid body already exists: " + name;
+        return false;
+    }
+
+    auto triangleMesh = std::make_unique<btTriangleMesh>();
+    for (size_t index = 0; index < indices.size(); index += 3) {
+        uint32_t i0 = indices[index];
+        uint32_t i1 = indices[index + 1];
+        uint32_t i2 = indices[index + 2];
+        if (i0 >= vertices.size() || i1 >= vertices.size() || i2 >= vertices.size()) {
+            error = "Triangle mesh index out of range";
+            return false;
+        }
+        const auto& v0 = vertices[i0];
+        const auto& v1 = vertices[i1];
+        const auto& v2 = vertices[i2];
+        triangleMesh->addTriangle(
+            btVector3(v0[0], v0[1], v0[2]),
+            btVector3(v1[0], v1[1], v1[2]),
+            btVector3(v2[0], v2[1], v2[2]),
+            true);
+    }
+
+    auto shape = std::make_unique<btBvhTriangleMeshShape>(triangleMesh.get(), true, true);
+    btVector3 inertia(0.0f, 0.0f, 0.0f);
+    auto motionState = std::make_unique<btDefaultMotionState>(transform);
+    btRigidBody::btRigidBodyConstructionInfo constructionInfo(
+        0.0f,
+        motionState.get(),
+        shape.get(),
+        inertia);
+    auto body = std::make_unique<btRigidBody>(constructionInfo);
+    world_->addRigidBody(body.get());
+    bodies_.emplace(name, BodyRecord{
+        std::move(shape),
+        std::move(motionState),
+        std::move(body),
+        std::move(triangleMesh),
     });
     return true;
 }
@@ -284,6 +363,23 @@ bool PhysicsBridgeService::SetLinearVelocity(const std::string& name,
     return true;
 }
 
+bool PhysicsBridgeService::GetLinearVelocity(const std::string& name,
+                                             btVector3& outVelocity,
+                                             std::string& error) const {
+    if (logger_) {
+        logger_->Trace("PhysicsBridgeService", "GetLinearVelocity", "name=" + name);
+    }
+    if (!world_) {
+        error = "Physics world is not initialized";
+        return false;
+    }
+    auto* record = FindBodyRecord(name, error);
+    if (!record || !record->body) {
+        return false;
+    }
+    outVelocity = record->body->getLinearVelocity();
+    return true;
+}
 int PhysicsBridgeService::StepSimulation(float deltaTime, int maxSubSteps) {
     if (logger_) {
         logger_->Trace("PhysicsBridgeService", "StepSimulation",

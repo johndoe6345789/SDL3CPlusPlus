@@ -35,9 +35,7 @@ layout(location = 2) in vec2 inTexCoord;
 layout(location = 0) out vec4 fragColor;
 layout(location = 1) out vec2 fragTexCoord;
 
-layout(set = 0, binding = 1) uniform GuiUniforms {
-    mat4 u_modelViewProj;
-};
+uniform mat4 u_modelViewProj;
 
 void main() {
     fragColor = inColor;
@@ -54,7 +52,7 @@ layout(location = 1) in vec2 fragTexCoord;
 
 layout(location = 0) out vec4 outColor;
 
-layout(binding = 0) uniform sampler2D s_tex;
+uniform sampler2D s_tex;
 
 void main() {
     outColor = fragColor * texture(s_tex, fragTexCoord);
@@ -105,11 +103,16 @@ void BgfxGuiService::PrepareFrame(const std::vector<GuiCommand>& commands,
     }
 
     if (!bgfx::isValid(program_) || !bgfx::isValid(whiteTexture_)) {
-        if (logger_) {
+        if (logger_ && !loggedMissingResources_) {
             logger_->Warn("BgfxGuiService::PrepareFrame: GUI resources not initialized");
         }
+        loggedMissingResources_ = true;
         return;
     }
+    if (loggedMissingResources_ && logger_) {
+        logger_->Trace("BgfxGuiService", "PrepareFrame", "GUI resources recovered");
+    }
+    loggedMissingResources_ = false;
 
     ApplyGuiView(width, height);
     scissorStack_.clear();
@@ -830,6 +833,8 @@ bgfx::ShaderHandle BgfxGuiService::CreateShader(const std::string& label,
     shaderc::Compiler compiler;
     shaderc::CompileOptions options;
     options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
+    options.SetAutoBindUniforms(true);
+    options.SetAutoMapLocations(true);
 
     if (logger_) {
         logger_->Trace("BgfxGuiService", "CreateShader",
@@ -848,7 +853,11 @@ bgfx::ShaderHandle BgfxGuiService::CreateShader(const std::string& label,
     std::vector<uint32_t> spirv(result.cbegin(), result.cend());
     const bgfx::Memory* mem = bgfx::copy(spirv.data(),
                                          static_cast<uint32_t>(spirv.size() * sizeof(uint32_t)));
-    return bgfx::createShader(mem);
+    bgfx::ShaderHandle handle = bgfx::createShader(mem);
+    if (!bgfx::isValid(handle) && logger_) {
+        logger_->Error("BgfxGuiService::CreateShader: Failed to create shader handle for " + label);
+    }
+    return handle;
 }
 
 void BgfxGuiService::PruneTextCache() {

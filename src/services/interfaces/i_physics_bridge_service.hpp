@@ -1,7 +1,10 @@
 #pragma once
 
+#include <array>
 #include <cstddef>
+#include <cstdint>
 #include <string>
+#include <vector>
 
 class btVector3;
 class btTransform;
@@ -28,6 +31,11 @@ public:
                                     float mass,
                                     const btTransform& transform,
                                     std::string& error) = 0;
+    virtual bool AddTriangleMeshRigidBody(const std::string& name,
+                                          const std::vector<std::array<float, 3>>& vertices,
+                                          const std::vector<uint32_t>& indices,
+                                          const btTransform& transform,
+                                          std::string& error) = 0;
     virtual bool RemoveRigidBody(const std::string& name,
                                  std::string& error) = 0;
     virtual bool SetRigidBodyTransform(const std::string& name,
@@ -42,6 +50,9 @@ public:
     virtual bool SetLinearVelocity(const std::string& name,
                                    const btVector3& velocity,
                                    std::string& error) = 0;
+    virtual bool GetLinearVelocity(const std::string& name,
+                                   btVector3& outVelocity,
+                                   std::string& error) const = 0;
     virtual int StepSimulation(float deltaTime, int maxSubSteps = 10) = 0;
     virtual bool GetRigidBodyTransform(const std::string& name,
                                        btTransform& outTransform,

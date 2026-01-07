@@ -21,6 +21,13 @@ local function resolve_number(value, fallback)
     return fallback
 end
 
+local function resolve_boolean(value, fallback)
+    if type(value) == "boolean" then
+        return value
+    end
+    return fallback
+end
+
 local function resolve_vec3(value, fallback)
     if type(value) == "table"
         and type(value[1]) == "number"
@@ -81,6 +88,54 @@ local function clamp(value, min_value, max_value)
     return value
 end
 
+local function transform_point(matrix, point)
+    local x = point[1]
+    local y = point[2]
+    local z = point[3]
+    return {
+        matrix[1] * x + matrix[5] * y + matrix[9] * z + matrix[13],
+        matrix[2] * x + matrix[6] * y + matrix[10] * z + matrix[14],
+        matrix[3] * x + matrix[7] * y + matrix[11] * z + matrix[15],
+    }
+end
+
+local function compute_bounds(vertices, matrix)
+    if type(vertices) ~= "table" then
+        return nil
+    end
+    local min_bounds = {math.huge, math.huge, math.huge}
+    local max_bounds = {-math.huge, -math.huge, -math.huge}
+    for i = 1, #vertices do
+        local vertex = vertices[i]
+        local position = vertex and (vertex.position or vertex)
+        if type(position) == "table" then
+            local world_pos = transform_point(matrix, position)
+            if world_pos[1] < min_bounds[1] then
+                min_bounds[1] = world_pos[1]
+            end
+            if world_pos[2] < min_bounds[2] then
+                min_bounds[2] = world_pos[2]
+            end
+            if world_pos[3] < min_bounds[3] then
+                min_bounds[3] = world_pos[3]
+            end
+            if world_pos[1] > max_bounds[1] then
+                max_bounds[1] = world_pos[1]
+            end
+            if world_pos[2] > max_bounds[2] then
+                max_bounds[2] = world_pos[2]
+            end
+            if world_pos[3] > max_bounds[3] then
+                max_bounds[3] = world_pos[3]
+            end
+        end
+    end
+    if min_bounds[1] == math.huge then
+        return nil
+    end
+    return {min = min_bounds, max = max_bounds}
+end
+
 local function normalize(vec)
     local x, y, z = vec[1], vec[2], vec[3]
     local len = math.sqrt(x * x + y * y + z * z)
@@ -117,6 +172,14 @@ local function is_action_down(action_name, fallback_key)
     return false
 end
 
+local action_states = {}
+local function is_action_pressed(action_name, fallback_key)
+    local is_down = is_action_down(action_name, fallback_key)
+    local was_down = action_states[action_name]
+    action_states[action_name] = is_down
+    return is_down and not was_down
+end
+
 local fallback_bindings = {
     move_forward = "W",
     move_back = "S",
@@ -124,6 +187,8 @@ local fallback_bindings = {
     move_right = "D",
     fly_up = "Q",
     fly_down = "Z",
+    jump = "Space",
+    noclip_toggle = "N",
 }
 
 local input_bindings = resolve_table(type(config) == "table" and config.input_bindings)
@@ -164,9 +229,72 @@ log_debug("Loaded Quake 3 map %s from %s (%d vertices, %d indices)",
     #map_mesh.vertices,
     #map_mesh.indices)
 
+local map_bounds = compute_bounds(map_mesh.vertices, map_model_matrix)
+if map_bounds then
+    log_debug("Map bounds min=(%.2f, %.2f, %.2f) max=(%.2f, %.2f, %.2f)",
+        map_bounds.min[1], map_bounds.min[2], map_bounds.min[3],
+        map_bounds.max[1], map_bounds.max[2], map_bounds.max[3])
+end
+
 local camera_config = resolve_table(quake3_config.camera)
+
+local function compute_spawn_position(bounds)
+    if not bounds then
+        return {0.0, 48.0, 0.0}
+    end
+    local min_bounds = bounds.min
+    local max_bounds = bounds.max
+    local center = {
+        (min_bounds[1] + max_bounds[1]) * 0.5,
+        (min_bounds[2] + max_bounds[2]) * 0.5,
+        (min_bounds[3] + max_bounds[3]) * 0.5,
+    }
+    local height = math.max(2.0, (max_bounds[2] - min_bounds[2]) * 0.1)
+    local spawn_height = resolve_number(quake3_config.spawn_height, height)
+    local spawn_offset = resolve_vec3(quake3_config.spawn_offset, {0.0, 0.0, 0.0})
+    return {
+        center[1] + spawn_offset[1],
+        max_bounds[2] + spawn_height + spawn_offset[2],
+        center[3] + spawn_offset[3],
+    }
+end
+
+local function is_position_far_from_bounds(position, bounds)
+    if not bounds then
+        return false
+    end
+    local min_bounds = bounds.min
+    local max_bounds = bounds.max
+    local extent_x = max_bounds[1] - min_bounds[1]
+    local extent_y = max_bounds[2] - min_bounds[2]
+    local extent_z = max_bounds[3] - min_bounds[3]
+    local margin = math.max(extent_x, extent_y, extent_z) * 0.5
+    if position[1] < min_bounds[1] - margin or position[1] > max_bounds[1] + margin then
+        return true
+    end
+    if position[2] < min_bounds[2] - margin or position[2] > max_bounds[2] + margin then
+        return true
+    end
+    if position[3] < min_bounds[3] - margin or position[3] > max_bounds[3] + margin then
+        return true
+    end
+    return false
+end
+
+local camera_position = resolve_vec3(camera_config.position, {0.0, 48.0, 0.0})
+local spawn_position = compute_spawn_position(map_bounds)
+local auto_spawn = quake3_config.auto_spawn
+if auto_spawn == nil then
+    auto_spawn = true
+end
+if auto_spawn and is_position_far_from_bounds(camera_position, map_bounds) then
+    camera_position = {spawn_position[1], spawn_position[2], spawn_position[3]}
+    log_debug("Camera spawn adjusted to map bounds (%.2f, %.2f, %.2f)",
+        camera_position[1], camera_position[2], camera_position[3])
+end
+
 local camera = {
-    position = resolve_vec3(camera_config.position, {0.0, 48.0, 0.0}),
+    position = camera_position,
     yaw = math.rad(resolve_number(camera_config.yaw_degrees, 0.0)),
     pitch = math.rad(resolve_number(camera_config.pitch_degrees, 0.0)),
     fov = resolve_number(camera_config.fov, 0.85),
@@ -181,10 +309,46 @@ local controls = {
     max_pitch = math.rad(85.0),
 }
 
+local physics_config = resolve_table(quake3_config.physics)
+local physics_enabled = resolve_boolean(physics_config.enabled, true)
+local physics_available = type(physics_create_static_mesh) == "function"
+    and type(physics_create_sphere) == "function"
+    and type(physics_get_transform) == "function"
+    and type(physics_set_linear_velocity) == "function"
+    and type(physics_get_linear_velocity) == "function"
+    and type(physics_step_simulation) == "function"
+
+if physics_enabled and not physics_available then
+    log_debug("Physics disabled: required bindings are unavailable")
+end
+
+local physics_state = {
+    enabled = physics_enabled and physics_available,
+    ready = false,
+    noclip = false,
+    map_body_name = physics_config.map_body_name or "quake3_map",
+    player_body_name = physics_config.player_body_name or "quake3_player",
+    player_radius = resolve_number(physics_config.player_radius, resolve_number(quake3_config.player_radius, 0.6)),
+    player_mass = resolve_number(physics_config.player_mass, resolve_number(quake3_config.player_mass, 1.0)),
+    eye_height = resolve_number(physics_config.eye_height, resolve_number(quake3_config.eye_height, 0.6)),
+    gravity = resolve_vec3(physics_config.gravity, {0.0, -9.8, 0.0}),
+    jump_impulse = resolve_number(physics_config.jump_impulse, resolve_number(quake3_config.jump_impulse, 4.5)),
+    jump_velocity_threshold = resolve_number(
+        physics_config.jump_velocity_threshold,
+        resolve_number(quake3_config.jump_velocity_threshold, 0.2)),
+    max_sub_steps = resolve_number(physics_config.max_sub_steps, resolve_number(quake3_config.max_sub_steps, 8)),
+}
+
+physics_state.spawn_position = {
+    camera.position[1],
+    camera.position[2] - physics_state.eye_height,
+    camera.position[3],
+}
+
 local last_frame_time = nil
 local world_up = {0.0, 1.0, 0.0}
 
-local function update_camera(dt)
+local function update_camera_angles()
     local look_delta_x = 0.0
     local look_delta_y = 0.0
     if type(input_get_mouse_delta) == "function" then
@@ -199,11 +363,9 @@ local function update_camera(dt)
 
     camera.yaw = camera.yaw + look_delta_x
     camera.pitch = clamp(camera.pitch + look_delta_y, -controls.max_pitch, controls.max_pitch)
+end
 
-    local forward = forward_from_angles(camera.yaw, camera.pitch)
-    local forward_flat = normalize({forward[1], 0.0, forward[3]})
-    local right = normalize(cross(forward_flat, world_up))
-
+local function resolve_move_input()
     local move_x = 0.0
     local move_z = 0.0
     local move_y = 0.0
@@ -233,6 +395,11 @@ local function update_camera(dt)
         move_z = move_z / length
     end
 
+    return move_x, move_y, move_z
+end
+
+local function update_free_fly(dt, forward_flat, right)
+    local move_x, move_y, move_z = resolve_move_input()
     local planar_speed = controls.move_speed * dt
     camera.position[1] = camera.position[1] + (right[1] * move_x + forward_flat[1] * move_z) * planar_speed
     camera.position[2] = camera.position[2] + (right[2] * move_x + forward_flat[2] * move_z) * planar_speed
@@ -240,6 +407,96 @@ local function update_camera(dt)
 
     if move_y ~= 0.0 then
         camera.position[2] = camera.position[2] + move_y * controls.fly_speed * dt
+    end
+end
+
+local function ensure_physics_setup()
+    if not physics_state.enabled then
+        return false
+    end
+    if physics_state.ready then
+        return true
+    end
+
+    if type(physics_clear) == "function" then
+        physics_clear()
+    end
+    if type(physics_set_gravity) == "function" then
+        local ok, err = physics_set_gravity(physics_state.gravity)
+        if not ok then
+            log_debug("Physics gravity failed: %s", err or "unknown")
+        end
+    end
+
+    local ok, err = physics_create_static_mesh(
+        physics_state.map_body_name,
+        map_mesh.vertices,
+        map_mesh.indices,
+        map_model_matrix)
+    if not ok then
+        log_debug("Physics map creation failed: %s", err or "unknown")
+        return false
+    end
+
+    local rotation = {0.0, 0.0, 0.0, 1.0}
+    ok, err = physics_create_sphere(
+        physics_state.player_body_name,
+        physics_state.player_radius,
+        physics_state.player_mass,
+        physics_state.spawn_position,
+        rotation)
+    if not ok then
+        log_debug("Physics player creation failed: %s", err or "unknown")
+        return false
+    end
+
+    if type(physics_set_linear_velocity) == "function" then
+        physics_set_linear_velocity(physics_state.player_body_name, {0.0, 0.0, 0.0})
+    end
+
+    physics_state.ready = true
+    log_debug("Physics world initialized for Quake 3 map")
+    return true
+end
+
+local function apply_physics_controls(forward_flat, right)
+    local move_x, _, move_z = resolve_move_input()
+    local desired_x = (right[1] * move_x + forward_flat[1] * move_z) * controls.move_speed
+    local desired_z = (right[3] * move_x + forward_flat[3] * move_z) * controls.move_speed
+
+    local current_velocity = {0.0, 0.0, 0.0}
+    local velocity, velocity_err = physics_get_linear_velocity(physics_state.player_body_name)
+    if type(velocity) == "table" then
+        current_velocity = velocity
+    elseif velocity_err then
+        log_debug("Physics velocity query failed: %s", velocity_err)
+    end
+
+    local desired_velocity = {desired_x, current_velocity[2] or 0.0, desired_z}
+    local ok, err = physics_set_linear_velocity(physics_state.player_body_name, desired_velocity)
+    if not ok then
+        log_debug("Physics velocity failed: %s", err or "unknown")
+    end
+
+    if type(physics_apply_impulse) == "function"
+        and is_action_pressed("jump", get_binding("jump"))
+        and math.abs(current_velocity[2] or 0.0) < physics_state.jump_velocity_threshold then
+        local impulse = {0.0, physics_state.jump_impulse, 0.0}
+        local jump_ok, jump_err = physics_apply_impulse(physics_state.player_body_name, impulse)
+        if not jump_ok then
+            log_debug("Physics jump failed: %s", jump_err or "unknown")
+        end
+    end
+end
+
+local function sync_camera_from_physics()
+    local transform, transform_err = physics_get_transform(physics_state.player_body_name)
+    if type(transform) == "table" and type(transform.position) == "table" then
+        camera.position[1] = transform.position[1]
+        camera.position[2] = transform.position[2] + physics_state.eye_height
+        camera.position[3] = transform.position[3]
+    elseif transform_err then
+        log_debug("Physics transform query failed: %s", transform_err)
     end
 end
 
@@ -276,9 +533,47 @@ local function build_view_state(aspect)
         dt = 0.1
     end
 
-    update_camera(dt)
+    update_camera_angles()
 
     local forward = forward_from_angles(camera.yaw, camera.pitch)
+    local forward_flat = normalize({forward[1], 0.0, forward[3]})
+    local right = normalize(cross(forward_flat, world_up))
+
+    local physics_ready = physics_state.enabled and ensure_physics_setup()
+    if physics_ready then
+        if is_action_pressed("noclip_toggle", get_binding("noclip_toggle")) then
+            physics_state.noclip = not physics_state.noclip
+            log_debug("Noclip toggled: %s", tostring(physics_state.noclip))
+            if not physics_state.noclip and type(physics_set_transform) == "function" then
+                local rotation = {0.0, 0.0, 0.0, 1.0}
+                local reset_position = {
+                    camera.position[1],
+                    camera.position[2] - physics_state.eye_height,
+                    camera.position[3],
+                }
+                local ok, err = physics_set_transform(
+                    physics_state.player_body_name,
+                    reset_position,
+                    rotation)
+                if not ok then
+                    log_debug("Physics reset failed: %s", err or "unknown")
+                elseif type(physics_set_linear_velocity) == "function" then
+                    physics_set_linear_velocity(physics_state.player_body_name, {0.0, 0.0, 0.0})
+                end
+            end
+        end
+        if physics_state.noclip then
+            update_free_fly(dt, forward_flat, right)
+        else
+            apply_physics_controls(forward_flat, right)
+            if dt > 0.0 then
+                physics_step_simulation(dt, physics_state.max_sub_steps)
+            end
+            sync_camera_from_physics()
+        end
+    else
+        update_free_fly(dt, forward_flat, right)
+    end
     local center = {
         camera.position[1] + forward[1],
         camera.position[2] + forward[2],

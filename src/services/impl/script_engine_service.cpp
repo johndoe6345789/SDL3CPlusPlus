@@ -21,6 +21,7 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace {
 namespace mx = MaterialX;
@@ -33,6 +34,18 @@ struct MaterialXSurfaceParameters {
     bool hasRoughness = false;
     bool hasMetallic = false;
 };
+
+std::array<float, 3> TransformPoint(const std::array<float, 16>& matrix,
+                                    const std::array<float, 3>& point) {
+    const float x = point[0];
+    const float y = point[1];
+    const float z = point[2];
+    return {
+        matrix[0] * x + matrix[4] * y + matrix[8] * z + matrix[12],
+        matrix[1] * x + matrix[5] * y + matrix[9] * z + matrix[13],
+        matrix[2] * x + matrix[6] * y + matrix[10] * z + matrix[14],
+    };
+}
 
 std::filesystem::path ResolveMaterialXPath(const std::filesystem::path& path,
                                            const std::filesystem::path& scriptDirectory) {
@@ -474,11 +487,13 @@ void ScriptEngineService::RegisterBindings(lua_State* L) {
     bind("load_mesh_from_pk3", &ScriptEngineService::LoadMeshFromArchive);
     bind("physics_create_box", &ScriptEngineService::PhysicsCreateBox);
     bind("physics_create_sphere", &ScriptEngineService::PhysicsCreateSphere);
+    bind("physics_create_static_mesh", &ScriptEngineService::PhysicsCreateStaticMesh);
     bind("physics_remove_body", &ScriptEngineService::PhysicsRemoveBody);
     bind("physics_set_transform", &ScriptEngineService::PhysicsSetTransform);
     bind("physics_apply_force", &ScriptEngineService::PhysicsApplyForce);
     bind("physics_apply_impulse", &ScriptEngineService::PhysicsApplyImpulse);
     bind("physics_set_linear_velocity", &ScriptEngineService::PhysicsSetLinearVelocity);
+    bind("physics_get_linear_velocity", &ScriptEngineService::PhysicsGetLinearVelocity);
     bind("physics_set_gravity", &ScriptEngineService::PhysicsSetGravity);
     bind("physics_step_simulation", &ScriptEngineService::PhysicsStepSimulation);
     bind("physics_get_transform", &ScriptEngineService::PhysicsGetTransform);
@@ -660,6 +675,94 @@ int ScriptEngineService::PhysicsCreateSphere(lua_State* L) {
     return 1;
 }
 
+int ScriptEngineService::PhysicsCreateStaticMesh(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    auto logger = context ? context->logger : nullptr;
+    if (!context || !context->physicsBridgeService) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Physics service not available");
+        return 2;
+    }
+
+    const char* name = luaL_checkstring(L, 1);
+    if (logger) {
+        logger->Trace("ScriptEngineService", "PhysicsCreateStaticMesh",
+                      "name=" + std::string(name));
+    }
+
+    if (!lua_istable(L, 2) || !lua_istable(L, 3)) {
+        luaL_error(L, "physics_create_static_mesh expects vertex and index tables");
+    }
+
+    std::array<float, 16> transformMatrix = lua::IdentityMatrix();
+    if (lua_gettop(L) >= 4) {
+        if (!lua_istable(L, 4)) {
+            luaL_error(L, "physics_create_static_mesh expects a transform matrix table");
+        }
+        transformMatrix = lua::ReadMatrix(L, 4);
+    }
+
+    const int verticesIndex = lua_absindex(L, 2);
+    const int indicesIndex = lua_absindex(L, 3);
+    const size_t vertexCount = lua_rawlen(L, verticesIndex);
+    const size_t indexCount = lua_rawlen(L, indicesIndex);
+
+    std::vector<std::array<float, 3>> vertices;
+    vertices.reserve(vertexCount);
+
+    for (size_t vertexIndex = 1; vertexIndex <= vertexCount; ++vertexIndex) {
+        lua_rawgeti(L, verticesIndex, static_cast<int>(vertexIndex));
+        if (!lua_istable(L, -1)) {
+            luaL_error(L, "physics_create_static_mesh vertices must be tables");
+        }
+
+        std::array<float, 3> position;
+        lua_getfield(L, -1, "position");
+        if (lua_istable(L, -1)) {
+            position = lua::ReadVector3(L, -1);
+            lua_pop(L, 1);
+        } else {
+            lua_pop(L, 1);
+            position = lua::ReadVector3(L, -1);
+        }
+        lua_pop(L, 1);
+
+        vertices.push_back(TransformPoint(transformMatrix, position));
+    }
+
+    std::vector<uint32_t> indices;
+    indices.reserve(indexCount);
+    for (size_t index = 1; index <= indexCount; ++index) {
+        lua_rawgeti(L, indicesIndex, static_cast<int>(index));
+        if (!lua_isinteger(L, -1) && !lua_isnumber(L, -1)) {
+            luaL_error(L, "physics_create_static_mesh indices must be numbers");
+        }
+        lua_Integer rawIndex = lua_tointeger(L, -1);
+        lua_pop(L, 1);
+        if (rawIndex <= 0) {
+            luaL_error(L, "physics_create_static_mesh indices must be 1-based positive integers");
+        }
+        indices.push_back(static_cast<uint32_t>(rawIndex - 1));
+    }
+
+    btTransform transform;
+    transform.setIdentity();
+    std::string error;
+    if (!context->physicsBridgeService->AddTriangleMeshRigidBody(
+            name,
+            vertices,
+            indices,
+            transform,
+            error)) {
+        lua_pushnil(L);
+        lua_pushstring(L, error.c_str());
+        return 2;
+    }
+
+    lua_pushboolean(L, 1);
+    return 1;
+}
+
 int ScriptEngineService::PhysicsRemoveBody(lua_State* L) {
     auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
     auto logger = context ? context->logger : nullptr;
@@ -826,6 +929,39 @@ int ScriptEngineService::PhysicsSetLinearVelocity(lua_State* L) {
     }
 
     lua_pushboolean(L, 1);
+    return 1;
+}
+
+int ScriptEngineService::PhysicsGetLinearVelocity(lua_State* L) {
+    auto* context = static_cast<LuaBindingContext*>(lua_touserdata(L, lua_upvalueindex(1)));
+    auto logger = context ? context->logger : nullptr;
+    if (!context || !context->physicsBridgeService) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Physics service not available");
+        return 2;
+    }
+
+    const char* name = luaL_checkstring(L, 1);
+    if (logger) {
+        logger->Trace("ScriptEngineService", "PhysicsGetLinearVelocity",
+                      "name=" + std::string(name));
+    }
+
+    btVector3 velocity;
+    std::string error;
+    if (!context->physicsBridgeService->GetLinearVelocity(name, velocity, error)) {
+        lua_pushnil(L);
+        lua_pushstring(L, error.c_str());
+        return 2;
+    }
+
+    lua_newtable(L);
+    lua_pushnumber(L, velocity.getX());
+    lua_rawseti(L, -2, 1);
+    lua_pushnumber(L, velocity.getY());
+    lua_rawseti(L, -2, 2);
+    lua_pushnumber(L, velocity.getZ());
+    lua_rawseti(L, -2, 3);
     return 1;
 }
 
