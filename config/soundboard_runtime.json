@@ -13,6 +13,30 @@
   "bgfx": {
     "renderer": "vulkan"
   },
+  "materialx": {
+    "enabled": true,
+    "parameters_enabled": true,
+    "document": "MaterialX/resources/Materials/Examples/StandardSurface/standard_surface_default.mtlx",
+    "shader_key": "default",
+    "material": "Default",
+    "library_path": "MaterialX/libraries",
+    "library_folders": [
+      "stdlib",
+      "pbrlib",
+      "lights",
+      "bxdf",
+      "cmlib",
+      "nprlib",
+      "targets"
+    ],
+    "use_constant_color": false,
+    "constant_color": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "materialx_materials": [],
   "gui_font": {
     "use_freetype": true,
     "font_path": "scripts/assets/fonts/Roboto-Regular.ttf",

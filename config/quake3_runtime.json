@@ -36,6 +36,13 @@
       1.0
     ]
   },
+  "materialx_materials": [
+    {
+      "shader_key": "alternative",
+      "document": "MaterialX/resources/Materials/Examples/StandardSurface/standard_surface_brass_tiled.mtlx",
+      "material": "Tiled_Brass"
+    }
+  ],
   "mouse_grab": {
     "enabled": true,
     "grab_on_click": true,

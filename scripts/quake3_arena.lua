@@ -585,9 +585,6 @@ local function check_respawn(position)
     end
 end
 
-local shader_variants_module = require("shader_variants")
-local shader_variants = shader_variants_module.build_cube_variants(config, log_debug)
-
 function get_scene_objects()
     return {
         {
@@ -602,7 +599,8 @@ function get_scene_objects()
 end
 
 function get_shader_paths()
-    return shader_variants
+    -- MaterialX shaders are configured via JSON materialx_materials
+    return {}
 end
 
 local function build_view_state(aspect)

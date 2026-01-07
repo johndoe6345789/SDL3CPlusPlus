@@ -66,8 +66,6 @@ local function updateFpsModeToggle()
     end
 end
 
-local shader_variants = require("shader_variants").build_gui_variants()
-
 local function drawTestButtons()
     -- Background panel
     ctx:pushRect({x = 50, y = 50, width = 400, height = 400}, {
@@ -172,13 +170,8 @@ function get_scene_objects()
 end
 
 function get_shader_paths()
-    local default_variant = shader_variants.default or {}
-    local vertex_label = default_variant.vertex or "inline"
-    local fragment_label = default_variant.fragment or "inline"
-    log_trace("GUI demo shader variants: default vertex=%s fragment=%s",
-        vertex_label,
-        fragment_label)
-    return shader_variants
+    -- MaterialX shaders are configured via JSON materialx_materials
+    return {}
 end
 
 function get_view_projection(aspect)
