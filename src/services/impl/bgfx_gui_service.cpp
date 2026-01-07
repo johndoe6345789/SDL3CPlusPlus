@@ -1,11 +1,11 @@
 #include "bgfx_gui_service.hpp"
+#include "bgfx_shader_compiler.hpp"
 
 #include "../interfaces/config_types.hpp"
 #include "../interfaces/gui_types.hpp"
 
 #include <bgfx/bgfx.h>
 #include <bx/math.h>
-#include <shaderc/shaderc.hpp>
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -25,76 +25,6 @@ namespace {
 
 constexpr uint64_t kGuiSamplerFlags = BGFX_SAMPLER_U_CLAMP |
                                       BGFX_SAMPLER_V_CLAMP;
-constexpr uint8_t kUniformFragmentBit = 0x10;
-constexpr uint8_t kUniformMask = 0
-    | 0x10
-    | 0x20
-    | 0x40
-    | 0x80;
-
-struct GuiShaderUniform {
-    std::string name;
-    bgfx::UniformType::Enum type = bgfx::UniformType::Count;
-    uint8_t num = 0;
-    uint16_t regIndex = 0;
-    uint16_t regCount = 0;
-    uint8_t texComponent = 0;
-    uint8_t texDimension = 0;
-    uint16_t texFormat = 0;
-};
-
-uint16_t WriteUniformArray(uint8_t* data,
-                           uint32_t& offset,
-                           const std::vector<GuiShaderUniform>& uniforms,
-                           bool isFragmentShader) {
-    uint16_t size = 0;
-    const uint16_t count = static_cast<uint16_t>(uniforms.size());
-    std::memcpy(data + offset, &count, sizeof(count));
-    offset += sizeof(count);
-
-    const uint8_t fragmentBit = isFragmentShader ? kUniformFragmentBit : 0;
-    for (const auto& un : uniforms) {
-        if ((static_cast<uint8_t>(un.type) & ~kUniformMask) > bgfx::UniformType::End) {
-            size = std::max<uint16_t>(size, static_cast<uint16_t>(un.regIndex + un.regCount * 16));
-        }
-
-        const uint8_t nameSize = static_cast<uint8_t>(un.name.size());
-        std::memcpy(data + offset, &nameSize, sizeof(nameSize));
-        offset += sizeof(nameSize);
-        std::memcpy(data + offset, un.name.data(), nameSize);
-        offset += nameSize;
-
-        const uint8_t typeByte = static_cast<uint8_t>(un.type) | fragmentBit;
-        std::memcpy(data + offset, &typeByte, sizeof(typeByte));
-        offset += sizeof(typeByte);
-        std::memcpy(data + offset, &un.num, sizeof(un.num));
-        offset += sizeof(un.num);
-        std::memcpy(data + offset, &un.regIndex, sizeof(un.regIndex));
-        offset += sizeof(un.regIndex);
-        std::memcpy(data + offset, &un.regCount, sizeof(un.regCount));
-        offset += sizeof(un.regCount);
-        std::memcpy(data + offset, &un.texComponent, sizeof(un.texComponent));
-        offset += sizeof(un.texComponent);
-        std::memcpy(data + offset, &un.texDimension, sizeof(un.texDimension));
-        offset += sizeof(un.texDimension);
-        std::memcpy(data + offset, &un.texFormat, sizeof(un.texFormat));
-        offset += sizeof(un.texFormat);
-    }
-    return size;
-}
-
-uint16_t GuiAttribToId(bgfx::Attrib::Enum attr) {
-    switch (attr) {
-        case bgfx::Attrib::Position:
-            return 0x0001;
-        case bgfx::Attrib::Color0:
-            return 0x0005;
-        case bgfx::Attrib::TexCoord0:
-            return 0x0010;
-        default:
-            return UINT16_MAX;
-    }
-}
 
 const char* RendererTypeName(bgfx::RendererType::Enum type) {
     switch (type) {
@@ -122,36 +52,49 @@ const char* RendererTypeName(bgfx::RendererType::Enum type) {
 const char* kGuiVertexSource = R"(
 #version 450
 
-layout(location = 0) in vec3 inPos;
-layout(location = 1) in vec4 inColor;
-layout(location = 2) in vec2 inTexCoord;
+#pragma shader_stage(vertex)
 
-layout(location = 0) out vec4 fragColor;
-layout(location = 1) out vec2 fragTexCoord;
-
-layout(std140) uniform GuiUniforms {
+// Uniform block: PrivateUniforms  
+layout (std140, binding=0) uniform PrivateUniforms_vertex
+{
     mat4 u_modelViewProj;
 };
 
-void main() {
-    fragColor = inColor;
-    fragTexCoord = inTexCoord;
-    gl_Position = u_modelViewProj * vec4(inPos, 1.0);
+// Inputs block: VertexInputs
+layout (location = 0) in vec3 a_position;
+layout (location = 1) in vec4 a_color0;
+layout (location = 2) in vec2 a_texcoord0;
+
+// Outputs block: VertexOutputs
+layout (location = 0) out vec4 v_color0;
+layout (location = 1) out vec2 v_texcoord0;
+
+void main()
+{
+    v_color0 = a_color0;
+    v_texcoord0 = a_texcoord0;
+    gl_Position = u_modelViewProj * vec4(a_position, 1.0);
 }
 )";
 
 const char* kGuiFragmentSource = R"(
 #version 450
 
-layout(location = 0) in vec4 fragColor;
-layout(location = 1) in vec2 fragTexCoord;
+#pragma shader_stage(fragment)
 
-layout(location = 0) out vec4 outColor;
+// Inputs block: FragmentInputs
+layout (location = 0) in vec4 v_color0;
+layout (location = 1) in vec2 v_texcoord0;
 
+// Outputs block: FragmentOutputs
+layout (location = 0) out vec4 out_color;
+
+// Texture sampler
 uniform sampler2D s_tex;
 
-void main() {
-    outColor = fragColor * texture(s_tex, fragTexCoord);
+void main()
+{
+    out_color = v_color0 * texture(s_tex, v_texcoord0);
 }
 )";
 
@@ -1057,131 +1000,37 @@ bgfx::ProgramHandle BgfxGuiService::CreateProgram(const char* vertexSource,
 bgfx::ShaderHandle BgfxGuiService::CreateShader(const std::string& label,
                                                 const std::string& source,
                                                 bool isVertex) const {
-    const bgfx::RendererType::Enum rendererType = bgfx::getRendererType();
+    BgfxShaderCompiler compiler(logger_);
     
-    if (logger_) {
-        logger_->Trace("BgfxGuiService", "CreateShader",
-                       "label=" + label +
-                           ", renderer=" + std::string(RendererTypeName(rendererType)) +
-                           ", sourceLength=" + std::to_string(source.size()));
-    }
-
-    const bool isOpenGL = (rendererType == bgfx::RendererType::OpenGL || 
-                           rendererType == bgfx::RendererType::OpenGLES);
-    
-    if (isOpenGL) {
-        // For OpenGL: Just copy GLSL source directly
-        const uint32_t sourceSize = static_cast<uint32_t>(source.size());
-        const bgfx::Memory* mem = bgfx::copy(source.c_str(), sourceSize + 1);
-        
-        bgfx::ShaderHandle handle = bgfx::createShader(mem);
-        if (!bgfx::isValid(handle) && logger_) {
-            logger_->Error("BgfxGuiService: Failed to create shader handle for " + label);
-        }
-        return handle;
-    }
-    
-    // For Vulkan/Metal/DX: Compile to SPIRV and wrap in bgfx binary format
-    shaderc::Compiler compiler;
-    shaderc::CompileOptions options;
-    options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_1);
-    options.SetAutoBindUniforms(true);
-    // Do NOT use SetAutoMapLocations - it overrides explicit layout(location=N) declarations
-    // and assigns locations alphabetically by variable name, breaking the vertex layout.
-    // GUI shaders already specify explicit locations matching the VertexLayout.
-    // options.SetAutoMapLocations(true);
-
-    shaderc_shader_kind kind = isVertex ? shaderc_vertex_shader : shaderc_fragment_shader;
-    auto result = compiler.CompileGlslToSpv(source, kind, label.c_str(), options);
-    if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
-        if (logger_) {
-            logger_->Error("BgfxGuiService::CreateShader: " + label + "\n" + result.GetErrorMessage());
-        }
-        return BGFX_INVALID_HANDLE;
-    }
-
-    std::vector<uint32_t> spirv(result.cbegin(), result.cend());
-    
-    std::vector<GuiShaderUniform> uniforms;
+    std::vector<BgfxShaderUniform> uniforms;
     std::vector<bgfx::Attrib::Enum> attributes;
+    
     if (isVertex) {
-        uniforms.push_back(GuiShaderUniform{
+        uniforms.push_back(BgfxShaderUniform{
             "u_modelViewProj",
             bgfx::UniformType::Mat4,
-            1,
-            0,
-            4,
-            0,
-            0,
-            0
+            1,    // num
+            0,    // regIndex
+            4,    // regCount (mat4 = 4 vec4s)
+            0,    // texComponent
+            0,    // texDimension
+            0     // texFormat
         });
         attributes = {bgfx::Attrib::Position, bgfx::Attrib::Color0, bgfx::Attrib::TexCoord0};
     } else {
-        uniforms.push_back(GuiShaderUniform{
+        uniforms.push_back(BgfxShaderUniform{
             "s_tex",
             bgfx::UniformType::Sampler,
-            1,
-            0,
-            1,
-            0,
-            0,
-            0
+            1,    // num
+            0,    // regIndex
+            1,    // regCount
+            0,    // texComponent
+            0,    // texDimension
+            0     // texFormat
         });
     }
-
-    if (logger_) {
-        logger_->Trace("BgfxGuiService", "CreateShader",
-                       "uniforms=" + std::to_string(uniforms.size()) +
-                           ", attributes=" + std::to_string(attributes.size()));
-    }
-
-    // Wrap SPIRV with bgfx binary format.
-    constexpr uint8_t kBgfxShaderVersion = 11;
-    constexpr uint32_t kMagicVSH = ('V') | ('S' << 8) | ('H' << 16) | (kBgfxShaderVersion << 24);
-    constexpr uint32_t kMagicFSH = ('F') | ('S' << 8) | ('H' << 16) | (kBgfxShaderVersion << 24);
-    const uint32_t magic = isVertex ? kMagicVSH : kMagicFSH;
-    const uint32_t varyingHash = 0x47554901;  // "GUI" + 0x01
-    const uint32_t inputHash = varyingHash;
-    const uint32_t outputHash = varyingHash;
-    const uint32_t spirvSize = static_cast<uint32_t>(spirv.size() * sizeof(uint32_t));
-    const uint32_t uniformDataSize = 2 +
-        static_cast<uint32_t>(uniforms.size()) * (1 + 0 + 1 + 1 + 2 + 2 + 1 + 1 + 2) +
-        static_cast<uint32_t>(std::accumulate(
-            uniforms.begin(),
-            uniforms.end(),
-            size_t{0},
-            [](size_t total, const auto& un) { return total + un.name.size(); }));
-    const uint32_t attribDataSize = 1 + static_cast<uint32_t>(attributes.size()) * 2;
-    const uint32_t totalSize = 4 + 4 + 4 + uniformDataSize + 4 + spirvSize + 1 + attribDataSize + 2;
     
-    const bgfx::Memory* mem = bgfx::alloc(totalSize);
-    uint8_t* data = mem->data;
-    uint32_t offset = 0;
-    
-    std::memcpy(data + offset, &magic, 4); offset += 4;
-    std::memcpy(data + offset, &inputHash, 4); offset += 4;
-    std::memcpy(data + offset, &outputHash, 4); offset += 4;
-    const uint16_t uniformSize = WriteUniformArray(data, offset, uniforms, !isVertex);
-    std::memcpy(data + offset, &spirvSize, 4); offset += 4;
-    std::memcpy(data + offset, spirv.data(), spirvSize); offset += spirvSize;
-    data[offset] = 0;
-    offset += 1;
-
-    const uint8_t numAttr = static_cast<uint8_t>(attributes.size());
-    std::memcpy(data + offset, &numAttr, sizeof(numAttr));
-    offset += sizeof(numAttr);
-    for (auto attr : attributes) {
-        const uint16_t attrId = GuiAttribToId(attr);
-        std::memcpy(data + offset, &attrId, sizeof(attrId));
-        offset += sizeof(attrId);
-    }
-    std::memcpy(data + offset, &uniformSize, sizeof(uniformSize));
-    
-    bgfx::ShaderHandle handle = bgfx::createShader(mem);
-    if (!bgfx::isValid(handle) && logger_) {
-        logger_->Error("BgfxGuiService: Failed to create shader handle for " + label);
-    }
-    return handle;
+    return compiler.CompileShader(label, source, isVertex, uniforms, attributes);
 }
 
 void BgfxGuiService::PruneTextCache() {

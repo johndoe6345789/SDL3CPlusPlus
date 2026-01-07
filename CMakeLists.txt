@@ -219,6 +219,7 @@ if(BUILD_SDL3_APP)
             src/services/impl/materialx_shader_generator.cpp
             src/services/impl/gui_script_service.cpp
             $<$<NOT:$<BOOL:${ENABLE_VITA}>>:src/services/impl/bgfx_gui_service.cpp>
+            $<$<NOT:$<BOOL:${ENABLE_VITA}>>:src/services/impl/bgfx_shader_compiler.cpp>
             src/services/impl/audio_command_service.cpp
             src/services/impl/physics_bridge_service.cpp
             src/services/impl/mesh_service.cpp
@@ -231,6 +232,7 @@ if(BUILD_SDL3_APP)
             src/services/impl/render_coordinator_service.cpp
             src/services/impl/null_gui_service.cpp
             src/services/impl/bgfx_gui_service.cpp
+            src/services/impl/bgfx_shader_compiler.cpp
             src/services/impl/bullet_physics_service.cpp
             src/services/impl/scene_service.cpp
             src/services/impl/graphics_service.cpp
@@ -349,6 +351,7 @@ add_test(NAME script_engine_tests COMMAND script_engine_tests)
 add_executable(bgfx_gui_service_tests
     tests/test_bgfx_gui_service.cpp
     src/services/impl/bgfx_gui_service.cpp
+    src/services/impl/bgfx_shader_compiler.cpp
     src/services/impl/materialx_shader_generator.cpp
 )
 target_include_directories(bgfx_gui_service_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")

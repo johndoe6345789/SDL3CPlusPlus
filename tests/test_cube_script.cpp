@@ -429,6 +429,32 @@ bool RunGpuRenderTest(int& failures,
             Assert(hasSkybox, "GPU render test: Missing skybox geometry", failures);
             Assert(hasCube, "GPU render test: Missing physics cube geometry", failures);
             
+            // Validate all scene objects have valid shader keys (critical for rendering)
+            for (size_t i = 0; i < objects.size(); ++i) {
+                const auto& obj = objects[i];
+                Assert(!obj.shaderKeys.empty(), 
+                       "GPU render test: Object " + std::to_string(i) + " (" + obj.objectType + ") has no shader keys", 
+                       failures);
+                
+                // Validate room geometry (floor, ceiling, walls) has expected shader keys
+                if (obj.objectType == "floor") {
+                    Assert(!obj.shaderKeys.empty() && obj.shaderKeys.front() == "floor",
+                           "GPU render test: Floor should have shader key 'floor'", failures);
+                    Assert(obj.vertices.size() >= 100,
+                           "GPU render test: Floor should have tessellated geometry (expected >= 100 vertices, got " + 
+                           std::to_string(obj.vertices.size()) + ")", failures);
+                } else if (obj.objectType == "ceiling") {
+                    Assert(!obj.shaderKeys.empty() && obj.shaderKeys.front() == "ceiling",
+                           "GPU render test: Ceiling should have shader key 'ceiling'", failures);
+                    Assert(obj.vertices.size() >= 100,
+                           "GPU render test: Ceiling should have tessellated geometry (expected >= 100 vertices, got " + 
+                           std::to_string(obj.vertices.size()) + ")", failures);
+                } else if (obj.objectType == "wall") {
+                    Assert(!obj.shaderKeys.empty() && obj.shaderKeys.front() == "wall",
+                           "GPU render test: Wall should have shader key 'wall'", failures);
+                }
+            }
+            
             // Create actual render buffers and render multiple frames to test animation
             auto ecsService = std::make_shared<sdl3cpp::services::impl::EcsService>(logger);
             auto sceneService = std::make_shared<sdl3cpp::services::impl::SceneService>(sceneScriptService, ecsService, logger);
