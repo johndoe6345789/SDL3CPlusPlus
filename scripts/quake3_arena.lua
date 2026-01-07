@@ -435,6 +435,7 @@ local function ensure_physics_setup()
         map_model_matrix)
     if not ok then
         log_debug("Physics map creation failed: %s", err or "unknown")
+        physics_state.enabled = false
         return false
     end
 
@@ -447,6 +448,7 @@ local function ensure_physics_setup()
         rotation)
     if not ok then
         log_debug("Physics player creation failed: %s", err or "unknown")
+        physics_state.enabled = false
         return false
     end
 
