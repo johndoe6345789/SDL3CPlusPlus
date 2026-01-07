@@ -680,10 +680,19 @@ namespace bgfx { namespace spirv
 						un.regIndex = uint16_t(offset);
 						un.regCount = un.num;
 
-						switch (program->getUniformType(ii) )
+						const uint32_t uniformType = program->getUniformType(ii);
+
+						switch (uniformType)
 						{
 						case 0x1404: // GL_INT:
-							un.type = UniformType::Sampler;
+						case 0x8B53: // GL_INT_VEC2:
+						case 0x8B54: // GL_INT_VEC3:
+						case 0x8B55: // GL_INT_VEC4:
+							un.type = UniformType::Vec4;
+							BX_TRACE("shaderc_spirv: int uniform mapped to Vec4 (%s, glType=0x%X, offset=%u)",
+								un.name.c_str(),
+								uniformType,
+								offset);
 							break;
 
 						case 0x8B52: // GL_FLOAT_VEC4:
