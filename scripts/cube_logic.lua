@@ -871,10 +871,11 @@ local function create_spinning_cube()
     end
 
     return {
-        vertices = cube_vertices,
-        indices = (#cube_indices_double_sided > 0) and cube_indices_double_sided or cube_indices,
+        vertices = apply_color_to_vertices({0.75, 0.45, 0.25}),
+        indices = cube_indices,
         compute_model_matrix = compute_model_matrix,
         shader_keys = {shader_key},
+        object_type = \"spinning_cube\",
     }
 end
 
