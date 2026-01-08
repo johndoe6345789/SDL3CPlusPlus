@@ -280,3 +280,149 @@ The crash is most likely caused by:
 - Texture loading: [bgfx_graphics_backend.cpp:698-744](src/services/impl/bgfx_graphics_backend.cpp#L698-L744)
 - Pipeline creation: [bgfx_graphics_backend.cpp:804-875](src/services/impl/bgfx_graphics_backend.cpp#L804-L875)
 - Shader validation: [shader_pipeline_validator.cpp](src/services/impl/shader_pipeline_validator.cpp)
+
+▶ Running: build-ninja/sdl3_app -j config/seed_runtime.json
+
+2026-01-08 15:37:11.675 [INFO] JsonConfigService initialized from config file: /home/rewrich/Documents/GitHub/SDL3CPlusPlus/config/seed_runtime.json
+
+2026-01-08 15:37:11.675 [INFO] ServiceBasedApp::ServiceBasedApp: Setting up SDL
+2026-01-08 15:37:11.675 [INFO] ServiceBasedApp::ServiceBasedApp: Registering services
+2026-01-08 15:37:11.675 [INFO] JsonConfigService initialized with explicit configuration
+
+2026-01-08 15:37:11.773 [INFO] CrashRecoveryService::SetupSignalHandlers: Signal handlers installed
+2026-01-08 15:37:11.773 [INFO] CrashRecoveryService::Initialize: Crash recovery service initialized
+2026-01-08 15:37:11.773 [INFO] ServiceBasedApp::ServiceBasedApp: Resolving lifecycle services
+2026-01-08 15:37:11.773 [INFO] ServiceBasedApp::ServiceBasedApp: constructor completed
+
+2026-01-08 15:37:11.773 [INFO] Application starting
+2026-01-08 15:37:11.774 [INFO] LifecycleService::InitializeAll: Initializing all services
+
+2026-01-08 15:37:11.785 [INFO] SDL audio service initialized successfully
+
+2026-01-08 15:37:11.789 [INFO] Playing background audio: /home/rewrich/Documents/GitHub/SDL3CPlusPlus/scripts/piano.ogg (loop: 1)
+
+2026-01-08 15:37:11.791 [INFO] Script engine service initialized
+
+2026-01-08 15:37:11.794 [INFO] Physics service initialized
+
+2026-01-08 15:37:11.794 [INFO] LifecycleService::InitializeAll: All services initialized
+
+2026-01-08 15:37:11.811 [INFO] PlatformService::FeatureTable
+feature	value
+platform.pointerBits	64
+platform.name	Linux
+platform.sdl.version	3002020
+platform.sdl.version.major	3
+platform.sdl.version.minor	2
+platform.sdl.version.micro	20
+platform.sdl.revision	release-3.2.20-0-g96292a5b4
+platform.cpu.count	12
+platform.cpu.cacheLineSize	64
+platform.systemRamMB	64198
+platform.cpu.hasSSE	true
+platform.cpu.hasSSE2	true
+platform.cpu.hasSSE3	true
+platform.cpu.hasSSE41	true
+platform.cpu.hasSSE42	true
+platform.cpu.hasAVX	true
+platform.cpu.hasAVX2	true
+platform.cpu.hasAVX512F	false
+platform.cpu.hasNEON	false
+platform.cpu.hasARMSIMD	false
+platform.cpu.hasAltiVec	false
+platform.cpu.hasLSX	false
+platform.cpu.hasLASX	false
+env.xdgSessionType	x11
+env.waylandDisplay	unset
+env.x11Display	:0
+env.desktopSession	mate
+env.xdgCurrentDesktop	MATE
+env.xdgRuntimeDir	/run/user/1000
+env.sdlVideoDriver	unset
+env.sdlRenderDriver	unset
+sdl.hint.videoDriver	unset
+sdl.hint.renderDriver	unset
+sdl.hint.waylandPreferLibdecor	unset
+sdl.videoDriverCount	5
+sdl.videoDrivers	wayland, x11, offscreen, dummy, evdev
+sdl.videoInitialized	true
+sdl.videoBackend.supportsWayland	true
+sdl.videoBackend.supportsX11	true
+sdl.videoBackend.supportsKmsdrm	false
+sdl.videoBackend.supportsWindows	false
+sdl.videoBackend.supportsCocoa	false
+sdl.videoBackend.isWayland	false
+sdl.videoBackend.isX11	true
+sdl.videoBackend.isKmsdrm	false
+sdl.videoBackend.isWindows	false
+sdl.videoBackend.isCocoa	false
+sdl.currentVideoDriver	x11
+sdl.systemTheme	unknown
+sdl.renderDriverCount	5
+sdl.renderDrivers	opengl, opengles2, vulkan, gpu, software
+sdl.render.supportsOpenGL	true
+sdl.render.supportsOpenGLES2	true
+sdl.render.supportsDirect3D11	false
+sdl.render.supportsDirect3D12	false
+sdl.render.supportsMetal	false
+sdl.render.supportsSoftware	true
+sdl.displayCount	1
+sdl.primaryDisplayId	1
+sdl.displaySummary	0:Odyssey G40B 27"@1920x1080+0+0
+sdl.displayError	none
+platform.uname.sysname	Linux
+platform.uname.release	6.17.12-300.fc43.x86_64
+platform.uname.version	#1 SMP PREEMPT_DYNAMIC Sat Dec 13 05:06:24 UTC 2025
+platform.uname.machine	x86_64
+
+
+2026-01-08 15:37:11.871 [INFO] SdlWindowService: Mouse grab config: enabled=true, grabOnClick=true, grabMouseButton=1, releaseKey=27
+
+2026-01-08 15:37:11.954 [INFO] ApplicationLoopService::Run: Starting main loop
+
+2026-01-08 15:37:12.022 [WARN] [MaterialX Pipeline: standard_surface_wood_tiled.mtlx] ⚠ Vertex layout provides unused attribute at location 4 (Color0)
+
+2026-01-08 15:37:12.074 [WARN] [MaterialX Pipeline: standard_surface_brick_procedural.mtlx] ⚠ Vertex layout provides unused attribute at location 4 (Color0)
+
+2026-01-08 15:37:12.125 [WARN] [MaterialX Pipeline: standard_surface_marble_solid.mtlx] ⚠ Vertex layout provides unused attribute at location 3 (TexCoord0)
+
+2026-01-08 15:37:12.126 [WARN] [MaterialX Pipeline: standard_surface_marble_solid.mtlx] ⚠ Vertex layout provides unused attribute at location 4 (Color0)
+
+2026-01-08 15:37:12.171 [WARN] [MaterialX Pipeline: standard_surface_brass_tiled.mtlx] ⚠ Vertex layout provides unused attribute at location 4 (Color0)
+
+2026-01-08 15:37:12.229 [INFO] BgfxShaderCompiler: created shader ceiling:vertex (binSize=2553, renderer=Vulkan)
+
+2026-01-08 15:37:12.546 [INFO] BgfxShaderCompiler: created shader ceiling:fragment (binSize=78632, renderer=Vulkan)
+
+2026-01-08 15:37:12.591 [INFO] BgfxShaderCompiler: created shader wall:vertex (binSize=2835, renderer=Vulkan)
+
+2026-01-08 15:37:12.893 [INFO] BgfxShaderCompiler: created shader wall:fragment (binSize=78866, renderer=Vulkan)
+
+2026-01-08 15:37:13.079 [INFO] BgfxShaderCompiler: created shader solid:vertex (binSize=2675, renderer=Vulkan)
+
+2026-01-08 15:37:13.363 [INFO] BgfxShaderCompiler: created shader solid:fragment (binSize=68326, renderer=Vulkan)
+
+2026-01-08 15:37:13.497 [INFO] BgfxShaderCompiler: created shader floor:vertex (binSize=2675, renderer=Vulkan)
+
+2026-01-08 15:37:13.784 [INFO] BgfxShaderCompiler: created shader floor:fragment (binSize=68414, renderer=Vulkan)
+
+2026-01-08 15:37:13.905 [INFO] BgfxShaderCompiler: created shader gui_vertex (binSize=1646, renderer=Vulkan)
+
+2026-01-08 15:37:13.953 [INFO] BgfxShaderCompiler: created shader gui_fragment (binSize=846, renderer=Vulkan)
+
+radv/amdgpu: The CS has been cancelled because the context is lost. This context is guilty of a hard recovery.
+radv: GPUVM fault detected at address 0x8001000000.
+GCVM_L2_PROTECTION_FAULT_STATUS: 0x401431
+	 CLIENT_ID: (SQC (data)) 0xa
+	 MORE_FAULTS: 1
+	 WALKER_ERROR: 0
+	 PERMISSION_FAULTS: 3
+	 MAPPING_ERROR: 0
+	 RW: 0
+
+2026-01-08 15:37:41.954 [WARN] CrashRecoveryService::ExecuteWithTimeout: Operation 'Main Application Loop' timed out after 30000ms
+
+
+⏸ Stopping process...
+
+❌ Process exited with code 9

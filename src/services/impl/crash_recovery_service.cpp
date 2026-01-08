@@ -1,4 +1,5 @@
 #include "crash_recovery_service.hpp"
+#include <exception>
 #include <future>
 #include <chrono>
 #include <sstream>
@@ -71,23 +72,60 @@ void CrashRecoveryService::Shutdown() {
 bool CrashRecoveryService::ExecuteWithTimeout(std::function<void()> func, int timeoutMs, const std::string& operationName) {
     logger_->Trace("CrashRecoveryService", "ExecuteWithTimeout", "timeoutMs=" + std::to_string(timeoutMs) + ", operationName=" + operationName, "Executing with timeout");
 
-    auto future = std::async(std::launch::async, func);
+    std::promise<void> completionPromise;
+    auto completionFuture = completionPromise.get_future();
+    std::thread workerThread([task = std::move(func), promise = std::move(completionPromise)]() mutable {
+        try {
+            task();
+            promise.set_value();
+        } catch (...) {
+            try {
+                promise.set_exception(std::current_exception());
+            } catch (...) {
+                // Swallow exception if promise is already satisfied.
+            }
+        }
+    });
 
-    if (future.wait_for(std::chrono::milliseconds(timeoutMs)) == std::future_status::timeout) {
+    if (completionFuture.wait_for(std::chrono::milliseconds(timeoutMs)) == std::future_status::timeout) {
         logger_->Warn("CrashRecoveryService::ExecuteWithTimeout: Operation '" + operationName + "' timed out after " + std::to_string(timeoutMs) + "ms");
+        logger_->Trace("CrashRecoveryService", "ExecuteWithTimeout",
+                       "timeoutMs=" + std::to_string(timeoutMs) + ", operationName=" + operationName,
+                       "Timeout detected; marking crash and detaching worker thread");
 
-        // Attempt to cancel the operation (limited effectiveness)
-        // Note: std::future doesn't provide direct cancellation, this is just detection
+        {
+            std::lock_guard<std::mutex> lock(crashMutex_);
+            crashDetected_ = true;
+            crashReport_ += "\nTIMEOUT: Operation '" + operationName + "' exceeded " +
+                           std::to_string(timeoutMs) + "ms\n";
+        }
+
+        // No safe way to cancel; detach so we can report the timeout promptly.
+        if (workerThread.joinable()) {
+            workerThread.detach();
+        }
 
         return false;
     }
 
     try {
-        future.get(); // Re-throw any exceptions
+        completionFuture.get(); // Re-throw any exceptions
         logger_->Trace("CrashRecoveryService", "ExecuteWithTimeout", "", "Operation completed successfully");
+        if (workerThread.joinable()) {
+            workerThread.join();
+        }
         return true;
     } catch (const std::exception& e) {
         logger_->Error("CrashRecoveryService::ExecuteWithTimeout: Operation '" + operationName + "' threw exception: " + e.what());
+        if (workerThread.joinable()) {
+            workerThread.join();
+        }
+        throw;
+    } catch (...) {
+        logger_->Error("CrashRecoveryService::ExecuteWithTimeout: Operation '" + operationName + "' threw unknown exception");
+        if (workerThread.joinable()) {
+            workerThread.join();
+        }
         throw;
     }
 }
