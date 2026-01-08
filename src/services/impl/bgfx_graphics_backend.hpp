@@ -51,6 +51,10 @@ public:
     void* GetGraphicsQueue() const override;
 
 private:
+    friend bgfx::TextureHandle LoadTextureFromFileForTest(const BgfxGraphicsBackend& backend,
+                                                          const std::string& path,
+                                                          uint64_t samplerFlags);
+
     // Texture memory budget tracker to prevent GPU memory exhaustion
     class TextureMemoryTracker {
     public:
@@ -142,6 +146,7 @@ private:
     void ApplyMaterialXUniforms(const std::array<float, 16>& modelMatrix);
     void DestroyPipelines();
     void DestroyBuffers();
+    bool HasProcessedFrame() const { return frameCount_ > 0; }
 
     std::shared_ptr<IConfigService> configService_;
     std::shared_ptr<IPlatformService> platformService_;
@@ -156,6 +161,7 @@ private:
     uint32_t viewportWidth_ = 0;
     uint32_t viewportHeight_ = 0;
     bool initialized_ = false;
+    uint32_t frameCount_ = 0;
     bgfx::ViewId viewId_ = 0;
     PlatformHandleInfo platformHandleInfo_{};
     bgfx::PlatformData platformData_{};

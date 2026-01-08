@@ -113,6 +113,13 @@ void GraphicsService::UploadVertexData(const std::vector<core::Vertex>& vertices
         throw std::runtime_error("Graphics service not initialized");
     }
 
+    if (vertexBuffer_ && backend_) {
+        logger_->Trace("GraphicsService", "UploadVertexData",
+                       "destroyingPreviousVertexBuffer=true");
+        backend_->DestroyBuffer(device_, vertexBuffer_);
+        vertexBuffer_ = nullptr;
+    }
+
     // Convert vertices to bytes
     std::vector<uint8_t> data(sizeof(core::Vertex) * vertices.size());
     std::memcpy(data.data(), vertices.data(), data.size());
@@ -125,6 +132,13 @@ void GraphicsService::UploadIndexData(const std::vector<uint16_t>& indices) {
 
     if (!initialized_) {
         throw std::runtime_error("Graphics service not initialized");
+    }
+
+    if (indexBuffer_ && backend_) {
+        logger_->Trace("GraphicsService", "UploadIndexData",
+                       "destroyingPreviousIndexBuffer=true");
+        backend_->DestroyBuffer(device_, indexBuffer_);
+        indexBuffer_ = nullptr;
     }
 
     // Convert indices to bytes

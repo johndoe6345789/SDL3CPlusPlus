@@ -392,6 +392,7 @@ add_executable(script_engine_tests
     src/services/impl/scene_script_service.cpp
     src/services/impl/shader_script_service.cpp
     src/services/impl/materialx_shader_generator.cpp
+    src/services/impl/shader_pipeline_validator.cpp
     src/services/impl/sdl_window_service.cpp
     src/services/impl/ecs_service.cpp
     src/services/impl/scene_service.cpp
@@ -432,6 +433,7 @@ add_executable(bgfx_gui_service_tests
     src/services/impl/bgfx_gui_service.cpp
     src/services/impl/bgfx_shader_compiler.cpp
     src/services/impl/materialx_shader_generator.cpp
+    src/services/impl/shader_pipeline_validator.cpp
     src/services/impl/pipeline_compiler_service.cpp
 )
 target_include_directories(bgfx_gui_service_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
@@ -464,6 +466,7 @@ add_executable(vulkan_shader_linking_test
     src/services/impl/bgfx_shader_compiler.cpp
     src/services/impl/json_config_service.cpp
     src/services/impl/materialx_shader_generator.cpp
+    src/services/impl/shader_pipeline_validator.cpp
     src/services/impl/platform_service.cpp
     src/services/impl/sdl_window_service.cpp
     src/events/event_bus.cpp
@@ -564,6 +567,46 @@ target_link_libraries(render_coordinator_init_order_test PRIVATE
     GTest::gtest_main
 )
 add_test(NAME render_coordinator_init_order_test COMMAND render_coordinator_init_order_test)
+
+# Test: Bgfx backend frame guard (ensures texture loads are blocked before first frame)
+add_executable(bgfx_backend_frame_guard_test
+    tests/bgfx_backend_frame_guard_test.cpp
+    src/services/impl/bgfx_graphics_backend.cpp
+    src/services/impl/bgfx_shader_compiler.cpp
+    src/stb_image.cpp
+)
+target_include_directories(bgfx_backend_frame_guard_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_include_directories(bgfx_backend_frame_guard_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_tools/shaderc")
+target_link_libraries(bgfx_backend_frame_guard_test PRIVATE
+    GTest::gtest
+    GTest::gtest_main
+    ${SDL3CPP_RENDER_STACK_LIBS}
+    ${SDL3CPP_STB_LIBS}
+    glm::glm
+    SDL3::SDL3
+)
+if(TARGET shaderc_local)
+    target_link_libraries(bgfx_backend_frame_guard_test PRIVATE shaderc_local)
+elseif(TARGET shaderc::shaderc)
+    target_link_libraries(bgfx_backend_frame_guard_test PRIVATE shaderc::shaderc)
+elseif(TARGET shaderc::shaderc_combined)
+    target_link_libraries(bgfx_backend_frame_guard_test PRIVATE shaderc::shaderc_combined)
+else()
+    message(WARNING "shaderc CMake target not found; skipping link for bgfx_backend_frame_guard_test.")
+endif()
+add_test(NAME bgfx_backend_frame_guard_test COMMAND bgfx_backend_frame_guard_test)
+
+# Test: Graphics service buffer lifecycle (TDD guard for VRAM leaks on reupload)
+add_executable(graphics_service_buffer_lifecycle_test
+    tests/graphics_service_buffer_lifecycle_test.cpp
+    src/services/impl/graphics_service.cpp
+)
+target_include_directories(graphics_service_buffer_lifecycle_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_link_libraries(graphics_service_buffer_lifecycle_test PRIVATE
+    GTest::gtest
+    GTest::gtest_main
+)
+add_test(NAME graphics_service_buffer_lifecycle_test COMMAND graphics_service_buffer_lifecycle_test)
 endif()
 
 if(ENABLE_VITA)

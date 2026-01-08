@@ -182,12 +182,11 @@ bgfx::TextureHandle BgfxGraphicsBackend::LoadTextureFromFile(
     }
 
     // VALIDATION: Ensure bgfx is ready for texture creation
-    const bgfx::Stats* stats = bgfx::getStats();
-    if (stats && stats->numFrames == 0) {
+    // (bgfx::Stats does not expose a frame counter, so we track it ourselves.)
+    if (!HasProcessedFrame()) {
         if (logger_) {
             logger_->Error("BgfxGraphicsBackend::LoadTextureFromFile: "
-                          "Attempted to load texture BEFORE first bgfx::frame()! "
-                          "This will cause GPU driver crashes. "
+                          "Attempted to load texture BEFORE first bgfx::frame(). "
                           "Fix: Call BeginFrame()+EndFrame() before loading textures. "
                           "path=" + path);
         }
@@ -215,8 +214,10 @@ After implementing fix, check logs for proper order:
 [INFO] Application starting
 [TRACE] BgfxGraphicsBackend::Initialize
 [TRACE] RenderCoordinatorService::RenderFrame - shadersLoaded=false
-[TRACE] BgfxGraphicsBackend::BeginFrame
-[TRACE] BgfxGraphicsBackend::EndFrame frameNum=1          ← CRITICAL: First frame
+[TRACE] RenderCoordinatorService::RenderFrame - Priming bgfx with a dummy frame before shader load
+[TRACE] GraphicsService::BeginFrame
+[TRACE] GraphicsService::EndFrame
+[TRACE] BgfxGraphicsBackend::EndFrame frameNumber=0        ← CRITICAL: First frame
 [TRACE] GraphicsService::LoadShaders                       ← After first frame
 [TRACE] BgfxGraphicsBackend::CreatePipeline shaderKey=floor
 [TRACE] BgfxGraphicsBackend::LoadTextureFromFile path=wood_color.jpg

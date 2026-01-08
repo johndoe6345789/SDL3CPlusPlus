@@ -454,6 +454,7 @@ void BgfxGraphicsBackend::Initialize(void* window, const GraphicsConfig& config)
     if (initialized_) {
         return;
     }
+    frameCount_ = 0;
     (void)config;
 
     SDL_Window* sdlWindow = static_cast<SDL_Window*>(window);
@@ -609,6 +610,7 @@ void BgfxGraphicsBackend::Shutdown() {
     DestroyUniforms();
     bgfx::shutdown();
     initialized_ = false;
+    frameCount_ = 0;
 }
 
 void BgfxGraphicsBackend::RecreateSwapchain(uint32_t width, uint32_t height) {
@@ -699,6 +701,13 @@ bgfx::TextureHandle BgfxGraphicsBackend::LoadTextureFromFile(const std::string& 
                                                              uint64_t samplerFlags) const {
     if (logger_) {
         logger_->Trace("BgfxGraphicsBackend", "LoadTextureFromFile", "path=" + path);
+    }
+    if (!HasProcessedFrame()) {
+        if (logger_) {
+            logger_->Error("BgfxGraphicsBackend::LoadTextureFromFile: Attempted to load texture BEFORE first "
+                           "bgfx::frame(). Call BeginFrame()+EndFrame() before loading textures. path=" + path);
+        }
+        return BGFX_INVALID_HANDLE;
     }
 
     int width = 0;
@@ -1063,7 +1072,12 @@ bool BgfxGraphicsBackend::EndFrame(GraphicsDeviceHandle device) {
     if (!initialized_) {
         return false;
     }
-    bgfx::frame();
+    const uint32_t frameNumber = bgfx::frame();
+    frameCount_ = frameNumber + 1;
+    if (logger_) {
+        logger_->Trace("BgfxGraphicsBackend", "EndFrame",
+                       "frameNumber=" + std::to_string(frameNumber));
+    }
     return true;
 }
 
