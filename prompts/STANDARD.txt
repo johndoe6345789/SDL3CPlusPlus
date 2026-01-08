@@ -1,3 +1,0 @@
-Look for C++ magic that only C++ has and see if we can remove it.
-I want the code to feel same as any other OO  language.
-Similar to Java.
