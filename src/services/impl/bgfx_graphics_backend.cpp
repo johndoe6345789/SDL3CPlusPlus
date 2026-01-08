@@ -590,6 +590,17 @@ void BgfxGraphicsBackend::Initialize(void* window, const GraphicsConfig& config)
         logger_->Warn("BgfxGraphicsBackend::Initialize: Noop renderer selected; rendering disabled");
     }
 
+    if (logger_) {
+        logger_->Trace("BgfxGraphicsBackend", "Initialize",
+                       "Priming bgfx with initial frame before resource creation");
+    }
+    const uint32_t frameNumber = bgfx::frame();
+    frameCount_ = frameNumber + 1;
+    if (logger_) {
+        logger_->Trace("BgfxGraphicsBackend", "Initialize",
+                       "Prime frame complete frameNumber=" + std::to_string(frameNumber));
+    }
+
     bgfx::setViewClear(viewId_, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x1f1f1fff, 1.0f, 0);
     bgfx::setDebug(BGFX_DEBUG_TEXT);
     InitializeUniforms();
