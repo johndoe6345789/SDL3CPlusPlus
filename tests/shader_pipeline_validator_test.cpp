@@ -193,6 +193,28 @@ TEST_F(ShaderPipelineValidatorTest, ValidateVertexLayoutMatch_TypeMismatch) {
     EXPECT_TRUE(result.errors[0].find("Type mismatch") != std::string::npos);
 }
 
+TEST_F(ShaderPipelineValidatorTest, ValidateVertexLayoutMatch_ShuffledLocations) {
+    std::vector<ShaderPipelineValidator::AttributeInfo> shaderInputs = {
+        {0, "vec3", "i_position", 12},
+        {1, "vec2", "i_texcoord_0", 8},  // Wrong location/type for bgfx layout.
+        {2, "vec3", "i_tangent", 12},
+        {3, "vec3", "i_normal", 12},    // Normal moved to location 3.
+    };
+
+    std::vector<ShaderPipelineValidator::AttributeInfo> layoutAttribs = {
+        {0, "vec3", "Position", 12},
+        {1, "vec3", "Normal", 12},
+        {2, "vec3", "Tangent", 12},
+        {3, "vec2", "TexCoord0", 8},
+    };
+
+    auto result = validator->ValidateVertexLayoutMatch(shaderInputs, layoutAttribs, "test_shader");
+
+    EXPECT_FALSE(result.passed);
+    EXPECT_GT(result.errors.size(), 0);
+    EXPECT_TRUE(result.errors[0].find("location 1") != std::string::npos);
+}
+
 TEST_F(ShaderPipelineValidatorTest, ValidateVertexLayoutMatch_UnusedAttribute) {
     std::vector<ShaderPipelineValidator::AttributeInfo> shaderInputs = {
         {0, "vec3", "i_position", 12},

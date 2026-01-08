@@ -507,6 +507,20 @@ target_link_libraries(shader_pipeline_validator_test PRIVATE
 )
 add_test(NAME shader_pipeline_validator_test COMMAND shader_pipeline_validator_test)
 
+# Test: Shaderc Uniform Mapping (guards Vulkan uniform metadata correctness)
+add_executable(shaderc_uniform_mapping_test
+    tests/shaderc_uniform_mapping_test.cpp
+)
+target_include_directories(shaderc_uniform_mapping_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_tools/shaderc")
+target_link_libraries(shaderc_uniform_mapping_test PRIVATE
+    GTest::gtest
+    GTest::gtest_main
+    shaderc_local
+)
+add_test(NAME shaderc_uniform_mapping_test COMMAND shaderc_uniform_mapping_test)
+
 # Test: MaterialX Shader Generator Integration (validates shader generation + validation together)
 add_executable(materialx_shader_generator_integration_test
     tests/materialx_shader_generator_integration_test.cpp
