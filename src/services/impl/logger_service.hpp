@@ -12,6 +12,14 @@
 #include <sstream>
 #include <thread>
 
+#if defined(_WIN32)
+#include <io.h>
+#include <fcntl.h>
+#else
+#include <fcntl.h>
+#include <unistd.h>
+#endif
+
 namespace sdl3cpp::services::impl {
 
 // Implementation class that holds all the logging logic
@@ -27,18 +35,21 @@ public:
     size_t maxLinesPerFile_;
     size_t currentLineCount_;
     size_t currentFileIndex_;
+    int fileDescriptor_;
 
     LoggerImpl()
         : level_(LogLevel::INFO),
           consoleEnabled_(true),
           maxLinesPerFile_(kDefaultMaxLinesPerFile),
           currentLineCount_(0),
-          currentFileIndex_(0) {}
+          currentFileIndex_(0),
+          fileDescriptor_(-1) {}
 
     ~LoggerImpl() {
         if (fileStream_) {
             fileStream_->close();
         }
+        CloseFileDescriptor();
     }
 
     std::string LevelToString(LogLevel level) const {
@@ -78,6 +89,7 @@ public:
         if (fileStream_) {
             *fileStream_ << message << std::endl;
             fileStream_->flush();
+            SyncFile();
             ++currentLineCount_;
             RotateFileIfNeeded();
         }
@@ -88,6 +100,7 @@ public:
             fileStream_->close();
         }
         fileStream_.reset();
+        CloseFileDescriptor();
 
         baseFilePath_ = filename;
         currentLineCount_ = 0;
@@ -125,7 +138,10 @@ public:
         if (!fileStream_->is_open()) {
             std::cerr << "Failed to open log file: " << logPath.string() << std::endl;
             fileStream_.reset();
+            CloseFileDescriptor();
+            return;
         }
+        OpenFileDescriptor(logPath);
     }
 
     void RotateFileIfNeeded() {
@@ -136,10 +152,47 @@ public:
         if (fileStream_) {
             fileStream_->close();
         }
+        CloseFileDescriptor();
 
         ++currentFileIndex_;
         currentLineCount_ = 0;
         OpenLogFile(currentFileIndex_);
+    }
+
+    void OpenFileDescriptor(const std::filesystem::path& logPath) {
+        CloseFileDescriptor();
+        const std::string pathString = logPath.string();
+#if defined(_WIN32)
+        fileDescriptor_ = _open(pathString.c_str(), _O_WRONLY | _O_APPEND);
+#else
+        fileDescriptor_ = ::open(pathString.c_str(), O_WRONLY | O_APPEND);
+#endif
+        if (fileDescriptor_ < 0) {
+            std::cerr << "Failed to open log file descriptor for sync: " << pathString << std::endl;
+        }
+    }
+
+    void CloseFileDescriptor() {
+        if (fileDescriptor_ < 0) {
+            return;
+        }
+#if defined(_WIN32)
+        _close(fileDescriptor_);
+#else
+        ::close(fileDescriptor_);
+#endif
+        fileDescriptor_ = -1;
+    }
+
+    void SyncFile() {
+        if (fileDescriptor_ < 0) {
+            return;
+        }
+#if defined(_WIN32)
+        _commit(fileDescriptor_);
+#else
+        ::fsync(fileDescriptor_);
+#endif
     }
 };
 
