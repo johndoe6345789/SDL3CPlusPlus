@@ -49,6 +49,24 @@ void RenderCoordinatorService::RenderFrame(float time) {
             return;
         }
         if (logger_) {
+            logger_->Trace("RenderCoordinatorService", "RenderFrame",
+                           "Priming bgfx with a dummy frame before shader load");
+        }
+        if (!graphicsService_->BeginFrame()) {
+            if (logger_) {
+                logger_->Warn("RenderCoordinatorService::RenderFrame: Swapchain out of date during shader pre-frame");
+            }
+            graphicsService_->RecreateSwapchain();
+            return;
+        }
+        if (!graphicsService_->EndFrame()) {
+            if (logger_) {
+                logger_->Warn("RenderCoordinatorService::RenderFrame: Swapchain out of date during shader pre-frame");
+            }
+            graphicsService_->RecreateSwapchain();
+            return;
+        }
+        if (logger_) {
             logger_->Trace("RenderCoordinatorService", "RenderFrame", "Loading shaders from Lua");
         }
         auto shaders = shaderScriptService_->LoadShaderPathsMap();

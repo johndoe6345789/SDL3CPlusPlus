@@ -552,6 +552,18 @@ target_link_libraries(bgfx_frame_requirement_test PRIVATE
     SDL3::SDL3
 )
 add_test(NAME bgfx_frame_requirement_test COMMAND bgfx_frame_requirement_test)
+
+# Test: Render coordinator initialization order (TDD guard for shader load timing)
+add_executable(render_coordinator_init_order_test
+    tests/render_coordinator_init_order_test.cpp
+    src/services/impl/render_coordinator_service.cpp
+)
+target_include_directories(render_coordinator_init_order_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_link_libraries(render_coordinator_init_order_test PRIVATE
+    GTest::gtest
+    GTest::gtest_main
+)
+add_test(NAME render_coordinator_init_order_test COMMAND render_coordinator_init_order_test)
 endif()
 
 if(ENABLE_VITA)
