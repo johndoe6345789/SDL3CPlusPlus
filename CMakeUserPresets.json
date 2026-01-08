@@ -18,7 +18,6 @@
         }
     ],
     "include": [
-        "build-ninja/build/Release/generators/CMakePresets.json",
-        "build/Release/generators/CMakePresets.json"
+        "build-ninja/build/Release/generators/CMakePresets.json"
     ]
 }
