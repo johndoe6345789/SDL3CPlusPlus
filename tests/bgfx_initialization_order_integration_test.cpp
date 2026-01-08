@@ -3,6 +3,7 @@
 #include <vector>
 #include <memory>
 #include <cstring>
+#include <iostream>
 
 // Integration test for texture creation BEFORE first bgfx::frame()
 // Based on INITIALIZATION_ORDER_BUG.md
@@ -42,20 +43,36 @@ const char* RendererTypeName(bgfx::RendererType::Enum type) {
 
 class BgfxInitializationOrderTest : public ::testing::Test {
 protected:
+    bool bgfxInitialized_ = false;
+
+    bool InitializeNoopBgfx() {
+        bgfx::Init init;
+        init.type = bgfx::RendererType::Noop;
+        init.resolution.width = 1024;
+        init.resolution.height = 768;
+        init.resolution.reset = BGFX_RESET_NONE;
+
+        bgfxInitialized_ = bgfx::init(init);
+        std::cout << "[TRACE] BgfxInitializationOrderTest::InitializeNoopBgfx initialized="
+                  << (bgfxInitialized_ ? "true" : "false") << "\n";
+
+        return bgfxInitialized_;
+    }
+
     void TearDown() override {
-        // bgfx shutdown is safe to call even if not initialized
-        bgfx::shutdown();
+        if (bgfxInitialized_) {
+            std::cout << "[TRACE] BgfxInitializationOrderTest::TearDown shutting down bgfx\n";
+            bgfx::shutdown();
+            bgfxInitialized_ = false;
+        } else {
+            std::cout << "[TRACE] BgfxInitializationOrderTest::TearDown skipped bgfx shutdown (not initialized)\n";
+        }
     }
 };
 
 TEST_F(BgfxInitializationOrderTest, CreateTexture_BeforeFrame_ProducesInvalidHandle) {
     // Initialize bgfx
-    bgfx::Init init;
-    init.type = bgfx::RendererType::Noop;
-    init.resolution.width = 1024;
-    init.resolution.height = 768;
-    init.resolution.reset = BGFX_RESET_NONE;
-    if (!bgfx::init(init)) {
+    if (!InitializeNoopBgfx()) {
         GTEST_SKIP() << "bgfx::init failed";
     }
     const auto rendererType = bgfx::getRendererType();
@@ -93,12 +110,7 @@ TEST_F(BgfxInitializationOrderTest, CreateTexture_BeforeFrame_ProducesInvalidHan
 
 TEST_F(BgfxInitializationOrderTest, CreateTexture_AfterFrame_ProducesValidHandle) {
     // Initialize bgfx
-    bgfx::Init init;
-    init.type = bgfx::RendererType::Noop;
-    init.resolution.width = 1024;
-    init.resolution.height = 768;
-    init.resolution.reset = BGFX_RESET_NONE;
-    ASSERT_TRUE(bgfx::init(init));
+    ASSERT_TRUE(InitializeNoopBgfx());
     
     // ✅ CORRECT: Call frame FIRST to prime bgfx
     bgfx::frame();
@@ -127,12 +139,7 @@ TEST_F(BgfxInitializationOrderTest, CreateTexture_AfterFrame_ProducesValidHandle
 
 TEST_F(BgfxInitializationOrderTest, MultipleTextures_AfterFrame_AllValid) {
     // Initialize and prime bgfx
-    bgfx::Init init;
-    init.type = bgfx::RendererType::Noop;
-    init.resolution.width = 1024;
-    init.resolution.height = 768;
-    init.resolution.reset = BGFX_RESET_NONE;
-    ASSERT_TRUE(bgfx::init(init));
+    ASSERT_TRUE(InitializeNoopBgfx());
     bgfx::frame();
     
     // Create multiple textures
@@ -165,12 +172,7 @@ TEST_F(BgfxInitializationOrderTest, CorrectInitSequence_Documented) {
     // Documents the correct initialization sequence from INITIALIZATION_ORDER_BUG.md
     
     // Step 1: Initialize bgfx
-    bgfx::Init init;
-    init.type = bgfx::RendererType::Noop;
-    init.resolution.width = 1024;
-    init.resolution.height = 768;
-    init.resolution.reset = BGFX_RESET_NONE;
-    ASSERT_TRUE(bgfx::init(init));
+    ASSERT_TRUE(InitializeNoopBgfx());
     
     // Step 2: Call frame() FIRST - this primes bgfx
     bgfx::frame();
@@ -206,12 +208,7 @@ TEST_F(BgfxInitializationOrderTest, ErrorSymptom_InvalidHandleValue) {
 TEST_F(BgfxInitializationOrderTest, BufferCreation_AlsoRequiresFrame) {
     // Buffers (vertex, index) also need frame() to be called first
     
-    bgfx::Init init;
-    init.type = bgfx::RendererType::Noop;
-    init.resolution.width = 1024;
-    init.resolution.height = 768;
-    init.resolution.reset = BGFX_RESET_NONE;
-    ASSERT_TRUE(bgfx::init(init));
+    ASSERT_TRUE(InitializeNoopBgfx());
     bgfx::frame(); // Prime first
     
     // Create vertex buffer - simplified test without layout issues

@@ -160,6 +160,7 @@ private:
     MaterialXUniforms materialXUniforms_{};
     uint32_t viewportWidth_ = 0;
     uint32_t viewportHeight_ = 0;
+    bool bgfxInitialized_ = false;
     bool initialized_ = false;
     uint32_t frameCount_ = 0;
     bgfx::ViewId viewId_ = 0;

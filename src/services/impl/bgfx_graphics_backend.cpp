@@ -308,7 +308,7 @@ BgfxGraphicsBackend::~BgfxGraphicsBackend() {
     if (logger_) {
         logger_->Trace("BgfxGraphicsBackend", "~BgfxGraphicsBackend");
     }
-    if (initialized_) {
+    if (initialized_ || bgfxInitialized_) {
         Shutdown();
     }
 }
@@ -454,6 +454,12 @@ void BgfxGraphicsBackend::Initialize(void* window, const GraphicsConfig& config)
     if (initialized_) {
         return;
     }
+    if (bgfxInitialized_) {
+        if (logger_) {
+            logger_->Warn("BgfxGraphicsBackend::Initialize: bgfx already initialized; resetting before reinit");
+        }
+        Shutdown();
+    }
     frameCount_ = 0;
     (void)config;
 
@@ -547,7 +553,7 @@ void BgfxGraphicsBackend::Initialize(void* window, const GraphicsConfig& config)
                        "candidateRenderers=" + JoinRendererNames(candidates));
     }
 
-    bool initialized = false;
+    bool bgfxInitSucceeded = false;
     bool requestedFailed = false;
     const bool requestedExplicit = requestedRenderer != bgfx::RendererType::Count;
     for (bgfx::RendererType::Enum renderer : candidates) {
@@ -557,7 +563,12 @@ void BgfxGraphicsBackend::Initialize(void* window, const GraphicsConfig& config)
                            "attemptingRenderer=" + RendererTypeName(renderer));
         }
         if (bgfx::init(init)) {
-            initialized = true;
+            bgfxInitSucceeded = true;
+            bgfxInitialized_ = true;
+            if (logger_) {
+                logger_->Trace("BgfxGraphicsBackend", "Initialize",
+                               "bgfxInitSucceeded renderer=" + RendererTypeName(renderer));
+            }
             break;
         }
         if (logger_) {
@@ -570,7 +581,7 @@ void BgfxGraphicsBackend::Initialize(void* window, const GraphicsConfig& config)
         }
     }
 
-    if (!initialized) {
+    if (!bgfxInitSucceeded) {
         if (platformService_ && !loggedInitFailureDiagnostics_) {
             platformService_->LogSystemInfo();
             loggedInitFailureDiagnostics_ = true;
@@ -606,13 +617,24 @@ void BgfxGraphicsBackend::Initialize(void* window, const GraphicsConfig& config)
     InitializeUniforms();
 
     initialized_ = true;
+    if (logger_) {
+        logger_->Trace("BgfxGraphicsBackend", "Initialize", "backendInitialized=true");
+    }
 }
 
 void BgfxGraphicsBackend::Shutdown() {
     if (logger_) {
         logger_->Trace("BgfxGraphicsBackend", "Shutdown");
     }
-    if (!initialized_) {
+    if (!bgfxInitialized_) {
+        if (logger_) {
+            logger_->Trace("BgfxGraphicsBackend", "Shutdown", "bgfxInitialized=false");
+            if (initialized_) {
+                logger_->Warn("BgfxGraphicsBackend::Shutdown: backend marked initialized without bgfx init");
+            }
+        }
+        initialized_ = false;
+        frameCount_ = 0;
         return;
     }
 
@@ -620,6 +642,10 @@ void BgfxGraphicsBackend::Shutdown() {
     DestroyBuffers();
     DestroyUniforms();
     bgfx::shutdown();
+    if (logger_) {
+        logger_->Trace("BgfxGraphicsBackend", "Shutdown", "bgfxShutdown=true");
+    }
+    bgfxInitialized_ = false;
     initialized_ = false;
     frameCount_ = 0;
 }
