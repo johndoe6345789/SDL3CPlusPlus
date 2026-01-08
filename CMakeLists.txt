@@ -669,6 +669,58 @@ target_link_libraries(bgfx_draw_bounds_crash_test PRIVATE
     GTest::gtest_main
 )
 add_test(NAME bgfx_draw_bounds_crash_test COMMAND bgfx_draw_bounds_crash_test)
+
+# Integration Test: Bgfx Draw with real backend
+add_executable(bgfx_draw_integration_test
+    tests/bgfx_draw_integration_test.cpp
+)
+target_include_directories(bgfx_draw_integration_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_link_libraries(bgfx_draw_integration_test PRIVATE
+    bgfx::bgfx
+    bx
+    bimg
+    GTest::gtest
+    GTest::gtest_main
+)
+add_test(NAME bgfx_draw_integration_test COMMAND bgfx_draw_integration_test)
+
+# Integration Test: Shader uniform type mapping
+add_executable(shader_uniform_type_integration_test
+    tests/shader_uniform_type_integration_test.cpp
+)
+target_include_directories(shader_uniform_type_integration_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_link_libraries(shader_uniform_type_integration_test PRIVATE
+    GTest::gtest
+    GTest::gtest_main
+)
+add_test(NAME shader_uniform_type_integration_test COMMAND shader_uniform_type_integration_test)
+
+# Integration Test: Bgfx initialization order
+add_executable(bgfx_initialization_order_integration_test
+    tests/bgfx_initialization_order_integration_test.cpp
+)
+target_include_directories(bgfx_initialization_order_integration_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_link_libraries(bgfx_initialization_order_integration_test PRIVATE
+    bgfx::bgfx
+    bx
+    bimg
+    GTest::gtest
+    GTest::gtest_main
+)
+add_test(NAME bgfx_initialization_order_integration_test COMMAND bgfx_initialization_order_integration_test)
+
+# Integration Test: Vulkan crash reproduction with REAL renderer
+add_executable(vulkan_crash_reproduction_test
+    tests/vulkan_crash_reproduction_test.cpp
+)
+target_include_directories(vulkan_crash_reproduction_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_link_libraries(vulkan_crash_reproduction_test PRIVATE
+    bgfx::bgfx
+    bx
+    bimg
+    GTest::gtest
+)
+add_test(NAME vulkan_crash_reproduction_test COMMAND vulkan_crash_reproduction_test)
 endif()
 
 if(ENABLE_VITA)
