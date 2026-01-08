@@ -382,4 +382,4 @@ If you share:
 * and whether you want glTF as the primary asset format,
   I will lock the design to your conventions and avoid inventing abstractions you will later delete.
   
-  See if anything in NEW_DESIGN.md we can implement. Do refactoring.
+See if anything in NEW_DESIGN.md we can implement. Do refactoring. Update cube demo. See if we can use our JSON config concept to make app more rugged (VRAM limits on everything, crash resistant settings) and use less boilerplate. I do a similar thing with React to generate component trees and declaratively set props.
