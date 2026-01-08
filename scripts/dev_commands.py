@@ -415,6 +415,10 @@ def _sync_assets(build_dir: str, dry_run: bool) -> None:
         ("scripts/models", ["*.stl", "*.obj", "*.fbx"]),
         ("config", ["*.json"]),
     ]
+    asset_trees = [
+        "MaterialX/libraries",
+        "MaterialX/resources",
+    ]
 
     print("\n=== Syncing Assets ===")
 
@@ -437,6 +441,15 @@ def _sync_assets(build_dir: str, dry_run: bool) -> None:
                     print(f"  {src_file} -> {dst_file}")
                     if not dry_run:
                         shutil.copy2(src_file, dst_file)
+
+    for src_dir in asset_trees:
+        src_path = project_root / src_dir
+        dst_path = build_path / src_dir
+        if not src_path.exists():
+            continue
+        print(f"  {src_path} -> {dst_path}")
+        if not dry_run:
+            shutil.copytree(src_path, dst_path, dirs_exist_ok=True)
 
     print("=== Assets Synced ===\n")
 
