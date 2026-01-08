@@ -105,9 +105,39 @@ end
 
 start_music()
 
-local math3d = require("math3d")
 local Gui = require("gui")
 local string_format = string.format
+
+local resolve_number = scene_framework.resolve_number
+local resolve_boolean = scene_framework.resolve_boolean
+local resolve_table = scene_framework.resolve_table
+local resolve_vec3 = scene_framework.resolve_vec3
+
+local function resolve_positive_int(value, fallback)
+    local candidate = resolve_number(value, fallback)
+    local rounded = math.floor(candidate)
+    if rounded < 1 then
+        return fallback
+    end
+    return rounded
+end
+
+local function resolve_window_size()
+    local default_width = 1024
+    local default_height = 768
+    if type(config) ~= "table" then
+        return default_width, default_height
+    end
+
+    local window = resolve_table(config.window)
+    local size = resolve_table(window.size)
+    local width = resolve_positive_int(size.width, default_width)
+    local height = resolve_positive_int(size.height, default_height)
+
+    width = resolve_positive_int(config.window_width, width)
+    height = resolve_positive_int(config.window_height, height)
+    return width, height
+end
 
 local InputState = {}
 InputState.__index = InputState
@@ -201,9 +231,10 @@ end
 gui_input = InputState:new()
 
 local gui_context = Gui.newContext()
+local window_width, window_height = resolve_window_size()
 local ui_layout = {
-    width = 1024,
-    height = 768,
+    width = window_width,
+    height = window_height,
     margin = 16,
 }
 local compass_layout = {
@@ -279,12 +310,22 @@ local function get_time_seconds()
 end
 local movement_log_cooldown = 0.0
 local world_up = {0.0, 1.0, 0.0}
+local scene_config = resolve_table(config_resolver.resolve_scene(config))
+local room_config = resolve_table(scene_config.room)
+local lantern_config = resolve_table(scene_config.lanterns)
+local physics_config = resolve_table(scene_config.physics_cube)
+local spinning_config = resolve_table(scene_config.spinning_cube)
+local rotation_speed = resolve_number(scene_config.rotation_speed, 0.9)
 local room = {
-    half_size = 15.0,
-    wall_thickness = 0.5,
-    wall_height = 4.0,
-    floor_half_thickness = 0.3,
-    floor_top = 0.0,
+    half_size = resolve_number(room_config.half_size, 15.0),
+    wall_thickness = resolve_number(room_config.wall_thickness, 0.5),
+    wall_height = resolve_number(room_config.wall_height, 4.0),
+    floor_half_thickness = resolve_number(room_config.floor_half_thickness, 0.3),
+    floor_top = resolve_number(room_config.floor_top, 0.0),
+    floor_subdivisions = resolve_positive_int(room_config.floor_subdivisions, 20),
+    floor_color = resolve_vec3(room_config.floor_color, {1.0, 1.0, 1.0}),
+    wall_color = resolve_vec3(room_config.wall_color, {1.0, 1.0, 1.0}),
+    ceiling_color = resolve_vec3(room_config.ceiling_color, {1.0, 1.0, 1.0}),
 }
 local player_state = {
     eye_height = 1.6,
@@ -303,27 +344,45 @@ local function physics_is_available()
         and type(math3d.from_transform) == "function"
 end
 
-local physics_cube_half_extents = {1.5, 1.5, 1.5}
+local physics_enabled = resolve_boolean(physics_config.enabled, true)
+local physics_cube_half_extents = resolve_vec3(physics_config.half_extents, {1.5, 1.5, 1.5})
 local physics_cube_scale = {physics_cube_half_extents[1], physics_cube_half_extents[2], physics_cube_half_extents[3]}
-local physics_cube_spawn = {
+local physics_cube_spawn = resolve_vec3(physics_config.spawn, {
     0.0,
     room.floor_top + room.wall_height + physics_cube_half_extents[2] + 0.5,
     0.0,
-}
+})
+local physics_cube_color = resolve_vec3(physics_config.color, {0.92, 0.34, 0.28})
+local physics_kick_strength = resolve_number(physics_config.kick_strength, 6.0)
+local physics_cube_mass = resolve_number(physics_config.mass, 1.0)
+local physics_gravity = resolve_vec3(physics_config.gravity, {0.0, -9.8, 0.0})
+local physics_max_sub_steps = resolve_positive_int(physics_config.max_sub_steps, 10)
+local physics_spin_speed = resolve_number(physics_config.rotation_speed, rotation_speed)
+local spinning_cube_enabled = resolve_boolean(spinning_config.enabled, true)
+local spinning_cube_scale = resolve_number(spinning_config.scale, 1.5)
+local spinning_cube_height = resolve_number(spinning_config.height, 5.0)
+local spinning_cube_color = resolve_vec3(spinning_config.color, {0.75, 0.45, 0.25})
+local spinning_cube_rotation_speed = resolve_number(spinning_config.rotation_speed, rotation_speed)
+local lantern_enabled = resolve_boolean(lantern_config.enabled, true)
+local lantern_height = resolve_number(lantern_config.height, 8.0)
+local lantern_size = resolve_number(lantern_config.size, 0.2)
+local lantern_color = resolve_vec3(lantern_config.color, {1.0, 0.9, 0.6})
+local lantern_corner_offset = resolve_number(lantern_config.corner_offset, 2.0)
+local lantern_wall_offset = resolve_number(lantern_config.wall_offset, lantern_corner_offset)
 
 local physics_state = {
-    enabled = physics_is_available(),
+    enabled = physics_is_available() and physics_enabled,
     ready = false,
     last_step_time = nil,
-    max_sub_steps = 10,
+    max_sub_steps = physics_max_sub_steps,
     cube_name = "demo_cube",
     cube_half_extents = physics_cube_half_extents,
     cube_scale = physics_cube_scale,
-    cube_mass = 1.0,
-    cube_color = {0.92, 0.34, 0.28},
+    cube_mass = physics_cube_mass,
+    cube_color = physics_cube_color,
     cube_spawn = physics_cube_spawn,
-    kick_strength = 6.0,
-    gravity = {0.0, -9.8, 0.0},
+    kick_strength = physics_kick_strength,
+    gravity = physics_gravity,
 }
 
 camera.position[1] = 0.0
@@ -705,7 +764,6 @@ local function update_audio_controls()
     music_state.togglePressed = toggle_pressed and true or false
 end
 
-local rotation_speed = 0.9
 local function resolve_material_shader()
     if type(config) ~= "table" then
         error("Missing config table for MaterialX shader selection")
@@ -777,7 +835,7 @@ local function create_physics_cube()
         end
         
         -- Add rotation to physics cube so it spins while falling
-        local spin_angle = base_rotation_offset + (time * rotation_speed)
+        local spin_angle = base_rotation_offset + (time * physics_spin_speed)
         local spin_rotation = math3d.rotation_y(spin_angle)
         local physics_matrix = math3d.from_transform(transform.position, transform.rotation)
         local scale = scale_matrix(
@@ -801,17 +859,20 @@ local function create_physics_cube()
 end
 
 local function create_spinning_cube()
+    if not spinning_cube_enabled then
+        return nil
+    end
     local shader_key = resolve_material_shader()
     log_debug("Spinning cube shader=%s", shader_key)
     local function compute_model_matrix(time)
-        local rotation = math3d.rotation_y(time * rotation_speed)
-        local scale = scale_matrix(1.5, 1.5, 1.5)  -- Make cube 3x3x3 units
-        local position = math3d.translation(0.0, 5.0, 0.0)  -- Center of the room
+        local rotation = math3d.rotation_y(time * spinning_cube_rotation_speed)
+        local scale = scale_matrix(spinning_cube_scale, spinning_cube_scale, spinning_cube_scale)
+        local position = math3d.translation(0.0, spinning_cube_height, 0.0)
         return math3d.multiply(position, math3d.multiply(rotation, scale))
     end
 
     return {
-        vertices = apply_color_to_vertices({0.75, 0.45, 0.25}),
+        vertices = apply_color_to_vertices(spinning_cube_color),
         indices = cube_indices,
         compute_model_matrix = compute_model_matrix,
         shader_keys = {shader_key},
@@ -828,10 +889,8 @@ local function create_dynamic_cube()
 end
 
 local function create_lantern(x, z)
-    local lantern_height = 8
-    local lantern_size = 0.2
     return create_static_cube({x, lantern_height, z},
-        {lantern_size, lantern_size, lantern_size}, {1.0, 0.9, 0.6}, "solid", "lantern")
+        {lantern_size, lantern_size, lantern_size}, lantern_color, "solid", "lantern")
 end
 
 local function create_room_objects()
@@ -843,18 +902,18 @@ local function create_room_objects()
     local wall_outer_edge = wall_offset + room.wall_thickness
     log_debug("Room walls: inner=%.2f outer=%.2f", wall_inner_edge, wall_outer_edge)
 
-    local floor_color = {1.0, 1.0, 1.0}
-    local wall_color = {1.0, 1.0, 1.0}
-    local ceiling_color = {1.0, 1.0, 1.0}
+    local floor_color = room.floor_color
+    local wall_color = room.wall_color
+    local ceiling_color = room.ceiling_color
 
-    -- Generate proper floor and ceiling planes with tessellation (20x20 = 400 triangles, 441 vertices)
-    local floor_vertices, floor_indices = generate_plane_mesh(room.half_size * 2, room.half_size * 2, 20, floor_color)
-    local ceiling_vertices, ceiling_indices = generate_plane_mesh(room.half_size * 2, room.half_size * 2, 20, ceiling_color)
+    -- Generate proper floor and ceiling planes with tessellation
+    local floor_vertices, floor_indices = generate_plane_mesh(
+        room.half_size * 2, room.half_size * 2, room.floor_subdivisions, floor_color)
+    local ceiling_vertices, ceiling_indices = generate_plane_mesh(
+        room.half_size * 2, room.half_size * 2, room.floor_subdivisions, ceiling_color)
     
     -- Flip ceiling normals to face down
-    for i = 1, #ceiling_vertices do
-        ceiling_vertices[i].normal = {0.0, -1.0, 0.0}
-    end
+    scene_framework.flip_normals(ceiling_vertices)
     
     local function create_floor()
         local function compute_model_matrix()
@@ -895,18 +954,19 @@ local function create_room_objects()
             {room.wall_thickness, room.wall_height, room.half_size}, wall_color, "wall", "wall"),
     }
 
-    -- Add lanterns in the four corners (adjusted for bigger room)
-    local lantern_offset = room.half_size - 2.0  -- 2 units from wall
-    objects[#objects + 1] = create_lantern(lantern_offset, lantern_offset)
-    objects[#objects + 1] = create_lantern(-lantern_offset, lantern_offset)
-    objects[#objects + 1] = create_lantern(lantern_offset, -lantern_offset)
-    objects[#objects + 1] = create_lantern(-lantern_offset, -lantern_offset)
+    if lantern_enabled then
+        local corner_offset = room.half_size - lantern_corner_offset
+        local wall_offset = room.half_size - lantern_wall_offset
+        objects[#objects + 1] = create_lantern(corner_offset, corner_offset)
+        objects[#objects + 1] = create_lantern(-corner_offset, corner_offset)
+        objects[#objects + 1] = create_lantern(corner_offset, -corner_offset)
+        objects[#objects + 1] = create_lantern(-corner_offset, -corner_offset)
 
-    -- Add lanterns on the walls (midpoints)
-    objects[#objects + 1] = create_lantern(0.0, lantern_offset)
-    objects[#objects + 1] = create_lantern(0.0, -lantern_offset)
-    objects[#objects + 1] = create_lantern(lantern_offset, 0.0)
-    objects[#objects + 1] = create_lantern(-lantern_offset, 0.0)
+        objects[#objects + 1] = create_lantern(0.0, wall_offset)
+        objects[#objects + 1] = create_lantern(0.0, -wall_offset)
+        objects[#objects + 1] = create_lantern(wall_offset, 0.0)
+        objects[#objects + 1] = create_lantern(-wall_offset, 0.0)
+    end
 
     return objects
 end
@@ -1074,7 +1134,10 @@ function get_scene_objects()
     for i = 1, #room_objects do
         objects[#objects + 1] = room_objects[i]
     end
-    objects[#objects + 1] = create_dynamic_cube()
+    local dynamic_cube = create_dynamic_cube()
+    if dynamic_cube then
+        objects[#objects + 1] = dynamic_cube
+    end
     return objects
 end
 

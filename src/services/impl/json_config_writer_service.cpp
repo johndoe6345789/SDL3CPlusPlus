@@ -41,7 +41,9 @@ void JsonConfigWriterService::WriteConfig(const RuntimeConfig& config, const std
         target.AddMember(nameValue, stringValue, allocator);
     };
 
-    document.AddMember("schema_version", 2, allocator);
+    constexpr int kSchemaVersion = 2;
+    document.AddMember("schema_version", kSchemaVersion, allocator);
+    document.AddMember("configVersion", kSchemaVersion, allocator);
 
     rapidjson::Value scriptsObject(rapidjson::kObjectType);
     addStringMember(scriptsObject, "entry", config.scriptPath.string());

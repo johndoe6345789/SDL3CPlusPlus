@@ -974,7 +974,8 @@ std::string JsonConfigService::BuildConfigJson(const RuntimeConfig& config,
         target.AddMember(nameValue, stringValue, allocator);
     };
 
-    document.AddMember("schema_version", 2, allocator);
+    document.AddMember("schema_version", kExpectedSchemaVersion, allocator);
+    document.AddMember("configVersion", kExpectedSchemaVersion, allocator);
 
     rapidjson::Value scriptsObject(rapidjson::kObjectType);
     addStringMember(scriptsObject, "entry", config.scriptPath.string());

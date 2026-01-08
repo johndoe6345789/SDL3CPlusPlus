@@ -82,4 +82,12 @@ function resolver.resolve_gui_opacity(config)
     return nil
 end
 
+function resolver.resolve_scene(config)
+    local root = as_table(config)
+    if not root then
+        return nil
+    end
+    return as_table(root.scene)
+end
+
 return resolver
