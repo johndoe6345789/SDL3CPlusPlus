@@ -270,11 +270,13 @@ if(BUILD_SDL3_APP)
             src/di/service_registry.cpp
             src/events/event_bus.cpp
             src/services/impl/json_config_service.cpp
+            src/services/impl/config_compiler_service.cpp
             src/services/impl/command_line_service.cpp
             src/services/impl/json_config_writer_service.cpp
             src/services/impl/logger_service.cpp
             src/services/impl/ecs_service.cpp
             src/services/impl/platform_service.cpp
+            src/services/impl/probe_service.cpp
             src/services/impl/script_engine_service.cpp
             src/services/impl/lua_helpers.cpp
             src/services/impl/scene_script_service.cpp
@@ -294,6 +296,7 @@ if(BUILD_SDL3_APP)
             src/services/impl/lifecycle_service.cpp
             src/services/impl/application_loop_service.cpp
             src/services/impl/render_coordinator_service.cpp
+            src/services/impl/render_graph_service.cpp
             src/services/impl/null_gui_service.cpp
             src/services/impl/bgfx_gui_service.cpp
             src/services/impl/bgfx_shader_compiler.cpp

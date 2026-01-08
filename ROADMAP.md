@@ -17,21 +17,21 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 
 ### Starter Plan: "Bootstrap Hosting"
 - [x] Config version gating (`schema_version` / `configVersion` checks)
-- [ ] JSON Schema validation (external schema + validator)
-- [~] JSON-path diagnostics (path strings in exceptions, not full JSON Pointer coverage)
+- [x] JSON Schema validation (external schema + validator)
+- [~] JSON-path diagnostics (schema validator pointers + path strings; not full JSON Pointer coverage)
 - [~] Layered config merges (supports `extends` + `@delete`; no profile/local/CLI yet)
 - [x] Trace logging around config load, validation, and merge steps
-- [ ] Migration stubs for future versions
+- [~] Migration stubs for future versions (notes + stubbed hook)
 
 ### Pro Plan: "Graph Builder"
-- [ ] Typed IRs: `SceneIR`, `ResourceIR`, `RenderGraphIR`
-- [ ] Symbol tables + reference resolution with clear diagnostics
-- [ ] Render graph DAG compile with cycle detection
-- [ ] "Use before produce" validation for render pass inputs
-- [ ] Explicit pass scheduling and backend submission planning
+- [~] Typed IRs: `SceneIR`, `ResourceIR`, `RenderGraphIR`
+- [~] Symbol tables + reference resolution with clear diagnostics
+- [x] Render graph DAG compile with cycle detection
+- [x] "Use before produce" validation for render pass inputs
+- [~] Explicit pass scheduling and backend submission planning (schedule only)
 
 ### Ultra Plan: "Probe Fortress"
-- [ ] Probe hooks: `OnLoadScene`, `OnCreatePipeline`, `OnDraw`, `OnPresent`, `OnFrameEnd`
+- [~] Probe hooks: `OnLoadScene`, `OnCreatePipeline`, `OnDraw`, `OnPresent`, `OnFrameEnd`
 - [x] Pipeline compatibility checks (mesh layout vs shader inputs) via shader pipeline validator
 - [x] Sampler limits enforced from bgfx caps
 - [ ] Shader uniform compatibility enforcement
@@ -51,13 +51,13 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 | Feature | Status | Starter | Pro | Ultra | Enterprise |
 | --- | --- | --- | --- | --- | --- |
 | Config version gating (`schema_version` / `configVersion`) | Live | [x] | [ ] | [ ] | [ ] |
-| JSON Schema validation | Planned | [x] | [ ] | [ ] | [ ] |
+| JSON Schema validation | Live | [x] | [ ] | [ ] | [ ] |
 | Layered config merges + deterministic rules | Partial | [x] | [ ] | [ ] | [ ] |
 | JSON-path diagnostics | Partial | [x] | [ ] | [ ] | [ ] |
-| IR compilation (scene/resources/render) | Planned | [ ] | [x] | [ ] | [ ] |
-| Render graph DAG build + cycle checks | Planned | [ ] | [x] | [ ] | [ ] |
-| Pass scheduling + submission planning | Planned | [ ] | [x] | [ ] | [ ] |
-| Probe system + structured reports | Planned | [ ] | [ ] | [x] | [ ] |
+| IR compilation (scene/resources/render) | Partial | [ ] | [x] | [ ] | [ ] |
+| Render graph DAG build + cycle checks | Live | [ ] | [x] | [ ] | [ ] |
+| Pass scheduling + submission planning | Partial | [ ] | [x] | [ ] | [ ] |
+| Probe system + structured reports | Partial | [ ] | [ ] | [x] | [ ] |
 | Pipeline compatibility checks | Live | [ ] | [ ] | [x] | [ ] |
 | Sampler limits enforced | Live | [ ] | [ ] | [x] | [ ] |
 | Shader uniform compatibility enforcement | Planned | [ ] | [ ] | [x] | [ ] |
@@ -68,10 +68,12 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 | Hot-reload + rollback | Planned | [ ] | [ ] | [ ] | [x] |
 
 ## Deliverables Checklist
-- [ ] `config/schema/` with versioned JSON Schema and migration notes
-- [ ] `src/services/impl/config_compiler_service.*` for JSON -> IR compilation
-- [ ] `src/services/impl/render_graph_service.*` for graph build and scheduling
-- [ ] `src/services/interfaces/i_probe_service.hpp` plus report/event types
+- [x] `config/schema/` with versioned JSON Schema and migration notes
+- [x] `src/services/impl/config_compiler_service.*` for JSON -> IR compilation
+- [x] `src/services/impl/render_graph_service.*` for graph build and scheduling
+- [x] `src/services/interfaces/i_probe_service.hpp` plus report/event types
+- [x] `src/services/impl/probe_service.*` for logging/queueing probe reports
+- [x] `src/services/interfaces/config_ir_types.hpp` for typed IR payloads
 - [~] Budget enforcement with clear failure modes and fallback resources (textures + GUI caches today)
 - [ ] Cube demo config-only boot path
 

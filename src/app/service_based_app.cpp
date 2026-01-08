@@ -6,10 +6,13 @@
 #include "services/interfaces/i_application_loop_service.hpp"
 #include "services/interfaces/i_lifecycle_service.hpp"
 #include "services/impl/json_config_service.hpp"
+#include "services/impl/config_compiler_service.hpp"
 #include "services/impl/lifecycle_service.hpp"
 #include "services/impl/application_loop_service.hpp"
 #include "services/impl/render_coordinator_service.hpp"
+#include "services/impl/render_graph_service.hpp"
 #include "services/impl/platform_service.hpp"
+#include "services/impl/probe_service.hpp"
 #include "services/impl/sdl_window_service.hpp"
 #include "services/impl/sdl_input_service.hpp"
 #include "services/impl/ecs_service.hpp"
@@ -33,6 +36,9 @@
 #include "services/impl/logger_service.hpp"
 #include "services/impl/pipeline_compiler_service.hpp"
 #include "services/interfaces/i_platform_service.hpp"
+#include "services/interfaces/i_probe_service.hpp"
+#include "services/interfaces/i_render_graph_service.hpp"
+#include "services/interfaces/i_config_compiler_service.hpp"
 #include <iostream>
 #include <stdexcept>
 #include <utility>
@@ -209,10 +215,28 @@ void ServiceBasedApp::RegisterServices() {
     // Event bus (needed by window service)
     registry_.RegisterService<events::IEventBus, events::EventBus>();
 
+    // Probe service (structured diagnostics)
+    registry_.RegisterService<services::IProbeService, services::impl::ProbeService>(
+        registry_.GetService<services::ILogger>());
+
     // Configuration service
     registry_.RegisterService<services::IConfigService, services::impl::JsonConfigService>(
-        registry_.GetService<services::ILogger>(), runtimeConfig_);
+        registry_.GetService<services::ILogger>(),
+        runtimeConfig_,
+        registry_.GetService<services::IProbeService>());
     auto configService = registry_.GetService<services::IConfigService>();
+
+    // Render graph service (DAG build + scheduling)
+    registry_.RegisterService<services::IRenderGraphService, services::impl::RenderGraphService>(
+        registry_.GetService<services::ILogger>(),
+        registry_.GetService<services::IProbeService>());
+
+    // Config compiler service (JSON -> IR)
+    registry_.RegisterService<services::IConfigCompilerService, services::impl::ConfigCompilerService>(
+        registry_.GetService<services::IConfigService>(),
+        registry_.GetService<services::IRenderGraphService>(),
+        registry_.GetService<services::IProbeService>(),
+        registry_.GetService<services::ILogger>());
     // ECS service (entt registry)
     registry_.RegisterService<services::IEcsService, services::impl::EcsService>(
         registry_.GetService<services::ILogger>());
@@ -283,7 +307,8 @@ void ServiceBasedApp::RegisterServices() {
         registry_.GetService<services::IConfigService>(),
         registry_.GetService<services::IPlatformService>(),
         registry_.GetService<services::ILogger>(),
-        registry_.GetService<services::IPipelineCompilerService>());
+        registry_.GetService<services::IPipelineCompilerService>(),
+        registry_.GetService<services::IProbeService>());
 
     // Graphics service (facade)
     registry_.RegisterService<services::IGraphicsService, services::impl::GraphicsService>(

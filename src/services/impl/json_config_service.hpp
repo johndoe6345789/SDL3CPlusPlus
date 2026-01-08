@@ -2,6 +2,7 @@
 
 #include "../interfaces/i_config_service.hpp"
 #include "../interfaces/i_logger.hpp"
+#include "../interfaces/i_probe_service.hpp"
 #include "../interfaces/config_types.hpp"
 #include <cstdint>
 #include <filesystem>
@@ -23,8 +24,11 @@ public:
      *
      * @param logger Logger service for logging
      * @param argv0 First command-line argument (for finding default script path)
+     * @param probeService Probe service for diagnostics (optional)
      */
-    JsonConfigService(std::shared_ptr<ILogger> logger, const char* argv0);
+    JsonConfigService(std::shared_ptr<ILogger> logger,
+                      const char* argv0,
+                      std::shared_ptr<IProbeService> probeService = nullptr);
 
     /**
      * @brief Construct by loading configuration from JSON.
@@ -32,17 +36,24 @@ public:
      * @param logger Logger service for logging
      * @param configPath Path to JSON configuration file
      * @param dumpConfig Whether to print loaded config to stdout
+     * @param probeService Probe service for diagnostics (optional)
      * @throws std::runtime_error if config file cannot be loaded or is invalid
      */
-    JsonConfigService(std::shared_ptr<ILogger> logger, const std::filesystem::path& configPath, bool dumpConfig);
+    JsonConfigService(std::shared_ptr<ILogger> logger,
+                      const std::filesystem::path& configPath,
+                      bool dumpConfig,
+                      std::shared_ptr<IProbeService> probeService = nullptr);
 
     /**
      * @brief Construct with explicit configuration.
      *
      * @param logger Logger service for logging
      * @param config Runtime configuration to use
+     * @param probeService Probe service for diagnostics (optional)
      */
-    JsonConfigService(std::shared_ptr<ILogger> logger, const RuntimeConfig& config);
+    JsonConfigService(std::shared_ptr<ILogger> logger,
+                      const RuntimeConfig& config,
+                      std::shared_ptr<IProbeService> probeService = nullptr);
 
     // IConfigService interface implementation
     uint32_t GetWindowWidth() const override {
@@ -144,12 +155,14 @@ public:
 
 private:
     std::shared_ptr<ILogger> logger_;
+    std::shared_ptr<IProbeService> probeService_;
     std::string configJson_;
     RuntimeConfig config_;
 
     // Helper methods moved from main.cpp
     std::filesystem::path FindScriptPath(const char* argv0);
     static RuntimeConfig LoadFromJson(std::shared_ptr<ILogger> logger,
+                                      std::shared_ptr<IProbeService> probeService,
                                       const std::filesystem::path& configPath,
                                       bool dumpConfig,
                                       std::string* configJson);

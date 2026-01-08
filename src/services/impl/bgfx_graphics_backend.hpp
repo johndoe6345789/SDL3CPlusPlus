@@ -5,6 +5,7 @@
 #include "../interfaces/i_logger.hpp"
 #include "../interfaces/i_platform_service.hpp"
 #include "../interfaces/i_pipeline_compiler_service.hpp"
+#include "../interfaces/i_probe_service.hpp"
 #include "../../core/vertex.hpp"
 #include <bgfx/bgfx.h>
 #include <array>
@@ -19,7 +20,8 @@ public:
     BgfxGraphicsBackend(std::shared_ptr<IConfigService> configService,
                         std::shared_ptr<IPlatformService> platformService,
                         std::shared_ptr<ILogger> logger,
-                        std::shared_ptr<IPipelineCompilerService> pipelineCompiler);
+                        std::shared_ptr<IPipelineCompilerService> pipelineCompiler,
+                        std::shared_ptr<IProbeService> probeService = nullptr);
     ~BgfxGraphicsBackend() override;
 
     void Initialize(void* window, const GraphicsConfig& config) override;
@@ -157,6 +159,7 @@ private:
     std::shared_ptr<IPlatformService> platformService_;
     std::shared_ptr<ILogger> logger_;
     std::shared_ptr<IPipelineCompilerService> pipelineCompiler_;
+    std::shared_ptr<IProbeService> probeService_;
     bgfx::VertexLayout vertexLayout_;
     std::unordered_map<GraphicsPipelineHandle, std::unique_ptr<PipelineEntry>> pipelines_;
     std::unordered_map<GraphicsBufferHandle, std::unique_ptr<VertexBufferEntry>> vertexBuffers_;

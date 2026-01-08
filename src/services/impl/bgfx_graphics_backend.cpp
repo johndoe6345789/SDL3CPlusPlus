@@ -275,11 +275,13 @@ std::optional<bgfx::RendererType::Enum> RecommendFallbackRenderer(
 BgfxGraphicsBackend::BgfxGraphicsBackend(std::shared_ptr<IConfigService> configService,
                                          std::shared_ptr<IPlatformService> platformService,
                                          std::shared_ptr<ILogger> logger,
-                                         std::shared_ptr<IPipelineCompilerService> pipelineCompiler)
+                                         std::shared_ptr<IPipelineCompilerService> pipelineCompiler,
+                                         std::shared_ptr<IProbeService> probeService)
     : configService_(std::move(configService)),
       platformService_(std::move(platformService)),
       logger_(std::move(logger)),
-      pipelineCompiler_(std::move(pipelineCompiler)) {
+      pipelineCompiler_(std::move(pipelineCompiler)),
+      probeService_(std::move(probeService)) {
     if (logger_) {
         logger_->Trace("BgfxGraphicsBackend", "BgfxGraphicsBackend",
                        "configService=" + std::string(configService_ ? "set" : "null") +
@@ -1178,11 +1180,23 @@ void BgfxGraphicsBackend::Draw(GraphicsDeviceHandle device, GraphicsPipelineHand
                                GraphicsBufferHandle vertexBuffer, GraphicsBufferHandle indexBuffer,
                                uint32_t indexOffset, uint32_t indexCount, int32_t vertexOffset,
                                const std::array<float, 16>& modelMatrix) {
+    auto reportError = [&](const std::string& code, const std::string& message) {
+        if (!probeService_) {
+            return;
+        }
+        ProbeReport report{};
+        report.severity = ProbeSeverity::Error;
+        report.code = code;
+        report.message = message;
+        probeService_->Report(report);
+    };
+
     auto pipelineIt = pipelines_.find(pipeline);
     if (pipelineIt == pipelines_.end()) {
         if (logger_) {
             logger_->Error("BgfxGraphicsBackend::Draw: Pipeline not found");
         }
+        reportError("DRAW_PIPELINE_MISSING", "Draw call missing pipeline");
         return;
     }
     auto vertexIt = vertexBuffers_.find(vertexBuffer);
@@ -1191,6 +1205,7 @@ void BgfxGraphicsBackend::Draw(GraphicsDeviceHandle device, GraphicsPipelineHand
         if (logger_) {
             logger_->Error("BgfxGraphicsBackend::Draw: Buffer handles not found");
         }
+        reportError("DRAW_BUFFER_MISSING", "Draw call missing vertex or index buffer");
         return;
     }
     const auto& vb = vertexIt->second;
@@ -1211,6 +1226,7 @@ void BgfxGraphicsBackend::Draw(GraphicsDeviceHandle device, GraphicsPipelineHand
             logger_->Error("BgfxGraphicsBackend::Draw: Invalid negative vertex offset (" +
                           std::to_string(vertexOffset) + ")");
         }
+        reportError("DRAW_VERTEX_OFFSET_NEGATIVE", "Draw call has negative vertex offset");
         return;
     }
 
@@ -1220,6 +1236,7 @@ void BgfxGraphicsBackend::Draw(GraphicsDeviceHandle device, GraphicsPipelineHand
                           std::to_string(vertexOffset) + ") exceeds vertex buffer size (" +
                           std::to_string(vb->vertexCount) + ")");
         }
+        reportError("DRAW_VERTEX_OFFSET_RANGE", "Draw call vertex offset exceeds vertex buffer size");
         return;
     }
 
@@ -1231,6 +1248,7 @@ void BgfxGraphicsBackend::Draw(GraphicsDeviceHandle device, GraphicsPipelineHand
                           ") exceeds index buffer size (" +
                           std::to_string(ib->indexCount) + ")");
         }
+        reportError("DRAW_INDEX_RANGE", "Draw call index range exceeds index buffer size");
         return;
     }
 
