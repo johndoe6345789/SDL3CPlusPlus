@@ -56,3 +56,8 @@ __pycache__/
 *.pyd
 sdl3_app.log
 sdl3_app.*.log
+/.idea/.gitignore
+/.idea/editor.xml
+/.idea/modules.xml
+/.idea/SDL3CPlusPlus.iml
+/.idea/vcs.xml
