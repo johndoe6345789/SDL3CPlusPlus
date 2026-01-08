@@ -70,6 +70,65 @@
       "gamepad_axis_action_threshold": 0.5
     }
   },
+  "scene": {
+    "rotation_speed": 0.9,
+    "cube_mesh": {
+      "path": "models/cube.stl",
+      "double_sided": true
+    },
+    "camera": {
+      "position": [0.0, 1.6, 10.0],
+      "fov": 0.78,
+      "near": 0.1,
+      "far": 50.0
+    },
+    "controls": {
+      "move_speed": 16.0,
+      "fly_speed": 3.0,
+      "jump_speed": 5.5,
+      "gravity": -12.0,
+      "max_fall_speed": -20.0,
+      "mouse_sensitivity": 0.0025,
+      "gamepad_look_speed": 2.5,
+      "stick_deadzone": 0.2,
+      "max_pitch_degrees": 85.0,
+      "move_forward_uses_pitch": true
+    },
+    "room": {
+      "half_size": 15.0,
+      "wall_thickness": 0.5,
+      "wall_height": 4.0,
+      "floor_half_thickness": 0.3,
+      "floor_top": 0.0,
+      "floor_subdivisions": 20,
+      "floor_color": [1.0, 1.0, 1.0],
+      "wall_color": [1.0, 1.0, 1.0],
+      "ceiling_color": [1.0, 1.0, 1.0]
+    },
+    "physics_cube": {
+      "enabled": true,
+      "half_extents": [1.5, 1.5, 1.5],
+      "mass": 1.0,
+      "color": [0.92, 0.34, 0.28],
+      "kick_strength": 6.0,
+      "gravity": [0.0, -9.8, 0.0],
+      "max_sub_steps": 10
+    },
+    "spinning_cube": {
+      "enabled": true,
+      "scale": 1.5,
+      "height": 5.0,
+      "color": [0.75, 0.45, 0.25]
+    },
+    "lanterns": {
+      "enabled": true,
+      "height": 8.0,
+      "size": 0.2,
+      "color": [1.0, 0.9, 0.6],
+      "corner_offset": 2.0,
+      "wall_offset": 2.0
+    }
+  },
   "rendering": {
     "bgfx": {
       "renderer": "opengl"
@@ -124,6 +183,22 @@
       "pbr_roughness": 0.28,
       "pbr_metallic": 0.08
     }
+  },
+  "budgets": {
+    "vram_mb": 512,
+    "max_texture_dim": 4096,
+    "gui_text_cache_entries": 256,
+    "gui_svg_cache_entries": 64
+  },
+  "crash_recovery": {
+    "heartbeat_timeout_ms": 5000,
+    "heartbeat_poll_interval_ms": 200,
+    "memory_limit_mb": 1024,
+    "gpu_hang_frame_time_multiplier": 10.0,
+    "max_consecutive_gpu_timeouts": 5,
+    "max_lua_failures": 3,
+    "max_file_format_errors": 2,
+    "max_memory_warnings": 3
   },
   "gui": {
     "font": {

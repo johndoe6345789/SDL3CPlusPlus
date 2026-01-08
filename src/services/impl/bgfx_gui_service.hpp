@@ -179,6 +179,7 @@ private:
     uint64_t frameIndex_ = 0;
     size_t maxTextCacheEntries_ = 256;
     size_t maxSvgCacheEntries_ = 64;
+    uint32_t maxTextureDim_ = 0;
 };
 
 }  // namespace sdl3cpp::services::impl

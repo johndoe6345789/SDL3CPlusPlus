@@ -61,6 +61,9 @@ private:
         TextureMemoryTracker() = default;
 
         bool CanAllocate(size_t bytes) const {
+            if (maxBytes_ == 0) {
+                return true;
+            }
             return (totalBytes_ + bytes) <= maxBytes_;
         }
 
@@ -78,7 +81,7 @@ private:
 
         size_t GetUsedBytes() const { return totalBytes_; }
         size_t GetMaxBytes() const { return maxBytes_; }
-        size_t GetAvailableBytes() const { return maxBytes_ - totalBytes_; }
+        size_t GetAvailableBytes() const { return maxBytes_ == 0 ? 0 : maxBytes_ - totalBytes_; }
 
         void SetMaxBytes(size_t max) { maxBytes_ = max; }
 
@@ -140,7 +143,9 @@ private:
     bgfx::ShaderHandle CreateShader(const std::string& label,
                                     const std::string& source,
                                     bool isVertex) const;
-    bgfx::TextureHandle LoadTextureFromFile(const std::string& path, uint64_t samplerFlags) const;
+    bgfx::TextureHandle LoadTextureFromFile(const std::string& path,
+                                            uint64_t samplerFlags,
+                                            size_t* outSizeBytes = nullptr) const;
     void InitializeUniforms();
     void DestroyUniforms();
     void ApplyMaterialXUniforms(const std::array<float, 16>& modelMatrix);
@@ -168,6 +173,7 @@ private:
     bgfx::PlatformData platformData_{};
     bool loggedInitFailureDiagnostics_ = false;
     mutable TextureMemoryTracker textureMemoryTracker_{};
+    uint32_t maxTextureDim_ = 0;
 };
 
 }  // namespace sdl3cpp::services::impl

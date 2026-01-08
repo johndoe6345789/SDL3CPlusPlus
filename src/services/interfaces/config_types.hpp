@@ -121,6 +121,30 @@ struct GuiFontConfig {
 };
 
 /**
+ * @brief Resource budget and rendering limits.
+ */
+struct RenderBudgetConfig {
+    size_t vramMB = 512;
+    uint32_t maxTextureDim = 0;
+    size_t guiTextCacheEntries = 256;
+    size_t guiSvgCacheEntries = 64;
+};
+
+/**
+ * @brief Crash recovery tuning parameters.
+ */
+struct CrashRecoveryConfig {
+    uint32_t heartbeatTimeoutMs = 5000;
+    uint32_t heartbeatPollIntervalMs = 200;
+    size_t memoryLimitMB = 1024;
+    double gpuHangFrameTimeMultiplier = 10.0;
+    size_t maxConsecutiveGpuTimeouts = 5;
+    size_t maxLuaFailures = 3;
+    size_t maxFileFormatErrors = 2;
+    size_t maxMemoryWarnings = 3;
+};
+
+/**
  * @brief Runtime configuration values used across services.
  */
 struct RuntimeConfig {
@@ -135,8 +159,10 @@ struct RuntimeConfig {
     BgfxConfig bgfx{};
     MaterialXConfig materialX{};
     std::vector<MaterialXMaterialConfig> materialXMaterials{};
+    RenderBudgetConfig budgets{};
     GuiFontConfig guiFont{};
     float guiOpacity = 1.0f;
+    CrashRecoveryConfig crashRecovery{};
 };
 
 }  // namespace sdl3cpp::services

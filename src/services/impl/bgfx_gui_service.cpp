@@ -125,6 +125,18 @@ BgfxGuiService::BgfxGuiService(std::shared_ptr<IConfigService> configService,
                        "configService=" + std::string(configService_ ? "set" : "null") +
                        ", pipelineCompiler=" + std::string(pipelineCompiler_ ? "set" : "null"));
     }
+    if (configService_) {
+        const auto& budgets = configService_->GetRenderBudgetConfig();
+        maxTextCacheEntries_ = budgets.guiTextCacheEntries;
+        maxSvgCacheEntries_ = budgets.guiSvgCacheEntries;
+        maxTextureDim_ = budgets.maxTextureDim;
+        if (logger_) {
+            logger_->Trace("BgfxGuiService", "BgfxGuiService",
+                           "guiTextCacheEntries=" + std::to_string(maxTextCacheEntries_) +
+                           ", guiSvgCacheEntries=" + std::to_string(maxSvgCacheEntries_) +
+                           ", maxTextureDim=" + std::to_string(maxTextureDim_));
+        }
+    }
 }
 
 BgfxGuiService::~BgfxGuiService() {
@@ -965,6 +977,22 @@ bgfx::TextureHandle BgfxGuiService::CreateTexture(const uint8_t* rgba,
                                                   uint32_t height,
                                                   uint64_t flags) const {
     if (!rgba || width == 0 || height == 0) {
+        return BGFX_INVALID_HANDLE;
+    }
+    uint32_t maxDim = maxTextureDim_;
+    if (const bgfx::Caps* caps = bgfx::getCaps()) {
+        if (caps->limits.maxTextureSize > 0) {
+            maxDim = (maxDim == 0)
+                ? caps->limits.maxTextureSize
+                : std::min<uint32_t>(maxDim, caps->limits.maxTextureSize);
+        }
+    }
+    if (maxDim > 0 && (width > maxDim || height > maxDim)) {
+        if (logger_) {
+            logger_->Error("BgfxGuiService::CreateTexture: texture size (" +
+                          std::to_string(width) + "x" + std::to_string(height) +
+                          ") exceeds max texture dim (" + std::to_string(maxDim) + ")");
+        }
         return BGFX_INVALID_HANDLE;
     }
     const uint32_t size = width * height * 4;

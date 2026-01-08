@@ -73,6 +73,28 @@
   },
   "scene": {
     "rotation_speed": 0.9,
+    "cube_mesh": {
+      "path": "models/cube.stl",
+      "double_sided": true
+    },
+    "camera": {
+      "position": [0.0, 1.6, 10.0],
+      "fov": 0.78,
+      "near": 0.1,
+      "far": 50.0
+    },
+    "controls": {
+      "move_speed": 16.0,
+      "fly_speed": 3.0,
+      "jump_speed": 5.5,
+      "gravity": -12.0,
+      "max_fall_speed": -20.0,
+      "mouse_sensitivity": 0.0025,
+      "gamepad_look_speed": 2.5,
+      "stick_deadzone": 0.2,
+      "max_pitch_degrees": 85.0,
+      "move_forward_uses_pitch": true
+    },
     "room": {
       "half_size": 15.0,
       "wall_thickness": 0.5,
@@ -162,6 +184,22 @@
       "pbr_roughness": 0.28,
       "pbr_metallic": 0.08
     }
+  },
+  "budgets": {
+    "vram_mb": 512,
+    "max_texture_dim": 4096,
+    "gui_text_cache_entries": 256,
+    "gui_svg_cache_entries": 64
+  },
+  "crash_recovery": {
+    "heartbeat_timeout_ms": 5000,
+    "heartbeat_poll_interval_ms": 200,
+    "memory_limit_mb": 1024,
+    "gpu_hang_frame_time_multiplier": 10.0,
+    "max_consecutive_gpu_timeouts": 5,
+    "max_lua_failures": 3,
+    "max_file_format_errors": 2,
+    "max_memory_warnings": 3
   },
   "gui": {
     "font": {

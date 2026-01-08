@@ -959,6 +959,79 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
         config.guiOpacity = static_cast<float>(value.GetDouble());
     }
 
+    auto readSizeT = [](const rapidjson::Value& parent,
+                        const char* name,
+                        const std::string& path,
+                        size_t& target) {
+        if (!parent.HasMember(name)) {
+            return;
+        }
+        const auto& value = parent[name];
+        if (!value.IsNumber()) {
+            throw std::runtime_error("JSON member '" + path + "." + std::string(name) + "' must be a number");
+        }
+        const double rawValue = value.GetDouble();
+        if (rawValue < 0.0) {
+            throw std::runtime_error("JSON member '" + path + "." + std::string(name) + "' must be non-negative");
+        }
+        target = static_cast<size_t>(rawValue);
+    };
+
+    auto readUint32 = [](const rapidjson::Value& parent,
+                         const char* name,
+                         const std::string& path,
+                         uint32_t& target) {
+        if (!parent.HasMember(name)) {
+            return;
+        }
+        const auto& value = parent[name];
+        if (!value.IsNumber()) {
+            throw std::runtime_error("JSON member '" + path + "." + std::string(name) + "' must be a number");
+        }
+        const double rawValue = value.GetDouble();
+        if (rawValue < 0.0) {
+            throw std::runtime_error("JSON member '" + path + "." + std::string(name) + "' must be non-negative");
+        }
+        target = static_cast<uint32_t>(rawValue);
+    };
+
+    const auto* budgetsValue = getObjectMember(document, "budgets", "budgets");
+    if (budgetsValue) {
+        readSizeT(*budgetsValue, "vram_mb", "budgets", config.budgets.vramMB);
+        readUint32(*budgetsValue, "max_texture_dim", "budgets", config.budgets.maxTextureDim);
+        readSizeT(*budgetsValue, "gui_text_cache_entries", "budgets", config.budgets.guiTextCacheEntries);
+        readSizeT(*budgetsValue, "gui_svg_cache_entries", "budgets", config.budgets.guiSvgCacheEntries);
+    }
+
+    const auto* crashRecoveryValue = getObjectMember(document, "crash_recovery", "crash_recovery");
+    if (crashRecoveryValue) {
+        readUint32(*crashRecoveryValue, "heartbeat_timeout_ms",
+                   "crash_recovery", config.crashRecovery.heartbeatTimeoutMs);
+        readUint32(*crashRecoveryValue, "heartbeat_poll_interval_ms",
+                   "crash_recovery", config.crashRecovery.heartbeatPollIntervalMs);
+        readSizeT(*crashRecoveryValue, "memory_limit_mb",
+                  "crash_recovery", config.crashRecovery.memoryLimitMB);
+        readSizeT(*crashRecoveryValue, "max_consecutive_gpu_timeouts",
+                  "crash_recovery", config.crashRecovery.maxConsecutiveGpuTimeouts);
+        readSizeT(*crashRecoveryValue, "max_lua_failures",
+                  "crash_recovery", config.crashRecovery.maxLuaFailures);
+        readSizeT(*crashRecoveryValue, "max_file_format_errors",
+                  "crash_recovery", config.crashRecovery.maxFileFormatErrors);
+        readSizeT(*crashRecoveryValue, "max_memory_warnings",
+                  "crash_recovery", config.crashRecovery.maxMemoryWarnings);
+        if (crashRecoveryValue->HasMember("gpu_hang_frame_time_multiplier")) {
+            const auto& value = (*crashRecoveryValue)["gpu_hang_frame_time_multiplier"];
+            if (!value.IsNumber()) {
+                throw std::runtime_error("JSON member 'crash_recovery.gpu_hang_frame_time_multiplier' must be a number");
+            }
+            const double rawValue = value.GetDouble();
+            if (rawValue < 0.0) {
+                throw std::runtime_error("JSON member 'crash_recovery.gpu_hang_frame_time_multiplier' must be non-negative");
+            }
+            config.crashRecovery.gpuHangFrameTimeMultiplier = rawValue;
+        }
+    }
+
     return config;
 }
 
@@ -1090,6 +1163,33 @@ std::string JsonConfigService::BuildConfigJson(const RuntimeConfig& config,
     atmosphericsObject.AddMember("pbr_metallic", config.atmospherics.pbrMetallic, allocator);
     renderingObject.AddMember("atmospherics", atmosphericsObject, allocator);
     document.AddMember("rendering", renderingObject, allocator);
+
+    rapidjson::Value budgetsObject(rapidjson::kObjectType);
+    budgetsObject.AddMember("vram_mb", static_cast<uint64_t>(config.budgets.vramMB), allocator);
+    budgetsObject.AddMember("max_texture_dim", config.budgets.maxTextureDim, allocator);
+    budgetsObject.AddMember("gui_text_cache_entries",
+                            static_cast<uint64_t>(config.budgets.guiTextCacheEntries),
+                            allocator);
+    budgetsObject.AddMember("gui_svg_cache_entries",
+                            static_cast<uint64_t>(config.budgets.guiSvgCacheEntries),
+                            allocator);
+    document.AddMember("budgets", budgetsObject, allocator);
+
+    rapidjson::Value crashObject(rapidjson::kObjectType);
+    crashObject.AddMember("heartbeat_timeout_ms", config.crashRecovery.heartbeatTimeoutMs, allocator);
+    crashObject.AddMember("heartbeat_poll_interval_ms", config.crashRecovery.heartbeatPollIntervalMs, allocator);
+    crashObject.AddMember("memory_limit_mb", static_cast<uint64_t>(config.crashRecovery.memoryLimitMB), allocator);
+    crashObject.AddMember("gpu_hang_frame_time_multiplier",
+                          config.crashRecovery.gpuHangFrameTimeMultiplier, allocator);
+    crashObject.AddMember("max_consecutive_gpu_timeouts",
+                          static_cast<uint64_t>(config.crashRecovery.maxConsecutiveGpuTimeouts), allocator);
+    crashObject.AddMember("max_lua_failures",
+                          static_cast<uint64_t>(config.crashRecovery.maxLuaFailures), allocator);
+    crashObject.AddMember("max_file_format_errors",
+                          static_cast<uint64_t>(config.crashRecovery.maxFileFormatErrors), allocator);
+    crashObject.AddMember("max_memory_warnings",
+                          static_cast<uint64_t>(config.crashRecovery.maxMemoryWarnings), allocator);
+    document.AddMember("crash_recovery", crashObject, allocator);
 
     rapidjson::Value bindingsObject(rapidjson::kObjectType);
     auto addBindingMember = [&](const char* name, const std::string& value) {

@@ -86,6 +86,18 @@ public:
     virtual const GuiFontConfig& GetGuiFontConfig() const = 0;
 
     /**
+     * @brief Get rendering budgets.
+     * @return Render budget configuration
+     */
+    virtual const RenderBudgetConfig& GetRenderBudgetConfig() const = 0;
+
+    /**
+     * @brief Get crash recovery configuration.
+     * @return Crash recovery configuration
+     */
+    virtual const CrashRecoveryConfig& GetCrashRecoveryConfig() const = 0;
+
+    /**
      * @brief Get the full JSON configuration as a string.
      *
      * @return JSON string (may be empty if unavailable)

@@ -35,8 +35,8 @@ int64_t GetSteadyClockNs() {
 // Static instance for signal handler
 CrashRecoveryService* CrashRecoveryService::instance_ = nullptr;
 
-CrashRecoveryService::CrashRecoveryService(std::shared_ptr<ILogger> logger)
-    : logger_(logger)
+CrashRecoveryService::CrashRecoveryService(std::shared_ptr<ILogger> logger, CrashRecoveryConfig config)
+    : logger_(std::move(logger))
     , crashDetected_(false)
     , lastSignal_(0)
     , lastHeartbeatNs_(0)
@@ -48,10 +48,19 @@ CrashRecoveryService::CrashRecoveryService(std::shared_ptr<ILogger> logger)
     , fileFormatErrors_(0)
     , memoryWarnings_(0)
     , lastHealthCheck_(std::chrono::steady_clock::now())
-    , signalHandlersInstalled_(false) {
-    logger_->Trace("CrashRecoveryService", "CrashRecoveryService",
-                   "logger=" + std::string(logger_ ? "set" : "null"),
-                   "Created");
+    , signalHandlersInstalled_(false)
+    , config_(std::move(config)) {
+    heartbeatTimeout_ = std::chrono::milliseconds(config_.heartbeatTimeoutMs);
+    heartbeatPollInterval_ = std::chrono::milliseconds(config_.heartbeatPollIntervalMs);
+    memoryLimitBytes_ = config_.memoryLimitMB * 1024 * 1024;
+
+    if (logger_) {
+        logger_->Trace("CrashRecoveryService", "CrashRecoveryService",
+                       "logger=" + std::string(logger_ ? "set" : "null") +
+                       ", heartbeatTimeoutMs=" + std::to_string(config_.heartbeatTimeoutMs) +
+                       ", heartbeatPollIntervalMs=" + std::to_string(config_.heartbeatPollIntervalMs) +
+                       ", memoryLimitMB=" + std::to_string(config_.memoryLimitMB));
+    }
 }
 
 CrashRecoveryService::~CrashRecoveryService() {
@@ -69,8 +78,17 @@ void CrashRecoveryService::Initialize() {
     heartbeatSeen_ = false;
     crashReport_.clear();
 
-    if (!heartbeatMonitorRunning_.exchange(true)) {
-        heartbeatMonitorThread_ = std::thread(&CrashRecoveryService::MonitorHeartbeats, this);
+    const bool heartbeatEnabled = config_.heartbeatTimeoutMs > 0 && config_.heartbeatPollIntervalMs > 0;
+    if (heartbeatEnabled) {
+        if (!heartbeatMonitorRunning_.exchange(true)) {
+            heartbeatMonitorThread_ = std::thread(&CrashRecoveryService::MonitorHeartbeats, this);
+        }
+    } else {
+        heartbeatMonitorRunning_ = false;
+        if (logger_) {
+            logger_->Trace("CrashRecoveryService", "Initialize",
+                           "heartbeatEnabled=false", "Heartbeat monitor disabled via config");
+        }
     }
 
     logger_->Info("CrashRecoveryService::Initialize: Crash recovery service initialized");
@@ -370,10 +388,16 @@ bool CrashRecoveryService::CheckGpuHealth(double lastFrameTime, double expectedF
                    ", expectedFrameTime=" + std::to_string(expectedFrameTime));
     UpdateHealthMetrics();
 
+    if (config_.gpuHangFrameTimeMultiplier <= 0.0 || config_.maxConsecutiveGpuTimeouts == 0) {
+        consecutiveFrameTimeouts_ = 0;
+        lastSuccessfulFrameTime_ = lastFrameTime;
+        return true;
+    }
+
     // Check for GPU hangs - if we haven't had a successful frame in too long
-    if (lastFrameTime > expectedFrameTime * 10.0) { // 10x expected frame time
+    if (lastFrameTime > expectedFrameTime * config_.gpuHangFrameTimeMultiplier) {
         consecutiveFrameTimeouts_++;
-        if (consecutiveFrameTimeouts_ > 5) { // 5 consecutive timeouts
+        if (consecutiveFrameTimeouts_ > config_.maxConsecutiveGpuTimeouts) {
             std::lock_guard<std::mutex> lock(crashMutex_);
             crashDetected_ = true;
             crashReport_ += "\nGPU HANG DETECTED: No successful frames for " +
@@ -406,7 +430,7 @@ bool CrashRecoveryService::ValidateLuaExecution(bool scriptResult, const std::st
         logger_->Error("CrashRecoveryService::ValidateLuaExecution: Lua script '" +
                       scriptName + "' failed to execute");
 
-        if (luaExecutionFailures_ > 3) { // Multiple Lua failures indicate a serious issue
+        if (config_.maxLuaFailures > 0 && luaExecutionFailures_ > config_.maxLuaFailures) {
             crashDetected_ = true;
             crashReport_ += "CRITICAL: Multiple Lua execution failures detected\n";
         }
@@ -442,7 +466,7 @@ bool CrashRecoveryService::ValidateFileFormat(const std::string& filePath, const
         logger_->Warn("CrashRecoveryService::ValidateFileFormat: Invalid format for " +
                      filePath + " - expected " + expectedFormat + ", got " + extension);
 
-        if (fileFormatErrors_ > 2) { // Multiple format errors
+        if (config_.maxFileFormatErrors > 0 && fileFormatErrors_ > config_.maxFileFormatErrors) {
             crashDetected_ = true;
             crashReport_ += "CRITICAL: Multiple file format errors detected\n";
         }
@@ -476,13 +500,15 @@ bool CrashRecoveryService::CheckMemoryHealth() {
     logger_->Trace("CrashRecoveryService", "CheckMemoryHealth");
     UpdateHealthMetrics();
 
+    if (memoryLimitBytes_ == 0) {
+        return true;
+    }
+
     size_t currentMemory = GetCurrentMemoryUsage();
 
     // Basic memory usage check (this is a simplified version)
     // In a real implementation, you'd track memory growth over time
-    const size_t MAX_MEMORY_MB = 1024; // 1GB limit for this example
-
-    if (currentMemory > MAX_MEMORY_MB * 1024 * 1024) {
+    if (currentMemory > memoryLimitBytes_) {
         memoryWarnings_++;
         std::lock_guard<std::mutex> lock(crashMutex_);
         crashReport_ += "\nHIGH MEMORY USAGE: " + std::to_string(currentMemory / (1024*1024)) + " MB\n";
@@ -490,7 +516,7 @@ bool CrashRecoveryService::CheckMemoryHealth() {
         logger_->Warn("CrashRecoveryService::CheckMemoryHealth: High memory usage detected: " +
                      std::to_string(currentMemory / (1024*1024)) + " MB");
 
-        if (memoryWarnings_ > 3) {
+        if (config_.maxMemoryWarnings > 0 && memoryWarnings_ > config_.maxMemoryWarnings) {
             crashDetected_ = true;
             crashReport_ += "CRITICAL: Persistent high memory usage detected\n";
             return false;

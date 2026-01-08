@@ -18,6 +18,7 @@
 #include <glm/gtc/matrix_inverse.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <iterator>
+#include <limits>
 #include <optional>
 #include <string>
 #include <stdexcept>
@@ -283,6 +284,16 @@ BgfxGraphicsBackend::BgfxGraphicsBackend(std::shared_ptr<IConfigService> configS
         logger_->Trace("BgfxGraphicsBackend", "BgfxGraphicsBackend",
                        "configService=" + std::string(configService_ ? "set" : "null") +
                        ", platformService=" + std::string(platformService_ ? "set" : "null"));
+    }
+    if (configService_) {
+        const auto& budgets = configService_->GetRenderBudgetConfig();
+        textureMemoryTracker_.SetMaxBytes(budgets.vramMB * 1024 * 1024);
+        maxTextureDim_ = budgets.maxTextureDim;
+        if (logger_) {
+            logger_->Trace("BgfxGraphicsBackend", "BgfxGraphicsBackend",
+                           "vramMB=" + std::to_string(budgets.vramMB) +
+                           ", maxTextureDim=" + std::to_string(maxTextureDim_));
+        }
     }
     vertexLayout_.begin()
         .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
@@ -735,9 +746,13 @@ bgfx::ShaderHandle BgfxGraphicsBackend::CreateShader(const std::string& label,
 }
 
 bgfx::TextureHandle BgfxGraphicsBackend::LoadTextureFromFile(const std::string& path,
-                                                             uint64_t samplerFlags) const {
+                                                             uint64_t samplerFlags,
+                                                             size_t* outSizeBytes) const {
     if (logger_) {
         logger_->Trace("BgfxGraphicsBackend", "LoadTextureFromFile", "path=" + path);
+    }
+    if (outSizeBytes) {
+        *outSizeBytes = 0;
     }
     if (!HasProcessedFrame()) {
         if (logger_) {
@@ -762,6 +777,18 @@ bgfx::TextureHandle BgfxGraphicsBackend::LoadTextureFromFile(const std::string& 
         return BGFX_INVALID_HANDLE;
     }
 
+    if (maxTextureDim_ > 0) {
+        if (width > static_cast<int>(maxTextureDim_) || height > static_cast<int>(maxTextureDim_)) {
+            if (logger_) {
+                logger_->Error("BgfxGraphicsBackend::LoadTextureFromFile: texture " + path +
+                               " size (" + std::to_string(width) + "x" + std::to_string(height) +
+                               ") exceeds config max texture dim (" + std::to_string(maxTextureDim_) + ")");
+            }
+            stbi_image_free(pixels);
+            return BGFX_INVALID_HANDLE;
+        }
+    }
+
     // Validate texture dimensions against GPU capabilities
     const bgfx::Caps* caps = bgfx::getCaps();
     if (caps) {
@@ -777,7 +804,16 @@ bgfx::TextureHandle BgfxGraphicsBackend::LoadTextureFromFile(const std::string& 
         }
     }
 
-    const uint32_t size = static_cast<uint32_t>(width * height * 4);
+    const size_t size = static_cast<size_t>(width) * static_cast<size_t>(height) * 4u;
+    if (size > std::numeric_limits<uint32_t>::max()) {
+        if (logger_) {
+            logger_->Error("BgfxGraphicsBackend::LoadTextureFromFile: texture " + path +
+                           " exceeds supported size for upload (" + std::to_string(size) + " bytes)");
+        }
+        stbi_image_free(pixels);
+        return BGFX_INVALID_HANDLE;
+    }
+    const uint32_t sizeBytes = static_cast<uint32_t>(size);
 
     // Check memory budget before allocation
     if (!textureMemoryTracker_.CanAllocate(size)) {
@@ -791,7 +827,7 @@ bgfx::TextureHandle BgfxGraphicsBackend::LoadTextureFromFile(const std::string& 
         return BGFX_INVALID_HANDLE;
     }
 
-    const bgfx::Memory* mem = bgfx::copy(pixels, size);
+    const bgfx::Memory* mem = bgfx::copy(pixels, sizeBytes);
     stbi_image_free(pixels);
 
     // Validate bgfx::copy() succeeded
@@ -828,6 +864,10 @@ bgfx::TextureHandle BgfxGraphicsBackend::LoadTextureFromFile(const std::string& 
                            ", width=" + std::to_string(width) +
                            ", height=" + std::to_string(height) +
                            ", memoryMB=" + std::to_string(size / 1024 / 1024));
+    }
+
+    if (outSizeBytes) {
+        *outSizeBytes = size;
     }
 
     return handle;
@@ -955,23 +995,34 @@ GraphicsPipelineHandle BgfxGraphicsBackend::CreatePipeline(GraphicsDeviceHandle 
                 }
 
                 // Try to load texture from file
-                binding.texture = LoadTextureFromFile(binding.sourcePath, samplerFlags);
+                size_t textureSizeBytes = 0;
+                binding.texture = LoadTextureFromFile(binding.sourcePath, samplerFlags, &textureSizeBytes);
                 if (bgfx::isValid(binding.texture)) {
-                    // Estimate texture memory size (assume RGBA8 format, no mipmaps for now)
-                    // In production, should query actual texture info from bgfx
-                    // For now, estimate based on typical 2048x2048 textures
-                    binding.memorySizeBytes = 2048 * 2048 * 4;  // Conservative estimate
-                    textureMemoryTracker_.Allocate(binding.memorySizeBytes);
+                    binding.memorySizeBytes = textureSizeBytes;
+                    if (binding.memorySizeBytes > 0) {
+                        textureMemoryTracker_.Allocate(binding.memorySizeBytes);
+                    }
                 } else {
                     if (logger_) {
                         logger_->Warn("BgfxGraphicsBackend::CreatePipeline: texture load failed for " +
                                       binding.sourcePath + ", creating fallback texture");
                     }
                     // Use fallback magenta texture (1x1)
-                    binding.texture = CreateSolidTexture(0xff00ffff, samplerFlags);
-                    if (bgfx::isValid(binding.texture)) {
-                        binding.memorySizeBytes = 1 * 1 * 4;  // 1x1 RGBA8
-                        textureMemoryTracker_.Allocate(binding.memorySizeBytes);
+                    binding.memorySizeBytes = 1 * 1 * 4;  // 1x1 RGBA8
+                    if (!textureMemoryTracker_.CanAllocate(binding.memorySizeBytes)) {
+                        if (logger_) {
+                            logger_->Warn("BgfxGraphicsBackend::CreatePipeline: budget prevents fallback texture for " +
+                                          binding.sourcePath);
+                        }
+                        binding.texture = BGFX_INVALID_HANDLE;
+                        binding.memorySizeBytes = 0;
+                    } else {
+                        binding.texture = CreateSolidTexture(0xff00ffff, samplerFlags);
+                        if (bgfx::isValid(binding.texture)) {
+                            textureMemoryTracker_.Allocate(binding.memorySizeBytes);
+                        } else {
+                            binding.memorySizeBytes = 0;
+                        }
                     }
                 }
 

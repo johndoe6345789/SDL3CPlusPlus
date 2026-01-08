@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../interfaces/config_types.hpp"
 #include "../interfaces/i_crash_recovery_service.hpp"
 #include "../interfaces/i_logger.hpp"
 #include <atomic>
@@ -21,7 +22,7 @@ namespace sdl3cpp::services::impl {
  */
 class CrashRecoveryService : public ICrashRecoveryService {
 public:
-    explicit CrashRecoveryService(std::shared_ptr<ILogger> logger);
+    CrashRecoveryService(std::shared_ptr<ILogger> logger, CrashRecoveryConfig config);
     ~CrashRecoveryService() override;
 
     // ICrashRecoveryService interface
@@ -65,6 +66,8 @@ private:
     std::chrono::milliseconds heartbeatPollInterval_{200};
     std::string crashReport_;
     mutable std::mutex crashMutex_;
+    CrashRecoveryConfig config_{};
+    size_t memoryLimitBytes_ = 0;
 
     // Health monitoring state
     std::atomic<double> lastSuccessfulFrameTime_;

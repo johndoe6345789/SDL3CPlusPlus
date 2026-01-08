@@ -111,6 +111,18 @@ public:
         }
         return config_.guiFont;
     }
+    const RenderBudgetConfig& GetRenderBudgetConfig() const override {
+        if (logger_) {
+            logger_->Trace("JsonConfigService", "GetRenderBudgetConfig");
+        }
+        return config_.budgets;
+    }
+    const CrashRecoveryConfig& GetCrashRecoveryConfig() const override {
+        if (logger_) {
+            logger_->Trace("JsonConfigService", "GetCrashRecoveryConfig");
+        }
+        return config_.crashRecovery;
+    }
     const std::string& GetConfigJson() const override {
         if (logger_) {
             logger_->Trace("JsonConfigService", "GetConfigJson");

@@ -148,6 +148,8 @@ public:
         return materialXMaterials_;
     }
     const sdl3cpp::services::GuiFontConfig& GetGuiFontConfig() const override { return guiFontConfig_; }
+    const sdl3cpp::services::RenderBudgetConfig& GetRenderBudgetConfig() const override { return budgets_; }
+    const sdl3cpp::services::CrashRecoveryConfig& GetCrashRecoveryConfig() const override { return crashRecovery_; }
     const std::string& GetConfigJson() const override { return configJson_; }
 
     void DisableFreeType() {
@@ -173,6 +175,8 @@ private:
     sdl3cpp::services::MaterialXConfig materialXConfig_{};
     std::vector<sdl3cpp::services::MaterialXMaterialConfig> materialXMaterials_{};
     sdl3cpp::services::GuiFontConfig guiFontConfig_{};
+    sdl3cpp::services::RenderBudgetConfig budgets_{};
+    sdl3cpp::services::CrashRecoveryConfig crashRecovery_{};
     std::string configJson_{};
 };
 

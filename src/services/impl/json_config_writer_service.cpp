@@ -225,6 +225,33 @@ void JsonConfigWriterService::WriteConfig(const RuntimeConfig& config, const std
     renderingObject.AddMember("atmospherics", atmosphericsObject, allocator);
     document.AddMember("rendering", renderingObject, allocator);
 
+    rapidjson::Value budgetsObject(rapidjson::kObjectType);
+    budgetsObject.AddMember("vram_mb", static_cast<uint64_t>(config.budgets.vramMB), allocator);
+    budgetsObject.AddMember("max_texture_dim", config.budgets.maxTextureDim, allocator);
+    budgetsObject.AddMember("gui_text_cache_entries",
+                            static_cast<uint64_t>(config.budgets.guiTextCacheEntries),
+                            allocator);
+    budgetsObject.AddMember("gui_svg_cache_entries",
+                            static_cast<uint64_t>(config.budgets.guiSvgCacheEntries),
+                            allocator);
+    document.AddMember("budgets", budgetsObject, allocator);
+
+    rapidjson::Value crashObject(rapidjson::kObjectType);
+    crashObject.AddMember("heartbeat_timeout_ms", config.crashRecovery.heartbeatTimeoutMs, allocator);
+    crashObject.AddMember("heartbeat_poll_interval_ms", config.crashRecovery.heartbeatPollIntervalMs, allocator);
+    crashObject.AddMember("memory_limit_mb", static_cast<uint64_t>(config.crashRecovery.memoryLimitMB), allocator);
+    crashObject.AddMember("gpu_hang_frame_time_multiplier",
+                          config.crashRecovery.gpuHangFrameTimeMultiplier, allocator);
+    crashObject.AddMember("max_consecutive_gpu_timeouts",
+                          static_cast<uint64_t>(config.crashRecovery.maxConsecutiveGpuTimeouts), allocator);
+    crashObject.AddMember("max_lua_failures",
+                          static_cast<uint64_t>(config.crashRecovery.maxLuaFailures), allocator);
+    crashObject.AddMember("max_file_format_errors",
+                          static_cast<uint64_t>(config.crashRecovery.maxFileFormatErrors), allocator);
+    crashObject.AddMember("max_memory_warnings",
+                          static_cast<uint64_t>(config.crashRecovery.maxMemoryWarnings), allocator);
+    document.AddMember("crash_recovery", crashObject, allocator);
+
     rapidjson::Value guiObject(rapidjson::kObjectType);
     rapidjson::Value fontObject(rapidjson::kObjectType);
     fontObject.AddMember("use_freetype", config.guiFont.useFreeType, allocator);

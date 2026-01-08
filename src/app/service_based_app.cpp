@@ -194,7 +194,8 @@ void ServiceBasedApp::RegisterServices() {
 
     // Crash recovery service (needed early for crash detection)
     registry_.RegisterService<services::ICrashRecoveryService, services::impl::CrashRecoveryService>(
-        registry_.GetService<services::ILogger>());
+        registry_.GetService<services::ILogger>(),
+        runtimeConfig_.crashRecovery);
 
     // Lifecycle service
     registry_.RegisterService<services::ILifecycleService, services::impl::LifecycleService>(

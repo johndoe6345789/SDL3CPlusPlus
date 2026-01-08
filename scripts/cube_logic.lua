@@ -2,8 +2,19 @@ local scene_framework = require("scene_framework")
 local math3d = require("math3d")
 local config_resolver = require("config_resolver")
 
+local resolve_number = scene_framework.resolve_number
+local resolve_boolean = scene_framework.resolve_boolean
+local resolve_string = scene_framework.resolve_string
+local resolve_table = scene_framework.resolve_table
+local resolve_vec3 = scene_framework.resolve_vec3
+
+local scene_config = resolve_table(config_resolver.resolve_scene(config))
+local cube_mesh_config = resolve_table(scene_config.cube_mesh)
+local cube_mesh_path = resolve_string(cube_mesh_config.path, "models/cube.stl")
+local cube_mesh_double_sided = resolve_boolean(cube_mesh_config.double_sided, true)
+
 local cube_mesh_info = {
-    path = "models/cube.stl",
+    path = cube_mesh_path,
     loaded = false,
     vertex_count = 0,
     index_count = 0,
@@ -63,7 +74,11 @@ local function load_cube_mesh()
 
     cube_vertices = mesh.vertices
     cube_indices = mesh.indices
-    cube_indices_double_sided = build_double_sided_indices(cube_indices)
+    if cube_mesh_double_sided then
+        cube_indices_double_sided = build_double_sided_indices(cube_indices)
+    else
+        cube_indices_double_sided = {}
+    end
     cube_mesh_info.loaded = true
     cube_mesh_info.vertex_count = #mesh.vertices
     cube_mesh_info.index_count = #mesh.indices
@@ -107,11 +122,6 @@ start_music()
 
 local Gui = require("gui")
 local string_format = string.format
-
-local resolve_number = scene_framework.resolve_number
-local resolve_boolean = scene_framework.resolve_boolean
-local resolve_table = scene_framework.resolve_table
-local resolve_vec3 = scene_framework.resolve_vec3
 
 local function resolve_positive_int(value, fallback)
     local candidate = resolve_number(value, fallback)
@@ -275,26 +285,37 @@ if cube_mesh_info.loaded then
     end
 end
 
+local camera_config = resolve_table(scene_config.camera)
+local controls_config = resolve_table(scene_config.controls)
+local max_pitch_degrees = resolve_number(controls_config.max_pitch_degrees, nil)
+local max_pitch = resolve_number(controls_config.max_pitch, nil)
+if max_pitch_degrees then
+    max_pitch = math.rad(max_pitch_degrees)
+end
+if not max_pitch then
+    max_pitch = math.rad(85.0)
+end
+
 local camera = {
     position = {0.0, 0.0, 5.0},
-    yaw = math.pi,  -- Face toward -Z (center of room)
-    pitch = 0.0,
-    fov = 0.78,
-    near = 0.1,
-    far = 50.0,
+    yaw = resolve_number(camera_config.yaw, math.pi),
+    pitch = resolve_number(camera_config.pitch, 0.0),
+    fov = resolve_number(camera_config.fov, 0.78),
+    near = resolve_number(camera_config.near, 0.1),
+    far = resolve_number(camera_config.far, 50.0),
 }
 
 local controls = {
-    move_speed = 16.0,
-    fly_speed = 3.0,
-    jump_speed = 5.5,
-    gravity = -12.0,
-    max_fall_speed = -20.0,
-    mouse_sensitivity = 0.0025,
-    gamepad_look_speed = 2.5,
-    stick_deadzone = 0.2,
-    max_pitch = math.rad(85.0),
-    move_forward_uses_pitch = true,
+    move_speed = resolve_number(controls_config.move_speed, 16.0),
+    fly_speed = resolve_number(controls_config.fly_speed, 3.0),
+    jump_speed = resolve_number(controls_config.jump_speed, 5.5),
+    gravity = resolve_number(controls_config.gravity, -12.0),
+    max_fall_speed = resolve_number(controls_config.max_fall_speed, -20.0),
+    mouse_sensitivity = resolve_number(controls_config.mouse_sensitivity, 0.0025),
+    gamepad_look_speed = resolve_number(controls_config.gamepad_look_speed, 2.5),
+    stick_deadzone = resolve_number(controls_config.stick_deadzone, 0.2),
+    max_pitch = max_pitch,
+    move_forward_uses_pitch = resolve_boolean(controls_config.move_forward_uses_pitch, true),
 }
 
 local last_frame_time = nil
@@ -310,7 +331,6 @@ local function get_time_seconds()
 end
 local movement_log_cooldown = 0.0
 local world_up = {0.0, 1.0, 0.0}
-local scene_config = resolve_table(config_resolver.resolve_scene(config))
 local room_config = resolve_table(scene_config.room)
 local lantern_config = resolve_table(scene_config.lanterns)
 local physics_config = resolve_table(scene_config.physics_cube)
@@ -385,9 +405,11 @@ local physics_state = {
     gravity = physics_gravity,
 }
 
-camera.position[1] = 0.0
-camera.position[2] = room.floor_top + player_state.eye_height
-camera.position[3] = 10.0
+camera.position = resolve_vec3(camera_config.position, {
+    0.0,
+    room.floor_top + player_state.eye_height,
+    10.0,
+})
 
 local function clamp(value, minValue, maxValue)
     if value < minValue then
