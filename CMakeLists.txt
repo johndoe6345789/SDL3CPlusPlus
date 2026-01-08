@@ -517,6 +517,28 @@ target_link_libraries(materialx_shader_generator_integration_test PRIVATE
     ${SDL3CPP_MATERIALX_LIBS}
 )
 add_test(NAME materialx_shader_generator_integration_test COMMAND materialx_shader_generator_integration_test)
+
+# Test: Bgfx Texture Loading (investigates texture loading crash)
+add_executable(bgfx_texture_loading_test
+    tests/bgfx_texture_loading_test.cpp
+)
+target_include_directories(bgfx_texture_loading_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_link_libraries(bgfx_texture_loading_test PRIVATE
+    GTest::gtest
+    GTest::gtest_main
+)
+add_test(NAME bgfx_texture_loading_test COMMAND bgfx_texture_loading_test)
+
+# Test: Bgfx Initialization Order (documents timing requirements and crash fix)
+add_executable(bgfx_initialization_order_test
+    tests/bgfx_initialization_order_test.cpp
+)
+target_include_directories(bgfx_initialization_order_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_link_libraries(bgfx_initialization_order_test PRIVATE
+    GTest::gtest
+    GTest::gtest_main
+)
+add_test(NAME bgfx_initialization_order_test COMMAND bgfx_initialization_order_test)
 endif()
 
 if(ENABLE_VITA)

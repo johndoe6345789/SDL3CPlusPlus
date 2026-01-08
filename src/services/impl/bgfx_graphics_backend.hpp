@@ -51,6 +51,38 @@ public:
     void* GetGraphicsQueue() const override;
 
 private:
+    // Texture memory budget tracker to prevent GPU memory exhaustion
+    class TextureMemoryTracker {
+    public:
+        TextureMemoryTracker() = default;
+
+        bool CanAllocate(size_t bytes) const {
+            return (totalBytes_ + bytes) <= maxBytes_;
+        }
+
+        void Allocate(size_t bytes) {
+            totalBytes_ += bytes;
+        }
+
+        void Free(size_t bytes) {
+            if (bytes > totalBytes_) {
+                totalBytes_ = 0;
+            } else {
+                totalBytes_ -= bytes;
+            }
+        }
+
+        size_t GetUsedBytes() const { return totalBytes_; }
+        size_t GetMaxBytes() const { return maxBytes_; }
+        size_t GetAvailableBytes() const { return maxBytes_ - totalBytes_; }
+
+        void SetMaxBytes(size_t max) { maxBytes_ = max; }
+
+    private:
+        size_t totalBytes_ = 0;
+        size_t maxBytes_ = 512 * 1024 * 1024;  // 512MB default limit
+    };
+
     struct PipelineEntry {
         bgfx::ProgramHandle program = BGFX_INVALID_HANDLE;
         struct TextureBinding {
@@ -59,6 +91,7 @@ private:
             uint8_t stage = 0;
             std::string uniformName;
             std::string sourcePath;
+            size_t memorySizeBytes = 0;  // Track memory used by this texture
         };
         std::vector<TextureBinding> textures;
     };
@@ -127,6 +160,7 @@ private:
     PlatformHandleInfo platformHandleInfo_{};
     bgfx::PlatformData platformData_{};
     bool loggedInitFailureDiagnostics_ = false;
+    mutable TextureMemoryTracker textureMemoryTracker_{};
 };
 
 }  // namespace sdl3cpp::services::impl

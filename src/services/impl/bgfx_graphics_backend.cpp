@@ -716,9 +716,47 @@ bgfx::TextureHandle BgfxGraphicsBackend::LoadTextureFromFile(const std::string& 
         return BGFX_INVALID_HANDLE;
     }
 
+    // Validate texture dimensions against GPU capabilities
+    const bgfx::Caps* caps = bgfx::getCaps();
+    if (caps) {
+        const uint16_t maxTextureSize = caps->limits.maxTextureSize;
+        if (width > maxTextureSize || height > maxTextureSize) {
+            if (logger_) {
+                logger_->Error("BgfxGraphicsBackend::LoadTextureFromFile: texture " + path +
+                               " size (" + std::to_string(width) + "x" + std::to_string(height) +
+                               ") exceeds GPU max texture size (" + std::to_string(maxTextureSize) + ")");
+            }
+            stbi_image_free(pixels);
+            return BGFX_INVALID_HANDLE;
+        }
+    }
+
     const uint32_t size = static_cast<uint32_t>(width * height * 4);
+
+    // Check memory budget before allocation
+    if (!textureMemoryTracker_.CanAllocate(size)) {
+        if (logger_) {
+            logger_->Error("BgfxGraphicsBackend::LoadTextureFromFile: texture memory budget exceeded for " + path +
+                           " - requested " + std::to_string(size / 1024 / 1024) + " MB" +
+                           ", used " + std::to_string(textureMemoryTracker_.GetUsedBytes() / 1024 / 1024) + " MB" +
+                           " / " + std::to_string(textureMemoryTracker_.GetMaxBytes() / 1024 / 1024) + " MB");
+        }
+        stbi_image_free(pixels);
+        return BGFX_INVALID_HANDLE;
+    }
+
     const bgfx::Memory* mem = bgfx::copy(pixels, size);
     stbi_image_free(pixels);
+
+    // Validate bgfx::copy() succeeded
+    if (!mem) {
+        if (logger_) {
+            logger_->Error("BgfxGraphicsBackend::LoadTextureFromFile: bgfx::copy() failed for " + path +
+                           " - likely out of GPU memory (attempted to allocate " +
+                           std::to_string(size / 1024 / 1024) + " MB)");
+        }
+        return BGFX_INVALID_HANDLE;
+    }
 
     bgfx::TextureHandle handle = bgfx::createTexture2D(
         static_cast<uint16_t>(width),
@@ -729,15 +767,21 @@ bgfx::TextureHandle BgfxGraphicsBackend::LoadTextureFromFile(const std::string& 
         samplerFlags,
         mem);
 
-    if (!bgfx::isValid(handle) && logger_) {
-        logger_->Error("BgfxGraphicsBackend::LoadTextureFromFile: createTexture2D failed for " + path);
+    if (!bgfx::isValid(handle)) {
+        if (logger_) {
+            logger_->Error("BgfxGraphicsBackend::LoadTextureFromFile: createTexture2D failed for " + path +
+                           " (" + std::to_string(width) + "x" + std::to_string(height) +
+                           " = " + std::to_string(size / 1024 / 1024) + " MB) - GPU resource exhaustion likely");
+        }
+        return BGFX_INVALID_HANDLE;
     }
 
     if (logger_) {
         logger_->Trace("BgfxGraphicsBackend", "LoadTextureFromFile",
                        "path=" + path +
                            ", width=" + std::to_string(width) +
-                           ", height=" + std::to_string(height));
+                           ", height=" + std::to_string(height) +
+                           ", memoryMB=" + std::to_string(size / 1024 / 1024));
     }
 
     return handle;
@@ -849,15 +893,55 @@ GraphicsPipelineHandle BgfxGraphicsBackend::CreatePipeline(GraphicsDeviceHandle 
                     continue;
                 }
                 PipelineEntry::TextureBinding binding{};
-                binding.stage = stage++;
+                binding.stage = stage;
                 binding.uniformName = texture.uniformName;
                 binding.sourcePath = texture.path;
                 binding.sampler = bgfx::createUniform(binding.uniformName.c_str(),
                                                       bgfx::UniformType::Sampler);
-                binding.texture = LoadTextureFromFile(binding.sourcePath, samplerFlags);
-                if (!bgfx::isValid(binding.texture)) {
-                    binding.texture = CreateSolidTexture(0xff00ffff, samplerFlags);
+
+                // Validate sampler creation
+                if (!bgfx::isValid(binding.sampler)) {
+                    if (logger_) {
+                        logger_->Error("BgfxGraphicsBackend::CreatePipeline: failed to create sampler uniform '" +
+                                       binding.uniformName + "' for " + shaderKey);
+                    }
+                    continue;  // Skip this texture binding
                 }
+
+                // Try to load texture from file
+                binding.texture = LoadTextureFromFile(binding.sourcePath, samplerFlags);
+                if (bgfx::isValid(binding.texture)) {
+                    // Estimate texture memory size (assume RGBA8 format, no mipmaps for now)
+                    // In production, should query actual texture info from bgfx
+                    // For now, estimate based on typical 2048x2048 textures
+                    binding.memorySizeBytes = 2048 * 2048 * 4;  // Conservative estimate
+                    textureMemoryTracker_.Allocate(binding.memorySizeBytes);
+                } else {
+                    if (logger_) {
+                        logger_->Warn("BgfxGraphicsBackend::CreatePipeline: texture load failed for " +
+                                      binding.sourcePath + ", creating fallback texture");
+                    }
+                    // Use fallback magenta texture (1x1)
+                    binding.texture = CreateSolidTexture(0xff00ffff, samplerFlags);
+                    if (bgfx::isValid(binding.texture)) {
+                        binding.memorySizeBytes = 1 * 1 * 4;  // 1x1 RGBA8
+                        textureMemoryTracker_.Allocate(binding.memorySizeBytes);
+                    }
+                }
+
+                // Validate texture creation succeeded (either main or fallback)
+                if (!bgfx::isValid(binding.texture)) {
+                    if (logger_) {
+                        logger_->Error("BgfxGraphicsBackend::CreatePipeline: both texture load AND fallback failed for " +
+                                       shaderKey + " - skipping texture binding '" + binding.uniformName + "'");
+                    }
+                    // Cleanup the sampler we created
+                    if (bgfx::isValid(binding.sampler)) {
+                        bgfx::destroy(binding.sampler);
+                    }
+                    continue;  // Skip this texture binding entirely
+                }
+
                 if (logger_) {
                     logger_->Trace("BgfxGraphicsBackend", "CreatePipeline",
                                    "shaderKey=" + shaderKey +
@@ -865,6 +949,9 @@ GraphicsPipelineHandle BgfxGraphicsBackend::CreatePipeline(GraphicsDeviceHandle 
                                        ", texturePath=" + binding.sourcePath +
                                        ", stage=" + std::to_string(binding.stage));
                 }
+
+                // Successfully created texture binding - increment stage and add to pipeline
+                stage++;
                 entry->textures.push_back(std::move(binding));
             }
         }
@@ -885,6 +972,10 @@ void BgfxGraphicsBackend::DestroyPipeline(GraphicsDeviceHandle device, GraphicsP
     for (const auto& binding : it->second->textures) {
         if (bgfx::isValid(binding.texture)) {
             bgfx::destroy(binding.texture);
+            // Free texture memory from budget
+            if (binding.memorySizeBytes > 0) {
+                textureMemoryTracker_.Free(binding.memorySizeBytes);
+            }
         }
         if (bgfx::isValid(binding.sampler)) {
             bgfx::destroy(binding.sampler);
@@ -1060,6 +1151,10 @@ void BgfxGraphicsBackend::DestroyPipelines() {
         for (const auto& binding : entry->textures) {
             if (bgfx::isValid(binding.texture)) {
                 bgfx::destroy(binding.texture);
+                // Free texture memory from budget
+                if (binding.memorySizeBytes > 0) {
+                    textureMemoryTracker_.Free(binding.memorySizeBytes);
+                }
             }
             if (bgfx::isValid(binding.sampler)) {
                 bgfx::destroy(binding.sampler);
