@@ -1,0 +1,65 @@
+name: Package Release
+
+on:
+  workflow_call:
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  package-release:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-amd64-sdl3
+            runner: ubuntu-24.04
+            platform: linux
+            arch: amd64
+            sdl_version: SDL3
+          - name: linux-arm64-sdl3
+            runner: ubuntu-24.04-arm64
+            platform: linux
+            arch: arm64
+            sdl_version: SDL3
+          - name: linux-amd64-sdl
+            runner: ubuntu-24.04
+            platform: linux
+            arch: amd64
+            sdl_version: sdl
+          - name: linux-arm64-sdl
+            runner: ubuntu-24.04-arm64
+            platform: linux
+            arch: arm64
+            sdl_version: sdl
+    runs-on: ${{ matrix.runner }}
+    env:
+      BUILD_DIR: build/${{ matrix.platform }}-${{ matrix.arch }}-${{ matrix.sdl_version }}
+      ZIP_NAME: sdl3_app-${{ matrix.platform }}-${{ matrix.arch }}-${{ matrix.sdl_version }}.zip
+      PLATFORM_NAME: ${{ matrix.platform }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-${{ matrix.platform }}-${{ matrix.arch }}-${{ matrix.sdl_version }}
+          path: .
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Package release ZIP
+        run: python scripts/package_release.py
+
+      - name: Publish GitHub release asset
+        if: github.ref != 'refs/tags/local'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release/${{ env.ZIP_NAME }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,177 @@
+# codex-skill.yaml — Machine-friendly variant
+# Use alongside AGENTS.md; agents should treat this as normative.
+
+style:
+  paradigm: "OO"
+  framework_bias: "Spring-like layering"
+  layering_bias: "Controller -> Service -> Repository with explicit domain/data layers"
+  class_file_bias: "small"
+  dataclass_bias: "strong"
+
+languages:
+  primary: ["java", "typescript", "cpp"]
+  allowed: ["java", "kotlin", "typescript", "cpp", "python"]
+  notes:
+    java: "Spring-style layering; prefer records for DTOs/value objects."
+    typescript: "Prefer class-based OO where it clarifies responsibilities; use readonly/immutability; treat types/interfaces as dataclass-like carriers."
+    cpp: "Prefer RAII, value types, small headers; separate interface/impl; avoid macro-heavy patterns; explicit ownership."
+
+layering:
+  controller: "boundary only"
+  service: "orchestration + application logic"
+  repository: "persistence boundary"
+  domain: "entities/value objects + invariants"
+  dto: "records/data-classes; no business logic"
+  mapping: "dedicated mappers"
+
+# Per-language adaptations of the same architecture
+layering_by_language:
+  java:
+    controller: ["@RestController", "Controller"]
+    service: ["@Service", "UseCase"]
+    repository: ["@Repository"]
+    domain: ["domain"]
+    dto: ["dto"]
+    mapping: ["mapper"]
+  typescript:
+    controller: ["routes", "controllers"]
+    service: ["services", "use-cases"]
+    repository: ["repositories", "adapters", "ports"]
+    domain: ["domain", "entities", "value-objects"]
+    dto: ["dto", "contracts", "types"]
+    mapping: ["mappers"]
+  kotlin:
+    controller: ["@RestController", "Controller"]
+    service: ["@Service", "UseCase"]
+    repository: ["@Repository"]
+    domain: ["domain"]
+    dto: ["dto"]
+    mapping: ["mapper"]
+  python:
+    controller: ["controllers", "routes"]
+    service: ["services", "use_cases"]
+    repository: ["repositories", "adapters", "ports"]
+    domain: ["domain", "entities", "value_objects"]
+    dto: ["dto", "contracts", "types"]
+    mapping: ["mappers"]
+  cpp:
+    controller: ["api", "handlers", "endpoints"]
+    service: ["services", "use_cases"]
+    repository: ["repositories", "adapters", "ports"]
+    domain: ["domain", "entities", "value_objects"]
+    dto: ["dto", "contracts"]
+    mapping: ["mappers"]
+
+size_limits:
+  class_file_lines_target: [40, 160]
+  class_file_lines_soft_cap: 200
+  methods_lines_soft_cap: 20
+  cyclomatic_complexity_soft_cap: 8
+  one_top_level_class_per_file: true
+
+data_carriers:
+  immutable: true
+  preferred:
+    java: "record"
+    kotlin: "data class"
+    python: "@dataclass(frozen=True)"
+    typescript: "type/interface + readonly (or immutable class)"
+    cpp: "struct/value type with const-correctness; no hidden ownership"
+  rules:
+    - "no orchestration logic"
+    - "only intrinsic validation"
+    - "small and specific"
+    - "prefer serialization-friendly shapes at boundaries"
+
+naming:
+  controller_suffix: "Controller"
+  service_suffix: "Service"
+  repository_suffix: "Repository"
+  dto_suffixes: ["Request", "Response", "Dto"]
+  mapper_suffix: "Mapper"
+  exception_suffixes: ["Exception"]
+
+naming_by_language:
+  kotlin:
+    controller_suffixes: ["Controller"]
+    service_suffixes: ["Service", "UseCase"]
+    repository_suffixes: ["Repository"]
+    dto_suffixes: ["Request", "Response", "Dto"]
+    exception_suffixes: ["Exception"]
+  python:
+    controller_suffixes: ["Controller", "Routes"]
+    service_suffixes: ["Service", "UseCase"]
+    repository_suffixes: ["Repository", "Port", "Adapter"]
+    dto_suffixes: ["Request", "Response", "Dto"]
+    exception_suffixes: ["Error"]
+  typescript:
+    controller_suffixes: ["Controller", "Routes"]
+    service_suffixes: ["Service", "UseCase"]
+    repository_suffixes: ["Repository", "Port", "Adapter"]
+    dto_suffixes: ["Request", "Response", "Dto"]
+    exception_suffixes: ["Error"]
+  cpp:
+    controller_suffixes: ["Handler", "Endpoint"]
+    service_suffixes: ["Service", "UseCase"]
+    repository_suffixes: ["Repository", "Port", "Adapter"]
+    dto_suffixes: ["Request", "Response", "Dto"]
+    exception_suffixes: ["Error"]
+
+dependencies:
+  domain_must_not_depend_on_framework: true
+  controllers_depend_on_services_only: true
+  repositories_no_business_rules: true
+
+typescript_rules:
+  module_structure:
+    - "Prefer one exported class per file (with small helper types allowed)."
+    - "DTO files may export multiple related types (no behavior)."
+    - "Avoid deep barrel exports that obscure dependency direction."
+  types:
+    - "Prefer explicit types at boundaries."
+    - "Use readonly properties; prefer Readonly<T> for DTO shapes."
+    - "Use type/interface for DTOs; use classes for behavior."
+  runtime_validation:
+    - "If validation is needed, keep it at boundaries (e.g., schema/validator) not inside controllers."
+  async:
+    - "Prefer async/await; do not leak promises across layers unintentionally."
+
+cpp_rules:
+  compilation_structure:
+    - "Separate interface (.h/.hpp) and implementation (.cc/.cpp) unless header-only is explicitly required."
+    - "Minimize includes; prefer forward declarations in headers."
+  ownership:
+    - "Prefer value semantics; otherwise use unique_ptr/shared_ptr intentionally."
+    - "RAII for resources; no raw new/delete in application code."
+  errors:
+    - "Prefer expected-like results or typed exceptions consistently (project choice)."
+  macros:
+    - "Avoid macros except include guards and narrowly-scoped configuration."
+
+testing:
+  unit_focus: ["domain", "service"]
+  integration_focus: ["repository", "controller"]
+  avoid_e2e_by_default: true
+
+testing_by_language:
+  java: ["JUnit5", "SpringBootTest when needed"]
+  kotlin: ["JUnit5 or Kotest"]
+  python: ["Pytest"]
+  typescript: ["Jest"]
+  cpp: ["GoogleTest (if present) or Catch2 (if present); otherwise provide minimal harness"]
+
+anti_patterns:
+  - "fat controllers"
+  - "god services"
+  - "repository business logic"
+  - "mega DTOs"
+  - "utility dumping ground"
+  - "framework types leaking into domain"
+  - "cross-layer imports that invert dependency direction"
+
+agent_output:
+  prefer_new_small_classes_over_big_classes: true
+  keep_controllers_thin: true
+  keep_mapping_out_of_controllers: true
+  enforce_layering: true
+  language_specific_conformance: true

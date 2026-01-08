@@ -1,0 +1,23 @@
+name: Release Demo
+
+on:
+  push:
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  upload-build-artifact:
+    uses: ./.github/workflows/upload-build-artifact.yml
+    secrets: inherit
+
+  package-release:
+    needs: upload-build-artifact
+    uses: ./.github/workflows/package-release.yml
+    secrets: inherit
+
+  publish-container:
+    needs: upload-build-artifact
+    uses: ./.github/workflows/publish-container.yml
+    secrets: inherit

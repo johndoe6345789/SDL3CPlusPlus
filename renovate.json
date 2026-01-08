@@ -1,0 +1,23 @@
+{
+  "extends": [
+    "config:recommended"
+  ],
+  "enabledManagers": [
+    "conan"
+  ],
+  "conan": {
+    "enabled": true
+  },
+  "packageRules": [
+    {
+      "matchDatasources": [
+        "conan"
+      ],
+      "groupName": "all Conan dependencies",
+      "automerge": true,
+      "automergeType": "branch"
+    }
+  ],
+  "prConcurrentLimit": 5,
+  "timezone": "UTC"
+}
