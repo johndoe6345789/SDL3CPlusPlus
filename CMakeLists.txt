@@ -539,6 +539,20 @@ target_link_libraries(bgfx_initialization_order_test PRIVATE
     GTest::gtest_main
 )
 add_test(NAME bgfx_initialization_order_test COMMAND bgfx_initialization_order_test)
+
+# Test: Bgfx Frame Requirement (TDD test - validates the actual bgfx behavior)
+add_executable(bgfx_frame_requirement_test
+    tests/bgfx_frame_requirement_test.cpp
+    src/stb_image.cpp
+)
+target_include_directories(bgfx_frame_requirement_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_link_libraries(bgfx_frame_requirement_test PRIVATE
+    GTest::gtest
+    GTest::gtest_main
+    ${SDL3CPP_RENDER_STACK_LIBS}
+    SDL3::SDL3
+)
+add_test(NAME bgfx_frame_requirement_test COMMAND bgfx_frame_requirement_test)
 endif()
 
 if(ENABLE_VITA)
