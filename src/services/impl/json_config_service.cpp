@@ -12,8 +12,232 @@
 #include <iostream>
 #include <optional>
 #include <stdexcept>
+#include <system_error>
+#include <unordered_set>
 
 namespace sdl3cpp::services::impl {
+
+namespace {
+constexpr int kExpectedSchemaVersion = 2;
+constexpr const char* kSchemaVersionKey = "schema_version";
+constexpr const char* kConfigVersionKey = "configVersion";
+constexpr const char* kExtendsKey = "extends";
+constexpr const char* kDeleteKey = "@delete";
+
+std::filesystem::path NormalizeConfigPath(const std::filesystem::path& path) {
+    std::error_code ec;
+    auto canonicalPath = std::filesystem::weakly_canonical(path, ec);
+    if (ec) {
+        return std::filesystem::absolute(path);
+    }
+    return canonicalPath;
+}
+
+rapidjson::Document ParseJsonDocument(const std::filesystem::path& configPath) {
+    std::ifstream configStream(configPath);
+    if (!configStream) {
+        throw std::runtime_error("Failed to open config file: " + configPath.string());
+    }
+
+    rapidjson::IStreamWrapper inputWrapper(configStream);
+    rapidjson::Document document;
+    document.ParseStream(inputWrapper);
+    if (document.HasParseError()) {
+        throw std::runtime_error("Failed to parse JSON config at " + configPath.string());
+    }
+    if (!document.IsObject()) {
+        throw std::runtime_error("JSON config must contain an object at the root");
+    }
+    return document;
+}
+
+std::vector<std::filesystem::path> ExtractExtendPaths(const rapidjson::Value& document,
+                                                      const std::filesystem::path& configPath) {
+    std::vector<std::filesystem::path> paths;
+    if (!document.HasMember(kExtendsKey)) {
+        return paths;
+    }
+
+    const auto& extendsValue = document[kExtendsKey];
+    auto resolvePath = [&](const std::filesystem::path& candidate) {
+        if (candidate.is_absolute()) {
+            return candidate;
+        }
+        return configPath.parent_path() / candidate;
+    };
+
+    if (extendsValue.IsString()) {
+        paths.push_back(resolvePath(extendsValue.GetString()));
+    } else if (extendsValue.IsArray()) {
+        for (const auto& entry : extendsValue.GetArray()) {
+            if (!entry.IsString()) {
+                throw std::runtime_error("JSON member 'extends' must be a string or array of strings");
+            }
+            paths.push_back(resolvePath(entry.GetString()));
+        }
+    } else {
+        throw std::runtime_error("JSON member 'extends' must be a string or array of strings");
+    }
+
+    return paths;
+}
+
+void ApplyDeleteDirectives(rapidjson::Value& target,
+                           const rapidjson::Value& overlay,
+                           const std::shared_ptr<ILogger>& logger,
+                           const std::string& jsonPath) {
+    if (!overlay.HasMember(kDeleteKey)) {
+        return;
+    }
+    const auto& deletes = overlay[kDeleteKey];
+    if (!deletes.IsArray()) {
+        throw std::runtime_error("JSON member '" + std::string(kDeleteKey) + "' must be an array of strings");
+    }
+    for (const auto& entry : deletes.GetArray()) {
+        if (!entry.IsString()) {
+            throw std::runtime_error("JSON member '" + std::string(kDeleteKey) + "' must contain only strings");
+        }
+        const char* key = entry.GetString();
+        if (target.HasMember(key)) {
+            target.RemoveMember(key);
+            if (logger) {
+                logger->Trace("JsonConfigService", "ApplyDeleteDirectives",
+                              "jsonPath=" + jsonPath + ", key=" + std::string(key),
+                              "Removed key from merged config");
+            }
+        }
+    }
+}
+
+void MergeJsonValues(rapidjson::Value& target,
+                     const rapidjson::Value& overlay,
+                     rapidjson::Document::AllocatorType& allocator,
+                     const std::shared_ptr<ILogger>& logger,
+                     const std::string& jsonPath) {
+    if (!overlay.IsObject()) {
+        target.CopyFrom(overlay, allocator);
+        return;
+    }
+
+    if (!target.IsObject()) {
+        target.CopyFrom(overlay, allocator);
+        return;
+    }
+
+    ApplyDeleteDirectives(target, overlay, logger, jsonPath);
+
+    for (auto it = overlay.MemberBegin(); it != overlay.MemberEnd(); ++it) {
+        const std::string memberName = it->name.GetString();
+        if (memberName == kDeleteKey) {
+            continue;
+        }
+        if (target.HasMember(memberName.c_str())) {
+            auto& targetValue = target[memberName.c_str()];
+            const auto& overlayValue = it->value;
+            if (targetValue.IsObject() && overlayValue.IsObject()) {
+                MergeJsonValues(targetValue, overlayValue, allocator, logger, jsonPath + "/" + memberName);
+            } else {
+                targetValue.CopyFrom(overlayValue, allocator);
+            }
+        } else {
+            rapidjson::Value nameValue(memberName.c_str(), allocator);
+            rapidjson::Value valueCopy;
+            valueCopy.CopyFrom(it->value, allocator);
+            target.AddMember(nameValue, valueCopy, allocator);
+        }
+    }
+}
+
+rapidjson::Document LoadConfigDocumentRecursive(const std::filesystem::path& configPath,
+                                                const std::shared_ptr<ILogger>& logger,
+                                                std::unordered_set<std::string>& visited) {
+    const auto normalizedPath = NormalizeConfigPath(configPath);
+    const std::string pathKey = normalizedPath.string();
+    if (!visited.insert(pathKey).second) {
+        throw std::runtime_error("Config extends cycle detected at " + pathKey);
+    }
+
+    if (logger) {
+        logger->Trace("JsonConfigService", "LoadConfigDocumentRecursive",
+                      "configPath=" + pathKey, "Loading config document");
+    }
+
+    rapidjson::Document document = ParseJsonDocument(normalizedPath);
+    auto extendPaths = ExtractExtendPaths(document, normalizedPath);
+    if (document.HasMember(kExtendsKey)) {
+        document.RemoveMember(kExtendsKey);
+    }
+
+    if (extendPaths.empty()) {
+        visited.erase(pathKey);
+        return document;
+    }
+
+    if (logger) {
+        logger->Trace("JsonConfigService", "LoadConfigDocumentRecursive",
+                      "configPath=" + pathKey + ", extendsCount=" + std::to_string(extendPaths.size()),
+                      "Merging extended configs");
+    }
+
+    rapidjson::Document merged;
+    merged.SetObject();
+    auto& allocator = merged.GetAllocator();
+    for (const auto& extendPath : extendPaths) {
+        auto baseDoc = LoadConfigDocumentRecursive(extendPath, logger, visited);
+        MergeJsonValues(merged, baseDoc, allocator, logger, extendPath.string());
+    }
+    MergeJsonValues(merged, document, allocator, logger, normalizedPath.string());
+
+    visited.erase(pathKey);
+    return merged;
+}
+
+std::optional<int> ReadVersionField(const rapidjson::Value& document,
+                                    const char* fieldName,
+                                    const std::filesystem::path& configPath) {
+    if (!document.HasMember(fieldName)) {
+        return std::nullopt;
+    }
+    const auto& value = document[fieldName];
+    if (value.IsInt()) {
+        return value.GetInt();
+    }
+    if (value.IsUint()) {
+        return static_cast<int>(value.GetUint());
+    }
+    throw std::runtime_error("JSON member '" + std::string(fieldName) + "' must be an integer in " +
+                             configPath.string());
+}
+
+void ValidateSchemaVersion(const rapidjson::Value& document,
+                           const std::filesystem::path& configPath,
+                           const std::shared_ptr<ILogger>& logger) {
+    const auto schemaVersion = ReadVersionField(document, kSchemaVersionKey, configPath);
+    const auto configVersion = ReadVersionField(document, kConfigVersionKey, configPath);
+    if (schemaVersion && configVersion && *schemaVersion != *configVersion) {
+        throw std::runtime_error("JSON members 'schema_version' and 'configVersion' must match in " +
+                                 configPath.string());
+    }
+    const auto activeVersion = schemaVersion ? schemaVersion : configVersion;
+    if (!activeVersion) {
+        if (logger) {
+            logger->Warn("JsonConfigService::LoadFromJson: Missing schema version in " +
+                         configPath.string() + "; assuming version " + std::to_string(kExpectedSchemaVersion));
+        }
+        return;
+    }
+    if (logger) {
+        logger->Trace("JsonConfigService", "ValidateSchemaVersion",
+                      "version=" + std::to_string(*activeVersion) +
+                      ", configPath=" + configPath.string());
+    }
+    if (*activeVersion != kExpectedSchemaVersion) {
+        throw std::runtime_error("Unsupported schema version " + std::to_string(*activeVersion) +
+                                 " in " + configPath.string() +
+                                 "; expected " + std::to_string(kExpectedSchemaVersion));
+    }
+}
+}  // namespace
 
 JsonConfigService::JsonConfigService(std::shared_ptr<ILogger> logger, const char* argv0)
     : logger_(std::move(logger)), configJson_(), config_(RuntimeConfig{}) {
@@ -81,20 +305,9 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
         ", dumpConfig=" + (dumpConfig ? "true" : "false");
     logger->Trace("JsonConfigService", "LoadFromJson", args);
 
-    std::ifstream configStream(configPath);
-    if (!configStream) {
-        throw std::runtime_error("Failed to open config file: " + configPath.string());
-    }
-
-    rapidjson::IStreamWrapper inputWrapper(configStream);
-    rapidjson::Document document;
-    document.ParseStream(inputWrapper);
-    if (document.HasParseError()) {
-        throw std::runtime_error("Failed to parse JSON config at " + configPath.string());
-    }
-    if (!document.IsObject()) {
-        throw std::runtime_error("JSON config must contain an object at the root");
-    }
+    std::unordered_set<std::string> visitedPaths;
+    rapidjson::Document document = LoadConfigDocumentRecursive(configPath, logger, visitedPaths);
+    ValidateSchemaVersion(document, configPath, logger);
 
     if (dumpConfig || configJson) {
         rapidjson::StringBuffer buffer;
