@@ -543,7 +543,6 @@ add_test(NAME bgfx_initialization_order_test COMMAND bgfx_initialization_order_t
 # Test: Bgfx Frame Requirement (TDD test - validates the actual bgfx behavior)
 add_executable(bgfx_frame_requirement_test
     tests/bgfx_frame_requirement_test.cpp
-    src/stb_image.cpp
 )
 target_include_directories(bgfx_frame_requirement_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(bgfx_frame_requirement_test PRIVATE

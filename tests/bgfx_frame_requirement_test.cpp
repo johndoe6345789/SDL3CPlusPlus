@@ -108,7 +108,6 @@ protected:
         platformData_.nwh = SDL_GetPointerProperty(props, SDL_PROP_WINDOW_COCOA_WINDOW_POINTER, nullptr);
 #endif
 
-        bgfx::setPlatformData(platformData_);
     }
 
     void ProcessFrame() {
@@ -172,8 +171,7 @@ TEST_F(BgfxFrameRequirementTest, DISABLED_CreatingTextureBeforeFirstFrame_Should
     // 1. bgfx::init() ✓
     // 2. bgfx::createTexture2D() ← BEFORE first frame() → CRASH on AMD
 
-    const bgfx::Stats* stats = bgfx::getStats();
-    ASSERT_EQ(stats->numFrames, 0) << "Should be before first frame";
+    EXPECT_EQ(frameCount_, 0) << "Should be before first frame";
 
     // Create a 1x1 texture BEFORE calling bgfx::frame()
     // This is UNDEFINED BEHAVIOR in bgfx
@@ -205,22 +203,15 @@ TEST_F(BgfxFrameRequirementTest, DISABLED_CreatingTextureBeforeFirstFrame_Should
 TEST_F(BgfxFrameRequirementTest, ValidateFrameCountBeforeTextureCreation) {
     // This is the validation we should add to LoadTextureFromFile()
 
-    const bgfx::Stats* stats = bgfx::getStats();
-    ASSERT_NE(stats, nullptr);
-
     // VALIDATION: Check if bgfx is ready for texture creation
-    bool isSafeToCreateTexture = (stats->numFrames > 0);
+    bool isSafeToCreateTexture = HasProcessedFrame();
 
     EXPECT_FALSE(isSafeToCreateTexture)
         << "BEFORE first frame: Should NOT be safe to create textures";
 
     // Now call frame() to initialize resource system
-    bgfx::frame();
-
-    const bgfx::Stats* statsAfter = bgfx::getStats();
-    ASSERT_NE(statsAfter, nullptr);
-
-    isSafeToCreateTexture = (statsAfter->numFrames > 0);
+    ProcessFrame();
+    isSafeToCreateTexture = HasProcessedFrame();
 
     EXPECT_TRUE(isSafeToCreateTexture)
         << "AFTER first frame: Should be safe to create textures";
@@ -234,16 +225,13 @@ TEST_F(BgfxFrameRequirementTest, ProperInitializationSequence) {
     // This test demonstrates the CORRECT sequence
 
     // Step 1: Verify we're at frame 0
-    const bgfx::Stats* stats1 = bgfx::getStats();
-    ASSERT_EQ(stats1->numFrames, 0);
+    EXPECT_EQ(frameCount_, 0);
 
     // Step 2: Process first frame (initializes resource system)
-    bgfx::touch(0);  // Touch view to mark it as used
-    bgfx::frame();   // Process frame
+    ProcessFrame();
 
     // Step 3: Verify frame count incremented
-    const bgfx::Stats* stats2 = bgfx::getStats();
-    ASSERT_EQ(stats2->numFrames, 1);
+    EXPECT_EQ(frameCount_, 1);
 
     // Step 4: NOW it's safe to create textures
     uint32_t pixel = 0xFFFFFFFF;
@@ -262,7 +250,7 @@ TEST_F(BgfxFrameRequirementTest, ProperInitializationSequence) {
     // Cleanup
     if (bgfx::isValid(texture)) {
         // Process another frame to actually create the texture on GPU
-        bgfx::frame();
+        ProcessFrame();
 
         // Now destroy it
         bgfx::destroy(texture);
@@ -283,8 +271,7 @@ TEST_F(BgfxFrameRequirementTest, DISABLED_MultipleTexturesBeforeFirstFrame_Cause
     //
     // DO NOT ENABLE unless you want to reproduce the crash!
 
-    const bgfx::Stats* stats = bgfx::getStats();
-    ASSERT_EQ(stats->numFrames, 0);
+    EXPECT_EQ(frameCount_, 0);
 
     // Create FIRST texture (this "succeeds" but corrupts state)
     uint32_t pixel1 = 0xFF0000FF;  // Red
@@ -322,11 +309,8 @@ TEST_F(BgfxFrameRequirementTest, WithFix_MultipleTexturesWork) {
     // This test demonstrates the fix working correctly
 
     // THE FIX: Call frame() BEFORE creating any textures
-    bgfx::touch(0);
-    bgfx::frame();
-
-    const bgfx::Stats* stats = bgfx::getStats();
-    ASSERT_GT(stats->numFrames, 0) << "Should have processed at least one frame";
+    ProcessFrame();
+    EXPECT_TRUE(HasProcessedFrame()) << "Should have processed at least one frame";
 
     // NOW create multiple textures safely
     uint32_t pixel1 = 0xFF0000FF;  // Red
@@ -350,7 +334,7 @@ TEST_F(BgfxFrameRequirementTest, WithFix_MultipleTexturesWork) {
     EXPECT_TRUE(bgfx::isValid(texture2)) << "Second texture should be valid";
 
     // Process frame to create textures on GPU
-    bgfx::frame();
+    ProcessFrame();
 
     // Cleanup
     if (bgfx::isValid(texture1)) bgfx::destroy(texture1);
