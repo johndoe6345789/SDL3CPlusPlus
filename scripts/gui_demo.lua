@@ -1,5 +1,6 @@
 ﻿local Gui = require('gui')
 local math3d = require('math3d')
+local config_resolver = require('config_resolver')
 
 local ctx = Gui.newContext()
 local input = Gui.newInputState()
@@ -24,7 +25,7 @@ local fpsMode = false
 local fpsToggleWasDown = false
 local fpsToggleKey = "F1"
 if type(config) == "table" then
-    local bindings = config.input_bindings
+    local bindings = config_resolver.resolve_input_bindings(config)
     if type(bindings) == "table" then
         local key = bindings.fps_toggle or bindings.fps_toggle_key
         if type(key) == "string" or type(key) == "number" then

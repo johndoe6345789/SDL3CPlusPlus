@@ -2,6 +2,7 @@
 -- Provides mesh generation, object builders, and utility functions
 
 local math3d = require("math3d")
+local config_resolver = require("config_resolver")
 
 local framework = {}
 
@@ -328,8 +329,9 @@ function framework.MaterialRegistry.new(config)
     self.materials = {}
     self.default_key = nil
     
-    if config and config.materialx_materials then
-        for i, mat in ipairs(config.materialx_materials) do
+    local materials = config_resolver.resolve_materialx_materials(config)
+    if type(materials) == "table" then
+        for i, mat in ipairs(materials) do
             if mat.shader_key then
                 self.materials[mat.shader_key] = mat
                 if i == 1 then

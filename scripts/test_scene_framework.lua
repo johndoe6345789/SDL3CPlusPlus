@@ -214,10 +214,14 @@ assert_equal(time_value, 42, "dynamic compute function receives time")
 print("Testing material registry...")
 
 local test_config = {
-    materialx_materials = {
-        {shader_key = "floor", document = "floor.mtlx", material = "Floor"},
-        {shader_key = "wall", document = "wall.mtlx", material = "Wall"},
-        {shader_key = "ceiling", document = "ceiling.mtlx", material = "Ceiling"},
+    rendering = {
+        materialx = {
+            materials = {
+                {shader_key = "floor", document = "floor.mtlx", material = "Floor"},
+                {shader_key = "wall", document = "wall.mtlx", material = "Wall"},
+                {shader_key = "ceiling", document = "ceiling.mtlx", material = "Ceiling"},
+            }
+        }
     }
 }
 

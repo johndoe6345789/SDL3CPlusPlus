@@ -1,5 +1,6 @@
 local scene_framework = require("scene_framework")
 local math3d = require("math3d")
+local config_resolver = require("config_resolver")
 
 local cube_mesh_info = {
     path = "models/cube.stl",
@@ -709,19 +710,19 @@ local function resolve_material_shader()
     if type(config) ~= "table" then
         error("Missing config table for MaterialX shader selection")
     end
-    local materialx = config.materialx
+    local materialx = config_resolver.resolve_materialx(config)
     if type(materialx) ~= "table" or not materialx.enabled then
         error("MaterialX config missing or disabled; shader selection cannot proceed")
     end
-    local materials = config.materialx_materials
+    local materials = config_resolver.resolve_materialx_materials(config)
     if type(materials) == "table" and type(materials[1]) == "table" then
         local first_key = materials[1].shader_key
         if type(first_key) == "string" and first_key ~= "" then
-            log_debug("Using first materialx_materials shader_key=%s", first_key)
+            log_debug("Using first materialx materials shader_key=%s", first_key)
             return first_key
         end
     end
-    error("MaterialX enabled but no materialx_materials shader_key found")
+    error("MaterialX enabled but no materials shader_key found")
 end
 
 -- Delegate to framework

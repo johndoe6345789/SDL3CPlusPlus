@@ -11,7 +11,8 @@ ApplicationLoopService::ApplicationLoopService(std::shared_ptr<ILogger> logger,
                                                std::shared_ptr<IPhysicsService> physicsService,
                                                std::shared_ptr<ISceneService> sceneService,
                                                std::shared_ptr<IRenderCoordinatorService> renderCoordinatorService,
-                                               std::shared_ptr<IAudioService> audioService)
+                                               std::shared_ptr<IAudioService> audioService,
+                                               std::shared_ptr<ICrashRecoveryService> crashRecoveryService)
     : logger_(std::move(logger)),
       windowService_(std::move(windowService)),
       eventBus_(std::move(eventBus)),
@@ -19,7 +20,8 @@ ApplicationLoopService::ApplicationLoopService(std::shared_ptr<ILogger> logger,
       physicsService_(std::move(physicsService)),
       sceneService_(std::move(sceneService)),
       renderCoordinatorService_(std::move(renderCoordinatorService)),
-      audioService_(std::move(audioService)) {
+      audioService_(std::move(audioService)),
+      crashRecoveryService_(std::move(crashRecoveryService)) {
     if (logger_) {
         logger_->Trace("ApplicationLoopService", "ApplicationLoopService",
                        "windowService=" + std::string(windowService_ ? "set" : "null") +
@@ -28,7 +30,8 @@ ApplicationLoopService::ApplicationLoopService(std::shared_ptr<ILogger> logger,
                        ", physicsService=" + std::string(physicsService_ ? "set" : "null") +
                        ", sceneService=" + std::string(sceneService_ ? "set" : "null") +
                        ", renderCoordinatorService=" + std::string(renderCoordinatorService_ ? "set" : "null") +
-                       ", audioService=" + std::string(audioService_ ? "set" : "null"),
+                       ", audioService=" + std::string(audioService_ ? "set" : "null") +
+                       ", crashRecoveryService=" + std::string(crashRecoveryService_ ? "set" : "null"),
                        "Created");
     }
 }
@@ -49,6 +52,18 @@ void ApplicationLoopService::Run() {
         float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
         float elapsedTime = std::chrono::duration<float>(currentTime - startTime).count();
         lastTime = currentTime;
+        const double elapsedSeconds = static_cast<double>(elapsedTime);
+
+        if (crashRecoveryService_) {
+            crashRecoveryService_->RecordFrameHeartbeat(static_cast<double>(deltaTime));
+            if (elapsedSeconds - lastMemoryCheckSeconds_ >= memoryCheckIntervalSeconds_) {
+                lastMemoryCheckSeconds_ = elapsedSeconds;
+                if (!crashRecoveryService_->CheckMemoryHealth()) {
+                    logger_->Warn("ApplicationLoopService::Run: Memory health check failed, stopping loop");
+                    running_ = false;
+                }
+            }
+        }
 
         HandleEvents();
         ProcessFrame(deltaTime, elapsedTime);

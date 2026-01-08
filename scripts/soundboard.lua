@@ -1,9 +1,17 @@
 local Gui = require("gui")
 local math3d = require("math3d")
+local config_resolver = require("config_resolver")
 
 local ctx = Gui.newContext()
 local input = Gui.newInputState()
 local statusMessage = "Select a clip to play"
+
+local function log_debug(fmt, ...)
+    if not lua_debug or not fmt then
+        return
+    end
+    print(string.format(fmt, ...))
+end
 
 local function findScriptDirectory()
     local info = debug.getinfo(1, "S")
@@ -247,17 +255,20 @@ local function createCube(position)
         local offset = math3d.translation(position[1], position[2], position[3])
         return math3d.multiply(offset, base)
     end
+    local materials = config_resolver.resolve_materialx_materials(config)
+    if type(materials) ~= "table"
+        or type(materials[1]) ~= "table"
+        or type(materials[1].shader_key) ~= "string"
+        or materials[1].shader_key == "" then
+        error("Soundboard requires rendering.materialx.materials[1].shader_key or materialx_materials[1].shader_key")
+    end
+    local shader_key = materials[1].shader_key
+    log_debug("Soundboard using material shader_key=%s", shader_key)
     return {
         vertices = cubeVertices,
         indices = cubeIndices,
         compute_model_matrix = computeModel,
-        if type(config) ~= "table" or type(config.materialx_materials) ~= "table" or
-            type(config.materialx_materials[1]) ~= "table" or
-            type(config.materialx_materials[1].shader_key) ~= "string" or
-            config.materialx_materials[1].shader_key == "" then
-            error("Soundboard requires materialx_materials[1].shader_key")
-        end
-        shader_keys = {config.materialx_materials[1].shader_key},
+        shader_keys = {shader_key},
     }
 end
 

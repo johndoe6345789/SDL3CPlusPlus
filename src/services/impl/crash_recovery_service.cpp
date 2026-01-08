@@ -24,6 +24,12 @@ std::string BuildStackTrace() {
     }
     return trace.to_string();
 }
+
+int64_t GetSteadyClockNs() {
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(
+               std::chrono::steady_clock::now().time_since_epoch())
+        .count();
+}
 }
 
 // Static instance for signal handler
@@ -33,13 +39,16 @@ CrashRecoveryService::CrashRecoveryService(std::shared_ptr<ILogger> logger)
     : logger_(logger)
     , crashDetected_(false)
     , lastSignal_(0)
-    , signalHandlersInstalled_(false)
+    , lastHeartbeatNs_(0)
+    , heartbeatSeen_(false)
+    , heartbeatMonitorRunning_(false)
     , lastSuccessfulFrameTime_(0.0)
     , consecutiveFrameTimeouts_(0)
     , luaExecutionFailures_(0)
     , fileFormatErrors_(0)
     , memoryWarnings_(0)
-    , lastHealthCheck_(std::chrono::steady_clock::now()) {
+    , lastHealthCheck_(std::chrono::steady_clock::now())
+    , signalHandlersInstalled_(false) {
     logger_->Trace("CrashRecoveryService", "CrashRecoveryService",
                    "logger=" + std::string(logger_ ? "set" : "null"),
                    "Created");
@@ -56,13 +65,24 @@ void CrashRecoveryService::Initialize() {
     SetupSignalHandlers();
     crashDetected_ = false;
     lastSignal_ = 0;
+    lastHeartbeatNs_ = 0;
+    heartbeatSeen_ = false;
     crashReport_.clear();
+
+    if (!heartbeatMonitorRunning_.exchange(true)) {
+        heartbeatMonitorThread_ = std::thread(&CrashRecoveryService::MonitorHeartbeats, this);
+    }
 
     logger_->Info("CrashRecoveryService::Initialize: Crash recovery service initialized");
 }
 
 void CrashRecoveryService::Shutdown() {
     logger_->Trace("CrashRecoveryService", "Shutdown", "", "Shutting down crash recovery service");
+
+    heartbeatMonitorRunning_ = false;
+    if (heartbeatMonitorThread_.joinable()) {
+        heartbeatMonitorThread_.join();
+    }
 
     RemoveSignalHandlers();
 
@@ -87,47 +107,102 @@ bool CrashRecoveryService::ExecuteWithTimeout(std::function<void()> func, int ti
         }
     });
 
-    if (completionFuture.wait_for(std::chrono::milliseconds(timeoutMs)) == std::future_status::timeout) {
-        logger_->Warn("CrashRecoveryService::ExecuteWithTimeout: Operation '" + operationName + "' timed out after " + std::to_string(timeoutMs) + "ms");
-        logger_->Trace("CrashRecoveryService", "ExecuteWithTimeout",
-                       "timeoutMs=" + std::to_string(timeoutMs) + ", operationName=" + operationName,
-                       "Timeout detected; marking crash and detaching worker thread");
+    const auto start = std::chrono::steady_clock::now();
+    const auto timeoutDuration = std::chrono::milliseconds(timeoutMs);
+    const auto pollInterval = std::chrono::milliseconds(50);
 
-        {
+    while (true) {
+        if (completionFuture.wait_for(pollInterval) == std::future_status::ready) {
+            try {
+                completionFuture.get(); // Re-throw any exceptions
+                logger_->Trace("CrashRecoveryService", "ExecuteWithTimeout", "", "Operation completed successfully");
+                if (workerThread.joinable()) {
+                    workerThread.join();
+                }
+                return true;
+            } catch (const std::exception& e) {
+                logger_->Error("CrashRecoveryService::ExecuteWithTimeout: Operation '" + operationName + "' threw exception: " + e.what());
+                if (workerThread.joinable()) {
+                    workerThread.join();
+                }
+                throw;
+            } catch (...) {
+                logger_->Error("CrashRecoveryService::ExecuteWithTimeout: Operation '" + operationName + "' threw unknown exception");
+                if (workerThread.joinable()) {
+                    workerThread.join();
+                }
+                throw;
+            }
+        }
+
+        if (crashDetected_.load()) {
+            logger_->Warn("CrashRecoveryService::ExecuteWithTimeout: Operation '" + operationName + "' aborted after crash detection");
+            if (workerThread.joinable()) {
+                workerThread.detach();
+            }
+            return false;
+        }
+
+        if (timeoutMs >= 0 && std::chrono::steady_clock::now() - start >= timeoutDuration) {
+            logger_->Warn("CrashRecoveryService::ExecuteWithTimeout: Operation '" + operationName + "' timed out after " + std::to_string(timeoutMs) + "ms");
+            logger_->Trace("CrashRecoveryService", "ExecuteWithTimeout",
+                           "timeoutMs=" + std::to_string(timeoutMs) + ", operationName=" + operationName,
+                           "Timeout detected; marking crash and detaching worker thread");
+
+            {
+                std::lock_guard<std::mutex> lock(crashMutex_);
+                crashDetected_ = true;
+                crashReport_ += "\nTIMEOUT: Operation '" + operationName + "' exceeded " +
+                               std::to_string(timeoutMs) + "ms\n";
+            }
+
+            // No safe way to cancel; detach so we can report the timeout promptly.
+            if (workerThread.joinable()) {
+                workerThread.detach();
+            }
+
+            return false;
+        }
+    }
+}
+
+void CrashRecoveryService::RecordFrameHeartbeat(double frameTimeSeconds) {
+    lastHeartbeatNs_.store(GetSteadyClockNs(), std::memory_order_relaxed);
+    heartbeatSeen_.store(true, std::memory_order_release);
+    lastSuccessfulFrameTime_ = frameTimeSeconds;
+}
+
+void CrashRecoveryService::MonitorHeartbeats() {
+    logger_->Trace("CrashRecoveryService", "MonitorHeartbeats", "", "Starting heartbeat monitor");
+
+    const int64_t timeoutNs = static_cast<int64_t>(heartbeatTimeout_.count()) * 1000 * 1000;
+    while (heartbeatMonitorRunning_.load()) {
+        std::this_thread::sleep_for(heartbeatPollInterval_);
+        if (!heartbeatSeen_.load(std::memory_order_acquire)) {
+            continue;
+        }
+
+        const int64_t lastHeartbeat = lastHeartbeatNs_.load(std::memory_order_relaxed);
+        if (lastHeartbeat == 0) {
+            continue;
+        }
+
+        const int64_t nowNs = GetSteadyClockNs();
+        const int64_t elapsedNs = nowNs - lastHeartbeat;
+        if (elapsedNs >= timeoutNs) {
+            const int64_t elapsedMs = elapsedNs / (1000 * 1000);
             std::lock_guard<std::mutex> lock(crashMutex_);
-            crashDetected_ = true;
-            crashReport_ += "\nTIMEOUT: Operation '" + operationName + "' exceeded " +
-                           std::to_string(timeoutMs) + "ms\n";
+            if (!crashDetected_) {
+                crashDetected_ = true;
+                crashReport_ += "\nHEARTBEAT TIMEOUT: No frame heartbeat for " +
+                               std::to_string(elapsedMs) + "ms\n";
+                logger_->Error("CrashRecoveryService::MonitorHeartbeats: Frame heartbeat stalled for " +
+                              std::to_string(elapsedMs) + "ms");
+            }
         }
-
-        // No safe way to cancel; detach so we can report the timeout promptly.
-        if (workerThread.joinable()) {
-            workerThread.detach();
-        }
-
-        return false;
     }
 
-    try {
-        completionFuture.get(); // Re-throw any exceptions
-        logger_->Trace("CrashRecoveryService", "ExecuteWithTimeout", "", "Operation completed successfully");
-        if (workerThread.joinable()) {
-            workerThread.join();
-        }
-        return true;
-    } catch (const std::exception& e) {
-        logger_->Error("CrashRecoveryService::ExecuteWithTimeout: Operation '" + operationName + "' threw exception: " + e.what());
-        if (workerThread.joinable()) {
-            workerThread.join();
-        }
-        throw;
-    } catch (...) {
-        logger_->Error("CrashRecoveryService::ExecuteWithTimeout: Operation '" + operationName + "' threw unknown exception");
-        if (workerThread.joinable()) {
-            workerThread.join();
-        }
-        throw;
-    }
+    logger_->Trace("CrashRecoveryService", "MonitorHeartbeats", "", "Heartbeat monitor exiting");
 }
 
 bool CrashRecoveryService::IsCrashDetected() const {
@@ -150,6 +225,8 @@ bool CrashRecoveryService::AttemptRecovery() {
         crashDetected_ = false;
         lastSignal_ = 0;
         crashReport_.clear();
+        lastHeartbeatNs_ = 0;
+        heartbeatSeen_ = false;
         logger_->Info("CrashRecoveryService::AttemptRecovery: Recovery successful");
     } else {
         logger_->Error("CrashRecoveryService::AttemptRecovery: Recovery failed");
@@ -435,6 +512,13 @@ std::string CrashRecoveryService::GetSystemHealthStatus() const {
     ss << "File Format Errors: " << fileFormatErrors_ << "\n";
     ss << "Memory Warnings: " << memoryWarnings_ << "\n";
     ss << "Last Successful Frame Time: " << lastSuccessfulFrameTime_ << " seconds\n";
+    if (heartbeatSeen_.load(std::memory_order_acquire)) {
+        const int64_t lastHeartbeat = lastHeartbeatNs_.load(std::memory_order_relaxed);
+        const int64_t ageMs = (GetSteadyClockNs() - lastHeartbeat) / (1000 * 1000);
+        ss << "Last Frame Heartbeat Age: " << ageMs << " ms\n";
+    } else {
+        ss << "Last Frame Heartbeat Age: n/a\n";
+    }
 
     auto now = std::chrono::steady_clock::now();
     auto timeSinceLastCheck = std::chrono::duration_cast<std::chrono::seconds>(

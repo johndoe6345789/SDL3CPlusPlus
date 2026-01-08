@@ -1,5 +1,6 @@
 -- Lightweight Lua-based 2D GUI framework that emits draw commands
 -- and handles interaction for buttons, textboxes, and list views.
+local config_resolver = require("config_resolver")
 local Gui = {}
 
 -- {r,g,b,a} colors
@@ -126,14 +127,15 @@ function Context:new(options)
     options = options or {}
     local style = options.style or DEFAULT_STYLE
     if options.style == nil and type(config) == "table" then
-        local guiFont = config.gui_font
+        local guiFont = config_resolver.resolve_gui_font(config)
         if type(guiFont) == "table" and type(guiFont.font_size) == "number" then
             style.fontSize = guiFont.font_size
         end
     end
     local opacity = 1.0
-    if type(config) == "table" and type(config.gui_opacity) == "number" then
-        opacity = config.gui_opacity
+    local resolvedOpacity = config_resolver.resolve_gui_opacity(config)
+    if type(resolvedOpacity) == "number" then
+        opacity = resolvedOpacity
     end
     local instance = {
         commands = {},

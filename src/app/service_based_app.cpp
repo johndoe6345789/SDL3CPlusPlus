@@ -132,14 +132,15 @@ void ServiceBasedApp::Run() {
 
         // Run the main application loop with crash recovery
         if (crashRecoveryService_) {
+            constexpr int kMainLoopTimeoutMs = 24 * 60 * 60 * 1000; // Safety net; heartbeat monitor handles hangs.
             bool success = crashRecoveryService_->ExecuteWithTimeout(
                 [this]() { applicationLoopService_->Run(); },
-                30000, // 30 second timeout for the main loop
+                kMainLoopTimeoutMs,
                 "Main Application Loop"
             );
 
             if (!success) {
-                logger_->Warn("ServiceBasedApp::Run: Main loop timed out, attempting recovery");
+                logger_->Warn("ServiceBasedApp::Run: Main loop stopped by crash recovery, attempting recovery");
                 if (crashRecoveryService_->AttemptRecovery()) {
                     logger_->Info("ServiceBasedApp::Run: Recovery successful, restarting main loop");
                     applicationLoopService_->Run(); // Try again
@@ -329,7 +330,8 @@ void ServiceBasedApp::RegisterServices() {
         registry_.GetService<services::IPhysicsService>(),
         registry_.GetService<services::ISceneService>(),
         registry_.GetService<services::IRenderCoordinatorService>(),
-        registry_.GetService<services::IAudioService>());
+        registry_.GetService<services::IAudioService>(),
+        registry_.GetService<services::ICrashRecoveryService>());
 
     logger_->Trace("ServiceBasedApp", "RegisterServices", "", "Exiting");
 }

@@ -35,18 +35,27 @@ void JsonConfigWriterService::WriteConfig(const RuntimeConfig& config, const std
     document.SetObject();
     auto& allocator = document.GetAllocator();
 
-    auto addStringMember = [&](const char* name, const std::string& value) {
+    auto addStringMember = [&](rapidjson::Value& target, const char* name, const std::string& value) {
         rapidjson::Value nameValue(name, allocator);
         rapidjson::Value stringValue(value.c_str(), allocator);
-        document.AddMember(nameValue, stringValue, allocator);
+        target.AddMember(nameValue, stringValue, allocator);
     };
 
-    document.AddMember("window_width", config.width, allocator);
-    document.AddMember("window_height", config.height, allocator);
-    addStringMember("lua_script", config.scriptPath.string());
+    document.AddMember("schema_version", 2, allocator);
+
+    rapidjson::Value scriptsObject(rapidjson::kObjectType);
+    addStringMember(scriptsObject, "entry", config.scriptPath.string());
+    scriptsObject.AddMember("lua_debug", config.luaDebug, allocator);
+    document.AddMember("scripts", scriptsObject, allocator);
+
+    rapidjson::Value windowObject(rapidjson::kObjectType);
+    addStringMember(windowObject, "title", config.windowTitle);
+    rapidjson::Value sizeObject(rapidjson::kObjectType);
+    sizeObject.AddMember("width", config.width, allocator);
+    sizeObject.AddMember("height", config.height, allocator);
+    windowObject.AddMember("size", sizeObject, allocator);
 
     std::filesystem::path scriptsDir = config.scriptPath.parent_path();
-    addStringMember("scripts_directory", scriptsDir.string());
 
     rapidjson::Value mouseGrabObject(rapidjson::kObjectType);
     mouseGrabObject.AddMember("enabled", config.mouseGrab.enabled, allocator);
@@ -61,7 +70,8 @@ void JsonConfigWriterService::WriteConfig(const RuntimeConfig& config, const std
     mouseGrabObject.AddMember("release_key",
                               rapidjson::Value(config.mouseGrab.releaseKey.c_str(), allocator),
                               allocator);
-    document.AddMember("mouse_grab", mouseGrabObject, allocator);
+    windowObject.AddMember("mouse_grab", mouseGrabObject, allocator);
+    document.AddMember("window", windowObject, allocator);
 
     rapidjson::Value bindingsObject(rapidjson::kObjectType);
     auto addBindingMember = [&](const char* name, const std::string& value) {
@@ -113,22 +123,120 @@ void JsonConfigWriterService::WriteConfig(const RuntimeConfig& config, const std
     addMappingObject("gamepad_axis_actions", config.inputBindings.gamepadAxisActions, bindingsObject);
     bindingsObject.AddMember("gamepad_axis_action_threshold",
                              config.inputBindings.gamepadAxisActionThreshold, allocator);
-    document.AddMember("input_bindings", bindingsObject, allocator);
+    rapidjson::Value inputObject(rapidjson::kObjectType);
+    inputObject.AddMember("bindings", bindingsObject, allocator);
+    document.AddMember("input", inputObject, allocator);
 
     std::filesystem::path projectRoot = scriptsDir.parent_path();
-    if (!projectRoot.empty()) {
-        addStringMember("project_root", projectRoot.string());
-        addStringMember("shaders_directory", (projectRoot / "shaders").string());
-    } else {
-        addStringMember("shaders_directory", "shaders");
+    rapidjson::Value pathsObject(rapidjson::kObjectType);
+    if (!scriptsDir.empty()) {
+        addStringMember(pathsObject, "scripts", scriptsDir.string());
     }
+    if (!projectRoot.empty()) {
+        addStringMember(pathsObject, "project_root", projectRoot.string());
+        addStringMember(pathsObject, "shaders", (projectRoot / "shaders").string());
+    } else {
+        addStringMember(pathsObject, "shaders", "shaders");
+    }
+    document.AddMember("paths", pathsObject, allocator);
 
     rapidjson::Value bgfxObject(rapidjson::kObjectType);
     bgfxObject.AddMember("renderer",
                          rapidjson::Value(config.bgfx.renderer.c_str(), allocator),
                          allocator);
-    document.AddMember("bgfx", bgfxObject, allocator);
-    addStringMember("config_file", configPath.string());
+    rapidjson::Value materialObject(rapidjson::kObjectType);
+    materialObject.AddMember("enabled", config.materialX.enabled, allocator);
+    materialObject.AddMember("document",
+                             rapidjson::Value(config.materialX.documentPath.string().c_str(), allocator),
+                             allocator);
+    materialObject.AddMember("shader_key",
+                             rapidjson::Value(config.materialX.shaderKey.c_str(), allocator),
+                             allocator);
+    materialObject.AddMember("material",
+                             rapidjson::Value(config.materialX.materialName.c_str(), allocator),
+                             allocator);
+    materialObject.AddMember("library_path",
+                             rapidjson::Value(config.materialX.libraryPath.string().c_str(), allocator),
+                             allocator);
+    rapidjson::Value libraryFolders(rapidjson::kArrayType);
+    for (const auto& folder : config.materialX.libraryFolders) {
+        libraryFolders.PushBack(rapidjson::Value(folder.c_str(), allocator), allocator);
+    }
+    materialObject.AddMember("library_folders", libraryFolders, allocator);
+    materialObject.AddMember("use_constant_color", config.materialX.useConstantColor, allocator);
+    rapidjson::Value constantColor(rapidjson::kArrayType);
+    constantColor.PushBack(config.materialX.constantColor[0], allocator);
+    constantColor.PushBack(config.materialX.constantColor[1], allocator);
+    constantColor.PushBack(config.materialX.constantColor[2], allocator);
+    materialObject.AddMember("constant_color", constantColor, allocator);
+
+    if (!config.materialXMaterials.empty()) {
+        rapidjson::Value materialsArray(rapidjson::kArrayType);
+        for (const auto& material : config.materialXMaterials) {
+            rapidjson::Value entry(rapidjson::kObjectType);
+            entry.AddMember("enabled", material.enabled, allocator);
+            entry.AddMember("document",
+                            rapidjson::Value(material.documentPath.string().c_str(), allocator),
+                            allocator);
+            entry.AddMember("shader_key",
+                            rapidjson::Value(material.shaderKey.c_str(), allocator),
+                            allocator);
+            entry.AddMember("material",
+                            rapidjson::Value(material.materialName.c_str(), allocator),
+                            allocator);
+            entry.AddMember("use_constant_color", material.useConstantColor, allocator);
+            rapidjson::Value materialColor(rapidjson::kArrayType);
+            materialColor.PushBack(material.constantColor[0], allocator);
+            materialColor.PushBack(material.constantColor[1], allocator);
+            materialColor.PushBack(material.constantColor[2], allocator);
+            entry.AddMember("constant_color", materialColor, allocator);
+            materialsArray.PushBack(entry, allocator);
+        }
+        materialObject.AddMember("materials", materialsArray, allocator);
+    }
+
+    rapidjson::Value atmosphericsObject(rapidjson::kObjectType);
+    atmosphericsObject.AddMember("ambient_strength", config.atmospherics.ambientStrength, allocator);
+    atmosphericsObject.AddMember("fog_density", config.atmospherics.fogDensity, allocator);
+    rapidjson::Value fogColor(rapidjson::kArrayType);
+    fogColor.PushBack(config.atmospherics.fogColor[0], allocator);
+    fogColor.PushBack(config.atmospherics.fogColor[1], allocator);
+    fogColor.PushBack(config.atmospherics.fogColor[2], allocator);
+    atmosphericsObject.AddMember("fog_color", fogColor, allocator);
+    rapidjson::Value skyColor(rapidjson::kArrayType);
+    skyColor.PushBack(config.atmospherics.skyColor[0], allocator);
+    skyColor.PushBack(config.atmospherics.skyColor[1], allocator);
+    skyColor.PushBack(config.atmospherics.skyColor[2], allocator);
+    atmosphericsObject.AddMember("sky_color", skyColor, allocator);
+    atmosphericsObject.AddMember("gamma", config.atmospherics.gamma, allocator);
+    atmosphericsObject.AddMember("exposure", config.atmospherics.exposure, allocator);
+    atmosphericsObject.AddMember("enable_tone_mapping", config.atmospherics.enableToneMapping, allocator);
+    atmosphericsObject.AddMember("enable_shadows", config.atmospherics.enableShadows, allocator);
+    atmosphericsObject.AddMember("enable_ssgi", config.atmospherics.enableSSGI, allocator);
+    atmosphericsObject.AddMember("enable_volumetric_lighting", config.atmospherics.enableVolumetricLighting, allocator);
+    atmosphericsObject.AddMember("pbr_roughness", config.atmospherics.pbrRoughness, allocator);
+    atmosphericsObject.AddMember("pbr_metallic", config.atmospherics.pbrMetallic, allocator);
+
+    rapidjson::Value renderingObject(rapidjson::kObjectType);
+    renderingObject.AddMember("bgfx", bgfxObject, allocator);
+    renderingObject.AddMember("materialx", materialObject, allocator);
+    renderingObject.AddMember("atmospherics", atmosphericsObject, allocator);
+    document.AddMember("rendering", renderingObject, allocator);
+
+    rapidjson::Value guiObject(rapidjson::kObjectType);
+    rapidjson::Value fontObject(rapidjson::kObjectType);
+    fontObject.AddMember("use_freetype", config.guiFont.useFreeType, allocator);
+    fontObject.AddMember("font_path",
+                         rapidjson::Value(config.guiFont.fontPath.string().c_str(), allocator),
+                         allocator);
+    fontObject.AddMember("font_size", config.guiFont.fontSize, allocator);
+    guiObject.AddMember("font", fontObject, allocator);
+    guiObject.AddMember("opacity", config.guiOpacity, allocator);
+    document.AddMember("gui", guiObject, allocator);
+
+    if (!configPath.empty()) {
+        addStringMember(document, "config_file", configPath.string());
+    }
 
     rapidjson::StringBuffer buffer;
     rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);

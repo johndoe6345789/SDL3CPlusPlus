@@ -1,4 +1,5 @@
 local math3d = require("math3d")
+local config_resolver = require("config_resolver")
 
 local function log_debug(fmt, ...)
     if not lua_debug or not fmt then
@@ -59,15 +60,20 @@ local map_offset = resolve_vec3(quake3_config.offset, {0.0, 0.0, 0.0})
 local map_shader_key = nil
 if type(quake3_config.shader_key) == "string" and quake3_config.shader_key ~= "" then
     map_shader_key = quake3_config.shader_key
-elseif type(config) == "table"
-    and type(config.materialx_materials) == "table"
-    and type(config.materialx_materials[1]) == "table"
-    and type(config.materialx_materials[1].shader_key) == "string"
-    and config.materialx_materials[1].shader_key ~= "" then
-    map_shader_key = config.materialx_materials[1].shader_key
-    log_debug("Using MaterialX shader_key for Quake3 map=%s", map_shader_key)
 else
-    error("Quake3 config requires a shader_key or materialx_materials[1].shader_key")
+    local materials = config_resolver.resolve_materialx_materials(config)
+    if type(materials) == "table"
+        and type(materials[1]) == "table"
+        and type(materials[1].shader_key) == "string"
+        and materials[1].shader_key ~= "" then
+        map_shader_key = materials[1].shader_key
+    end
+end
+
+if map_shader_key then
+    log_debug("Using shader_key for Quake3 map=%s", map_shader_key)
+else
+    error("Quake3 config requires a shader_key or a MaterialX materials shader_key")
 end
 
 local function scale_matrix(x, y, z)
@@ -218,7 +224,7 @@ local fallback_bindings = {
     noclip_toggle = "N",
 }
 
-local input_bindings = resolve_table(type(config) == "table" and config.input_bindings)
+local input_bindings = resolve_table(config_resolver.resolve_input_bindings(config))
 local function get_binding(action_name)
     if type(input_bindings[action_name]) == "string" then
         return input_bindings[action_name]

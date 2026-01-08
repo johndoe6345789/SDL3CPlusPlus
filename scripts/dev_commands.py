@@ -1250,30 +1250,45 @@ def gui(args: argparse.Namespace) -> None:
                             "description": f"3D {name} project based on cube demo template",
                             "enabled": True
                         },
-                        "window_width": 1024,
-                        "window_height": 768,
-                        "lua_script": f"scripts/{project_id}_logic.lua",
-                        "scripts_directory": "scripts",
-                        "mouse_grab": {
-                            "enabled": True,
-                            "grab_on_click": True,
-                            "release_on_escape": True,
-                            "start_grabbed": False,
-                            "hide_cursor": True,
-                            "relative_mode": True,
-                            "grab_mouse_button": "left",
-                            "release_key": "escape"
+                        "schema_version": 2,
+                        "window": {
+                            "title": name,
+                            "size": {
+                                "width": 1024,
+                                "height": 768
+                            },
+                            "mouse_grab": {
+                                "enabled": True,
+                                "grab_on_click": True,
+                                "release_on_escape": True,
+                                "start_grabbed": False,
+                                "hide_cursor": True,
+                                "relative_mode": True,
+                                "grab_mouse_button": "left",
+                                "release_key": "escape"
+                            }
                         },
-                        "input_bindings": {
-                            "move_forward": "W",
-                            "move_back": "S",
-                            "move_left": "A",
-                            "move_right": "D",
-                            "fly_up": "Q",
-                            "fly_down": "Z",
-                            "jump": "Space",
-                            "noclip_toggle": "N",
-                            "music_toggle": "M"
+                        "scripts": {
+                            "entry": f"scripts/{project_id}_logic.lua",
+                            "lua_debug": False
+                        },
+                        "paths": {
+                            "project_root": "../",
+                            "scripts": "scripts",
+                            "shaders": "shaders"
+                        },
+                        "input": {
+                            "bindings": {
+                                "move_forward": "W",
+                                "move_back": "S",
+                                "move_left": "A",
+                                "move_right": "D",
+                                "fly_up": "Q",
+                                "fly_down": "Z",
+                                "jump": "Space",
+                                "noclip_toggle": "N",
+                                "music_toggle": "M"
+                            }
                         }
                     },
                     "lua_script": f"""-- {name} Logic Script
@@ -1512,6 +1527,10 @@ return {{
                     config_data = json.load(f)
 
                 lua_script_path = config_data.get("lua_script", "")
+                if not lua_script_path:
+                    scripts_config = config_data.get("scripts", {})
+                    if isinstance(scripts_config, dict):
+                        lua_script_path = scripts_config.get("entry", "")
                 if not lua_script_path:
                     self.lua_editor.setPlainText("# No Lua script specified in config")
                     self.lua_file_label.setText("No Lua script found")

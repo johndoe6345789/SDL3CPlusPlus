@@ -36,6 +36,13 @@ public:
     virtual bool ExecuteWithTimeout(std::function<void()> func, int timeoutMs, const std::string& operationName) = 0;
 
     /**
+     * @brief Record a heartbeat for the main loop or long-running operation.
+     *
+     * @param frameTimeSeconds Delta time for the last frame in seconds
+     */
+    virtual void RecordFrameHeartbeat(double frameTimeSeconds) = 0;
+
+    /**
      * @brief Check if a crash has been detected.
      *
      * @return true if crash detected

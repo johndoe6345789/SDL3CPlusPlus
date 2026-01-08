@@ -7,6 +7,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <csignal>
+#include <chrono>
 #include <string>
 #include <functional>
 
@@ -27,6 +28,7 @@ public:
     void Initialize() override;
     void Shutdown() override;
     bool ExecuteWithTimeout(std::function<void()> func, int timeoutMs, const std::string& operationName) override;
+    void RecordFrameHeartbeat(double frameTimeSeconds) override;
     bool IsCrashDetected() const override;
     bool AttemptRecovery() override;
     std::string GetCrashReport() const override;
@@ -50,10 +52,17 @@ private:
     void UpdateHealthMetrics();
     size_t GetCurrentMemoryUsage() const;
     bool IsGpuResponsive() const;
+    void MonitorHeartbeats();
 
     std::shared_ptr<ILogger> logger_;
     std::atomic<bool> crashDetected_;
     std::atomic<int> lastSignal_;
+    std::atomic<int64_t> lastHeartbeatNs_;
+    std::atomic<bool> heartbeatSeen_;
+    std::atomic<bool> heartbeatMonitorRunning_;
+    std::thread heartbeatMonitorThread_;
+    std::chrono::milliseconds heartbeatTimeout_{5000};
+    std::chrono::milliseconds heartbeatPollInterval_{200};
     std::string crashReport_;
     mutable std::mutex crashMutex_;
 

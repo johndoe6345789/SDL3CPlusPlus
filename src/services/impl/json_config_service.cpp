@@ -110,15 +110,68 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
         }
     }
 
-    const char* scriptField = "lua_script";
-    if (!document.HasMember(scriptField) || !document[scriptField].IsString()) {
-        throw std::runtime_error("JSON config requires a string member '" + std::string(scriptField) + "'");
+    auto getObjectMember = [&](const rapidjson::Value& parent,
+                               const char* name,
+                               const char* fullName) -> const rapidjson::Value* {
+        if (!parent.HasMember(name)) {
+            return nullptr;
+        }
+        const auto& value = parent[name];
+        if (!value.IsObject()) {
+            throw std::runtime_error("JSON member '" + std::string(fullName) + "' must be an object");
+        }
+        return &value;
+    };
+
+    const auto* scriptsValue = getObjectMember(document, "scripts", "scripts");
+    const auto* pathsValue = getObjectMember(document, "paths", "paths");
+    const auto* windowValue = getObjectMember(document, "window", "window");
+    const auto* windowSizeValue = windowValue
+        ? getObjectMember(*windowValue, "size", "window.size")
+        : nullptr;
+    const auto* inputValue = getObjectMember(document, "input", "input");
+    const auto* inputBindingsValue = inputValue
+        ? getObjectMember(*inputValue, "bindings", "input.bindings")
+        : nullptr;
+    const auto* renderingValue = getObjectMember(document, "rendering", "rendering");
+    const auto* guiValue = getObjectMember(document, "gui", "gui");
+
+    std::optional<std::string> scriptPathValue;
+    if (scriptsValue && scriptsValue->HasMember("entry")) {
+        const auto& value = (*scriptsValue)["entry"];
+        if (!value.IsString()) {
+            throw std::runtime_error("JSON member 'scripts.entry' must be a string");
+        }
+        scriptPathValue = value.GetString();
+    } else if (document.HasMember("lua_script")) {
+        const auto& value = document["lua_script"];
+        if (!value.IsString()) {
+            throw std::runtime_error("JSON member 'lua_script' must be a string");
+        }
+        scriptPathValue = value.GetString();
+    }
+    if (!scriptPathValue) {
+        throw std::runtime_error("JSON config requires a string member 'scripts.entry' or 'lua_script'");
     }
 
     std::optional<std::filesystem::path> projectRoot;
-    const char* projectRootField = "project_root";
-    if (document.HasMember(projectRootField) && document[projectRootField].IsString()) {
-        std::filesystem::path candidate(document[projectRootField].GetString());
+    if (pathsValue && pathsValue->HasMember("project_root")) {
+        const auto& value = (*pathsValue)["project_root"];
+        if (!value.IsString()) {
+            throw std::runtime_error("JSON member 'paths.project_root' must be a string");
+        }
+        std::filesystem::path candidate(value.GetString());
+        if (candidate.is_absolute()) {
+            projectRoot = std::filesystem::weakly_canonical(candidate);
+        } else {
+            projectRoot = std::filesystem::weakly_canonical(configPath.parent_path() / candidate);
+        }
+    } else if (document.HasMember("project_root")) {
+        const auto& value = document["project_root"];
+        if (!value.IsString()) {
+            throw std::runtime_error("JSON member 'project_root' must be a string");
+        }
+        std::filesystem::path candidate(value.GetString());
         if (candidate.is_absolute()) {
             projectRoot = std::filesystem::weakly_canonical(candidate);
         } else {
@@ -127,8 +180,7 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
     }
 
     RuntimeConfig config;
-    const auto& scriptValue = document[scriptField];
-    std::filesystem::path scriptPath(scriptValue.GetString());
+    std::filesystem::path scriptPath(*scriptPathValue);
     if (!scriptPath.is_absolute()) {
         if (projectRoot) {
             scriptPath = *projectRoot / scriptPath;
@@ -159,10 +211,38 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
         throw std::runtime_error(std::string("JSON member '") + name + "' must be a non-negative integer");
     };
 
-    config.width = parseDimension("window_width", config.width);
-    config.height = parseDimension("window_height", config.height);
+    auto parseDimensionValue = [&](const rapidjson::Value& value, const char* name) -> uint32_t {
+        if (value.IsUint()) {
+            return value.GetUint();
+        }
+        if (value.IsInt()) {
+            int maybeValue = value.GetInt();
+            if (maybeValue >= 0) {
+                return static_cast<uint32_t>(maybeValue);
+            }
+        }
+        throw std::runtime_error(std::string("JSON member '") + name + "' must be a non-negative integer");
+    };
 
-    if (document.HasMember("lua_debug")) {
+    if (windowSizeValue) {
+        if (windowSizeValue->HasMember("width")) {
+            config.width = parseDimensionValue((*windowSizeValue)["width"], "window.size.width");
+        }
+        if (windowSizeValue->HasMember("height")) {
+            config.height = parseDimensionValue((*windowSizeValue)["height"], "window.size.height");
+        }
+    } else {
+        config.width = parseDimension("window_width", config.width);
+        config.height = parseDimension("window_height", config.height);
+    }
+
+    if (scriptsValue && scriptsValue->HasMember("lua_debug")) {
+        const auto& value = (*scriptsValue)["lua_debug"];
+        if (!value.IsBool()) {
+            throw std::runtime_error("JSON member 'scripts.lua_debug' must be a boolean");
+        }
+        config.luaDebug = value.GetBool();
+    } else if (document.HasMember("lua_debug")) {
         const auto& value = document["lua_debug"];
         if (!value.IsBool()) {
             throw std::runtime_error("JSON member 'lua_debug' must be a boolean");
@@ -170,7 +250,13 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
         config.luaDebug = value.GetBool();
     }
 
-    if (document.HasMember("window_title")) {
+    if (windowValue && windowValue->HasMember("title")) {
+        const auto& value = (*windowValue)["title"];
+        if (!value.IsString()) {
+            throw std::runtime_error("JSON member 'window.title' must be a string");
+        }
+        config.windowTitle = value.GetString();
+    } else if (document.HasMember("window_title")) {
         const auto& value = document["window_title"];
         if (!value.IsString()) {
             throw std::runtime_error("JSON member 'window_title' must be a string");
@@ -178,28 +264,40 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
         config.windowTitle = value.GetString();
     }
 
-    if (document.HasMember("mouse_grab")) {
-        const auto& mouseGrabValue = document["mouse_grab"];
-        if (!mouseGrabValue.IsObject()) {
+    const rapidjson::Value* mouseGrabValue = nullptr;
+    std::string mouseGrabPath = "mouse_grab";
+    if (windowValue && windowValue->HasMember("mouse_grab")) {
+        const auto& value = (*windowValue)["mouse_grab"];
+        if (!value.IsObject()) {
+            throw std::runtime_error("JSON member 'window.mouse_grab' must be an object");
+        }
+        mouseGrabValue = &value;
+        mouseGrabPath = "window.mouse_grab";
+    } else if (document.HasMember("mouse_grab")) {
+        const auto& value = document["mouse_grab"];
+        if (!value.IsObject()) {
             throw std::runtime_error("JSON member 'mouse_grab' must be an object");
         }
+        mouseGrabValue = &value;
+    }
+    if (mouseGrabValue) {
         auto readBool = [&](const char* name, bool& target) {
-            if (!mouseGrabValue.HasMember(name)) {
+            if (!mouseGrabValue->HasMember(name)) {
                 return;
             }
-            const auto& value = mouseGrabValue[name];
+            const auto& value = (*mouseGrabValue)[name];
             if (!value.IsBool()) {
-                throw std::runtime_error("JSON member 'mouse_grab." + std::string(name) + "' must be a boolean");
+                throw std::runtime_error("JSON member '" + mouseGrabPath + "." + std::string(name) + "' must be a boolean");
             }
             target = value.GetBool();
         };
         auto readString = [&](const char* name, std::string& target) {
-            if (!mouseGrabValue.HasMember(name)) {
+            if (!mouseGrabValue->HasMember(name)) {
                 return;
             }
-            const auto& value = mouseGrabValue[name];
+            const auto& value = (*mouseGrabValue)[name];
             if (!value.IsString()) {
-                throw std::runtime_error("JSON member 'mouse_grab." + std::string(name) + "' must be a string");
+                throw std::runtime_error("JSON member '" + mouseGrabPath + "." + std::string(name) + "' must be a string");
             }
             target = value.GetString();
         };
@@ -213,11 +311,19 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
         readString("release_key", config.mouseGrab.releaseKey);
     }
 
-    if (document.HasMember("input_bindings")) {
-        const auto& bindingsValue = document["input_bindings"];
-        if (!bindingsValue.IsObject()) {
+    const rapidjson::Value* bindingsValue = nullptr;
+    std::string bindingsPath = "input_bindings";
+    if (inputBindingsValue) {
+        bindingsValue = inputBindingsValue;
+        bindingsPath = "input.bindings";
+    } else if (document.HasMember("input_bindings")) {
+        const auto& value = document["input_bindings"];
+        if (!value.IsObject()) {
             throw std::runtime_error("JSON member 'input_bindings' must be an object");
         }
+        bindingsValue = &value;
+    }
+    if (bindingsValue) {
         struct BindingSpec {
             const char* name;
             std::string InputBindings::* member;
@@ -244,12 +350,12 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
         }};
 
         auto readBinding = [&](const BindingSpec& spec) {
-            if (!bindingsValue.HasMember(spec.name)) {
+            if (!bindingsValue->HasMember(spec.name)) {
                 return;
             }
-            const auto& value = bindingsValue[spec.name];
+            const auto& value = (*bindingsValue)[spec.name];
             if (!value.IsString()) {
-                throw std::runtime_error("JSON member 'input_bindings." + std::string(spec.name) + "' must be a string");
+                throw std::runtime_error("JSON member '" + bindingsPath + "." + std::string(spec.name) + "' must be a string");
             }
             config.inputBindings.*(spec.member) = value.GetString();
         };
@@ -260,16 +366,16 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
 
         auto readMapping = [&](const char* name,
                                std::unordered_map<std::string, std::string>& target) {
-            if (!bindingsValue.HasMember(name)) {
+            if (!bindingsValue->HasMember(name)) {
                 return;
             }
-            const auto& mappingValue = bindingsValue[name];
+            const auto& mappingValue = (*bindingsValue)[name];
             if (!mappingValue.IsObject()) {
-                throw std::runtime_error("JSON member 'input_bindings." + std::string(name) + "' must be an object");
+                throw std::runtime_error("JSON member '" + bindingsPath + "." + std::string(name) + "' must be an object");
             }
             for (auto it = mappingValue.MemberBegin(); it != mappingValue.MemberEnd(); ++it) {
                 if (!it->name.IsString() || !it->value.IsString()) {
-                    throw std::runtime_error("JSON member 'input_bindings." + std::string(name) +
+                    throw std::runtime_error("JSON member '" + bindingsPath + "." + std::string(name) +
                                              "' must contain string pairs");
                 }
                 std::string key = it->name.GetString();
@@ -285,54 +391,69 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
         readMapping("gamepad_button_actions", config.inputBindings.gamepadButtonActions);
         readMapping("gamepad_axis_actions", config.inputBindings.gamepadAxisActions);
 
-        if (bindingsValue.HasMember("gamepad_axis_action_threshold")) {
-            const auto& value = bindingsValue["gamepad_axis_action_threshold"];
+        if (bindingsValue->HasMember("gamepad_axis_action_threshold")) {
+            const auto& value = (*bindingsValue)["gamepad_axis_action_threshold"];
             if (!value.IsNumber()) {
-                throw std::runtime_error("JSON member 'input_bindings.gamepad_axis_action_threshold' must be a number");
+                throw std::runtime_error("JSON member '" + bindingsPath + ".gamepad_axis_action_threshold' must be a number");
             }
             config.inputBindings.gamepadAxisActionThreshold = static_cast<float>(value.GetDouble());
         }
     }
 
-    if (document.HasMember("atmospherics")) {
-        const auto& atmosphericsValue = document["atmospherics"];
-        if (!atmosphericsValue.IsObject()) {
+    const rapidjson::Value* atmosphericsValue = nullptr;
+    std::string atmosphericsPath = "atmospherics";
+    if (renderingValue) {
+        atmosphericsValue = getObjectMember(*renderingValue, "atmospherics", "rendering.atmospherics");
+        if (atmosphericsValue) {
+            atmosphericsPath = "rendering.atmospherics";
+        }
+    }
+    if (!atmosphericsValue && document.HasMember("atmospherics")) {
+        const auto& value = document["atmospherics"];
+        if (!value.IsObject()) {
             throw std::runtime_error("JSON member 'atmospherics' must be an object");
         }
+        atmosphericsValue = &value;
+    }
+    if (atmosphericsValue) {
         
         auto readFloat = [&](const char* name, float& target) {
-            if (!atmosphericsValue.HasMember(name)) {
+            if (!atmosphericsValue->HasMember(name)) {
                 return;
             }
-            const auto& value = atmosphericsValue[name];
+            const auto& value = (*atmosphericsValue)[name];
             if (!value.IsNumber()) {
-                throw std::runtime_error("JSON member 'atmospherics." + std::string(name) + "' must be a number");
+                throw std::runtime_error("JSON member '" + atmosphericsPath + "." + std::string(name) +
+                                         "' must be a number");
             }
             target = static_cast<float>(value.GetDouble());
         };
         
         auto readBool = [&](const char* name, bool& target) {
-            if (!atmosphericsValue.HasMember(name)) {
+            if (!atmosphericsValue->HasMember(name)) {
                 return;
             }
-            const auto& value = atmosphericsValue[name];
+            const auto& value = (*atmosphericsValue)[name];
             if (!value.IsBool()) {
-                throw std::runtime_error("JSON member 'atmospherics." + std::string(name) + "' must be a boolean");
+                throw std::runtime_error("JSON member '" + atmosphericsPath + "." + std::string(name) +
+                                         "' must be a boolean");
             }
             target = value.GetBool();
         };
         
         auto readFloatArray3 = [&](const char* name, std::array<float, 3>& target) {
-            if (!atmosphericsValue.HasMember(name)) {
+            if (!atmosphericsValue->HasMember(name)) {
                 return;
             }
-            const auto& value = atmosphericsValue[name];
+            const auto& value = (*atmosphericsValue)[name];
             if (!value.IsArray() || value.Size() != 3) {
-                throw std::runtime_error("JSON member 'atmospherics." + std::string(name) + "' must be an array of 3 numbers");
+                throw std::runtime_error("JSON member '" + atmosphericsPath + "." + std::string(name) +
+                                         "' must be an array of 3 numbers");
             }
             for (rapidjson::SizeType i = 0; i < 3; ++i) {
                 if (!value[i].IsNumber()) {
-                    throw std::runtime_error("JSON member 'atmospherics." + std::string(name) + "[" + std::to_string(i) + "]' must be a number");
+                    throw std::runtime_error("JSON member '" + atmosphericsPath + "." + std::string(name) +
+                                             "[" + std::to_string(i) + "]' must be a number");
                 }
                 target[i] = static_cast<float>(value[i].GetDouble());
             }
@@ -352,112 +473,151 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
         readFloat("pbr_metallic", config.atmospherics.pbrMetallic);
     }
 
-    if (document.HasMember("bgfx")) {
-        const auto& bgfxValue = document["bgfx"];
-        if (!bgfxValue.IsObject()) {
+    const rapidjson::Value* bgfxValue = nullptr;
+    std::string bgfxPath = "bgfx";
+    if (renderingValue) {
+        bgfxValue = getObjectMember(*renderingValue, "bgfx", "rendering.bgfx");
+        if (bgfxValue) {
+            bgfxPath = "rendering.bgfx";
+        }
+    }
+    if (!bgfxValue && document.HasMember("bgfx")) {
+        const auto& value = document["bgfx"];
+        if (!value.IsObject()) {
             throw std::runtime_error("JSON member 'bgfx' must be an object");
         }
-        if (bgfxValue.HasMember("renderer")) {
-            const auto& value = bgfxValue["renderer"];
+        bgfxValue = &value;
+    }
+    if (bgfxValue) {
+        if (bgfxValue->HasMember("renderer")) {
+            const auto& value = (*bgfxValue)["renderer"];
             if (!value.IsString()) {
-                throw std::runtime_error("JSON member 'bgfx.renderer' must be a string");
+                throw std::runtime_error("JSON member '" + bgfxPath + ".renderer' must be a string");
             }
             config.bgfx.renderer = value.GetString();
         }
     }
 
-    bool materialShaderKeyProvided = false;
-    if (document.HasMember("materialx")) {
-        const auto& materialValue = document["materialx"];
-        if (!materialValue.IsObject()) {
+    const rapidjson::Value* materialValue = nullptr;
+    std::string materialPath = "materialx";
+    if (renderingValue) {
+        materialValue = getObjectMember(*renderingValue, "materialx", "rendering.materialx");
+        if (materialValue) {
+            materialPath = "rendering.materialx";
+        }
+    }
+    if (!materialValue && document.HasMember("materialx")) {
+        const auto& value = document["materialx"];
+        if (!value.IsObject()) {
             throw std::runtime_error("JSON member 'materialx' must be an object");
         }
-        if (materialValue.HasMember("enabled")) {
-            const auto& value = materialValue["enabled"];
+        materialValue = &value;
+    }
+
+    bool materialShaderKeyProvided = false;
+    if (materialValue) {
+        if (materialValue->HasMember("enabled")) {
+            const auto& value = (*materialValue)["enabled"];
             if (!value.IsBool()) {
-                throw std::runtime_error("JSON member 'materialx.enabled' must be a boolean");
+                throw std::runtime_error("JSON member '" + materialPath + ".enabled' must be a boolean");
             }
             config.materialX.enabled = value.GetBool();
         }
-        if (materialValue.HasMember("document")) {
-            const auto& value = materialValue["document"];
+        if (materialValue->HasMember("document")) {
+            const auto& value = (*materialValue)["document"];
             if (!value.IsString()) {
-                throw std::runtime_error("JSON member 'materialx.document' must be a string");
+                throw std::runtime_error("JSON member '" + materialPath + ".document' must be a string");
             }
             config.materialX.documentPath = value.GetString();
         }
-        if (materialValue.HasMember("shader_key")) {
-            const auto& value = materialValue["shader_key"];
+        if (materialValue->HasMember("shader_key")) {
+            const auto& value = (*materialValue)["shader_key"];
             if (!value.IsString()) {
-                throw std::runtime_error("JSON member 'materialx.shader_key' must be a string");
+                throw std::runtime_error("JSON member '" + materialPath + ".shader_key' must be a string");
             }
             config.materialX.shaderKey = value.GetString();
             materialShaderKeyProvided = true;
         }
-        if (materialValue.HasMember("material")) {
-            const auto& value = materialValue["material"];
+        if (materialValue->HasMember("material")) {
+            const auto& value = (*materialValue)["material"];
             if (!value.IsString()) {
-                throw std::runtime_error("JSON member 'materialx.material' must be a string");
+                throw std::runtime_error("JSON member '" + materialPath + ".material' must be a string");
             }
             config.materialX.materialName = value.GetString();
         }
-        if (materialValue.HasMember("library_path")) {
-            const auto& value = materialValue["library_path"];
+        if (materialValue->HasMember("library_path")) {
+            const auto& value = (*materialValue)["library_path"];
             if (!value.IsString()) {
-                throw std::runtime_error("JSON member 'materialx.library_path' must be a string");
+                throw std::runtime_error("JSON member '" + materialPath + ".library_path' must be a string");
             }
             config.materialX.libraryPath = value.GetString();
         }
-        if (materialValue.HasMember("library_folders")) {
-            const auto& value = materialValue["library_folders"];
+        if (materialValue->HasMember("library_folders")) {
+            const auto& value = (*materialValue)["library_folders"];
             if (!value.IsArray()) {
-                throw std::runtime_error("JSON member 'materialx.library_folders' must be an array");
+                throw std::runtime_error("JSON member '" + materialPath + ".library_folders' must be an array");
             }
             config.materialX.libraryFolders.clear();
             for (rapidjson::SizeType i = 0; i < value.Size(); ++i) {
                 if (!value[i].IsString()) {
-                    throw std::runtime_error("JSON member 'materialx.library_folders[" + std::to_string(i) + "]' must be a string");
+                    throw std::runtime_error("JSON member '" + materialPath + ".library_folders[" +
+                                             std::to_string(i) + "]' must be a string");
                 }
                 config.materialX.libraryFolders.emplace_back(value[i].GetString());
             }
         }
-        if (materialValue.HasMember("use_constant_color")) {
-            const auto& value = materialValue["use_constant_color"];
+        if (materialValue->HasMember("use_constant_color")) {
+            const auto& value = (*materialValue)["use_constant_color"];
             if (!value.IsBool()) {
-                throw std::runtime_error("JSON member 'materialx.use_constant_color' must be a boolean");
+                throw std::runtime_error("JSON member '" + materialPath + ".use_constant_color' must be a boolean");
             }
             config.materialX.useConstantColor = value.GetBool();
         }
-        if (materialValue.HasMember("constant_color")) {
-            const auto& value = materialValue["constant_color"];
+        if (materialValue->HasMember("constant_color")) {
+            const auto& value = (*materialValue)["constant_color"];
             if (!value.IsArray() || value.Size() != 3) {
-                throw std::runtime_error("JSON member 'materialx.constant_color' must be an array of 3 numbers");
+                throw std::runtime_error("JSON member '" + materialPath + ".constant_color' must be an array of 3 numbers");
             }
             for (rapidjson::SizeType i = 0; i < 3; ++i) {
                 if (!value[i].IsNumber()) {
-                    throw std::runtime_error("JSON member 'materialx.constant_color[" + std::to_string(i) + "]' must be a number");
+                    throw std::runtime_error("JSON member '" + materialPath + ".constant_color[" +
+                                             std::to_string(i) + "]' must be a number");
                 }
                 config.materialX.constantColor[i] = static_cast<float>(value[i].GetDouble());
             }
         }
     }
 
-    if (document.HasMember("materialx_materials")) {
-        const auto& materialsValue = document["materialx_materials"];
-        if (!materialsValue.IsArray()) {
+    const rapidjson::Value* materialsValue = nullptr;
+    std::string materialsPath = "materialx_materials";
+    if (materialValue && materialValue->HasMember("materials")) {
+        const auto& value = (*materialValue)["materials"];
+        if (!value.IsArray()) {
+            throw std::runtime_error("JSON member '" + materialPath + ".materials' must be an array");
+        }
+        materialsValue = &value;
+        materialsPath = materialPath + ".materials";
+    }
+    if (!materialsValue && document.HasMember("materialx_materials")) {
+        const auto& value = document["materialx_materials"];
+        if (!value.IsArray()) {
             throw std::runtime_error("JSON member 'materialx_materials' must be an array");
         }
+        materialsValue = &value;
+    }
+    if (materialsValue) {
         config.materialXMaterials.clear();
-        for (rapidjson::SizeType i = 0; i < materialsValue.Size(); ++i) {
-            const auto& entry = materialsValue[i];
+        for (rapidjson::SizeType i = 0; i < materialsValue->Size(); ++i) {
+            const auto& entry = (*materialsValue)[i];
             if (!entry.IsObject()) {
-                throw std::runtime_error("JSON member 'materialx_materials[" + std::to_string(i) + "]' must be an object");
+                throw std::runtime_error("JSON member '" + materialsPath + "[" + std::to_string(i) +
+                                         "]' must be an object");
             }
             MaterialXMaterialConfig materialConfig;
             if (entry.HasMember("enabled")) {
                 const auto& value = entry["enabled"];
                 if (!value.IsBool()) {
-                    throw std::runtime_error("JSON member 'materialx_materials[" + std::to_string(i) +
+                    throw std::runtime_error("JSON member '" + materialsPath + "[" + std::to_string(i) +
                                              "].enabled' must be a boolean");
                 }
                 materialConfig.enabled = value.GetBool();
@@ -465,7 +625,7 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
             if (entry.HasMember("document")) {
                 const auto& value = entry["document"];
                 if (!value.IsString()) {
-                    throw std::runtime_error("JSON member 'materialx_materials[" + std::to_string(i) +
+                    throw std::runtime_error("JSON member '" + materialsPath + "[" + std::to_string(i) +
                                              "].document' must be a string");
                 }
                 materialConfig.documentPath = value.GetString();
@@ -473,7 +633,7 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
             if (entry.HasMember("shader_key")) {
                 const auto& value = entry["shader_key"];
                 if (!value.IsString()) {
-                    throw std::runtime_error("JSON member 'materialx_materials[" + std::to_string(i) +
+                    throw std::runtime_error("JSON member '" + materialsPath + "[" + std::to_string(i) +
                                              "].shader_key' must be a string");
                 }
                 materialConfig.shaderKey = value.GetString();
@@ -481,7 +641,7 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
             if (entry.HasMember("material")) {
                 const auto& value = entry["material"];
                 if (!value.IsString()) {
-                    throw std::runtime_error("JSON member 'materialx_materials[" + std::to_string(i) +
+                    throw std::runtime_error("JSON member '" + materialsPath + "[" + std::to_string(i) +
                                              "].material' must be a string");
                 }
                 materialConfig.materialName = value.GetString();
@@ -489,7 +649,7 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
             if (entry.HasMember("use_constant_color")) {
                 const auto& value = entry["use_constant_color"];
                 if (!value.IsBool()) {
-                    throw std::runtime_error("JSON member 'materialx_materials[" + std::to_string(i) +
+                    throw std::runtime_error("JSON member '" + materialsPath + "[" + std::to_string(i) +
                                              "].use_constant_color' must be a boolean");
                 }
                 materialConfig.useConstantColor = value.GetBool();
@@ -497,12 +657,12 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
             if (entry.HasMember("constant_color")) {
                 const auto& value = entry["constant_color"];
                 if (!value.IsArray() || value.Size() != 3) {
-                    throw std::runtime_error("JSON member 'materialx_materials[" + std::to_string(i) +
+                    throw std::runtime_error("JSON member '" + materialsPath + "[" + std::to_string(i) +
                                              "].constant_color' must be an array of 3 numbers");
                 }
                 for (rapidjson::SizeType channel = 0; channel < 3; ++channel) {
                     if (!value[channel].IsNumber()) {
-                        throw std::runtime_error("JSON member 'materialx_materials[" + std::to_string(i) +
+                        throw std::runtime_error("JSON member '" + materialsPath + "[" + std::to_string(i) +
                                                  "].constant_color[" + std::to_string(channel) +
                                                  "]' must be a number");
                     }
@@ -511,11 +671,11 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
             }
 
             if (materialConfig.shaderKey.empty()) {
-                throw std::runtime_error("JSON member 'materialx_materials[" + std::to_string(i) +
+                throw std::runtime_error("JSON member '" + materialsPath + "[" + std::to_string(i) +
                                          "].shader_key' must be provided");
             }
             if (materialConfig.documentPath.empty() && !materialConfig.useConstantColor) {
-                throw std::runtime_error("JSON member 'materialx_materials[" + std::to_string(i) +
+                throw std::runtime_error("JSON member '" + materialsPath + "[" + std::to_string(i) +
                                          "].document' is required when use_constant_color is false");
             }
 
@@ -532,35 +692,53 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
         }
     }
 
-    if (document.HasMember("gui_font")) {
-        const auto& fontValue = document["gui_font"];
-        if (!fontValue.IsObject()) {
+    const rapidjson::Value* guiFontValue = nullptr;
+    std::string guiFontPath = "gui_font";
+    if (guiValue && guiValue->HasMember("font")) {
+        const auto& value = (*guiValue)["font"];
+        if (!value.IsObject()) {
+            throw std::runtime_error("JSON member 'gui.font' must be an object");
+        }
+        guiFontValue = &value;
+        guiFontPath = "gui.font";
+    } else if (document.HasMember("gui_font")) {
+        const auto& value = document["gui_font"];
+        if (!value.IsObject()) {
             throw std::runtime_error("JSON member 'gui_font' must be an object");
         }
-        if (fontValue.HasMember("use_freetype")) {
-            const auto& value = fontValue["use_freetype"];
+        guiFontValue = &value;
+    }
+    if (guiFontValue) {
+        if (guiFontValue->HasMember("use_freetype")) {
+            const auto& value = (*guiFontValue)["use_freetype"];
             if (!value.IsBool()) {
-                throw std::runtime_error("JSON member 'gui_font.use_freetype' must be a boolean");
+                throw std::runtime_error("JSON member '" + guiFontPath + ".use_freetype' must be a boolean");
             }
             config.guiFont.useFreeType = value.GetBool();
         }
-        if (fontValue.HasMember("font_path")) {
-            const auto& value = fontValue["font_path"];
+        if (guiFontValue->HasMember("font_path")) {
+            const auto& value = (*guiFontValue)["font_path"];
             if (!value.IsString()) {
-                throw std::runtime_error("JSON member 'gui_font.font_path' must be a string");
+                throw std::runtime_error("JSON member '" + guiFontPath + ".font_path' must be a string");
             }
             config.guiFont.fontPath = value.GetString();
         }
-        if (fontValue.HasMember("font_size")) {
-            const auto& value = fontValue["font_size"];
+        if (guiFontValue->HasMember("font_size")) {
+            const auto& value = (*guiFontValue)["font_size"];
             if (!value.IsNumber()) {
-                throw std::runtime_error("JSON member 'gui_font.font_size' must be a number");
+                throw std::runtime_error("JSON member '" + guiFontPath + ".font_size' must be a number");
             }
             config.guiFont.fontSize = static_cast<float>(value.GetDouble());
         }
     }
 
-    if (document.HasMember("gui_opacity")) {
+    if (guiValue && guiValue->HasMember("opacity")) {
+        const auto& value = (*guiValue)["opacity"];
+        if (!value.IsNumber()) {
+            throw std::runtime_error("JSON member 'gui.opacity' must be a number");
+        }
+        config.guiOpacity = static_cast<float>(value.GetDouble());
+    } else if (document.HasMember("gui_opacity")) {
         const auto& value = document["gui_opacity"];
         if (!value.IsNumber()) {
             throw std::runtime_error("JSON member 'gui_opacity' must be a number");
@@ -577,22 +755,27 @@ std::string JsonConfigService::BuildConfigJson(const RuntimeConfig& config,
     document.SetObject();
     auto& allocator = document.GetAllocator();
 
-    auto addStringMember = [&](const char* name, const std::string& value) {
+    auto addStringMember = [&](rapidjson::Value& target, const char* name, const std::string& value) {
         rapidjson::Value nameValue(name, allocator);
         rapidjson::Value stringValue(value.c_str(), allocator);
-        document.AddMember(nameValue, stringValue, allocator);
+        target.AddMember(nameValue, stringValue, allocator);
     };
 
-    document.AddMember("window_width", config.width, allocator);
-    document.AddMember("window_height", config.height, allocator);
-    addStringMember("lua_script", config.scriptPath.string());
-    addStringMember("window_title", config.windowTitle);
-    document.AddMember("lua_debug", config.luaDebug, allocator);
+    document.AddMember("schema_version", 2, allocator);
+
+    rapidjson::Value scriptsObject(rapidjson::kObjectType);
+    addStringMember(scriptsObject, "entry", config.scriptPath.string());
+    scriptsObject.AddMember("lua_debug", config.luaDebug, allocator);
+    document.AddMember("scripts", scriptsObject, allocator);
+
+    rapidjson::Value windowObject(rapidjson::kObjectType);
+    addStringMember(windowObject, "title", config.windowTitle);
+    rapidjson::Value sizeObject(rapidjson::kObjectType);
+    sizeObject.AddMember("width", config.width, allocator);
+    sizeObject.AddMember("height", config.height, allocator);
+    windowObject.AddMember("size", sizeObject, allocator);
 
     std::filesystem::path scriptsDir = config.scriptPath.parent_path();
-    if (!scriptsDir.empty()) {
-        addStringMember("scripts_directory", scriptsDir.string());
-    }
 
     rapidjson::Value mouseGrabObject(rapidjson::kObjectType);
     mouseGrabObject.AddMember("enabled", config.mouseGrab.enabled, allocator);
@@ -607,13 +790,13 @@ std::string JsonConfigService::BuildConfigJson(const RuntimeConfig& config,
     mouseGrabObject.AddMember("release_key",
                               rapidjson::Value(config.mouseGrab.releaseKey.c_str(), allocator),
                               allocator);
-    document.AddMember("mouse_grab", mouseGrabObject, allocator);
+    windowObject.AddMember("mouse_grab", mouseGrabObject, allocator);
+    document.AddMember("window", windowObject, allocator);
 
     rapidjson::Value bgfxObject(rapidjson::kObjectType);
     bgfxObject.AddMember("renderer",
                          rapidjson::Value(config.bgfx.renderer.c_str(), allocator),
                          allocator);
-    document.AddMember("bgfx", bgfxObject, allocator);
 
     rapidjson::Value materialObject(rapidjson::kObjectType);
     materialObject.AddMember("enabled", config.materialX.enabled, allocator);
@@ -640,7 +823,6 @@ std::string JsonConfigService::BuildConfigJson(const RuntimeConfig& config,
     constantColor.PushBack(config.materialX.constantColor[1], allocator);
     constantColor.PushBack(config.materialX.constantColor[2], allocator);
     materialObject.AddMember("constant_color", constantColor, allocator);
-    document.AddMember("materialx", materialObject, allocator);
 
     if (!config.materialXMaterials.empty()) {
         rapidjson::Value materialsArray(rapidjson::kArrayType);
@@ -664,16 +846,36 @@ std::string JsonConfigService::BuildConfigJson(const RuntimeConfig& config,
             entry.AddMember("constant_color", materialColor, allocator);
             materialsArray.PushBack(entry, allocator);
         }
-        document.AddMember("materialx_materials", materialsArray, allocator);
+        materialObject.AddMember("materials", materialsArray, allocator);
     }
 
-    rapidjson::Value fontObject(rapidjson::kObjectType);
-    fontObject.AddMember("use_freetype", config.guiFont.useFreeType, allocator);
-    fontObject.AddMember("font_path",
-                         rapidjson::Value(config.guiFont.fontPath.string().c_str(), allocator),
-                         allocator);
-    fontObject.AddMember("font_size", config.guiFont.fontSize, allocator);
-    document.AddMember("gui_font", fontObject, allocator);
+    rapidjson::Value renderingObject(rapidjson::kObjectType);
+    renderingObject.AddMember("bgfx", bgfxObject, allocator);
+    renderingObject.AddMember("materialx", materialObject, allocator);
+
+    rapidjson::Value atmosphericsObject(rapidjson::kObjectType);
+    atmosphericsObject.AddMember("ambient_strength", config.atmospherics.ambientStrength, allocator);
+    atmosphericsObject.AddMember("fog_density", config.atmospherics.fogDensity, allocator);
+    rapidjson::Value fogColor(rapidjson::kArrayType);
+    fogColor.PushBack(config.atmospherics.fogColor[0], allocator);
+    fogColor.PushBack(config.atmospherics.fogColor[1], allocator);
+    fogColor.PushBack(config.atmospherics.fogColor[2], allocator);
+    atmosphericsObject.AddMember("fog_color", fogColor, allocator);
+    rapidjson::Value skyColor(rapidjson::kArrayType);
+    skyColor.PushBack(config.atmospherics.skyColor[0], allocator);
+    skyColor.PushBack(config.atmospherics.skyColor[1], allocator);
+    skyColor.PushBack(config.atmospherics.skyColor[2], allocator);
+    atmosphericsObject.AddMember("sky_color", skyColor, allocator);
+    atmosphericsObject.AddMember("gamma", config.atmospherics.gamma, allocator);
+    atmosphericsObject.AddMember("exposure", config.atmospherics.exposure, allocator);
+    atmosphericsObject.AddMember("enable_tone_mapping", config.atmospherics.enableToneMapping, allocator);
+    atmosphericsObject.AddMember("enable_shadows", config.atmospherics.enableShadows, allocator);
+    atmosphericsObject.AddMember("enable_ssgi", config.atmospherics.enableSSGI, allocator);
+    atmosphericsObject.AddMember("enable_volumetric_lighting", config.atmospherics.enableVolumetricLighting, allocator);
+    atmosphericsObject.AddMember("pbr_roughness", config.atmospherics.pbrRoughness, allocator);
+    atmosphericsObject.AddMember("pbr_metallic", config.atmospherics.pbrMetallic, allocator);
+    renderingObject.AddMember("atmospherics", atmosphericsObject, allocator);
+    document.AddMember("rendering", renderingObject, allocator);
 
     rapidjson::Value bindingsObject(rapidjson::kObjectType);
     auto addBindingMember = [&](const char* name, const std::string& value) {
@@ -725,20 +927,36 @@ std::string JsonConfigService::BuildConfigJson(const RuntimeConfig& config,
     addMappingObject("gamepad_axis_actions", config.inputBindings.gamepadAxisActions, bindingsObject);
     bindingsObject.AddMember("gamepad_axis_action_threshold",
                              config.inputBindings.gamepadAxisActionThreshold, allocator);
-    document.AddMember("input_bindings", bindingsObject, allocator);
+    rapidjson::Value inputObject(rapidjson::kObjectType);
+    inputObject.AddMember("bindings", bindingsObject, allocator);
+    document.AddMember("input", inputObject, allocator);
 
     std::filesystem::path projectRoot = scriptsDir.parent_path();
-    if (!projectRoot.empty()) {
-        addStringMember("project_root", projectRoot.string());
-        addStringMember("shaders_directory", (projectRoot / "shaders").string());
-    } else {
-        addStringMember("shaders_directory", "shaders");
+    rapidjson::Value pathsObject(rapidjson::kObjectType);
+    if (!scriptsDir.empty()) {
+        addStringMember(pathsObject, "scripts", scriptsDir.string());
     }
+    if (!projectRoot.empty()) {
+        addStringMember(pathsObject, "project_root", projectRoot.string());
+        addStringMember(pathsObject, "shaders", (projectRoot / "shaders").string());
+    } else {
+        addStringMember(pathsObject, "shaders", "shaders");
+    }
+    document.AddMember("paths", pathsObject, allocator);
 
-    document.AddMember("gui_opacity", config.guiOpacity, allocator);
+    rapidjson::Value guiObject(rapidjson::kObjectType);
+    rapidjson::Value fontObject(rapidjson::kObjectType);
+    fontObject.AddMember("use_freetype", config.guiFont.useFreeType, allocator);
+    fontObject.AddMember("font_path",
+                         rapidjson::Value(config.guiFont.fontPath.string().c_str(), allocator),
+                         allocator);
+    fontObject.AddMember("font_size", config.guiFont.fontSize, allocator);
+    guiObject.AddMember("font", fontObject, allocator);
+    guiObject.AddMember("opacity", config.guiOpacity, allocator);
+    document.AddMember("gui", guiObject, allocator);
 
     if (!configPath.empty()) {
-        addStringMember("config_file", configPath.string());
+        addStringMember(document, "config_file", configPath.string());
     }
 
     rapidjson::StringBuffer buffer;
