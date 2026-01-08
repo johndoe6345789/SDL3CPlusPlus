@@ -636,6 +636,28 @@ target_link_libraries(graphics_service_buffer_lifecycle_test PRIVATE
     GTest::gtest_main
 )
 add_test(NAME graphics_service_buffer_lifecycle_test COMMAND graphics_service_buffer_lifecycle_test)
+
+# Test: Bgfx Draw bounds validation (TDD test for buffer overflow crash)
+add_executable(bgfx_draw_bounds_validation_test
+    tests/bgfx_draw_bounds_validation_test.cpp
+)
+target_include_directories(bgfx_draw_bounds_validation_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_link_libraries(bgfx_draw_bounds_validation_test PRIVATE
+    GTest::gtest
+    GTest::gtest_main
+)
+add_test(NAME bgfx_draw_bounds_validation_test COMMAND bgfx_draw_bounds_validation_test)
+
+# Test: GUI shader linking failure (TDD test for int→sampler mapping bug)
+add_executable(gui_shader_linking_failure_test
+    tests/gui_shader_linking_failure_test.cpp
+)
+target_include_directories(gui_shader_linking_failure_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_link_libraries(gui_shader_linking_failure_test PRIVATE
+    GTest::gtest
+    GTest::gtest_main
+)
+add_test(NAME gui_shader_linking_failure_test COMMAND gui_shader_linking_failure_test)
 endif()
 
 if(ENABLE_VITA)
