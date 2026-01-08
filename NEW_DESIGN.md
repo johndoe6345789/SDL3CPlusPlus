@@ -382,3 +382,4 @@ If you share:
 * and whether you want glTF as the primary asset format,
   I will lock the design to your conventions and avoid inventing abstractions you will later delete.
   
+  See if anything in NEW_DESIGN.md we can implement. Do refactoring.
