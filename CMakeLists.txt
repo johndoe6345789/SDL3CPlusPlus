@@ -658,6 +658,17 @@ target_link_libraries(gui_shader_linking_failure_test PRIVATE
     GTest::gtest_main
 )
 add_test(NAME gui_shader_linking_failure_test COMMAND gui_shader_linking_failure_test)
+
+# Test: Bgfx Draw bounds crash test (REAL TDD - tests should be DISABLED until fix implemented)
+add_executable(bgfx_draw_bounds_crash_test
+    tests/bgfx_draw_bounds_crash_test.cpp
+)
+target_include_directories(bgfx_draw_bounds_crash_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_link_libraries(bgfx_draw_bounds_crash_test PRIVATE
+    GTest::gtest
+    GTest::gtest_main
+)
+add_test(NAME bgfx_draw_bounds_crash_test COMMAND bgfx_draw_bounds_crash_test)
 endif()
 
 if(ENABLE_VITA)

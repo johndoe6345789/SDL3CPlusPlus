@@ -1116,6 +1116,36 @@ void BgfxGraphicsBackend::Draw(GraphicsDeviceHandle device, GraphicsPipelineHand
                        ", totalVertices=" + std::to_string(vb->vertexCount));
     }
 
+    // Validate bounds to prevent GPU driver crashes
+    // Based on crash analysis from sdl3_app.log where invalid parameters caused GPU segfault
+    if (vertexOffset < 0) {
+        if (logger_) {
+            logger_->Error("BgfxGraphicsBackend::Draw: Invalid negative vertex offset (" +
+                          std::to_string(vertexOffset) + ")");
+        }
+        return;
+    }
+
+    if (static_cast<uint32_t>(vertexOffset) >= vb->vertexCount) {
+        if (logger_) {
+            logger_->Error("BgfxGraphicsBackend::Draw: Vertex offset (" +
+                          std::to_string(vertexOffset) + ") exceeds vertex buffer size (" +
+                          std::to_string(vb->vertexCount) + ")");
+        }
+        return;
+    }
+
+    if (indexOffset + indexCount > ib->indexCount) {
+        if (logger_) {
+            logger_->Error("BgfxGraphicsBackend::Draw: Index range [" +
+                          std::to_string(indexOffset) + ", " +
+                          std::to_string(indexOffset + indexCount) +
+                          ") exceeds index buffer size (" +
+                          std::to_string(ib->indexCount) + ")");
+        }
+        return;
+    }
+
     // When using indexed rendering with a vertex offset, bgfx expects:
     // - setVertexBuffer: (handle, startVertex=0, numVertices=all)
     // - setIndexBuffer: (handle, firstIndex, numIndices)
