@@ -1,6 +1,7 @@
 #include "workflow_step_registry.hpp"
 
 #include <stdexcept>
+#include <utility>
 
 namespace sdl3cpp::services::impl {
 
