@@ -274,6 +274,7 @@ endif()
 
 set(JSON_CONFIG_SOURCES
     src/services/impl/json_config_service.cpp
+    src/services/impl/runtime_config_builder.cpp
     src/services/impl/json_config_document_loader.cpp
     src/services/impl/json_config_document_parser.cpp
     src/services/impl/json_config_extend_resolver.cpp
@@ -296,6 +297,7 @@ set(WORKFLOW_SOURCES
     src/services/impl/workflow_config_migration_step.cpp
     src/services/impl/workflow_config_schema_step.cpp
     src/services/impl/workflow_default_step_registrar.cpp
+    src/services/impl/workflow_runtime_config_step.cpp
 )
 
 set(MATERIALX_SCRIPT_SOURCES

@@ -7,11 +7,11 @@
 #include "workflow_template_resolver.hpp"
 #include "../interfaces/i_logger.hpp"
 #include "../interfaces/i_probe_service.hpp"
+#include "../interfaces/workflow_context.hpp"
 
 #include <stdexcept>
 #include <string>
 #include <utility>
-
 namespace sdl3cpp::services::impl {
 
 WorkflowConfigPipeline::WorkflowConfigPipeline(std::shared_ptr<ILogger> logger,
@@ -19,9 +19,8 @@ WorkflowConfigPipeline::WorkflowConfigPipeline(std::shared_ptr<ILogger> logger,
     : logger_(std::move(logger)),
       probeService_(std::move(probeService)) {}
 
-std::shared_ptr<rapidjson::Document> WorkflowConfigPipeline::Execute(
-    const std::filesystem::path& configPath,
-    std::optional<int>* versionOut) const {
+WorkflowResult WorkflowConfigPipeline::Execute(const std::filesystem::path& configPath,
+                                               std::optional<int>* versionOut) const {
     if (logger_) {
         logger_->Trace("WorkflowConfigPipeline", "Execute",
                        "configPath=" + configPath.string(),
@@ -51,10 +50,6 @@ std::shared_ptr<rapidjson::Document> WorkflowConfigPipeline::Execute(
     if (!documentHandle || !(*documentHandle)) {
         throw std::runtime_error("WorkflowConfigPipeline: boot workflow did not provide config.document");
     }
-    if (versionOut) {
-        const auto* versionHandle = context.TryGet<std::optional<int>>("config.version");
-        *versionOut = versionHandle ? *versionHandle : std::nullopt;
-    }
 
     if (logger_) {
         logger_->Trace("WorkflowConfigPipeline", "Execute",
@@ -62,7 +57,14 @@ std::shared_ptr<rapidjson::Document> WorkflowConfigPipeline::Execute(
                        "Boot workflow complete");
     }
 
-    return *documentHandle;
+    WorkflowResult result;
+    result.document = *documentHandle;
+    if (versionOut) {
+        const auto* versionHandle = context.TryGet<std::optional<int>>("config.version");
+        *versionOut = versionHandle ? *versionHandle : std::nullopt;
+    }
+    result.context = std::move(context);
+    return result;
 }
 
 }  // namespace sdl3cpp::services::impl

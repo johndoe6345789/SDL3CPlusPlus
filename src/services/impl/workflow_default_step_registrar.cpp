@@ -3,6 +3,7 @@
 #include "workflow_config_migration_step.hpp"
 #include "workflow_config_schema_step.hpp"
 #include "workflow_config_version_step.hpp"
+#include "workflow_runtime_config_step.hpp"
 
 #include <stdexcept>
 #include <unordered_set>
@@ -38,6 +39,9 @@ void WorkflowDefaultStepRegistrar::RegisterUsedSteps(
     }
     if (plugins.contains("config.schema.validate")) {
         registry->RegisterStep(std::make_shared<WorkflowConfigSchemaStep>(logger_, probeService_));
+    }
+    if (plugins.contains("runtime.config.build")) {
+        registry->RegisterStep(std::make_shared<WorkflowRuntimeConfigStep>(logger_));
     }
 }
 

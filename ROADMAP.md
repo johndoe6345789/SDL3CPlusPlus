@@ -242,8 +242,8 @@ Option B: per-shader only
 - [x] Template package: `config/workflows/templates/boot_default.json`.
 
 ### Next Steps
-- Move RuntimeConfig parsing into a workflow step.
-- Add frame workflow template (BeginFrame → RenderGraph → Capture → Validate).
+- [x] Move RuntimeConfig parsing into a workflow step.
+- [ ] Add frame workflow template (BeginFrame → RenderGraph → Capture → Validate).
 
 ## Feature Matrix (What You Get, When You Get It)
 

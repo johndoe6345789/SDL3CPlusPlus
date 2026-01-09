@@ -42,6 +42,17 @@
         "document": "config.document",
         "path": "config.path"
       }
+    },
+    {
+      "id": "build_runtime_config",
+      "plugin": "runtime.config.build",
+      "inputs": {
+        "document": "config.document",
+        "path": "config.path"
+      },
+      "outputs": {
+        "runtime": "config.runtime"
+      }
     }
   ]
 }
