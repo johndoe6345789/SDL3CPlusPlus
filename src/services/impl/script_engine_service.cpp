@@ -1,15 +1,14 @@
 #include "script_engine_service.hpp"
 
 #include "lua_helpers.hpp"
+#include "materialx_document_loader.hpp"
+#include "materialx_path_resolver.hpp"
+#include "materialx_surface_node_resolver.hpp"
+#include "materialx_surface_parameter_reader.hpp"
 #include "services/interfaces/i_logger.hpp"
 
 #include <btBulletDynamicsCommon.h>
 #include <lua.hpp>
-#include <MaterialXCore/Document.h>
-#include <MaterialXCore/Types.h>
-#include <MaterialXFormat/File.h>
-#include <MaterialXFormat/Util.h>
-#include <MaterialXFormat/XmlIo.h>
 #include <SDL3/SDL.h>
 #include <rapidjson/document.h>
 #include <rapidjson/error/en.h>
@@ -24,17 +23,6 @@
 #include <vector>
 
 namespace {
-namespace mx = MaterialX;
-
-struct MaterialXSurfaceParameters {
-    std::array<float, 3> albedo = {1.0f, 1.0f, 1.0f};
-    float roughness = 0.3f;
-    float metallic = 0.0f;
-    bool hasAlbedo = false;
-    bool hasRoughness = false;
-    bool hasMetallic = false;
-};
-
 std::array<float, 3> TransformPoint(const std::array<float, 16>& matrix,
                                     const std::array<float, 3>& point) {
     const float x = point[0];
@@ -45,174 +33,6 @@ std::array<float, 3> TransformPoint(const std::array<float, 16>& matrix,
         matrix[1] * x + matrix[5] * y + matrix[9] * z + matrix[13],
         matrix[2] * x + matrix[6] * y + matrix[10] * z + matrix[14],
     };
-}
-
-std::filesystem::path ResolveMaterialXPath(const std::filesystem::path& path,
-                                           const std::filesystem::path& scriptDirectory) {
-    if (path.empty()) {
-        return {};
-    }
-    if (path.is_absolute()) {
-        return path;
-    }
-    if (!scriptDirectory.empty()) {
-        auto projectRoot = scriptDirectory.parent_path();
-        if (!projectRoot.empty()) {
-            std::error_code ec;
-            auto resolved = std::filesystem::weakly_canonical(projectRoot / path, ec);
-            if (!ec) {
-                return resolved;
-            }
-        }
-    }
-    std::error_code ec;
-    auto resolved = std::filesystem::weakly_canonical(path, ec);
-    if (ec) {
-        return {};
-    }
-    return resolved;
-}
-
-mx::FileSearchPath BuildMaterialXSearchPath(const sdl3cpp::services::MaterialXConfig& config,
-                                            const std::filesystem::path& scriptDirectory) {
-    mx::FileSearchPath searchPath;
-    std::filesystem::path libraryPath = ResolveMaterialXPath(config.libraryPath, scriptDirectory);
-    if (libraryPath.empty() && !scriptDirectory.empty()) {
-        auto fallback = scriptDirectory.parent_path() / "MaterialX" / "libraries";
-        if (std::filesystem::exists(fallback)) {
-            libraryPath = fallback;
-        }
-    }
-    if (!libraryPath.empty()) {
-        searchPath.append(mx::FilePath(libraryPath.string()));
-    }
-    return searchPath;
-}
-
-mx::DocumentPtr LoadMaterialXDocument(const std::filesystem::path& documentPath,
-                                      const sdl3cpp::services::MaterialXConfig& config,
-                                      const std::filesystem::path& scriptDirectory) {
-    mx::DocumentPtr document = mx::createDocument();
-    mx::FileSearchPath searchPath = BuildMaterialXSearchPath(config, scriptDirectory);
-    mx::readFromXmlFile(document, mx::FilePath(documentPath.string()), searchPath);
-
-    if (!config.libraryFolders.empty()) {
-        mx::DocumentPtr stdLib = mx::createDocument();
-        mx::FilePathVec folders;
-        folders.reserve(config.libraryFolders.size());
-        for (const auto& folder : config.libraryFolders) {
-            folders.emplace_back(folder);
-        }
-        mx::loadLibraries(folders, searchPath, stdLib);
-        document->importLibrary(stdLib);
-    }
-
-    return document;
-}
-
-mx::NodePtr ResolveSurfaceNode(const mx::DocumentPtr& document, const std::string& materialName) {
-    if (!materialName.empty()) {
-        mx::NodePtr candidate = document->getNode(materialName);
-        if (candidate && candidate->getCategory() == "surfacematerial") {
-            mx::NodePtr surfaceNode = candidate->getConnectedNode("surfaceshader");
-            if (surfaceNode) {
-                return surfaceNode;
-            }
-        }
-        if (candidate && (candidate->getCategory() == "standard_surface"
-            || candidate->getCategory() == "usd_preview_surface")) {
-            return candidate;
-        }
-    }
-
-    for (const auto& node : document->getNodes()) {
-        if (node->getCategory() == "surfacematerial") {
-            mx::NodePtr surfaceNode = node->getConnectedNode("surfaceshader");
-            if (surfaceNode) {
-                return surfaceNode;
-            }
-        }
-    }
-
-    for (const auto& node : document->getNodes()) {
-        if (node->getCategory() == "standard_surface"
-            || node->getCategory() == "usd_preview_surface") {
-            return node;
-        }
-    }
-
-    return {};
-}
-
-bool TryReadColor3(const mx::NodePtr& node, const char* name, std::array<float, 3>& outColor) {
-    if (!node) {
-        return false;
-    }
-    mx::InputPtr input = node->getInput(name);
-    if (!input || !input->hasValueString()) {
-        return false;
-    }
-    mx::ValuePtr value = input->getValue();
-    if (!value || !value->isA<mx::Color3>()) {
-        return false;
-    }
-    const mx::Color3& color = value->asA<mx::Color3>();
-    outColor = {color[0], color[1], color[2]};
-    return true;
-}
-
-bool TryReadFloat(const mx::NodePtr& node, const char* name, float& outValue) {
-    if (!node) {
-        return false;
-    }
-    mx::InputPtr input = node->getInput(name);
-    if (!input || !input->hasValueString()) {
-        return false;
-    }
-    mx::ValuePtr value = input->getValue();
-    if (!value || !value->isA<float>()) {
-        return false;
-    }
-    outValue = value->asA<float>();
-    return true;
-}
-
-MaterialXSurfaceParameters ReadStandardSurfaceParameters(const mx::NodePtr& node) {
-    MaterialXSurfaceParameters parameters;
-    std::array<float, 3> baseColor = parameters.albedo;
-    bool hasBaseColor = TryReadColor3(node, "base_color", baseColor);
-    if (!hasBaseColor) {
-        hasBaseColor = TryReadColor3(node, "diffuse_color", baseColor);
-    }
-    float baseStrength = 1.0f;
-    bool hasBaseStrength = TryReadFloat(node, "base", baseStrength);
-    if (hasBaseColor) {
-        parameters.albedo = {
-            baseColor[0] * baseStrength,
-            baseColor[1] * baseStrength,
-            baseColor[2] * baseStrength
-        };
-        parameters.hasAlbedo = true;
-    } else if (hasBaseStrength) {
-        parameters.albedo = {baseStrength, baseStrength, baseStrength};
-        parameters.hasAlbedo = true;
-    }
-
-    float roughness = parameters.roughness;
-    if (TryReadFloat(node, "specular_roughness", roughness)
-        || TryReadFloat(node, "roughness", roughness)) {
-        parameters.roughness = roughness;
-        parameters.hasRoughness = true;
-    }
-
-    float metallic = parameters.metallic;
-    if (TryReadFloat(node, "metalness", metallic)
-        || TryReadFloat(node, "metallic", metallic)) {
-        parameters.metallic = metallic;
-        parameters.hasMetallic = true;
-    }
-
-    return parameters;
 }
 
 bool TryParseMouseButtonName(const char* name, uint8_t& button) {
@@ -1356,7 +1176,8 @@ int ScriptEngineService::MaterialXGetSurfaceParameters(lua_State* L) {
                       ", material=" + std::string(materialArg ? materialArg : ""));
     }
 
-    std::filesystem::path documentPath = ResolveMaterialXPath(documentArg ? documentArg : "", scriptDirectory);
+    MaterialXPathResolver pathResolver;
+    std::filesystem::path documentPath = pathResolver.Resolve(documentArg ? documentArg : "", scriptDirectory);
     if (documentPath.empty()) {
         lua_pushnil(L);
         lua_pushstring(L, "MaterialX document path could not be resolved");
@@ -1370,9 +1191,12 @@ int ScriptEngineService::MaterialXGetSurfaceParameters(lua_State* L) {
     }
 
     const auto& materialConfig = context->configService->GetMaterialXConfig();
-    mx::DocumentPtr document;
+    MaterialXDocumentLoader documentLoader;
+    MaterialXSurfaceNodeResolver nodeResolver;
+    MaterialXSurfaceParameterReader parameterReader;
+    MaterialX::DocumentPtr document;
     try {
-        document = LoadMaterialXDocument(documentPath, materialConfig, scriptDirectory);
+        document = documentLoader.Load(documentPath, materialConfig, scriptDirectory);
     } catch (const std::exception& ex) {
         lua_pushnil(L);
         std::string message = "MaterialX document load failed: ";
@@ -1381,14 +1205,14 @@ int ScriptEngineService::MaterialXGetSurfaceParameters(lua_State* L) {
         return 2;
     }
 
-    mx::NodePtr surfaceNode = ResolveSurfaceNode(document, materialArg ? materialArg : "");
+    auto surfaceNode = nodeResolver.ResolveSurfaceNode(document, materialArg ? materialArg : "");
     if (!surfaceNode) {
         lua_pushnil(L);
         lua_pushstring(L, "MaterialX document has no standard_surface material");
         return 2;
     }
 
-    MaterialXSurfaceParameters parameters = ReadStandardSurfaceParameters(surfaceNode);
+    MaterialXSurfaceParameters parameters = parameterReader.ReadStandardSurfaceParameters(surfaceNode);
     if (!parameters.hasAlbedo && !parameters.hasRoughness && !parameters.hasMetallic) {
         lua_pushnil(L);
         lua_pushstring(L, "MaterialX material does not expose supported PBR parameters");

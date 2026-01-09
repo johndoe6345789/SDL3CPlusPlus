@@ -160,6 +160,7 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 ### Phase A: Mechanical Extraction (1-3 days)
 - [~] JsonConfigService: extracted config document load/merge helpers into `src/services/impl/json_config_document_loader.cpp` plus small parser/extend/merge services to keep files <100 LOC.
 - [~] JsonConfigService: split schema validation/versioning/migration into `json_config_*` services (`schema_validator`, `version_validator`, `migration_service`).
+- [~] ScriptEngineService: extracted MaterialX helpers into micro services (`materialx_path_resolver`, `materialx_search_path_builder`, `materialx_document_loader`, `materialx_surface_node_resolver`, `materialx_surface_parameter_reader`).
 - Move self-contained helpers into `*_helpers.cpp` with clear headers.
 - Extract pure data transforms into free functions with unit tests.
 - Preserve public interfaces; no behavior change in this phase.
@@ -231,6 +232,7 @@ Option B: per-shader only
 - Describe boot + frame pipelines as a declarative JSON workflow graph.
 - Keep each step tiny (<100 LOC), with explicit inputs/outputs and DI-backed plugin lookup.
 - Package common pipelines as templates so users don't start from scratch.
+- Only register/instantiate step plugins that are referenced by the active workflow.
 
 ### Status
 - [~] Workflow core: step registry + executor + JSON definition parser.

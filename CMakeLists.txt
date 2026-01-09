@@ -295,6 +295,14 @@ set(WORKFLOW_SOURCES
     src/services/impl/workflow_default_step_registrar.cpp
 )
 
+set(MATERIALX_SCRIPT_SOURCES
+    src/services/impl/materialx_path_resolver.cpp
+    src/services/impl/materialx_search_path_builder.cpp
+    src/services/impl/materialx_document_loader.cpp
+    src/services/impl/materialx_surface_node_resolver.cpp
+    src/services/impl/materialx_surface_parameter_reader.cpp
+)
+
 if(BUILD_SDL3_APP)
     add_executable(sdl3_app
             src/main.cpp
@@ -303,6 +311,7 @@ if(BUILD_SDL3_APP)
             src/events/event_bus.cpp
             ${JSON_CONFIG_SOURCES}
             ${WORKFLOW_SOURCES}
+            ${MATERIALX_SCRIPT_SOURCES}
             src/services/impl/config_compiler_service.cpp
             src/services/impl/command_line_service.cpp
             src/services/impl/json_config_writer_service.cpp
@@ -428,6 +437,7 @@ add_executable(script_engine_tests
     src/services/impl/physics_bridge_service.cpp
     src/services/impl/platform_service.cpp
     src/services/impl/script_engine_service.cpp
+    ${MATERIALX_SCRIPT_SOURCES}
     src/services/impl/lua_helpers.cpp
     src/services/impl/scene_script_service.cpp
     src/services/impl/shader_script_service.cpp

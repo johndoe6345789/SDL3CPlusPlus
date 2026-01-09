@@ -38,6 +38,7 @@
 #include "services/impl/pipeline_compiler_service.hpp"
 #include "services/impl/validation_tour_service.hpp"
 #include "services/impl/workflow_default_step_registrar.hpp"
+#include "services/impl/workflow_definition_parser.hpp"
 #include "services/impl/workflow_executor.hpp"
 #include "services/impl/workflow_step_registry.hpp"
 #include "services/interfaces/i_platform_service.hpp"
@@ -49,6 +50,7 @@
 #include "services/interfaces/i_workflow_step_registry.hpp"
 #include "services/interfaces/i_config_compiler_service.hpp"
 #include <iostream>
+#include <filesystem>
 #include <stdexcept>
 #include <utility>
 
@@ -233,10 +235,26 @@ void ServiceBasedApp::RegisterServices() {
     registry_.RegisterService<services::IWorkflowExecutor, services::impl::WorkflowExecutor>(
         registry_.GetService<services::IWorkflowStepRegistry>(),
         registry_.GetService<services::ILogger>());
-    services::impl::WorkflowDefaultStepRegistrar workflowRegistrar(
-        registry_.GetService<services::ILogger>(),
-        registry_.GetService<services::IProbeService>());
-    workflowRegistrar.RegisterDefaults(registry_.GetService<services::IWorkflowStepRegistry>());
+    services::impl::WorkflowDefinitionParser workflowParser;
+    services::WorkflowDefinition workflowDefinition;
+    bool workflowLoaded = false;
+    try {
+        const std::filesystem::path workflowPath =
+            std::filesystem::current_path() / "config" / "workflows" / "templates" / "boot_default.json";
+        workflowDefinition = workflowParser.ParseFile(workflowPath);
+        workflowLoaded = true;
+    } catch (const std::exception& e) {
+        logger_->Warn("ServiceBasedApp::RegisterServices: Failed to load workflow template: " +
+                      std::string(e.what()));
+    }
+    if (workflowLoaded) {
+        services::impl::WorkflowDefaultStepRegistrar workflowRegistrar(
+            registry_.GetService<services::ILogger>(),
+            registry_.GetService<services::IProbeService>());
+        workflowRegistrar.RegisterUsedSteps(
+            workflowDefinition,
+            registry_.GetService<services::IWorkflowStepRegistry>());
+    }
 
     // Configuration service
     registry_.RegisterService<services::IConfigService, services::impl::JsonConfigService>(
