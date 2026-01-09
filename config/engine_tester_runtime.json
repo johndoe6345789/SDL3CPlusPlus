@@ -1,0 +1,56 @@
+{
+  "schema_version": 2,
+  "configVersion": 2,
+  "scripts": {
+    "entry": "scripts/cube_logic.lua",
+    "lua_debug": false
+  },
+  "runtime": {
+    "scene_source": "lua"
+  },
+  "window": {
+    "title": "SDL3 Engine Tester",
+    "size": {
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "rendering": {
+    "bgfx": {
+      "renderer": "auto"
+    }
+  },
+  "validation_tour": {
+    "enabled": true,
+    "fail_on_mismatch": true,
+    "warmup_frames": 3,
+    "capture_frames": 1,
+    "output_dir": "artifacts/validation",
+    "checkpoints": [
+      {
+        "id": "startup_spawn",
+        "camera": {
+          "position": [0.0, 2.0, 5.0],
+          "look_at": [0.0, 1.0, 0.0],
+          "fov_degrees": 60.0,
+          "near": 0.1,
+          "far": 100.0
+        },
+        "checks": [
+          {
+            "type": "non_black_ratio",
+            "threshold": 0.02,
+            "min_ratio": 0.01,
+            "max_ratio": 1.0
+          },
+          {
+            "type": "luma_range",
+            "min_luma": 0.01,
+            "max_luma": 0.95
+          }
+        ]
+      }
+    ]
+  },
+  "config_file": "config/engine_tester_runtime.json"
+}

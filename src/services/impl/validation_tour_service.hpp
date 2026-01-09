@@ -22,18 +22,25 @@ public:
 private:
     struct PendingCapture {
         std::filesystem::path actualPath;
-        std::filesystem::path expectedPath;
-        std::string checkpointId;
-        float tolerance = 0.01f;
-        size_t maxDiffPixels = 0;
+        size_t checkpointIndex = 0;
         size_t captureIndex = 0;
     };
 
     void AdvanceCheckpoint();
     ViewState BuildViewState(const ValidationCameraConfig& camera, float aspect) const;
     std::filesystem::path ResolvePath(const std::filesystem::path& path) const;
-    bool CompareImages(const PendingCapture& pending, std::string& errorMessage) const;
-    void ReportMismatch(const PendingCapture& pending,
+    bool AnalyzeCapture(const PendingCapture& pending, std::string& errorMessage) const;
+    bool ApplyChecks(const ValidationCheckpointConfig& checkpoint,
+                     int width,
+                     int height,
+                     const unsigned char* pixels,
+                     std::string& errorMessage) const;
+    bool CompareExpectedImage(const ValidationCheckpointConfig& checkpoint,
+                              int width,
+                              int height,
+                              const unsigned char* pixels,
+                              std::string& errorMessage) const;
+    void ReportMismatch(const std::string& checkpointId,
                         const std::string& summary,
                         const std::string& details) const;
 

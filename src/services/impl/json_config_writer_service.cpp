@@ -289,15 +289,57 @@ void JsonConfigWriterService::WriteConfig(const RuntimeConfig& config, const std
             cameraObject.AddMember("far", checkpoint.camera.farPlane, allocator);
             entry.AddMember("camera", cameraObject, allocator);
 
-            rapidjson::Value expectedObject(rapidjson::kObjectType);
-            expectedObject.AddMember("image",
-                                     rapidjson::Value(checkpoint.expected.imagePath.string().c_str(), allocator),
-                                     allocator);
-            expectedObject.AddMember("tolerance", checkpoint.expected.tolerance, allocator);
-            expectedObject.AddMember("max_diff_pixels",
-                                     static_cast<uint64_t>(checkpoint.expected.maxDiffPixels),
-                                     allocator);
-            entry.AddMember("expected", expectedObject, allocator);
+            if (checkpoint.expected.enabled) {
+                rapidjson::Value expectedObject(rapidjson::kObjectType);
+                expectedObject.AddMember("image",
+                                         rapidjson::Value(checkpoint.expected.imagePath.string().c_str(), allocator),
+                                         allocator);
+                expectedObject.AddMember("tolerance", checkpoint.expected.tolerance, allocator);
+                expectedObject.AddMember("max_diff_pixels",
+                                         static_cast<uint64_t>(checkpoint.expected.maxDiffPixels),
+                                         allocator);
+                entry.AddMember("expected", expectedObject, allocator);
+            }
+
+            if (!checkpoint.checks.empty()) {
+                rapidjson::Value checksArray(rapidjson::kArrayType);
+                for (const auto& check : checkpoint.checks) {
+                    rapidjson::Value checkObject(rapidjson::kObjectType);
+                    checkObject.AddMember("type", rapidjson::Value(check.type.c_str(), allocator), allocator);
+                    if (check.type == "non_black_ratio") {
+                        checkObject.AddMember("threshold", check.threshold, allocator);
+                        checkObject.AddMember("min_ratio", check.minValue, allocator);
+                        checkObject.AddMember("max_ratio", check.maxValue, allocator);
+                    } else if (check.type == "luma_range") {
+                        checkObject.AddMember("min_luma", check.minValue, allocator);
+                        checkObject.AddMember("max_luma", check.maxValue, allocator);
+                    } else if (check.type == "mean_color") {
+                        rapidjson::Value colorValue(rapidjson::kArrayType);
+                        colorValue.PushBack(check.color[0], allocator);
+                        colorValue.PushBack(check.color[1], allocator);
+                        colorValue.PushBack(check.color[2], allocator);
+                        checkObject.AddMember("color", colorValue, allocator);
+                        checkObject.AddMember("tolerance", check.tolerance, allocator);
+                    } else if (check.type == "sample_points") {
+                        rapidjson::Value pointsArray(rapidjson::kArrayType);
+                        for (const auto& point : check.points) {
+                            rapidjson::Value pointValue(rapidjson::kObjectType);
+                            pointValue.AddMember("x", point.x, allocator);
+                            pointValue.AddMember("y", point.y, allocator);
+                            rapidjson::Value pointColor(rapidjson::kArrayType);
+                            pointColor.PushBack(point.color[0], allocator);
+                            pointColor.PushBack(point.color[1], allocator);
+                            pointColor.PushBack(point.color[2], allocator);
+                            pointValue.AddMember("color", pointColor, allocator);
+                            pointValue.AddMember("tolerance", point.tolerance, allocator);
+                            pointsArray.PushBack(pointValue, allocator);
+                        }
+                        checkObject.AddMember("points", pointsArray, allocator);
+                    }
+                    checksArray.PushBack(checkObject, allocator);
+                }
+                entry.AddMember("checks", checksArray, allocator);
+            }
 
             checkpointsArray.PushBack(entry, allocator);
         }

@@ -289,8 +289,46 @@
                   "max_diff_pixels": {"type": "number", "minimum": 0}
                 },
                 "additionalProperties": true
+              },
+              "checks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": ["non_black_ratio", "luma_range", "mean_color", "sample_points"]
+                    },
+                    "threshold": {"type": "number", "minimum": 0, "maximum": 1},
+                    "min_ratio": {"type": "number", "minimum": 0, "maximum": 1},
+                    "max_ratio": {"type": "number", "minimum": 0, "maximum": 1},
+                    "min_luma": {"type": "number", "minimum": 0, "maximum": 1},
+                    "max_luma": {"type": "number", "minimum": 0, "maximum": 1},
+                    "color": {"$ref": "#/definitions/float3"},
+                    "tolerance": {"type": "number", "minimum": 0, "maximum": 1},
+                    "points": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "x": {"type": "number", "minimum": 0, "maximum": 1},
+                          "y": {"type": "number", "minimum": 0, "maximum": 1},
+                          "color": {"$ref": "#/definitions/float3"},
+                          "tolerance": {"type": "number", "minimum": 0, "maximum": 1}
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  },
+                  "required": ["type"],
+                  "additionalProperties": true
+                }
               }
             },
+            "anyOf": [
+              { "required": ["expected"] },
+              { "required": ["checks"] }
+            ],
             "additionalProperties": true
           }
         }

@@ -59,6 +59,7 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 - Add runtime probe hooks and map probe severity to crash recovery policies.
 - Enforce shader uniform compatibility using reflection + material metadata.
 - Add tests for schema/merge rules, render graph validation, and budget enforcement.
+- Start service refactor program for large modules (approaching 2K LOC).
 
 ## Config-First Program Plan (Verbose)
 
@@ -143,6 +144,54 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 - Deliverable: regression protection for the new pipeline.
 - Acceptance: new tests pass alongside existing integration tests.
 
+## Service Refactor Program (2K LOC Risk Plan)
+### Goals
+- Reduce single-file service sizes to improve readability, reviewability, and test coverage.
+- Isolate responsibilities: parsing vs validation vs runtime state vs external I/O.
+- Make failure modes explicit and easier to diagnose with trace probes.
+
+### Target Services (Top Of List)
+- JsonConfigService (~1800 LOC): split into loader/merger/validator/parser modules.
+- ScriptEngineService (~1650 LOC): split Lua binding registry, library setup, and script loading.
+- BgfxGraphicsBackend (~1400 LOC): split pipeline/buffer/texture/screenshot/validation submodules.
+- BgfxGuiService (~1100 LOC): split font cache, SVG cache, command encoding, and layout.
+- MaterialXShaderGenerator (~1100 LOC): split MaterialX graph prep, shader emit, validation.
+
+### Phase A: Mechanical Extraction (1-3 days)
+- [~] JsonConfigService: extracted config document load/merge helpers into `src/services/impl/json_config_document_loader.cpp` to isolate parsing + extends/@delete merging.
+- Move self-contained helpers into `*_helpers.cpp` with clear headers.
+- Extract pure data transforms into free functions with unit tests.
+- Preserve public interfaces; no behavior change in this phase.
+
+### Phase B: Responsibility Split (2-5 days)
+- Create focused classes (e.g., `ConfigSchemaValidator`, `ConfigMergeService`,
+  `LuaBindingRegistry`, `BgfxPipelineCache`, `TextureLoader`, `GuiFontCache`).
+- Reduce cross-module knowledge by passing simple data structs.
+- Add trace logging at handoff boundaries to retain diagnostics.
+
+### Phase C: API Stabilization (2-4 days)
+- Tighten constructor injection to only needed dependencies.
+- Remove circular dependencies; make order-of-operations explicit.
+- Add targeted unit tests for each new helper/service.
+
+### Acceptance Criteria
+- Each refactored service has < 800 LOC in its primary implementation file.
+- 1–3 unit tests per extracted module (minimum happy + failure path).
+- No regression in existing integration tests or runtime logs.
+
+## Validation Tour (Production Self-Test)
+### Multi-Method Screen Validation
+- Image compare (baseline diff with tolerance + max diff pixels).
+- Non-black ratio checks (detect all-black or missing render output).
+- Luma range checks (detect over/under-exposed frames).
+- Mean color checks (verify dominant color scenes without exact baselines).
+- Sample point checks (pinpoint color at specific normalized coordinates).
+
+### Engine Tester Config
+- `config/engine_tester_runtime.json` provides a default self-test config.
+- Designed for production binaries; no golden image required by default.
+- Produces capture artifacts in `artifacts/validation/`.
+
 ### Default Config Behavior (Config-First)
 - Default config resolution remains `--json-file-in` → `--set-default-json` path → stored default config → seed config.
 - Config-first is the default runtime path after the config is loaded.
@@ -215,6 +264,7 @@ Option B: per-shader only
 - [x] Pipeline compatibility tests (shader inputs vs mesh layouts)
 - [x] Crash recovery timeout tests (`tests/crash_recovery_timeout_test.cpp`)
 - [~] Budget enforcement tests (GUI cache pruning + texture tracker covered; transient pool pending)
+- [~] Config-driven validation tour (checkpoint captures + image/ratio/luma/sample-point checks)
 - [ ] Smoke test: cube demo boots with config-first scene definition
 
 ## Test Strategy (Solid Coverage Plan)
@@ -228,6 +278,7 @@ Option B: per-shader only
 - Service: render graph validation (cycles, unknown refs, duplicates), shader pipeline validation, budget enforcement.
 - Integration: shader compilation, MaterialX generation + validation, crash recovery timeouts.
 - Smoke: config-first boot of the cube demo with no Lua scene execution.
+- Runtime: validation tour checkpoints for production self-test.
 
 ### Coverage Matrix (What We Must Prove)
 - Config parsing + schema errors produce JSON Pointer diagnostics.

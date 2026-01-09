@@ -1,20 +1,15 @@
 #include "json_config_service.hpp"
+#include "json_config_document_loader.hpp"
 #include "../interfaces/i_logger.hpp"
 #include <rapidjson/document.h>
-#include <rapidjson/error/en.h>
-#include <rapidjson/istreamwrapper.h>
 #include <rapidjson/schema.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
 #include <rapidjson/prettywriter.h>
 #include <array>
-#include <algorithm>
-#include <cctype>
-#include <fstream>
 #include <iostream>
 #include <optional>
 #include <stdexcept>
-#include <system_error>
 #include <unordered_set>
 
 namespace sdl3cpp::services::impl {
@@ -23,8 +18,6 @@ namespace {
 constexpr int kExpectedSchemaVersion = 2;
 constexpr const char* kSchemaVersionKey = "schema_version";
 constexpr const char* kConfigVersionKey = "configVersion";
-constexpr const char* kExtendsKey = "extends";
-constexpr const char* kDeleteKey = "@delete";
 
 const char* SceneSourceName(SceneSource source) {
     switch (source) {
@@ -51,193 +44,6 @@ std::string PointerToString(const rapidjson::Pointer& pointer) {
     rapidjson::StringBuffer buffer;
     pointer.Stringify(buffer);
     return buffer.GetString();
-}
-
-std::filesystem::path NormalizeConfigPath(const std::filesystem::path& path) {
-    std::error_code ec;
-    auto canonicalPath = std::filesystem::weakly_canonical(path, ec);
-    if (ec) {
-        return std::filesystem::absolute(path);
-    }
-    return canonicalPath;
-}
-
-rapidjson::Document ParseJsonDocument(const std::filesystem::path& jsonPath,
-                                      const std::string& description) {
-    std::ifstream configStream(jsonPath);
-    if (!configStream) {
-        throw std::runtime_error("Failed to open " + description + ": " + jsonPath.string());
-    }
-
-    rapidjson::IStreamWrapper inputWrapper(configStream);
-    rapidjson::Document document;
-    document.ParseStream(inputWrapper);
-    if (document.HasParseError()) {
-        throw std::runtime_error("Failed to parse " + description + " at " + jsonPath.string() +
-                                 ": " + rapidjson::GetParseError_En(document.GetParseError()));
-    }
-    if (!document.IsObject()) {
-        throw std::runtime_error("JSON " + description + " must contain an object at the root");
-    }
-    return document;
-}
-
-std::vector<std::filesystem::path> ExtractExtendPaths(const rapidjson::Value& document,
-                                                      const std::filesystem::path& configPath) {
-    std::vector<std::filesystem::path> paths;
-    if (!document.HasMember(kExtendsKey)) {
-        return paths;
-    }
-
-    const auto& extendsValue = document[kExtendsKey];
-    auto resolvePath = [&](const std::filesystem::path& candidate) {
-        if (candidate.is_absolute()) {
-            return candidate;
-        }
-        return configPath.parent_path() / candidate;
-    };
-
-    if (extendsValue.IsString()) {
-        paths.push_back(resolvePath(extendsValue.GetString()));
-    } else if (extendsValue.IsArray()) {
-        for (const auto& entry : extendsValue.GetArray()) {
-            if (!entry.IsString()) {
-                throw std::runtime_error("JSON member 'extends' must be a string or array of strings");
-            }
-            paths.push_back(resolvePath(entry.GetString()));
-        }
-    } else {
-        throw std::runtime_error("JSON member 'extends' must be a string or array of strings");
-    }
-
-    return paths;
-}
-
-std::filesystem::path ResolveSchemaPath(const std::filesystem::path& configPath) {
-    const std::filesystem::path schemaFile = "runtime_config_v2.schema.json";
-    std::vector<std::filesystem::path> candidates;
-    if (!configPath.empty()) {
-        candidates.push_back(configPath.parent_path() / "schema" / schemaFile);
-    }
-    candidates.push_back(std::filesystem::current_path() / "config" / "schema" / schemaFile);
-
-    std::error_code ec;
-    for (const auto& candidate : candidates) {
-        if (!candidate.empty() && std::filesystem::exists(candidate, ec)) {
-            return candidate;
-        }
-    }
-    return {};
-}
-
-void ApplyDeleteDirectives(rapidjson::Value& target,
-                           const rapidjson::Value& overlay,
-                           const std::shared_ptr<ILogger>& logger,
-                           const std::string& jsonPath) {
-    if (!overlay.HasMember(kDeleteKey)) {
-        return;
-    }
-    const auto& deletes = overlay[kDeleteKey];
-    if (!deletes.IsArray()) {
-        throw std::runtime_error("JSON member '" + std::string(kDeleteKey) + "' must be an array of strings");
-    }
-    for (const auto& entry : deletes.GetArray()) {
-        if (!entry.IsString()) {
-            throw std::runtime_error("JSON member '" + std::string(kDeleteKey) + "' must contain only strings");
-        }
-        const char* key = entry.GetString();
-        if (target.HasMember(key)) {
-            target.RemoveMember(key);
-            if (logger) {
-                logger->Trace("JsonConfigService", "ApplyDeleteDirectives",
-                              "jsonPath=" + jsonPath + ", key=" + std::string(key),
-                              "Removed key from merged config");
-            }
-        }
-    }
-}
-
-void MergeJsonValues(rapidjson::Value& target,
-                     const rapidjson::Value& overlay,
-                     rapidjson::Document::AllocatorType& allocator,
-                     const std::shared_ptr<ILogger>& logger,
-                     const std::string& jsonPath) {
-    if (!overlay.IsObject()) {
-        target.CopyFrom(overlay, allocator);
-        return;
-    }
-
-    if (!target.IsObject()) {
-        target.CopyFrom(overlay, allocator);
-        return;
-    }
-
-    ApplyDeleteDirectives(target, overlay, logger, jsonPath);
-
-    for (auto it = overlay.MemberBegin(); it != overlay.MemberEnd(); ++it) {
-        const std::string memberName = it->name.GetString();
-        if (memberName == kDeleteKey) {
-            continue;
-        }
-        if (target.HasMember(memberName.c_str())) {
-            auto& targetValue = target[memberName.c_str()];
-            const auto& overlayValue = it->value;
-            if (targetValue.IsObject() && overlayValue.IsObject()) {
-                MergeJsonValues(targetValue, overlayValue, allocator, logger, jsonPath + "/" + memberName);
-            } else {
-                targetValue.CopyFrom(overlayValue, allocator);
-            }
-        } else {
-            rapidjson::Value nameValue(memberName.c_str(), allocator);
-            rapidjson::Value valueCopy;
-            valueCopy.CopyFrom(it->value, allocator);
-            target.AddMember(nameValue, valueCopy, allocator);
-        }
-    }
-}
-
-rapidjson::Document LoadConfigDocumentRecursive(const std::filesystem::path& configPath,
-                                                const std::shared_ptr<ILogger>& logger,
-                                                std::unordered_set<std::string>& visited) {
-    const auto normalizedPath = NormalizeConfigPath(configPath);
-    const std::string pathKey = normalizedPath.string();
-    if (!visited.insert(pathKey).second) {
-        throw std::runtime_error("Config extends cycle detected at " + pathKey);
-    }
-
-    if (logger) {
-        logger->Trace("JsonConfigService", "LoadConfigDocumentRecursive",
-                      "configPath=" + pathKey, "Loading config document");
-    }
-
-    rapidjson::Document document = ParseJsonDocument(normalizedPath, "config file");
-    auto extendPaths = ExtractExtendPaths(document, normalizedPath);
-    if (document.HasMember(kExtendsKey)) {
-        document.RemoveMember(kExtendsKey);
-    }
-
-    if (extendPaths.empty()) {
-        visited.erase(pathKey);
-        return document;
-    }
-
-    if (logger) {
-        logger->Trace("JsonConfigService", "LoadConfigDocumentRecursive",
-                      "configPath=" + pathKey + ", extendsCount=" + std::to_string(extendPaths.size()),
-                      "Merging extended configs");
-    }
-
-    rapidjson::Document merged;
-    merged.SetObject();
-    auto& allocator = merged.GetAllocator();
-    for (const auto& extendPath : extendPaths) {
-        auto baseDoc = LoadConfigDocumentRecursive(extendPath, logger, visited);
-        MergeJsonValues(merged, baseDoc, allocator, logger, extendPath.string());
-    }
-    MergeJsonValues(merged, document, allocator, logger, normalizedPath.string());
-
-    visited.erase(pathKey);
-    return merged;
 }
 
 std::optional<int> ReadVersionField(const rapidjson::Value& document,
@@ -314,7 +120,7 @@ void ValidateSchemaDocument(const rapidjson::Document& document,
                             const std::filesystem::path& configPath,
                             const std::shared_ptr<ILogger>& logger,
                             const std::shared_ptr<IProbeService>& probeService) {
-    const auto schemaPath = ResolveSchemaPath(configPath);
+    const auto schemaPath = json_config::ResolveSchemaPath(configPath);
     if (schemaPath.empty()) {
         if (logger) {
             logger->Warn("JsonConfigService::ValidateSchemaDocument: Schema file not found for " +
@@ -323,7 +129,7 @@ void ValidateSchemaDocument(const rapidjson::Document& document,
         return;
     }
 
-    rapidjson::Document schemaDocument = ParseJsonDocument(schemaPath, "schema file");
+    rapidjson::Document schemaDocument = json_config::ParseJsonDocument(schemaPath, "schema file");
     rapidjson::SchemaDocument schema(schemaDocument);
     rapidjson::SchemaValidator validator(schema);
     if (!document.Accept(validator)) {
@@ -440,7 +246,7 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
     logger->Trace("JsonConfigService", "LoadFromJson", args);
 
     std::unordered_set<std::string> visitedPaths;
-    rapidjson::Document document = LoadConfigDocumentRecursive(configPath, logger, visitedPaths);
+    rapidjson::Document document = json_config::LoadConfigDocumentRecursive(configPath, logger, visitedPaths);
     const auto activeVersion = ValidateSchemaVersion(document, configPath, logger);
     if (activeVersion && *activeVersion != kExpectedSchemaVersion) {
         const bool migrated = ApplyMigrations(document,
@@ -1294,39 +1100,192 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
                     checkpoint.camera.farPlane = static_cast<float>(value.GetDouble());
                 }
 
-                if (!entry.HasMember("expected") || !entry["expected"].IsObject()) {
-                    throw std::runtime_error("JSON member '" + basePath + ".expected' must be an object");
-                }
-                const auto& expectedValue = entry["expected"];
-                if (!expectedValue.HasMember("image") || !expectedValue["image"].IsString()) {
-                    throw std::runtime_error("JSON member '" + basePath + ".expected.image' must be a string");
-                }
-                checkpoint.expected.imagePath = expectedValue["image"].GetString();
-                if (expectedValue.HasMember("tolerance")) {
-                    const auto& value = expectedValue["tolerance"];
+                auto readFloatInRange = [&](const rapidjson::Value& value,
+                                            const std::string& path,
+                                            float minValue,
+                                            float maxValue) -> float {
                     if (!value.IsNumber()) {
-                        throw std::runtime_error("JSON member '" + basePath +
-                                                 ".expected.tolerance' must be a number");
+                        throw std::runtime_error("JSON member '" + path + "' must be a number");
                     }
                     const double rawValue = value.GetDouble();
-                    if (rawValue < 0.0 || rawValue > 1.0) {
-                        throw std::runtime_error("JSON member '" + basePath +
-                                                 ".expected.tolerance' must be between 0 and 1");
+                    const double minAllowed = static_cast<double>(minValue);
+                    const double maxAllowed = static_cast<double>(maxValue);
+                    if (rawValue < minAllowed || rawValue > maxAllowed) {
+                        throw std::runtime_error("JSON member '" + path + "' must be between " +
+                                                 std::to_string(minValue) + " and " +
+                                                 std::to_string(maxValue));
                     }
-                    checkpoint.expected.tolerance = static_cast<float>(rawValue);
+                    return static_cast<float>(rawValue);
+                };
+
+                if (entry.HasMember("expected")) {
+                    if (!entry["expected"].IsObject()) {
+                        throw std::runtime_error("JSON member '" + basePath + ".expected' must be an object");
+                    }
+                    const auto& expectedValue = entry["expected"];
+                    if (!expectedValue.HasMember("image") || !expectedValue["image"].IsString()) {
+                        throw std::runtime_error("JSON member '" + basePath + ".expected.image' must be a string");
+                    }
+                    checkpoint.expected.enabled = true;
+                    checkpoint.expected.imagePath = expectedValue["image"].GetString();
+                    if (expectedValue.HasMember("tolerance")) {
+                        checkpoint.expected.tolerance = readFloatInRange(
+                            expectedValue["tolerance"],
+                            basePath + ".expected.tolerance",
+                            0.0f,
+                            1.0f);
+                    }
+                    if (expectedValue.HasMember("max_diff_pixels")) {
+                        const auto& value = expectedValue["max_diff_pixels"];
+                        if (!value.IsNumber()) {
+                            throw std::runtime_error("JSON member '" + basePath +
+                                                     ".expected.max_diff_pixels' must be a number");
+                        }
+                        const double rawValue = value.GetDouble();
+                        if (rawValue < 0.0) {
+                            throw std::runtime_error("JSON member '" + basePath +
+                                                     ".expected.max_diff_pixels' must be non-negative");
+                        }
+                        checkpoint.expected.maxDiffPixels = static_cast<size_t>(rawValue);
+                    }
                 }
-                if (expectedValue.HasMember("max_diff_pixels")) {
-                    const auto& value = expectedValue["max_diff_pixels"];
-                    if (!value.IsNumber()) {
-                        throw std::runtime_error("JSON member '" + basePath +
-                                                 ".expected.max_diff_pixels' must be a number");
+
+                if (entry.HasMember("checks")) {
+                    const auto& checksValue = entry["checks"];
+                    if (!checksValue.IsArray()) {
+                        throw std::runtime_error("JSON member '" + basePath + ".checks' must be an array");
                     }
-                    const double rawValue = value.GetDouble();
-                    if (rawValue < 0.0) {
-                        throw std::runtime_error("JSON member '" + basePath +
-                                                 ".expected.max_diff_pixels' must be non-negative");
+                    checkpoint.checks.clear();
+                    checkpoint.checks.reserve(checksValue.Size());
+
+                    auto readFloat3Field = [&](const rapidjson::Value& value,
+                                               const std::string& path,
+                                               std::array<float, 3>& target) {
+                        if (!value.IsArray() || value.Size() != 3) {
+                            throw std::runtime_error("JSON member '" + path + "' must be an array of 3 numbers");
+                        }
+                        for (rapidjson::SizeType index = 0; index < 3; ++index) {
+                            if (!value[index].IsNumber()) {
+                                throw std::runtime_error("JSON member '" + path + "[" + std::to_string(index) +
+                                                         "]' must be a number");
+                            }
+                            target[index] = static_cast<float>(value[index].GetDouble());
+                        }
+                    };
+
+                    for (rapidjson::SizeType checkIndex = 0; checkIndex < checksValue.Size(); ++checkIndex) {
+                        const auto& checkValue = checksValue[checkIndex];
+                        const std::string checkPath = basePath + ".checks[" + std::to_string(checkIndex) + "]";
+                        if (!checkValue.IsObject()) {
+                            throw std::runtime_error("JSON member '" + checkPath + "' must be an object");
+                        }
+                        if (!checkValue.HasMember("type") || !checkValue["type"].IsString()) {
+                            throw std::runtime_error("JSON member '" + checkPath + ".type' must be a string");
+                        }
+                        ValidationCheckConfig check{};
+                        check.type = checkValue["type"].GetString();
+
+                        if (check.type == "non_black_ratio") {
+                            if (checkValue.HasMember("threshold")) {
+                                check.threshold = readFloatInRange(
+                                    checkValue["threshold"],
+                                    checkPath + ".threshold",
+                                    0.0f,
+                                    1.0f);
+                            }
+                            if (checkValue.HasMember("min_ratio")) {
+                                check.minValue = readFloatInRange(
+                                    checkValue["min_ratio"],
+                                    checkPath + ".min_ratio",
+                                    0.0f,
+                                    1.0f);
+                            }
+                            if (checkValue.HasMember("max_ratio")) {
+                                check.maxValue = readFloatInRange(
+                                    checkValue["max_ratio"],
+                                    checkPath + ".max_ratio",
+                                    0.0f,
+                                    1.0f);
+                            }
+                            if (check.minValue > check.maxValue) {
+                                throw std::runtime_error("JSON member '" + checkPath +
+                                                         "' must have min_ratio <= max_ratio");
+                            }
+                        } else if (check.type == "luma_range") {
+                            if (!checkValue.HasMember("min_luma") || !checkValue.HasMember("max_luma")) {
+                                throw std::runtime_error("JSON member '" + checkPath +
+                                                         "' must include min_luma and max_luma");
+                            }
+                            check.minValue = readFloatInRange(
+                                checkValue["min_luma"],
+                                checkPath + ".min_luma",
+                                0.0f,
+                                1.0f);
+                            check.maxValue = readFloatInRange(
+                                checkValue["max_luma"],
+                                checkPath + ".max_luma",
+                                0.0f,
+                                1.0f);
+                            if (check.minValue > check.maxValue) {
+                                throw std::runtime_error("JSON member '" + checkPath +
+                                                         "' must have min_luma <= max_luma");
+                            }
+                        } else if (check.type == "mean_color") {
+                            if (!checkValue.HasMember("color")) {
+                                throw std::runtime_error("JSON member '" + checkPath + ".color' is required");
+                            }
+                            readFloat3Field(checkValue["color"], checkPath + ".color", check.color);
+                            if (checkValue.HasMember("tolerance")) {
+                                check.tolerance = readFloatInRange(
+                                    checkValue["tolerance"],
+                                    checkPath + ".tolerance",
+                                    0.0f,
+                                    1.0f);
+                            }
+                        } else if (check.type == "sample_points") {
+                            if (!checkValue.HasMember("points") || !checkValue["points"].IsArray()) {
+                                throw std::runtime_error("JSON member '" + checkPath + ".points' must be an array");
+                            }
+                            const auto& pointsValue = checkValue["points"];
+                            check.points.clear();
+                            check.points.reserve(pointsValue.Size());
+                            for (rapidjson::SizeType pointIndex = 0; pointIndex < pointsValue.Size(); ++pointIndex) {
+                                const auto& pointValue = pointsValue[pointIndex];
+                                const std::string pointPath = checkPath + ".points[" + std::to_string(pointIndex) + "]";
+                                if (!pointValue.IsObject()) {
+                                    throw std::runtime_error("JSON member '" + pointPath + "' must be an object");
+                                }
+                                ValidationSamplePointConfig point{};
+                                if (!pointValue.HasMember("x") || !pointValue.HasMember("y")) {
+                                    throw std::runtime_error("JSON member '" + pointPath +
+                                                             "' must include x and y");
+                                }
+                                point.x = readFloatInRange(pointValue["x"], pointPath + ".x", 0.0f, 1.0f);
+                                point.y = readFloatInRange(pointValue["y"], pointPath + ".y", 0.0f, 1.0f);
+                                if (!pointValue.HasMember("color")) {
+                                    throw std::runtime_error("JSON member '" + pointPath + ".color' is required");
+                                }
+                                readFloat3Field(pointValue["color"], pointPath + ".color", point.color);
+                                if (pointValue.HasMember("tolerance")) {
+                                    point.tolerance = readFloatInRange(
+                                        pointValue["tolerance"],
+                                        pointPath + ".tolerance",
+                                        0.0f,
+                                        1.0f);
+                                }
+                                check.points.push_back(std::move(point));
+                            }
+                        } else {
+                            throw std::runtime_error("JSON member '" + checkPath + ".type' is unsupported");
+                        }
+
+                        checkpoint.checks.push_back(std::move(check));
                     }
-                    checkpoint.expected.maxDiffPixels = static_cast<size_t>(rawValue);
+                }
+
+                if (!checkpoint.expected.enabled && checkpoint.checks.empty()) {
+                    throw std::runtime_error("JSON member '" + basePath +
+                                             "' must define 'expected' or 'checks'");
                 }
 
                 config.validationTour.checkpoints.push_back(std::move(checkpoint));
@@ -1534,15 +1493,57 @@ std::string JsonConfigService::BuildConfigJson(const RuntimeConfig& config,
             cameraObject.AddMember("far", checkpoint.camera.farPlane, allocator);
             entry.AddMember("camera", cameraObject, allocator);
 
-            rapidjson::Value expectedObject(rapidjson::kObjectType);
-            expectedObject.AddMember("image",
-                                     rapidjson::Value(checkpoint.expected.imagePath.string().c_str(), allocator),
-                                     allocator);
-            expectedObject.AddMember("tolerance", checkpoint.expected.tolerance, allocator);
-            expectedObject.AddMember("max_diff_pixels",
-                                     static_cast<uint64_t>(checkpoint.expected.maxDiffPixels),
-                                     allocator);
-            entry.AddMember("expected", expectedObject, allocator);
+            if (checkpoint.expected.enabled) {
+                rapidjson::Value expectedObject(rapidjson::kObjectType);
+                expectedObject.AddMember("image",
+                                         rapidjson::Value(checkpoint.expected.imagePath.string().c_str(), allocator),
+                                         allocator);
+                expectedObject.AddMember("tolerance", checkpoint.expected.tolerance, allocator);
+                expectedObject.AddMember("max_diff_pixels",
+                                         static_cast<uint64_t>(checkpoint.expected.maxDiffPixels),
+                                         allocator);
+                entry.AddMember("expected", expectedObject, allocator);
+            }
+
+            if (!checkpoint.checks.empty()) {
+                rapidjson::Value checksArray(rapidjson::kArrayType);
+                for (const auto& check : checkpoint.checks) {
+                    rapidjson::Value checkObject(rapidjson::kObjectType);
+                    checkObject.AddMember("type", rapidjson::Value(check.type.c_str(), allocator), allocator);
+                    if (check.type == "non_black_ratio") {
+                        checkObject.AddMember("threshold", check.threshold, allocator);
+                        checkObject.AddMember("min_ratio", check.minValue, allocator);
+                        checkObject.AddMember("max_ratio", check.maxValue, allocator);
+                    } else if (check.type == "luma_range") {
+                        checkObject.AddMember("min_luma", check.minValue, allocator);
+                        checkObject.AddMember("max_luma", check.maxValue, allocator);
+                    } else if (check.type == "mean_color") {
+                        rapidjson::Value colorValue(rapidjson::kArrayType);
+                        colorValue.PushBack(check.color[0], allocator);
+                        colorValue.PushBack(check.color[1], allocator);
+                        colorValue.PushBack(check.color[2], allocator);
+                        checkObject.AddMember("color", colorValue, allocator);
+                        checkObject.AddMember("tolerance", check.tolerance, allocator);
+                    } else if (check.type == "sample_points") {
+                        rapidjson::Value pointsArray(rapidjson::kArrayType);
+                        for (const auto& point : check.points) {
+                            rapidjson::Value pointValue(rapidjson::kObjectType);
+                            pointValue.AddMember("x", point.x, allocator);
+                            pointValue.AddMember("y", point.y, allocator);
+                            rapidjson::Value pointColor(rapidjson::kArrayType);
+                            pointColor.PushBack(point.color[0], allocator);
+                            pointColor.PushBack(point.color[1], allocator);
+                            pointColor.PushBack(point.color[2], allocator);
+                            pointValue.AddMember("color", pointColor, allocator);
+                            pointValue.AddMember("tolerance", point.tolerance, allocator);
+                            pointsArray.PushBack(pointValue, allocator);
+                        }
+                        checkObject.AddMember("points", pointsArray, allocator);
+                    }
+                    checksArray.PushBack(checkObject, allocator);
+                }
+                entry.AddMember("checks", checksArray, allocator);
+            }
 
             checkpointsArray.PushBack(entry, allocator);
         }

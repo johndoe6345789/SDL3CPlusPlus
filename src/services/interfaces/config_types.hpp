@@ -165,9 +165,33 @@ struct ValidationCameraConfig {
  * @brief Expected output for a validation checkpoint.
  */
 struct ValidationExpectedConfig {
+    bool enabled = false;
     std::filesystem::path imagePath;
     float tolerance = 0.01f;
     size_t maxDiffPixels = 0;
+};
+
+/**
+ * @brief Sample point expectation for validation checks.
+ */
+struct ValidationSamplePointConfig {
+    float x = 0.5f;
+    float y = 0.5f;
+    std::array<float, 3> color = {0.0f, 0.0f, 0.0f};
+    float tolerance = 0.1f;
+};
+
+/**
+ * @brief Validation check definitions that do not require a baseline image.
+ */
+struct ValidationCheckConfig {
+    std::string type;
+    float minValue = 0.0f;
+    float maxValue = 1.0f;
+    float threshold = 0.05f;
+    float tolerance = 0.1f;
+    std::array<float, 3> color = {0.0f, 0.0f, 0.0f};
+    std::vector<ValidationSamplePointConfig> points{};
 };
 
 /**
@@ -177,6 +201,7 @@ struct ValidationCheckpointConfig {
     std::string id;
     ValidationCameraConfig camera{};
     ValidationExpectedConfig expected{};
+    std::vector<ValidationCheckConfig> checks{};
 };
 
 /**
