@@ -213,6 +213,79 @@ Option B: per-shader only
 - [ ] Budget enforcement tests (over-limit textures, transient pool caps)
 - [ ] Smoke test: cube demo boots with config-first scene definition
 
+## Test Strategy (Solid Coverage Plan)
+### Goals
+- Fail fast on config errors, graph issues, and resource constraints before runtime.
+- Protect crash recovery and rendering safety invariants with regression tests.
+- Keep config-first path validated even while Lua fallback exists.
+
+### Layered Test Plan
+- Unit: schema validation, config merges (`extends`, `@delete`), IR compilation edge cases.
+- Service: render graph validation (cycles, unknown refs, duplicates), shader pipeline validation, budget enforcement.
+- Integration: shader compilation, MaterialX generation + validation, crash recovery timeouts.
+- Smoke: config-first boot of the cube demo with no Lua scene execution.
+
+### Coverage Matrix (What We Must Prove)
+- Config parsing + schema errors produce JSON Pointer diagnostics.
+- Merge behavior is deterministic and well-documented for arrays and deletes.
+- Render graph validation detects cycles, unknown passes/outputs, and produces stable schedules.
+- Shader pipelines reject layout mismatches and uniform incompatibilities.
+- Budget enforcement fails safely (textures + GUI caches now, buffers later).
+- Crash recovery detects hangs and returns promptly.
+
+### Test Assets + Determinism
+- Prefer tiny synthetic assets in `tests/` for deterministic behavior.
+- Keep large MaterialX assets for integration tests only.
+- Avoid network access in tests; all inputs must be local.
+
+### CI Gate Suggestions
+- Quick: unit + service tests (schema/merge/render graph/pipeline validator).
+- Full: integration tests (MaterialX + shader linking) and smoke config-first boot.
+
+## Troubleshooting Guide (Segfaults, Ordering, Shader Quirks)
+### Common Failure Modes
+- Segfaults after startup: often caused by invalid bgfx handles, resource exhaustion, or pre-frame usage.
+- Draw crashes: index/vertex buffer mismatch or using buffers before upload.
+- Shader issues: missing uniforms, incorrect layout qualifiers, or wrong backend profile.
+- Ordering bugs: loading shaders/textures before the first `BeginFrame` + `EndFrame` priming pass.
+
+### Immediate Triage Steps
+- Re-run with trace logging enabled (`--trace`) and capture the last 50 lines of the log.
+- Confirm config schema validation passes and print loaded JSON (`--dump-json`).
+- Check that shaders are compiled for the active renderer (Vulkan vs OpenGL).
+- Ensure bgfx is initialized and has seen a frame before loading textures/shaders.
+
+### Known Hotspots To Inspect
+- Shader pipeline validation: `src/services/impl/shader_pipeline_validator.cpp`
+- Texture load guards + budgets: `src/services/impl/bgfx_graphics_backend.cpp`
+- Render graph scheduling: `src/services/impl/render_graph_service.cpp`
+- Config compiler diagnostics: `src/services/impl/config_compiler_service.cpp`
+- Crash recovery timeouts: `src/services/impl/crash_recovery_service.cpp`
+
+### Ordering Checklist (When Things Crash)
+- `InitializeDevice` → `InitializeSwapchain` → `BeginFrame` → `EndFrame` before loading shaders/textures.
+- Load shaders once, then upload geometry, then render.
+- Avoid calling bgfx APIs after shutdown or on invalid handles.
+
+### Shader Debug Checklist
+- Verify `layout(location = N)` on all GLSL inputs/outputs (SPIR-V requirement).
+- Check uniform types match expected (sampler vs vec types).
+- Validate vertex layout matches shader inputs.
+
+### When Filing A Bug
+- Include config JSON, active renderer, last log lines, and crash report (if any).
+- Note whether `runtime.scene_source` is `config` or `lua`.
+
+### Known Fixes And Evidence
+- Texture load crashes: see `tests/bgfx_texture_loading_test.cpp` and `FIXES_IMPLEMENTED.md`.
+- Shader uniform mapping failures: see `tests/shaderc_uniform_mapping_test.cpp` and `tests/gui_shader_linking_failure_test.cpp`.
+- Initialization order regressions: see `tests/bgfx_initialization_order_test.cpp` and `tests/bgfx_frame_requirement_test.cpp`.
+- Render graph validation gaps: see `tests/render_graph_service_test.cpp` (cycles/unknown refs/duplicates).
+- Crash recovery timeouts: see `tests/crash_recovery_timeout_test.cpp`.
+
+### Vendored Library Caveat
+- Treat any library code pasted into `src/` (or similar vendor folders) as locally modified until verified.
+- Do not assume upstream behavior; always confirm against the local copy when debugging.
 ## Open Questions
 - Preferred merge behavior for array fields (replace vs keyed merge by `id`)
 - Scope of hot-reload (full scene reload vs incremental updates)

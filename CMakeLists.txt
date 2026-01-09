@@ -640,6 +640,18 @@ target_link_libraries(graphics_service_buffer_lifecycle_test PRIVATE
 )
 add_test(NAME graphics_service_buffer_lifecycle_test COMMAND graphics_service_buffer_lifecycle_test)
 
+# Test: Render graph validation (cycles + unknown dependencies)
+add_executable(render_graph_service_test
+    tests/render_graph_service_test.cpp
+    src/services/impl/render_graph_service.cpp
+)
+target_include_directories(render_graph_service_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_link_libraries(render_graph_service_test PRIVATE
+    GTest::gtest
+    GTest::gtest_main
+)
+add_test(NAME render_graph_service_test COMMAND render_graph_service_test)
+
 # Test: Bgfx Draw bounds validation (TDD test for buffer overflow crash)
 add_executable(bgfx_draw_bounds_validation_test
     tests/bgfx_draw_bounds_validation_test.cpp
