@@ -652,6 +652,18 @@ target_link_libraries(render_graph_service_test PRIVATE
 )
 add_test(NAME render_graph_service_test COMMAND render_graph_service_test)
 
+# Test: JSON config merge rules (extends + @delete)
+add_executable(json_config_merge_test
+    tests/json_config_merge_test.cpp
+    src/services/impl/json_config_service.cpp
+)
+target_include_directories(json_config_merge_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_link_libraries(json_config_merge_test PRIVATE
+    GTest::gtest
+    GTest::gtest_main
+)
+add_test(NAME json_config_merge_test COMMAND json_config_merge_test)
+
 # Test: Bgfx Draw bounds validation (TDD test for buffer overflow crash)
 add_executable(bgfx_draw_bounds_validation_test
     tests/bgfx_draw_bounds_validation_test.cpp
