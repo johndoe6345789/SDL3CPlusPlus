@@ -3,6 +3,7 @@
 namespace sdl3cpp::services::impl {
 
 RenderCoordinatorService::RenderCoordinatorService(std::shared_ptr<ILogger> logger,
+                                                   std::shared_ptr<IConfigService> configService,
                                                    std::shared_ptr<IGraphicsService> graphicsService,
                                                    std::shared_ptr<ISceneScriptService> sceneScriptService,
                                                    std::shared_ptr<IShaderScriptService> shaderScriptService,
@@ -10,6 +11,7 @@ RenderCoordinatorService::RenderCoordinatorService(std::shared_ptr<ILogger> logg
                                                    std::shared_ptr<IGuiService> guiService,
                                                    std::shared_ptr<ISceneService> sceneService)
     : logger_(std::move(logger)),
+      configService_(std::move(configService)),
       graphicsService_(std::move(graphicsService)),
       sceneScriptService_(std::move(sceneScriptService)),
       shaderScriptService_(std::move(shaderScriptService)),
@@ -18,7 +20,8 @@ RenderCoordinatorService::RenderCoordinatorService(std::shared_ptr<ILogger> logg
       sceneService_(std::move(sceneService)) {
     if (logger_) {
         logger_->Trace("RenderCoordinatorService", "RenderCoordinatorService",
-                       "graphicsService=" + std::string(graphicsService_ ? "set" : "null") +
+                       "configService=" + std::string(configService_ ? "set" : "null") +
+                       ", graphicsService=" + std::string(graphicsService_ ? "set" : "null") +
                        ", sceneScriptService=" + std::string(sceneScriptService_ ? "set" : "null") +
                        ", shaderScriptService=" + std::string(shaderScriptService_ ? "set" : "null") +
                        ", guiScriptService=" + std::string(guiScriptService_ ? "set" : "null") +
@@ -41,37 +44,49 @@ void RenderCoordinatorService::RenderFrame(float time) {
         return;
     }
 
+    const bool useLuaScene = !configService_ || configService_->GetSceneSource() == SceneSource::Lua;
+    if (!useLuaScene && !configFirstLogged_) {
+        if (logger_) {
+            logger_->Warn("RenderCoordinatorService::RenderFrame: config-first scene source selected; Lua scene path disabled");
+        }
+        configFirstLogged_ = true;
+    }
+
     if (!shadersLoaded_) {
-        if (!shaderScriptService_) {
+        if (!useLuaScene) {
+            shadersLoaded_ = true;
+        } else if (!shaderScriptService_) {
             if (logger_) {
                 logger_->Error("RenderCoordinatorService::RenderFrame: Shader script service not available");
             }
             return;
         }
-        if (logger_) {
-            logger_->Trace("RenderCoordinatorService", "RenderFrame",
-                           "Priming bgfx with a dummy frame before shader load");
-        }
-        if (!graphicsService_->BeginFrame()) {
+        if (!shadersLoaded_) {
             if (logger_) {
-                logger_->Warn("RenderCoordinatorService::RenderFrame: Swapchain out of date during shader pre-frame");
+                logger_->Trace("RenderCoordinatorService", "RenderFrame",
+                               "Priming bgfx with a dummy frame before shader load");
             }
-            graphicsService_->RecreateSwapchain();
-            return;
-        }
-        if (!graphicsService_->EndFrame()) {
+            if (!graphicsService_->BeginFrame()) {
+                if (logger_) {
+                    logger_->Warn("RenderCoordinatorService::RenderFrame: Swapchain out of date during shader pre-frame");
+                }
+                graphicsService_->RecreateSwapchain();
+                return;
+            }
+            if (!graphicsService_->EndFrame()) {
+                if (logger_) {
+                    logger_->Warn("RenderCoordinatorService::RenderFrame: Swapchain out of date during shader pre-frame");
+                }
+                graphicsService_->RecreateSwapchain();
+                return;
+            }
             if (logger_) {
-                logger_->Warn("RenderCoordinatorService::RenderFrame: Swapchain out of date during shader pre-frame");
+                logger_->Trace("RenderCoordinatorService", "RenderFrame", "Loading shaders from Lua");
             }
-            graphicsService_->RecreateSwapchain();
-            return;
+            auto shaders = shaderScriptService_->LoadShaderPathsMap();
+            graphicsService_->LoadShaders(shaders);
+            shadersLoaded_ = true;
         }
-        if (logger_) {
-            logger_->Trace("RenderCoordinatorService", "RenderFrame", "Loading shaders from Lua");
-        }
-        auto shaders = shaderScriptService_->LoadShaderPathsMap();
-        graphicsService_->LoadShaders(shaders);
-        shadersLoaded_ = true;
     }
 
     if (!graphicsService_->BeginFrame()) {
@@ -88,7 +103,7 @@ void RenderCoordinatorService::RenderFrame(float time) {
         guiService_->PrepareFrame(guiCommands, extent.first, extent.second);
     }
 
-    if (sceneScriptService_ && sceneService_) {
+    if (useLuaScene && sceneScriptService_ && sceneService_) {
         auto sceneObjects = sceneScriptService_->LoadSceneObjects();
         sceneService_->LoadScene(sceneObjects);
 

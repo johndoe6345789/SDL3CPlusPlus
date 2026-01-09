@@ -37,6 +37,16 @@
       },
       "additionalProperties": true
     },
+    "runtime": {
+      "type": "object",
+      "properties": {
+        "scene_source": {
+          "type": "string",
+          "enum": ["config", "lua"]
+        }
+      },
+      "additionalProperties": true
+    },
     "paths": {
       "type": "object",
       "properties": {

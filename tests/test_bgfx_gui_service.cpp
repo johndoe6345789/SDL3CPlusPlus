@@ -140,6 +140,9 @@ public:
     std::filesystem::path GetScriptPath() const override { return {}; }
     bool IsLuaDebugEnabled() const override { return false; }
     std::string GetWindowTitle() const override { return ""; }
+    sdl3cpp::services::SceneSource GetSceneSource() const override {
+        return sdl3cpp::services::SceneSource::Lua;
+    }
     const sdl3cpp::services::InputBindings& GetInputBindings() const override { return inputBindings_; }
     const sdl3cpp::services::MouseGrabConfig& GetMouseGrabConfig() const override { return mouseGrabConfig_; }
     const sdl3cpp::services::BgfxConfig& GetBgfxConfig() const override { return bgfxConfig_; }

@@ -7,6 +7,9 @@
   "display_width": 960,
   "display_height": 544,
   "lua_script": "scripts/cube_logic.lua",
+  "runtime": {
+    "scene_source": "lua"
+  },
   "scripts_directory": "scripts",
   "project_root": "../",
   "shaders_directory": "shaders",

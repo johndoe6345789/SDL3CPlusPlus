@@ -48,6 +48,11 @@ public:
      */
     virtual std::string GetWindowTitle() const = 0;
 
+    /**
+     * @brief Get the configured scene source.
+     * @return Scene source enum
+     */
+    virtual SceneSource GetSceneSource() const = 0;
 
     /**
      * @brief Get configured input bindings.

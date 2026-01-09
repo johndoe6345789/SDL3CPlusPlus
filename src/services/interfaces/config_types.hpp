@@ -86,6 +86,11 @@ struct BgfxConfig {
     std::string renderer = "vulkan";
 };
 
+enum class SceneSource {
+    Config,
+    Lua
+};
+
 struct MaterialXConfig {
     bool enabled = false;
     std::filesystem::path documentPath;
@@ -152,6 +157,7 @@ struct RuntimeConfig {
     uint32_t height = 768;
     std::filesystem::path scriptPath;
     bool luaDebug = false;
+    SceneSource sceneSource = SceneSource::Config;
     std::string windowTitle = "SDL3 Bgfx Demo";
     MouseGrabConfig mouseGrab{};
     InputBindings inputBindings{};

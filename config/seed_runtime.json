@@ -27,6 +27,9 @@
     "entry": "scripts/cube_logic.lua",
     "lua_debug": false
   },
+  "runtime": {
+    "scene_source": "lua"
+  },
   "paths": {
     "project_root": "../",
     "scripts": "scripts",

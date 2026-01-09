@@ -26,6 +26,27 @@ constexpr const char* kConfigVersionKey = "configVersion";
 constexpr const char* kExtendsKey = "extends";
 constexpr const char* kDeleteKey = "@delete";
 
+const char* SceneSourceName(SceneSource source) {
+    switch (source) {
+        case SceneSource::Config:
+            return "config";
+        case SceneSource::Lua:
+            return "lua";
+        default:
+            return "config";
+    }
+}
+
+SceneSource ParseSceneSource(const std::string& value, const std::string& jsonPath) {
+    if (value == "config") {
+        return SceneSource::Config;
+    }
+    if (value == "lua") {
+        return SceneSource::Lua;
+    }
+    throw std::runtime_error("JSON member '" + jsonPath + "' must be 'config' or 'lua'");
+}
+
 std::filesystem::path NormalizeConfigPath(const std::filesystem::path& path) {
     std::error_code ec;
     auto canonicalPath = std::filesystem::weakly_canonical(path, ec);
@@ -463,6 +484,7 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
     const auto* windowSizeValue = windowValue
         ? getObjectMember(*windowValue, "size", "window.size")
         : nullptr;
+    const auto* runtimeValue = getObjectMember(document, "runtime", "runtime");
     const auto* inputValue = getObjectMember(document, "input", "input");
     const auto* inputBindingsValue = inputValue
         ? getObjectMember(*inputValue, "bindings", "input.bindings")
@@ -527,6 +549,14 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
         throw std::runtime_error("Lua script not found at " + scriptPath.string());
     }
     config.scriptPath = scriptPath;
+
+    if (runtimeValue && runtimeValue->HasMember("scene_source")) {
+        const auto& value = (*runtimeValue)["scene_source"];
+        if (!value.IsString()) {
+            throw std::runtime_error("JSON member 'runtime.scene_source' must be a string");
+        }
+        config.sceneSource = ParseSceneSource(value.GetString(), "runtime.scene_source");
+    }
 
     auto parseDimension = [&](const char* name, uint32_t defaultValue) -> uint32_t {
         if (!document.HasMember(name)) {
@@ -1175,6 +1205,10 @@ std::string JsonConfigService::BuildConfigJson(const RuntimeConfig& config,
     addStringMember(scriptsObject, "entry", config.scriptPath.string());
     scriptsObject.AddMember("lua_debug", config.luaDebug, allocator);
     document.AddMember("scripts", scriptsObject, allocator);
+
+    rapidjson::Value runtimeObject(rapidjson::kObjectType);
+    addStringMember(runtimeObject, "scene_source", SceneSourceName(config.sceneSource));
+    document.AddMember("runtime", runtimeObject, allocator);
 
     rapidjson::Value windowObject(rapidjson::kObjectType);
     addStringMember(windowObject, "title", config.windowTitle);

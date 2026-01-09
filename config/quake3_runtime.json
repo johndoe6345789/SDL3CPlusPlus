@@ -7,6 +7,9 @@
   "window_width": 1280,
   "window_height": 720,
   "lua_script": "scripts/quake3_arena.lua",
+  "runtime": {
+    "scene_source": "lua"
+  },
   "scripts_directory": "scripts",
   "project_root": "../",
   "shaders_directory": "shaders",

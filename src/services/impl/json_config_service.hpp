@@ -86,6 +86,12 @@ public:
         }
         return config_.windowTitle;
     }
+    SceneSource GetSceneSource() const override {
+        if (logger_) {
+            logger_->Trace("JsonConfigService", "GetSceneSource");
+        }
+        return config_.sceneSource;
+    }
     const InputBindings& GetInputBindings() const override {
         if (logger_) {
             logger_->Trace("JsonConfigService", "GetInputBindings");
