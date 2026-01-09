@@ -7,6 +7,7 @@ echo ""
 BUILD_DIR="${1:-build-ninja}"
 SRC_DIRS="src/"
 ERRORS_FOUND=0
+CACHE_FILE="$BUILD_DIR/CMakeCache.txt"
 
 # Colors for output
 RED='\033[0;31m'
@@ -27,6 +28,29 @@ print_status() {
         ERRORS_FOUND=1
     fi
 }
+
+TOOLCHAIN_ARGS=()
+PREFIX_PATH_ARGS=()
+SHADERC_DIR_ARGS=()
+BUILD_TYPE="Debug"
+if [ -f "$CACHE_FILE" ]; then
+    TOOLCHAIN_FILE=$(grep -E "^CMAKE_TOOLCHAIN_FILE:" "$CACHE_FILE" | cut -d= -f2- || true)
+    if [ -n "$TOOLCHAIN_FILE" ]; then
+        TOOLCHAIN_ARGS=(-DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN_FILE")
+    fi
+    PREFIX_PATH_VALUE=$(grep -E "^CMAKE_PREFIX_PATH:" "$CACHE_FILE" | cut -d= -f2- || true)
+    if [ -n "$PREFIX_PATH_VALUE" ]; then
+        PREFIX_PATH_ARGS=(-DCMAKE_PREFIX_PATH="$PREFIX_PATH_VALUE")
+    fi
+    SHADERC_DIR_VALUE=$(grep -E "^shaderc_DIR:" "$CACHE_FILE" | cut -d= -f2- || true)
+    if [ -n "$SHADERC_DIR_VALUE" ] && [ "$SHADERC_DIR_VALUE" != "shaderc_DIR-NOTFOUND" ]; then
+        SHADERC_DIR_ARGS=(-Dshaderc_DIR="$SHADERC_DIR_VALUE")
+    fi
+    BUILD_TYPE_VALUE=$(grep -E "^CMAKE_BUILD_TYPE:" "$CACHE_FILE" | cut -d= -f2- || true)
+    if [ -n "$BUILD_TYPE_VALUE" ]; then
+        BUILD_TYPE="$BUILD_TYPE_VALUE"
+    fi
+fi
 
 # 1. Clang-Tidy (Static Analysis)
 echo "=== Layer 1: Clang-Tidy Static Analysis ==="
@@ -84,15 +108,28 @@ else
     print_status "WARN" "Cppcheck: not installed (install with: sudo dnf install cppcheck)"
 fi
 
+# Helper to read cached build type
+cached_build_type() {
+    local cache_file="$1"
+    if [ -f "$cache_file" ]; then
+        grep -E "^CMAKE_BUILD_TYPE:" "$cache_file" | cut -d= -f2-
+    fi
+}
+
 # 3. Compiler Warnings (Maximum strictness)
 echo ""
 echo "=== Layer 3: Compiler Warning Check ==="
 echo "Rebuilding with maximum warnings enabled..."
 
-if [ ! -d "$BUILD_DIR-lint" ]; then
+LINT_CACHE="$BUILD_DIR-lint/CMakeCache.txt"
+LINT_BUILD_TYPE=$(cached_build_type "$LINT_CACHE")
+if [ ! -f "$BUILD_DIR-lint/build.ninja" ] || [ "$LINT_BUILD_TYPE" != "$BUILD_TYPE" ]; then
     cmake -B "$BUILD_DIR-lint" -G Ninja \
-        -DCMAKE_BUILD_TYPE=Debug \
-        -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wpedantic -Werror -Wshadow -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wconversion -Wsign-conversion -Wmisleading-indentation -Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wnull-dereference -Wuseless-cast -Wdouble-promotion -Wformat=2" \
+        "${TOOLCHAIN_ARGS[@]}" \
+        "${PREFIX_PATH_ARGS[@]}" \
+        "${SHADERC_DIR_ARGS[@]}" \
+        -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
+        -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wpedantic -Werror -Wshadow -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wconversion -Wsign-conversion -Wmisleading-indentation -Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wno-null-dereference -Wuseless-cast -Wdouble-promotion -Wformat=2" \
         -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 fi
 
@@ -118,17 +155,33 @@ echo ""
 echo "=== Layer 5: Sanitizer Build Check ==="
 echo "Building with AddressSanitizer + UndefinedBehaviorSanitizer..."
 
-if [ ! -d "$BUILD_DIR-asan" ]; then
-    cmake -B "$BUILD_DIR-asan" -G Ninja \
-        -DCMAKE_BUILD_TYPE=Debug \
-        -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer -g" \
-        -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined"
+HAS_ASAN=0
+if compgen -G "/usr/lib64/libasan.so*" > /dev/null; then
+    HAS_ASAN=1
+elif compgen -G "/usr/lib/libasan.so*" > /dev/null; then
+    HAS_ASAN=1
 fi
 
-if cmake --build "$BUILD_DIR-asan" --target sdl3_app 2>&1 | tee /tmp/asan-build-$$.txt; then
-    print_status "OK" "Sanitizer build succeeded (run with: $BUILD_DIR-asan/sdl3_app)"
+if [ $HAS_ASAN -eq 0 ]; then
+    print_status "WARN" "Sanitizer build skipped (libasan not found)"
 else
-    print_status "ERROR" "Sanitizer build failed"
+    ASAN_CACHE="$BUILD_DIR-asan/CMakeCache.txt"
+    ASAN_BUILD_TYPE=$(cached_build_type "$ASAN_CACHE")
+    if [ ! -f "$BUILD_DIR-asan/build.ninja" ] || [ "$ASAN_BUILD_TYPE" != "$BUILD_TYPE" ]; then
+        cmake -B "$BUILD_DIR-asan" -G Ninja \
+            "${TOOLCHAIN_ARGS[@]}" \
+            "${PREFIX_PATH_ARGS[@]}" \
+            "${SHADERC_DIR_ARGS[@]}" \
+            -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
+            -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer -g" \
+            -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined"
+    fi
+
+    if cmake --build "$BUILD_DIR-asan" --target sdl3_app 2>&1 | tee /tmp/asan-build-$$.txt; then
+        print_status "OK" "Sanitizer build succeeded (run with: $BUILD_DIR-asan/sdl3_app)"
+    else
+        print_status "ERROR" "Sanitizer build failed"
+    fi
 fi
 
 # Summary

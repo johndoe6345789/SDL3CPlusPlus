@@ -288,6 +288,7 @@ bool ApplyMigrations(rapidjson::Document& document,
                      const std::filesystem::path& configPath,
                      const std::shared_ptr<ILogger>& logger,
                      const std::shared_ptr<IProbeService>& probeService) {
+    (void)document;
     if (fromVersion == toVersion) {
         return true;
     }

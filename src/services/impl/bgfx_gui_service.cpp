@@ -815,6 +815,9 @@ const BgfxGuiService::TextTexture* BgfxGuiService::GetTextTexture(const std::str
     if (text.empty()) {
         return nullptr;
     }
+    if (fontSize <= 0) {
+        return nullptr;
+    }
 
     EnsureFontReady();
     if (!freeType_ || !freeType_->ready || !freeType_->face) {
@@ -829,20 +832,23 @@ const BgfxGuiService::TextTexture* BgfxGuiService::GetTextTexture(const std::str
     }
 
     FT_Face face = freeType_->face;
-    if (FT_Set_Pixel_Sizes(face, 0, fontSize) != 0) {
+    const FT_UInt fontSizePixels = static_cast<FT_UInt>(fontSize);
+    if (FT_Set_Pixel_Sizes(face, 0, fontSizePixels) != 0) {
         return nullptr;
     }
 
-    int ascent = face->size->metrics.ascender >> 6;
-    int descent = face->size->metrics.descender >> 6;
+    int ascent = static_cast<int>(face->size->metrics.ascender >> 6);
+    int descent = static_cast<int>(face->size->metrics.descender >> 6);
     int height = ascent - descent;
     int width = 0;
 
-    for (unsigned char ch : text) {
-        if (FT_Load_Char(face, ch, FT_LOAD_RENDER) != 0) {
+    for (char ch : text) {
+        const FT_ULong codepoint = static_cast<FT_ULong>(static_cast<unsigned char>(ch));
+        if (FT_Load_Char(face, codepoint, FT_LOAD_RENDER) != 0) {
             continue;
         }
-        width += face->glyph->advance.x >> 6;
+        const int advance = static_cast<int>(face->glyph->advance.x >> 6);
+        width += advance;
     }
 
     if (width <= 0 || height <= 0) {
@@ -851,8 +857,9 @@ const BgfxGuiService::TextTexture* BgfxGuiService::GetTextTexture(const std::str
 
     std::vector<uint8_t> pixels(static_cast<size_t>(width * height * 4), 0);
     int penX = 0;
-    for (unsigned char ch : text) {
-        if (FT_Load_Char(face, ch, FT_LOAD_RENDER) != 0) {
+    for (char ch : text) {
+        const FT_ULong codepoint = static_cast<FT_ULong>(static_cast<unsigned char>(ch));
+        if (FT_Load_Char(face, codepoint, FT_LOAD_RENDER) != 0) {
             continue;
         }
 
@@ -885,7 +892,7 @@ const BgfxGuiService::TextTexture* BgfxGuiService::GetTextTexture(const std::str
             }
         }
 
-        penX += glyph->advance.x >> 6;
+        penX += static_cast<int>(glyph->advance.x >> 6);
     }
 
     TextTexture entry{};

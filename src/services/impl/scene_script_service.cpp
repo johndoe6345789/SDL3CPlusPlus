@@ -248,9 +248,9 @@ std::vector<SceneObject> SceneScriptService::LoadSceneObjects() {
         object.shaderKeys.clear();
         lua_getfield(L, -1, "shader_keys");
         if (lua_istable(L, -1)) {
-            const size_t count = lua_rawlen(L, -1);
-            object.shaderKeys.reserve(count);
-            for (size_t keyIndex = 1; keyIndex <= count; ++keyIndex) {
+            const size_t shaderKeyCount = lua_rawlen(L, -1);
+            object.shaderKeys.reserve(shaderKeyCount);
+            for (size_t keyIndex = 1; keyIndex <= shaderKeyCount; ++keyIndex) {
                 lua_rawgeti(L, -1, static_cast<int>(keyIndex));
                 if (lua_isstring(L, -1)) {
                     object.shaderKeys.emplace_back(lua_tostring(L, -1));

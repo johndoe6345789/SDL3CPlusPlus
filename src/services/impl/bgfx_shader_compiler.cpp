@@ -380,6 +380,7 @@ bgfx::ShaderHandle BgfxShaderCompiler::CompileShader(
     bool isVertex,
     const std::vector<BgfxShaderUniform>& uniforms,
     const std::vector<bgfx::Attrib::Enum>& attributes) const {
+    (void)attributes;
 
     const bgfx::RendererType::Enum rendererType = bgfx::getRendererType();
 
@@ -502,7 +503,13 @@ bgfx::ShaderHandle BgfxShaderCompiler::CompileShader(
         }
         std::streamsize size = ifs.tellg();
         ifs.seekg(0, std::ios::beg);
-        buffer.resize(size);
+        if (size <= 0) {
+            if (logger_) {
+                logger_->Error("BgfxShaderCompiler: Compiled shader size invalid for " + label);
+            }
+            return BGFX_INVALID_HANDLE;
+        }
+        buffer.resize(static_cast<size_t>(size));
         if (!ifs.read(buffer.data(), size)) {
             if (logger_) logger_->Error("BgfxShaderCompiler: Failed to read compiled shader data");
             return BGFX_INVALID_HANDLE;

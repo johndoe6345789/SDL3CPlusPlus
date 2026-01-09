@@ -248,6 +248,15 @@ endif()
 if(TARGET shaderc::shaderc)
     target_link_libraries(shaderc_local PUBLIC shaderc::shaderc)
 endif()
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+    target_compile_options(shaderc_local PRIVATE
+        -Wno-old-style-cast
+        -Wno-sign-conversion
+        -Wno-conversion
+        -Wno-format
+        -Wno-extra
+        -Wno-unused-parameter)
+endif()
 
 ## Build geometryc tool
 # add_executable(geometryc
