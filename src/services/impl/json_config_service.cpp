@@ -47,6 +47,12 @@ SceneSource ParseSceneSource(const std::string& value, const std::string& jsonPa
     throw std::runtime_error("JSON member '" + jsonPath + "' must be 'config' or 'lua'");
 }
 
+std::string PointerToString(const rapidjson::Pointer& pointer) {
+    rapidjson::StringBuffer buffer;
+    pointer.Stringify(buffer);
+    return buffer.GetString();
+}
+
 std::filesystem::path NormalizeConfigPath(const std::filesystem::path& path) {
     std::error_code ec;
     auto canonicalPath = std::filesystem::weakly_canonical(path, ec);
@@ -320,8 +326,8 @@ void ValidateSchemaDocument(const rapidjson::Document& document,
     rapidjson::SchemaDocument schema(schemaDocument);
     rapidjson::SchemaValidator validator(schema);
     if (!document.Accept(validator)) {
-        const std::string docPointer = validator.GetInvalidDocumentPointer().String();
-        const std::string schemaPointer = validator.GetInvalidSchemaPointer().String();
+        const std::string docPointer = PointerToString(validator.GetInvalidDocumentPointer());
+        const std::string schemaPointer = PointerToString(validator.GetInvalidSchemaPointer());
         const std::string keyword = validator.GetInvalidSchemaKeyword();
         const std::string message = "JSON schema validation failed at " + docPointer +
             " (schema " + schemaPointer + ", keyword=" + keyword + ")";

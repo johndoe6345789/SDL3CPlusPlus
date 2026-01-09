@@ -39,16 +39,17 @@ public:
 // blocking on the background task's completion.
 TEST(CrashRecoveryTimeoutTest, ExecuteWithTimeoutReturnsPromptlyAfterTimeout) {
     auto logger = std::make_shared<NullLogger>();
-    sdl3cpp::services::impl::CrashRecoveryService crashRecoveryService(logger);
+    sdl3cpp::services::CrashRecoveryConfig config;
+    sdl3cpp::services::impl::CrashRecoveryService crashRecoveryService(logger, config);
 
-    std::promise<void> completionPromise;
-    auto completionFuture = completionPromise.get_future();
+    auto completionPromise = std::make_shared<std::promise<void>>();
+    auto completionFuture = completionPromise->get_future();
 
     const auto start = std::chrono::steady_clock::now();
     const bool success = crashRecoveryService.ExecuteWithTimeout(
-        [promise = std::move(completionPromise)]() mutable {
+        [promise = completionPromise]() {
             std::this_thread::sleep_for(std::chrono::milliseconds(200));
-            promise.set_value();
+            promise->set_value();
         },
         10,
         "Main Application Loop");

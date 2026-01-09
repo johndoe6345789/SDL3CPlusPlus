@@ -206,8 +206,8 @@ Option B: per-shader only
 - [ ] Cube demo config-only boot path
 
 ## Tests and Verification Checklist
-- [ ] Unit tests for schema validation, reference resolution, and merge rules
-- [ ] Graph validation tests for cycles and invalid dependencies
+- [~] Unit tests for schema validation, merge rules, and reference resolution (remaining gaps: component payload validation)
+- [x] Graph validation tests for cycles and invalid dependencies
 - [x] Pipeline compatibility tests (shader inputs vs mesh layouts)
 - [x] Crash recovery timeout tests (`tests/crash_recovery_timeout_test.cpp`)
 - [ ] Budget enforcement tests (over-limit textures, transient pool caps)
