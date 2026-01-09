@@ -41,6 +41,7 @@
 #include "services/impl/workflow_definition_parser.hpp"
 #include "services/impl/workflow_executor.hpp"
 #include "services/impl/workflow_step_registry.hpp"
+#include "services/impl/frame_workflow_service.hpp"
 #include "services/interfaces/i_platform_service.hpp"
 #include "services/interfaces/i_probe_service.hpp"
 #include "services/interfaces/i_render_graph_service.hpp"

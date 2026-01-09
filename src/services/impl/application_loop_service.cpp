@@ -12,6 +12,7 @@ ApplicationLoopService::ApplicationLoopService(std::shared_ptr<ILogger> logger,
                                                std::shared_ptr<ISceneService> sceneService,
                                                std::shared_ptr<IRenderCoordinatorService> renderCoordinatorService,
                                                std::shared_ptr<IAudioService> audioService,
+                                               std::shared_ptr<IFrameWorkflowService> frameWorkflowService,
                                                std::shared_ptr<ICrashRecoveryService> crashRecoveryService)
     : logger_(std::move(logger)),
       windowService_(std::move(windowService)),
@@ -21,6 +22,7 @@ ApplicationLoopService::ApplicationLoopService(std::shared_ptr<ILogger> logger,
       sceneService_(std::move(sceneService)),
       renderCoordinatorService_(std::move(renderCoordinatorService)),
       audioService_(std::move(audioService)),
+      frameWorkflowService_(std::move(frameWorkflowService)),
       crashRecoveryService_(std::move(crashRecoveryService)) {
     if (logger_) {
         logger_->Trace("ApplicationLoopService", "ApplicationLoopService",
@@ -107,24 +109,28 @@ void ApplicationLoopService::ProcessFrame(float deltaTime, float elapsedTime) {
                        "Entering");
     }
 
-    if (physicsService_) {
-        physicsService_->StepSimulation(deltaTime);
-    }
+    if (frameWorkflowService_) {
+        frameWorkflowService_->ExecuteFrame(deltaTime, elapsedTime);
+    } else {
+        if (physicsService_) {
+            physicsService_->StepSimulation(deltaTime);
+        }
 
-    if (sceneService_) {
-        sceneService_->UpdateScene(deltaTime);
-    }
+        if (sceneService_) {
+            sceneService_->UpdateScene(deltaTime);
+        }
 
-    if (renderCoordinatorService_) {
-        renderCoordinatorService_->RenderFrame(elapsedTime);
-    }
+        if (renderCoordinatorService_) {
+            renderCoordinatorService_->RenderFrame(elapsedTime);
+        }
 
-    if (audioService_) {
-        audioService_->Update();
-    }
+        if (audioService_) {
+            audioService_->Update();
+        }
 
-    if (inputService_) {
-        inputService_->UpdateGuiInput();
+        if (inputService_) {
+            inputService_->UpdateGuiInput();
+        }
     }
 
     if (logger_) {

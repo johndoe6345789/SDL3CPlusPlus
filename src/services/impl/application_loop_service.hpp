@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../interfaces/i_application_loop_service.hpp"
+#include "../interfaces/i_frame_workflow_service.hpp"
 #include "../interfaces/i_audio_service.hpp"
 #include "../interfaces/i_crash_recovery_service.hpp"
 #include "../interfaces/i_input_service.hpp"
@@ -23,8 +24,9 @@ public:
                            std::shared_ptr<IPhysicsService> physicsService,
                            std::shared_ptr<ISceneService> sceneService,
                            std::shared_ptr<IRenderCoordinatorService> renderCoordinatorService,
-                           std::shared_ptr<IAudioService> audioService,
-                           std::shared_ptr<ICrashRecoveryService> crashRecoveryService);
+                          std::shared_ptr<IAudioService> audioService,
+                          std::shared_ptr<IFrameWorkflowService> frameWorkflowService,
+                          std::shared_ptr<ICrashRecoveryService> crashRecoveryService);
     ~ApplicationLoopService() override = default;
 
     void Run() override;
@@ -41,6 +43,7 @@ private:
     std::shared_ptr<ISceneService> sceneService_;
     std::shared_ptr<IRenderCoordinatorService> renderCoordinatorService_;
     std::shared_ptr<IAudioService> audioService_;
+    std::shared_ptr<IFrameWorkflowService> frameWorkflowService_;
     std::shared_ptr<ICrashRecoveryService> crashRecoveryService_;
     bool running_ = false;
     double lastMemoryCheckSeconds_ = 0.0;
