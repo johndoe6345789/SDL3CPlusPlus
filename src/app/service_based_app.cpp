@@ -329,7 +329,8 @@ void ServiceBasedApp::RegisterServices() {
     registry_.RegisterService<services::ISceneService, services::impl::SceneService>(
         registry_.GetService<services::ISceneScriptService>(),
         registry_.GetService<services::IEcsService>(),
-        registry_.GetService<services::ILogger>());
+        registry_.GetService<services::ILogger>(),
+        registry_.GetService<services::IProbeService>());
 
     // GUI service
 #if defined(SDL3CPP_ENABLE_VITA)
