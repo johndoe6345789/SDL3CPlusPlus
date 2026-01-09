@@ -285,7 +285,7 @@ Option B: per-shader only
 - [~] Budget enforcement tests (GUI cache pruning + texture tracker covered; transient pool pending)
 - [~] Config-driven validation tour (checkpoint captures + image/ratio/luma/sample-point checks)
 - [ ] Smoke test: cube demo boots with config-first scene definition
-- [ ] Workflow parser tests (template loading + invalid step diagnostics)
+- [x] Workflow parser tests (template loading + invalid step diagnostics)
 
 ## Test Strategy (Solid Coverage Plan)
 ### Goals

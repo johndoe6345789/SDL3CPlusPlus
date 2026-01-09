@@ -789,6 +789,20 @@ target_link_libraries(json_config_schema_validation_test PRIVATE
 )
 add_test(NAME json_config_schema_validation_test COMMAND json_config_schema_validation_test)
 
+# Test: Workflow definition parser
+add_executable(workflow_definition_parser_test
+    tests/workflow_definition_parser_test.cpp
+    src/services/impl/workflow_definition_parser.cpp
+    src/services/impl/json_config_document_parser.cpp
+)
+target_include_directories(workflow_definition_parser_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_link_libraries(workflow_definition_parser_test PRIVATE
+    GTest::gtest
+    GTest::gtest_main
+    rapidjson
+)
+add_test(NAME workflow_definition_parser_test COMMAND workflow_definition_parser_test)
+
 # Test: Config compiler reference validation
 add_executable(config_compiler_reference_validation_test
     tests/config_compiler_reference_validation_test.cpp
