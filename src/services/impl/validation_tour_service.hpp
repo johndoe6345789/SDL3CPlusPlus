@@ -1,0 +1,55 @@
+#pragma once
+
+#include "../interfaces/i_config_service.hpp"
+#include "../interfaces/i_logger.hpp"
+#include "../interfaces/i_probe_service.hpp"
+#include "../interfaces/i_validation_tour_service.hpp"
+#include <filesystem>
+#include <optional>
+
+namespace sdl3cpp::services::impl {
+
+class ValidationTourService final : public IValidationTourService {
+public:
+    ValidationTourService(std::shared_ptr<IConfigService> configService,
+                          std::shared_ptr<IProbeService> probeService,
+                          std::shared_ptr<ILogger> logger);
+
+    ValidationFramePlan BeginFrame(float aspect) override;
+    ValidationFrameResult EndFrame() override;
+    bool IsActive() const override { return active_ && !completed_ && !failed_; }
+
+private:
+    struct PendingCapture {
+        std::filesystem::path actualPath;
+        std::filesystem::path expectedPath;
+        std::string checkpointId;
+        float tolerance = 0.01f;
+        size_t maxDiffPixels = 0;
+        size_t captureIndex = 0;
+    };
+
+    void AdvanceCheckpoint();
+    ViewState BuildViewState(const ValidationCameraConfig& camera, float aspect) const;
+    std::filesystem::path ResolvePath(const std::filesystem::path& path) const;
+    bool CompareImages(const PendingCapture& pending, std::string& errorMessage) const;
+    void ReportMismatch(const PendingCapture& pending,
+                        const std::string& summary,
+                        const std::string& details) const;
+
+    std::shared_ptr<IProbeService> probeService_;
+    std::shared_ptr<ILogger> logger_;
+    ValidationTourConfig config_{};
+    std::filesystem::path resolvedOutputDir_{};
+    size_t checkpointIndex_ = 0;
+    uint32_t warmupRemaining_ = 0;
+    uint32_t capturesRemaining_ = 0;
+    size_t captureIndex_ = 0;
+    bool active_ = false;
+    bool completed_ = false;
+    bool failed_ = false;
+    std::string failureMessage_;
+    std::optional<PendingCapture> pendingCapture_;
+};
+
+}  // namespace sdl3cpp::services::impl

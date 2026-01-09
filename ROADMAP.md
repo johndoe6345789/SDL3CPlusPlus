@@ -38,7 +38,7 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 - [~] Explicit pass scheduling and backend submission planning (schedule only; no backend plan)
 
 ### Ultra Plan: "Probe Fortress"
-- [~] Probe hooks (config/render graph/graphics reports wired; `OnDraw`/`OnPresent`/`OnFrameEnd` now emit trace-gated runtime probes; `OnLoadScene` still missing)
+- [~] Probe hooks (config/render graph/graphics reports wired; `OnDraw`/`OnPresent`/`OnFrameEnd`/`OnLoadScene` emit trace-gated runtime probes)
 - [x] Pipeline compatibility checks (mesh layout vs shader inputs) via shader pipeline validator
 - [x] Sampler limits enforced from bgfx caps
 - [ ] Shader uniform compatibility enforcement
@@ -122,7 +122,7 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 - Acceptance: a two-pass graph (offscreen + swapchain) renders correctly.
 
 ### Phase 6: Runtime Probe Hooks And Recovery Policy (3-6 days)
-- Add runtime probe hooks (`OnDraw`, `OnPresent`, `OnFrameEnd`) in render coordinator + graphics backend.
+- Add runtime probe hooks (`OnDraw`, `OnPresent`, `OnFrameEnd`, `OnLoadScene`) in render coordinator + graphics backend/scene service.
 - Map probe severity to crash recovery policies.
 - Add probes for invalid handles and pass output misuse.
 - Deliverable: runtime diagnostics that are structured and actionable.

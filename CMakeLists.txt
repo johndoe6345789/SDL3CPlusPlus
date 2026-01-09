@@ -308,6 +308,7 @@ if(BUILD_SDL3_APP)
             src/services/impl/lifecycle_service.cpp
             src/services/impl/application_loop_service.cpp
             src/services/impl/render_coordinator_service.cpp
+            src/services/impl/validation_tour_service.cpp
             src/services/impl/render_graph_service.cpp
             src/services/impl/null_gui_service.cpp
             src/services/impl/bgfx_gui_service.cpp

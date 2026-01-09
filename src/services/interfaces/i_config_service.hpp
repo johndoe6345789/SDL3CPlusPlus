@@ -103,6 +103,12 @@ public:
     virtual const CrashRecoveryConfig& GetCrashRecoveryConfig() const = 0;
 
     /**
+     * @brief Get validation tour configuration.
+     * @return Validation tour configuration
+     */
+    virtual const ValidationTourConfig& GetValidationTourConfig() const = 0;
+
+    /**
      * @brief Get the full JSON configuration as a string.
      *
      * @return JSON string (may be empty if unavailable)

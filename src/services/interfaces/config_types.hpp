@@ -150,6 +150,48 @@ struct CrashRecoveryConfig {
 };
 
 /**
+ * @brief Camera configuration for validation checkpoints.
+ */
+struct ValidationCameraConfig {
+    std::array<float, 3> position = {0.0f, 0.0f, 0.0f};
+    std::array<float, 3> lookAt = {0.0f, 0.0f, -1.0f};
+    std::array<float, 3> up = {0.0f, 1.0f, 0.0f};
+    float fovDegrees = 60.0f;
+    float nearPlane = 0.1f;
+    float farPlane = 1000.0f;
+};
+
+/**
+ * @brief Expected output for a validation checkpoint.
+ */
+struct ValidationExpectedConfig {
+    std::filesystem::path imagePath;
+    float tolerance = 0.01f;
+    size_t maxDiffPixels = 0;
+};
+
+/**
+ * @brief A single validation checkpoint definition.
+ */
+struct ValidationCheckpointConfig {
+    std::string id;
+    ValidationCameraConfig camera{};
+    ValidationExpectedConfig expected{};
+};
+
+/**
+ * @brief Config-driven validation tour at startup.
+ */
+struct ValidationTourConfig {
+    bool enabled = false;
+    bool failOnMismatch = true;
+    uint32_t warmupFrames = 2;
+    uint32_t captureFrames = 1;
+    std::filesystem::path outputDir = "artifacts/validation";
+    std::vector<ValidationCheckpointConfig> checkpoints{};
+};
+
+/**
  * @brief Runtime configuration values used across services.
  */
 struct RuntimeConfig {
@@ -169,6 +211,7 @@ struct RuntimeConfig {
     GuiFontConfig guiFont{};
     float guiOpacity = 1.0f;
     CrashRecoveryConfig crashRecovery{};
+    ValidationTourConfig validationTour{};
 };
 
 }  // namespace sdl3cpp::services

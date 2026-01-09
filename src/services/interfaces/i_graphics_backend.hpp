@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <filesystem>
 #include <string>
 #include <vector>
 #include <array>
@@ -138,6 +139,15 @@ public:
      * @return true if successful
      */
     virtual bool EndFrame(GraphicsDeviceHandle device) = 0;
+
+    /**
+     * @brief Request a screenshot of the backbuffer.
+     *
+     * @param device Device handle
+     * @param outputPath Output path for the screenshot
+     */
+    virtual void RequestScreenshot(GraphicsDeviceHandle device,
+                                   const std::filesystem::path& outputPath) = 0;
 
     /**
      * @brief Set the view state for the current frame.

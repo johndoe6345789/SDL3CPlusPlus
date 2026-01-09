@@ -117,6 +117,9 @@ public:
     const sdl3cpp::services::GuiFontConfig& GetGuiFontConfig() const override { return guiFontConfig_; }
     const sdl3cpp::services::RenderBudgetConfig& GetRenderBudgetConfig() const override { return budgets_; }
     const sdl3cpp::services::CrashRecoveryConfig& GetCrashRecoveryConfig() const override { return crashRecovery_; }
+    const sdl3cpp::services::ValidationTourConfig& GetValidationTourConfig() const override {
+        return validationTour_;
+    }
     const std::string& GetConfigJson() const override { return configJson_; }
 
 private:
@@ -133,6 +136,7 @@ private:
     sdl3cpp::services::GuiFontConfig guiFontConfig_{};
     sdl3cpp::services::RenderBudgetConfig budgets_{};
     sdl3cpp::services::CrashRecoveryConfig crashRecovery_{};
+    sdl3cpp::services::ValidationTourConfig validationTour_{};
     std::string configJson_{};
 };
 
@@ -167,6 +171,9 @@ public:
     const sdl3cpp::services::GuiFontConfig& GetGuiFontConfig() const override { return guiFontConfig_; }
     const sdl3cpp::services::RenderBudgetConfig& GetRenderBudgetConfig() const override { return budgets_; }
     const sdl3cpp::services::CrashRecoveryConfig& GetCrashRecoveryConfig() const override { return crashRecovery_; }
+    const sdl3cpp::services::ValidationTourConfig& GetValidationTourConfig() const override {
+        return validationTour_;
+    }
     const std::string& GetConfigJson() const override { return configJson_; }
 
 private:
@@ -185,6 +192,7 @@ private:
     sdl3cpp::services::GuiFontConfig guiFontConfig_{};
     sdl3cpp::services::RenderBudgetConfig budgets_{};
     sdl3cpp::services::CrashRecoveryConfig crashRecovery_{};
+    sdl3cpp::services::ValidationTourConfig validationTour_{};
     std::string renderer_;
 };
 

@@ -1,6 +1,7 @@
 #include "render_coordinator_service.hpp"
 
 #include <algorithm>
+#include <stdexcept>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -15,7 +16,8 @@ RenderCoordinatorService::RenderCoordinatorService(std::shared_ptr<ILogger> logg
                                                    std::shared_ptr<IShaderScriptService> shaderScriptService,
                                                    std::shared_ptr<IGuiScriptService> guiScriptService,
                                                    std::shared_ptr<IGuiService> guiService,
-                                                   std::shared_ptr<ISceneService> sceneService)
+                                                   std::shared_ptr<ISceneService> sceneService,
+                                                   std::shared_ptr<IValidationTourService> validationTourService)
     : logger_(std::move(logger)),
       configService_(std::move(configService)),
       configCompilerService_(std::move(configCompilerService)),
@@ -24,7 +26,8 @@ RenderCoordinatorService::RenderCoordinatorService(std::shared_ptr<ILogger> logg
       shaderScriptService_(std::move(shaderScriptService)),
       guiScriptService_(std::move(guiScriptService)),
       guiService_(std::move(guiService)),
-      sceneService_(std::move(sceneService)) {
+      sceneService_(std::move(sceneService)),
+      validationTourService_(std::move(validationTourService)) {
     if (logger_) {
         logger_->Trace("RenderCoordinatorService", "RenderCoordinatorService",
                        "configService=" + std::string(configService_ ? "set" : "null") +
@@ -34,7 +37,8 @@ RenderCoordinatorService::RenderCoordinatorService(std::shared_ptr<ILogger> logg
                        ", shaderScriptService=" + std::string(shaderScriptService_ ? "set" : "null") +
                        ", guiScriptService=" + std::string(guiScriptService_ ? "set" : "null") +
                        ", guiService=" + std::string(guiService_ ? "set" : "null") +
-                       ", sceneService=" + std::string(sceneService_ ? "set" : "null"),
+                       ", sceneService=" + std::string(sceneService_ ? "set" : "null") +
+                       ", validationTourService=" + std::string(validationTourService_ ? "set" : "null"),
                        "Created");
     }
 }
@@ -131,6 +135,8 @@ void RenderCoordinatorService::RenderFrame(float time) {
     if (logger_) {
         logger_->Trace("RenderCoordinatorService", "RenderFrame", "time=" + std::to_string(time), "Entering");
     }
+
+    ValidationFramePlan validationPlan{};
 
     if (!graphicsService_) {
         if (logger_) {
@@ -234,9 +240,20 @@ void RenderCoordinatorService::RenderFrame(float time) {
         auto extent = graphicsService_->GetSwapchainExtent();
         float aspect = extent.second == 0 ? 1.0f
                                           : static_cast<float>(extent.first) / static_cast<float>(extent.second);
-        auto viewState = sceneScriptService_->GetViewState(aspect);
+        if (validationTourService_) {
+            validationPlan = validationTourService_->BeginFrame(aspect);
+        }
+
+        ViewState viewState = sceneScriptService_->GetViewState(aspect);
+        if (validationPlan.active && validationPlan.overrideView) {
+            viewState = validationPlan.viewState;
+        }
 
         graphicsService_->RenderScene(renderCommands, viewState);
+    }
+
+    if (validationPlan.active && validationPlan.requestScreenshot) {
+        graphicsService_->RequestScreenshot(validationPlan.screenshotPath);
     }
 
     if (!graphicsService_->EndFrame()) {
@@ -245,6 +262,16 @@ void RenderCoordinatorService::RenderFrame(float time) {
         }
         graphicsService_->RecreateSwapchain();
         return;
+    }
+
+    if (validationPlan.active && validationTourService_) {
+        ValidationFrameResult validationResult = validationTourService_->EndFrame();
+        if (validationResult.shouldAbort) {
+            if (logger_) {
+                logger_->Error("RenderCoordinatorService::RenderFrame: Validation failed - " + validationResult.message);
+            }
+            throw std::runtime_error("Validation tour failed: " + validationResult.message);
+        }
     }
 
     if (logger_) {

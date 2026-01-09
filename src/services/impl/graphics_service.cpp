@@ -229,6 +229,17 @@ bool GraphicsService::EndFrame() {
     return backend_->EndFrame(device_);
 }
 
+void GraphicsService::RequestScreenshot(const std::filesystem::path& outputPath) {
+    logger_->Trace("GraphicsService", "RequestScreenshot",
+                   "outputPath=" + outputPath.string());
+
+    if (!initialized_) {
+        return;
+    }
+
+    backend_->RequestScreenshot(device_, outputPath);
+}
+
 void GraphicsService::WaitIdle() {
     logger_->Trace("GraphicsService", "WaitIdle");
 

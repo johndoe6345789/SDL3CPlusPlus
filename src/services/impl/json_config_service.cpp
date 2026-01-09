@@ -1190,6 +1190,150 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
         }
     }
 
+    const auto* validationValue = getObjectMember(document, "validation_tour", "validation_tour");
+    if (validationValue) {
+        auto readBool = [&](const char* name, bool& target) {
+            if (!validationValue->HasMember(name)) {
+                return;
+            }
+            const auto& value = (*validationValue)[name];
+            if (!value.IsBool()) {
+                throw std::runtime_error("JSON member 'validation_tour." + std::string(name) + "' must be a boolean");
+            }
+            target = value.GetBool();
+        };
+        readBool("enabled", config.validationTour.enabled);
+        readBool("fail_on_mismatch", config.validationTour.failOnMismatch);
+        readUint32(*validationValue, "warmup_frames", "validation_tour", config.validationTour.warmupFrames);
+        readUint32(*validationValue, "capture_frames", "validation_tour", config.validationTour.captureFrames);
+
+        if (validationValue->HasMember("output_dir")) {
+            const auto& value = (*validationValue)["output_dir"];
+            if (!value.IsString()) {
+                throw std::runtime_error("JSON member 'validation_tour.output_dir' must be a string");
+            }
+            config.validationTour.outputDir = value.GetString();
+        }
+
+        if (validationValue->HasMember("checkpoints")) {
+            const auto& checkpointsValue = (*validationValue)["checkpoints"];
+            if (!checkpointsValue.IsArray()) {
+                throw std::runtime_error("JSON member 'validation_tour.checkpoints' must be an array");
+            }
+            config.validationTour.checkpoints.clear();
+            config.validationTour.checkpoints.reserve(checkpointsValue.Size());
+
+            auto readFloat3 = [&](const rapidjson::Value& value,
+                                  const std::string& path,
+                                  std::array<float, 3>& target) {
+                if (!value.IsArray() || value.Size() != 3) {
+                    throw std::runtime_error("JSON member '" + path + "' must be an array of 3 numbers");
+                }
+                for (rapidjson::SizeType i = 0; i < 3; ++i) {
+                    if (!value[i].IsNumber()) {
+                        throw std::runtime_error("JSON member '" + path + "[" + std::to_string(i) +
+                                                 "]' must be a number");
+                    }
+                    target[i] = static_cast<float>(value[i].GetDouble());
+                }
+            };
+
+            for (rapidjson::SizeType i = 0; i < checkpointsValue.Size(); ++i) {
+                const auto& entry = checkpointsValue[i];
+                const std::string basePath = "validation_tour.checkpoints[" + std::to_string(i) + "]";
+                if (!entry.IsObject()) {
+                    throw std::runtime_error("JSON member '" + basePath + "' must be an object");
+                }
+                ValidationCheckpointConfig checkpoint;
+
+                if (!entry.HasMember("id") || !entry["id"].IsString()) {
+                    throw std::runtime_error("JSON member '" + basePath + ".id' must be a string");
+                }
+                checkpoint.id = entry["id"].GetString();
+
+                if (!entry.HasMember("camera") || !entry["camera"].IsObject()) {
+                    throw std::runtime_error("JSON member '" + basePath + ".camera' must be an object");
+                }
+                const auto& cameraValue = entry["camera"];
+                if (!cameraValue.HasMember("position")) {
+                    throw std::runtime_error("JSON member '" + basePath + ".camera.position' is required");
+                }
+                readFloat3(cameraValue["position"], basePath + ".camera.position",
+                           checkpoint.camera.position);
+                if (!cameraValue.HasMember("look_at")) {
+                    throw std::runtime_error("JSON member '" + basePath + ".camera.look_at' is required");
+                }
+                readFloat3(cameraValue["look_at"], basePath + ".camera.look_at",
+                           checkpoint.camera.lookAt);
+                if (cameraValue.HasMember("up")) {
+                    readFloat3(cameraValue["up"], basePath + ".camera.up",
+                               checkpoint.camera.up);
+                }
+                if (cameraValue.HasMember("fov_degrees")) {
+                    const auto& value = cameraValue["fov_degrees"];
+                    if (!value.IsNumber()) {
+                        throw std::runtime_error("JSON member '" + basePath +
+                                                 ".camera.fov_degrees' must be a number");
+                    }
+                    checkpoint.camera.fovDegrees = static_cast<float>(value.GetDouble());
+                }
+                if (cameraValue.HasMember("near")) {
+                    const auto& value = cameraValue["near"];
+                    if (!value.IsNumber()) {
+                        throw std::runtime_error("JSON member '" + basePath +
+                                                 ".camera.near' must be a number");
+                    }
+                    checkpoint.camera.nearPlane = static_cast<float>(value.GetDouble());
+                }
+                if (cameraValue.HasMember("far")) {
+                    const auto& value = cameraValue["far"];
+                    if (!value.IsNumber()) {
+                        throw std::runtime_error("JSON member '" + basePath +
+                                                 ".camera.far' must be a number");
+                    }
+                    checkpoint.camera.farPlane = static_cast<float>(value.GetDouble());
+                }
+
+                if (!entry.HasMember("expected") || !entry["expected"].IsObject()) {
+                    throw std::runtime_error("JSON member '" + basePath + ".expected' must be an object");
+                }
+                const auto& expectedValue = entry["expected"];
+                if (!expectedValue.HasMember("image") || !expectedValue["image"].IsString()) {
+                    throw std::runtime_error("JSON member '" + basePath + ".expected.image' must be a string");
+                }
+                checkpoint.expected.imagePath = expectedValue["image"].GetString();
+                if (expectedValue.HasMember("tolerance")) {
+                    const auto& value = expectedValue["tolerance"];
+                    if (!value.IsNumber()) {
+                        throw std::runtime_error("JSON member '" + basePath +
+                                                 ".expected.tolerance' must be a number");
+                    }
+                    const double rawValue = value.GetDouble();
+                    if (rawValue < 0.0 || rawValue > 1.0) {
+                        throw std::runtime_error("JSON member '" + basePath +
+                                                 ".expected.tolerance' must be between 0 and 1");
+                    }
+                    checkpoint.expected.tolerance = static_cast<float>(rawValue);
+                }
+                if (expectedValue.HasMember("max_diff_pixels")) {
+                    const auto& value = expectedValue["max_diff_pixels"];
+                    if (!value.IsNumber()) {
+                        throw std::runtime_error("JSON member '" + basePath +
+                                                 ".expected.max_diff_pixels' must be a number");
+                    }
+                    const double rawValue = value.GetDouble();
+                    if (rawValue < 0.0) {
+                        throw std::runtime_error("JSON member '" + basePath +
+                                                 ".expected.max_diff_pixels' must be non-negative");
+                    }
+                    checkpoint.expected.maxDiffPixels = static_cast<size_t>(rawValue);
+                }
+
+                config.validationTour.checkpoints.push_back(std::move(checkpoint));
+            }
+        }
+    }
+
     return config;
 }
 
@@ -1352,6 +1496,59 @@ std::string JsonConfigService::BuildConfigJson(const RuntimeConfig& config,
     crashObject.AddMember("max_memory_warnings",
                           static_cast<uint64_t>(config.crashRecovery.maxMemoryWarnings), allocator);
     document.AddMember("crash_recovery", crashObject, allocator);
+
+    rapidjson::Value validationObject(rapidjson::kObjectType);
+    validationObject.AddMember("enabled", config.validationTour.enabled, allocator);
+    validationObject.AddMember("fail_on_mismatch", config.validationTour.failOnMismatch, allocator);
+    validationObject.AddMember("warmup_frames", config.validationTour.warmupFrames, allocator);
+    validationObject.AddMember("capture_frames", config.validationTour.captureFrames, allocator);
+    addStringMember(validationObject, "output_dir", config.validationTour.outputDir.string());
+
+    if (!config.validationTour.checkpoints.empty()) {
+        rapidjson::Value checkpointsArray(rapidjson::kArrayType);
+        for (const auto& checkpoint : config.validationTour.checkpoints) {
+            rapidjson::Value entry(rapidjson::kObjectType);
+            entry.AddMember("id", rapidjson::Value(checkpoint.id.c_str(), allocator), allocator);
+
+            rapidjson::Value cameraObject(rapidjson::kObjectType);
+            rapidjson::Value cameraPosition(rapidjson::kArrayType);
+            cameraPosition.PushBack(checkpoint.camera.position[0], allocator);
+            cameraPosition.PushBack(checkpoint.camera.position[1], allocator);
+            cameraPosition.PushBack(checkpoint.camera.position[2], allocator);
+            cameraObject.AddMember("position", cameraPosition, allocator);
+
+            rapidjson::Value cameraLookAt(rapidjson::kArrayType);
+            cameraLookAt.PushBack(checkpoint.camera.lookAt[0], allocator);
+            cameraLookAt.PushBack(checkpoint.camera.lookAt[1], allocator);
+            cameraLookAt.PushBack(checkpoint.camera.lookAt[2], allocator);
+            cameraObject.AddMember("look_at", cameraLookAt, allocator);
+
+            rapidjson::Value cameraUp(rapidjson::kArrayType);
+            cameraUp.PushBack(checkpoint.camera.up[0], allocator);
+            cameraUp.PushBack(checkpoint.camera.up[1], allocator);
+            cameraUp.PushBack(checkpoint.camera.up[2], allocator);
+            cameraObject.AddMember("up", cameraUp, allocator);
+
+            cameraObject.AddMember("fov_degrees", checkpoint.camera.fovDegrees, allocator);
+            cameraObject.AddMember("near", checkpoint.camera.nearPlane, allocator);
+            cameraObject.AddMember("far", checkpoint.camera.farPlane, allocator);
+            entry.AddMember("camera", cameraObject, allocator);
+
+            rapidjson::Value expectedObject(rapidjson::kObjectType);
+            expectedObject.AddMember("image",
+                                     rapidjson::Value(checkpoint.expected.imagePath.string().c_str(), allocator),
+                                     allocator);
+            expectedObject.AddMember("tolerance", checkpoint.expected.tolerance, allocator);
+            expectedObject.AddMember("max_diff_pixels",
+                                     static_cast<uint64_t>(checkpoint.expected.maxDiffPixels),
+                                     allocator);
+            entry.AddMember("expected", expectedObject, allocator);
+
+            checkpointsArray.PushBack(entry, allocator);
+        }
+        validationObject.AddMember("checkpoints", checkpointsArray, allocator);
+    }
+    document.AddMember("validation_tour", validationObject, allocator);
 
     rapidjson::Value bindingsObject(rapidjson::kObjectType);
     auto addBindingMember = [&](const char* name, const std::string& value) {

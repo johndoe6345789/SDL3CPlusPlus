@@ -461,6 +461,12 @@ bool GxmGraphicsBackend::EndFrame(GraphicsDeviceHandle device) {
     return true;
 }
 
+void GxmGraphicsBackend::RequestScreenshot(GraphicsDeviceHandle device,
+                                           const std::filesystem::path& outputPath) {
+    (void)device;
+    (void)outputPath;
+}
+
 void GxmGraphicsBackend::SetViewState(const ViewState& viewState) {
     std::cout << "GXM: Setting view state" << std::endl;
     (void)viewState;

@@ -255,6 +255,48 @@
       },
       "additionalProperties": true
     },
+    "validation_tour": {
+      "type": "object",
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "fail_on_mismatch": {"type": "boolean"},
+        "warmup_frames": {"type": "integer", "minimum": 0},
+        "capture_frames": {"type": "integer", "minimum": 0},
+        "output_dir": {"type": "string"},
+        "checkpoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {"type": "string"},
+              "camera": {
+                "type": "object",
+                "properties": {
+                  "position": {"$ref": "#/definitions/float3"},
+                  "look_at": {"$ref": "#/definitions/float3"},
+                  "up": {"$ref": "#/definitions/float3"},
+                  "fov_degrees": {"type": "number"},
+                  "near": {"type": "number"},
+                  "far": {"type": "number"}
+                },
+                "additionalProperties": true
+              },
+              "expected": {
+                "type": "object",
+                "properties": {
+                  "image": {"type": "string"},
+                  "tolerance": {"type": "number", "minimum": 0, "maximum": 1},
+                  "max_diff_pixels": {"type": "number", "minimum": 0}
+                },
+                "additionalProperties": true
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": true
+    },
     "gui": {
       "type": "object",
       "properties": {

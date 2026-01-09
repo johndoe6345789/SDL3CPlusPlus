@@ -10,6 +10,7 @@
 #include "../interfaces/i_scene_script_service.hpp"
 #include "../interfaces/i_scene_service.hpp"
 #include "../interfaces/i_shader_script_service.hpp"
+#include "../interfaces/i_validation_tour_service.hpp"
 #include <memory>
 
 namespace sdl3cpp::services::impl {
@@ -24,7 +25,8 @@ public:
                              std::shared_ptr<IShaderScriptService> shaderScriptService,
                              std::shared_ptr<IGuiScriptService> guiScriptService,
                              std::shared_ptr<IGuiService> guiService,
-                             std::shared_ptr<ISceneService> sceneService);
+                             std::shared_ptr<ISceneService> sceneService,
+                             std::shared_ptr<IValidationTourService> validationTourService);
     ~RenderCoordinatorService() override = default;
 
     void RenderFrame(float time) override;
@@ -41,6 +43,7 @@ private:
     std::shared_ptr<IGuiScriptService> guiScriptService_;
     std::shared_ptr<IGuiService> guiService_;
     std::shared_ptr<ISceneService> sceneService_;
+    std::shared_ptr<IValidationTourService> validationTourService_;
     size_t lastVertexCount_ = 0;
     size_t lastIndexCount_ = 0;
     bool shadersLoaded_ = false;

@@ -5,6 +5,7 @@
 #include "i_graphics_backend.hpp"
 #include <array>
 #include <cstdint>
+#include <filesystem>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -107,6 +108,13 @@ public:
      * @return true if successful, false if swapchain needs recreation
      */
     virtual bool EndFrame() = 0;
+
+    /**
+     * @brief Request a screenshot of the backbuffer.
+     *
+     * @param outputPath Output path for the screenshot
+     */
+    virtual void RequestScreenshot(const std::filesystem::path& outputPath) = 0;
 
     /**
      * @brief Wait for all GPU operations to complete.

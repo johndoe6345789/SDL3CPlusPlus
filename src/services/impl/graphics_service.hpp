@@ -41,6 +41,7 @@ public:
                      const ViewState& viewState) override;
     void ConfigureView(uint16_t viewId, const ViewClearConfig& clearConfig) override;
     bool EndFrame() override;
+    void RequestScreenshot(const std::filesystem::path& outputPath) override;
     void WaitIdle() override;
     GraphicsDeviceHandle GetDevice() const override;
     GraphicsDeviceHandle GetPhysicalDevice() const override;

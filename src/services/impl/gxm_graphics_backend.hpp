@@ -35,6 +35,8 @@ public:
 
     bool BeginFrame(GraphicsDeviceHandle device) override;
     bool EndFrame(GraphicsDeviceHandle device) override;
+    void RequestScreenshot(GraphicsDeviceHandle device,
+                           const std::filesystem::path& outputPath) override;
 
     void SetViewState(const ViewState& viewState) override;
     void ConfigureView(GraphicsDeviceHandle device,

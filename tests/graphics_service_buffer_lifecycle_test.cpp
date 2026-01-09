@@ -105,6 +105,8 @@ public:
 
     bool BeginFrame(sdl3cpp::services::GraphicsDeviceHandle) override { return true; }
     bool EndFrame(sdl3cpp::services::GraphicsDeviceHandle) override { return true; }
+    void RequestScreenshot(sdl3cpp::services::GraphicsDeviceHandle,
+                           const std::filesystem::path&) override {}
     void SetViewState(const sdl3cpp::services::ViewState&) override {}
     void ConfigureView(sdl3cpp::services::GraphicsDeviceHandle,
                        uint16_t,

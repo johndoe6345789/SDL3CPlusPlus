@@ -9,6 +9,7 @@
 #include "../../core/vertex.hpp"
 #include <bgfx/bgfx.h>
 #include <array>
+#include <filesystem>
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -49,6 +50,8 @@ public:
               GraphicsBufferHandle vertexBuffer, GraphicsBufferHandle indexBuffer,
               uint32_t indexOffset, uint32_t indexCount, int32_t vertexOffset,
               const std::array<float, 16>& modelMatrix) override;
+    void RequestScreenshot(GraphicsDeviceHandle device,
+                           const std::filesystem::path& outputPath) override;
     GraphicsDeviceHandle GetPhysicalDevice() const override;
     std::pair<uint32_t, uint32_t> GetSwapchainExtent() const override;
     uint32_t GetSwapchainFormat() const override;

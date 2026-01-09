@@ -140,6 +140,12 @@ public:
         }
         return config_.crashRecovery;
     }
+    const ValidationTourConfig& GetValidationTourConfig() const override {
+        if (logger_) {
+            logger_->Trace("JsonConfigService", "GetValidationTourConfig");
+        }
+        return config_.validationTour;
+    }
     const std::string& GetConfigJson() const override {
         if (logger_) {
             logger_->Trace("JsonConfigService", "GetConfigJson");

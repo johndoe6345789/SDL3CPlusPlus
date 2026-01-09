@@ -252,6 +252,59 @@ void JsonConfigWriterService::WriteConfig(const RuntimeConfig& config, const std
                           static_cast<uint64_t>(config.crashRecovery.maxMemoryWarnings), allocator);
     document.AddMember("crash_recovery", crashObject, allocator);
 
+    rapidjson::Value validationObject(rapidjson::kObjectType);
+    validationObject.AddMember("enabled", config.validationTour.enabled, allocator);
+    validationObject.AddMember("fail_on_mismatch", config.validationTour.failOnMismatch, allocator);
+    validationObject.AddMember("warmup_frames", config.validationTour.warmupFrames, allocator);
+    validationObject.AddMember("capture_frames", config.validationTour.captureFrames, allocator);
+    addStringMember(validationObject, "output_dir", config.validationTour.outputDir.string());
+
+    if (!config.validationTour.checkpoints.empty()) {
+        rapidjson::Value checkpointsArray(rapidjson::kArrayType);
+        for (const auto& checkpoint : config.validationTour.checkpoints) {
+            rapidjson::Value entry(rapidjson::kObjectType);
+            entry.AddMember("id", rapidjson::Value(checkpoint.id.c_str(), allocator), allocator);
+
+            rapidjson::Value cameraObject(rapidjson::kObjectType);
+            rapidjson::Value cameraPosition(rapidjson::kArrayType);
+            cameraPosition.PushBack(checkpoint.camera.position[0], allocator);
+            cameraPosition.PushBack(checkpoint.camera.position[1], allocator);
+            cameraPosition.PushBack(checkpoint.camera.position[2], allocator);
+            cameraObject.AddMember("position", cameraPosition, allocator);
+
+            rapidjson::Value cameraLookAt(rapidjson::kArrayType);
+            cameraLookAt.PushBack(checkpoint.camera.lookAt[0], allocator);
+            cameraLookAt.PushBack(checkpoint.camera.lookAt[1], allocator);
+            cameraLookAt.PushBack(checkpoint.camera.lookAt[2], allocator);
+            cameraObject.AddMember("look_at", cameraLookAt, allocator);
+
+            rapidjson::Value cameraUp(rapidjson::kArrayType);
+            cameraUp.PushBack(checkpoint.camera.up[0], allocator);
+            cameraUp.PushBack(checkpoint.camera.up[1], allocator);
+            cameraUp.PushBack(checkpoint.camera.up[2], allocator);
+            cameraObject.AddMember("up", cameraUp, allocator);
+
+            cameraObject.AddMember("fov_degrees", checkpoint.camera.fovDegrees, allocator);
+            cameraObject.AddMember("near", checkpoint.camera.nearPlane, allocator);
+            cameraObject.AddMember("far", checkpoint.camera.farPlane, allocator);
+            entry.AddMember("camera", cameraObject, allocator);
+
+            rapidjson::Value expectedObject(rapidjson::kObjectType);
+            expectedObject.AddMember("image",
+                                     rapidjson::Value(checkpoint.expected.imagePath.string().c_str(), allocator),
+                                     allocator);
+            expectedObject.AddMember("tolerance", checkpoint.expected.tolerance, allocator);
+            expectedObject.AddMember("max_diff_pixels",
+                                     static_cast<uint64_t>(checkpoint.expected.maxDiffPixels),
+                                     allocator);
+            entry.AddMember("expected", expectedObject, allocator);
+
+            checkpointsArray.PushBack(entry, allocator);
+        }
+        validationObject.AddMember("checkpoints", checkpointsArray, allocator);
+    }
+    document.AddMember("validation_tour", validationObject, allocator);
+
     rapidjson::Value guiObject(rapidjson::kObjectType);
     rapidjson::Value fontObject(rapidjson::kObjectType);
     fontObject.AddMember("use_freetype", config.guiFont.useFreeType, allocator);

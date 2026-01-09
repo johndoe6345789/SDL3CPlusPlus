@@ -36,10 +36,12 @@
 #include "services/impl/crash_recovery_service.hpp"
 #include "services/impl/logger_service.hpp"
 #include "services/impl/pipeline_compiler_service.hpp"
+#include "services/impl/validation_tour_service.hpp"
 #include "services/interfaces/i_platform_service.hpp"
 #include "services/interfaces/i_probe_service.hpp"
 #include "services/interfaces/i_render_graph_service.hpp"
 #include "services/interfaces/i_shader_system_registry.hpp"
+#include "services/interfaces/i_validation_tour_service.hpp"
 #include "services/interfaces/i_config_compiler_service.hpp"
 #include <iostream>
 #include <stdexcept>
@@ -228,6 +230,12 @@ void ServiceBasedApp::RegisterServices() {
         registry_.GetService<services::IProbeService>());
     auto configService = registry_.GetService<services::IConfigService>();
 
+    // Validation tour service (startup visual checks)
+    registry_.RegisterService<services::IValidationTourService, services::impl::ValidationTourService>(
+        configService,
+        registry_.GetService<services::IProbeService>(),
+        registry_.GetService<services::ILogger>());
+
     // Render graph service (DAG build + scheduling)
     registry_.RegisterService<services::IRenderGraphService, services::impl::RenderGraphService>(
         registry_.GetService<services::ILogger>(),
@@ -357,7 +365,8 @@ void ServiceBasedApp::RegisterServices() {
         registry_.GetService<services::IShaderScriptService>(),
         registry_.GetService<services::IGuiScriptService>(),
         registry_.GetService<services::IGuiService>(),
-        registry_.GetService<services::ISceneService>());
+        registry_.GetService<services::ISceneService>(),
+        registry_.GetService<services::IValidationTourService>());
 
     // Application loop service
     registry_.RegisterService<services::IApplicationLoopService, services::impl::ApplicationLoopService>(

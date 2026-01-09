@@ -1184,6 +1184,19 @@ bool BgfxGraphicsBackend::EndFrame(GraphicsDeviceHandle device) {
     return true;
 }
 
+void BgfxGraphicsBackend::RequestScreenshot(GraphicsDeviceHandle device,
+                                            const std::filesystem::path& outputPath) {
+    (void)device;
+    if (!initialized_) {
+        return;
+    }
+    if (logger_) {
+        logger_->Trace("BgfxGraphicsBackend", "RequestScreenshot",
+                       "outputPath=" + outputPath.string());
+    }
+    bgfx::requestScreenShot(BGFX_INVALID_HANDLE, outputPath.string().c_str());
+}
+
 void BgfxGraphicsBackend::SetViewState(const ViewState& viewState) {
     viewState_ = viewState;
     bgfx::setViewTransform(viewId_, viewState_.view.data(), viewState_.proj.data());
