@@ -1,5 +1,6 @@
 #include "workflow_default_step_registrar.hpp"
 #include "workflow_config_load_step.hpp"
+#include "workflow_config_migration_step.hpp"
 #include "workflow_config_schema_step.hpp"
 #include "workflow_config_version_step.hpp"
 
@@ -31,6 +32,9 @@ void WorkflowDefaultStepRegistrar::RegisterUsedSteps(
     }
     if (plugins.contains("config.version.validate")) {
         registry->RegisterStep(std::make_shared<WorkflowConfigVersionStep>(logger_));
+    }
+    if (plugins.contains("config.migrate")) {
+        registry->RegisterStep(std::make_shared<WorkflowConfigMigrationStep>(logger_, probeService_));
     }
     if (plugins.contains("config.schema.validate")) {
         registry->RegisterStep(std::make_shared<WorkflowConfigSchemaStep>(logger_, probeService_));

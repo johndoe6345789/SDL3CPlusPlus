@@ -237,11 +237,12 @@ Option B: per-shader only
 ### Status
 - [~] Workflow core: step registry + executor + JSON definition parser.
 - [~] Default step package: `config.load`, `config.version.validate`, `config.schema.validate`.
+- [~] Boot config workflow execution (load/version/migrate/schema); runtime config parsing still outside workflow.
 - [x] Workflow schema: `config/schema/workflow_v1.schema.json`.
 - [x] Template package: `config/workflows/templates/boot_default.json`.
 
 ### Next Steps
-- Wire boot pipeline to use workflow executor (config load/validate/migrate).
+- Move RuntimeConfig parsing into a workflow step.
 - Add frame workflow template (BeginFrame → RenderGraph → Capture → Validate).
 
 ## Feature Matrix (What You Get, When You Get It)

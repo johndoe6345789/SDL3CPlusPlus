@@ -289,8 +289,11 @@ set(WORKFLOW_SOURCES
     src/services/impl/workflow_step_registry.cpp
     src/services/impl/workflow_executor.cpp
     src/services/impl/workflow_definition_parser.cpp
+    src/services/impl/workflow_template_resolver.cpp
+    src/services/impl/workflow_config_pipeline.cpp
     src/services/impl/workflow_config_load_step.cpp
     src/services/impl/workflow_config_version_step.cpp
+    src/services/impl/workflow_config_migration_step.cpp
     src/services/impl/workflow_config_schema_step.cpp
     src/services/impl/workflow_default_step_registrar.cpp
 )
@@ -579,6 +582,7 @@ add_executable(vulkan_shader_linking_test
     src/services/impl/bgfx_gui_service.cpp
     src/services/impl/bgfx_shader_compiler.cpp
     ${JSON_CONFIG_SOURCES}
+    ${WORKFLOW_SOURCES}
     src/services/impl/materialx_shader_generator.cpp
     src/services/impl/shader_pipeline_validator.cpp
     src/services/impl/platform_service.cpp
@@ -767,6 +771,7 @@ add_test(NAME render_graph_service_test COMMAND render_graph_service_test)
 add_executable(json_config_merge_test
     tests/json_config_merge_test.cpp
     ${JSON_CONFIG_SOURCES}
+    ${WORKFLOW_SOURCES}
 )
 target_include_directories(json_config_merge_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(json_config_merge_test PRIVATE
@@ -780,6 +785,7 @@ add_test(NAME json_config_merge_test COMMAND json_config_merge_test)
 add_executable(json_config_schema_validation_test
     tests/json_config_schema_validation_test.cpp
     ${JSON_CONFIG_SOURCES}
+    ${WORKFLOW_SOURCES}
 )
 target_include_directories(json_config_schema_validation_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(json_config_schema_validation_test PRIVATE

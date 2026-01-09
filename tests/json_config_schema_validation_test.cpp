@@ -3,10 +3,12 @@
 #include "services/impl/json_config_service.hpp"
 #include "services/interfaces/i_logger.hpp"
 
+#include <array>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <string>
+#include <utility>
 
 namespace {
 
@@ -67,15 +69,22 @@ void WriteFile(const std::filesystem::path& path, const std::string& contents) {
     output << contents;
 }
 
-void CopySchema(const std::filesystem::path& targetDir) {
-    auto schemaSource = GetRepoRoot() / "config" / "schema" / "runtime_config_v2.schema.json";
-    auto schemaTarget = targetDir / "schema" / "runtime_config_v2.schema.json";
-    std::filesystem::create_directories(schemaTarget.parent_path());
-    std::ifstream input(schemaSource);
-    ASSERT_TRUE(input.is_open()) << "Missing schema source: " << schemaSource;
-    std::ofstream output(schemaTarget);
-    ASSERT_TRUE(output.is_open()) << "Failed to write schema target: " << schemaTarget;
-    output << input.rdbuf();
+void CopyConfigAssets(const std::filesystem::path& targetDir) {
+    const auto repoRoot = GetRepoRoot();
+    const std::array<std::pair<std::filesystem::path, std::filesystem::path>, 2> assets = {
+        std::make_pair(repoRoot / "config" / "schema" / "runtime_config_v2.schema.json",
+                       targetDir / "schema" / "runtime_config_v2.schema.json"),
+        std::make_pair(repoRoot / "config" / "workflows" / "templates" / "boot_default.json",
+                       targetDir / "workflows" / "templates" / "boot_default.json")
+    };
+    for (const auto& asset : assets) {
+        std::filesystem::create_directories(asset.second.parent_path());
+        std::ifstream input(asset.first);
+        ASSERT_TRUE(input.is_open()) << "Missing config asset: " << asset.first;
+        std::ofstream output(asset.second);
+        ASSERT_TRUE(output.is_open()) << "Failed to write config asset: " << asset.second;
+        output << input.rdbuf();
+    }
 }
 
 void WriteLuaScript(const std::filesystem::path& rootDir) {
@@ -84,7 +93,7 @@ void WriteLuaScript(const std::filesystem::path& rootDir) {
 
 TEST(JsonConfigSchemaValidationTest, RejectsInvalidWindowWidthType) {
     ScopedTempDir tempDir;
-    CopySchema(tempDir.Path());
+    CopyConfigAssets(tempDir.Path());
     WriteLuaScript(tempDir.Path());
     auto logger = std::make_shared<NullLogger>();
 
@@ -104,7 +113,7 @@ TEST(JsonConfigSchemaValidationTest, RejectsInvalidWindowWidthType) {
 
 TEST(JsonConfigSchemaValidationTest, RejectsInvalidSceneSourceEnum) {
     ScopedTempDir tempDir;
-    CopySchema(tempDir.Path());
+    CopyConfigAssets(tempDir.Path());
     WriteLuaScript(tempDir.Path());
     auto logger = std::make_shared<NullLogger>();
 

@@ -1,9 +1,6 @@
 #include "json_config_service.hpp"
-#include "json_config_document_loader.hpp"
-#include "json_config_migration_service.hpp"
-#include "json_config_schema_validator.hpp"
 #include "json_config_schema_version.hpp"
-#include "json_config_version_validator.hpp"
+#include "workflow_config_pipeline.hpp"
 #include "../interfaces/i_logger.hpp"
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
@@ -120,27 +117,12 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
         ", dumpConfig=" + (dumpConfig ? "true" : "false");
     logger->Trace("JsonConfigService", "LoadFromJson", args);
 
-    json_config::JsonConfigDocumentLoader documentLoader(logger);
-    rapidjson::Document document = documentLoader.Load(configPath);
-
-    json_config::JsonConfigVersionValidator versionValidator(logger);
-    const auto activeVersion = versionValidator.Validate(document, configPath);
-    if (activeVersion && *activeVersion != json_config::kRuntimeConfigSchemaVersion) {
-        json_config::JsonConfigMigrationService migrationService(logger, probeService);
-        const bool migrated = migrationService.Apply(document,
-                                                     *activeVersion,
-                                                     json_config::kRuntimeConfigSchemaVersion,
-                                                     configPath);
-        if (!migrated) {
-            throw std::runtime_error("Unsupported schema version " + std::to_string(*activeVersion) +
-                                     " in " + configPath.string() +
-                                     "; expected " + std::to_string(json_config::kRuntimeConfigSchemaVersion) +
-                                     " (see config/schema/MIGRATIONS.md)");
-        }
+    WorkflowConfigPipeline pipeline(logger, probeService);
+    std::shared_ptr<rapidjson::Document> documentHandle = pipeline.Execute(configPath, nullptr);
+    if (!documentHandle) {
+        throw std::runtime_error("JsonConfigService::LoadFromJson: workflow pipeline returned null document");
     }
-
-    json_config::JsonConfigSchemaValidator schemaValidator(logger, probeService);
-    schemaValidator.ValidateOrThrow(document, configPath);
+    const rapidjson::Document& document = *documentHandle;
 
     if (dumpConfig || configJson) {
         rapidjson::StringBuffer buffer;

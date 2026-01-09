@@ -23,6 +23,19 @@
       }
     },
     {
+      "id": "migrate_version",
+      "plugin": "config.migrate",
+      "inputs": {
+        "document": "config.document",
+        "path": "config.path",
+        "version": "config.version"
+      },
+      "outputs": {
+        "document": "config.document",
+        "version": "config.version"
+      }
+    },
+    {
       "id": "validate_schema",
       "plugin": "config.schema.validate",
       "inputs": {
