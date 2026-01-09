@@ -49,7 +49,7 @@
 #include "services/interfaces/i_validation_tour_service.hpp"
 #include "services/interfaces/i_workflow_executor.hpp"
 #include "services/interfaces/i_workflow_step_registry.hpp"
-#include "services/interfaces/i_config_compiler_service.hpp"
+#include "services/interfaces/i_frame_workflow_service.hpp"
 #include <iostream>
 #include <filesystem>
 #include <stdexcept>
@@ -305,6 +305,14 @@ void ServiceBasedApp::RegisterServices() {
     registry_.RegisterService<services::IAudioService, services::impl::SdlAudioService>(
         registry_.GetService<services::ILogger>());
 
+    registry_.RegisterService<services::IFrameWorkflowService, services::impl::FrameWorkflowService>(
+        registry_.GetService<services::ILogger>(),
+        registry_.GetService<services::IAudioService>(),
+        registry_.GetService<services::IInputService>(),
+        registry_.GetService<services::IPhysicsService>(),
+        registry_.GetService<services::ISceneService>(),
+        registry_.GetService<services::IRenderCoordinatorService>());
+
     // Script bridge services
     registry_.RegisterService<services::IMeshService, services::impl::MeshService>(
         registry_.GetService<services::IConfigService>(),
@@ -412,6 +420,7 @@ void ServiceBasedApp::RegisterServices() {
         registry_.GetService<services::ISceneService>(),
         registry_.GetService<services::IRenderCoordinatorService>(),
         registry_.GetService<services::IAudioService>(),
+        registry_.GetService<services::IFrameWorkflowService>(),
         registry_.GetService<services::ICrashRecoveryService>());
 
     logger_->Trace("ServiceBasedApp", "RegisterServices", "", "Exiting");
