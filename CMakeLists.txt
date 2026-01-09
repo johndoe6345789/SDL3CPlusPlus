@@ -281,6 +281,9 @@ if(BUILD_SDL3_APP)
             src/services/impl/lua_helpers.cpp
             src/services/impl/scene_script_service.cpp
             src/services/impl/shader_script_service.cpp
+            src/services/impl/shader_system_registry.cpp
+            src/services/impl/materialx_shader_system.cpp
+            src/services/impl/glsl_shader_system.cpp
             src/services/impl/materialx_shader_generator.cpp
             src/services/impl/shader_pipeline_validator.cpp
             src/services/impl/gui_script_service.cpp
@@ -394,6 +397,9 @@ add_executable(script_engine_tests
     src/services/impl/lua_helpers.cpp
     src/services/impl/scene_script_service.cpp
     src/services/impl/shader_script_service.cpp
+    src/services/impl/shader_system_registry.cpp
+    src/services/impl/materialx_shader_system.cpp
+    src/services/impl/glsl_shader_system.cpp
     src/services/impl/materialx_shader_generator.cpp
     src/services/impl/shader_pipeline_validator.cpp
     src/services/impl/sdl_window_service.cpp
@@ -408,6 +414,7 @@ target_include_directories(script_engine_tests PRIVATE "${CMAKE_CURRENT_SOURCE_D
 target_link_libraries(script_engine_tests PRIVATE
     ${SDL_TARGET}
     lua::lua
+    rapidjson
     ${SDL3CPP_RENDER_STACK_LIBS}
     assimp::assimp
     Bullet::Bullet
@@ -492,6 +499,34 @@ else()
     endif()
 endif()
 add_test(NAME bgfx_gui_budget_enforcement_test COMMAND bgfx_gui_budget_enforcement_test)
+
+# Test: Texture budget tracker (allocation + free)
+add_executable(bgfx_texture_budget_tracker_test
+    tests/bgfx_texture_budget_tracker_test.cpp
+    src/services/impl/bgfx_graphics_backend.cpp
+    src/services/impl/bgfx_shader_compiler.cpp
+    src/stb_image.cpp
+)
+target_include_directories(bgfx_texture_budget_tracker_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_include_directories(bgfx_texture_budget_tracker_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_tools/shaderc")
+target_link_libraries(bgfx_texture_budget_tracker_test PRIVATE
+    GTest::gtest
+    GTest::gtest_main
+    ${SDL3CPP_RENDER_STACK_LIBS}
+    ${SDL3CPP_STB_LIBS}
+    glm::glm
+    SDL3::SDL3
+)
+if(TARGET shaderc_local)
+    target_link_libraries(bgfx_texture_budget_tracker_test PRIVATE shaderc_local)
+elseif(TARGET shaderc::shaderc)
+    target_link_libraries(bgfx_texture_budget_tracker_test PRIVATE shaderc::shaderc)
+elseif(TARGET shaderc::shaderc_combined)
+    target_link_libraries(bgfx_texture_budget_tracker_test PRIVATE shaderc::shaderc_combined)
+else()
+    message(WARNING "shaderc CMake target not found; skipping link for bgfx_texture_budget_tracker_test.")
+endif()
+add_test(NAME bgfx_texture_budget_tracker_test COMMAND bgfx_texture_budget_tracker_test)
 
 # Test: Vulkan shader linking (TDD test for walls/ceiling/floor rendering)
 add_executable(vulkan_shader_linking_test

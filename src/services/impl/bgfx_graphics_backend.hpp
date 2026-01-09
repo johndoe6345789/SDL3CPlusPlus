@@ -56,6 +56,12 @@ private:
     friend bgfx::TextureHandle LoadTextureFromFileForTest(const BgfxGraphicsBackend& backend,
                                                           const std::string& path,
                                                           uint64_t samplerFlags);
+    friend bool CanAllocateTextureBudgetForTest(const BgfxGraphicsBackend& backend, size_t bytes);
+    friend void AllocateTextureBudgetForTest(BgfxGraphicsBackend& backend, size_t bytes);
+    friend void FreeTextureBudgetForTest(BgfxGraphicsBackend& backend, size_t bytes);
+    friend void SetTextureBudgetMaxForTest(BgfxGraphicsBackend& backend, size_t maxBytes);
+    friend size_t GetTextureBudgetMaxForTest(const BgfxGraphicsBackend& backend);
+    friend size_t GetTextureBudgetUsedForTest(const BgfxGraphicsBackend& backend);
 
     // Texture memory budget tracker to prevent GPU memory exhaustion
     class TextureMemoryTracker {

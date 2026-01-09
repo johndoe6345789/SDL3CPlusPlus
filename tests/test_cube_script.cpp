@@ -7,6 +7,7 @@
 #include "services/impl/script_engine_service.hpp"
 #include "services/impl/scene_script_service.hpp"
 #include "services/impl/shader_script_service.hpp"
+#include "services/impl/shader_system_registry.hpp"
 #include "services/impl/ecs_service.hpp"
 #include "services/impl/scene_service.hpp"
 #include "services/impl/sdl_window_service.hpp"
@@ -792,7 +793,15 @@ int main() {
         engineService->Initialize();
 
         sdl3cpp::services::impl::SceneScriptService sceneService(engineService, logger);
-        sdl3cpp::services::impl::ShaderScriptService shaderService(engineService, configService, logger);
+        auto shaderSystemRegistry = std::make_shared<sdl3cpp::services::impl::ShaderSystemRegistry>(
+            configService,
+            nullptr,
+            engineService,
+            logger);
+        sdl3cpp::services::impl::ShaderScriptService shaderService(
+            engineService,
+            shaderSystemRegistry,
+            logger);
 
         auto objects = sceneService.LoadSceneObjects();
         Assert(objects.size() == 1, "expected exactly one scene object", failures);

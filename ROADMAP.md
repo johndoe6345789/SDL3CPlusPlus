@@ -16,6 +16,7 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 ## Current Snapshot (Codebase Audit)
 - Config intake: version gating + schema validation + layered merges (`extends`, `@delete`) with JSON Pointer diagnostics.
 - Config compiler builds Scene/Resource/RenderGraph IR, resolves asset/material/render-pass refs, and schedules a render pass DAG; IR is not yet driving runtime rendering.
+- Schema now covers assets/materials/shaders, `shader_systems`, and render-pass `view_id` + `clear` metadata.
 - Runtime rendering is still Lua-driven, with MaterialX shader generation, pipeline validation, sampler caps, and texture/GUI cache budget enforcement.
 - Diagnostics include ProbeService reports plus CrashRecoveryService heartbeats/GPU hang detection; runtime probe hooks (draw/present/frame) are still missing.
 
@@ -83,6 +84,7 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 - Extend schema to fully cover `assets`, `materials`, and `render.passes` (inputs/outputs, pass types).
 - Add schema for render pass clear state, attachment format, and view metadata.
 - Add a `shader_systems` section and allow per-shader system selection.
+- Status: assets/materials/shaders + `shader_systems` + render-pass `view_id`/`clear` metadata are now in schema.
 - Deliverable: schema guarantees all data needed for IR compilation and render execution.
 - Acceptance: invalid configs fail with JSON Pointer diagnostics from schema validation.
 
@@ -92,6 +94,7 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 - Implement `MaterialXShaderSystem` using existing MaterialX generator logic.
 - Update shader loading to use the selected shader system to build `ShaderPaths`.
 - Deliverable: shader generation/compilation becomes a plugin choice, not hardcoded.
+- Status: `IShaderSystem` + registry wired into shader loading, with `materialx` and `glsl` systems registered (reflection/default textures stubbed).
 - Acceptance: MaterialX stays working, and a second stub system (e.g., `glsl`) can be registered without touching `IGraphicsService`.
 
 ### Phase 3: Resource IR → Runtime Resource Registry (3-6 days)
@@ -210,7 +213,7 @@ Option B: per-shader only
 - [x] Graph validation tests for cycles and invalid dependencies
 - [x] Pipeline compatibility tests (shader inputs vs mesh layouts)
 - [x] Crash recovery timeout tests (`tests/crash_recovery_timeout_test.cpp`)
-- [~] Budget enforcement tests (GUI cache pruning covered; texture/transient pool pending)
+- [~] Budget enforcement tests (GUI cache pruning + texture tracker covered; transient pool pending)
 - [ ] Smoke test: cube demo boots with config-first scene definition
 
 ## Test Strategy (Solid Coverage Plan)

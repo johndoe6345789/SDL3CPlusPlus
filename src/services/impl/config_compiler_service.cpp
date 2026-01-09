@@ -268,6 +268,23 @@ ConfigCompilerResult ConfigCompilerService::Compile(const std::string& configJso
                 shader.id = id;
                 shader.vertexPath = it->value["vs"].GetString();
                 shader.fragmentPath = it->value["fs"].GetString();
+                bool systemValid = true;
+                if (it->value.HasMember("system")) {
+                    const auto& systemValue = it->value["system"];
+                    if (!systemValue.IsString()) {
+                        AddDiagnostic(result,
+                                      ProbeSeverity::Error,
+                                      "ASSET_SHADER_SYSTEM_TYPE",
+                                      JoinPath(shaderPath, "system"),
+                                      "Shader system must be a string");
+                        systemValid = false;
+                    } else {
+                        shader.system = systemValue.GetString();
+                    }
+                }
+                if (!systemValid) {
+                    continue;
+                }
                 shader.jsonPath = shaderPath;
                 result.resources.shaders.push_back(std::move(shader));
                 shaderIds.insert(id);
@@ -375,6 +392,162 @@ ConfigCompilerResult ConfigCompilerService::Compile(const std::string& configJso
                 }
                 if (passValue.HasMember("type") && passValue["type"].IsString()) {
                     pass.type = passValue["type"].GetString();
+                }
+                if (passValue.HasMember("view_id")) {
+                    const auto& viewValue = passValue["view_id"];
+                    const std::string viewPath = JoinPath(passPath, "view_id");
+                    if (!viewValue.IsInt()) {
+                        AddDiagnostic(result,
+                                      ProbeSeverity::Error,
+                                      "RG_VIEW_ID_TYPE",
+                                      viewPath,
+                                      "Render pass view_id must be an integer");
+                    } else if (viewValue.GetInt() < 0) {
+                        AddDiagnostic(result,
+                                      ProbeSeverity::Error,
+                                      "RG_VIEW_ID_RANGE",
+                                      viewPath,
+                                      "Render pass view_id must be zero or greater");
+                    } else {
+                        pass.hasViewId = true;
+                        pass.viewId = viewValue.GetInt();
+                    }
+                }
+                if (passValue.HasMember("clear")) {
+                    const auto& clearValue = passValue["clear"];
+                    const std::string clearPath = JoinPath(passPath, "clear");
+                    if (!clearValue.IsObject()) {
+                        AddDiagnostic(result,
+                                      ProbeSeverity::Error,
+                                      "RG_CLEAR_TYPE",
+                                      clearPath,
+                                      "Render pass clear must be an object");
+                    } else {
+                        RenderPassClearIR clear;
+                        clear.enabled = true;
+                        clear.jsonPath = clearPath;
+                        bool hasFlags = false;
+                        bool hasColor = false;
+                        bool hasDepth = false;
+                        bool hasStencil = false;
+                        if (clearValue.HasMember("flags")) {
+                            const auto& flagsValue = clearValue["flags"];
+                            const std::string flagsPath = JoinPath(clearPath, "flags");
+                            if (!flagsValue.IsArray()) {
+                                AddDiagnostic(result,
+                                              ProbeSeverity::Error,
+                                              "RG_CLEAR_FLAGS_TYPE",
+                                              flagsPath,
+                                              "Render pass clear flags must be an array");
+                            } else {
+                                hasFlags = true;
+                                for (rapidjson::SizeType f = 0; f < flagsValue.Size(); ++f) {
+                                    const auto& flagValue = flagsValue[f];
+                                    if (!flagValue.IsString()) {
+                                        AddDiagnostic(result,
+                                                      ProbeSeverity::Error,
+                                                      "RG_CLEAR_FLAGS_VALUE",
+                                                      flagsPath,
+                                                      "Render pass clear flag entries must be strings");
+                                        continue;
+                                    }
+                                    const std::string flagName = flagValue.GetString();
+                                    if (flagName == "color") {
+                                        clear.clearColor = true;
+                                    } else if (flagName == "depth") {
+                                        clear.clearDepth = true;
+                                    } else if (flagName == "stencil") {
+                                        clear.clearStencil = true;
+                                    } else {
+                                        AddDiagnostic(result,
+                                                      ProbeSeverity::Error,
+                                                      "RG_CLEAR_FLAGS_VALUE",
+                                                      flagsPath,
+                                                      "Render pass clear flag must be color, depth, or stencil");
+                                    }
+                                }
+                            }
+                        }
+                        if (clearValue.HasMember("color")) {
+                            const auto& colorValue = clearValue["color"];
+                            const std::string colorPath = JoinPath(clearPath, "color");
+                            if (!colorValue.IsArray() || colorValue.Size() != 4) {
+                                AddDiagnostic(result,
+                                              ProbeSeverity::Error,
+                                              "RG_CLEAR_COLOR",
+                                              colorPath,
+                                              "Render pass clear color must be a 4-element array");
+                            } else {
+                                bool colorValid = true;
+                                for (rapidjson::SizeType c = 0; c < colorValue.Size(); ++c) {
+                                    if (!colorValue[c].IsNumber()) {
+                                        colorValid = false;
+                                        break;
+                                    }
+                                }
+                                if (!colorValid) {
+                                    AddDiagnostic(result,
+                                                  ProbeSeverity::Error,
+                                                  "RG_CLEAR_COLOR",
+                                                  colorPath,
+                                                  "Render pass clear color values must be numbers");
+                                } else {
+                                    for (rapidjson::SizeType c = 0; c < colorValue.Size(); ++c) {
+                                        clear.color[c] = static_cast<float>(colorValue[c].GetDouble());
+                                    }
+                                    hasColor = true;
+                                }
+                            }
+                        }
+                        if (clearValue.HasMember("depth")) {
+                            const auto& depthValue = clearValue["depth"];
+                            const std::string depthPath = JoinPath(clearPath, "depth");
+                            if (!depthValue.IsNumber()) {
+                                AddDiagnostic(result,
+                                              ProbeSeverity::Error,
+                                              "RG_CLEAR_DEPTH",
+                                              depthPath,
+                                              "Render pass clear depth must be a number");
+                            } else {
+                                clear.depth = static_cast<float>(depthValue.GetDouble());
+                                hasDepth = true;
+                            }
+                        }
+                        if (clearValue.HasMember("stencil")) {
+                            const auto& stencilValue = clearValue["stencil"];
+                            const std::string stencilPath = JoinPath(clearPath, "stencil");
+                            if (!stencilValue.IsInt()) {
+                                AddDiagnostic(result,
+                                              ProbeSeverity::Error,
+                                              "RG_CLEAR_STENCIL",
+                                              stencilPath,
+                                              "Render pass clear stencil must be an integer");
+                            } else if (stencilValue.GetInt() < 0) {
+                                AddDiagnostic(result,
+                                              ProbeSeverity::Error,
+                                              "RG_CLEAR_STENCIL",
+                                              stencilPath,
+                                              "Render pass clear stencil must be zero or greater");
+                            } else {
+                                clear.stencil = stencilValue.GetInt();
+                                hasStencil = true;
+                            }
+                        }
+
+                        if (!hasFlags) {
+                            if (hasColor) {
+                                clear.clearColor = true;
+                            }
+                            if (hasDepth) {
+                                clear.clearDepth = true;
+                            }
+                            if (hasStencil) {
+                                clear.clearStencil = true;
+                            }
+                        }
+
+                        pass.clear = std::move(clear);
+                    }
                 }
                 outputsByPass.emplace(pass.id, std::unordered_set<std::string>{});
 

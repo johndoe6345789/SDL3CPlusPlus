@@ -134,4 +134,61 @@ TEST(ConfigCompilerReferenceValidationTest, FlagsSelfReference) {
     EXPECT_TRUE(HasDiagnosticCode(result.diagnostics, "RG_INPUT_SELF_REFERENCE"));
 }
 
+TEST(ConfigCompilerReferenceValidationTest, FlagsInvalidViewId) {
+    const std::string json = R"({
+  "render": {
+    "passes": [
+      {
+        "id": "main",
+        "view_id": "bad"
+      }
+    ]
+  }
+})";
+
+    sdl3cpp::services::impl::ConfigCompilerService compiler(nullptr, nullptr, nullptr, nullptr);
+    auto result = compiler.Compile(json);
+
+    EXPECT_FALSE(result.success);
+    EXPECT_TRUE(HasDiagnosticCode(result.diagnostics, "RG_VIEW_ID_TYPE"));
+}
+
+TEST(ConfigCompilerReferenceValidationTest, FlagsInvalidClearColor) {
+    const std::string json = R"({
+  "render": {
+    "passes": [
+      {
+        "id": "main",
+        "clear": {
+          "flags": ["color"],
+          "color": [1.0, 0.5, 0.25]
+        }
+      }
+    ]
+  }
+})";
+
+    sdl3cpp::services::impl::ConfigCompilerService compiler(nullptr, nullptr, nullptr, nullptr);
+    auto result = compiler.Compile(json);
+
+    EXPECT_FALSE(result.success);
+    EXPECT_TRUE(HasDiagnosticCode(result.diagnostics, "RG_CLEAR_COLOR"));
+}
+
+TEST(ConfigCompilerReferenceValidationTest, FlagsInvalidShaderSystemType) {
+    const std::string json = R"({
+  "assets": {
+    "shaders": {
+      "pbr": { "vs": "shaders/pbr.vs", "fs": "shaders/pbr.fs", "system": 3 }
+    }
+  }
+})";
+
+    sdl3cpp::services::impl::ConfigCompilerService compiler(nullptr, nullptr, nullptr, nullptr);
+    auto result = compiler.Compile(json);
+
+    EXPECT_FALSE(result.success);
+    EXPECT_TRUE(HasDiagnosticCode(result.diagnostics, "ASSET_SHADER_SYSTEM_TYPE"));
+}
+
 }  // namespace

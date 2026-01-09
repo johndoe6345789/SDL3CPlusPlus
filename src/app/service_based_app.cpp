@@ -21,6 +21,7 @@
 #include "services/impl/script_engine_service.hpp"
 #include "services/impl/scene_script_service.hpp"
 #include "services/impl/shader_script_service.hpp"
+#include "services/impl/shader_system_registry.hpp"
 #include "services/impl/gui_script_service.hpp"
 #include "services/impl/audio_command_service.hpp"
 #include "services/impl/physics_bridge_service.hpp"
@@ -38,6 +39,7 @@
 #include "services/interfaces/i_platform_service.hpp"
 #include "services/interfaces/i_probe_service.hpp"
 #include "services/interfaces/i_render_graph_service.hpp"
+#include "services/interfaces/i_shader_system_registry.hpp"
 #include "services/interfaces/i_config_compiler_service.hpp"
 #include <iostream>
 #include <stdexcept>
@@ -284,13 +286,20 @@ void ServiceBasedApp::RegisterServices() {
         registry_.GetService<services::IConfigService>(),
         runtimeConfig_.luaDebug);
 
+    // Shader system registry (pluggable shader system selection)
+    registry_.RegisterService<services::IShaderSystemRegistry, services::impl::ShaderSystemRegistry>(
+        registry_.GetService<services::IConfigService>(),
+        registry_.GetService<services::IConfigCompilerService>(),
+        registry_.GetService<services::IScriptEngineService>(),
+        registry_.GetService<services::ILogger>());
+
     // Script-facing services
     registry_.RegisterService<services::ISceneScriptService, services::impl::SceneScriptService>(
         registry_.GetService<services::IScriptEngineService>(),
         registry_.GetService<services::ILogger>());
     registry_.RegisterService<services::IShaderScriptService, services::impl::ShaderScriptService>(
         registry_.GetService<services::IScriptEngineService>(),
-        registry_.GetService<services::IConfigService>(),
+        registry_.GetService<services::IShaderSystemRegistry>(),
         registry_.GetService<services::ILogger>());
     registry_.RegisterService<services::IGuiScriptService, services::impl::GuiScriptService>(
         registry_.GetService<services::IScriptEngineService>(),

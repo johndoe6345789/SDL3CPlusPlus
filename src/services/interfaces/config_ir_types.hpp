@@ -1,6 +1,7 @@
 #pragma once
 
 #include "probe_types.hpp"
+#include <array>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -33,6 +34,7 @@ struct ShaderIR {
     std::string id;
     std::string vertexPath;
     std::string fragmentPath;
+    std::string system;
     std::string jsonPath;
 };
 
@@ -77,9 +79,23 @@ struct RenderPassOutputIR {
     std::string jsonPath;
 };
 
+struct RenderPassClearIR {
+    bool enabled = false;
+    bool clearColor = false;
+    bool clearDepth = false;
+    bool clearStencil = false;
+    std::array<float, 4> color{0.0f, 0.0f, 0.0f, 1.0f};
+    float depth = 1.0f;
+    int stencil = 0;
+    std::string jsonPath;
+};
+
 struct RenderPassIR {
     std::string id;
     std::string type;
+    bool hasViewId = false;
+    int viewId = 0;
+    RenderPassClearIR clear;
     std::vector<RenderPassInputIR> inputs;
     std::vector<RenderPassOutputIR> outputs;
     std::string jsonPath;
