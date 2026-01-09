@@ -7,6 +7,9 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 - Fail fast with clear JSON-path error reporting.
 - Keep APIs explicit, predictable, and easy to reason about.
 - Prefer refactoring that reduces boilerplate and hardcoded state.
+- Treat JSON workflows as the primary control plane, keeping each definition micro‑stepped (templates/refs preferred over huge monoliths) and wiring only the plugin/service paths required by the active workflow.
+- Keep source files focused (ideally <100 LOC unless justified) with a single responsibility, leverage DI/plugin/service/controller systems, and prefer loops and declarative packages over repeated boilerplate.
+- Push static data (lists, hash maps) into JSON configs and template packages, then loop over those data sets so the C++ service code stays lean and declarative.
 
 ## Status Legend
 - [x] live now
@@ -60,6 +63,7 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 - Enforce shader uniform compatibility using reflection + material metadata.
 - Add tests for schema/merge rules, render graph validation, and budget enforcement.
 - Start service refactor program for large modules (approaching 2K LOC).
+- Remove the Lua-first execution path once config-first workflows (boot, frame, gameplay) can fully describe the engine; workflows should be able to teleport the camera to key spots, render expected visuals, and fail fast when actual output deviates from the JSON-specified state (no Lua required unless explicitly chosen).
 
 ## Config-First Program Plan (Verbose)
 
@@ -67,6 +71,7 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 - Config-first is the default runtime path. Lua becomes optional or secondary.
 - Users can persist a default runtime config (via `--set-default-json`).
 - Schema extensions are allowed.
+- The default config pipeline (`--json-file-in` → `--set-default-json`/stored default → seed) is the preferred boot path, and Lua implications must only run when a workflow explicitly routes to it.
 - Shader systems should be pluggable (MaterialX now, others later).
 
 ### Scope And Assumptions
@@ -149,6 +154,7 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 - Reduce single-file service sizes to improve readability, reviewability, and test coverage.
 - Isolate responsibilities: parsing vs validation vs runtime state vs external I/O.
 - Make failure modes explicit and easier to diagnose with trace probes.
+- Align runtime services with JSON workflows so only referenced services run; keep each service file focused (<100 LOC ideally) and gate them through DI/plugin choreography rather than global singletons.
 
 ### Target Services (Top Of List)
 - JsonConfigService (~1800 LOC): split into loader/merger/validator/parser modules.
@@ -180,6 +186,7 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 - Each refactored service has < 800 LOC in its primary implementation file.
 - 1–3 unit tests per extracted module (minimum happy + failure path).
 - No regression in existing integration tests or runtime logs.
+- Services only run when the active workflow references them, avoiding unused initialization and respecting the "if it's not in the workflow, don't run it" rule.
 
 ## Validation Tour (Production Self-Test)
 ### Multi-Method Screen Validation
@@ -193,6 +200,8 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 - `config/engine_tester_runtime.json` provides a default self-test config.
 - Designed for production binaries; no golden image required by default.
 - Produces capture artifacts in `artifacts/validation/`.
+- The config-first workflow teleports the camera through key waypoints, renders the prescribed scenes, and validates each capture with the multi-method assertions; mismatched output fails with a descriptive JSON-path error so bad code can't silently crash the machine.
+- Multiple validation strategies (image diff, luma, sample points, non-black ratio, mean color) are orchestrated from the workflow so even unknown scenes (new JSON/Lua outputs) get covered by at least one detector.
 
 ### Default Config Behavior (Config-First)
 - Default config resolution remains `--json-file-in` → `--set-default-json` path → stored default config → seed config.
@@ -233,6 +242,8 @@ Option B: per-shader only
 - Keep each step tiny (<100 LOC), with explicit inputs/outputs and DI-backed plugin lookup.
 - Package common pipelines as templates so users don't start from scratch.
 - Only register/instantiate step plugins that are referenced by the active workflow.
+- Treat workflows as the portable definition of the entire engine (boot → gameplay → frame); each JSON step should map to a single C++ plugin/service that stays lean, and users should be able to describe camera modes, bullet physics, and render expectations just by swapping workflow nodes.
+- Allow workflows to reference other files or templates when they grow large so each JSON artifact stays focused on one responsibility.
 
 ### Status
 - [~] Workflow core: step registry + executor + JSON definition parser.
@@ -244,6 +255,7 @@ Option B: per-shader only
 ### Next Steps
 - [x] Move RuntimeConfig parsing into a workflow step.
 - [ ] Add frame workflow template (BeginFrame → RenderGraph → Capture → Validate).
+- [ ] Publish gameplay workflow templates (e.g., default FPS/passive camera steps, bullet physics, validation/teleport checks) so users can switch camera styles or physics by swapping workflow nodes.
 
 ## Feature Matrix (What You Get, When You Get It)
 
@@ -318,12 +330,18 @@ Option B: per-shader only
 - Quick: unit + service tests (schema/merge/render graph/pipeline validator).
 - Full: integration tests (MaterialX + shader linking) and smoke config-first boot.
 
+## Automation Priorities
+- Prioritize lint/static analysis (clang-tidy or similar) so no code reaches CI with unchecked warnings; make the lint target part of the default build/test sprint.
+- Always run the "triangle/run" regression harness, the static-analysis pass, and the e2e validation workflow (boot → frame → capture) on workstation hardware before claiming readiness.
+- Tie the game engine tester config (`config/engine_tester_runtime.json`) into CI to execute teleport/capture checks plus the multi-method screen validation suite (image compare, non-black/luma/mean/samples).
+
 ## Troubleshooting Guide (Segfaults, Ordering, Shader Quirks)
 ### Common Failure Modes
 - Segfaults after startup: often caused by invalid bgfx handles, resource exhaustion, or pre-frame usage.
 - Draw crashes: index/vertex buffer mismatch or using buffers before upload.
 - Shader issues: missing uniforms, incorrect layout qualifiers, or wrong backend profile.
 - Ordering bugs: loading shaders/textures before the first `BeginFrame` + `EndFrame` priming pass.
+- Vendor blobs in `src/` might have local tweaks; verify the sanitized version before assuming upstream behavior.
 
 ### Immediate Triage Steps
 - Re-run with trace logging enabled (`--trace`) and capture the last 50 lines of the log.
