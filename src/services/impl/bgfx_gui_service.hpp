@@ -40,6 +40,20 @@ public:
     bool IsWhiteTextureReady() const;
 
 private:
+    friend void AddTextCacheEntryForTest(BgfxGuiService& service,
+                                         const std::string& text,
+                                         int fontSize,
+                                         uint64_t lastUsedFrame);
+    friend void AddSvgCacheEntryForTest(BgfxGuiService& service,
+                                        const std::string& path,
+                                        int width,
+                                        int height,
+                                        uint64_t lastUsedFrame);
+    friend size_t GetTextCacheSizeForTest(const BgfxGuiService& service);
+    friend size_t GetSvgCacheSizeForTest(const BgfxGuiService& service);
+    friend void PruneTextCacheForTest(BgfxGuiService& service);
+    friend void PruneSvgCacheForTest(BgfxGuiService& service);
+
     struct GuiVertex {
         float x = 0.0f;
         float y = 0.0f;

@@ -461,6 +461,38 @@ else()
 endif()
 add_test(NAME bgfx_gui_service_tests COMMAND bgfx_gui_service_tests)
 
+# Test: GUI budget enforcement (cache pruning)
+add_executable(bgfx_gui_budget_enforcement_test
+    tests/bgfx_gui_budget_enforcement_test.cpp
+    src/services/impl/bgfx_gui_service.cpp
+    src/services/impl/bgfx_shader_compiler.cpp
+    src/services/impl/materialx_shader_generator.cpp
+    src/services/impl/shader_pipeline_validator.cpp
+    src/services/impl/pipeline_compiler_service.cpp
+)
+target_include_directories(bgfx_gui_budget_enforcement_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_include_directories(bgfx_gui_budget_enforcement_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_tools/shaderc")
+target_link_libraries(bgfx_gui_budget_enforcement_test PRIVATE
+    GTest::gtest
+    GTest::gtest_main
+    ${SDL3CPP_RENDER_STACK_LIBS}
+    ${SDL3CPP_FREETYPE_LIBS}
+    lunasvg::lunasvg
+)
+if(TARGET shaderc_local)
+    target_link_libraries(bgfx_gui_budget_enforcement_test PRIVATE shaderc_local)
+elseif(TARGET shaderc::shaderc)
+elseif(TARGET shaderc::shaderc_combined)
+    target_link_libraries(bgfx_gui_budget_enforcement_test PRIVATE shaderc::shaderc_combined)
+else()
+    if(TARGET shaderc_local)
+        target_link_libraries(bgfx_gui_budget_enforcement_test PRIVATE shaderc_local)
+    else()
+        message(WARNING "shaderc CMake target not found; skipping link for bgfx_gui_budget_enforcement_test.")
+    endif()
+endif()
+add_test(NAME bgfx_gui_budget_enforcement_test COMMAND bgfx_gui_budget_enforcement_test)
+
 # Test: Vulkan shader linking (TDD test for walls/ceiling/floor rendering)
 add_executable(vulkan_shader_linking_test
     tests/test_vulkan_shader_linking.cpp

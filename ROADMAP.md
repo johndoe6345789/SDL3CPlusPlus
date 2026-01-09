@@ -210,7 +210,7 @@ Option B: per-shader only
 - [x] Graph validation tests for cycles and invalid dependencies
 - [x] Pipeline compatibility tests (shader inputs vs mesh layouts)
 - [x] Crash recovery timeout tests (`tests/crash_recovery_timeout_test.cpp`)
-- [ ] Budget enforcement tests (over-limit textures, transient pool caps)
+- [~] Budget enforcement tests (GUI cache pruning covered; texture/transient pool pending)
 - [ ] Smoke test: cube demo boots with config-first scene definition
 
 ## Test Strategy (Solid Coverage Plan)
