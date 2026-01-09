@@ -758,6 +758,26 @@ target_link_libraries(config_compiler_reference_validation_test PRIVATE
 )
 add_test(NAME config_compiler_reference_validation_test COMMAND config_compiler_reference_validation_test)
 
+# Test: Shader system registry selection
+add_executable(shader_system_registry_test
+    tests/shader_system_registry_test.cpp
+    src/services/impl/config_compiler_service.cpp
+    src/services/impl/shader_system_registry.cpp
+    src/services/impl/glsl_shader_system.cpp
+    src/services/impl/materialx_shader_system.cpp
+    src/services/impl/materialx_shader_generator.cpp
+    src/services/impl/shader_pipeline_validator.cpp
+)
+target_include_directories(shader_system_registry_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+target_include_directories(shader_system_registry_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_tools/shaderc")
+target_link_libraries(shader_system_registry_test PRIVATE
+    GTest::gtest
+    GTest::gtest_main
+    rapidjson
+    ${SDL3CPP_RENDER_STACK_LIBS}
+)
+add_test(NAME shader_system_registry_test COMMAND shader_system_registry_test)
+
 # Test: Bgfx Draw bounds validation (TDD test for buffer overflow crash)
 add_executable(bgfx_draw_bounds_validation_test
     tests/bgfx_draw_bounds_validation_test.cpp

@@ -115,6 +115,7 @@ std::unordered_map<std::string, ShaderPaths> MaterialXShaderSystem::BuildShaderM
         throw std::runtime_error("No MaterialX shaders were generated from JSON config");
     }
 
+    lastShaderMap_ = shaderMap;
     return shaderMap;
 }
 
@@ -130,7 +131,11 @@ std::vector<ShaderPaths::TextureBinding> MaterialXShaderSystem::GetDefaultTextur
     if (logger_) {
         logger_->Trace("MaterialXShaderSystem", "GetDefaultTextures", "shaderKey=" + shaderKey);
     }
-    return {};
+    auto it = lastShaderMap_.find(shaderKey);
+    if (it == lastShaderMap_.end()) {
+        return {};
+    }
+    return it->second.textures;
 }
 
 }  // namespace sdl3cpp::services::impl

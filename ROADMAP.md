@@ -94,7 +94,7 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 - Implement `MaterialXShaderSystem` using existing MaterialX generator logic.
 - Update shader loading to use the selected shader system to build `ShaderPaths`.
 - Deliverable: shader generation/compilation becomes a plugin choice, not hardcoded.
-- Status: `IShaderSystem` + registry wired into shader loading, with `materialx` and `glsl` systems registered (reflection/default textures stubbed).
+- Status: `IShaderSystem` + registry wired into shader loading, with `materialx` and `glsl` systems registered; config compiler validates shader system declarations; default texture lookup is now exposed via the registry.
 - Acceptance: MaterialX stays working, and a second stub system (e.g., `glsl`) can be registered without touching `IGraphicsService`.
 
 ### Phase 3: Resource IR → Runtime Resource Registry (3-6 days)
@@ -137,7 +137,7 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 ### Phase 8: Tests And Docs (2-5 days, overlaps phases)
 - Add unit tests for config merge rules (`extends`, `@delete`).
 - Add render graph validation tests for cycles and invalid outputs.
-- Add shader system registry tests for multi-system support.
+- Add shader system registry tests for multi-system support. (done)
 - Update docs with a "Config First Pipeline" guide and known limitations.
 - Deliverable: regression protection for the new pipeline.
 - Acceptance: new tests pass alongside existing integration tests.

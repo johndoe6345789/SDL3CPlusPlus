@@ -191,4 +191,42 @@ TEST(ConfigCompilerReferenceValidationTest, FlagsInvalidShaderSystemType) {
     EXPECT_TRUE(HasDiagnosticCode(result.diagnostics, "ASSET_SHADER_SYSTEM_TYPE"));
 }
 
+TEST(ConfigCompilerReferenceValidationTest, FlagsUnknownShaderSystem) {
+    const std::string json = R"({
+  "shader_systems": {
+    "systems": {
+      "glsl": { "enabled": true }
+    }
+  },
+  "assets": {
+    "shaders": {
+      "pbr": { "vs": "shaders/pbr.vs", "fs": "shaders/pbr.fs", "system": "materialx" }
+    }
+  }
+})";
+
+    sdl3cpp::services::impl::ConfigCompilerService compiler(nullptr, nullptr, nullptr, nullptr);
+    auto result = compiler.Compile(json);
+
+    EXPECT_FALSE(result.success);
+    EXPECT_TRUE(HasDiagnosticCode(result.diagnostics, "ASSET_SHADER_SYSTEM_UNKNOWN"));
+}
+
+TEST(ConfigCompilerReferenceValidationTest, FlagsUnknownActiveShaderSystem) {
+    const std::string json = R"({
+  "shader_systems": {
+    "active": "missing",
+    "systems": {
+      "glsl": { "enabled": true }
+    }
+  }
+})";
+
+    sdl3cpp::services::impl::ConfigCompilerService compiler(nullptr, nullptr, nullptr, nullptr);
+    auto result = compiler.Compile(json);
+
+    EXPECT_FALSE(result.success);
+    EXPECT_TRUE(HasDiagnosticCode(result.diagnostics, "SHADER_SYSTEMS_ACTIVE_UNKNOWN"));
+}
+
 }  // namespace

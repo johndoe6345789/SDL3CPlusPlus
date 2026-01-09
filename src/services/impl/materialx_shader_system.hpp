@@ -33,6 +33,7 @@ private:
     std::shared_ptr<IScriptEngineService> scriptEngineService_;
     std::shared_ptr<ILogger> logger_;
     MaterialXShaderGenerator materialxGenerator_;
+    std::unordered_map<std::string, ShaderPaths> lastShaderMap_;
 };
 
 }  // namespace sdl3cpp::services::impl

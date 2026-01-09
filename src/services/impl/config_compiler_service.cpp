@@ -185,6 +185,86 @@ ConfigCompilerResult ConfigCompilerService::Compile(const std::string& configJso
     const std::string assetsPath = "/assets";
     std::unordered_set<std::string> textureIds;
     std::unordered_set<std::string> shaderIds;
+    std::unordered_map<std::string, bool> shaderSystems;
+    std::string activeShaderSystem;
+    const std::string shaderSystemsPath = "/shader_systems";
+    if (document.HasMember("shader_systems")) {
+        const auto& shaderSystemsValue = document["shader_systems"];
+        if (!shaderSystemsValue.IsObject()) {
+            AddDiagnostic(result,
+                          ProbeSeverity::Error,
+                          "SHADER_SYSTEMS_TYPE",
+                          shaderSystemsPath,
+                          "shader_systems must be an object");
+        } else {
+            if (shaderSystemsValue.HasMember("active")) {
+                const auto& activeValue = shaderSystemsValue["active"];
+                if (!activeValue.IsString()) {
+                    AddDiagnostic(result,
+                                  ProbeSeverity::Error,
+                                  "SHADER_SYSTEMS_ACTIVE_TYPE",
+                                  JoinPath(shaderSystemsPath, "active"),
+                                  "shader_systems.active must be a string");
+                } else {
+                    activeShaderSystem = activeValue.GetString();
+                }
+            }
+            if (shaderSystemsValue.HasMember("systems")) {
+                const auto& systemsValue = shaderSystemsValue["systems"];
+                const std::string systemsPath = JoinPath(shaderSystemsPath, "systems");
+                if (!systemsValue.IsObject()) {
+                    AddDiagnostic(result,
+                                  ProbeSeverity::Error,
+                                  "SHADER_SYSTEMS_ENTRIES_TYPE",
+                                  systemsPath,
+                                  "shader_systems.systems must be an object");
+                } else {
+                    for (auto it = systemsValue.MemberBegin(); it != systemsValue.MemberEnd(); ++it) {
+                        const std::string systemId = it->name.GetString();
+                        const std::string systemPath = JoinPath(systemsPath, systemId);
+                        bool enabled = true;
+                        if (!it->value.IsObject()) {
+                            AddDiagnostic(result,
+                                          ProbeSeverity::Error,
+                                          "SHADER_SYSTEMS_ENTRY_TYPE",
+                                          systemPath,
+                                          "shader_systems.systems entries must be objects");
+                            continue;
+                        }
+                        if (it->value.HasMember("enabled")) {
+                            const auto& enabledValue = it->value["enabled"];
+                            if (!enabledValue.IsBool()) {
+                                AddDiagnostic(result,
+                                              ProbeSeverity::Error,
+                                              "SHADER_SYSTEMS_ENABLED_TYPE",
+                                              JoinPath(systemPath, "enabled"),
+                                              "shader_systems.systems.enabled must be a boolean");
+                            } else {
+                                enabled = enabledValue.GetBool();
+                            }
+                        }
+                        shaderSystems.emplace(systemId, enabled);
+                    }
+                }
+            }
+        }
+    }
+    if (!activeShaderSystem.empty() && !shaderSystems.empty()) {
+        auto activeIt = shaderSystems.find(activeShaderSystem);
+        if (activeIt == shaderSystems.end()) {
+            AddDiagnostic(result,
+                          ProbeSeverity::Error,
+                          "SHADER_SYSTEMS_ACTIVE_UNKNOWN",
+                          JoinPath(shaderSystemsPath, "active"),
+                          "shader_systems.active is not declared in shader_systems.systems");
+        } else if (!activeIt->second) {
+            AddDiagnostic(result,
+                          ProbeSeverity::Warn,
+                          "SHADER_SYSTEMS_ACTIVE_DISABLED",
+                          JoinPath(shaderSystemsPath, "active"),
+                          "shader_systems.active references a disabled shader system");
+        }
+    }
     if (const auto* assetsValue = getObjectMember(document, "assets", assetsPath)) {
         if (const auto* texturesValue = getObjectMember(*assetsValue, "textures", JoinPath(assetsPath, "textures"))) {
             for (auto it = texturesValue->MemberBegin(); it != texturesValue->MemberEnd(); ++it) {
@@ -284,6 +364,24 @@ ConfigCompilerResult ConfigCompilerService::Compile(const std::string& configJso
                 }
                 if (!systemValid) {
                     continue;
+                }
+                if (!shader.system.empty() && !shaderSystems.empty()) {
+                    auto systemIt = shaderSystems.find(shader.system);
+                    if (systemIt == shaderSystems.end()) {
+                        AddDiagnostic(result,
+                                      ProbeSeverity::Error,
+                                      "ASSET_SHADER_SYSTEM_UNKNOWN",
+                                      JoinPath(shaderPath, "system"),
+                                      "Shader system is not declared in shader_systems.systems");
+                        continue;
+                    }
+                    if (!systemIt->second) {
+                        AddDiagnostic(result,
+                                      ProbeSeverity::Warn,
+                                      "ASSET_SHADER_SYSTEM_DISABLED",
+                                      JoinPath(shaderPath, "system"),
+                                      "Shader system is disabled in shader_systems.systems");
+                    }
                 }
                 shader.jsonPath = shaderPath;
                 result.resources.shaders.push_back(std::move(shader));

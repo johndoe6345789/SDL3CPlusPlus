@@ -31,6 +31,7 @@ private:
     std::shared_ptr<IConfigService> configService_;
     std::shared_ptr<IConfigCompilerService> configCompilerService_;
     std::shared_ptr<ILogger> logger_;
+    std::unordered_map<std::string, ShaderPaths> lastShaderMap_;
 };
 
 }  // namespace sdl3cpp::services::impl

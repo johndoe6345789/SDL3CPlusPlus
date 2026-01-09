@@ -26,6 +26,11 @@ public:
 
     std::unordered_map<std::string, ShaderPaths> BuildShaderMap() override;
 
+    ShaderReflection GetReflection(const std::string& shaderKey) const override;
+
+    std::vector<ShaderPaths::TextureBinding> GetDefaultTextures(
+        const std::string& shaderKey) const override;
+
     std::string GetActiveSystemId() const override;
 
 private:

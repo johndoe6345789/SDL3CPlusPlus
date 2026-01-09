@@ -60,6 +60,7 @@ std::unordered_map<std::string, ShaderPaths> GlslShaderSystem::BuildShaderMap() 
         throw std::runtime_error("No GLSL shaders found in assets.shaders");
     }
 
+    lastShaderMap_ = shaderMap;
     return shaderMap;
 }
 
@@ -75,7 +76,11 @@ std::vector<ShaderPaths::TextureBinding> GlslShaderSystem::GetDefaultTextures(
     if (logger_) {
         logger_->Trace("GlslShaderSystem", "GetDefaultTextures", "shaderKey=" + shaderKey);
     }
-    return {};
+    auto it = lastShaderMap_.find(shaderKey);
+    if (it == lastShaderMap_.end()) {
+        return {};
+    }
+    return it->second.textures;
 }
 
 }  // namespace sdl3cpp::services::impl

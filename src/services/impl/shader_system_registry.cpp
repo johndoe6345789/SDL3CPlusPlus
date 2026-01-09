@@ -45,6 +45,31 @@ std::unordered_map<std::string, ShaderPaths> ShaderSystemRegistry::BuildShaderMa
     return it->second->BuildShaderMap();
 }
 
+ShaderReflection ShaderSystemRegistry::GetReflection(const std::string& shaderKey) const {
+    const std::string activeSystem = ResolveActiveSystemId();
+    auto it = systems_.find(activeSystem);
+    if (it == systems_.end()) {
+        if (logger_) {
+            logger_->Warn("ShaderSystemRegistry::GetReflection: Active system not registered");
+        }
+        return {};
+    }
+    return it->second->GetReflection(shaderKey);
+}
+
+std::vector<ShaderPaths::TextureBinding> ShaderSystemRegistry::GetDefaultTextures(
+    const std::string& shaderKey) const {
+    const std::string activeSystem = ResolveActiveSystemId();
+    auto it = systems_.find(activeSystem);
+    if (it == systems_.end()) {
+        if (logger_) {
+            logger_->Warn("ShaderSystemRegistry::GetDefaultTextures: Active system not registered");
+        }
+        return {};
+    }
+    return it->second->GetDefaultTextures(shaderKey);
+}
+
 std::string ShaderSystemRegistry::GetActiveSystemId() const {
     return ResolveActiveSystemId();
 }
