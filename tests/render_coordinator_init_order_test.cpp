@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "services/impl/render_coordinator_service.hpp"
+#include "services/interfaces/i_config_compiler_service.hpp"
 #include "services/interfaces/i_config_service.hpp"
 #include "services/interfaces/i_graphics_service.hpp"
 #include "services/interfaces/i_shader_script_service.hpp"
@@ -15,7 +16,13 @@ namespace {
 
 class CallOrderGraphicsService : public sdl3cpp::services::IGraphicsService {
 public:
+    struct ConfigureViewCall {
+        uint16_t viewId = 0;
+        sdl3cpp::services::ViewClearConfig clearConfig{};
+    };
+
     std::vector<std::string> calls;
+    std::vector<ConfigureViewCall> configureViewCalls;
     bool beginFrameResult = true;
     bool endFrameResult = true;
 
@@ -34,8 +41,9 @@ public:
     }
     void RenderScene(const std::vector<sdl3cpp::services::RenderCommand>&,
                      const sdl3cpp::services::ViewState&) override {}
-    void ConfigureView(uint16_t, const sdl3cpp::services::ViewClearConfig&) override {
+    void ConfigureView(uint16_t viewId, const sdl3cpp::services::ViewClearConfig& clearConfig) override {
         calls.push_back("ConfigureView");
+        configureViewCalls.push_back({viewId, clearConfig});
     }
     bool EndFrame() override {
         calls.push_back("EndFrame");
@@ -59,13 +67,16 @@ public:
 
 class StubConfigService final : public sdl3cpp::services::IConfigService {
 public:
+    explicit StubConfigService(sdl3cpp::services::SceneSource sceneSource = sdl3cpp::services::SceneSource::Lua)
+        : sceneSource_(sceneSource) {}
+
     uint32_t GetWindowWidth() const override { return 1; }
     uint32_t GetWindowHeight() const override { return 1; }
     std::filesystem::path GetScriptPath() const override { return {}; }
     bool IsLuaDebugEnabled() const override { return false; }
     std::string GetWindowTitle() const override { return ""; }
     sdl3cpp::services::SceneSource GetSceneSource() const override {
-        return sdl3cpp::services::SceneSource::Lua;
+        return sceneSource_;
     }
     const sdl3cpp::services::InputBindings& GetInputBindings() const override { return inputBindings_; }
     const sdl3cpp::services::MouseGrabConfig& GetMouseGrabConfig() const override { return mouseGrabConfig_; }
@@ -80,6 +91,7 @@ public:
     const std::string& GetConfigJson() const override { return configJson_; }
 
 private:
+    sdl3cpp::services::SceneSource sceneSource_;
     sdl3cpp::services::InputBindings inputBindings_{};
     sdl3cpp::services::MouseGrabConfig mouseGrabConfig_{};
     sdl3cpp::services::BgfxConfig bgfxConfig_{};
@@ -89,6 +101,23 @@ private:
     sdl3cpp::services::RenderBudgetConfig budgets_{};
     sdl3cpp::services::CrashRecoveryConfig crashRecovery_{};
     std::string configJson_{};
+};
+
+class StubConfigCompilerService final : public sdl3cpp::services::IConfigCompilerService {
+public:
+    explicit StubConfigCompilerService(const sdl3cpp::services::ConfigCompilerResult& result)
+        : result_(result) {}
+
+    sdl3cpp::services::ConfigCompilerResult Compile(const std::string&) override {
+        return result_;
+    }
+
+    const sdl3cpp::services::ConfigCompilerResult& GetLastResult() const override {
+        return result_;
+    }
+
+private:
+    sdl3cpp::services::ConfigCompilerResult result_;
 };
 
 std::string JoinCalls(const std::vector<std::string>& calls) {
@@ -145,6 +174,90 @@ TEST(RenderCoordinatorInitOrderTest, LoadsShadersOnlyAfterFirstFrame) {
     EXPECT_TRUE(HasEndFrameBeforeLoadShaders(graphicsService->calls))
         << "LoadShaders was called before a completed frame. Calls: "
         << JoinCalls(graphicsService->calls);
+}
+
+TEST(RenderCoordinatorRenderGraphTest, ConfiguresViewsInPassOrder) {
+    sdl3cpp::services::ConfigCompilerResult result;
+
+    sdl3cpp::services::RenderPassIR shadowPass;
+    shadowPass.id = "shadow";
+    shadowPass.hasViewId = true;
+    shadowPass.viewId = 0;
+    shadowPass.clear.enabled = true;
+    shadowPass.clear.clearColor = true;
+    shadowPass.clear.clearDepth = true;
+    shadowPass.clear.clearStencil = true;
+    shadowPass.clear.color = {0.2f, 0.3f, 0.4f, 1.0f};
+    shadowPass.clear.depth = 0.75f;
+    shadowPass.clear.stencil = 5;
+
+    sdl3cpp::services::RenderPassIR postPass;
+    postPass.id = "post";
+    postPass.clear.enabled = false;
+
+    sdl3cpp::services::RenderPassIR mainPass;
+    mainPass.id = "main";
+    mainPass.hasViewId = true;
+    mainPass.viewId = 5;
+    mainPass.clear.enabled = true;
+    mainPass.clear.clearColor = true;
+    mainPass.clear.clearDepth = false;
+    mainPass.clear.clearStencil = true;
+    mainPass.clear.color = {0.1f, 0.2f, 0.3f, 1.0f};
+    mainPass.clear.depth = 0.9f;
+    mainPass.clear.stencil = 300;
+
+    result.renderGraph.passes = {shadowPass, postPass, mainPass};
+    result.renderGraphBuild.passOrder = {"post", "shadow", "main"};
+
+    auto configCompilerService = std::make_shared<StubConfigCompilerService>(result);
+    auto configService = std::make_shared<StubConfigService>(sdl3cpp::services::SceneSource::Config);
+    auto graphicsService = std::make_shared<CallOrderGraphicsService>();
+
+    sdl3cpp::services::impl::RenderCoordinatorService service(
+        nullptr,
+        configService,
+        configCompilerService,
+        graphicsService,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr);
+
+    service.RenderFrame(0.0f);
+
+    ASSERT_EQ(graphicsService->configureViewCalls.size(), 3u);
+    EXPECT_EQ(graphicsService->configureViewCalls[0].viewId, 1u);
+    EXPECT_EQ(graphicsService->configureViewCalls[1].viewId, 0u);
+    EXPECT_EQ(graphicsService->configureViewCalls[2].viewId, 5u);
+
+    const auto& postClear = graphicsService->configureViewCalls[0].clearConfig;
+    EXPECT_FALSE(postClear.enabled);
+
+    const auto& shadowClear = graphicsService->configureViewCalls[1].clearConfig;
+    EXPECT_TRUE(shadowClear.enabled);
+    EXPECT_TRUE(shadowClear.clearColor);
+    EXPECT_TRUE(shadowClear.clearDepth);
+    EXPECT_TRUE(shadowClear.clearStencil);
+    EXPECT_FLOAT_EQ(shadowClear.color[0], 0.2f);
+    EXPECT_FLOAT_EQ(shadowClear.color[1], 0.3f);
+    EXPECT_FLOAT_EQ(shadowClear.color[2], 0.4f);
+    EXPECT_FLOAT_EQ(shadowClear.color[3], 1.0f);
+    EXPECT_FLOAT_EQ(shadowClear.depth, 0.75f);
+    EXPECT_EQ(shadowClear.stencil, static_cast<uint8_t>(5));
+
+    const auto& mainClear = graphicsService->configureViewCalls[2].clearConfig;
+    EXPECT_TRUE(mainClear.enabled);
+    EXPECT_TRUE(mainClear.clearColor);
+    EXPECT_FALSE(mainClear.clearDepth);
+    EXPECT_TRUE(mainClear.clearStencil);
+    EXPECT_FLOAT_EQ(mainClear.color[0], 0.1f);
+    EXPECT_FLOAT_EQ(mainClear.color[1], 0.2f);
+    EXPECT_FLOAT_EQ(mainClear.color[2], 0.3f);
+    EXPECT_FLOAT_EQ(mainClear.color[3], 1.0f);
+    EXPECT_FLOAT_EQ(mainClear.depth, 0.9f);
+    EXPECT_EQ(mainClear.stencil, static_cast<uint8_t>(255));
 }
 
 }  // namespace
