@@ -280,6 +280,13 @@ if(BUILD_SDL3_APP)
             src/events/event_bus.cpp
             src/services/impl/json_config_service.cpp
             src/services/impl/json_config_document_loader.cpp
+            src/services/impl/json_config_document_parser.cpp
+            src/services/impl/json_config_extend_resolver.cpp
+            src/services/impl/json_config_merge_service.cpp
+            src/services/impl/json_config_schema_path_resolver.cpp
+            src/services/impl/json_config_schema_validator.cpp
+            src/services/impl/json_config_version_validator.cpp
+            src/services/impl/json_config_migration_service.cpp
             src/services/impl/config_compiler_service.cpp
             src/services/impl/command_line_service.cpp
             src/services/impl/json_config_writer_service.cpp
@@ -547,6 +554,13 @@ add_executable(vulkan_shader_linking_test
     src/services/impl/bgfx_shader_compiler.cpp
     src/services/impl/json_config_service.cpp
     src/services/impl/json_config_document_loader.cpp
+    src/services/impl/json_config_document_parser.cpp
+    src/services/impl/json_config_extend_resolver.cpp
+    src/services/impl/json_config_merge_service.cpp
+    src/services/impl/json_config_schema_path_resolver.cpp
+    src/services/impl/json_config_schema_validator.cpp
+    src/services/impl/json_config_version_validator.cpp
+    src/services/impl/json_config_migration_service.cpp
     src/services/impl/materialx_shader_generator.cpp
     src/services/impl/shader_pipeline_validator.cpp
     src/services/impl/platform_service.cpp
@@ -736,6 +750,13 @@ add_executable(json_config_merge_test
     tests/json_config_merge_test.cpp
     src/services/impl/json_config_service.cpp
     src/services/impl/json_config_document_loader.cpp
+    src/services/impl/json_config_document_parser.cpp
+    src/services/impl/json_config_extend_resolver.cpp
+    src/services/impl/json_config_merge_service.cpp
+    src/services/impl/json_config_schema_path_resolver.cpp
+    src/services/impl/json_config_schema_validator.cpp
+    src/services/impl/json_config_version_validator.cpp
+    src/services/impl/json_config_migration_service.cpp
 )
 target_include_directories(json_config_merge_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(json_config_merge_test PRIVATE
@@ -750,6 +771,13 @@ add_executable(json_config_schema_validation_test
     tests/json_config_schema_validation_test.cpp
     src/services/impl/json_config_service.cpp
     src/services/impl/json_config_document_loader.cpp
+    src/services/impl/json_config_document_parser.cpp
+    src/services/impl/json_config_extend_resolver.cpp
+    src/services/impl/json_config_merge_service.cpp
+    src/services/impl/json_config_schema_path_resolver.cpp
+    src/services/impl/json_config_schema_validator.cpp
+    src/services/impl/json_config_version_validator.cpp
+    src/services/impl/json_config_migration_service.cpp
 )
 target_include_directories(json_config_schema_validation_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(json_config_schema_validation_test PRIVATE

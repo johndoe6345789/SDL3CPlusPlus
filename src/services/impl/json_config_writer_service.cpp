@@ -1,4 +1,5 @@
 #include "json_config_writer_service.hpp"
+#include "json_config_schema_version.hpp"
 
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
@@ -41,9 +42,8 @@ void JsonConfigWriterService::WriteConfig(const RuntimeConfig& config, const std
         target.AddMember(nameValue, stringValue, allocator);
     };
 
-    constexpr int kSchemaVersion = 2;
-    document.AddMember("schema_version", kSchemaVersion, allocator);
-    document.AddMember("configVersion", kSchemaVersion, allocator);
+    document.AddMember("schema_version", json_config::kRuntimeConfigSchemaVersion, allocator);
+    document.AddMember("configVersion", json_config::kRuntimeConfigSchemaVersion, allocator);
 
     rapidjson::Value scriptsObject(rapidjson::kObjectType);
     addStringMember(scriptsObject, "entry", config.scriptPath.string());

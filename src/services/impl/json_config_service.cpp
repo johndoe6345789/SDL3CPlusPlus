@@ -1,8 +1,11 @@
 #include "json_config_service.hpp"
 #include "json_config_document_loader.hpp"
+#include "json_config_migration_service.hpp"
+#include "json_config_schema_validator.hpp"
+#include "json_config_schema_version.hpp"
+#include "json_config_version_validator.hpp"
 #include "../interfaces/i_logger.hpp"
 #include <rapidjson/document.h>
-#include <rapidjson/schema.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
 #include <rapidjson/prettywriter.h>
@@ -10,15 +13,10 @@
 #include <iostream>
 #include <optional>
 #include <stdexcept>
-#include <unordered_set>
 
 namespace sdl3cpp::services::impl {
 
 namespace {
-constexpr int kExpectedSchemaVersion = 2;
-constexpr const char* kSchemaVersionKey = "schema_version";
-constexpr const char* kConfigVersionKey = "configVersion";
-
 const char* SceneSourceName(SceneSource source) {
     switch (source) {
         case SceneSource::Config:
@@ -38,129 +36,6 @@ SceneSource ParseSceneSource(const std::string& value, const std::string& jsonPa
         return SceneSource::Lua;
     }
     throw std::runtime_error("JSON member '" + jsonPath + "' must be 'config' or 'lua'");
-}
-
-std::string PointerToString(const rapidjson::Pointer& pointer) {
-    rapidjson::StringBuffer buffer;
-    pointer.Stringify(buffer);
-    return buffer.GetString();
-}
-
-std::optional<int> ReadVersionField(const rapidjson::Value& document,
-                                    const char* fieldName,
-                                    const std::filesystem::path& configPath) {
-    if (!document.HasMember(fieldName)) {
-        return std::nullopt;
-    }
-    const auto& value = document[fieldName];
-    if (value.IsInt()) {
-        return value.GetInt();
-    }
-    if (value.IsUint()) {
-        return static_cast<int>(value.GetUint());
-    }
-    throw std::runtime_error("JSON member '" + std::string(fieldName) + "' must be an integer in " +
-                             configPath.string());
-}
-
-std::optional<int> ValidateSchemaVersion(const rapidjson::Value& document,
-                                         const std::filesystem::path& configPath,
-                                         const std::shared_ptr<ILogger>& logger) {
-    const auto schemaVersion = ReadVersionField(document, kSchemaVersionKey, configPath);
-    const auto configVersion = ReadVersionField(document, kConfigVersionKey, configPath);
-    if (schemaVersion && configVersion && *schemaVersion != *configVersion) {
-        throw std::runtime_error("JSON members 'schema_version' and 'configVersion' must match in " +
-                                 configPath.string());
-    }
-    const auto activeVersion = schemaVersion ? schemaVersion : configVersion;
-    if (!activeVersion) {
-        if (logger) {
-            logger->Warn("JsonConfigService::LoadFromJson: Missing schema version in " +
-                         configPath.string() + "; assuming version " + std::to_string(kExpectedSchemaVersion));
-        }
-        return std::nullopt;
-    }
-    if (logger) {
-        logger->Trace("JsonConfigService", "ValidateSchemaVersion",
-                      "version=" + std::to_string(*activeVersion) +
-                      ", configPath=" + configPath.string());
-    }
-    return activeVersion;
-}
-
-bool ApplyMigrations(rapidjson::Document& document,
-                     int fromVersion,
-                     int toVersion,
-                     const std::filesystem::path& configPath,
-                     const std::shared_ptr<ILogger>& logger,
-                     const std::shared_ptr<IProbeService>& probeService) {
-    (void)document;
-    if (fromVersion == toVersion) {
-        return true;
-    }
-    if (logger) {
-        logger->Warn("JsonConfigService::ApplyMigrations: No migration path from v" +
-                     std::to_string(fromVersion) + " to v" + std::to_string(toVersion) +
-                     " for " + configPath.string());
-    }
-    if (probeService) {
-        ProbeReport report{};
-        report.severity = ProbeSeverity::Error;
-        report.code = "CONFIG_MIGRATION_MISSING";
-        report.jsonPath = "";
-        report.message = "No migration path from v" + std::to_string(fromVersion) +
-                         " to v" + std::to_string(toVersion) +
-                         " (see config/schema/MIGRATIONS.md)";
-        probeService->Report(report);
-    }
-    return false;
-}
-
-void ValidateSchemaDocument(const rapidjson::Document& document,
-                            const std::filesystem::path& configPath,
-                            const std::shared_ptr<ILogger>& logger,
-                            const std::shared_ptr<IProbeService>& probeService) {
-    const auto schemaPath = json_config::ResolveSchemaPath(configPath);
-    if (schemaPath.empty()) {
-        if (logger) {
-            logger->Warn("JsonConfigService::ValidateSchemaDocument: Schema file not found for " +
-                         configPath.string());
-        }
-        return;
-    }
-
-    rapidjson::Document schemaDocument = json_config::ParseJsonDocument(schemaPath, "schema file");
-    rapidjson::SchemaDocument schema(schemaDocument);
-    rapidjson::SchemaValidator validator(schema);
-    if (!document.Accept(validator)) {
-        const std::string docPointer = PointerToString(validator.GetInvalidDocumentPointer());
-        const std::string schemaPointer = PointerToString(validator.GetInvalidSchemaPointer());
-        const std::string keyword = validator.GetInvalidSchemaKeyword();
-        const std::string message = "JSON schema validation failed at " + docPointer +
-            " (schema " + schemaPointer + ", keyword=" + keyword + ")";
-        if (logger) {
-            logger->Error("JsonConfigService::ValidateSchemaDocument: " + message +
-                          " configPath=" + configPath.string());
-        }
-        if (probeService) {
-            ProbeReport report{};
-            report.severity = ProbeSeverity::Error;
-            report.code = "CONFIG_SCHEMA_INVALID";
-            report.jsonPath = docPointer;
-            report.message = message;
-            report.details = "schemaPointer=" + schemaPointer + ", keyword=" + keyword;
-            probeService->Report(report);
-        }
-        throw std::runtime_error("JSON schema validation failed for " + configPath.string() +
-                                 " at " + docPointer + " (schema " + schemaPointer +
-                                 ", keyword=" + keyword + ")");
-    }
-    if (logger) {
-        logger->Trace("JsonConfigService", "ValidateSchemaDocument",
-                      "schemaPath=" + schemaPath.string() +
-                      ", configPath=" + configPath.string(),
-                      "Schema validation passed");
-    }
 }
 }  // namespace
 
@@ -245,24 +120,27 @@ RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
         ", dumpConfig=" + (dumpConfig ? "true" : "false");
     logger->Trace("JsonConfigService", "LoadFromJson", args);
 
-    std::unordered_set<std::string> visitedPaths;
-    rapidjson::Document document = json_config::LoadConfigDocumentRecursive(configPath, logger, visitedPaths);
-    const auto activeVersion = ValidateSchemaVersion(document, configPath, logger);
-    if (activeVersion && *activeVersion != kExpectedSchemaVersion) {
-        const bool migrated = ApplyMigrations(document,
-                                              *activeVersion,
-                                              kExpectedSchemaVersion,
-                                              configPath,
-                                              logger,
-                                              probeService);
+    json_config::JsonConfigDocumentLoader documentLoader(logger);
+    rapidjson::Document document = documentLoader.Load(configPath);
+
+    json_config::JsonConfigVersionValidator versionValidator(logger);
+    const auto activeVersion = versionValidator.Validate(document, configPath);
+    if (activeVersion && *activeVersion != json_config::kRuntimeConfigSchemaVersion) {
+        json_config::JsonConfigMigrationService migrationService(logger, probeService);
+        const bool migrated = migrationService.Apply(document,
+                                                     *activeVersion,
+                                                     json_config::kRuntimeConfigSchemaVersion,
+                                                     configPath);
         if (!migrated) {
             throw std::runtime_error("Unsupported schema version " + std::to_string(*activeVersion) +
                                      " in " + configPath.string() +
-                                     "; expected " + std::to_string(kExpectedSchemaVersion) +
+                                     "; expected " + std::to_string(json_config::kRuntimeConfigSchemaVersion) +
                                      " (see config/schema/MIGRATIONS.md)");
         }
     }
-    ValidateSchemaDocument(document, configPath, logger, probeService);
+
+    json_config::JsonConfigSchemaValidator schemaValidator(logger, probeService);
+    schemaValidator.ValidateOrThrow(document, configPath);
 
     if (dumpConfig || configJson) {
         rapidjson::StringBuffer buffer;
@@ -1308,8 +1186,8 @@ std::string JsonConfigService::BuildConfigJson(const RuntimeConfig& config,
         target.AddMember(nameValue, stringValue, allocator);
     };
 
-    document.AddMember("schema_version", kExpectedSchemaVersion, allocator);
-    document.AddMember("configVersion", kExpectedSchemaVersion, allocator);
+    document.AddMember("schema_version", json_config::kRuntimeConfigSchemaVersion, allocator);
+    document.AddMember("configVersion", json_config::kRuntimeConfigSchemaVersion, allocator);
 
     rapidjson::Value scriptsObject(rapidjson::kObjectType);
     addStringMember(scriptsObject, "entry", config.scriptPath.string());
