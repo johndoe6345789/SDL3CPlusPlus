@@ -163,6 +163,10 @@ private:
     void DestroyPipelines();
     void DestroyBuffers();
     bool HasProcessedFrame() const { return frameCount_ > 0; }
+    bool ShouldEmitRuntimeProbe() const;
+    void ReportRuntimeProbe(const std::string& code,
+                            const std::string& message,
+                            const std::string& details = "") const;
 
     std::shared_ptr<IConfigService> configService_;
     std::shared_ptr<IPlatformService> platformService_;

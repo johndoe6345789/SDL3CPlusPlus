@@ -1168,6 +1168,11 @@ bool BgfxGraphicsBackend::EndFrame(GraphicsDeviceHandle device) {
         logger_->Trace("BgfxGraphicsBackend", "EndFrame",
                        "frameNumber=" + std::to_string(frameNumber));
     }
+    if (ShouldEmitRuntimeProbe()) {
+        const std::string details = "frameNumber=" + std::to_string(frameNumber);
+        ReportRuntimeProbe("FRAME_PRESENT", "Frame presented", details);
+        ReportRuntimeProbe("FRAME_END", "Frame end", details);
+    }
     return true;
 }
 
@@ -1256,6 +1261,14 @@ void BgfxGraphicsBackend::Draw(GraphicsDeviceHandle device, GraphicsPipelineHand
                        ", indexCount=" + std::to_string(indexCount) +
                        ", totalVertices=" + std::to_string(vb->vertexCount));
     }
+    if (ShouldEmitRuntimeProbe()) {
+        ReportRuntimeProbe(
+            "DRAW_SUBMIT",
+            "Draw submitted",
+            "indexCount=" + std::to_string(indexCount) +
+                ", indexOffset=" + std::to_string(indexOffset) +
+                ", vertexOffset=" + std::to_string(vertexOffset));
+    }
 
     // Validate bounds to prevent GPU driver crashes
     // Based on crash analysis from sdl3_app.log where invalid parameters caused GPU segfault
@@ -1312,6 +1325,25 @@ void BgfxGraphicsBackend::Draw(GraphicsDeviceHandle device, GraphicsPipelineHand
     bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_WRITE_Z |
                    BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CW | BGFX_STATE_MSAA);
     bgfx::submit(viewId_, pipelineIt->second->program);
+}
+
+bool BgfxGraphicsBackend::ShouldEmitRuntimeProbe() const {
+    if (!probeService_ || !logger_) {
+        return false;
+    }
+    const LogLevel level = logger_->GetLevel();
+    return level == LogLevel::TRACE || level == LogLevel::DEBUG;
+}
+
+void BgfxGraphicsBackend::ReportRuntimeProbe(const std::string& code,
+                                             const std::string& message,
+                                             const std::string& details) const {
+    ProbeReport report{};
+    report.severity = ProbeSeverity::Info;
+    report.code = code;
+    report.message = message;
+    report.details = details;
+    probeService_->Report(report);
 }
 
 GraphicsDeviceHandle BgfxGraphicsBackend::GetPhysicalDevice() const {

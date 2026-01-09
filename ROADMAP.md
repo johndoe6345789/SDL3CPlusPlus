@@ -38,7 +38,7 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 - [~] Explicit pass scheduling and backend submission planning (schedule only; no backend plan)
 
 ### Ultra Plan: "Probe Fortress"
-- [~] Probe hooks (config/render graph/graphics reports wired; missing `OnLoadScene`, `OnDraw`, `OnPresent`, `OnFrameEnd`)
+- [~] Probe hooks (config/render graph/graphics reports wired; `OnDraw`/`OnPresent`/`OnFrameEnd` now emit trace-gated runtime probes; `OnLoadScene` still missing)
 - [x] Pipeline compatibility checks (mesh layout vs shader inputs) via shader pipeline validator
 - [x] Sampler limits enforced from bgfx caps
 - [ ] Shader uniform compatibility enforcement
