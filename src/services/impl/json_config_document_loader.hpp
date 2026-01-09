@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <memory>
+#include <string>
 #include <unordered_set>
 
 #include <rapidjson/document.h>

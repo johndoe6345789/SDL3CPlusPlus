@@ -8,6 +8,7 @@
 #include <rapidjson/stringbuffer.h>
 
 #include <stdexcept>
+#include <string>
 
 namespace sdl3cpp::services::impl::json_config {
 

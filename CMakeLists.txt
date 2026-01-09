@@ -272,21 +272,25 @@ endif()
 # target_include_directories(texturev PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 # target_link_libraries(texturev PRIVATE ${SDL3CPP_RENDER_STACK_LIBS})
 
+set(JSON_CONFIG_SOURCES
+    src/services/impl/json_config_service.cpp
+    src/services/impl/json_config_document_loader.cpp
+    src/services/impl/json_config_document_parser.cpp
+    src/services/impl/json_config_extend_resolver.cpp
+    src/services/impl/json_config_merge_service.cpp
+    src/services/impl/json_config_schema_path_resolver.cpp
+    src/services/impl/json_config_schema_validator.cpp
+    src/services/impl/json_config_version_validator.cpp
+    src/services/impl/json_config_migration_service.cpp
+)
+
 if(BUILD_SDL3_APP)
     add_executable(sdl3_app
             src/main.cpp
             src/stb_image.cpp
             src/di/service_registry.cpp
             src/events/event_bus.cpp
-            src/services/impl/json_config_service.cpp
-            src/services/impl/json_config_document_loader.cpp
-            src/services/impl/json_config_document_parser.cpp
-            src/services/impl/json_config_extend_resolver.cpp
-            src/services/impl/json_config_merge_service.cpp
-            src/services/impl/json_config_schema_path_resolver.cpp
-            src/services/impl/json_config_schema_validator.cpp
-            src/services/impl/json_config_version_validator.cpp
-            src/services/impl/json_config_migration_service.cpp
+            ${JSON_CONFIG_SOURCES}
             src/services/impl/config_compiler_service.cpp
             src/services/impl/command_line_service.cpp
             src/services/impl/json_config_writer_service.cpp
@@ -552,15 +556,7 @@ add_executable(vulkan_shader_linking_test
     src/services/impl/bgfx_graphics_backend.cpp
     src/services/impl/bgfx_gui_service.cpp
     src/services/impl/bgfx_shader_compiler.cpp
-    src/services/impl/json_config_service.cpp
-    src/services/impl/json_config_document_loader.cpp
-    src/services/impl/json_config_document_parser.cpp
-    src/services/impl/json_config_extend_resolver.cpp
-    src/services/impl/json_config_merge_service.cpp
-    src/services/impl/json_config_schema_path_resolver.cpp
-    src/services/impl/json_config_schema_validator.cpp
-    src/services/impl/json_config_version_validator.cpp
-    src/services/impl/json_config_migration_service.cpp
+    ${JSON_CONFIG_SOURCES}
     src/services/impl/materialx_shader_generator.cpp
     src/services/impl/shader_pipeline_validator.cpp
     src/services/impl/platform_service.cpp
@@ -748,15 +744,7 @@ add_test(NAME render_graph_service_test COMMAND render_graph_service_test)
 # Test: JSON config merge rules (extends + @delete)
 add_executable(json_config_merge_test
     tests/json_config_merge_test.cpp
-    src/services/impl/json_config_service.cpp
-    src/services/impl/json_config_document_loader.cpp
-    src/services/impl/json_config_document_parser.cpp
-    src/services/impl/json_config_extend_resolver.cpp
-    src/services/impl/json_config_merge_service.cpp
-    src/services/impl/json_config_schema_path_resolver.cpp
-    src/services/impl/json_config_schema_validator.cpp
-    src/services/impl/json_config_version_validator.cpp
-    src/services/impl/json_config_migration_service.cpp
+    ${JSON_CONFIG_SOURCES}
 )
 target_include_directories(json_config_merge_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(json_config_merge_test PRIVATE
@@ -769,15 +757,7 @@ add_test(NAME json_config_merge_test COMMAND json_config_merge_test)
 # Test: JSON schema validation
 add_executable(json_config_schema_validation_test
     tests/json_config_schema_validation_test.cpp
-    src/services/impl/json_config_service.cpp
-    src/services/impl/json_config_document_loader.cpp
-    src/services/impl/json_config_document_parser.cpp
-    src/services/impl/json_config_extend_resolver.cpp
-    src/services/impl/json_config_merge_service.cpp
-    src/services/impl/json_config_schema_path_resolver.cpp
-    src/services/impl/json_config_schema_validator.cpp
-    src/services/impl/json_config_version_validator.cpp
-    src/services/impl/json_config_migration_service.cpp
+    ${JSON_CONFIG_SOURCES}
 )
 target_include_directories(json_config_schema_validation_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(json_config_schema_validation_test PRIVATE

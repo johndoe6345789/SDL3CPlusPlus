@@ -3,6 +3,7 @@
 #include "../interfaces/i_logger.hpp"
 
 #include <stdexcept>
+#include <string>
 
 namespace sdl3cpp::services::impl::json_config {
 
