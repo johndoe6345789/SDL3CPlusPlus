@@ -49,3 +49,7 @@ Avoid stagnation; improve structure, clarity, and expressiveness over time.
 Roadmap discipline. 
 If you run out of ROADMAP.md tasks, stop and report. 
 We should reassess priorities before inventing work.
+
+Prefer JSON workflows over LUA - Steps can be written in host language.
+
+Vulkan can be a bit sketchy at first, very cryptic crashes. Try OpenGL.
