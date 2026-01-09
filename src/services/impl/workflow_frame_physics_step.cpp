@@ -1,6 +1,8 @@
 #include "workflow_frame_physics_step.hpp"
 #include "workflow_step_io_resolver.hpp"
 
+#include "../interfaces/i_physics_service.hpp"
+
 #include <stdexcept>
 
 namespace sdl3cpp::services::impl {

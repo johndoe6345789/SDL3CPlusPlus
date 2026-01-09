@@ -300,6 +300,17 @@ set(WORKFLOW_SOURCES
     src/services/impl/workflow_runtime_config_step.cpp
 )
 
+set(FRAME_WORKFLOW_SOURCES
+    src/services/impl/workflow_frame_begin_step.cpp
+    src/services/impl/workflow_frame_physics_step.cpp
+    src/services/impl/workflow_frame_scene_step.cpp
+    src/services/impl/workflow_frame_render_step.cpp
+    src/services/impl/workflow_frame_audio_step.cpp
+    src/services/impl/workflow_frame_gui_step.cpp
+    src/services/impl/frame_workflow_step_registrar.cpp
+    src/services/impl/frame_workflow_service.cpp
+)
+
 set(MATERIALX_SCRIPT_SOURCES
     src/services/impl/materialx_path_resolver.cpp
     src/services/impl/materialx_search_path_builder.cpp
@@ -316,6 +327,7 @@ if(BUILD_SDL3_APP)
             src/events/event_bus.cpp
             ${JSON_CONFIG_SOURCES}
             ${WORKFLOW_SOURCES}
+            ${FRAME_WORKFLOW_SOURCES}
             ${MATERIALX_SCRIPT_SOURCES}
             src/services/impl/config_compiler_service.cpp
             src/services/impl/command_line_service.cpp

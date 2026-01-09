@@ -63,7 +63,7 @@ The crash occurs when:
 ### 3. Code Issues Identified
 
 #### Issue 1: Missing Error Handling in LoadTextureFromFile
-**File**: [bgfx_graphics_backend.cpp:698-744](src/services/impl/bgfx_graphics_backend.cpp#L698-L744)
+**File**: [bgfx_graphics_backend.cpp:698-744](../src/services/impl/bgfx_graphics_backend.cpp#L698-L744)
 
 ```cpp
 bgfx::TextureHandle handle = bgfx::createTexture2D(...);
@@ -80,7 +80,7 @@ return handle;  // ⚠️ PROBLEM: Returns invalid handle anyway!
 **Fix**: Should throw exception or use fallback texture on failure.
 
 #### Issue 2: No Validation of bgfx::copy() Result
-**File**: [bgfx_graphics_backend.cpp:720](src/services/impl/bgfx_graphics_backend.cpp#L720)
+**File**: [bgfx_graphics_backend.cpp:720](../src/services/impl/bgfx_graphics_backend.cpp#L720)
 
 ```cpp
 const bgfx::Memory* mem = bgfx::copy(pixels, size);
@@ -93,7 +93,7 @@ bgfx::TextureHandle handle = bgfx::createTexture2D(..., mem);
 **Fix**: Validate `mem != nullptr` before proceeding.
 
 #### Issue 3: No Texture Dimension Validation
-**File**: [bgfx_graphics_backend.cpp:707-717](src/services/impl/bgfx_graphics_backend.cpp#L707-L717)
+**File**: [bgfx_graphics_backend.cpp:707-717](../src/services/impl/bgfx_graphics_backend.cpp#L707-L717)
 
 ```cpp
 stbi_uc* pixels = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
@@ -109,7 +109,7 @@ if (!pixels || width <= 0 || height <= 0) {
 **Fix**: Query `bgfx::getCaps()->limits.maxTextureSize` and validate.
 
 #### Issue 4: CreateSolidTexture Fallback Not Validated
-**File**: [bgfx_graphics_backend.cpp:858-860](src/services/impl/bgfx_graphics_backend.cpp#L858-L860)
+**File**: [bgfx_graphics_backend.cpp:858-860](../src/services/impl/bgfx_graphics_backend.cpp#L858-L860)
 
 ```cpp
 binding.texture = LoadTextureFromFile(binding.sourcePath, samplerFlags);
@@ -271,15 +271,15 @@ The crash is most likely caused by:
 
 ## Files Modified
 
-- [tests/bgfx_texture_loading_test.cpp](tests/bgfx_texture_loading_test.cpp) - New investigation tests
-- [CMakeLists.txt:521-530](CMakeLists.txt#L521-L530) - Added test target
+- [tests/bgfx_texture_loading_test.cpp](../tests/bgfx_texture_loading_test.cpp) - New investigation tests
+- [CMakeLists.txt:521-530](../CMakeLists.txt#L521-L530) - Added test target
 
 ## References
 
-- Log analysis: [sdl3_app.log:580-611](sdl3_app.log#L580-L611)
-- Texture loading: [bgfx_graphics_backend.cpp:698-744](src/services/impl/bgfx_graphics_backend.cpp#L698-L744)
-- Pipeline creation: [bgfx_graphics_backend.cpp:804-875](src/services/impl/bgfx_graphics_backend.cpp#L804-L875)
-- Shader validation: [shader_pipeline_validator.cpp](src/services/impl/shader_pipeline_validator.cpp)
+- Log analysis: [sdl3_app.log:580-611](../sdl3_app.log#L580-L611)
+- Texture loading: [bgfx_graphics_backend.cpp:698-744](../src/services/impl/bgfx_graphics_backend.cpp#L698-L744)
+- Pipeline creation: [bgfx_graphics_backend.cpp:804-875](../src/services/impl/bgfx_graphics_backend.cpp#L804-L875)
+- Shader validation: [shader_pipeline_validator.cpp](../src/services/impl/shader_pipeline_validator.cpp)
 
 ▶ Running: build-ninja/sdl3_app -j config/seed_runtime.json
 

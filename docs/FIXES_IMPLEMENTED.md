@@ -8,7 +8,7 @@ This document summarizes all fixes implemented to address the system crash issue
 
 ### 1. Enhanced Error Handling in LoadTextureFromFile ✓
 
-**File**: [src/services/impl/bgfx_graphics_backend.cpp:698-775](src/services/impl/bgfx_graphics_backend.cpp#L698-L775)
+**File**: [src/services/impl/bgfx_graphics_backend.cpp:698-775](../src/services/impl/bgfx_graphics_backend.cpp#L698-L775)
 
 **Changes**:
 
@@ -64,7 +64,7 @@ if (!bgfx::isValid(handle)) {
 
 ### 2. Robust Texture Binding Validation in CreatePipeline ✓
 
-**File**: [src/services/impl/bgfx_graphics_backend.cpp:871-943](src/services/impl/bgfx_graphics_backend.cpp#L871-L943)
+**File**: [src/services/impl/bgfx_graphics_backend.cpp:871-943](../src/services/impl/bgfx_graphics_backend.cpp#L871-L943)
 
 **Changes**:
 
@@ -125,7 +125,7 @@ entry->textures.push_back(std::move(binding));
 
 ### 3. Memory Budget Tracking System ✓
 
-**File**: [src/services/impl/bgfx_graphics_backend.hpp:54-84](src/services/impl/bgfx_graphics_backend.hpp#L54-L84)
+**File**: [src/services/impl/bgfx_graphics_backend.hpp:54-84](../src/services/impl/bgfx_graphics_backend.hpp#L54-L84)
 
 **New Class Added**:
 ```cpp
@@ -156,7 +156,7 @@ private:
 ### 4. Memory Tracking in Pipeline Lifecycle ✓
 
 #### DestroyPipeline
-**File**: [src/services/impl/bgfx_graphics_backend.cpp:964-988](src/services/impl/bgfx_graphics_backend.cpp#L964-L988)
+**File**: [src/services/impl/bgfx_graphics_backend.cpp:964-988](../src/services/impl/bgfx_graphics_backend.cpp#L964-L988)
 
 ```cpp
 for (const auto& binding : it->second->textures) {
@@ -171,7 +171,7 @@ for (const auto& binding : it->second->textures) {
 ```
 
 #### DestroyPipelines
-**File**: [src/services/impl/bgfx_graphics_backend.cpp:1149-1168](src/services/impl/bgfx_graphics_backend.cpp#L1149-L1168)
+**File**: [src/services/impl/bgfx_graphics_backend.cpp:1149-1168](../src/services/impl/bgfx_graphics_backend.cpp#L1149-L1168)
 
 **Benefit**: Properly accounts for memory when textures are destroyed, preventing memory leak accounting.
 
@@ -258,22 +258,22 @@ Trace: shaderKey=wall, textureUniform=node_image_file, stage=2
 
 ## Files Modified
 
-1. **[src/services/impl/bgfx_graphics_backend.hpp](src/services/impl/bgfx_graphics_backend.hpp)**
+1. **[src/services/impl/bgfx_graphics_backend.hpp](../src/services/impl/bgfx_graphics_backend.hpp)**
    - Added `TextureMemoryTracker` class (lines 54-84)
    - Added `memorySizeBytes` to `TextureBinding` struct (line 94)
    - Added `textureMemoryTracker_` member (line 163)
 
-2. **[src/services/impl/bgfx_graphics_backend.cpp](src/services/impl/bgfx_graphics_backend.cpp)**
+2. **[src/services/impl/bgfx_graphics_backend.cpp](../src/services/impl/bgfx_graphics_backend.cpp)**
    - Enhanced `LoadTextureFromFile` with all validations (lines 698-775)
    - Improved `CreatePipeline` texture binding logic (lines 871-943)
    - Updated `DestroyPipeline` to free memory (lines 964-988)
    - Updated `DestroyPipelines` to free memory (lines 1149-1168)
 
-3. **[tests/bgfx_texture_loading_test.cpp](tests/bgfx_texture_loading_test.cpp)** (NEW)
+3. **[tests/bgfx_texture_loading_test.cpp](../tests/bgfx_texture_loading_test.cpp)** (NEW)
    - Created investigation tests documenting crash cause
    - 7 tests covering memory analysis and code review
 
-4. **[CMakeLists.txt](CMakeLists.txt)**
+4. **[CMakeLists.txt](../CMakeLists.txt)**
    - Added `bgfx_texture_loading_test` target (lines 520-530)
 
 5. **[CRASH_ANALYSIS.md](CRASH_ANALYSIS.md)** (NEW)

@@ -2,9 +2,12 @@
 
 #include "../interfaces/i_workflow_step.hpp"
 #include "../interfaces/i_logger.hpp"
-#include "../interfaces/i_physics_service.hpp"
 
 #include <memory>
+
+namespace sdl3cpp::services {
+class IPhysicsService;
+}
 
 namespace sdl3cpp::services::impl {
 
