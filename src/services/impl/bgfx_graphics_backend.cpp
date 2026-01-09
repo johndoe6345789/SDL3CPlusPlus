@@ -33,6 +33,10 @@ std::string ToLower(std::string value) {
     return value;
 }
 
+uint16_t ClampViewExtent(uint32_t value) {
+    return static_cast<uint16_t>(std::min<uint32_t>(value, std::numeric_limits<uint16_t>::max()));
+}
+
 glm::mat4 ToMat4(const std::array<float, 16>& value) {
     return glm::make_mat4(value.data());
 }
@@ -240,17 +244,9 @@ std::vector<bgfx::RendererType::Enum> BuildPreferredRenderers(
         AddRendererIfSupported(preferred, supportedRenderers, bgfx::RendererType::OpenGL);
         AddRendererIfSupported(preferred, supportedRenderers, bgfx::RendererType::Vulkan);
     } else {
-        const bool waylandOrX11 = (videoLower == "wayland") || (videoLower == "x11");
-        const bool kmsdrm = (videoLower == "kmsdrm");
-        if (waylandOrX11 || kmsdrm) {
-            AddRendererIfSupported(preferred, supportedRenderers, bgfx::RendererType::Vulkan);
-            AddRendererIfSupported(preferred, supportedRenderers, bgfx::RendererType::OpenGL);
-            AddRendererIfSupported(preferred, supportedRenderers, bgfx::RendererType::OpenGLES);
-        } else {
-            AddRendererIfSupported(preferred, supportedRenderers, bgfx::RendererType::Vulkan);
-            AddRendererIfSupported(preferred, supportedRenderers, bgfx::RendererType::OpenGL);
-            AddRendererIfSupported(preferred, supportedRenderers, bgfx::RendererType::OpenGLES);
-        }
+        AddRendererIfSupported(preferred, supportedRenderers, bgfx::RendererType::Vulkan);
+        AddRendererIfSupported(preferred, supportedRenderers, bgfx::RendererType::OpenGL);
+        AddRendererIfSupported(preferred, supportedRenderers, bgfx::RendererType::OpenGLES);
     }
 
     return preferred;
@@ -694,6 +690,7 @@ GraphicsDeviceHandle BgfxGraphicsBackend::CreateDevice() {
 }
 
 void BgfxGraphicsBackend::DestroyDevice(GraphicsDeviceHandle device) {
+    (void)device;
     if (logger_) {
         logger_->Trace("BgfxGraphicsBackend", "DestroyDevice");
     }
@@ -794,8 +791,10 @@ bgfx::TextureHandle BgfxGraphicsBackend::LoadTextureFromFile(const std::string& 
     // Validate texture dimensions against GPU capabilities
     const bgfx::Caps* caps = bgfx::getCaps();
     if (caps) {
-        const uint16_t maxTextureSize = caps->limits.maxTextureSize;
-        if (width > maxTextureSize || height > maxTextureSize) {
+        const uint32_t maxTextureSize = caps->limits.maxTextureSize;
+        const uint32_t widthU = static_cast<uint32_t>(width);
+        const uint32_t heightU = static_cast<uint32_t>(height);
+        if (widthU > maxTextureSize || heightU > maxTextureSize) {
             if (logger_) {
                 logger_->Error("BgfxGraphicsBackend::LoadTextureFromFile: texture " + path +
                                " size (" + std::to_string(width) + "x" + std::to_string(height) +
@@ -936,6 +935,7 @@ void BgfxGraphicsBackend::ApplyMaterialXUniforms(const std::array<float, 16>& mo
 GraphicsPipelineHandle BgfxGraphicsBackend::CreatePipeline(GraphicsDeviceHandle device,
                                                            const std::string& shaderKey,
                                                            const ShaderPaths& shaderPaths) {
+    (void)device;
     if (logger_) {
         logger_->Trace("BgfxGraphicsBackend", "CreatePipeline", "shaderKey=" + shaderKey);
     }
@@ -1061,6 +1061,7 @@ GraphicsPipelineHandle BgfxGraphicsBackend::CreatePipeline(GraphicsDeviceHandle 
 }
 
 void BgfxGraphicsBackend::DestroyPipeline(GraphicsDeviceHandle device, GraphicsPipelineHandle pipeline) {
+    (void)device;
     if (logger_) {
         logger_->Trace("BgfxGraphicsBackend", "DestroyPipeline");
     }
@@ -1088,6 +1089,7 @@ void BgfxGraphicsBackend::DestroyPipeline(GraphicsDeviceHandle device, GraphicsP
 
 GraphicsBufferHandle BgfxGraphicsBackend::CreateVertexBuffer(GraphicsDeviceHandle device,
                                                             const std::vector<uint8_t>& data) {
+    (void)device;
     if (logger_) {
         logger_->Trace("BgfxGraphicsBackend", "CreateVertexBuffer",
                        "data.size=" + std::to_string(data.size()));
@@ -1109,6 +1111,7 @@ GraphicsBufferHandle BgfxGraphicsBackend::CreateVertexBuffer(GraphicsDeviceHandl
 
 GraphicsBufferHandle BgfxGraphicsBackend::CreateIndexBuffer(GraphicsDeviceHandle device,
                                                            const std::vector<uint8_t>& data) {
+    (void)device;
     if (logger_) {
         logger_->Trace("BgfxGraphicsBackend", "CreateIndexBuffer",
                        "data.size=" + std::to_string(data.size()));
@@ -1129,6 +1132,7 @@ GraphicsBufferHandle BgfxGraphicsBackend::CreateIndexBuffer(GraphicsDeviceHandle
 }
 
 void BgfxGraphicsBackend::DestroyBuffer(GraphicsDeviceHandle device, GraphicsBufferHandle buffer) {
+    (void)device;
     if (logger_) {
         logger_->Trace("BgfxGraphicsBackend", "DestroyBuffer");
     }
@@ -1150,15 +1154,19 @@ void BgfxGraphicsBackend::DestroyBuffer(GraphicsDeviceHandle device, GraphicsBuf
 }
 
 bool BgfxGraphicsBackend::BeginFrame(GraphicsDeviceHandle device) {
+    (void)device;
     if (!initialized_) {
         return false;
     }
-    bgfx::setViewRect(viewId_, 0, 0, viewportWidth_, viewportHeight_);
+    const uint16_t viewWidth = ClampViewExtent(viewportWidth_);
+    const uint16_t viewHeight = ClampViewExtent(viewportHeight_);
+    bgfx::setViewRect(viewId_, 0, 0, viewWidth, viewHeight);
     bgfx::touch(viewId_);
     return true;
 }
 
 bool BgfxGraphicsBackend::EndFrame(GraphicsDeviceHandle device) {
+    (void)device;
     if (!initialized_) {
         return false;
     }
@@ -1189,7 +1197,9 @@ void BgfxGraphicsBackend::ConfigureView(GraphicsDeviceHandle device,
         return;
     }
 
-    bgfx::setViewRect(viewId, 0, 0, viewportWidth_, viewportHeight_);
+    const uint16_t viewWidth = ClampViewExtent(viewportWidth_);
+    const uint16_t viewHeight = ClampViewExtent(viewportHeight_);
+    bgfx::setViewRect(viewId, 0, 0, viewWidth, viewHeight);
 
     const bool hasClear = clearConfig.enabled ||
         clearConfig.clearColor || clearConfig.clearDepth || clearConfig.clearStencil;
@@ -1223,6 +1233,7 @@ void BgfxGraphicsBackend::Draw(GraphicsDeviceHandle device, GraphicsPipelineHand
                                GraphicsBufferHandle vertexBuffer, GraphicsBufferHandle indexBuffer,
                                uint32_t indexOffset, uint32_t indexCount, int32_t vertexOffset,
                                const std::array<float, 16>& modelMatrix) {
+    (void)device;
     auto reportError = [&](const std::string& code, const std::string& message) {
         if (!probeService_) {
             return;

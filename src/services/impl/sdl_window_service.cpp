@@ -71,6 +71,8 @@ void ThrowSdlErrorIfFailed(bool success, const char* context, const std::shared_
 }
 
 void ShowErrorDialog(const char* title, const std::string& message) {
+    (void)title;
+    (void)message;
     // Disabled for headless environments
     // SDL_ShowSimpleMessageBox(
     //     SDL_MESSAGEBOX_ERROR,
@@ -185,10 +187,12 @@ void SdlWindowService::CreateWindow(const WindowConfig& config) {
     logger_->TraceVariable("sdl.windowFlags", static_cast<int>(flags));
 
     logger_->Trace("SdlWindowService", "CreateWindow", "SDL_CreateWindow");
+    const int windowWidth = static_cast<int>(config.width);
+    const int windowHeight = static_cast<int>(config.height);
     window_ = SDL_CreateWindow(
         config.title.c_str(),
-        config.width,
-        config.height,
+        windowWidth,
+        windowHeight,
         flags
     );
 
@@ -248,7 +252,7 @@ bool SdlWindowService::IsMinimized() const {
         return false;
     }
 
-    uint32_t flags = SDL_GetWindowFlags(window_);
+    const SDL_WindowFlags flags = SDL_GetWindowFlags(window_);
     return (flags & SDL_WINDOW_MINIMIZED) != 0;
 }
 

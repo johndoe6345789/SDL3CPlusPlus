@@ -1,6 +1,7 @@
 #include "sdl_audio_service.hpp"
 
 #include <algorithm>
+#include <limits>
 #include <stdexcept>
 #include <string>
 
@@ -9,6 +10,11 @@ namespace sdl3cpp::services::impl {
 namespace {
 constexpr int kDecodeChunkSize = 4096;
 constexpr int kMixFrames = 1024;
+uint32_t GetBytesPerFrame(const SDL_AudioSpec& spec) {
+    const uint32_t formatMask = SDL_AUDIO_MASK_BITSIZE;
+    const uint32_t bitsPerSample = static_cast<uint32_t>(spec.format) & formatMask;
+    return (bitsPerSample / 8u) * static_cast<uint32_t>(spec.channels);
+}
 }  // namespace
 
 SdlAudioService::SdlAudioService(std::shared_ptr<ILogger> logger)
@@ -254,8 +260,8 @@ void SdlAudioService::Update() {
         return;
     }
 
-    const int bytesPerFrame = SDL_AUDIO_FRAMESIZE(mixSpec_);
-    if (bytesPerFrame <= 0) {
+    const uint32_t bytesPerFrame = GetBytesPerFrame(mixSpec_);
+    if (bytesPerFrame == 0) {
         return;
     }
 
@@ -267,7 +273,8 @@ void SdlAudioService::Update() {
         return;
     }
 
-    if (queuedBytes >= bytesPerFrame * kMixFrames) {
+    const uint32_t queueLimit = bytesPerFrame * static_cast<uint32_t>(kMixFrames);
+    if (static_cast<uint32_t>(queuedBytes) >= queueLimit) {
         return;
     }
 
@@ -322,7 +329,8 @@ void SdlAudioService::Update() {
     outputBuffer_.assign(sampleCount, 0);
     const float volume = volume_;
     for (size_t i = 0; i < sampleCount; ++i) {
-        int32_t value = static_cast<int32_t>(mixBuffer_[i] * volume);
+        const float mixed = static_cast<float>(mixBuffer_[i]) * volume;
+        int32_t value = static_cast<int32_t>(mixed);
         value = std::clamp(value, -32768, 32767);
         outputBuffer_[i] = static_cast<int16_t>(value);
     }
@@ -369,7 +377,7 @@ bool SdlAudioService::LoadAudioFile(const std::filesystem::path& path, AudioData
 
     audioData.sourceSpec.format = SDL_AUDIO_S16;
     audioData.sourceSpec.channels = info->channels;
-    audioData.sourceSpec.freq = info->rate;
+    audioData.sourceSpec.freq = static_cast<int>(info->rate);
     audioData.convertStream = SDL_CreateAudioStream(&audioData.sourceSpec, &mixSpec_);
     if (!audioData.convertStream) {
         ov_clear(&audioData.vorbisFile);
@@ -410,9 +418,17 @@ int SdlAudioService::ReadStreamSamples(AudioData& audioData, std::vector<int16_t
         return 0;
     }
 
-    const int bytesPerFrame = SDL_AUDIO_FRAMESIZE(mixSpec_);
-    const int bytesNeeded = frames * bytesPerFrame;
-    const size_t sampleCount = static_cast<size_t>(bytesNeeded / static_cast<int>(sizeof(int16_t)));
+    const uint32_t bytesPerFrame = GetBytesPerFrame(mixSpec_);
+    if (bytesPerFrame == 0) {
+        return 0;
+    }
+    const uint32_t bytesNeeded = bytesPerFrame * static_cast<uint32_t>(frames);
+    if (bytesNeeded > static_cast<uint32_t>(std::numeric_limits<int>::max())) {
+        audioData.finished = true;
+        return 0;
+    }
+    const int bytesNeededInt = static_cast<int>(bytesNeeded);
+    const size_t sampleCount = static_cast<size_t>(bytesNeededInt / static_cast<int>(sizeof(int16_t)));
     output.assign(sampleCount, 0);
 
     while (!audioData.finished) {
@@ -424,13 +440,17 @@ int SdlAudioService::ReadStreamSamples(AudioData& audioData, std::vector<int16_t
             audioData.finished = true;
             break;
         }
-        if (available >= bytesNeeded) {
+        if (available >= bytesNeededInt) {
             break;
         }
 
         char decodeBuffer[kDecodeChunkSize];
-        int bytesRead = ov_read(&audioData.vorbisFile, decodeBuffer, kDecodeChunkSize, 0, 2, 1, nullptr);
-        if (bytesRead > 0) {
+        long bytesReadLong = ov_read(&audioData.vorbisFile, decodeBuffer, kDecodeChunkSize, 0, 2, 1, nullptr);
+        if (bytesReadLong > 0) {
+            if (bytesReadLong > std::numeric_limits<int>::max()) {
+                bytesReadLong = std::numeric_limits<int>::max();
+            }
+            const int bytesRead = static_cast<int>(bytesReadLong);
             if (!SDL_PutAudioStreamData(audioData.convertStream, decodeBuffer, bytesRead)) {
                 if (logger_) {
                     logger_->Error("Failed to queue decoded audio: " + std::string(SDL_GetError()));
@@ -438,7 +458,7 @@ int SdlAudioService::ReadStreamSamples(AudioData& audioData, std::vector<int16_t
                 audioData.finished = true;
                 break;
             }
-        } else if (bytesRead == 0) {
+        } else if (bytesReadLong == 0) {
             if (audioData.loop) {
                 ov_pcm_seek(&audioData.vorbisFile, 0);
                 continue;
@@ -455,7 +475,7 @@ int SdlAudioService::ReadStreamSamples(AudioData& audioData, std::vector<int16_t
         }
     }
 
-    int bytesRead = SDL_GetAudioStreamData(audioData.convertStream, output.data(), bytesNeeded);
+    int bytesRead = SDL_GetAudioStreamData(audioData.convertStream, output.data(), bytesNeededInt);
     if (bytesRead < 0) {
         if (logger_) {
             logger_->Error("Failed to read audio stream data: " + std::string(SDL_GetError()));
@@ -464,10 +484,11 @@ int SdlAudioService::ReadStreamSamples(AudioData& audioData, std::vector<int16_t
         return 0;
     }
 
-    if (bytesRead < bytesNeeded) {
+    if (bytesRead < bytesNeededInt) {
         const size_t samplesRead = static_cast<size_t>(bytesRead / static_cast<int>(sizeof(int16_t)));
         if (samplesRead < output.size()) {
-            std::fill(output.begin() + samplesRead, output.end(), 0);
+            using Difference = std::vector<int16_t>::difference_type;
+            std::fill(output.begin() + static_cast<Difference>(samplesRead), output.end(), 0);
         }
     }
 

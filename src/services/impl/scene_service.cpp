@@ -7,13 +7,16 @@ namespace sdl3cpp::services::impl {
 
 SceneService::SceneService(std::shared_ptr<ISceneScriptService> scriptService,
                            std::shared_ptr<IEcsService> ecsService,
-                           std::shared_ptr<ILogger> logger)
+                           std::shared_ptr<ILogger> logger,
+                           std::shared_ptr<IProbeService> probeService)
     : scriptService_(std::move(scriptService)),
       ecsService_(std::move(ecsService)),
-      logger_(std::move(logger)) {
+      logger_(std::move(logger)),
+      probeService_(std::move(probeService)) {
     logger_->Trace("SceneService", "SceneService",
                    "scriptService=" + std::string(scriptService_ ? "set" : "null") +
-                   ", ecsService=" + std::string(ecsService_ ? "set" : "null"));
+                   ", ecsService=" + std::string(ecsService_ ? "set" : "null") +
+                   ", probeService=" + std::string(probeService_ ? "set" : "null"));
 
     if (!scriptService_ || !ecsService_) {
         throw std::invalid_argument("Scene script service and ECS service cannot be null");
@@ -39,6 +42,7 @@ void SceneService::LoadScene(const std::vector<SceneObject>& objects) {
 
     if (objects.empty()) {
         initialized_ = false;
+        hasSceneSignature_ = false;
         return;
     }
 
@@ -60,6 +64,12 @@ void SceneService::LoadScene(const std::vector<SceneObject>& objects) {
         }
         throw std::runtime_error("Scene vertex count exceeds uint16_t index range");
     }
+
+    const bool shouldReportSceneLoad = ShouldEmitRuntimeProbe() &&
+        (!hasSceneSignature_ ||
+         objects.size() != lastSceneObjectCount_ ||
+         totalVertices != lastSceneVertexCount_ ||
+         totalIndices != lastSceneIndexCount_);
 
     combinedVertices_.reserve(totalVertices);
     combinedIndices_.reserve(totalIndices);
@@ -133,6 +143,17 @@ void SceneService::LoadScene(const std::vector<SceneObject>& objects) {
                        "combinedVertices=" + std::to_string(combinedVertices_.size()) +
                        ", combinedIndices=" + std::to_string(combinedIndices_.size()) +
                        ", drawCalls=" + std::to_string(drawInfos_.size()));
+    }
+    lastSceneObjectCount_ = objects.size();
+    lastSceneVertexCount_ = totalVertices;
+    lastSceneIndexCount_ = totalIndices;
+    hasSceneSignature_ = true;
+    if (shouldReportSceneLoad) {
+        ReportRuntimeProbe("SCENE_LOAD",
+                           "Scene loaded",
+                           "objects=" + std::to_string(objects.size()) +
+                               ", vertices=" + std::to_string(totalVertices) +
+                               ", indices=" + std::to_string(totalIndices));
     }
     initialized_ = true;
 }
@@ -214,6 +235,25 @@ void SceneService::ClearSceneEntities() {
         }
     }
     sceneEntities_.clear();
+}
+
+bool SceneService::ShouldEmitRuntimeProbe() const {
+    if (!probeService_ || !logger_) {
+        return false;
+    }
+    LogLevel level = logger_->GetLevel();
+    return level == LogLevel::TRACE || level == LogLevel::DEBUG;
+}
+
+void SceneService::ReportRuntimeProbe(const std::string& code,
+                                      const std::string& message,
+                                      const std::string& details) const {
+    ProbeReport report{};
+    report.severity = ProbeSeverity::Info;
+    report.code = code;
+    report.message = message;
+    report.details = details;
+    probeService_->Report(report);
 }
 
 }  // namespace sdl3cpp::services::impl

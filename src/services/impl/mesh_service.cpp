@@ -897,9 +897,9 @@ void MeshService::PushMeshToLua(lua_State* L, const MeshPayload& payload) {
         lua_newtable(L);
 
         lua_newtable(L);
-        for (int component = 0; component < 3; ++component) {
+        for (size_t component = 0; component < 3; ++component) {
             lua_pushnumber(L, payload.positions[vertexIndex][component]);
-            lua_rawseti(L, -2, component + 1);
+            lua_rawseti(L, -2, static_cast<int>(component + 1));
         }
         lua_setfield(L, -2, "position");
 
@@ -908,9 +908,9 @@ void MeshService::PushMeshToLua(lua_State* L, const MeshPayload& payload) {
         if (vertexIndex < payload.normals.size()) {
             normal = payload.normals[vertexIndex];
         }
-        for (int component = 0; component < 3; ++component) {
+        for (size_t component = 0; component < 3; ++component) {
             lua_pushnumber(L, normal[component]);
-            lua_rawseti(L, -2, component + 1);
+            lua_rawseti(L, -2, static_cast<int>(component + 1));
         }
         lua_setfield(L, -2, "normal");
 
@@ -919,16 +919,16 @@ void MeshService::PushMeshToLua(lua_State* L, const MeshPayload& payload) {
         if (vertexIndex < payload.tangents.size()) {
             tangent = payload.tangents[vertexIndex];
         }
-        for (int component = 0; component < 3; ++component) {
+        for (size_t component = 0; component < 3; ++component) {
             lua_pushnumber(L, tangent[component]);
-            lua_rawseti(L, -2, component + 1);
+            lua_rawseti(L, -2, static_cast<int>(component + 1));
         }
         lua_setfield(L, -2, "tangent");
 
         lua_newtable(L);
-        for (int component = 0; component < 3; ++component) {
+        for (size_t component = 0; component < 3; ++component) {
             lua_pushnumber(L, payload.colors[vertexIndex][component]);
-            lua_rawseti(L, -2, component + 1);
+            lua_rawseti(L, -2, static_cast<int>(component + 1));
         }
         lua_setfield(L, -2, "color");
 
@@ -937,9 +937,9 @@ void MeshService::PushMeshToLua(lua_State* L, const MeshPayload& payload) {
         if (vertexIndex < payload.texcoords.size()) {
             texcoord = payload.texcoords[vertexIndex];
         }
-        for (int component = 0; component < 2; ++component) {
+        for (size_t component = 0; component < 2; ++component) {
             lua_pushnumber(L, texcoord[component]);
-            lua_rawseti(L, -2, component + 1);
+            lua_rawseti(L, -2, static_cast<int>(component + 1));
         }
         lua_setfield(L, -2, "texcoord");
 

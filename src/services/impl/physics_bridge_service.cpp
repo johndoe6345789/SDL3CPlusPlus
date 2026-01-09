@@ -392,7 +392,7 @@ int PhysicsBridgeService::StepSimulation(float deltaTime, int maxSubSteps) {
     if (maxSubSteps < 0) {
         maxSubSteps = 0;
     }
-    return static_cast<int>(world_->stepSimulation(deltaTime, maxSubSteps, 1.0f / 60.0f));
+    return world_->stepSimulation(deltaTime, maxSubSteps, 1.0f / 60.0f);
 }
 
 bool PhysicsBridgeService::GetRigidBodyTransform(const std::string& name,

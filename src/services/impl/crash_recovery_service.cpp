@@ -42,14 +42,15 @@ CrashRecoveryService::CrashRecoveryService(std::shared_ptr<ILogger> logger, Cras
     , lastHeartbeatNs_(0)
     , heartbeatSeen_(false)
     , heartbeatMonitorRunning_(false)
+    , config_(std::move(config))
+    , memoryLimitBytes_(0)
     , lastSuccessfulFrameTime_(0.0)
     , consecutiveFrameTimeouts_(0)
     , luaExecutionFailures_(0)
     , fileFormatErrors_(0)
     , memoryWarnings_(0)
     , lastHealthCheck_(std::chrono::steady_clock::now())
-    , signalHandlersInstalled_(false)
-    , config_(std::move(config)) {
+    , signalHandlersInstalled_(false) {
     heartbeatTimeout_ = std::chrono::milliseconds(config_.heartbeatTimeoutMs);
     heartbeatPollInterval_ = std::chrono::milliseconds(config_.heartbeatPollIntervalMs);
     memoryLimitBytes_ = config_.memoryLimitMB * 1024 * 1024;
@@ -193,7 +194,7 @@ void CrashRecoveryService::RecordFrameHeartbeat(double frameTimeSeconds) {
 void CrashRecoveryService::MonitorHeartbeats() {
     logger_->Trace("CrashRecoveryService", "MonitorHeartbeats", "", "Starting heartbeat monitor");
 
-    const int64_t timeoutNs = static_cast<int64_t>(heartbeatTimeout_.count()) * 1000 * 1000;
+    const int64_t timeoutNs = heartbeatTimeout_.count() * 1000 * 1000;
     while (heartbeatMonitorRunning_.load()) {
         std::this_thread::sleep_for(heartbeatPollInterval_);
         if (!heartbeatSeen_.load(std::memory_order_acquire)) {
@@ -572,7 +573,10 @@ size_t CrashRecoveryService::GetCurrentMemoryUsage() const {
     struct rusage usage;
     if (getrusage(RUSAGE_SELF, &usage) == 0) {
         // Return resident set size in bytes
-        return usage.ru_maxrss * 1024; // ru_maxrss is in KB on Linux
+        if (usage.ru_maxrss <= 0) {
+            return 0;
+        }
+        return static_cast<size_t>(usage.ru_maxrss) * 1024; // ru_maxrss is in KB on Linux
     }
 
     return 0;

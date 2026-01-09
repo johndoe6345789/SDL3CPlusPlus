@@ -4,6 +4,7 @@
 #include "../interfaces/i_scene_script_service.hpp"
 #include "../interfaces/i_ecs_service.hpp"
 #include "../interfaces/i_logger.hpp"
+#include "../interfaces/i_probe_service.hpp"
 #include "../../di/lifecycle.hpp"
 #include <entt/entt.hpp>
 #include <memory>
@@ -23,7 +24,8 @@ class SceneService : public ISceneService,
 public:
     SceneService(std::shared_ptr<ISceneScriptService> scriptService,
                  std::shared_ptr<IEcsService> ecsService,
-                 std::shared_ptr<ILogger> logger);
+                 std::shared_ptr<ILogger> logger,
+                 std::shared_ptr<IProbeService> probeService = nullptr);
     ~SceneService() override;
 
     // ISceneService interface
@@ -59,17 +61,26 @@ private:
         std::vector<std::string> shaderKeys;
     };
 
+    bool ShouldEmitRuntimeProbe() const;
+    void ReportRuntimeProbe(const std::string& code,
+                            const std::string& message,
+                            const std::string& details) const;
     void ClearSceneEntities();
 
     std::shared_ptr<ISceneScriptService> scriptService_;
     std::shared_ptr<IEcsService> ecsService_;
     std::shared_ptr<ILogger> logger_;
+    std::shared_ptr<IProbeService> probeService_;
     entt::registry* registry_ = nullptr;
     std::vector<entt::entity> sceneEntities_;
     std::vector<core::Vertex> combinedVertices_;
     std::vector<uint16_t> combinedIndices_;
     std::vector<SceneDrawInfo> drawInfos_;
     bool initialized_ = false;
+    size_t lastSceneObjectCount_ = 0;
+    size_t lastSceneVertexCount_ = 0;
+    size_t lastSceneIndexCount_ = 0;
+    bool hasSceneSignature_ = false;
 };
 
 }  // namespace sdl3cpp::services::impl
