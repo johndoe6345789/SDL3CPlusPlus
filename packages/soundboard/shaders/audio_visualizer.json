@@ -1,0 +1,11 @@
+{
+  "shader": "audio_visualizer",
+  "system": "glsl",
+  "entry": {
+    "vertex": "shaders/audio_visualizer.vs",
+    "fragment": "shaders/audio_visualizer.fs"
+  },
+  "bindings": {
+    "spectrum": "PARAM_TEXTURE_0"
+  }
+}

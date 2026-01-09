@@ -1,0 +1,22 @@
+{
+  "id": "startup_camera",
+  "description": "Initial camera placement for the validation tour + gameplay template.",
+  "camera": {
+    "position": [0.0, 3.5, 6.0],
+    "look_at": [0.0, 1.2, 0.0],
+    "fov_degrees": 55.0,
+    "near": 0.1,
+    "far": 100.0
+  },
+  "physics": {
+    "gravity": [0.0, -9.81, 0.0],
+    "collision": "scene.bounds"
+  },
+  "validation": {
+    "checks": [
+      "non_black_ratio",
+      "luma_range",
+      "mean_color"
+    ]
+  }
+}

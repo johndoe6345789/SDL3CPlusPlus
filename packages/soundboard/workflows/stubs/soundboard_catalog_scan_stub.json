@@ -1,0 +1,23 @@
+{
+  "id": "soundboard.catalog.scan",
+  "summary": "Scans `assets/audio_catalog.json` plus audio folders to publish clip metadata.",
+  "stage": "planned",
+  "inputs": [
+    {
+      "name": "catalog_descriptor",
+      "type": "json_path",
+      "description": "Path to `assets/audio_catalog.json` describing categories + relative folders."
+    }
+  ],
+  "outputs": [
+    {
+      "name": "catalog",
+      "type": "soundboard.catalog",
+      "description": "Structured catalog with categories, clip names, absolute/audio-relative paths."
+    }
+  ],
+  "notes": [
+    "This step should read the JSON descriptor, scan the referenced folders (`assets/audio/sfx`, `assets/audio/tts`), and sort clip names alphabetically per category.",
+    "The output catalog should include the category ID, display name, and clip list (filename + label + path)."
+  ]
+}

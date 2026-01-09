@@ -1,0 +1,28 @@
+{
+  "name": "soundboard-demo",
+  "version": "0.1.0",
+  "description": "Workflow template for the soundboard experience (audio cues + GUI controls).",
+  "defaultWorkflow": "workflows/soundboard_flow.json",
+  "workflows": [
+    "workflows/soundboard_flow.json",
+    "workflows/stubs/soundboard_catalog_scan_stub.json",
+    "workflows/stubs/soundboard_gui_stub.json",
+    "workflows/stubs/soundboard_audio_stub.json",
+    "workflows/stubs/audio_visualizer_placeholder.json"
+  ],
+  "assets": [
+    "assets/sound/sound_samples.json",
+    "assets/audio",
+    "assets/audio_catalog.json",
+    "assets/soundboard_gui.json"
+  ],
+  "scene": [
+    "scene/soundboard_layout.json"
+  ],
+  "shaders": [
+    "shaders/audio_visualizer.json"
+  ],
+  "dependencies": [
+    "materialx"
+  ]
+}

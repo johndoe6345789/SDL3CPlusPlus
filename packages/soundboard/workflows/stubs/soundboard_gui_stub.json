@@ -1,0 +1,28 @@
+{
+  "id": "soundboard.gui",
+  "summary": "Renders buttons for every clip in the catalog and emits selection events.",
+  "stage": "planned",
+  "inputs": [
+    {
+      "name": "catalog",
+      "type": "soundboard.catalog",
+      "description": "Catalog produced by `soundboard.catalog.scan` (categories + clip names/paths)."
+    },
+    {
+      "name": "layout",
+      "type": "json_path",
+      "description": "GUI layout definition from `assets/soundboard_gui.json`."
+    }
+  ],
+  "outputs": [
+    {
+      "name": "selection",
+      "type": "soundboard.selection",
+      "description": "Clip selection event including category, clip id, and display label."
+    }
+  ],
+  "notes": [
+    "Should render a panel with column tabs per category, draw buttons for each clip, and feed button presses into the audio dispatcher.",
+    "Should also publish status messages (e.g., playback started/failed) for preview."
+  ]
+}

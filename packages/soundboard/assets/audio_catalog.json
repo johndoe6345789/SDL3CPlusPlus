@@ -1,0 +1,27 @@
+{
+  "categories": [
+    {
+      "id": "sound_effects",
+      "name": "Sound Effects",
+      "path": "assets/audio/sfx"
+    },
+    {
+      "id": "speech",
+      "name": "Speech",
+      "path": "assets/audio/tts"
+    }
+  ],
+  "gui": {
+    "panel": {
+      "x": 16,
+      "y": 16,
+      "width": 644,
+      "height": 520,
+      "color": [0.06, 0.07, 0.09, 0.95]
+    },
+    "button": {
+      "height": 36,
+      "spacing": 12
+    }
+  }
+}

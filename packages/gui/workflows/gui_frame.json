@@ -1,0 +1,34 @@
+{
+  "template": "frame.default",
+  "steps": [
+    {
+      "id": "gui_begin",
+      "plugin": "frame.begin",
+      "inputs": {
+        "delta": "frame.delta",
+        "elapsed": "frame.elapsed"
+      }
+    },
+    {
+      "id": "gui_layout",
+      "plugin": "frame.gui",
+      "inputs": {
+        "elapsed": "frame.elapsed"
+      }
+    },
+    {
+      "id": "render_ui",
+      "plugin": "frame.render",
+      "inputs": {
+        "elapsed": "frame.elapsed"
+      }
+    },
+    {
+      "id": "capture_ui",
+      "plugin": "validation.tour.checkpoint",
+      "inputs": {
+        "checkpoint": "packages.gui_demo"
+      }
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "samples": [
+    { "id": "laser", "path": "assets/sound/laser.wav", "loop": false },
+    { "id": "ambient", "path": "assets/sound/ambient.wav", "loop": true }
+  ],
+  "bindings": {
+    "trigger_fire": "laser",
+    "trigger_ambience": "ambient"
+  }
+}

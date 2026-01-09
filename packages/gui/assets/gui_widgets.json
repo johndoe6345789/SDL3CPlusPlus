@@ -1,0 +1,20 @@
+{
+  "widgets": [
+    {
+      "id": "main_panel",
+      "layout": "columns",
+      "widgets": ["button_play", "button_options", "status_text"]
+    },
+    {
+      "id": "status_text",
+      "type": "label",
+      "text": "GUI demo active"
+    }
+  ],
+  "styles": {
+    "panel": {
+      "background": [0.1, 0.1, 0.12],
+      "border": true
+    }
+  }
+}

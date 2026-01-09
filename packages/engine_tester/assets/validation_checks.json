@@ -1,0 +1,18 @@
+{
+  "checks": [
+    {
+      "type": "non_black_ratio",
+      "min_ratio": 0.05,
+      "max_ratio": 1.0
+    },
+    {
+      "type": "luma_range",
+      "min_luma": 0.02,
+      "max_luma": 0.95
+    }
+  ],
+  "capture": {
+    "warmup": 2,
+    "frames": 1
+  }
+}

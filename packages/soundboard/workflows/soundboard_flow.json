@@ -1,0 +1,56 @@
+{
+  "template": "frame.default",
+  "steps": [
+    {
+      "id": "begin_frame",
+      "plugin": "frame.begin",
+      "inputs": {
+        "delta": "frame.delta",
+        "elapsed": "frame.elapsed"
+      }
+    },
+    {
+      "id": "catalog_scan",
+      "plugin": "soundboard.catalog.scan",
+      "outputs": {
+        "catalog": "soundboard.catalog"
+      }
+    },
+    {
+      "id": "gui_render",
+      "plugin": "soundboard.gui",
+      "inputs": {
+        "catalog": "soundboard.catalog",
+        "layout": "soundboard.layout"
+      },
+      "outputs": {
+        "selection": "soundboard.selection"
+      }
+    },
+    {
+      "id": "audio_dispatch",
+      "plugin": "soundboard.audio",
+      "inputs": {
+        "catalog": "soundboard.catalog",
+        "selection": "soundboard.selection"
+      },
+      "outputs": {
+        "status": "soundboard.status"
+      }
+    },
+    {
+      "id": "render_frame",
+      "plugin": "frame.render",
+      "inputs": {
+        "elapsed": "frame.elapsed"
+      }
+    },
+    {
+      "id": "validation_capture",
+      "plugin": "validation.tour.checkpoint",
+      "inputs": {
+        "checkpoint": "packages.soundboard"
+      }
+    }
+  ]
+}

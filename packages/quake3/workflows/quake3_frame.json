@@ -1,0 +1,40 @@
+{
+  "template": "frame.default",
+  "steps": [
+    {
+      "id": "quake_begin",
+      "plugin": "frame.begin",
+      "inputs": {
+        "delta": "frame.delta"
+      }
+    },
+    {
+      "id": "quake_physics",
+      "plugin": "frame.bullet_physics",
+      "inputs": {
+        "delta": "frame.delta"
+      }
+    },
+    {
+      "id": "quake_scene",
+      "plugin": "frame.scene",
+      "inputs": {
+        "delta": "frame.delta"
+      }
+    },
+    {
+      "id": "quake_render",
+      "plugin": "frame.render",
+      "inputs": {
+        "elapsed": "frame.elapsed"
+      }
+    },
+    {
+      "id": "quake_validation",
+      "plugin": "validation.tour.checkpoint",
+      "inputs": {
+        "checkpoint": "packages.quake3_map"
+      }
+    }
+  ]
+}

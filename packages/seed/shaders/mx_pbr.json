@@ -1,0 +1,13 @@
+{
+  "shader": "mx_pbr",
+  "system": "materialx",
+  "material": "pbr",
+  "entry": {
+    "vertex": "shader/mx_pbr.vs",
+    "fragment": "shader/mx_pbr.fs"
+  },
+  "bindings": {
+    "albedo": "PARAM_COLOR_0",
+    "emission": "PARAM_COLOR_1"
+  }
+}

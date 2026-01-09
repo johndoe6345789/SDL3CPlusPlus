@@ -1,0 +1,41 @@
+{
+  "template": "boot.default",
+  "steps": [
+    {
+      "id": "load_config",
+      "plugin": "config.load",
+      "inputs": {
+        "path": "config.path"
+      },
+      "outputs": {
+        "document": "config.document"
+      }
+    },
+    {
+      "id": "validate_schema",
+      "plugin": "config.schema.validate",
+      "inputs": {
+        "document": "config.document",
+        "path": "config.path"
+      }
+    },
+    {
+      "id": "build_runtime",
+      "plugin": "runtime.config.build",
+      "inputs": {
+        "document": "config.document",
+        "path": "config.path"
+      },
+      "outputs": {
+        "runtime": "config.runtime"
+      }
+    },
+    {
+      "id": "validation_probe",
+      "plugin": "validation.tour.checkpoint",
+      "inputs": {
+        "checkpoint": "packages.engine_tester"
+      }
+    }
+  ]
+}

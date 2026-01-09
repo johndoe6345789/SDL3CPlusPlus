@@ -1,0 +1,27 @@
+{
+  "panel": {
+    "title": "Audio Soundboard",
+    "description": "Trigger SFX or speech clips from the bundled audio assets.",
+    "rect": {
+      "x": 16,
+      "y": 16,
+      "width": 664,
+      "height": 520
+    },
+    "colors": {
+      "background": [0.06, 0.07, 0.09, 0.95],
+      "border": [0.35, 0.38, 0.42, 1.0],
+      "text": [0.96, 0.96, 0.97, 1.0]
+    }
+  },
+  "buttons": {
+    "width": 300,
+    "height": 36,
+    "spacing": 12
+  },
+  "layout": {
+    "columns": 2,
+    "columnSpacing": 24,
+    "initialY": 120
+  }
+}

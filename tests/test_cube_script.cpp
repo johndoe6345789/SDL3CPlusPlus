@@ -380,6 +380,7 @@ bool RunGpuRenderTest(int& failures,
     auto pipelineCompiler = std::make_shared<sdl3cpp::services::impl::PipelineCompilerService>(logger);
     sdl3cpp::services::impl::BgfxGraphicsBackend backend(configService, platformService, logger, pipelineCompiler);
     bool success = true;
+    bool skipGpuRenderTest = false;
     
     try {
         sdl3cpp::services::GraphicsConfig graphicsConfig{};
@@ -391,12 +392,19 @@ bool RunGpuRenderTest(int& failures,
     }
 
     if (success && bgfx::getRendererType() == bgfx::RendererType::Noop) {
-        std::cerr << "GPU render test failed: bgfx selected Noop renderer despite SDL success\n";
-        ++failures;
-        success = false;
+        const std::string activeDriver = selectedDriver ? selectedDriver : "";
+        if (activeDriver == "offscreen" || activeDriver == "dummy") {
+            std::cerr << "GPU render test skipped: bgfx selected Noop renderer for headless driver '" <<
+                         activeDriver << "'\n";
+            skipGpuRenderTest = true;
+        } else {
+            std::cerr << "GPU render test failed: bgfx selected Noop renderer despite SDL success\n";
+            ++failures;
+            success = false;
+        }
     }
 
-    if (success) {
+    if (success && !skipGpuRenderTest) {
         std::cout << "GPU render test: Validating full render pipeline with scene geometry\n";
 
         // Load and render the actual cube scene to catch color, geometry, and animation issues

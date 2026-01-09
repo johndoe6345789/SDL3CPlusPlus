@@ -1,0 +1,15 @@
+{
+  "name": "gui-demo-panels",
+  "panels": [
+    {
+      "id": "hud",
+      "position": [0.0, 0.0, 0.0],
+      "size": [1.0, 0.2]
+    },
+    {
+      "id": "debug_overlay",
+      "position": [0.0, 0.8, 0.0],
+      "size": [1.0, 0.2]
+    }
+  ]
+}

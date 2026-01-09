@@ -1,0 +1,13 @@
+{
+  "panels": [
+    {
+      "id": "sound_tiles",
+      "grid": [3, 2],
+      "padding": 0.05
+    },
+    {
+      "id": "status_strip",
+      "size": [1.0, 0.1]
+    }
+  ]
+}

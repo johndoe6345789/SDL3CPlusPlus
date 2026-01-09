@@ -1,0 +1,48 @@
+{
+  "template": "frame.default",
+  "steps": [
+    {
+      "id": "begin_frame",
+      "plugin": "frame.begin",
+      "inputs": {
+        "delta": "frame.delta",
+        "elapsed": "frame.elapsed"
+      }
+    },
+    {
+      "id": "camera_control",
+      "plugin": "frame.camera",
+      "inputs": {
+        "delta": "frame.delta"
+      }
+    },
+    {
+      "id": "bullet_physics",
+      "plugin": "frame.bullet_physics",
+      "inputs": {
+        "delta": "frame.delta"
+      }
+    },
+    {
+      "id": "scene",
+      "plugin": "frame.scene",
+      "inputs": {
+        "delta": "frame.delta"
+      }
+    },
+    {
+      "id": "render",
+      "plugin": "frame.render",
+      "inputs": {
+        "elapsed": "frame.elapsed"
+      }
+    },
+    {
+      "id": "validate_capture",
+      "plugin": "validation.tour.checkpoint",
+      "inputs": {
+        "checkpoint": "gameplay.startup_camera"
+      }
+    }
+  ]
+}

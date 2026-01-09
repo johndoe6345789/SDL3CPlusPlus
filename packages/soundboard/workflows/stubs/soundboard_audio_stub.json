@@ -1,0 +1,28 @@
+{
+  "id": "soundboard.audio",
+  "summary": "Plays clips requested by the GUI and reports playback status.",
+  "stage": "planned",
+  "inputs": [
+    {
+      "name": "catalog",
+      "type": "soundboard.catalog",
+      "description": "Catalog data to resolve clip paths."
+    },
+    {
+      "name": "selection",
+      "type": "soundboard.selection",
+      "description": "Selected clip identifier emitted by the GUI step."
+    }
+  ],
+  "outputs": [
+    {
+      "name": "status",
+      "type": "soundboard.status",
+      "description": "Playback status message (playing/failed/missing)."
+    }
+  ],
+  "notes": [
+    "Should interact with the runtime audio command pipeline (`audio_play_sound` equivalent) to queue clips.",
+    "Status outputs let the GUI display feedback (success, failure, no clip available)."
+  ]
+}

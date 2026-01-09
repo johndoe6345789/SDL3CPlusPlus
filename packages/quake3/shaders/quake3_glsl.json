@@ -1,0 +1,11 @@
+{
+  "shader": "quake_wall",
+  "system": "glsl",
+  "entry": {
+    "vertex": "shaders/quake_wall.vs",
+    "fragment": "shaders/quake_wall.fs"
+  },
+  "bindings": {
+    "diffuse": "PARAM_COLOR_0"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "name": "gui-demo",
+  "version": "0.1.0",
+  "description": "Workflow package describing the GUI demo, focused on UI updates + frame capture validation.",
+  "defaultWorkflow": "workflows/gui_frame.json",
+  "workflows": [
+    "workflows/gui_frame.json",
+    "workflows/stubs/gui_layout_placeholder.json"
+  ],
+  "assets": [
+    "assets/gui_widgets.json",
+    "assets/logo.svg",
+    "assets/fonts/Roboto-Regular.ttf",
+    "assets/fonts/Roboto-LICENSE.txt"
+  ],
+  "scene": [
+    "scene/gui_panels.json"
+  ],
+  "shaders": [
+    "shaders/gui_font.json"
+  ]
+,
+  "dependencies": [
+    "materialx"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "materials": [
+    {
+      "id": "floor",
+      "shader": "floor",
+      "params": {
+        "albedo": [0.5, 0.5, 0.5],
+        "roughness": 0.7
+      }
+    },
+    {
+      "id": "lantern",
+      "shader": "lantern",
+      "params": {
+        "emission": [1.0, 0.9, 0.6]
+      }
+    }
+  ],
+  "textures": [
+    {
+      "id": "noise",
+      "path": "assets/noise_pattern.png"
+    }
+  ]
+}

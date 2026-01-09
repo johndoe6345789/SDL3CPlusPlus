@@ -86,6 +86,9 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 - Deliverable: app boot always compiles config and prefers IR-derived data.
 - Acceptance: running with only a JSON config triggers IR compilation, and Lua scene load only happens if explicitly enabled.
 
+- Introduce an npm-like dependency manifest per package plus a top-level `packages/registry.json`, allowing packages to declare other packages (e.g., `materialx`) they rely on before their workflows run; this keeps each workflow self-contained and enforces the “only register what the workflow references” rule.
+- Current catalog entries: `packages/seed` (spinning cube), `packages/gui` (GUI panels), `packages/soundboard`, `packages/quake3`, `packages/engine_tester`, and `packages/materialx`; each package lists its dependency graph and workflow entry point so a loader can resolve them in dependency order.
+
 ### Phase 1: Schema Extensions For Config-First Runtime (2-4 days)
 - Extend schema to fully cover `assets`, `materials`, and `render.passes` (inputs/outputs, pass types).
 - Add schema for render pass clear state, attachment format, and view metadata.
@@ -256,6 +259,7 @@ Option B: per-shader only
 - [x] Move RuntimeConfig parsing into a workflow step.
 - [ ] Add frame workflow template (BeginFrame → RenderGraph → Capture → Validate).
 - [ ] Publish gameplay workflow templates (e.g., default FPS/passive camera steps, bullet physics, validation/teleport checks) so users can switch camera styles or physics by swapping workflow nodes.
+- [ ] Create a packages directory containing reusable template payloads (`package.json`, workflows, assets, shaders, and level data); each package should expose optional stub steps for features that are not yet wired so the workflow parser can reference them early without crashing.
 
 ## Feature Matrix (What You Get, When You Get It)
 
@@ -385,3 +389,55 @@ Option B: per-shader only
 - Scope of hot-reload (full scene reload vs incremental updates)
 - Target shader reflection source (bgfx, MaterialX, or custom metadata)
 - Strategy for moving from Lua-driven scene scripts to config-first IR execution
+
+## Declarative Package Catalog
+
+### Manifest Expectations
+- Treat each package like an npm module: `package.json` + `workflows/` folder + clear `assets/`, `scene/` (not “levels”), optional `shaders/`, `gui/`, and `assets/sound` sub-folders so editors, artists, and automation can find the data without guessing.
+- Include `defaultWorkflow`, `workflows`, `assets`, `scene`, and `dependencies` fields in `package.json`; bundle notes, template guidance, and a `bundled` flag for platform-specific exports. A package linter will scan these manifests and warn when fields are missing, workflows are orphaned, dependencies are unspecified, or an active workflow lacks an associated C++ step registry entry.
+- Keep the `packages/registry.json` catalog in sync with the manifest layer so workflow loaders can resolve dependencies (e.g., `materialx`) before executing the JSON control plane. Packages that list unused services should emit warnings at lint time—if the workflow does not run it, the service should not register itself or consume startup budget.
+
+### Asset & Vendor Hygiene
+- Copy static assets from `MaterialX/` and the legacy `config/` asset folders (poster textures, fonts, audio catalogs, procedural generator outputs like `scripts/generate_audio_assets.py` and `scripts/generate_cube_stl.py`) into the appropriate `packages/<name>/assets/` subfolders. When a package owns enough copies, the on-disk `MaterialX` depot becomes optional; treat it as historical/archival until the workflow-only path is exercised.
+- Soundboard is more than a GUI prototype—its package must ship fonts, audio samples, and `scene/soundboard_layout.json` definitions so the workflow can reconstitute the old experience. Don’t assume baked-in MaterialX files are canonical; any library code or shaders pasted into `src/` or `MaterialX/` must be audited because they are often locally modified (treat them as untrusted until verified).
+- Every package that replaced a Lua-heavy example (seed, gui, soundboard, quake3, engine_tester) needs a workflow that reproduces or improves upon the Lua experience, including teleport checkpoints, animation graphs, GUI cues, and audio triggers. Stub steps are acceptable for yet-unimplemented services, but the workflow should look “real enough” to guide the forthcoming C++ plugin implementation.
+
+### Engine Tester & Workflow Templates
+- Feature packages ship template workflows and assets so users rarely start from scratch. When a new mechanic is required (e.g., bullet physics, FPS vs. third-person toggles), the workflow simply adds a counted micro step and selects the appropriate scene/shader package.
+- The engine tester package (`packages/engine_tester`) doubles as the CI validation tour: teleport checkpoints, expected render captures, and a multi-method screen verification suite (image diff + brightness/histogram heuristics) live entirely in JSON so the runtime can teleport the camera, render the requested view, and fail fast if what the user sees deviates from the script. This complements the `config/engine_tester_runtime.json` sample.
+- Dependencies between packages follow a strict DAG (materialx → shader systems → packages). If a workflow requires `bullet_physics_service` or `audio_service`, those steps must appear as entries in `workflows/<flow>.json`, and the manifest must list the services (instead of implicitly loading them via Lua or global registries).
+
+## Workflow-Driven Service Discipline
+
+### Micro-Stepped Execution
+- Think in n8n-sized micro steps: each JSON action maps to a C++ service/plugin with as few methods as possible (aim for <5) and a single well-defined responsibility. Keep files below 100 LOC unless the complexity genuinely demands it, and prefer loops, references, and declarative templates over copy/pasted branches.
+- Organize the codebase into plugin/service/controller modules wired through DI registries. A workflow should be able to describe the entire boot → frame → capture pipeline, including teleporting, physics, rendering, GUI, and audio, without falling back to Lua. If “bullet physics” is required, add that step to the workflow and link it to a `BulletPhysicsStep` plugin; if it is absent, the service stays unregistered and unloaded.
+- Every workflow must pair a step with a real C++ implementation (even if it’s a stub) so the runtime can reason about ordering before hitting the backend. Services that are not referenced by at least one workflow should log a warning and remain dormant.
+
+### Schema & Shader System Extensions
+- Continue extending `runtime_config_v2.schema.json` so that scene components, passes, attachments, budgets, and shader-system selectors are validated before runtime. Allow schema extensions per package and support `@extends`/`@delete` so templates can be layered without copying everything.
+- The shader pipeline should depend on a pluggable `IShaderSystem` registry; MaterialX stays as the first registered system, but the registry should also be able to host GLSL-only or future runtime shader builders. The config compiler validates the requested shader system, material metadata, and uniform bindings and raises JSON Pointer diagnostics now.
+- The workflow should describe which shader system, render pass, and telemetry probes to use so that the C++ services can wire the correct pipeline without implicit logic.
+
+## Lua Sunset & Config Defaults
+
+- Config-first execution is the default path. The CLI flag flow (`--json-file-in` → `--set-default-json` → stored default → seed) stays locked in. Lua only runs when a workflow explicitly routes to a `SceneScriptStep` and the user opts into `runtime.scene_source = "lua"`. Otherwise, running with a JSON workflow should upgrade the config compiler into an IR loader before Lua ever touches the renderer.
+- Provide a persistent default config that can be swapped via `--set-default-json` so that automation can change the baseline without shipping a new binary. Warn when the default config is corrupted or missing required `schema_version`.
+- When replacing Lua, keep trace logging in place for regressions. Drop in DEBUG/INFO/TRACE/ERROR logs when diagnosing segfaults, shader quirks, or ordering issues; they should reference the JSON path or workflow step so triage teams can quickly identify the failing stage.
+
+## Package Linter & Automation Hooks
+
+- Build a package linter that runs as part of `scripts/lint.sh` (or a dedicated CI job) and flags:
+  - missing `defaultWorkflow` or `workflow` definitions that cover boot/frame phases,
+  - absent `assets`/`scene` references that the workflow expects,
+  - dependencies listed in `registry.json` but not declared in `package.json`,
+  - unused services or steps referenced by the workflow but lacking C++ counterparts.
+- When we repackage an existing demo, the linter should compare the legacy config/workflow + assets (e.g., the old Lua-driven bundle) to the restored package and warn about any missing pieces (assets, scenes, workflows, or service steps) so we can see what still needs to be ported.
+- The linter also ensures that packages import the right assets (GUI folder under `gui/`, sound under `assets/sound`, fonts under `assets/fonts`, shaders under `shaders/`) so the runtime can find them deterministically.
+- Automation stays disciplined: lint/static analysis must pass before accepting code, and the “triangle/run” regression harness (or its eventual equivalent) stays part of every sprint along with E2E boot→frame→capture execution and `config/engine_tester_runtime.json` teleport checks.
+
+## Testing Strategy Additions
+
+- Maintain the full testing pyramid: unit (schema, merge, IR), service (render graph, shader pipeline, budgets), integration (MaterialX shader generation, shader linking with both Vulkan/OpenGL), and end-to-end verification (boot the package, run the configured workflow, capture the frame).
+- In addition to the existing automation bullets, add multi-method screen validation (pixel diffs, non-black coverage, histogram/mean heuristics) because we occasionally do not know what the image should contain when new JSON/lua combos hit the runtime. This logic lives inside `engine_tester` and should be pluggable so we can add new heuristics later.
+- Static analysis and linters are part of the default sprint (`scripts/lint.sh` covering clang-tidy, cppcheck, compiler warning builds, and sanitizer builds). Build verification must also re-run on `build-ninja-asan` or similar sanitized configurations so we catch ordering/segfault issues early.

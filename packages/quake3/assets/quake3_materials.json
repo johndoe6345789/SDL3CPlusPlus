@@ -1,0 +1,19 @@
+{
+  "materials": [
+    {
+      "id": "quake_floor",
+      "shader": "quake_floor",
+      "params": {
+        "diffuse": [0.4, 0.4, 0.5],
+        "roughness": 0.9
+      }
+    },
+    {
+      "id": "quake_light",
+      "shader": "quake_light",
+      "params": {
+        "emission": [1.0, 0.6, 0.3]
+      }
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "name": "demo-spinning-cube",
+  "version": "0.1.0",
+  "description": "Template package describing a boot-to-frame workflow, assets, and validation presets for the demo cube.",
+  "defaultWorkflow": "workflows/demo_gameplay.json",
+  "workflows": [
+    "workflows/demo_gameplay.json",
+    "workflows/stubs/bullet_physics_placeholder.json"
+  ],
+  "assets": [
+    "assets/cube_materials.json"
+  ],
+  "scene": [
+    "scene/startup_camera.json"
+  ],
+  "shaders": [
+    "shaders/mx_pbr.json"
+  ],
+  "bundled": true,
+  "notes": "Follow the workflow->services rule: only steps listed here should be registered at runtime.",
+  "dependencies": [
+    "materialx"
+  ]
+}

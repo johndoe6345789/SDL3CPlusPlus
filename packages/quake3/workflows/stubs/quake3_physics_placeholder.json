@@ -1,0 +1,9 @@
+{
+  "id": "frame.bullet_physics",
+  "summary": "Quake3 physics stub to ensure workflows can declare bullet-dependent steps.",
+  "stage": "planned",
+  "notes": [
+    "Should load BSP geometry, apply gravity, and resolve collisions.",
+    "Widgets will be active once the physics service is refactored accordingly."
+  ]
+}
