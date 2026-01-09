@@ -1,9 +1,15 @@
 #include "render_coordinator_service.hpp"
 
+#include <algorithm>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
+
 namespace sdl3cpp::services::impl {
 
 RenderCoordinatorService::RenderCoordinatorService(std::shared_ptr<ILogger> logger,
                                                    std::shared_ptr<IConfigService> configService,
+                                                   std::shared_ptr<IConfigCompilerService> configCompilerService,
                                                    std::shared_ptr<IGraphicsService> graphicsService,
                                                    std::shared_ptr<ISceneScriptService> sceneScriptService,
                                                    std::shared_ptr<IShaderScriptService> shaderScriptService,
@@ -12,6 +18,7 @@ RenderCoordinatorService::RenderCoordinatorService(std::shared_ptr<ILogger> logg
                                                    std::shared_ptr<ISceneService> sceneService)
     : logger_(std::move(logger)),
       configService_(std::move(configService)),
+      configCompilerService_(std::move(configCompilerService)),
       graphicsService_(std::move(graphicsService)),
       sceneScriptService_(std::move(sceneScriptService)),
       shaderScriptService_(std::move(shaderScriptService)),
@@ -21,6 +28,7 @@ RenderCoordinatorService::RenderCoordinatorService(std::shared_ptr<ILogger> logg
     if (logger_) {
         logger_->Trace("RenderCoordinatorService", "RenderCoordinatorService",
                        "configService=" + std::string(configService_ ? "set" : "null") +
+                       ", configCompilerService=" + std::string(configCompilerService_ ? "set" : "null") +
                        ", graphicsService=" + std::string(graphicsService_ ? "set" : "null") +
                        ", sceneScriptService=" + std::string(sceneScriptService_ ? "set" : "null") +
                        ", shaderScriptService=" + std::string(shaderScriptService_ ? "set" : "null") +
@@ -28,6 +36,94 @@ RenderCoordinatorService::RenderCoordinatorService(std::shared_ptr<ILogger> logg
                        ", guiService=" + std::string(guiService_ ? "set" : "null") +
                        ", sceneService=" + std::string(sceneService_ ? "set" : "null"),
                        "Created");
+    }
+}
+
+void RenderCoordinatorService::ConfigureRenderGraphPasses() {
+    if (!graphicsService_) {
+        return;
+    }
+    if (!configCompilerService_) {
+        if (logger_) {
+            logger_->Warn("RenderCoordinatorService::ConfigureRenderGraphPasses: Config compiler unavailable");
+        }
+        return;
+    }
+
+    const auto& result = configCompilerService_->GetLastResult();
+    const auto& passes = result.renderGraph.passes;
+    if (passes.empty()) {
+        return;
+    }
+
+    std::vector<std::string> passOrder = result.renderGraphBuild.passOrder;
+    if (passOrder.empty()) {
+        passOrder.reserve(passes.size());
+        for (const auto& pass : passes) {
+            passOrder.push_back(pass.id);
+        }
+    }
+
+    std::unordered_map<std::string, const RenderPassIR*> passMap;
+    passMap.reserve(passes.size());
+    for (const auto& pass : passes) {
+        passMap.emplace(pass.id, &pass);
+    }
+
+    std::unordered_set<uint16_t> usedViewIds;
+    usedViewIds.reserve(passes.size());
+    for (const auto& pass : passes) {
+        if (pass.hasViewId && pass.viewId >= 0) {
+            usedViewIds.insert(static_cast<uint16_t>(pass.viewId));
+        }
+    }
+
+    uint16_t nextAutoViewId = 0;
+    auto reserveAutoViewId = [&]() -> uint16_t {
+        while (usedViewIds.find(nextAutoViewId) != usedViewIds.end()) {
+            ++nextAutoViewId;
+        }
+        const uint16_t selected = nextAutoViewId;
+        usedViewIds.insert(selected);
+        ++nextAutoViewId;
+        return selected;
+    };
+
+    if (logger_) {
+        logger_->Trace("RenderCoordinatorService", "ConfigureRenderGraphPasses",
+                       "passes=" + std::to_string(passes.size()) +
+                           ", passOrder=" + std::to_string(passOrder.size()));
+    }
+
+    for (const auto& passId : passOrder) {
+        auto passIt = passMap.find(passId);
+        if (passIt == passMap.end()) {
+            if (logger_) {
+                logger_->Warn("RenderCoordinatorService::ConfigureRenderGraphPasses: Pass not found id=" + passId);
+            }
+            continue;
+        }
+        const RenderPassIR& pass = *passIt->second;
+        const uint16_t viewId = pass.hasViewId
+            ? static_cast<uint16_t>(pass.viewId)
+            : reserveAutoViewId();
+
+        ViewClearConfig clearConfig;
+        clearConfig.enabled = pass.clear.enabled;
+        clearConfig.clearColor = pass.clear.clearColor;
+        clearConfig.clearDepth = pass.clear.clearDepth;
+        clearConfig.clearStencil = pass.clear.clearStencil;
+        clearConfig.color = pass.clear.color;
+        clearConfig.depth = pass.clear.depth;
+        clearConfig.stencil = static_cast<uint8_t>(std::clamp(pass.clear.stencil, 0, 255));
+
+        if (logger_) {
+            logger_->Trace("RenderCoordinatorService", "ConfigureRenderGraphPasses",
+                           "passId=" + pass.id + ", viewId=" + std::to_string(viewId) +
+                               ", clear=" + std::string(clearConfig.enabled ? "true" : "false"));
+        }
+
+        graphicsService_->ConfigureView(viewId, clearConfig);
     }
 }
 
@@ -95,6 +191,10 @@ void RenderCoordinatorService::RenderFrame(float time) {
         }
         graphicsService_->RecreateSwapchain();
         return;
+    }
+
+    if (!useLuaScene) {
+        ConfigureRenderGraphPasses();
     }
 
     if (guiService_ && guiScriptService_ && guiScriptService_->HasGuiCommands()) {

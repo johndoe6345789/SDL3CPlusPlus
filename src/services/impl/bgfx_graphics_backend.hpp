@@ -42,6 +42,9 @@ public:
     bool BeginFrame(GraphicsDeviceHandle device) override;
     bool EndFrame(GraphicsDeviceHandle device) override;
     void SetViewState(const ViewState& viewState) override;
+    void ConfigureView(GraphicsDeviceHandle device,
+                       uint16_t viewId,
+                       const ViewClearConfig& clearConfig) override;
     void Draw(GraphicsDeviceHandle device, GraphicsPipelineHandle pipeline,
               GraphicsBufferHandle vertexBuffer, GraphicsBufferHandle indexBuffer,
               uint32_t indexOffset, uint32_t indexCount, int32_t vertexOffset,

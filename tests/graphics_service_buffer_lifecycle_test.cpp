@@ -106,6 +106,9 @@ public:
     bool BeginFrame(sdl3cpp::services::GraphicsDeviceHandle) override { return true; }
     bool EndFrame(sdl3cpp::services::GraphicsDeviceHandle) override { return true; }
     void SetViewState(const sdl3cpp::services::ViewState&) override {}
+    void ConfigureView(sdl3cpp::services::GraphicsDeviceHandle,
+                       uint16_t,
+                       const sdl3cpp::services::ViewClearConfig&) override {}
     void Draw(sdl3cpp::services::GraphicsDeviceHandle,
               sdl3cpp::services::GraphicsPipelineHandle,
               sdl3cpp::services::GraphicsBufferHandle,

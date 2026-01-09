@@ -350,6 +350,7 @@ void ServiceBasedApp::RegisterServices() {
     registry_.RegisterService<services::IRenderCoordinatorService, services::impl::RenderCoordinatorService>(
         registry_.GetService<services::ILogger>(),
         registry_.GetService<services::IConfigService>(),
+        registry_.GetService<services::IConfigCompilerService>(),
         registry_.GetService<services::IGraphicsService>(),
         registry_.GetService<services::ISceneScriptService>(),
         registry_.GetService<services::IShaderScriptService>(),

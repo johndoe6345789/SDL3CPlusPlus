@@ -2,6 +2,7 @@
 
 #include "../interfaces/i_render_coordinator_service.hpp"
 #include "../interfaces/i_config_service.hpp"
+#include "../interfaces/i_config_compiler_service.hpp"
 #include "../interfaces/i_graphics_service.hpp"
 #include "../interfaces/i_gui_script_service.hpp"
 #include "../interfaces/i_gui_service.hpp"
@@ -17,6 +18,7 @@ class RenderCoordinatorService : public IRenderCoordinatorService {
 public:
     RenderCoordinatorService(std::shared_ptr<ILogger> logger,
                              std::shared_ptr<IConfigService> configService,
+                             std::shared_ptr<IConfigCompilerService> configCompilerService,
                              std::shared_ptr<IGraphicsService> graphicsService,
                              std::shared_ptr<ISceneScriptService> sceneScriptService,
                              std::shared_ptr<IShaderScriptService> shaderScriptService,
@@ -28,8 +30,11 @@ public:
     void RenderFrame(float time) override;
 
 private:
+    void ConfigureRenderGraphPasses();
+
     std::shared_ptr<ILogger> logger_;
     std::shared_ptr<IConfigService> configService_;
+    std::shared_ptr<IConfigCompilerService> configCompilerService_;
     std::shared_ptr<IGraphicsService> graphicsService_;
     std::shared_ptr<ISceneScriptService> sceneScriptService_;
     std::shared_ptr<IShaderScriptService> shaderScriptService_;

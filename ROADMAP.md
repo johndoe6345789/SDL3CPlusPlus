@@ -15,7 +15,7 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 
 ## Current Snapshot (Codebase Audit)
 - Config intake: version gating + schema validation + layered merges (`extends`, `@delete`) with JSON Pointer diagnostics.
-- Config compiler builds Scene/Resource/RenderGraph IR, resolves asset/material/render-pass refs, and schedules a render pass DAG; IR is not yet driving runtime rendering.
+- Config compiler builds Scene/Resource/RenderGraph IR, resolves asset/material/render-pass refs, and schedules a render pass DAG; render graph pass order now configures view clears/touches but attachments and draw submission are still pending.
 - Schema now covers assets/materials/shaders, `shader_systems`, and render-pass `view_id` + `clear` metadata.
 - Runtime rendering is still Lua-driven, with MaterialX shader generation, pipeline validation, sampler caps, and texture/GUI cache budget enforcement.
 - Diagnostics include ProbeService reports plus CrashRecoveryService heartbeats/GPU hang detection; runtime probe hooks (draw/present/frame) are still missing.
@@ -117,6 +117,7 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 - Implement a render-graph executor that consumes `RenderGraphBuildResult::passOrder`.
 - Map pass outputs to framebuffers and attachments, with swapchain as a valid output.
 - Track attachment lifetimes and simple transient usage in the executor.
+- Status: render graph pass order now drives view configuration (clear + touch); attachments/framebuffers still pending.
 - Deliverable: render graph scheduling is executed, not just computed.
 - Acceptance: a two-pass graph (offscreen + swapchain) renders correctly.
 

@@ -94,6 +94,14 @@ public:
                             const ViewState& viewState) = 0;
 
     /**
+     * @brief Configure a view for a render pass.
+     *
+     * @param viewId View id to configure
+     * @param clearConfig Clear configuration
+     */
+    virtual void ConfigureView(uint16_t viewId, const ViewClearConfig& clearConfig) = 0;
+
+    /**
      * @brief End the frame and present the rendered image.
      *
      * @return true if successful, false if swapchain needs recreation

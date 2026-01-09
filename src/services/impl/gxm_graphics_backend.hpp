@@ -37,6 +37,9 @@ public:
     bool EndFrame(GraphicsDeviceHandle device) override;
 
     void SetViewState(const ViewState& viewState) override;
+    void ConfigureView(GraphicsDeviceHandle device,
+                       uint16_t viewId,
+                       const ViewClearConfig& clearConfig) override;
 
     void Draw(GraphicsDeviceHandle device, GraphicsPipelineHandle pipeline,
               GraphicsBufferHandle vertexBuffer, GraphicsBufferHandle indexBuffer,

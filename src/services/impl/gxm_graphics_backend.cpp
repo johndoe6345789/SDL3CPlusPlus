@@ -467,6 +467,14 @@ void GxmGraphicsBackend::SetViewState(const ViewState& viewState) {
     // Matrix will be set when drawing with specific pipeline
 }
 
+void GxmGraphicsBackend::ConfigureView(GraphicsDeviceHandle device,
+                                       uint16_t viewId,
+                                       const ViewClearConfig& clearConfig) {
+    std::cout << "GXM: Configuring view " << viewId << std::endl;
+    (void)device;
+    (void)clearConfig;
+}
+
 void GxmGraphicsBackend::Draw(GraphicsDeviceHandle device, GraphicsPipelineHandle pipeline,
                               GraphicsBufferHandle vertexBuffer, GraphicsBufferHandle indexBuffer,
                               uint32_t indexOffset, uint32_t indexCount, int32_t vertexOffset,

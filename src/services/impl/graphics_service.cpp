@@ -207,6 +207,18 @@ void GraphicsService::RenderScene(const std::vector<RenderCommand>& commands,
     }
 }
 
+void GraphicsService::ConfigureView(uint16_t viewId, const ViewClearConfig& clearConfig) {
+    logger_->Trace("GraphicsService", "ConfigureView",
+                   "viewId=" + std::to_string(viewId) +
+                   ", clearEnabled=" + std::string(clearConfig.enabled ? "true" : "false"));
+
+    if (!initialized_) {
+        return;
+    }
+
+    backend_->ConfigureView(device_, viewId, clearConfig);
+}
+
 bool GraphicsService::EndFrame() {
     logger_->Trace("GraphicsService", "EndFrame");
 

@@ -147,6 +147,17 @@ public:
     virtual void SetViewState(const ViewState& viewState) = 0;
 
     /**
+     * @brief Configure a view for a render pass.
+     *
+     * @param device Device handle
+     * @param viewId View id to configure
+     * @param clearConfig Clear configuration
+     */
+    virtual void ConfigureView(GraphicsDeviceHandle device,
+                               uint16_t viewId,
+                               const ViewClearConfig& clearConfig) = 0;
+
+    /**
      * @brief Draw with a pipeline.
      *
      * @param device Device handle

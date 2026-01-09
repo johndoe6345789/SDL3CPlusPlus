@@ -1176,6 +1176,44 @@ void BgfxGraphicsBackend::SetViewState(const ViewState& viewState) {
     bgfx::setViewTransform(viewId_, viewState_.view.data(), viewState_.proj.data());
 }
 
+void BgfxGraphicsBackend::ConfigureView(GraphicsDeviceHandle device,
+                                        uint16_t viewId,
+                                        const ViewClearConfig& clearConfig) {
+    (void)device;
+    if (!initialized_) {
+        return;
+    }
+
+    bgfx::setViewRect(viewId, 0, 0, viewportWidth_, viewportHeight_);
+
+    const bool hasClear = clearConfig.enabled ||
+        clearConfig.clearColor || clearConfig.clearDepth || clearConfig.clearStencil;
+    if (hasClear) {
+        uint16_t flags = 0;
+        if (clearConfig.clearColor) {
+            flags |= BGFX_CLEAR_COLOR;
+        }
+        if (clearConfig.clearDepth) {
+            flags |= BGFX_CLEAR_DEPTH;
+        }
+        if (clearConfig.clearStencil) {
+            flags |= BGFX_CLEAR_STENCIL;
+        }
+        auto clampChannel = [](float value) -> uint32_t {
+            const float clamped = std::min(std::max(value, 0.0f), 1.0f);
+            return static_cast<uint32_t>(clamped * 255.0f + 0.5f);
+        };
+        const uint32_t r = clampChannel(clearConfig.color[0]);
+        const uint32_t g = clampChannel(clearConfig.color[1]);
+        const uint32_t b = clampChannel(clearConfig.color[2]);
+        const uint32_t a = clampChannel(clearConfig.color[3]);
+        const uint32_t rgba = (r << 24) | (g << 16) | (b << 8) | a;
+        bgfx::setViewClear(viewId, flags, rgba, clearConfig.depth, clearConfig.stencil);
+    }
+
+    bgfx::touch(viewId);
+}
+
 void BgfxGraphicsBackend::Draw(GraphicsDeviceHandle device, GraphicsPipelineHandle pipeline,
                                GraphicsBufferHandle vertexBuffer, GraphicsBufferHandle indexBuffer,
                                uint32_t indexOffset, uint32_t indexCount, int32_t vertexOffset,

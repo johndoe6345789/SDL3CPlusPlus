@@ -39,6 +39,7 @@ public:
     bool BeginFrame() override;
     void RenderScene(const std::vector<RenderCommand>& commands,
                      const ViewState& viewState) override;
+    void ConfigureView(uint16_t viewId, const ViewClearConfig& clearConfig) override;
     bool EndFrame() override;
     void WaitIdle() override;
     GraphicsDeviceHandle GetDevice() const override;

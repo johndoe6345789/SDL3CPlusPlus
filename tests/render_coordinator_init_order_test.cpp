@@ -34,6 +34,9 @@ public:
     }
     void RenderScene(const std::vector<sdl3cpp::services::RenderCommand>&,
                      const sdl3cpp::services::ViewState&) override {}
+    void ConfigureView(uint16_t, const sdl3cpp::services::ViewClearConfig&) override {
+        calls.push_back("ConfigureView");
+    }
     bool EndFrame() override {
         calls.push_back("EndFrame");
         return endFrameResult;
@@ -119,6 +122,7 @@ TEST(RenderCoordinatorInitOrderTest, LoadsShadersOnlyAfterFirstFrame) {
     sdl3cpp::services::impl::RenderCoordinatorService service(
         nullptr,
         configService,
+        nullptr,
         graphicsService,
         nullptr,
         shaderScriptService,
