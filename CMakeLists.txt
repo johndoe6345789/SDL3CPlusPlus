@@ -284,6 +284,17 @@ set(JSON_CONFIG_SOURCES
     src/services/impl/json_config_migration_service.cpp
 )
 
+set(WORKFLOW_SOURCES
+    src/services/impl/workflow_step_io_resolver.cpp
+    src/services/impl/workflow_step_registry.cpp
+    src/services/impl/workflow_executor.cpp
+    src/services/impl/workflow_definition_parser.cpp
+    src/services/impl/workflow_config_load_step.cpp
+    src/services/impl/workflow_config_version_step.cpp
+    src/services/impl/workflow_config_schema_step.cpp
+    src/services/impl/workflow_default_step_registrar.cpp
+)
+
 if(BUILD_SDL3_APP)
     add_executable(sdl3_app
             src/main.cpp
@@ -291,6 +302,7 @@ if(BUILD_SDL3_APP)
             src/di/service_registry.cpp
             src/events/event_bus.cpp
             ${JSON_CONFIG_SOURCES}
+            ${WORKFLOW_SOURCES}
             src/services/impl/config_compiler_service.cpp
             src/services/impl/command_line_service.cpp
             src/services/impl/json_config_writer_service.cpp

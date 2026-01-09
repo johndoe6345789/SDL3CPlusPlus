@@ -226,6 +226,22 @@ Option B: per-shader only
 }
 ```
 
+## Workflow Engine (n8n-Style Micro Steps)
+### Goals
+- Describe boot + frame pipelines as a declarative JSON workflow graph.
+- Keep each step tiny (<100 LOC), with explicit inputs/outputs and DI-backed plugin lookup.
+- Package common pipelines as templates so users don't start from scratch.
+
+### Status
+- [~] Workflow core: step registry + executor + JSON definition parser.
+- [~] Default step package: `config.load`, `config.version.validate`, `config.schema.validate`.
+- [x] Workflow schema: `config/schema/workflow_v1.schema.json`.
+- [x] Template package: `config/workflows/templates/boot_default.json`.
+
+### Next Steps
+- Wire boot pipeline to use workflow executor (config load/validate/migrate).
+- Add frame workflow template (BeginFrame → RenderGraph → Capture → Validate).
+
 ## Feature Matrix (What You Get, When You Get It)
 
 | Feature | Status | Starter | Pro | Ultra | Enterprise |
@@ -267,6 +283,7 @@ Option B: per-shader only
 - [~] Budget enforcement tests (GUI cache pruning + texture tracker covered; transient pool pending)
 - [~] Config-driven validation tour (checkpoint captures + image/ratio/luma/sample-point checks)
 - [ ] Smoke test: cube demo boots with config-first scene definition
+- [ ] Workflow parser tests (template loading + invalid step diagnostics)
 
 ## Test Strategy (Solid Coverage Plan)
 ### Goals

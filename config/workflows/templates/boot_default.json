@@ -1,0 +1,34 @@
+{
+  "template": "boot.default",
+  "steps": [
+    {
+      "id": "load_config",
+      "plugin": "config.load",
+      "inputs": {
+        "path": "config.path"
+      },
+      "outputs": {
+        "document": "config.document"
+      }
+    },
+    {
+      "id": "validate_version",
+      "plugin": "config.version.validate",
+      "inputs": {
+        "document": "config.document",
+        "path": "config.path"
+      },
+      "outputs": {
+        "version": "config.version"
+      }
+    },
+    {
+      "id": "validate_schema",
+      "plugin": "config.schema.validate",
+      "inputs": {
+        "document": "config.document",
+        "path": "config.path"
+      }
+    }
+  ]
+}

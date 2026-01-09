@@ -37,11 +37,16 @@
 #include "services/impl/logger_service.hpp"
 #include "services/impl/pipeline_compiler_service.hpp"
 #include "services/impl/validation_tour_service.hpp"
+#include "services/impl/workflow_default_step_registrar.hpp"
+#include "services/impl/workflow_executor.hpp"
+#include "services/impl/workflow_step_registry.hpp"
 #include "services/interfaces/i_platform_service.hpp"
 #include "services/interfaces/i_probe_service.hpp"
 #include "services/interfaces/i_render_graph_service.hpp"
 #include "services/interfaces/i_shader_system_registry.hpp"
 #include "services/interfaces/i_validation_tour_service.hpp"
+#include "services/interfaces/i_workflow_executor.hpp"
+#include "services/interfaces/i_workflow_step_registry.hpp"
 #include "services/interfaces/i_config_compiler_service.hpp"
 #include <iostream>
 #include <stdexcept>
@@ -222,6 +227,16 @@ void ServiceBasedApp::RegisterServices() {
     // Probe service (structured diagnostics)
     registry_.RegisterService<services::IProbeService, services::impl::ProbeService>(
         registry_.GetService<services::ILogger>());
+
+    // Workflow step registry + executor (declarative boot/frame pipelines)
+    registry_.RegisterService<services::IWorkflowStepRegistry, services::impl::WorkflowStepRegistry>();
+    registry_.RegisterService<services::IWorkflowExecutor, services::impl::WorkflowExecutor>(
+        registry_.GetService<services::IWorkflowStepRegistry>(),
+        registry_.GetService<services::ILogger>());
+    services::impl::WorkflowDefaultStepRegistrar workflowRegistrar(
+        registry_.GetService<services::ILogger>(),
+        registry_.GetService<services::IProbeService>());
+    workflowRegistrar.RegisterDefaults(registry_.GetService<services::IWorkflowStepRegistry>());
 
     // Configuration service
     registry_.RegisterService<services::IConfigService, services::impl::JsonConfigService>(
