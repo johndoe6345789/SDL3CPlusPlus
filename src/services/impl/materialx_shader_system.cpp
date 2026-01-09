@@ -123,7 +123,16 @@ ShaderReflection MaterialXShaderSystem::GetReflection(const std::string& shaderK
     if (logger_) {
         logger_->Trace("MaterialXShaderSystem", "GetReflection", "shaderKey=" + shaderKey);
     }
-    return {};
+    ShaderReflection reflection;
+    auto it = lastShaderMap_.find(shaderKey);
+    if (it == lastShaderMap_.end()) {
+        return reflection;
+    }
+    reflection.textures.reserve(it->second.textures.size());
+    for (const auto& binding : it->second.textures) {
+        reflection.textures.push_back(binding.uniformName);
+    }
+    return reflection;
 }
 
 std::vector<ShaderPaths::TextureBinding> MaterialXShaderSystem::GetDefaultTextures(

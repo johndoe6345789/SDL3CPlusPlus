@@ -94,7 +94,7 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 - Implement `MaterialXShaderSystem` using existing MaterialX generator logic.
 - Update shader loading to use the selected shader system to build `ShaderPaths`.
 - Deliverable: shader generation/compilation becomes a plugin choice, not hardcoded.
-- Status: `IShaderSystem` + registry wired into shader loading, with `materialx` and `glsl` systems registered; config compiler validates shader system declarations; default texture lookup is now exposed via the registry.
+- Status: `IShaderSystem` + registry wired into shader loading, with `materialx` and `glsl` systems registered; config compiler validates shader system declarations; registry exposes reflection + default textures (reflection uses shader texture bindings where available).
 - Acceptance: MaterialX stays working, and a second stub system (e.g., `glsl`) can be registered without touching `IGraphicsService`.
 
 ### Phase 3: Resource IR → Runtime Resource Registry (3-6 days)

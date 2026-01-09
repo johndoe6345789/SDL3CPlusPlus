@@ -70,6 +70,10 @@ TEST(ShaderSystemRegistryTest, UsesActiveGlslSystem) {
 
     auto shaderMap = registry.BuildShaderMap();
     EXPECT_EQ(registry.GetActiveSystemId(), "glsl");
+    auto reflection = registry.GetReflection("flat");
+    EXPECT_TRUE(reflection.textures.empty());
+    auto defaults = registry.GetDefaultTextures("flat");
+    EXPECT_TRUE(defaults.empty());
     auto it = shaderMap.find("flat");
     ASSERT_NE(it, shaderMap.end());
     EXPECT_EQ(it->second.vertex, "shaders/flat.vs");
@@ -107,6 +111,8 @@ TEST(ShaderSystemRegistryTest, FiltersShadersBySystem) {
     EXPECT_NE(shaderMap.find("glsl"), shaderMap.end());
     EXPECT_NE(shaderMap.find("default"), shaderMap.end());
     EXPECT_EQ(shaderMap.find("mx"), shaderMap.end());
+    auto reflection = registry.GetReflection("glsl");
+    EXPECT_TRUE(reflection.textures.empty());
 }
 
 }  // namespace
