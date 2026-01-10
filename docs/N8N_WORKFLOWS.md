@@ -29,3 +29,13 @@ Connections Shape
 Templates
 - `config/workflows/templates/boot_default.json` and `config/workflows/templates/frame_default.json` are n8n-style now.
 - `config/workflows/templates/n8n_skeleton.json` is a minimal starting point.
+
+Generic Steps
+- Implementations live in `src/services/impl/workflow_generic_steps/`.
+- Current generic plugins:
+  - `value.copy` (inputs: `value`, outputs: `value`)
+  - `value.default` (inputs: `primary`, `fallback`, outputs: `value`)
+  - `number.add` (inputs: `left`, `right`, outputs: `value`)
+  - `list.filter.equals` (inputs: `list`, `value`, outputs: `list`)
+  - `list.map.add` (inputs: `list`, `value`, outputs: `list`)
+  - `list.reduce.sum` (inputs: `list`, outputs: `value`)

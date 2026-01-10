@@ -261,10 +261,14 @@ Option B: per-shader only
 - [x] Package workflows converted to n8n nodes (`seed`, `gui`, `soundboard`, `quake3`, `engine_tester`).
 - [x] Workflow steps implemented: `frame.bullet_physics`, `frame.camera`, `validation.tour.checkpoint`, `soundboard.catalog.scan`, `soundboard.gui`, `soundboard.audio`.
 - [x] Render coordinator supports workflow-supplied GUI command overrides (bypass Lua GUI path).
+- [~] Generic step library started (`value.copy`, `value.default`, `number.add`, `list.filter.equals`, `list.map.add`, `list.reduce.sum`).
 
 ### Next Steps
 - [ ] Publish gameplay workflow templates (FPS/passive camera variants, bullet physics, validation/teleport checks).
 - [ ] Expand JSON-driven GUI steps beyond soundboard (replace Lua GUI scripts in demo packages).
+- [ ] Build out generic "software building blocks" step coverage (strings, math, comparisons, branching, fan-out, list transforms).
+- [ ] Add generic game workflow steps (camera controls, teleport/waypoints, audio cues, model spawn/despawn, animation toggles).
+- [ ] Publish a workflow step catalog with example JSON snippets for each generic step.
 - [ ] Add workflow step analytics (probe events with JSON path + node id).
 
 ## Feature Matrix (What You Get, When You Get It)
