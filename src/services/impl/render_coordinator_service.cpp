@@ -132,6 +132,14 @@ void RenderCoordinatorService::ConfigureRenderGraphPasses() {
 }
 
 void RenderCoordinatorService::RenderFrame(float time) {
+    RenderFrameInternal(time, nullptr);
+}
+
+void RenderCoordinatorService::RenderFrameWithViewState(float time, const ViewState& viewState) {
+    RenderFrameInternal(time, &viewState);
+}
+
+void RenderCoordinatorService::RenderFrameInternal(float time, const ViewState* overrideView) {
     if (logger_) {
         logger_->Trace("RenderCoordinatorService", "RenderFrame", "time=" + std::to_string(time), "Entering");
     }
@@ -244,7 +252,7 @@ void RenderCoordinatorService::RenderFrame(float time) {
             validationPlan = validationTourService_->BeginFrame(aspect);
         }
 
-        ViewState viewState = sceneScriptService_->GetViewState(aspect);
+        ViewState viewState = overrideView ? *overrideView : sceneScriptService_->GetViewState(aspect);
         if (validationPlan.active && validationPlan.overrideView) {
             viewState = validationPlan.viewState;
         }

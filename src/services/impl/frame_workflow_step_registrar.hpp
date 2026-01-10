@@ -8,6 +8,7 @@
 
 namespace sdl3cpp::services {
 class IAudioService;
+class IConfigService;
 class IInputService;
 class IPhysicsService;
 class IRenderCoordinatorService;
@@ -20,6 +21,7 @@ namespace sdl3cpp::services::impl {
 class FrameWorkflowStepRegistrar {
 public:
     FrameWorkflowStepRegistrar(std::shared_ptr<ILogger> logger,
+                               std::shared_ptr<IConfigService> configService,
                                std::shared_ptr<IAudioService> audioService,
                                std::shared_ptr<IInputService> inputService,
                                std::shared_ptr<IPhysicsService> physicsService,
@@ -32,6 +34,7 @@ public:
 
 private:
     std::shared_ptr<ILogger> logger_;
+    std::shared_ptr<IConfigService> configService_;
     std::shared_ptr<IAudioService> audioService_;
     std::shared_ptr<IInputService> inputService_;
     std::shared_ptr<IPhysicsService> physicsService_;

@@ -307,6 +307,7 @@ void ServiceBasedApp::RegisterServices() {
 
     registry_.RegisterService<services::IFrameWorkflowService, services::impl::FrameWorkflowService>(
         registry_.GetService<services::ILogger>(),
+        registry_.GetService<services::IConfigService>(),
         registry_.GetService<services::IAudioService>(),
         registry_.GetService<services::IInputService>(),
         registry_.GetService<services::IPhysicsService>(),

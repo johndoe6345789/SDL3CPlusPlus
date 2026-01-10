@@ -24,7 +24,19 @@ void WorkflowFrameRenderStep::Execute(const WorkflowStepDefinition& step, Workfl
     if (!elapsed) {
         throw std::runtime_error("frame.render missing elapsed input");
     }
-    renderService_->RenderFrame(static_cast<float>(*elapsed));
+    const ViewState* viewState = nullptr;
+    auto it = step.inputs.find("view_state");
+    if (it != step.inputs.end()) {
+        viewState = context.TryGet<ViewState>(it->second);
+        if (!viewState) {
+            throw std::runtime_error("frame.render missing view_state input");
+        }
+    }
+    if (viewState) {
+        renderService_->RenderFrameWithViewState(static_cast<float>(*elapsed), *viewState);
+    } else {
+        renderService_->RenderFrame(static_cast<float>(*elapsed));
+    }
     if (logger_) {
         logger_->Trace("WorkflowFrameRenderStep", "Execute",
                        "elapsed=" + std::to_string(*elapsed),

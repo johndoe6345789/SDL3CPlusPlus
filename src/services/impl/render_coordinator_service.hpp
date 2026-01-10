@@ -30,9 +30,9 @@ public:
     ~RenderCoordinatorService() override = default;
 
     void RenderFrame(float time) override;
+    void RenderFrameWithViewState(float time, const ViewState& viewState) override;
 
 private:
-    void ConfigureRenderGraphPasses();
 
     std::shared_ptr<ILogger> logger_;
     std::shared_ptr<IConfigService> configService_;
@@ -49,6 +49,9 @@ private:
     bool shadersLoaded_ = false;
     bool geometryUploaded_ = false;
     bool configFirstLogged_ = false;
+
+    void ConfigureRenderGraphPasses();
+    void RenderFrameInternal(float time, const ViewState* overrideView);
 };
 
 }  // namespace sdl3cpp::services::impl

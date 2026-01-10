@@ -2,6 +2,7 @@
 
 #include "workflow_frame_audio_step.hpp"
 #include "workflow_frame_begin_step.hpp"
+#include "workflow_frame_camera_step.hpp"
 #include "workflow_frame_bullet_physics_step.hpp"
 #include "workflow_frame_gui_step.hpp"
 #include "workflow_frame_physics_step.hpp"
@@ -16,6 +17,7 @@
 namespace sdl3cpp::services::impl {
 
 FrameWorkflowStepRegistrar::FrameWorkflowStepRegistrar(std::shared_ptr<ILogger> logger,
+                                                       std::shared_ptr<IConfigService> configService,
                                                        std::shared_ptr<IAudioService> audioService,
                                                        std::shared_ptr<IInputService> inputService,
                                                        std::shared_ptr<IPhysicsService> physicsService,
@@ -23,6 +25,7 @@ FrameWorkflowStepRegistrar::FrameWorkflowStepRegistrar(std::shared_ptr<ILogger> 
                                                        std::shared_ptr<IRenderCoordinatorService> renderService,
                                                        std::shared_ptr<IValidationTourService> validationTourService)
     : logger_(std::move(logger)),
+      configService_(std::move(configService)),
       audioService_(std::move(audioService)),
       inputService_(std::move(inputService)),
       physicsService_(std::move(physicsService)),
@@ -49,6 +52,9 @@ void FrameWorkflowStepRegistrar::RegisterUsedSteps(
     }
     if (plugins.contains("frame.bullet_physics")) {
         registry->RegisterStep(std::make_shared<WorkflowFrameBulletPhysicsStep>(physicsService_, logger_));
+    }
+    if (plugins.contains("frame.camera")) {
+        registry->RegisterStep(std::make_shared<WorkflowFrameCameraStep>(configService_, logger_));
     }
     if (plugins.contains("frame.scene")) {
         registry->RegisterStep(std::make_shared<WorkflowFrameSceneStep>(sceneService_, logger_));

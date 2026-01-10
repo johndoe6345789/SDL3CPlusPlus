@@ -9,6 +9,7 @@
 namespace sdl3cpp::services::impl {
 
 FrameWorkflowService::FrameWorkflowService(std::shared_ptr<ILogger> logger,
+                                           std::shared_ptr<IConfigService> configService,
                                            std::shared_ptr<IAudioService> audioService,
                                            std::shared_ptr<IInputService> inputService,
                                            std::shared_ptr<IPhysicsService> physicsService,
@@ -27,6 +28,7 @@ FrameWorkflowService::FrameWorkflowService(std::shared_ptr<ILogger> logger,
     workflow_ = parser.ParseFile(path);
 
     FrameWorkflowStepRegistrar registrar(logger_,
+                                         std::move(configService),
                                          std::move(audioService),
                                          std::move(inputService),
                                          std::move(physicsService),

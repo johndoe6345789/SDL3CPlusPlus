@@ -16,6 +16,9 @@
       "position": [260, 0],
       "inputs": {
         "delta": "frame.delta"
+      },
+      "outputs": {
+        "view_state": "frame.view_state"
       }
     },
     {
@@ -39,7 +42,8 @@
       "plugin": "frame.render",
       "position": [1040, 0],
       "inputs": {
-        "elapsed": "frame.elapsed"
+        "elapsed": "frame.elapsed",
+        "view_state": "frame.view_state"
       }
     },
     {
