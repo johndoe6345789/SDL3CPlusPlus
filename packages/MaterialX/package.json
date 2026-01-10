@@ -1,0 +1,16 @@
+{
+  "name": "MaterialX",
+  "version": "0.1.0",
+  "description": "MaterialX",
+  "defaultWorkflow": null,
+  "workflows": [
+  ],
+  "assets": [
+  ],
+  "scene": [
+  ],
+  "shaders": [
+  ],
+  "dependencies": [
+  ]
+}

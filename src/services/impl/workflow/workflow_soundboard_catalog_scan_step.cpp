@@ -1,7 +1,7 @@
 #include "workflow_soundboard_catalog_scan_step.hpp"
 
 #include "../config/json_config_document_parser.hpp"
-#include "soundboard_path_resolver.hpp"
+#include "../soundboard_path_resolver.hpp"
 #include "workflow_step_io_resolver.hpp"
 
 #include <algorithm>

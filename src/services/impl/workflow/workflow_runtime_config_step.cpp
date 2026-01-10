@@ -1,6 +1,6 @@
 #include "workflow_runtime_config_step.hpp"
 
-#include "runtime_config_builder.hpp"
+#include "../config/runtime_config_builder.hpp"
 #include "workflow_step_io_resolver.hpp"
 
 #include <rapidjson/document.h>
