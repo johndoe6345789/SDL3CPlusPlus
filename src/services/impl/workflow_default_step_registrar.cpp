@@ -4,6 +4,12 @@
 #include "workflow_config_schema_step.hpp"
 #include "workflow_config_version_step.hpp"
 #include "workflow_runtime_config_step.hpp"
+#include "workflow_list_filter_equals_step.hpp"
+#include "workflow_list_map_add_step.hpp"
+#include "workflow_list_reduce_sum_step.hpp"
+#include "workflow_number_add_step.hpp"
+#include "workflow_value_copy_step.hpp"
+#include "workflow_value_default_step.hpp"
 
 #include <stdexcept>
 #include <unordered_set>
@@ -42,6 +48,24 @@ void WorkflowDefaultStepRegistrar::RegisterUsedSteps(
     }
     if (plugins.contains("runtime.config.build")) {
         registry->RegisterStep(std::make_shared<WorkflowRuntimeConfigStep>(logger_));
+    }
+    if (plugins.contains("value.copy")) {
+        registry->RegisterStep(std::make_shared<WorkflowValueCopyStep>(logger_));
+    }
+    if (plugins.contains("value.default")) {
+        registry->RegisterStep(std::make_shared<WorkflowValueDefaultStep>(logger_));
+    }
+    if (plugins.contains("number.add")) {
+        registry->RegisterStep(std::make_shared<WorkflowNumberAddStep>(logger_));
+    }
+    if (plugins.contains("list.filter.equals")) {
+        registry->RegisterStep(std::make_shared<WorkflowListFilterEqualsStep>(logger_));
+    }
+    if (plugins.contains("list.map.add")) {
+        registry->RegisterStep(std::make_shared<WorkflowListMapAddStep>(logger_));
+    }
+    if (plugins.contains("list.reduce.sum")) {
+        registry->RegisterStep(std::make_shared<WorkflowListReduceSumStep>(logger_));
     }
 }
 

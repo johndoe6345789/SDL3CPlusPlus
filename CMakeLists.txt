@@ -297,7 +297,13 @@ set(WORKFLOW_SOURCES
     src/services/impl/workflow_config_migration_step.cpp
     src/services/impl/workflow_config_schema_step.cpp
     src/services/impl/workflow_default_step_registrar.cpp
+    src/services/impl/workflow_list_filter_equals_step.cpp
+    src/services/impl/workflow_list_map_add_step.cpp
+    src/services/impl/workflow_list_reduce_sum_step.cpp
+    src/services/impl/workflow_number_add_step.cpp
     src/services/impl/workflow_runtime_config_step.cpp
+    src/services/impl/workflow_value_copy_step.cpp
+    src/services/impl/workflow_value_default_step.cpp
 )
 
 set(FRAME_WORKFLOW_SOURCES

@@ -8,10 +8,16 @@
 #include "workflow_frame_physics_step.hpp"
 #include "workflow_frame_render_step.hpp"
 #include "workflow_frame_scene_step.hpp"
+#include "workflow_list_filter_equals_step.hpp"
+#include "workflow_list_map_add_step.hpp"
+#include "workflow_list_reduce_sum_step.hpp"
+#include "workflow_number_add_step.hpp"
 #include "workflow_soundboard_audio_step.hpp"
 #include "workflow_soundboard_catalog_scan_step.hpp"
 #include "workflow_soundboard_gui_step.hpp"
 #include "workflow_step_registry.hpp"
+#include "workflow_value_copy_step.hpp"
+#include "workflow_value_default_step.hpp"
 #include "workflow_validation_checkpoint_step.hpp"
 
 #include <stdexcept>
@@ -90,6 +96,24 @@ void FrameWorkflowStepRegistrar::RegisterUsedSteps(
         registry->RegisterStep(std::make_shared<WorkflowSoundboardAudioStep>(audioService_,
                                                                              soundboardStateService_,
                                                                              logger_));
+    }
+    if (plugins.contains("value.copy")) {
+        registry->RegisterStep(std::make_shared<WorkflowValueCopyStep>(logger_));
+    }
+    if (plugins.contains("value.default")) {
+        registry->RegisterStep(std::make_shared<WorkflowValueDefaultStep>(logger_));
+    }
+    if (plugins.contains("number.add")) {
+        registry->RegisterStep(std::make_shared<WorkflowNumberAddStep>(logger_));
+    }
+    if (plugins.contains("list.filter.equals")) {
+        registry->RegisterStep(std::make_shared<WorkflowListFilterEqualsStep>(logger_));
+    }
+    if (plugins.contains("list.map.add")) {
+        registry->RegisterStep(std::make_shared<WorkflowListMapAddStep>(logger_));
+    }
+    if (plugins.contains("list.reduce.sum")) {
+        registry->RegisterStep(std::make_shared<WorkflowListReduceSumStep>(logger_));
     }
 }
 

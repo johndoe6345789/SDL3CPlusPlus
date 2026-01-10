@@ -63,7 +63,7 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 - Execute render graph schedule in the renderer (attachments, lifetimes, view ordering).
 - Add runtime probe hooks and map probe severity to crash recovery policies.
 - Enforce shader uniform compatibility using reflection + material metadata.
-- Finish soundboard workflow steps (`soundboard.catalog.scan`, `soundboard.gui`, `soundboard.audio`) with real plugins.
+- Validate soundboard workflow steps (catalog/GUI/audio) in runtime and retire the Lua soundboard UI path.
 - Port Lua demos (seed/gui/soundboard/quake3) into JSON-first packages and workflows.
 - Add tests for schema/merge rules, render graph validation, and budget enforcement.
 - Start service refactor program for large modules (approaching 2K LOC).
@@ -259,13 +259,12 @@ Option B: per-shader only
 - [x] Workflow schema: `config/schema/workflow_v1.schema.json` supports n8n nodes + connections.
 - [x] Templates: `config/workflows/templates/boot_default.json`, `config/workflows/templates/frame_default.json`.
 - [x] Package workflows converted to n8n nodes (`seed`, `gui`, `soundboard`, `quake3`, `engine_tester`).
-- [x] Workflow steps implemented: `frame.bullet_physics`, `frame.camera`, `validation.tour.checkpoint`.
-- [ ] Workflow steps pending: `soundboard.catalog.scan`, `soundboard.gui`, `soundboard.audio`.
+- [x] Workflow steps implemented: `frame.bullet_physics`, `frame.camera`, `validation.tour.checkpoint`, `soundboard.catalog.scan`, `soundboard.gui`, `soundboard.audio`.
+- [x] Render coordinator supports workflow-supplied GUI command overrides (bypass Lua GUI path).
 
 ### Next Steps
-- [ ] Implement soundboard workflow steps with real plugins (catalog scan, GUI render, audio dispatch).
 - [ ] Publish gameplay workflow templates (FPS/passive camera variants, bullet physics, validation/teleport checks).
-- [ ] Add JSON-driven GUI step(s) to replace Lua GUI scripts in demo packages.
+- [ ] Expand JSON-driven GUI steps beyond soundboard (replace Lua GUI scripts in demo packages).
 - [ ] Add workflow step analytics (probe events with JSON path + node id).
 
 ## Feature Matrix (What You Get, When You Get It)
@@ -293,7 +292,7 @@ Option B: per-shader only
 - [x] `config/schema/` with versioned JSON Schema and migration notes
 - [x] n8n workflow schema + parser support (nodes + connections)
 - [x] n8n templates + package workflow conversion
-- [~] Workflow step plugins for camera + validation checkpoints + bullet physics (soundboard steps pending)
+- [x] Workflow step plugins for camera + validation checkpoints + bullet physics + soundboard catalog/GUI/audio
 - [x] `src/services/impl/config_compiler_service.*` for JSON -> IR compilation
 - [x] `src/services/impl/render_graph_service.*` for graph build and scheduling
 - [x] `src/services/interfaces/i_probe_service.hpp` plus report/event types
