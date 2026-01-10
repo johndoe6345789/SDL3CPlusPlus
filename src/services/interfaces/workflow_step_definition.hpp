@@ -9,6 +9,7 @@ namespace sdl3cpp::services {
 
 struct WorkflowStepDefinition {
     std::string id;
+    std::string name;
     std::string plugin;
     std::unordered_map<std::string, std::string> inputs;
     std::unordered_map<std::string, std::string> outputs;
