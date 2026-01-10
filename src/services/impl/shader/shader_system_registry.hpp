@@ -3,7 +3,6 @@
 #include "services/interfaces/i_config_compiler_service.hpp"
 #include "services/interfaces/i_config_service.hpp"
 #include "services/interfaces/i_logger.hpp"
-#include "services/interfaces/i_script_engine_service.hpp"
 #include "services/interfaces/i_shader_system_registry.hpp"
 #include "glsl_shader_system.hpp"
 #include "materialx_shader_system.hpp"
@@ -21,7 +20,6 @@ class ShaderSystemRegistry final : public IShaderSystemRegistry {
 public:
     ShaderSystemRegistry(std::shared_ptr<IConfigService> configService,
                          std::shared_ptr<IConfigCompilerService> configCompilerService,
-                         std::shared_ptr<IScriptEngineService> scriptEngineService,
                          std::shared_ptr<ILogger> logger);
 
     std::unordered_map<std::string, ShaderPaths> BuildShaderMap() override;

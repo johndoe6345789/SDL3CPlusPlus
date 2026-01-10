@@ -6,9 +6,6 @@
 
 namespace sdl3cpp::services {
 
-// Forward declaration
-class IGuiScriptService;
-
 /**
  * @brief Input state snapshot for a single frame.
  */
@@ -29,7 +26,7 @@ struct InputState {
  *
  * Subscribes to input events from the event bus and maintains
  * the current input state for queries by other services.
- * Also handles GUI input processing for script integration.
+ * Also handles GUI input processing for GUI workflows.
  */
 class IInputService {
 public:
@@ -94,8 +91,6 @@ public:
     /**
      * @brief Set whether mouse input should be treated as relative motion.
      *
-     * This updates internal cursor tracking for script usage.
-     *
      * @param enabled true for relative mode, false for absolute
      */
     virtual void SetRelativeMouseMode(bool enabled) = 0;
@@ -108,20 +103,7 @@ public:
     virtual bool IsRelativeMouseMode() const = 0;
 
     /**
-     * @brief Set the GUI script service for GUI input processing.
-     *
-     * The input service will update GUI input state to the script service
-     * when events are processed.
-     *
-     * @param guiScriptService Pointer to the GUI script service, or nullptr to disable
-     */
-    virtual void SetGuiScriptService(IGuiScriptService* guiScriptService) = 0;
-
-    /**
-     * @brief Update GUI input state to the script service.
-     *
-     * Called at the end of each frame to send accumulated GUI input
-     * to the script engine for processing.
+     * @brief Update GUI input state for downstream consumers.
      */
     virtual void UpdateGuiInput() = 0;
 };

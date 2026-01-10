@@ -46,7 +46,6 @@ CrashRecoveryService::CrashRecoveryService(std::shared_ptr<ILogger> logger, Cras
     , memoryLimitBytes_(0)
     , lastSuccessfulFrameTime_(0.0)
     , consecutiveFrameTimeouts_(0)
-    , luaExecutionFailures_(0)
     , fileFormatErrors_(0)
     , memoryWarnings_(0)
     , lastHealthCheck_(std::chrono::steady_clock::now())
@@ -418,30 +417,6 @@ bool CrashRecoveryService::CheckGpuHealth(double lastFrameTime, double expectedF
     return true;
 }
 
-bool CrashRecoveryService::ValidateLuaExecution(bool scriptResult, const std::string& scriptName) {
-    logger_->Trace("CrashRecoveryService", "ValidateLuaExecution",
-                   "scriptResult=" + std::string(scriptResult ? "true" : "false") +
-                   ", scriptName=" + scriptName);
-    if (!scriptResult) {
-        luaExecutionFailures_++;
-        std::lock_guard<std::mutex> lock(crashMutex_);
-        crashReport_ += "\nLUA EXECUTION FAILURE: " + scriptName + "\n";
-        crashReport_ += "Total Lua failures: " + std::to_string(luaExecutionFailures_) + "\n";
-
-        logger_->Error("CrashRecoveryService::ValidateLuaExecution: Lua script '" +
-                      scriptName + "' failed to execute");
-
-        if (config_.maxLuaFailures > 0 && luaExecutionFailures_ > config_.maxLuaFailures) {
-            crashDetected_ = true;
-            crashReport_ += "CRITICAL: Multiple Lua execution failures detected\n";
-        }
-
-        return false;
-    }
-
-    return true;
-}
-
 bool CrashRecoveryService::ValidateFileFormat(const std::string& filePath, const std::string& expectedFormat) {
     logger_->Trace("CrashRecoveryService", "ValidateFileFormat",
                    "filePath=" + filePath +
@@ -535,7 +510,6 @@ std::string CrashRecoveryService::GetSystemHealthStatus() const {
     ss << "Crash Detected: " << (crashDetected_ ? "YES" : "NO") << "\n";
     ss << "Last Signal: " << lastSignal_ << "\n";
     ss << "Consecutive Frame Timeouts: " << consecutiveFrameTimeouts_ << "\n";
-    ss << "Lua Execution Failures: " << luaExecutionFailures_ << "\n";
     ss << "File Format Errors: " << fileFormatErrors_ << "\n";
     ss << "Memory Warnings: " << memoryWarnings_ << "\n";
     ss << "Last Successful Frame Time: " << lastSuccessfulFrameTime_ << " seconds\n";

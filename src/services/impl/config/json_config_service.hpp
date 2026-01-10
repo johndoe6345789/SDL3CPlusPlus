@@ -23,7 +23,7 @@ public:
      * @brief Construct with default configuration.
      *
      * @param logger Logger service for logging
-     * @param argv0 First command-line argument (for finding default script path)
+     * @param argv0 First command-line argument (for resolving default project root)
      * @param probeService Probe service for diagnostics (optional)
      */
     JsonConfigService(std::shared_ptr<ILogger> logger,
@@ -68,29 +68,17 @@ public:
         }
         return config_.height;
     }
-    std::filesystem::path GetScriptPath() const override {
+    std::filesystem::path GetProjectRoot() const override {
         if (logger_) {
-            logger_->Trace("JsonConfigService", "GetScriptPath");
+            logger_->Trace("JsonConfigService", "GetProjectRoot");
         }
-        return config_.scriptPath;
-    }
-    bool IsLuaDebugEnabled() const override {
-        if (logger_) {
-            logger_->Trace("JsonConfigService", "IsLuaDebugEnabled");
-        }
-        return config_.luaDebug;
+        return config_.projectRoot;
     }
     std::string GetWindowTitle() const override {
         if (logger_) {
             logger_->Trace("JsonConfigService", "GetWindowTitle");
         }
         return config_.windowTitle;
-    }
-    SceneSource GetSceneSource() const override {
-        if (logger_) {
-            logger_->Trace("JsonConfigService", "GetSceneSource");
-        }
-        return config_.sceneSource;
     }
     const InputBindings& GetInputBindings() const override {
         if (logger_) {
@@ -172,7 +160,7 @@ private:
     RuntimeConfig config_;
 
     // Helper methods moved from main.cpp
-    std::filesystem::path FindScriptPath(const char* argv0);
+    std::filesystem::path ResolveProjectRoot(const char* argv0);
     static RuntimeConfig LoadFromJson(std::shared_ptr<ILogger> logger,
                                       std::shared_ptr<IProbeService> probeService,
                                       const std::filesystem::path& configPath,

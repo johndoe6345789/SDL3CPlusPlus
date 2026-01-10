@@ -5,21 +5,18 @@
 
 namespace sdl3cpp::services::impl {
 
-SceneService::SceneService(std::shared_ptr<ISceneScriptService> scriptService,
-                           std::shared_ptr<IEcsService> ecsService,
+SceneService::SceneService(std::shared_ptr<IEcsService> ecsService,
                            std::shared_ptr<ILogger> logger,
                            std::shared_ptr<IProbeService> probeService)
-    : scriptService_(std::move(scriptService)),
-      ecsService_(std::move(ecsService)),
+    : ecsService_(std::move(ecsService)),
       logger_(std::move(logger)),
       probeService_(std::move(probeService)) {
     logger_->Trace("SceneService", "SceneService",
-                   "scriptService=" + std::string(scriptService_ ? "set" : "null") +
-                   ", ecsService=" + std::string(ecsService_ ? "set" : "null") +
+                   "ecsService=" + std::string(ecsService_ ? "set" : "null") +
                    ", probeService=" + std::string(probeService_ ? "set" : "null"));
 
-    if (!scriptService_ || !ecsService_) {
-        throw std::invalid_argument("Scene script service and ECS service cannot be null");
+    if (!ecsService_) {
+        throw std::invalid_argument("ECS service cannot be null");
     }
     registry_ = &ecsService_->GetRegistry();
 }
@@ -191,11 +188,14 @@ std::vector<RenderCommand> SceneService::GetRenderCommands(float time) const {
         cmd.indexCount = drawInfo.indexCount;
         cmd.vertexOffset = drawInfo.vertexOffset;
         cmd.shaderKeys = drawInfo.shaderKeys;
-        if (drawInfo.hasCustomModelMatrix) {
-            cmd.modelMatrix = drawInfo.modelMatrix;
-        } else {
-            cmd.modelMatrix = scriptService_->ComputeModelMatrix(drawInfo.computeModelMatrixRef, time);
-        }
+        cmd.modelMatrix = drawInfo.hasCustomModelMatrix
+            ? drawInfo.modelMatrix
+            : std::array<float, 16>{
+                  1.0f, 0.0f, 0.0f, 0.0f,
+                  0.0f, 1.0f, 0.0f, 0.0f,
+                  0.0f, 0.0f, 1.0f, 0.0f,
+                  0.0f, 0.0f, 0.0f, 1.0f
+              };
         commands.push_back(cmd);
     }
 

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "services/interfaces/i_scene_service.hpp"
-#include "services/interfaces/i_scene_script_service.hpp"
 #include "services/interfaces/i_ecs_service.hpp"
 #include "services/interfaces/i_logger.hpp"
 #include "services/interfaces/i_probe_service.hpp"
@@ -18,13 +17,12 @@ namespace sdl3cpp::services::impl {
  * @brief Scene service implementation.
  *
  * Maintains scene graph state and generates render commands.
- * Separated from script service to decouple scene state from Lua execution.
+ * Separated from script execution to keep scene state deterministic.
  */
 class SceneService : public ISceneService,
                      public di::IShutdownable {
 public:
-    SceneService(std::shared_ptr<ISceneScriptService> scriptService,
-                 std::shared_ptr<IEcsService> ecsService,
+    SceneService(std::shared_ptr<IEcsService> ecsService,
                  std::shared_ptr<ILogger> logger,
                  std::shared_ptr<IProbeService> probeService = nullptr);
     ~SceneService() override;
@@ -72,7 +70,6 @@ private:
                             const std::string& details) const;
     void ClearSceneEntities();
 
-    std::shared_ptr<ISceneScriptService> scriptService_;
     std::shared_ptr<IEcsService> ecsService_;
     std::shared_ptr<ILogger> logger_;
     std::shared_ptr<IProbeService> probeService_;

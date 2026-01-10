@@ -197,14 +197,6 @@ struct AudioPlayEvent {
 };
 
 /**
- * @brief Script loaded event data.
- */
-struct ScriptLoadedEvent {
-    std::string scriptPath;
-    bool debugMode;
-};
-
-/**
  * @brief Collision detection event data.
  */
 struct CollisionEvent {

@@ -23,9 +23,9 @@ std::filesystem::path FindPackageRoot(const std::filesystem::path& seed) {
 std::filesystem::path ResolveSoundboardPackageRoot(const std::shared_ptr<IConfigService>& configService) {
     std::filesystem::path seed = std::filesystem::current_path();
     if (configService) {
-        const auto scriptPath = configService->GetScriptPath();
-        if (!scriptPath.empty()) {
-            seed = scriptPath.parent_path();
+        const auto projectRoot = configService->GetProjectRoot();
+        if (!projectRoot.empty()) {
+            seed = projectRoot;
         }
     }
     return FindPackageRoot(seed) / "packages" / "soundboard";

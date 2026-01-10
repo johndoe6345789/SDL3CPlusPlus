@@ -3,8 +3,6 @@
 #include "mesh_types.hpp"
 #include <string>
 
-struct lua_State;
-
 namespace sdl3cpp::services {
 
 /**
@@ -21,7 +19,6 @@ public:
                                  const std::string& entryPath,
                                  MeshPayload& outPayload,
                                  std::string& outError) = 0;
-    virtual void PushMeshToLua(lua_State* L, const MeshPayload& payload) = 0;
 };
 
 }  // namespace sdl3cpp::services

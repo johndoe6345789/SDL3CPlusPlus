@@ -730,23 +730,11 @@ void SdlInputService::UpdateGamepadSnapshot() {
     }
 }
 
-void SdlInputService::SetGuiScriptService(IGuiScriptService* guiScriptService) {
-    if (logger_) {
-        logger_->Trace("SdlInputService", "SetGuiScriptService",
-                       "guiScriptServiceIsNull=" + std::string(guiScriptService ? "false" : "true"));
-    }
-    guiScriptService_ = guiScriptService;
-}
-
 void SdlInputService::UpdateGuiInput() {
     if (logger_) {
-        logger_->Trace("SdlInputService", "UpdateGuiInput",
-                       "guiScriptServiceIsNull=" + std::string(guiScriptService_ ? "false" : "true"));
+        logger_->Trace("SdlInputService", "UpdateGuiInput");
     }
-    if (guiScriptService_) {
-        UpdateGamepadSnapshot();
-        guiScriptService_->UpdateGuiInput(guiInputSnapshot_);
-    }
+    UpdateGamepadSnapshot();
 }
 
 }  // namespace sdl3cpp::services::impl

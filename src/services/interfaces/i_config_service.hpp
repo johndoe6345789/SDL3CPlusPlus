@@ -31,28 +31,16 @@ public:
     virtual uint32_t GetWindowHeight() const = 0;
 
     /**
-     * @brief Get the path to the Lua script to execute.
-     * @return Path to the script file
+     * @brief Get the resolved project root path.
+     * @return Project root path
      */
-    virtual std::filesystem::path GetScriptPath() const = 0;
-
-    /**
-     * @brief Check if Lua debug mode is enabled.
-     * @return true if debug mode is enabled, false otherwise
-     */
-    virtual bool IsLuaDebugEnabled() const = 0;
+    virtual std::filesystem::path GetProjectRoot() const = 0;
 
     /**
      * @brief Get the window title.
      * @return Window title string
      */
     virtual std::string GetWindowTitle() const = 0;
-
-    /**
-     * @brief Get the configured scene source.
-     * @return Scene source enum
-     */
-    virtual SceneSource GetSceneSource() const = 0;
 
     /**
      * @brief Get configured input bindings.

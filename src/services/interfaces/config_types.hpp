@@ -86,11 +86,6 @@ struct BgfxConfig {
     std::string renderer = "vulkan";
 };
 
-enum class SceneSource {
-    Config,
-    Lua
-};
-
 struct MaterialXConfig {
     bool enabled = false;
     std::filesystem::path documentPath;
@@ -144,7 +139,6 @@ struct CrashRecoveryConfig {
     size_t memoryLimitMB = 1024;
     double gpuHangFrameTimeMultiplier = 10.0;
     size_t maxConsecutiveGpuTimeouts = 5;
-    size_t maxLuaFailures = 3;
     size_t maxFileFormatErrors = 2;
     size_t maxMemoryWarnings = 3;
 };
@@ -222,9 +216,7 @@ struct ValidationTourConfig {
 struct RuntimeConfig {
     uint32_t width = 1024;
     uint32_t height = 768;
-    std::filesystem::path scriptPath;
-    bool luaDebug = false;
-    SceneSource sceneSource = SceneSource::Config;
+    std::filesystem::path projectRoot;
     std::string windowTitle = "SDL3 Bgfx Demo";
     MouseGrabConfig mouseGrab{};
     InputBindings inputBindings{};

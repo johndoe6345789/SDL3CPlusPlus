@@ -9,15 +9,13 @@ namespace sdl3cpp::services::impl {
 
 ShaderSystemRegistry::ShaderSystemRegistry(std::shared_ptr<IConfigService> configService,
                                            std::shared_ptr<IConfigCompilerService> configCompilerService,
-                                           std::shared_ptr<IScriptEngineService> scriptEngineService,
                                            std::shared_ptr<ILogger> logger)
     : configService_(std::move(configService)),
       logger_(std::move(logger)) {
     if (logger_) {
         logger_->Trace("ShaderSystemRegistry", "ShaderSystemRegistry",
                        "configService=" + std::string(configService_ ? "set" : "null") +
-                           ", configCompilerService=" + std::string(configCompilerService ? "set" : "null") +
-                           ", scriptEngineService=" + std::string(scriptEngineService ? "set" : "null"));
+                           ", configCompilerService=" + std::string(configCompilerService ? "set" : "null"));
     }
 
     if (configCompilerService) {
@@ -27,7 +25,7 @@ ShaderSystemRegistry::ShaderSystemRegistry(std::shared_ptr<IConfigService> confi
         logger_->Warn("ShaderSystemRegistry: Config compiler missing; GLSL shader system disabled");
     }
 
-    auto materialxSystem = std::make_shared<MaterialXShaderSystem>(configService_, scriptEngineService, logger_);
+    auto materialxSystem = std::make_shared<MaterialXShaderSystem>(configService_, logger_);
     systems_.emplace(materialxSystem->GetId(), std::move(materialxSystem));
 }
 

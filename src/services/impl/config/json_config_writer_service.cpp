@@ -25,8 +25,7 @@ void JsonConfigWriterService::WriteConfig(const RuntimeConfig& config, const std
         logger_->Trace("JsonConfigWriterService", "WriteConfig",
                        "config.width=" + std::to_string(config.width) +
                        ", config.height=" + std::to_string(config.height) +
-                       ", config.scriptPath=" + config.scriptPath.string() +
-                       ", config.luaDebug=" + std::string(config.luaDebug ? "true" : "false") +
+                       ", config.projectRoot=" + config.projectRoot.string() +
                        ", config.windowTitle=" + config.windowTitle +
                        ", configPath=" + configPath.string(),
                        "Entering");
@@ -45,11 +44,6 @@ void JsonConfigWriterService::WriteConfig(const RuntimeConfig& config, const std
     document.AddMember("schema_version", json_config::kRuntimeConfigSchemaVersion, allocator);
     document.AddMember("configVersion", json_config::kRuntimeConfigSchemaVersion, allocator);
 
-    rapidjson::Value scriptsObject(rapidjson::kObjectType);
-    addStringMember(scriptsObject, "entry", config.scriptPath.string());
-    scriptsObject.AddMember("lua_debug", config.luaDebug, allocator);
-    document.AddMember("scripts", scriptsObject, allocator);
-
     rapidjson::Value windowObject(rapidjson::kObjectType);
     addStringMember(windowObject, "title", config.windowTitle);
     rapidjson::Value sizeObject(rapidjson::kObjectType);
@@ -57,7 +51,10 @@ void JsonConfigWriterService::WriteConfig(const RuntimeConfig& config, const std
     sizeObject.AddMember("height", config.height, allocator);
     windowObject.AddMember("size", sizeObject, allocator);
 
-    std::filesystem::path scriptsDir = config.scriptPath.parent_path();
+    std::filesystem::path projectRoot = config.projectRoot;
+    if (projectRoot.empty()) {
+        projectRoot = configPath.empty() ? std::filesystem::current_path() : configPath.parent_path();
+    }
 
     rapidjson::Value mouseGrabObject(rapidjson::kObjectType);
     mouseGrabObject.AddMember("enabled", config.mouseGrab.enabled, allocator);
@@ -129,11 +126,7 @@ void JsonConfigWriterService::WriteConfig(const RuntimeConfig& config, const std
     inputObject.AddMember("bindings", bindingsObject, allocator);
     document.AddMember("input", inputObject, allocator);
 
-    std::filesystem::path projectRoot = scriptsDir.parent_path();
     rapidjson::Value pathsObject(rapidjson::kObjectType);
-    if (!scriptsDir.empty()) {
-        addStringMember(pathsObject, "scripts", scriptsDir.string());
-    }
     if (!projectRoot.empty()) {
         addStringMember(pathsObject, "project_root", projectRoot.string());
         addStringMember(pathsObject, "shaders", (projectRoot / "shaders").string());
@@ -244,8 +237,6 @@ void JsonConfigWriterService::WriteConfig(const RuntimeConfig& config, const std
                           config.crashRecovery.gpuHangFrameTimeMultiplier, allocator);
     crashObject.AddMember("max_consecutive_gpu_timeouts",
                           static_cast<uint64_t>(config.crashRecovery.maxConsecutiveGpuTimeouts), allocator);
-    crashObject.AddMember("max_lua_failures",
-                          static_cast<uint64_t>(config.crashRecovery.maxLuaFailures), allocator);
     crashObject.AddMember("max_file_format_errors",
                           static_cast<uint64_t>(config.crashRecovery.maxFileFormatErrors), allocator);
     crashObject.AddMember("max_memory_warnings",

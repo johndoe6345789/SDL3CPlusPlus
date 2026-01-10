@@ -57,8 +57,7 @@ int main(int argc, char** argv) {
             logger->Info("Application starting");
             logger->TraceVariable("config.width", static_cast<int>(options.runtimeConfig.width));
             logger->TraceVariable("config.height", static_cast<int>(options.runtimeConfig.height));
-            logger->TraceVariable("config.scriptPath", options.runtimeConfig.scriptPath.string());
-            logger->TraceVariable("config.luaDebug", options.runtimeConfig.luaDebug);
+            logger->TraceVariable("config.projectRoot", options.runtimeConfig.projectRoot.string());
             logger->TraceVariable("config.windowTitle", options.runtimeConfig.windowTitle);
         }
 

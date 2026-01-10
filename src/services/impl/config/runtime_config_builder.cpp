@@ -4,7 +4,6 @@
 
 using sdl3cpp::services::InputBindings;
 using sdl3cpp::services::RuntimeConfig;
-using sdl3cpp::services::SceneSource;
 
 #include <array>
 #include <filesystem>
@@ -12,20 +11,11 @@ using sdl3cpp::services::SceneSource;
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <system_error>
 #include <unordered_map>
 #include <utility>
 
 namespace {
-SceneSource ParseSceneSource(const std::string& value, const std::string& jsonPath) {
-    if (value == "config") {
-        return SceneSource::Config;
-    }
-    if (value == "lua") {
-        return SceneSource::Lua;
-    }
-    throw std::runtime_error("JSON member '" + jsonPath + "' must be 'config' or 'lua'");
-}
-
 const rapidjson::Value* GetObjectMember(const rapidjson::Value& parent,
                                         const char* name,
                                         const char* fullName) {
@@ -87,33 +77,13 @@ RuntimeConfigBuilder::RuntimeConfigBuilder(std::shared_ptr<ILogger> logger)
 RuntimeConfig RuntimeConfigBuilder::Build(const rapidjson::Document& document,
                                           const std::filesystem::path& configPath) const {
     RuntimeConfig config;
-    auto scriptsValue = GetObjectMember(document, "scripts", "scripts");
     auto pathsValue = GetObjectMember(document, "paths", "paths");
     auto windowValue = GetObjectMember(document, "window", "window");
     const auto* windowSizeValue = windowValue ? GetObjectMember(*windowValue, "size", "window.size") : nullptr;
-    auto runtimeValue = GetObjectMember(document, "runtime", "runtime");
     auto inputValue = GetObjectMember(document, "input", "input");
     const auto* inputBindingsValue = inputValue ? GetObjectMember(*inputValue, "bindings", "input.bindings") : nullptr;
     auto renderingValue = GetObjectMember(document, "rendering", "rendering");
     auto guiValue = GetObjectMember(document, "gui", "gui");
-
-    std::optional<std::string> scriptPathValue;
-    if (scriptsValue && scriptsValue->HasMember("entry")) {
-        const auto& value = (*scriptsValue)["entry"];
-        if (!value.IsString()) {
-            throw std::runtime_error("JSON member 'scripts.entry' must be a string");
-        }
-        scriptPathValue = value.GetString();
-    } else if (document.HasMember("lua_script")) {
-        const auto& value = document["lua_script"];
-        if (!value.IsString()) {
-            throw std::runtime_error("JSON member 'lua_script' must be a string");
-        }
-        scriptPathValue = value.GetString();
-    }
-    if (!scriptPathValue) {
-        throw std::runtime_error("JSON config requires a string member 'scripts.entry' or 'lua_script'");
-    }
 
     std::optional<std::filesystem::path> projectRoot;
     if (pathsValue && pathsValue->HasMember("project_root")) {
@@ -135,24 +105,16 @@ RuntimeConfig RuntimeConfigBuilder::Build(const rapidjson::Document& document,
             ? std::filesystem::weakly_canonical(candidate)
             : std::filesystem::weakly_canonical(configPath.parent_path() / candidate);
     }
-
-    std::filesystem::path scriptPath(*scriptPathValue);
-    if (!scriptPath.is_absolute()) {
-        scriptPath = projectRoot ? *projectRoot / scriptPath : configPath.parent_path() / scriptPath;
+    std::filesystem::path baseRoot = configPath.empty()
+        ? std::filesystem::current_path()
+        : configPath.parent_path();
+    std::filesystem::path resolvedRoot = projectRoot ? *projectRoot : baseRoot;
+    std::error_code rootError;
+    resolvedRoot = std::filesystem::weakly_canonical(resolvedRoot, rootError);
+    if (rootError) {
+        throw std::runtime_error("Failed to resolve project root: " + rootError.message());
     }
-    scriptPath = std::filesystem::weakly_canonical(scriptPath);
-    if (!std::filesystem::exists(scriptPath)) {
-        throw std::runtime_error("Lua script not found at " + scriptPath.string());
-    }
-    config.scriptPath = scriptPath;
-
-    if (runtimeValue && runtimeValue->HasMember("scene_source")) {
-        const auto& value = (*runtimeValue)["scene_source"];
-        if (!value.IsString()) {
-            throw std::runtime_error("JSON member 'runtime.scene_source' must be a string");
-        }
-        config.sceneSource = ParseSceneSource(value.GetString(), "runtime.scene_source");
-    }
+    config.projectRoot = resolvedRoot;
 
     if (windowSizeValue) {
         if (windowSizeValue->HasMember("width")) {
@@ -168,20 +130,6 @@ RuntimeConfig RuntimeConfigBuilder::Build(const rapidjson::Document& document,
         if (document.HasMember("window_height")) {
             config.height = ParseDimension(document, "window_height", "window_height");
         }
-    }
-
-    if (scriptsValue && scriptsValue->HasMember("lua_debug")) {
-        const auto& value = (*scriptsValue)["lua_debug"];
-        if (!value.IsBool()) {
-            throw std::runtime_error("JSON member 'scripts.lua_debug' must be a boolean");
-        }
-        config.luaDebug = value.GetBool();
-    } else if (document.HasMember("lua_debug")) {
-        const auto& value = document["lua_debug"];
-        if (!value.IsBool()) {
-            throw std::runtime_error("JSON member 'lua_debug' must be a boolean");
-        }
-        config.luaDebug = value.GetBool();
     }
 
     if (windowValue && windowValue->HasMember("title")) {
@@ -722,8 +670,6 @@ RuntimeConfig RuntimeConfigBuilder::Build(const rapidjson::Document& document,
                   "crash_recovery", config.crashRecovery.memoryLimitMB);
         readSizeT(*crashRecoveryValue, "max_consecutive_gpu_timeouts",
                   "crash_recovery", config.crashRecovery.maxConsecutiveGpuTimeouts);
-        readSizeT(*crashRecoveryValue, "max_lua_failures",
-                  "crash_recovery", config.crashRecovery.maxLuaFailures);
         readSizeT(*crashRecoveryValue, "max_file_format_errors",
                   "crash_recovery", config.crashRecovery.maxFileFormatErrors);
         readSizeT(*crashRecoveryValue, "max_memory_warnings",

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "services/interfaces/i_input_service.hpp"
-#include "services/interfaces/i_gui_script_service.hpp"
 #include "services/interfaces/i_logger.hpp"
 #include "services/interfaces/i_config_service.hpp"
 #include "../../../events/i_event_bus.hpp"
@@ -45,7 +44,6 @@ public:
     std::pair<float, float> GetMousePosition() const override;
     void SetRelativeMouseMode(bool enabled) override;
     bool IsRelativeMouseMode() const override;
-    void SetGuiScriptService(IGuiScriptService* guiScriptService) override;
     void UpdateGuiInput() override;
 
 private:
@@ -54,7 +52,6 @@ private:
     std::shared_ptr<ILogger> logger_;
     InputState state_;
     GuiInputSnapshot guiInputSnapshot_;
-    IGuiScriptService* guiScriptService_ = nullptr;
     SDL_Gamepad* gamepad_ = nullptr;
     bool windowFocused_ = true;
     bool mouseGrabbed_ = false;

@@ -7,16 +7,13 @@
 namespace sdl3cpp::services::impl {
 
 MaterialXShaderSystem::MaterialXShaderSystem(std::shared_ptr<IConfigService> configService,
-                                             std::shared_ptr<IScriptEngineService> scriptEngineService,
                                              std::shared_ptr<ILogger> logger)
     : configService_(std::move(configService)),
-      scriptEngineService_(std::move(scriptEngineService)),
       logger_(std::move(logger)),
       materialxGenerator_(logger_) {
     if (logger_) {
         logger_->Trace("MaterialXShaderSystem", "MaterialXShaderSystem",
-                       "configService=" + std::string(configService_ ? "set" : "null") +
-                           ", scriptEngineService=" + std::string(scriptEngineService_ ? "set" : "null"));
+                       "configService=" + std::string(configService_ ? "set" : "null"));
     }
 }
 
@@ -40,8 +37,8 @@ std::unordered_map<std::string, ShaderPaths> MaterialXShaderSystem::BuildShaderM
                            ", baseEnabled=" + std::string(materialConfig.enabled ? "true" : "false"));
     }
 
-    const auto scriptDirectory = scriptEngineService_
-        ? scriptEngineService_->GetScriptDirectory()
+    const auto scriptDirectory = configService_
+        ? configService_->GetProjectRoot()
         : std::filesystem::path{};
 
     const auto addShader = [&](const MaterialXConfig& config, const std::string& sourceLabel) {

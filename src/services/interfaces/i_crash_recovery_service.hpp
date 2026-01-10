@@ -9,7 +9,7 @@ namespace sdl3cpp::services {
  * @brief Crash recovery service interface.
  *
  * Provides mechanisms for detecting and recovering from crashes and infinite loops.
- * Monitors GPU state, Lua execution, file operations, and other critical subsystems.
+ * Monitors GPU state, file operations, and other critical subsystems.
  */
 class ICrashRecoveryService {
 public:
@@ -71,15 +71,6 @@ public:
      * @return true if GPU appears hung
      */
     virtual bool CheckGpuHealth(double lastFrameTime, double expectedFrameTime = 1.0/60.0) = 0;
-
-    /**
-     * @brief Validate Lua script execution.
-     *
-     * @param scriptResult Result from Lua operation
-     * @param scriptName Name of the script for error reporting
-     * @return true if script executed successfully
-     */
-    virtual bool ValidateLuaExecution(bool scriptResult, const std::string& scriptName) = 0;
 
     /**
      * @brief Check file format validity.

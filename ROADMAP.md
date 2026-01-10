@@ -466,3 +466,421 @@ Option B: per-shader only
 - Maintain the full testing pyramid: unit (schema, merge, IR), service (render graph, shader pipeline, budgets), integration (MaterialX shader generation, shader linking with both Vulkan/OpenGL), and end-to-end verification (boot the package, run the configured workflow, capture the frame).
 - In addition to the existing automation bullets, add multi-method screen validation (pixel diffs, non-black coverage, histogram/mean heuristics) because we occasionally do not know what the image should contain when new JSON/lua combos hit the runtime. This logic lives inside `engine_tester` and should be pluggable so we can add new heuristics later.
 - Static analysis and linters are part of the default sprint (`scripts/lint.sh` covering clang-tidy, cppcheck, compiler warning builds, and sanitizer builds). Build verification must also re-run on `build-ninja-asan` or similar sanitized configurations so we catch ordering/segfault issues early.
+
+n8n style schema:
+
+```json
+{
+"$schema": "https://json-schema.org/draft/2020-12/schema",
+"$id": "https://example.com/schemas/n8n-workflow.schema.json",
+"title": "N8N-Style Workflow",
+"type": "object",
+"additionalProperties": false,
+"required": ["name", "nodes", "connections"],
+"properties": {
+"id": {
+"description": "Optional external identifier (DB id, UUID, etc.).",
+"type": ["string", "integer"]
+},
+"name": {
+"type": "string",
+"minLength": 1
+},
+"active": {
+"type": "boolean",
+"default": false
+},
+"versionId": {
+"description": "Optional version identifier for optimistic concurrency.",
+"type": "string"
+},
+"createdAt": {
+"type": "string",
+"format": "date-time"
+},
+"updatedAt": {
+"type": "string",
+"format": "date-time"
+},
+"tags": {
+"type": "array",
+"items": { "$ref": "#/$defs/tag" },
+"default": []
+},
+"meta": {
+"description": "Arbitrary metadata. Keep stable keys for tooling.",
+"type": "object",
+"additionalProperties": true,
+"default": {}
+},
+"settings": {
+"$ref": "#/$defs/workflowSettings"
+},
+"pinData": {
+"description": "Optional pinned execution data (useful for dev).",
+"type": "object",
+"additionalProperties": {
+"type": "array",
+"items": {
+"type": "object",
+"additionalProperties": true
+}
+}
+},
+"nodes": {
+"type": "array",
+"minItems": 1,
+"items": { "$ref": "#/$defs/node" }
+},
+"connections": {
+"$ref": "#/$defs/connections"
+},
+"staticData": {
+"description": "Reserved for engine-managed workflow state.",
+"type": "object",
+"additionalProperties": true,
+"default": {}
+},
+"credentials": {
+"description": "Optional top-level credential bindings (engine-specific).",
+"type": "array",
+"items": { "$ref": "#/$defs/credentialBinding" },
+"default": []
+}
+},
+"$defs": {
+"tag": {
+"type": "object",
+"additionalProperties": false,
+"required": ["name"],
+"properties": {
+"id": { "type": ["string", "integer"] },
+"name": { "type": "string", "minLength": 1 }
+}
+},
+"workflowSettings": {
+"type": "object",
+"additionalProperties": false,
+"properties": {
+"timezone": {
+"description": "IANA timezone name, e.g. Europe/London.",
+"type": "string"
+},
+"executionTimeout": {
+"description": "Hard timeout in seconds for a workflow execution.",
+"type": "integer",
+"minimum": 0
+},
+"saveExecutionProgress": {
+"type": "boolean",
+"default": true
+},
+"saveManualExecutions": {
+"type": "boolean",
+"default": true
+},
+"saveDataErrorExecution": {
+"description": "Persist execution data on error.",
+"type": "string",
+"enum": ["all", "none"],
+"default": "all"
+},
+"saveDataSuccessExecution": {
+"description": "Persist execution data on success.",
+"type": "string",
+"enum": ["all", "none"],
+"default": "all"
+},
+"saveDataManualExecution": {
+"description": "Persist execution data for manual runs.",
+"type": "string",
+"enum": ["all", "none"],
+"default": "all"
+},
+"errorWorkflowId": {
+"description": "Optional workflow id to call on error.",
+"type": ["string", "integer"]
+},
+"callerPolicy": {
+"description": "Optional policy controlling which workflows can call this workflow.",
+"type": "string"
+}
+},
+"default": {}
+},
+"node": {
+"type": "object",
+"additionalProperties": false,
+"required": ["id", "name", "type", "typeVersion", "position"],
+"properties": {
+"id": {
+"description": "Stable unique id within the workflow. Prefer UUID.",
+"type": "string",
+"minLength": 1
+},
+"name": {
+"description": "Human-friendly name; should be unique in workflow.",
+"type": "string",
+"minLength": 1
+},
+"type": {
+"description": "Node type identifier, e.g. n8n-nodes-base.httpRequest.",
+"type": "string",
+"minLength": 1
+},
+"typeVersion": {
+"description": "Node implementation version.",
+"type": ["integer", "number"],
+"minimum": 1
+},
+"disabled": {
+"type": "boolean",
+"default": false
+},
+"notes": {
+"type": "string",
+"default": ""
+},
+"notesInFlow": {
+"description": "When true, notes are displayed on canvas.",
+"type": "boolean",
+"default": false
+},
+"retryOnFail": {
+"type": "boolean",
+"default": false
+},
+"maxTries": {
+"type": "integer",
+"minimum": 1
+},
+"waitBetweenTries": {
+"description": "Milliseconds.",
+"type": "integer",
+"minimum": 0
+},
+"continueOnFail": {
+"type": "boolean",
+"default": false
+},
+"alwaysOutputData": {
+"type": "boolean",
+"default": false
+},
+"executeOnce": {
+"description": "If true, node executes only once per execution (engine-dependent).",
+"type": "boolean",
+"default": false
+},
+"position": {
+"$ref": "#/$defs/position"
+},
+"parameters": {
+"description": "Node-specific parameters. Typically JSON-serializable.",
+"type": "object",
+"additionalProperties": true,
+"default": {}
+},
+"credentials": {
+"description": "Node-level credential references.",
+"type": "object",
+"additionalProperties": {
+"$ref": "#/$defs/credentialRef"
+},
+"default": {}
+},
+"webhookId": {
+"description": "Optional webhook id (for webhook-based trigger nodes).",
+"type": "string"
+},
+"onError": {
+"description": "Node-level error routing policy (engine-dependent).",
+"type": "string",
+"enum": ["stopWorkflow", "continueRegularOutput", "continueErrorOutput"]
+}
+}
+},
+"position": {
+"type": "array",
+"minItems": 2,
+"maxItems": 2,
+"items": {
+"type": "number"
+}
+},
+"credentialRef": {
+"type": "object",
+"additionalProperties": false,
+"required": ["id"],
+"properties": {
+"id": {
+"description": "Credential id or stable key.",
+"type": ["string", "integer"]
+},
+"name": {
+"description": "Optional human label.",
+"type": "string"
+}
+}
+},
+"credentialBinding": {
+"type": "object",
+"additionalProperties": false,
+"required": ["nodeId", "credentialType", "credentialId"],
+"properties": {
+"nodeId": { "type": "string", "minLength": 1 },
+"credentialType": { "type": "string", "minLength": 1 },
+"credentialId": { "type": ["string", "integer"] }
+}
+},
+"connections": {
+"description": "Adjacency map: fromNodeName -> outputType -> outputIndex -> array of targets.",
+"type": "object",
+"additionalProperties": {
+"$ref": "#/$defs/nodeConnectionsByType"
+},
+"default": {}
+},
+"nodeConnectionsByType": {
+"type": "object",
+"additionalProperties": false,
+"properties": {
+"main": {
+"$ref": "#/$defs/outputIndexMap"
+},
+"error": {
+"$ref": "#/$defs/outputIndexMap"
+}
+},
+"anyOf": [
+{ "required": ["main"] },
+{ "required": ["error"] }
+]
+},
+"outputIndexMap": {
+"description": "Output index -> array of connection targets.",
+"type": "object",
+"additionalProperties": {
+"type": "array",
+"items": { "$ref": "#/$defs/connectionTarget" }
+},
+"default": {}
+},
+"connectionTarget": {
+"type": "object",
+"additionalProperties": false,
+"required": ["node", "type", "index"],
+"properties": {
+"node": {
+"description": "Target node name (n8n uses node 'name' in connections).",
+"type": "string",
+"minLength": 1
+},
+"type": {
+"description": "Input type on target node (typically 'main' or 'error').",
+"type": "string",
+"minLength": 1
+},
+"index": {
+"description": "Input index on target node.",
+"type": "integer",
+"minimum": 0
+}
+}
+}
+}
+}
+```
+
+
+```json
+example data:
+{
+"id": "wf-001",
+"name": "Example HTTP → Transform → Log",
+"active": false,
+"createdAt": "2026-01-10T10:15:00Z",
+"updatedAt": "2026-01-10T10:20:00Z",
+"tags": [
+{ "id": 1, "name": "example" },
+{ "id": 2, "name": "demo" }
+],
+"settings": {
+"timezone": "Europe/London",
+"executionTimeout": 300,
+"saveExecutionProgress": true,
+"saveDataErrorExecution": "all",
+"saveDataSuccessExecution": "all"
+},
+"nodes": [
+{
+"id": "node-1",
+"name": "HTTP Request",
+"type": "n8n-nodes-base.httpRequest",
+"typeVersion": 4,
+"position": [0, 0],
+"parameters": {
+"method": "GET",
+"url": "https://api.example.com/users",
+"responseFormat": "json"
+},
+"credentials": {
+"httpBasicAuth": {
+"id": "cred-123",
+"name": "Example API Auth"
+}
+}
+},
+{
+"id": "node-2",
+"name": "Transform Data",
+"type": "n8n-nodes-base.function",
+"typeVersion": 1,
+"position": [300, 0],
+"parameters": {
+"code": "return items.map(i => ({ json: { id: i.json.id, email: i.json.email } }));"
+}
+},
+{
+"id": "node-3",
+"name": "Log Output",
+"type": "n8n-nodes-base.noOp",
+"typeVersion": 1,
+"position": [600, 0],
+"parameters": {}
+}
+],
+"connections": {
+"HTTP Request": {
+"main": {
+"0": [
+{
+"node": "Transform Data",
+"type": "main",
+"index": 0
+}
+]
+}
+},
+"Transform Data": {
+"main": {
+"0": [
+{
+"node": "Log Output",
+"type": "main",
+"index": 0
+}
+]
+}
+}
+},
+"staticData": {},
+"credentials": [
+{
+"nodeId": "node-1",
+"credentialType": "httpBasicAuth",
+"credentialId": "cred-123"
+}
+]
+}
+```

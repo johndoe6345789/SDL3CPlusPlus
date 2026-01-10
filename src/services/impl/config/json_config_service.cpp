@@ -12,19 +12,6 @@
 
 namespace sdl3cpp::services::impl {
 
-namespace {
-const char* SceneSourceName(SceneSource source) {
-    switch (source) {
-        case SceneSource::Config:
-            return "config";
-        case SceneSource::Lua:
-            return "lua";
-        default:
-            return "config";
-    }
-}
-}  // namespace
-
 JsonConfigService::JsonConfigService(std::shared_ptr<ILogger> logger,
                                      const char* argv0,
                                      std::shared_ptr<IProbeService> probeService)
@@ -36,7 +23,7 @@ JsonConfigService::JsonConfigService(std::shared_ptr<ILogger> logger,
         logger_->Trace("JsonConfigService", "JsonConfigService",
                        "argv0=" + std::string(argv0 ? argv0 : ""));
     }
-    config_.scriptPath = FindScriptPath(argv0);
+    config_.projectRoot = ResolveProjectRoot(argv0);
     configJson_ = BuildConfigJson(config_, {});
     logger_->Info("JsonConfigService initialized with default configuration");
 }
@@ -68,33 +55,31 @@ JsonConfigService::JsonConfigService(std::shared_ptr<ILogger> logger,
         logger_->Trace("JsonConfigService", "JsonConfigService",
                        "config.width=" + std::to_string(config.width) +
                        ", config.height=" + std::to_string(config.height) +
-                       ", config.scriptPath=" + config.scriptPath.string() +
-                       ", config.luaDebug=" + std::string(config.luaDebug ? "true" : "false") +
+                       ", config.projectRoot=" + config.projectRoot.string() +
                        ", config.windowTitle=" + config.windowTitle);
     }
     logger_->Info("JsonConfigService initialized with explicit configuration");
 }
 
-std::filesystem::path JsonConfigService::FindScriptPath(const char* argv0) {
+std::filesystem::path JsonConfigService::ResolveProjectRoot(const char* argv0) {
     if (logger_) {
-        logger_->Trace("JsonConfigService", "FindScriptPath",
+        logger_->Trace("JsonConfigService", "ResolveProjectRoot",
                        "argv0=" + std::string(argv0 ? argv0 : ""));
     }
-    std::filesystem::path executable;
+    std::filesystem::path basePath;
     if (argv0 && *argv0 != '\0') {
-        executable = std::filesystem::path(argv0);
-        if (executable.is_relative()) {
-            executable = std::filesystem::current_path() / executable;
+        basePath = std::filesystem::path(argv0);
+        if (basePath.is_relative()) {
+            basePath = std::filesystem::current_path() / basePath;
         }
     } else {
-        executable = std::filesystem::current_path();
+        basePath = std::filesystem::current_path();
     }
-    executable = std::filesystem::weakly_canonical(executable);
-    std::filesystem::path scriptPath = executable.parent_path() / "scripts" / "cube_logic.lua";
-    if (!std::filesystem::exists(scriptPath)) {
-        throw std::runtime_error("Could not find Lua script at " + scriptPath.string());
+    std::filesystem::path resolved = std::filesystem::weakly_canonical(basePath);
+    if (std::filesystem::is_regular_file(resolved)) {
+        resolved = resolved.parent_path();
     }
-    return scriptPath;
+    return resolved;
 }
 
 RuntimeConfig JsonConfigService::LoadFromJson(std::shared_ptr<ILogger> logger,
@@ -150,15 +135,6 @@ std::string JsonConfigService::BuildConfigJson(const RuntimeConfig& config,
     document.AddMember("schema_version", json_config::kRuntimeConfigSchemaVersion, allocator);
     document.AddMember("configVersion", json_config::kRuntimeConfigSchemaVersion, allocator);
 
-    rapidjson::Value scriptsObject(rapidjson::kObjectType);
-    addStringMember(scriptsObject, "entry", config.scriptPath.string());
-    scriptsObject.AddMember("lua_debug", config.luaDebug, allocator);
-    document.AddMember("scripts", scriptsObject, allocator);
-
-    rapidjson::Value runtimeObject(rapidjson::kObjectType);
-    addStringMember(runtimeObject, "scene_source", SceneSourceName(config.sceneSource));
-    document.AddMember("runtime", runtimeObject, allocator);
-
     rapidjson::Value windowObject(rapidjson::kObjectType);
     addStringMember(windowObject, "title", config.windowTitle);
     rapidjson::Value sizeObject(rapidjson::kObjectType);
@@ -166,7 +142,10 @@ std::string JsonConfigService::BuildConfigJson(const RuntimeConfig& config,
     sizeObject.AddMember("height", config.height, allocator);
     windowObject.AddMember("size", sizeObject, allocator);
 
-    std::filesystem::path scriptsDir = config.scriptPath.parent_path();
+    std::filesystem::path projectRoot = config.projectRoot;
+    if (projectRoot.empty()) {
+        projectRoot = configPath.empty() ? std::filesystem::current_path() : configPath.parent_path();
+    }
 
     rapidjson::Value mouseGrabObject(rapidjson::kObjectType);
     mouseGrabObject.AddMember("enabled", config.mouseGrab.enabled, allocator);
@@ -287,8 +266,6 @@ std::string JsonConfigService::BuildConfigJson(const RuntimeConfig& config,
                           config.crashRecovery.gpuHangFrameTimeMultiplier, allocator);
     crashObject.AddMember("max_consecutive_gpu_timeouts",
                           static_cast<uint64_t>(config.crashRecovery.maxConsecutiveGpuTimeouts), allocator);
-    crashObject.AddMember("max_lua_failures",
-                          static_cast<uint64_t>(config.crashRecovery.maxLuaFailures), allocator);
     crashObject.AddMember("max_file_format_errors",
                           static_cast<uint64_t>(config.crashRecovery.maxFileFormatErrors), allocator);
     crashObject.AddMember("max_memory_warnings",
@@ -444,11 +421,7 @@ std::string JsonConfigService::BuildConfigJson(const RuntimeConfig& config,
     inputObject.AddMember("bindings", bindingsObject, allocator);
     document.AddMember("input", inputObject, allocator);
 
-    std::filesystem::path projectRoot = scriptsDir.parent_path();
     rapidjson::Value pathsObject(rapidjson::kObjectType);
-    if (!scriptsDir.empty()) {
-        addStringMember(pathsObject, "scripts", scriptsDir.string());
-    }
     if (!projectRoot.empty()) {
         addStringMember(pathsObject, "project_root", projectRoot.string());
         addStringMember(pathsObject, "shaders", (projectRoot / "shaders").string());

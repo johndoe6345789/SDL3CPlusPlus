@@ -2,7 +2,6 @@
 
 #include "services/interfaces/i_config_service.hpp"
 #include "services/interfaces/i_logger.hpp"
-#include "services/interfaces/i_script_engine_service.hpp"
 #include "services/interfaces/i_shader_system.hpp"
 #include "services/impl/materialx/materialx_shader_generator.hpp"
 
@@ -17,7 +16,6 @@ namespace sdl3cpp::services::impl {
 class MaterialXShaderSystem final : public IShaderSystem {
 public:
     MaterialXShaderSystem(std::shared_ptr<IConfigService> configService,
-                          std::shared_ptr<IScriptEngineService> scriptEngineService,
                           std::shared_ptr<ILogger> logger);
 
     std::string GetId() const override { return "materialx"; }
@@ -30,7 +28,6 @@ public:
 
 private:
     std::shared_ptr<IConfigService> configService_;
-    std::shared_ptr<IScriptEngineService> scriptEngineService_;
     std::shared_ptr<ILogger> logger_;
     MaterialXShaderGenerator materialxGenerator_;
     std::unordered_map<std::string, ShaderPaths> lastShaderMap_;

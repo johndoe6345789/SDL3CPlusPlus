@@ -17,7 +17,7 @@ namespace sdl3cpp::services::impl {
 /**
  * @brief Crash recovery service implementation.
  *
- * Detects crashes, GPU hangs, Lua failures, file format issues, and provides recovery mechanisms.
+ * Detects crashes, GPU hangs, file format issues, and provides recovery mechanisms.
  * Monitors system health and provides comprehensive error detection and recovery.
  */
 class CrashRecoveryService : public ICrashRecoveryService {
@@ -34,7 +34,6 @@ public:
     bool AttemptRecovery() override;
     std::string GetCrashReport() const override;
     bool CheckGpuHealth(double lastFrameTime, double expectedFrameTime) override;
-    bool ValidateLuaExecution(bool scriptResult, const std::string& scriptName) override;
     bool ValidateFileFormat(const std::string& filePath, const std::string& expectedFormat) override;
     bool CheckMemoryHealth() override;
     std::string GetSystemHealthStatus() const override;
@@ -72,7 +71,6 @@ private:
     // Health monitoring state
     std::atomic<double> lastSuccessfulFrameTime_;
     std::atomic<size_t> consecutiveFrameTimeouts_;
-    std::atomic<size_t> luaExecutionFailures_;
     std::atomic<size_t> fileFormatErrors_;
     std::atomic<size_t> memoryWarnings_;
     std::chrono::steady_clock::time_point lastHealthCheck_;

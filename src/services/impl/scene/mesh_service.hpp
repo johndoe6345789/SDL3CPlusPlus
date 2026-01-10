@@ -9,7 +9,7 @@
 namespace sdl3cpp::services::impl {
 
 /**
- * @brief Script-facing mesh loading service implementation.
+ * @brief Mesh loading service implementation.
  */
 class MeshService : public IMeshService {
 public:
@@ -23,7 +23,6 @@ public:
                          const std::string& entryPath,
                          MeshPayload& outPayload,
                          std::string& outError) override;
-    void PushMeshToLua(lua_State* L, const MeshPayload& payload) override;
 
 private:
     bool ResolvePath(const std::string& requestedPath,

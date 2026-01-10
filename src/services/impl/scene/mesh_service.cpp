@@ -15,7 +15,6 @@
 #include <filesystem>
 #include <fstream>
 #include <limits>
-#include <lua.hpp>
 #include <system_error>
 #include <zip.h>
 
@@ -866,7 +865,7 @@ bool MeshService::ResolvePath(const std::string& requestedPath,
 
     std::filesystem::path resolved(requestedPath);
     if (!resolved.is_absolute()) {
-        resolved = configService_->GetScriptPath().parent_path() / resolved;
+        resolved = configService_->GetProjectRoot() / resolved;
     }
 
     std::error_code ec;
@@ -878,81 +877,6 @@ bool MeshService::ResolvePath(const std::string& requestedPath,
 
     resolvedPath = std::move(resolved);
     return true;
-}
-
-void MeshService::PushMeshToLua(lua_State* L, const MeshPayload& payload) {
-    if (logger_) {
-        logger_->Trace("MeshService", "PushMeshToLua",
-                       "positions.size=" + std::to_string(payload.positions.size()) +
-                       ", normals.size=" + std::to_string(payload.normals.size()) +
-                       ", colors.size=" + std::to_string(payload.colors.size()) +
-                       ", texcoords.size=" + std::to_string(payload.texcoords.size()) +
-                       ", indices.size=" + std::to_string(payload.indices.size()) +
-                       ", luaStateIsNull=" + std::string(L ? "false" : "true"));
-    }
-    lua_newtable(L);
-
-    lua_newtable(L);
-    for (size_t vertexIndex = 0; vertexIndex < payload.positions.size(); ++vertexIndex) {
-        lua_newtable(L);
-
-        lua_newtable(L);
-        for (size_t component = 0; component < 3; ++component) {
-            lua_pushnumber(L, payload.positions[vertexIndex][component]);
-            lua_rawseti(L, -2, static_cast<int>(component + 1));
-        }
-        lua_setfield(L, -2, "position");
-
-        lua_newtable(L);
-        std::array<float, 3> normal = {0.0f, 0.0f, 1.0f};
-        if (vertexIndex < payload.normals.size()) {
-            normal = payload.normals[vertexIndex];
-        }
-        for (size_t component = 0; component < 3; ++component) {
-            lua_pushnumber(L, normal[component]);
-            lua_rawseti(L, -2, static_cast<int>(component + 1));
-        }
-        lua_setfield(L, -2, "normal");
-
-        lua_newtable(L);
-        std::array<float, 3> tangent = {1.0f, 0.0f, 0.0f};
-        if (vertexIndex < payload.tangents.size()) {
-            tangent = payload.tangents[vertexIndex];
-        }
-        for (size_t component = 0; component < 3; ++component) {
-            lua_pushnumber(L, tangent[component]);
-            lua_rawseti(L, -2, static_cast<int>(component + 1));
-        }
-        lua_setfield(L, -2, "tangent");
-
-        lua_newtable(L);
-        for (size_t component = 0; component < 3; ++component) {
-            lua_pushnumber(L, payload.colors[vertexIndex][component]);
-            lua_rawseti(L, -2, static_cast<int>(component + 1));
-        }
-        lua_setfield(L, -2, "color");
-
-        lua_newtable(L);
-        std::array<float, 2> texcoord = {0.0f, 0.0f};
-        if (vertexIndex < payload.texcoords.size()) {
-            texcoord = payload.texcoords[vertexIndex];
-        }
-        for (size_t component = 0; component < 2; ++component) {
-            lua_pushnumber(L, texcoord[component]);
-            lua_rawseti(L, -2, static_cast<int>(component + 1));
-        }
-        lua_setfield(L, -2, "texcoord");
-
-        lua_rawseti(L, -2, static_cast<int>(vertexIndex + 1));
-    }
-    lua_setfield(L, -2, "vertices");
-
-    lua_newtable(L);
-    for (size_t index = 0; index < payload.indices.size(); ++index) {
-        lua_pushinteger(L, static_cast<lua_Integer>(payload.indices[index]) + 1);
-        lua_rawseti(L, -2, static_cast<int>(index + 1));
-    }
-    lua_setfield(L, -2, "indices");
 }
 
 }  // namespace sdl3cpp::services::impl

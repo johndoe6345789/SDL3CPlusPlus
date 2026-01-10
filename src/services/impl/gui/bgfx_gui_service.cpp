@@ -488,16 +488,10 @@ std::filesystem::path BgfxGuiService::ResolvePath(const std::filesystem::path& p
 
     std::vector<std::filesystem::path> roots;
     if (configService_) {
-        auto scriptPath = configService_->GetScriptPath();
-        if (!scriptPath.empty()) {
-            auto scriptDir = scriptPath.parent_path();
-            if (!scriptDir.empty()) {
-                roots.push_back(scriptDir);
-                auto projectRoot = scriptDir.parent_path();
-                if (!projectRoot.empty()) {
-                    roots.push_back(projectRoot);
-                }
-            }
+        auto projectRoot = configService_->GetProjectRoot();
+        if (!projectRoot.empty()) {
+            roots.push_back(projectRoot / "scripts");
+            roots.push_back(projectRoot);
         }
     }
     roots.push_back(std::filesystem::current_path());
@@ -515,11 +509,10 @@ std::filesystem::path BgfxGuiService::ResolvePath(const std::filesystem::path& p
 std::filesystem::path BgfxGuiService::ResolveDefaultFontPath() const {
     std::vector<std::filesystem::path> candidates;
     if (configService_) {
-        auto scriptPath = configService_->GetScriptPath();
-        if (!scriptPath.empty()) {
-            auto scriptDir = scriptPath.parent_path();
-            candidates.push_back(scriptDir / "assets" / "fonts" / "Roboto-Regular.ttf");
-            candidates.push_back(scriptDir.parent_path() / "scripts" / "assets" / "fonts" / "Roboto-Regular.ttf");
+        auto projectRoot = configService_->GetProjectRoot();
+        if (!projectRoot.empty()) {
+            candidates.push_back(projectRoot / "assets" / "fonts" / "Roboto-Regular.ttf");
+            candidates.push_back(projectRoot / "scripts" / "assets" / "fonts" / "Roboto-Regular.ttf");
         }
     }
     candidates.push_back(std::filesystem::current_path() / "scripts" / "assets" / "fonts" / "Roboto-Regular.ttf");

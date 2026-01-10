@@ -18,12 +18,7 @@
 #include "services/impl/scene/ecs_service.hpp"
 #include "services/impl/graphics/graphics_service.hpp"
 #include "services/impl/graphics/bgfx_graphics_backend.hpp"
-#include "services/impl/script/script_engine_service.hpp"
-#include "services/impl/script/scene_script_service.hpp"
-#include "services/impl/script/shader_script_service.hpp"
 #include "services/impl/shader/shader_system_registry.hpp"
-#include "services/impl/script/gui_script_service.hpp"
-#include "services/impl/audio/audio_command_service.hpp"
 #include "services/impl/scene/physics_bridge_service.hpp"
 #include "services/impl/scene/mesh_service.hpp"
 #include "services/impl/scene/scene_service.hpp"
@@ -67,7 +62,9 @@ ServiceBasedApp::ServiceBasedApp(services::RuntimeConfig runtimeConfig, services
         logger_->SetLevel(logLevel);
     }
     
-    logger_->Trace("ServiceBasedApp", "ServiceBasedApp", "scriptPath=" + runtimeConfig_.scriptPath.string(), "constructor starting");
+    logger_->Trace("ServiceBasedApp", "ServiceBasedApp",
+                   "projectRoot=" + runtimeConfig_.projectRoot.string(),
+                   "constructor starting");
 
     try {
         logger_->Info("ServiceBasedApp::ServiceBasedApp: Setting up SDL");
@@ -302,7 +299,7 @@ void ServiceBasedApp::RegisterServices() {
         registry_.GetService<services::IConfigService>(),
         registry_.GetService<services::ILogger>());
 
-    // Audio service (needed before script bindings execute)
+    // Audio service
     registry_.RegisterService<services::IAudioService, services::impl::SdlAudioService>(
         registry_.GetService<services::ILogger>());
 
@@ -325,51 +322,15 @@ void ServiceBasedApp::RegisterServices() {
         registry_.GetService<services::IValidationTourService>(),
         registry_.GetService<services::ISoundboardStateService>());
 
-    // Script bridge services
+    // Physics bridge services
     registry_.RegisterService<services::IPhysicsBridgeService, services::impl::PhysicsBridgeService>(
         registry_.GetService<services::ILogger>());
-    registry_.RegisterService<services::IAudioCommandService, services::impl::AudioCommandService>(
-        registry_.GetService<services::IConfigService>(),
-        registry_.GetService<services::IAudioService>(),
-        registry_.GetService<services::ILogger>());
-
-    // Script engine service (shared Lua runtime)
-    registry_.RegisterService<services::IScriptEngineService, services::impl::ScriptEngineService>(
-        runtimeConfig_.scriptPath,
-        registry_.GetService<services::ILogger>(),
-        registry_.GetService<services::IMeshService>(),
-        registry_.GetService<services::IAudioCommandService>(),
-        registry_.GetService<services::IPhysicsBridgeService>(),
-        registry_.GetService<services::IInputService>(),
-        registry_.GetService<services::IWindowService>(),
-        registry_.GetService<services::IConfigService>(),
-        runtimeConfig_.luaDebug);
 
     // Shader system registry (pluggable shader system selection)
     registry_.RegisterService<services::IShaderSystemRegistry, services::impl::ShaderSystemRegistry>(
         registry_.GetService<services::IConfigService>(),
         registry_.GetService<services::IConfigCompilerService>(),
-        registry_.GetService<services::IScriptEngineService>(),
         registry_.GetService<services::ILogger>());
-
-    // Script-facing services
-    registry_.RegisterService<services::ISceneScriptService, services::impl::SceneScriptService>(
-        registry_.GetService<services::IScriptEngineService>(),
-        registry_.GetService<services::ILogger>());
-    registry_.RegisterService<services::IShaderScriptService, services::impl::ShaderScriptService>(
-        registry_.GetService<services::IScriptEngineService>(),
-        registry_.GetService<services::IShaderSystemRegistry>(),
-        registry_.GetService<services::ILogger>());
-    registry_.RegisterService<services::IGuiScriptService, services::impl::GuiScriptService>(
-        registry_.GetService<services::IScriptEngineService>(),
-        registry_.GetService<services::ILogger>());
-
-    // Connect input service to GUI script service for GUI input processing
-    auto inputService = registry_.GetService<services::IInputService>();
-    auto guiScriptService = registry_.GetService<services::IGuiScriptService>();
-    if (inputService && guiScriptService) {
-        inputService->SetGuiScriptService(guiScriptService.get());
-    }
 
     auto graphicsBackend = std::make_shared<services::impl::BgfxGraphicsBackend>(
         registry_.GetService<services::IConfigService>(),
@@ -386,7 +347,6 @@ void ServiceBasedApp::RegisterServices() {
 
     // Scene service
     registry_.RegisterService<services::ISceneService, services::impl::SceneService>(
-        registry_.GetService<services::ISceneScriptService>(),
         registry_.GetService<services::IEcsService>(),
         registry_.GetService<services::ILogger>(),
         registry_.GetService<services::IProbeService>());
@@ -409,12 +369,9 @@ void ServiceBasedApp::RegisterServices() {
     // Render coordinator service
     registry_.RegisterService<services::IRenderCoordinatorService, services::impl::RenderCoordinatorService>(
         registry_.GetService<services::ILogger>(),
-        registry_.GetService<services::IConfigService>(),
         registry_.GetService<services::IConfigCompilerService>(),
         registry_.GetService<services::IGraphicsService>(),
-        registry_.GetService<services::ISceneScriptService>(),
-        registry_.GetService<services::IShaderScriptService>(),
-        registry_.GetService<services::IGuiScriptService>(),
+        registry_.GetService<services::IShaderSystemRegistry>(),
         registry_.GetService<services::IGuiService>(),
         registry_.GetService<services::ISceneService>(),
         registry_.GetService<services::IValidationTourService>());

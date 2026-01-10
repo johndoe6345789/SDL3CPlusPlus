@@ -9,33 +9,24 @@
 namespace sdl3cpp::services::impl {
 
 RenderCoordinatorService::RenderCoordinatorService(std::shared_ptr<ILogger> logger,
-                                                   std::shared_ptr<IConfigService> configService,
                                                    std::shared_ptr<IConfigCompilerService> configCompilerService,
                                                    std::shared_ptr<IGraphicsService> graphicsService,
-                                                   std::shared_ptr<ISceneScriptService> sceneScriptService,
-                                                   std::shared_ptr<IShaderScriptService> shaderScriptService,
-                                                   std::shared_ptr<IGuiScriptService> guiScriptService,
+                                                   std::shared_ptr<IShaderSystemRegistry> shaderSystemRegistry,
                                                    std::shared_ptr<IGuiService> guiService,
                                                    std::shared_ptr<ISceneService> sceneService,
                                                    std::shared_ptr<IValidationTourService> validationTourService)
     : logger_(std::move(logger)),
-      configService_(std::move(configService)),
       configCompilerService_(std::move(configCompilerService)),
       graphicsService_(std::move(graphicsService)),
-      sceneScriptService_(std::move(sceneScriptService)),
-      shaderScriptService_(std::move(shaderScriptService)),
-      guiScriptService_(std::move(guiScriptService)),
+      shaderSystemRegistry_(std::move(shaderSystemRegistry)),
       guiService_(std::move(guiService)),
       sceneService_(std::move(sceneService)),
       validationTourService_(std::move(validationTourService)) {
     if (logger_) {
         logger_->Trace("RenderCoordinatorService", "RenderCoordinatorService",
-                       "configService=" + std::string(configService_ ? "set" : "null") +
-                       ", configCompilerService=" + std::string(configCompilerService_ ? "set" : "null") +
+                       "configCompilerService=" + std::string(configCompilerService_ ? "set" : "null") +
                        ", graphicsService=" + std::string(graphicsService_ ? "set" : "null") +
-                       ", sceneScriptService=" + std::string(sceneScriptService_ ? "set" : "null") +
-                       ", shaderScriptService=" + std::string(shaderScriptService_ ? "set" : "null") +
-                       ", guiScriptService=" + std::string(guiScriptService_ ? "set" : "null") +
+                       ", shaderSystemRegistry=" + std::string(shaderSystemRegistry_ ? "set" : "null") +
                        ", guiService=" + std::string(guiService_ ? "set" : "null") +
                        ", sceneService=" + std::string(sceneService_ ? "set" : "null") +
                        ", validationTourService=" + std::string(validationTourService_ ? "set" : "null"),
@@ -162,49 +153,37 @@ void RenderCoordinatorService::RenderFrameInternal(float time,
         return;
     }
 
-    const bool useLuaScene = !configService_ || configService_->GetSceneSource() == SceneSource::Lua;
-    if (!useLuaScene && !configFirstLogged_) {
-        if (logger_) {
-            logger_->Warn("RenderCoordinatorService::RenderFrame: config-first scene source selected; Lua scene path disabled");
-        }
-        configFirstLogged_ = true;
-    }
-
     if (!shadersLoaded_) {
-        if (!useLuaScene) {
-            shadersLoaded_ = true;
-        } else if (!shaderScriptService_) {
+        if (!shaderSystemRegistry_) {
             if (logger_) {
-                logger_->Error("RenderCoordinatorService::RenderFrame: Shader script service not available");
+                logger_->Error("RenderCoordinatorService::RenderFrame: Shader system registry not available");
             }
             return;
         }
-        if (!shadersLoaded_) {
-            if (logger_) {
-                logger_->Trace("RenderCoordinatorService", "RenderFrame",
-                               "Priming bgfx with a dummy frame before shader load");
-            }
-            if (!graphicsService_->BeginFrame()) {
-                if (logger_) {
-                    logger_->Warn("RenderCoordinatorService::RenderFrame: Swapchain out of date during shader pre-frame");
-                }
-                graphicsService_->RecreateSwapchain();
-                return;
-            }
-            if (!graphicsService_->EndFrame()) {
-                if (logger_) {
-                    logger_->Warn("RenderCoordinatorService::RenderFrame: Swapchain out of date during shader pre-frame");
-                }
-                graphicsService_->RecreateSwapchain();
-                return;
-            }
-            if (logger_) {
-                logger_->Trace("RenderCoordinatorService", "RenderFrame", "Loading shaders from Lua");
-            }
-            auto shaders = shaderScriptService_->LoadShaderPathsMap();
-            graphicsService_->LoadShaders(shaders);
-            shadersLoaded_ = true;
+        if (logger_) {
+            logger_->Trace("RenderCoordinatorService", "RenderFrame",
+                           "Priming bgfx with a dummy frame before shader load");
         }
+        if (!graphicsService_->BeginFrame()) {
+            if (logger_) {
+                logger_->Warn("RenderCoordinatorService::RenderFrame: Swapchain out of date during shader pre-frame");
+            }
+            graphicsService_->RecreateSwapchain();
+            return;
+        }
+        if (!graphicsService_->EndFrame()) {
+            if (logger_) {
+                logger_->Warn("RenderCoordinatorService::RenderFrame: Swapchain out of date during shader pre-frame");
+            }
+            graphicsService_->RecreateSwapchain();
+            return;
+        }
+        if (logger_) {
+            logger_->Trace("RenderCoordinatorService", "RenderFrame", "Loading shaders from registry");
+        }
+        auto shaders = shaderSystemRegistry_->BuildShaderMap();
+        graphicsService_->LoadShaders(shaders);
+        shadersLoaded_ = true;
     }
 
     if (!graphicsService_->BeginFrame()) {
@@ -215,9 +194,7 @@ void RenderCoordinatorService::RenderFrameInternal(float time,
         return;
     }
 
-    if (!useLuaScene) {
-        ConfigureRenderGraphPasses();
-    }
+    ConfigureRenderGraphPasses();
 
     if (guiService_) {
         auto extent = graphicsService_->GetSwapchainExtent();
@@ -228,21 +205,14 @@ void RenderCoordinatorService::RenderFrameInternal(float time,
                                "Using workflow GUI commands");
             }
             guiService_->PrepareFrame(*guiCommands, extent.first, extent.second);
-        } else if (guiScriptService_ && guiScriptService_->HasGuiCommands()) {
-            auto scriptCommands = guiScriptService_->LoadGuiCommands();
-            if (logger_) {
-                logger_->Trace("RenderCoordinatorService", "RenderFrame",
-                               "guiCommands=" + std::to_string(scriptCommands.size()),
-                               "Using script GUI commands");
-            }
-            guiService_->PrepareFrame(scriptCommands, extent.first, extent.second);
         }
     }
 
-    if (useLuaScene && sceneScriptService_ && sceneService_) {
-        auto sceneObjects = sceneScriptService_->LoadSceneObjects();
-        sceneService_->LoadScene(sceneObjects);
-
+    if (!sceneService_) {
+        if (logger_) {
+            logger_->Error("RenderCoordinatorService::RenderFrame: Scene service not available");
+        }
+    } else {
         const auto& vertices = sceneService_->GetCombinedVertices();
         const auto& indices = sceneService_->GetCombinedIndices();
         bool geometryChanged = vertices.size() != lastVertexCount_ || indices.size() != lastIndexCount_;
@@ -274,7 +244,20 @@ void RenderCoordinatorService::RenderFrameInternal(float time,
             validationPlan = validationTourService_->BeginFrame(aspect);
         }
 
-        ViewState viewState = overrideView ? *overrideView : sceneScriptService_->GetViewState(aspect);
+        ViewState viewState{};
+        if (overrideView) {
+            viewState = *overrideView;
+        } else {
+            viewState.view = {
+                1.0f, 0.0f, 0.0f, 0.0f,
+                0.0f, 1.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 1.0f, 0.0f,
+                0.0f, 0.0f, 0.0f, 1.0f
+            };
+            viewState.proj = viewState.view;
+            viewState.viewProj = viewState.view;
+            viewState.cameraPosition = {0.0f, 0.0f, 0.0f};
+        }
         if (validationPlan.active && validationPlan.overrideView) {
             viewState = validationPlan.viewState;
         }
