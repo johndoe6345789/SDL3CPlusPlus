@@ -308,6 +308,7 @@ set(FRAME_WORKFLOW_SOURCES
     src/services/impl/workflow_frame_render_step.cpp
     src/services/impl/workflow_frame_audio_step.cpp
     src/services/impl/workflow_frame_gui_step.cpp
+    src/services/impl/workflow_validation_checkpoint_step.cpp
     src/services/impl/frame_workflow_step_registrar.cpp
     src/services/impl/frame_workflow_service.cpp
 )
