@@ -1,75 +1,95 @@
 {
-  "template": "frame.default",
+  "name": "Quake3 Frame",
   "nodes": [
     {
       "id": "quake_begin",
-      "plugin": "frame.begin",
+      "name": "Quake Begin",
+      "type": "frame.begin",
+      "typeVersion": 1,
       "position": [0, 0],
-      "inputs": {
-        "delta": "frame.delta"
+      "parameters": {
+        "inputs": {
+          "delta": "frame.delta"
+        }
       }
     },
     {
       "id": "quake_physics",
-      "plugin": "frame.bullet_physics",
+      "name": "Quake Physics",
+      "type": "frame.bullet_physics",
+      "typeVersion": 1,
       "position": [260, 0],
-      "inputs": {
-        "delta": "frame.delta"
+      "parameters": {
+        "inputs": {
+          "delta": "frame.delta"
+        }
       }
     },
     {
       "id": "quake_scene",
-      "plugin": "frame.scene",
+      "name": "Quake Scene",
+      "type": "frame.scene",
+      "typeVersion": 1,
       "position": [520, 0],
-      "inputs": {
-        "delta": "frame.delta"
+      "parameters": {
+        "inputs": {
+          "delta": "frame.delta"
+        }
       }
     },
     {
       "id": "quake_render",
-      "plugin": "frame.render",
+      "name": "Quake Render",
+      "type": "frame.render",
+      "typeVersion": 1,
       "position": [780, 0],
-      "inputs": {
-        "elapsed": "frame.elapsed"
+      "parameters": {
+        "inputs": {
+          "elapsed": "frame.elapsed"
+        }
       }
     },
     {
       "id": "quake_validation",
-      "plugin": "validation.tour.checkpoint",
+      "name": "Quake Validation",
+      "type": "validation.tour.checkpoint",
+      "typeVersion": 1,
       "position": [1040, 0],
-      "inputs": {
-        "checkpoint": "packages.quake3_map"
+      "parameters": {
+        "inputs": {
+          "checkpoint": "packages.quake3_map"
+        }
       }
     }
   ],
   "connections": {
-    "quake_begin": {
-      "main": [
-        [
-          { "node": "quake_physics", "type": "main", "index": 0 }
+    "Quake Begin": {
+      "main": {
+        "0": [
+          { "node": "Quake Physics", "type": "main", "index": 0 }
         ]
-      ]
+      }
     },
-    "quake_physics": {
-      "main": [
-        [
-          { "node": "quake_scene", "type": "main", "index": 0 }
+    "Quake Physics": {
+      "main": {
+        "0": [
+          { "node": "Quake Scene", "type": "main", "index": 0 }
         ]
-      ]
+      }
     },
-    "quake_scene": {
-      "main": [
-        [
-          { "node": "quake_render", "type": "main", "index": 0 }
+    "Quake Scene": {
+      "main": {
+        "0": [
+          { "node": "Quake Render", "type": "main", "index": 0 }
         ]
-      ]
+      }
     },
-    "quake_render": {
-      "main": [
-        [
-          { "node": "quake_validation", "type": "main", "index": 0 }
+    "Quake Render": {
+      "main": {
+        "0": [
+          { "node": "Quake Validation", "type": "main", "index": 0 }
         ]
-      ]
+      }
     }
   }
 }

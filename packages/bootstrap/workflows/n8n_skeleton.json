@@ -1,34 +1,42 @@
 {
-  "template": "n8n.skeleton",
+  "name": "N8N Skeleton",
   "nodes": [
     {
       "id": "load_config",
-      "plugin": "config.load",
+      "name": "Load Config",
+      "type": "config.load",
+      "typeVersion": 1,
       "position": [0, 0],
-      "inputs": {
-        "path": "config.path"
-      },
-      "outputs": {
-        "document": "config.document"
+      "parameters": {
+        "inputs": {
+          "path": "config.path"
+        },
+        "outputs": {
+          "document": "config.document"
+        }
       }
     },
     {
       "id": "validate_schema",
-      "plugin": "config.schema.validate",
+      "name": "Validate Schema",
+      "type": "config.schema.validate",
+      "typeVersion": 1,
       "position": [260, 0],
-      "inputs": {
-        "document": "config.document",
-        "path": "config.path"
+      "parameters": {
+        "inputs": {
+          "document": "config.document",
+          "path": "config.path"
+        }
       }
     }
   ],
   "connections": {
-    "load_config": {
-      "main": [
-        [
-          { "node": "validate_schema", "type": "main", "index": 0 }
+    "Load Config": {
+      "main": {
+        "0": [
+          { "node": "Validate Schema", "type": "main", "index": 0 }
         ]
-      ]
+      }
     }
   }
 }

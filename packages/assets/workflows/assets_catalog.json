@@ -1,41 +1,45 @@
 {
-  "template": "package.assets",
+  "name": "Assets Catalog",
   "nodes": [
     {
       "id": "asset_roots",
-      "plugin": "list.literal",
+      "name": "Asset Roots",
+      "type": "list.literal",
+      "typeVersion": 1,
       "position": [0, 0],
-      "outputs": {
-        "list": "assets.roots"
-      },
       "parameters": {
         "items": [
           "assets/audio",
           "assets/fonts",
           "assets/images"
         ],
-        "type": "string"
+        "type": "string",
+        "outputs": {
+          "list": "assets.roots"
+        }
       }
     },
     {
       "id": "assert_asset_roots",
-      "plugin": "value.assert.type",
+      "name": "Assert Asset Roots",
+      "type": "value.assert.type",
+      "typeVersion": 1,
       "position": [260, 0],
-      "inputs": {
-        "value": "assets.roots"
-      },
       "parameters": {
+        "inputs": {
+          "value": "assets.roots"
+        },
         "type": "string_list"
       }
     }
   ],
   "connections": {
-    "asset_roots": {
-      "main": [
-        [
-          { "node": "assert_asset_roots", "type": "main", "index": 0 }
+    "Asset Roots": {
+      "main": {
+        "0": [
+          { "node": "Assert Asset Roots", "type": "main", "index": 0 }
         ]
-      ]
+      }
     }
   }
 }

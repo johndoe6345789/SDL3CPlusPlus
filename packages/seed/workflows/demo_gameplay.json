@@ -1,95 +1,119 @@
 {
-  "template": "frame.default",
+  "name": "Seed Demo Gameplay",
   "nodes": [
     {
       "id": "begin_frame",
-      "plugin": "frame.begin",
+      "name": "Begin Frame",
+      "type": "frame.begin",
+      "typeVersion": 1,
       "position": [0, 0],
-      "inputs": {
-        "delta": "frame.delta",
-        "elapsed": "frame.elapsed"
+      "parameters": {
+        "inputs": {
+          "delta": "frame.delta",
+          "elapsed": "frame.elapsed"
+        }
       }
     },
     {
       "id": "camera_control",
-      "plugin": "frame.camera",
+      "name": "Camera Control",
+      "type": "frame.camera",
+      "typeVersion": 1,
       "position": [260, 0],
-      "inputs": {
-        "delta": "frame.delta"
-      },
-      "outputs": {
-        "view_state": "frame.view_state"
+      "parameters": {
+        "inputs": {
+          "delta": "frame.delta"
+        },
+        "outputs": {
+          "view_state": "frame.view_state"
+        }
       }
     },
     {
       "id": "bullet_physics",
-      "plugin": "frame.bullet_physics",
+      "name": "Bullet Physics",
+      "type": "frame.bullet_physics",
+      "typeVersion": 1,
       "position": [520, 0],
-      "inputs": {
-        "delta": "frame.delta"
+      "parameters": {
+        "inputs": {
+          "delta": "frame.delta"
+        }
       }
     },
     {
       "id": "scene",
-      "plugin": "frame.scene",
+      "name": "Scene Update",
+      "type": "frame.scene",
+      "typeVersion": 1,
       "position": [780, 0],
-      "inputs": {
-        "delta": "frame.delta"
+      "parameters": {
+        "inputs": {
+          "delta": "frame.delta"
+        }
       }
     },
     {
       "id": "render",
-      "plugin": "frame.render",
+      "name": "Render Frame",
+      "type": "frame.render",
+      "typeVersion": 1,
       "position": [1040, 0],
-      "inputs": {
-        "elapsed": "frame.elapsed",
-        "view_state": "frame.view_state"
+      "parameters": {
+        "inputs": {
+          "elapsed": "frame.elapsed",
+          "view_state": "frame.view_state"
+        }
       }
     },
     {
       "id": "validate_capture",
-      "plugin": "validation.tour.checkpoint",
+      "name": "Validate Capture",
+      "type": "validation.tour.checkpoint",
+      "typeVersion": 1,
       "position": [1300, 0],
-      "inputs": {
-        "checkpoint": "gameplay.startup_camera"
+      "parameters": {
+        "inputs": {
+          "checkpoint": "gameplay.startup_camera"
+        }
       }
     }
   ],
   "connections": {
-    "begin_frame": {
-      "main": [
-        [
-          { "node": "camera_control", "type": "main", "index": 0 }
+    "Begin Frame": {
+      "main": {
+        "0": [
+          { "node": "Camera Control", "type": "main", "index": 0 }
         ]
-      ]
+      }
     },
-    "camera_control": {
-      "main": [
-        [
-          { "node": "bullet_physics", "type": "main", "index": 0 }
+    "Camera Control": {
+      "main": {
+        "0": [
+          { "node": "Bullet Physics", "type": "main", "index": 0 }
         ]
-      ]
+      }
     },
-    "bullet_physics": {
-      "main": [
-        [
-          { "node": "scene", "type": "main", "index": 0 }
+    "Bullet Physics": {
+      "main": {
+        "0": [
+          { "node": "Scene Update", "type": "main", "index": 0 }
         ]
-      ]
+      }
     },
-    "scene": {
-      "main": [
-        [
-          { "node": "render", "type": "main", "index": 0 }
+    "Scene Update": {
+      "main": {
+        "0": [
+          { "node": "Render Frame", "type": "main", "index": 0 }
         ]
-      ]
+      }
     },
-    "render": {
-      "main": [
-        [
-          { "node": "validate_capture", "type": "main", "index": 0 }
+    "Render Frame": {
+      "main": {
+        "0": [
+          { "node": "Validate Capture", "type": "main", "index": 0 }
         ]
-      ]
+      }
     }
   }
 }

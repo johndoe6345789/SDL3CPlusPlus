@@ -1,12 +1,18 @@
 #include <gtest/gtest.h>
 
+#include "services/impl/config/config_compiler_service.hpp"
+#include "services/impl/config/json_config_service.hpp"
+#include "services/impl/diagnostics/logger_service.hpp"
 #include "services/impl/render/render_coordinator_service.hpp"
-#include "services/interfaces/i_config_compiler_service.hpp"
+#include "services/impl/shader/shader_system_registry.hpp"
 #include "services/interfaces/i_graphics_service.hpp"
-#include "services/interfaces/i_shader_system_registry.hpp"
 
 #include <algorithm>
+#include <chrono>
+#include <filesystem>
+#include <fstream>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -60,39 +66,57 @@ public:
     void* GetGraphicsQueue() const override { return nullptr; }
 };
 
-class StubShaderSystemRegistry : public sdl3cpp::services::IShaderSystemRegistry {
+class ScopedTempDir {
 public:
-    std::unordered_map<std::string, sdl3cpp::services::ShaderPaths> BuildShaderMap() override {
-        return {};
-    }
-    sdl3cpp::services::ShaderReflection GetReflection(const std::string&) const override {
-        return {};
-    }
-    std::vector<sdl3cpp::services::ShaderPaths::TextureBinding> GetDefaultTextures(
-        const std::string&) const override {
-        return {};
-    }
-    std::string GetActiveSystemId() const override {
-        return "materialx";
-    }
-};
-
-class StubConfigCompilerService final : public sdl3cpp::services::IConfigCompilerService {
-public:
-    explicit StubConfigCompilerService(const sdl3cpp::services::ConfigCompilerResult& result)
-        : result_(result) {}
-
-    sdl3cpp::services::ConfigCompilerResult Compile(const std::string&) override {
-        return result_;
+    ScopedTempDir() {
+        auto base = std::filesystem::temp_directory_path();
+        const auto suffix = std::to_string(
+            std::chrono::steady_clock::now().time_since_epoch().count());
+        path_ = base / ("sdl3cpp_render_coordinator_test_" + suffix);
+        std::filesystem::create_directories(path_);
     }
 
-    const sdl3cpp::services::ConfigCompilerResult& GetLastResult() const override {
-        return result_;
+    ~ScopedTempDir() {
+        std::error_code ec;
+        std::filesystem::remove_all(path_, ec);
+    }
+
+    const std::filesystem::path& Path() const {
+        return path_;
     }
 
 private:
-    sdl3cpp::services::ConfigCompilerResult result_;
+    std::filesystem::path path_;
 };
+
+std::filesystem::path GetRepoRoot() {
+    return std::filesystem::path(__FILE__).parent_path().parent_path();
+}
+
+void WriteFile(const std::filesystem::path& path, const std::string& contents) {
+    std::filesystem::create_directories(path.parent_path());
+    std::ofstream output(path);
+    if (!output.is_open()) {
+        throw std::runtime_error("Failed to open file for write: " + path.string());
+    }
+    output << contents;
+}
+
+void CopyBootTemplate(const std::filesystem::path& targetDir) {
+    const auto repoRoot = GetRepoRoot();
+    const auto source = repoRoot / "packages" / "bootstrap" / "workflows" / "boot_default.json";
+    const auto destination = targetDir / "workflows" / "templates" / "boot_default.json";
+    std::filesystem::create_directories(destination.parent_path());
+    std::ifstream input(source);
+    if (!input.is_open()) {
+        throw std::runtime_error("Missing boot workflow template: " + source.string());
+    }
+    std::ofstream output(destination);
+    if (!output.is_open()) {
+        throw std::runtime_error("Failed to write boot workflow template: " + destination.string());
+    }
+    output << input.rdbuf();
+}
 
 std::string JoinCalls(const std::vector<std::string>& calls) {
     std::string joined;

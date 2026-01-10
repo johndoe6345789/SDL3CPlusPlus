@@ -1,61 +1,77 @@
 {
-  "template": "frame.default",
+  "name": "GUI Frame",
   "nodes": [
     {
       "id": "gui_begin",
-      "plugin": "frame.begin",
+      "name": "GUI Begin",
+      "type": "frame.begin",
+      "typeVersion": 1,
       "position": [0, 0],
-      "inputs": {
-        "delta": "frame.delta",
-        "elapsed": "frame.elapsed"
+      "parameters": {
+        "inputs": {
+          "delta": "frame.delta",
+          "elapsed": "frame.elapsed"
+        }
       }
     },
     {
       "id": "gui_layout",
-      "plugin": "frame.gui",
+      "name": "GUI Layout",
+      "type": "frame.gui",
+      "typeVersion": 1,
       "position": [260, 0],
-      "inputs": {
-        "elapsed": "frame.elapsed"
+      "parameters": {
+        "inputs": {
+          "elapsed": "frame.elapsed"
+        }
       }
     },
     {
       "id": "render_ui",
-      "plugin": "frame.render",
+      "name": "Render UI",
+      "type": "frame.render",
+      "typeVersion": 1,
       "position": [520, 0],
-      "inputs": {
-        "elapsed": "frame.elapsed"
+      "parameters": {
+        "inputs": {
+          "elapsed": "frame.elapsed"
+        }
       }
     },
     {
       "id": "capture_ui",
-      "plugin": "validation.tour.checkpoint",
+      "name": "Capture UI",
+      "type": "validation.tour.checkpoint",
+      "typeVersion": 1,
       "position": [780, 0],
-      "inputs": {
-        "checkpoint": "packages.gui_demo"
+      "parameters": {
+        "inputs": {
+          "checkpoint": "packages.gui_demo"
+        }
       }
     }
   ],
   "connections": {
-    "gui_begin": {
-      "main": [
-        [
-          { "node": "gui_layout", "type": "main", "index": 0 }
+    "GUI Begin": {
+      "main": {
+        "0": [
+          { "node": "GUI Layout", "type": "main", "index": 0 }
         ]
-      ]
+      }
     },
-    "gui_layout": {
-      "main": [
-        [
-          { "node": "render_ui", "type": "main", "index": 0 }
+    "GUI Layout": {
+      "main": {
+        "0": [
+          { "node": "Render UI", "type": "main", "index": 0 }
         ]
-      ]
+      }
     },
-    "render_ui": {
-      "main": [
-        [
-          { "node": "capture_ui", "type": "main", "index": 0 }
+    "Render UI": {
+      "main": {
+        "0": [
+          { "node": "Capture UI", "type": "main", "index": 0 }
         ]
-      ]
+      }
     }
   }
 }

@@ -1,79 +1,99 @@
 {
-  "template": "frame.default",
+  "name": "Frame Default",
   "nodes": [
     {
       "id": "begin_frame",
-      "plugin": "frame.begin",
+      "name": "Begin Frame",
+      "type": "frame.begin",
+      "typeVersion": 1,
       "position": [0, 0],
-      "inputs": {
-        "delta": "frame.delta",
-        "elapsed": "frame.elapsed"
+      "parameters": {
+        "inputs": {
+          "delta": "frame.delta",
+          "elapsed": "frame.elapsed"
+        }
       }
     },
     {
       "id": "step_physics",
-      "plugin": "frame.physics",
+      "name": "Step Physics",
+      "type": "frame.physics",
+      "typeVersion": 1,
       "position": [260, 0],
-      "inputs": {
-        "delta": "frame.delta"
+      "parameters": {
+        "inputs": {
+          "delta": "frame.delta"
+        }
       }
     },
     {
       "id": "update_scene",
-      "plugin": "frame.scene",
+      "name": "Update Scene",
+      "type": "frame.scene",
+      "typeVersion": 1,
       "position": [520, 0],
-      "inputs": {
-        "delta": "frame.delta"
+      "parameters": {
+        "inputs": {
+          "delta": "frame.delta"
+        }
       }
     },
     {
       "id": "render_frame",
-      "plugin": "frame.render",
+      "name": "Render Frame",
+      "type": "frame.render",
+      "typeVersion": 1,
       "position": [780, 0],
-      "inputs": {
-        "elapsed": "frame.elapsed"
+      "parameters": {
+        "inputs": {
+          "elapsed": "frame.elapsed"
+        }
       }
     },
     {
       "id": "update_audio",
-      "plugin": "frame.audio",
+      "name": "Update Audio",
+      "type": "frame.audio",
+      "typeVersion": 1,
       "position": [1040, -120]
     },
     {
       "id": "dispatch_gui",
-      "plugin": "frame.gui",
+      "name": "Dispatch GUI",
+      "type": "frame.gui",
+      "typeVersion": 1,
       "position": [1040, 120]
     }
   ],
   "connections": {
-    "begin_frame": {
-      "main": [
-        [
-          { "node": "step_physics", "type": "main", "index": 0 }
+    "Begin Frame": {
+      "main": {
+        "0": [
+          { "node": "Step Physics", "type": "main", "index": 0 }
         ]
-      ]
+      }
     },
-    "step_physics": {
-      "main": [
-        [
-          { "node": "update_scene", "type": "main", "index": 0 }
+    "Step Physics": {
+      "main": {
+        "0": [
+          { "node": "Update Scene", "type": "main", "index": 0 }
         ]
-      ]
+      }
     },
-    "update_scene": {
-      "main": [
-        [
-          { "node": "render_frame", "type": "main", "index": 0 }
+    "Update Scene": {
+      "main": {
+        "0": [
+          { "node": "Render Frame", "type": "main", "index": 0 }
         ]
-      ]
+      }
     },
-    "render_frame": {
-      "main": [
-        [
-          { "node": "update_audio", "type": "main", "index": 0 },
-          { "node": "dispatch_gui", "type": "main", "index": 0 }
+    "Render Frame": {
+      "main": {
+        "0": [
+          { "node": "Update Audio", "type": "main", "index": 0 },
+          { "node": "Dispatch GUI", "type": "main", "index": 0 }
         ]
-      ]
+      }
     }
   }
 }

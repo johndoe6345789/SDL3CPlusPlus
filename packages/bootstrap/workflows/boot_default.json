@@ -1,93 +1,113 @@
 {
-  "template": "boot.default",
+  "name": "Boot Default",
   "nodes": [
     {
       "id": "load_config",
-      "plugin": "config.load",
+      "name": "Load Config",
+      "type": "config.load",
+      "typeVersion": 1,
       "position": [0, 0],
-      "inputs": {
-        "path": "config.path"
-      },
-      "outputs": {
-        "document": "config.document"
+      "parameters": {
+        "inputs": {
+          "path": "config.path"
+        },
+        "outputs": {
+          "document": "config.document"
+        }
       }
     },
     {
       "id": "validate_version",
-      "plugin": "config.version.validate",
+      "name": "Validate Version",
+      "type": "config.version.validate",
+      "typeVersion": 1,
       "position": [260, 0],
-      "inputs": {
-        "document": "config.document",
-        "path": "config.path"
-      },
-      "outputs": {
-        "version": "config.version"
+      "parameters": {
+        "inputs": {
+          "document": "config.document",
+          "path": "config.path"
+        },
+        "outputs": {
+          "version": "config.version"
+        }
       }
     },
     {
       "id": "migrate_version",
-      "plugin": "config.migrate",
+      "name": "Migrate Version",
+      "type": "config.migrate",
+      "typeVersion": 1,
       "position": [520, 0],
-      "inputs": {
-        "document": "config.document",
-        "path": "config.path",
-        "version": "config.version"
-      },
-      "outputs": {
-        "document": "config.document",
-        "version": "config.version"
+      "parameters": {
+        "inputs": {
+          "document": "config.document",
+          "path": "config.path",
+          "version": "config.version"
+        },
+        "outputs": {
+          "document": "config.document",
+          "version": "config.version"
+        }
       }
     },
     {
       "id": "validate_schema",
-      "plugin": "config.schema.validate",
+      "name": "Validate Schema",
+      "type": "config.schema.validate",
+      "typeVersion": 1,
       "position": [780, 0],
-      "inputs": {
-        "document": "config.document",
-        "path": "config.path"
+      "parameters": {
+        "inputs": {
+          "document": "config.document",
+          "path": "config.path"
+        }
       }
     },
     {
       "id": "build_runtime_config",
-      "plugin": "runtime.config.build",
+      "name": "Build Runtime Config",
+      "type": "runtime.config.build",
+      "typeVersion": 1,
       "position": [1040, 0],
-      "inputs": {
-        "document": "config.document",
-        "path": "config.path"
-      },
-      "outputs": {
-        "runtime": "config.runtime"
+      "parameters": {
+        "inputs": {
+          "document": "config.document",
+          "path": "config.path"
+        },
+        "outputs": {
+          "runtime": "config.runtime"
+        }
       }
     }
   ],
   "connections": {
-    "load_config": {
-      "main": [
-        [
-          { "node": "validate_version", "type": "main", "index": 0 }
+    "Load Config": {
+      "main": {
+        "0": [
+          { "node": "Validate Version", "type": "main", "index": 0 }
         ]
-      ]
+      }
     },
-    "validate_version": {
-      "main": [
-        [
-          { "node": "migrate_version", "type": "main", "index": 0 }
+    "Validate Version": {
+      "main": {
+        "0": [
+          { "node": "Migrate Version", "type": "main", "index": 0 }
         ]
-      ]
+      }
     },
-    "migrate_version": {
-      "main": [
-        [
-          { "node": "validate_schema", "type": "main", "index": 0 }
+    "Migrate Version": {
+      "main": {
+        "0": [
+          { "node": "Validate Schema", "type": "main", "index": 0 }
         ]
-      ]
+      }
     },
-    "validate_schema": {
-      "main": [
-        [
-          { "node": "build_runtime_config", "type": "main", "index": 0 }
+    "Validate Schema": {
+      "main": {
+        "0": [
+          { "node": "Build Runtime Config", "type": "main", "index": 0 }
         ]
-      ]
+      }
     }
   }
 }

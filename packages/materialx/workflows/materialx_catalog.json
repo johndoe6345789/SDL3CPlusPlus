@@ -1,41 +1,45 @@
 {
-  "template": "package.materialx",
+  "name": "MaterialX Catalog",
   "nodes": [
     {
       "id": "materialx_paths",
-      "plugin": "list.literal",
+      "name": "MaterialX Paths",
+      "type": "list.literal",
+      "typeVersion": 1,
       "position": [0, 0],
-      "outputs": {
-        "list": "materialx.paths"
-      },
       "parameters": {
         "items": [
           "libraries",
           "resources",
           "documents"
         ],
-        "type": "string"
+        "type": "string",
+        "outputs": {
+          "list": "materialx.paths"
+        }
       }
     },
     {
       "id": "assert_materialx_paths",
-      "plugin": "value.assert.type",
+      "name": "Assert MaterialX Paths",
+      "type": "value.assert.type",
+      "typeVersion": 1,
       "position": [260, 0],
-      "inputs": {
-        "value": "materialx.paths"
-      },
       "parameters": {
+        "inputs": {
+          "value": "materialx.paths"
+        },
         "type": "string_list"
       }
     }
   ],
   "connections": {
-    "materialx_paths": {
-      "main": [
-        [
-          { "node": "assert_materialx_paths", "type": "main", "index": 0 }
+    "MaterialX Paths": {
+      "main": {
+        "0": [
+          { "node": "Assert MaterialX Paths", "type": "main", "index": 0 }
         ]
-      ]
+      }
     }
   }
 }
