@@ -16,6 +16,7 @@ FrameWorkflowService::FrameWorkflowService(std::shared_ptr<ILogger> logger,
                                            std::shared_ptr<ISceneService> sceneService,
                                            std::shared_ptr<IRenderCoordinatorService> renderService,
                                            std::shared_ptr<IValidationTourService> validationTourService,
+                                           std::shared_ptr<ISoundboardStateService> soundboardStateService,
                                            const std::filesystem::path& templatePath)
     : registry_(std::make_shared<WorkflowStepRegistry>()),
       executor_(registry_, logger),
@@ -34,7 +35,8 @@ FrameWorkflowService::FrameWorkflowService(std::shared_ptr<ILogger> logger,
                                          std::move(physicsService),
                                          std::move(sceneService),
                                          std::move(renderService),
-                                         std::move(validationTourService));
+                                         std::move(validationTourService),
+                                         std::move(soundboardStateService));
     registrar.RegisterUsedSteps(workflow_, registry_);
 }
 

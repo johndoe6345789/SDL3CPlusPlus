@@ -8,20 +8,43 @@
       "width": 664,
       "height": 520
     },
+    "padding": {
+      "x": 20,
+      "y": 20
+    },
     "colors": {
       "background": [0.06, 0.07, 0.09, 0.95],
       "border": [0.35, 0.38, 0.42, 1.0],
-      "text": [0.96, 0.96, 0.97, 1.0]
+      "title": [0.96, 0.96, 0.97, 1.0],
+      "description": [0.7, 0.75, 0.8, 1.0],
+      "category": [0.9, 0.9, 0.95, 1.0],
+      "status": [0.6, 0.8, 1.0, 1.0]
     }
   },
   "buttons": {
     "width": 300,
     "height": 36,
-    "spacing": 12
+    "spacing": 12,
+    "colors": {
+      "background": [0.2, 0.24, 0.28, 1.0],
+      "hover": [0.26, 0.3, 0.36, 1.0],
+      "active": [0.16, 0.22, 0.28, 1.0],
+      "border": [0.45, 0.52, 0.6, 1.0],
+      "text": [1.0, 1.0, 1.0, 1.0]
+    }
   },
   "layout": {
     "columns": 2,
     "columnSpacing": 24,
-    "initialY": 120
+    "initialY": 80,
+    "statusOffsetY": 34
+  },
+  "typography": {
+    "titleSize": 24,
+    "descriptionSize": 14,
+    "categorySize": 20,
+    "buttonSize": 16,
+    "statusSize": 14,
+    "headerSpacing": 26
   }
 }

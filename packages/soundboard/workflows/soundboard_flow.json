@@ -23,11 +23,11 @@
       "plugin": "soundboard.gui",
       "position": [520, -120],
       "inputs": {
-        "catalog": "soundboard.catalog",
-        "layout": "soundboard.layout"
+        "catalog": "soundboard.catalog"
       },
       "outputs": {
-        "selection": "soundboard.selection"
+        "selection": "soundboard.selection",
+        "gui_commands": "soundboard.gui.commands"
       }
     },
     {
@@ -35,7 +35,6 @@
       "plugin": "soundboard.audio",
       "position": [780, -120],
       "inputs": {
-        "catalog": "soundboard.catalog",
         "selection": "soundboard.selection"
       },
       "outputs": {
@@ -47,7 +46,8 @@
       "plugin": "frame.render",
       "position": [520, 120],
       "inputs": {
-        "elapsed": "frame.elapsed"
+        "elapsed": "frame.elapsed",
+        "gui_commands": "soundboard.gui.commands"
       }
     },
     {

@@ -8,6 +8,9 @@
 #include "workflow_frame_physics_step.hpp"
 #include "workflow_frame_render_step.hpp"
 #include "workflow_frame_scene_step.hpp"
+#include "workflow_soundboard_audio_step.hpp"
+#include "workflow_soundboard_catalog_scan_step.hpp"
+#include "workflow_soundboard_gui_step.hpp"
 #include "workflow_step_registry.hpp"
 #include "workflow_validation_checkpoint_step.hpp"
 
@@ -23,7 +26,8 @@ FrameWorkflowStepRegistrar::FrameWorkflowStepRegistrar(std::shared_ptr<ILogger> 
                                                        std::shared_ptr<IPhysicsService> physicsService,
                                                        std::shared_ptr<ISceneService> sceneService,
                                                        std::shared_ptr<IRenderCoordinatorService> renderService,
-                                                       std::shared_ptr<IValidationTourService> validationTourService)
+                                                       std::shared_ptr<IValidationTourService> validationTourService,
+                                                       std::shared_ptr<ISoundboardStateService> soundboardStateService)
     : logger_(std::move(logger)),
       configService_(std::move(configService)),
       audioService_(std::move(audioService)),
@@ -31,7 +35,8 @@ FrameWorkflowStepRegistrar::FrameWorkflowStepRegistrar(std::shared_ptr<ILogger> 
       physicsService_(std::move(physicsService)),
       sceneService_(std::move(sceneService)),
       renderService_(std::move(renderService)),
-      validationTourService_(std::move(validationTourService)) {}
+      validationTourService_(std::move(validationTourService)),
+      soundboardStateService_(std::move(soundboardStateService)) {}
 
 void FrameWorkflowStepRegistrar::RegisterUsedSteps(
     const WorkflowDefinition& workflow,
@@ -71,6 +76,20 @@ void FrameWorkflowStepRegistrar::RegisterUsedSteps(
     if (plugins.contains("validation.tour.checkpoint")) {
         registry->RegisterStep(std::make_shared<WorkflowValidationCheckpointStep>(
             validationTourService_, logger_));
+    }
+    if (plugins.contains("soundboard.catalog.scan")) {
+        registry->RegisterStep(std::make_shared<WorkflowSoundboardCatalogScanStep>(configService_, logger_));
+    }
+    if (plugins.contains("soundboard.gui")) {
+        registry->RegisterStep(std::make_shared<WorkflowSoundboardGuiStep>(inputService_,
+                                                                          configService_,
+                                                                          soundboardStateService_,
+                                                                          logger_));
+    }
+    if (plugins.contains("soundboard.audio")) {
+        registry->RegisterStep(std::make_shared<WorkflowSoundboardAudioStep>(audioService_,
+                                                                             soundboardStateService_,
+                                                                             logger_));
     }
 }
 

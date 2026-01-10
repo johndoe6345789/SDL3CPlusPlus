@@ -309,9 +309,14 @@ set(FRAME_WORKFLOW_SOURCES
     src/services/impl/workflow_frame_render_step.cpp
     src/services/impl/workflow_frame_audio_step.cpp
     src/services/impl/workflow_frame_gui_step.cpp
+    src/services/impl/workflow_soundboard_catalog_scan_step.cpp
+    src/services/impl/workflow_soundboard_gui_step.cpp
+    src/services/impl/workflow_soundboard_audio_step.cpp
     src/services/impl/workflow_validation_checkpoint_step.cpp
     src/services/impl/frame_workflow_step_registrar.cpp
     src/services/impl/frame_workflow_service.cpp
+    src/services/impl/soundboard_state_service.cpp
+    src/services/impl/soundboard_path_resolver.cpp
 )
 
 set(MATERIALX_SCRIPT_SOURCES

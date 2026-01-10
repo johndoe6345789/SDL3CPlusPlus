@@ -32,8 +32,16 @@ void WorkflowFrameRenderStep::Execute(const WorkflowStepDefinition& step, Workfl
             throw std::runtime_error("frame.render missing view_state input");
         }
     }
-    if (viewState) {
-        renderService_->RenderFrameWithViewState(static_cast<float>(*elapsed), *viewState);
+    const std::vector<GuiCommand>* guiCommands = nullptr;
+    auto guiIt = step.inputs.find("gui_commands");
+    if (guiIt != step.inputs.end()) {
+        guiCommands = context.TryGet<std::vector<GuiCommand>>(guiIt->second);
+        if (!guiCommands) {
+            throw std::runtime_error("frame.render missing gui_commands input");
+        }
+    }
+    if (viewState || guiCommands) {
+        renderService_->RenderFrameWithOverrides(static_cast<float>(*elapsed), viewState, guiCommands);
     } else {
         renderService_->RenderFrame(static_cast<float>(*elapsed));
     }

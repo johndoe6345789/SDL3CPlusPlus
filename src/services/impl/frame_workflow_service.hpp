@@ -8,6 +8,7 @@
 #include "../interfaces/i_physics_service.hpp"
 #include "../interfaces/i_render_coordinator_service.hpp"
 #include "../interfaces/i_scene_service.hpp"
+#include "../interfaces/i_soundboard_state_service.hpp"
 #include "../interfaces/i_validation_tour_service.hpp"
 
 #include "workflow_executor.hpp"
@@ -29,6 +30,7 @@ public:
                          std::shared_ptr<ISceneService> sceneService,
                          std::shared_ptr<IRenderCoordinatorService> renderService,
                          std::shared_ptr<IValidationTourService> validationTourService,
+                         std::shared_ptr<ISoundboardStateService> soundboardStateService,
                          const std::filesystem::path& templatePath = {});
 
     void ExecuteFrame(float deltaTime, float elapsedTime) override;

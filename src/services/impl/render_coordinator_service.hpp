@@ -31,6 +31,9 @@ public:
 
     void RenderFrame(float time) override;
     void RenderFrameWithViewState(float time, const ViewState& viewState) override;
+    void RenderFrameWithOverrides(float time,
+                                  const ViewState* viewState,
+                                  const std::vector<GuiCommand>* guiCommands) override;
 
 private:
 
@@ -51,7 +54,9 @@ private:
     bool configFirstLogged_ = false;
 
     void ConfigureRenderGraphPasses();
-    void RenderFrameInternal(float time, const ViewState* overrideView);
+    void RenderFrameInternal(float time,
+                             const ViewState* overrideView,
+                             const std::vector<GuiCommand>* guiCommands);
 };
 
 }  // namespace sdl3cpp::services::impl

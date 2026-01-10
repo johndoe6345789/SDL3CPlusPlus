@@ -37,6 +37,7 @@
 #include "services/impl/logger_service.hpp"
 #include "services/impl/pipeline_compiler_service.hpp"
 #include "services/impl/validation_tour_service.hpp"
+#include "services/impl/soundboard_state_service.hpp"
 #include "services/impl/workflow_default_step_registrar.hpp"
 #include "services/impl/workflow_definition_parser.hpp"
 #include "services/impl/workflow_executor.hpp"
@@ -305,6 +306,9 @@ void ServiceBasedApp::RegisterServices() {
     registry_.RegisterService<services::IAudioService, services::impl::SdlAudioService>(
         registry_.GetService<services::ILogger>());
 
+    registry_.RegisterService<services::ISoundboardStateService, services::impl::SoundboardStateService>(
+        registry_.GetService<services::ILogger>());
+
     registry_.RegisterService<services::IFrameWorkflowService, services::impl::FrameWorkflowService>(
         registry_.GetService<services::ILogger>(),
         registry_.GetService<services::IConfigService>(),
@@ -313,7 +317,8 @@ void ServiceBasedApp::RegisterServices() {
         registry_.GetService<services::IPhysicsService>(),
         registry_.GetService<services::ISceneService>(),
         registry_.GetService<services::IRenderCoordinatorService>(),
-        registry_.GetService<services::IValidationTourService>());
+        registry_.GetService<services::IValidationTourService>(),
+        registry_.GetService<services::ISoundboardStateService>());
 
     // Script bridge services
     registry_.RegisterService<services::IMeshService, services::impl::MeshService>(

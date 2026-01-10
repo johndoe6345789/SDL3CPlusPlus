@@ -132,14 +132,22 @@ void RenderCoordinatorService::ConfigureRenderGraphPasses() {
 }
 
 void RenderCoordinatorService::RenderFrame(float time) {
-    RenderFrameInternal(time, nullptr);
+    RenderFrameInternal(time, nullptr, nullptr);
 }
 
 void RenderCoordinatorService::RenderFrameWithViewState(float time, const ViewState& viewState) {
-    RenderFrameInternal(time, &viewState);
+    RenderFrameInternal(time, &viewState, nullptr);
 }
 
-void RenderCoordinatorService::RenderFrameInternal(float time, const ViewState* overrideView) {
+void RenderCoordinatorService::RenderFrameWithOverrides(float time,
+                                                        const ViewState* viewState,
+                                                        const std::vector<GuiCommand>* guiCommands) {
+    RenderFrameInternal(time, viewState, guiCommands);
+}
+
+void RenderCoordinatorService::RenderFrameInternal(float time,
+                                                   const ViewState* overrideView,
+                                                   const std::vector<GuiCommand>* guiCommands) {
     if (logger_) {
         logger_->Trace("RenderCoordinatorService", "RenderFrame", "time=" + std::to_string(time), "Entering");
     }
@@ -211,10 +219,14 @@ void RenderCoordinatorService::RenderFrameInternal(float time, const ViewState* 
         ConfigureRenderGraphPasses();
     }
 
-    if (guiService_ && guiScriptService_ && guiScriptService_->HasGuiCommands()) {
-        auto guiCommands = guiScriptService_->LoadGuiCommands();
+    if (guiService_) {
         auto extent = graphicsService_->GetSwapchainExtent();
-        guiService_->PrepareFrame(guiCommands, extent.first, extent.second);
+        if (guiCommands) {
+            guiService_->PrepareFrame(*guiCommands, extent.first, extent.second);
+        } else if (guiScriptService_ && guiScriptService_->HasGuiCommands()) {
+            auto scriptCommands = guiScriptService_->LoadGuiCommands();
+            guiService_->PrepareFrame(scriptCommands, extent.first, extent.second);
+        }
     }
 
     if (useLuaScene && sceneScriptService_ && sceneService_) {
