@@ -1,0 +1,41 @@
+{
+  "template": "package.assets",
+  "nodes": [
+    {
+      "id": "asset_roots",
+      "plugin": "list.literal",
+      "position": [0, 0],
+      "outputs": {
+        "list": "assets.roots"
+      },
+      "parameters": {
+        "items": [
+          "assets/audio",
+          "assets/fonts",
+          "assets/images"
+        ],
+        "type": "string"
+      }
+    },
+    {
+      "id": "assert_asset_roots",
+      "plugin": "value.assert.type",
+      "position": [260, 0],
+      "inputs": {
+        "value": "assets.roots"
+      },
+      "parameters": {
+        "type": "string_list"
+      }
+    }
+  ],
+  "connections": {
+    "asset_roots": {
+      "main": [
+        [
+          { "node": "assert_asset_roots", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  }
+}

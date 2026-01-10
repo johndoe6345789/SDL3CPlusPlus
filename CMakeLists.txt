@@ -123,7 +123,6 @@ else()
 endif()
 
 if(NOT ENABLE_VITA)
-find_package(lua CONFIG REQUIRED)
 find_package(CLI11 CONFIG REQUIRED)
 find_package(RapidJSON CONFIG REQUIRED)
 find_package(EnTT CONFIG REQUIRED)
@@ -352,16 +351,11 @@ if(BUILD_SDL3_APP)
             src/services/impl/scene/ecs_service.cpp
             src/services/impl/platform/platform_service.cpp
             src/services/impl/diagnostics/probe_service.cpp
-            src/services/impl/script/script_engine_service.cpp
-            src/services/impl/script/lua_helpers.cpp
-            src/services/impl/script/scene_script_service.cpp
-            src/services/impl/script/shader_script_service.cpp
             src/services/impl/shader/shader_system_registry.cpp
             src/services/impl/shader/materialx_shader_system.cpp
             src/services/impl/shader/glsl_shader_system.cpp
             src/services/impl/materialx/materialx_shader_generator.cpp
             src/services/impl/shader/shader_pipeline_validator.cpp
-            src/services/impl/script/gui_script_service.cpp
             $<$<NOT:$<BOOL:${ENABLE_VITA}>>:src/services/impl/gui/bgfx_gui_service.cpp>
             $<$<NOT:$<BOOL:${ENABLE_VITA}>>:src/services/impl/graphics/bgfx_shader_compiler.cpp>
             src/services/impl/audio/audio_command_service.cpp
@@ -391,7 +385,6 @@ if(BUILD_SDL3_APP)
     target_include_directories(sdl3_app PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_tools/shaderc")
     target_link_libraries(sdl3_app PRIVATE
         ${SDL_TARGET}
-        lua::lua
         CLI11::CLI11
         rapidjson
         ${SDL3CPP_STB_LIBS}
@@ -461,60 +454,6 @@ endif()
 enable_testing()
 
 if(NOT ENABLE_VITA)
-add_executable(script_engine_tests
-    tests/test_cube_script.cpp
-    src/services/impl/graphics/bgfx_graphics_backend.cpp
-    src/services/impl/graphics/bgfx_shader_compiler.cpp
-    src/services/impl/diagnostics/logger_service.cpp
-    src/services/impl/scene/mesh_service.cpp
-    src/services/impl/scene/physics_bridge_service.cpp
-    src/services/impl/platform/platform_service.cpp
-    src/services/impl/script/script_engine_service.cpp
-    ${MATERIALX_SCRIPT_SOURCES}
-    src/services/impl/script/lua_helpers.cpp
-    src/services/impl/script/scene_script_service.cpp
-    src/services/impl/script/shader_script_service.cpp
-    src/services/impl/shader/shader_system_registry.cpp
-    src/services/impl/shader/materialx_shader_system.cpp
-    src/services/impl/shader/glsl_shader_system.cpp
-    src/services/impl/materialx/materialx_shader_generator.cpp
-    src/services/impl/shader/shader_pipeline_validator.cpp
-    src/services/impl/platform/sdl_window_service.cpp
-    src/services/impl/scene/ecs_service.cpp
-    src/services/impl/scene/scene_service.cpp
-    src/events/event_bus.cpp
-    src/stb_image.cpp
-    src/services/impl/shader/pipeline_compiler_service.cpp
-)
-target_include_directories(script_engine_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_include_directories(script_engine_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_tools/shaderc")
-target_link_libraries(script_engine_tests PRIVATE
-    ${SDL_TARGET}
-    lua::lua
-    rapidjson
-    ${SDL3CPP_RENDER_STACK_LIBS}
-    assimp::assimp
-    Bullet::Bullet
-    glm::glm
-    Vorbis::vorbisfile
-    Vorbis::vorbis
-    zip::zip
-    libzip::zip
-)
-if(TARGET shaderc_local)
-    target_link_libraries(script_engine_tests PRIVATE shaderc_local)
-elseif(TARGET shaderc::shaderc)
-elseif(TARGET shaderc::shaderc_combined)
-    target_link_libraries(script_engine_tests PRIVATE shaderc::shaderc_combined)
-else()
-    if(TARGET shaderc_local)
-        target_link_libraries(script_engine_tests PRIVATE shaderc_local)
-    else()
-        message(WARNING "shaderc CMake target not found; skipping link for script_engine_tests.")
-    endif()
-endif()
-add_test(NAME script_engine_tests COMMAND script_engine_tests)
-
 add_executable(bgfx_gui_service_tests
     tests/test_bgfx_gui_service.cpp
     src/services/impl/gui/bgfx_gui_service.cpp
@@ -757,21 +696,6 @@ else()
     message(WARNING "shaderc CMake target not found; skipping link for bgfx_backend_frame_guard_test.")
 endif()
 add_test(NAME bgfx_backend_frame_guard_test COMMAND bgfx_backend_frame_guard_test)
-
-# Test: Gui script service missing fields (logs trace and uses defaults)
-add_executable(gui_script_service_missing_fields_test
-    tests/gui_script_service_missing_fields_test.cpp
-    src/services/impl/script/gui_script_service.cpp
-    src/services/impl/script/lua_helpers.cpp
-)
-target_include_directories(gui_script_service_missing_fields_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_link_libraries(gui_script_service_missing_fields_test PRIVATE
-    GTest::gtest
-    GTest::gtest_main
-    lua::lua
-    glm::glm
-)
-add_test(NAME gui_script_service_missing_fields_test COMMAND gui_script_service_missing_fields_test)
 
 # Test: Graphics service buffer lifecycle (TDD guard for VRAM leaks on reupload)
 add_executable(graphics_service_buffer_lifecycle_test

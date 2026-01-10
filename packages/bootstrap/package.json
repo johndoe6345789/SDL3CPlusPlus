@@ -6,10 +6,5 @@
   "workflows": [
     "workflows/boot_default.json",
     "workflows/frame_default.json"
-  ],
-  "assets": [
-  ],
-  "scene": [
-  ],
-  "dependencies": []
+  ]
 }

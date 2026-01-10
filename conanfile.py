@@ -8,14 +8,9 @@ class SDL3CppConan(ConanFile):
     options = {"build_app": [True, False]}
     default_options = {
         "build_app": True,
-        "lua/*:shared": False,
-        "lua/*:fPIC": True,
-        "lua/*:compile_as_cpp": False,
-        "lua/*:with_tools": False,
     }
     generators = "CMakeDeps", "VirtualRunEnv"
     BASE_REQUIRES = (
-        "lua/5.4.8",
         "sdl/3.2.20",
         "shaderc/2023.6",
         "cpptrace/1.0.4",

@@ -1,0 +1,41 @@
+{
+  "template": "package.materialx",
+  "nodes": [
+    {
+      "id": "materialx_paths",
+      "plugin": "list.literal",
+      "position": [0, 0],
+      "outputs": {
+        "list": "materialx.paths"
+      },
+      "parameters": {
+        "items": [
+          "libraries",
+          "resources",
+          "documents"
+        ],
+        "type": "string"
+      }
+    },
+    {
+      "id": "assert_materialx_paths",
+      "plugin": "value.assert.type",
+      "position": [260, 0],
+      "inputs": {
+        "value": "materialx.paths"
+      },
+      "parameters": {
+        "type": "string_list"
+      }
+    }
+  ],
+  "connections": {
+    "materialx_paths": {
+      "main": [
+        [
+          { "node": "assert_materialx_paths", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  }
+}
