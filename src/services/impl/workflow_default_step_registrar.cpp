@@ -4,12 +4,12 @@
 #include "workflow_config_schema_step.hpp"
 #include "workflow_config_version_step.hpp"
 #include "workflow_runtime_config_step.hpp"
-#include "workflow_list_filter_equals_step.hpp"
-#include "workflow_list_map_add_step.hpp"
-#include "workflow_list_reduce_sum_step.hpp"
-#include "workflow_number_add_step.hpp"
-#include "workflow_value_copy_step.hpp"
-#include "workflow_value_default_step.hpp"
+#include "workflow_generic_steps/workflow_list_filter_equals_step.hpp"
+#include "workflow_generic_steps/workflow_list_map_add_step.hpp"
+#include "workflow_generic_steps/workflow_list_reduce_sum_step.hpp"
+#include "workflow_generic_steps/workflow_number_add_step.hpp"
+#include "workflow_generic_steps/workflow_value_copy_step.hpp"
+#include "workflow_generic_steps/workflow_value_default_step.hpp"
 
 #include <stdexcept>
 #include <unordered_set>

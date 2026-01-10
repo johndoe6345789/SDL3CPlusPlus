@@ -1,5 +1,5 @@
 #include "workflow_list_filter_equals_step.hpp"
-#include "workflow_step_io_resolver.hpp"
+#include "../workflow_step_io_resolver.hpp"
 
 #include <stdexcept>
 #include <string>
