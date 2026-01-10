@@ -27,6 +27,14 @@ public:
         return std::any_cast<T>(&it->second);
     }
 
+    const std::any* TryGetAny(const std::string& key) const {
+        auto it = values_.find(key);
+        if (it == values_.end()) {
+            return nullptr;
+        }
+        return &it->second;
+    }
+
 private:
     std::unordered_map<std::string, std::any> values_;
 };

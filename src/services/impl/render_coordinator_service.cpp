@@ -222,9 +222,19 @@ void RenderCoordinatorService::RenderFrameInternal(float time,
     if (guiService_) {
         auto extent = graphicsService_->GetSwapchainExtent();
         if (guiCommands) {
+            if (logger_) {
+                logger_->Trace("RenderCoordinatorService", "RenderFrame",
+                               "guiCommands=" + std::to_string(guiCommands->size()),
+                               "Using workflow GUI commands");
+            }
             guiService_->PrepareFrame(*guiCommands, extent.first, extent.second);
         } else if (guiScriptService_ && guiScriptService_->HasGuiCommands()) {
             auto scriptCommands = guiScriptService_->LoadGuiCommands();
+            if (logger_) {
+                logger_->Trace("RenderCoordinatorService", "RenderFrame",
+                               "guiCommands=" + std::to_string(scriptCommands.size()),
+                               "Using script GUI commands");
+            }
             guiService_->PrepareFrame(scriptCommands, extent.first, extent.second);
         }
     }

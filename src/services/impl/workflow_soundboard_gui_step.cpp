@@ -10,6 +10,7 @@
 #include <cmath>
 #include <filesystem>
 #include <stdexcept>
+#include <utility>
 
 namespace sdl3cpp::services::impl {
 namespace {
@@ -164,6 +165,10 @@ void WorkflowSoundboardGuiStep::Execute(const WorkflowStepDefinition& step, Work
 void WorkflowSoundboardGuiStep::EnsureConfigLoaded() {
     if (!cachedConfig_) {
         cachedConfig_ = LoadConfig();
+        if (logger_) {
+            logger_->Trace("WorkflowSoundboardGuiStep", "EnsureConfigLoaded",
+                           "title=" + cachedConfig_->title);
+        }
     }
 }
 
@@ -320,6 +325,10 @@ std::vector<GuiCommand> WorkflowSoundboardGuiStep::BuildCommands(
 
             buttonY += config.buttonHeight + config.buttonSpacing;
         }
+    }
+
+    if (justReleased && !activeWidget_.empty()) {
+        activeWidget_.clear();
     }
 
     const float statusY = rect.y + rect.height - config.statusOffsetY;

@@ -1,5 +1,7 @@
 #include "soundboard_state_service.hpp"
 
+#include <utility>
+
 namespace sdl3cpp::services::impl {
 
 SoundboardStateService::SoundboardStateService(std::shared_ptr<ILogger> logger)

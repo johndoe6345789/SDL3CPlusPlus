@@ -4,6 +4,7 @@
 
 #include <filesystem>
 #include <stdexcept>
+#include <utility>
 
 namespace sdl3cpp::services::impl {
 
