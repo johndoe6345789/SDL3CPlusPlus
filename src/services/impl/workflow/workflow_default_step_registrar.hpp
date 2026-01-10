@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../interfaces/i_logger.hpp"
-#include "../interfaces/i_probe_service.hpp"
-#include "../interfaces/i_workflow_step_registry.hpp"
-#include "../interfaces/workflow_definition.hpp"
+#include "services/interfaces/i_logger.hpp"
+#include "services/interfaces/i_probe_service.hpp"
+#include "services/interfaces/i_workflow_step_registry.hpp"
+#include "services/interfaces/workflow_definition.hpp"
 
 namespace sdl3cpp::services::impl {
 

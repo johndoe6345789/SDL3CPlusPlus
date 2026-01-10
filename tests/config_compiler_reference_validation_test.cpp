@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "services/impl/config_compiler_service.hpp"
+#include "services/impl/config/config_compiler_service.hpp"
 
 namespace {
 

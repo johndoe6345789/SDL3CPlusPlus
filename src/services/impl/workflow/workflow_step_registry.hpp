@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../interfaces/i_workflow_step_registry.hpp"
+#include "services/interfaces/i_workflow_step_registry.hpp"
 
 #include <unordered_map>
 

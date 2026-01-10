@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../interfaces/workflow_step_definition.hpp"
+#include "services/interfaces/workflow_step_definition.hpp"
 
 #include <string>
 

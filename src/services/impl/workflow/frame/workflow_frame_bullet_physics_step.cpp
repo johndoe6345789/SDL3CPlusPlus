@@ -1,5 +1,5 @@
 #include "workflow_frame_bullet_physics_step.hpp"
-#include "workflow_step_io_resolver.hpp"
+#include "../workflow_step_io_resolver.hpp"
 
 #include <stdexcept>
 

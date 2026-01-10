@@ -1,5 +1,5 @@
 #include "workflow_config_schema_step.hpp"
-#include "json_config_schema_validator.hpp"
+#include "../config/json_config_schema_validator.hpp"
 #include "workflow_step_io_resolver.hpp"
 
 #include <rapidjson/document.h>

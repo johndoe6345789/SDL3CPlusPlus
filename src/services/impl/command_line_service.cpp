@@ -1,6 +1,6 @@
 #include "command_line_service.hpp"
 
-#include "json_config_service.hpp"
+#include "config/json_config_service.hpp"
 #include <CLI/CLI.hpp>
 
 #include <cstdlib>

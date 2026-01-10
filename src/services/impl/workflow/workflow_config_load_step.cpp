@@ -1,5 +1,5 @@
 #include "workflow_config_load_step.hpp"
-#include "json_config_document_loader.hpp"
+#include "../config/json_config_document_loader.hpp"
 #include "workflow_step_io_resolver.hpp"
 
 #include <rapidjson/document.h>

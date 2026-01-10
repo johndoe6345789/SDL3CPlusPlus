@@ -5,9 +5,9 @@
 #include "workflow_executor.hpp"
 #include "workflow_step_registry.hpp"
 #include "workflow_template_resolver.hpp"
-#include "../interfaces/i_logger.hpp"
-#include "../interfaces/i_probe_service.hpp"
-#include "../interfaces/workflow_context.hpp"
+#include "services/interfaces/i_logger.hpp"
+#include "services/interfaces/i_probe_service.hpp"
+#include "services/interfaces/workflow_context.hpp"
 
 #include <stdexcept>
 #include <string>

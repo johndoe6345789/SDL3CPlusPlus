@@ -1,5 +1,5 @@
 #include "workflow_definition_parser.hpp"
-#include "json_config_document_parser.hpp"
+#include "../config/json_config_document_parser.hpp"
 
 #include <rapidjson/document.h>
 

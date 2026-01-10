@@ -1,7 +1,7 @@
 #include "workflow_config_migration_step.hpp"
 
-#include "json_config_migration_service.hpp"
-#include "json_config_schema_version.hpp"
+#include "../config/json_config_migration_service.hpp"
+#include "../config/json_config_schema_version.hpp"
 #include "workflow_step_io_resolver.hpp"
 
 #include <rapidjson/document.h>

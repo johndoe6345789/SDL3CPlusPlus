@@ -1,8 +1,8 @@
 #include "frame_workflow_service.hpp"
 
 #include "frame_workflow_step_registrar.hpp"
-#include "workflow_definition_parser.hpp"
-#include "../interfaces/i_logger.hpp"
+#include "../workflow_definition_parser.hpp"
+#include "services/interfaces/i_logger.hpp"
 
 #include <stdexcept>
 

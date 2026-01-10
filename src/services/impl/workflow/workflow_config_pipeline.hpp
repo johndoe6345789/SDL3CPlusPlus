@@ -4,7 +4,7 @@
 #include <memory>
 #include <optional>
 
-#include "../interfaces/workflow_context.hpp"
+#include "services/interfaces/workflow_context.hpp"
 
 #include <rapidjson/document.h>
 

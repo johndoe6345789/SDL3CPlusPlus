@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../interfaces/i_workflow_executor.hpp"
-#include "../interfaces/i_workflow_step_registry.hpp"
-#include "../interfaces/i_logger.hpp"
+#include "services/interfaces/i_workflow_executor.hpp"
+#include "services/interfaces/i_workflow_step_registry.hpp"
+#include "services/interfaces/i_logger.hpp"
 
 namespace sdl3cpp::services::impl {
 

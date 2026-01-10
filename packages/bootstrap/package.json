@@ -1,0 +1,15 @@
+{
+  "name": "bootstrap",
+  "version": "0.1.0",
+  "description": "Bootstrap system and bring up SDL window.",
+  "defaultWorkflow": "workflows/boot_default.json",
+  "workflows": [
+    "workflows/boot_default.json",
+    "workflows/frame_default.json"
+  ],
+  "assets": [
+  ],
+  "scene": [
+  ],
+  "dependencies": []
+}

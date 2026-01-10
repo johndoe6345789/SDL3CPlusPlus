@@ -1,19 +1,19 @@
 #pragma once
 
-#include "../interfaces/i_frame_workflow_service.hpp"
-#include "../interfaces/i_logger.hpp"
-#include "../interfaces/i_audio_service.hpp"
-#include "../interfaces/i_config_service.hpp"
-#include "../interfaces/i_input_service.hpp"
-#include "../interfaces/i_physics_service.hpp"
-#include "../interfaces/i_render_coordinator_service.hpp"
-#include "../interfaces/i_scene_service.hpp"
-#include "../interfaces/i_soundboard_state_service.hpp"
-#include "../interfaces/i_validation_tour_service.hpp"
+#include "services/interfaces/i_frame_workflow_service.hpp"
+#include "services/interfaces/i_logger.hpp"
+#include "services/interfaces/i_audio_service.hpp"
+#include "services/interfaces/i_config_service.hpp"
+#include "services/interfaces/i_input_service.hpp"
+#include "services/interfaces/i_physics_service.hpp"
+#include "services/interfaces/i_render_coordinator_service.hpp"
+#include "services/interfaces/i_scene_service.hpp"
+#include "services/interfaces/i_soundboard_state_service.hpp"
+#include "services/interfaces/i_validation_tour_service.hpp"
 
-#include "workflow_executor.hpp"
-#include "workflow_definition_parser.hpp"
-#include "workflow_step_registry.hpp"
+#include "../workflow_executor.hpp"
+#include "../workflow_definition_parser.hpp"
+#include "../workflow_step_registry.hpp"
 
 #include <filesystem>
 #include <memory>

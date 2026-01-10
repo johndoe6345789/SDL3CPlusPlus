@@ -273,54 +273,54 @@ endif()
 # target_link_libraries(texturev PRIVATE ${SDL3CPP_RENDER_STACK_LIBS})
 
 set(JSON_CONFIG_SOURCES
-    src/services/impl/json_config_service.cpp
-    src/services/impl/runtime_config_builder.cpp
-    src/services/impl/json_config_document_loader.cpp
-    src/services/impl/json_config_document_parser.cpp
-    src/services/impl/json_config_extend_resolver.cpp
-    src/services/impl/json_config_merge_service.cpp
-    src/services/impl/json_config_schema_path_resolver.cpp
-    src/services/impl/json_config_schema_validator.cpp
-    src/services/impl/json_config_version_validator.cpp
-    src/services/impl/json_config_migration_service.cpp
+    src/services/impl/config/json_config_service.cpp
+    src/services/impl/config/runtime_config_builder.cpp
+    src/services/impl/config/json_config_document_loader.cpp
+    src/services/impl/config/json_config_document_parser.cpp
+    src/services/impl/config/json_config_extend_resolver.cpp
+    src/services/impl/config/json_config_merge_service.cpp
+    src/services/impl/config/json_config_schema_path_resolver.cpp
+    src/services/impl/config/json_config_schema_validator.cpp
+    src/services/impl/config/json_config_version_validator.cpp
+    src/services/impl/config/json_config_migration_service.cpp
 )
 
 set(WORKFLOW_SOURCES
-    src/services/impl/workflow_step_io_resolver.cpp
-    src/services/impl/workflow_step_registry.cpp
-    src/services/impl/workflow_executor.cpp
-    src/services/impl/workflow_definition_parser.cpp
-    src/services/impl/workflow_template_resolver.cpp
-    src/services/impl/workflow_config_pipeline.cpp
-    src/services/impl/workflow_config_load_step.cpp
-    src/services/impl/workflow_config_version_step.cpp
-    src/services/impl/workflow_config_migration_step.cpp
-    src/services/impl/workflow_config_schema_step.cpp
-    src/services/impl/workflow_default_step_registrar.cpp
-    src/services/impl/workflow_generic_steps/workflow_list_filter_equals_step.cpp
-    src/services/impl/workflow_generic_steps/workflow_list_map_add_step.cpp
-    src/services/impl/workflow_generic_steps/workflow_list_reduce_sum_step.cpp
-    src/services/impl/workflow_generic_steps/workflow_number_add_step.cpp
-    src/services/impl/workflow_runtime_config_step.cpp
-    src/services/impl/workflow_generic_steps/workflow_value_copy_step.cpp
-    src/services/impl/workflow_generic_steps/workflow_value_default_step.cpp
+    src/services/impl/workflow/workflow_step_io_resolver.cpp
+    src/services/impl/workflow/workflow_step_registry.cpp
+    src/services/impl/workflow/workflow_executor.cpp
+    src/services/impl/workflow/workflow_definition_parser.cpp
+    src/services/impl/workflow/workflow_template_resolver.cpp
+    src/services/impl/workflow/workflow_config_pipeline.cpp
+    src/services/impl/workflow/workflow_config_load_step.cpp
+    src/services/impl/workflow/workflow_config_version_step.cpp
+    src/services/impl/workflow/workflow_config_migration_step.cpp
+    src/services/impl/workflow/workflow_config_schema_step.cpp
+    src/services/impl/workflow/workflow_default_step_registrar.cpp
+    src/services/impl/workflow/workflow_generic_steps/workflow_list_filter_equals_step.cpp
+    src/services/impl/workflow/workflow_generic_steps/workflow_list_map_add_step.cpp
+    src/services/impl/workflow/workflow_generic_steps/workflow_list_reduce_sum_step.cpp
+    src/services/impl/workflow/workflow_generic_steps/workflow_number_add_step.cpp
+    src/services/impl/workflow/workflow_runtime_config_step.cpp
+    src/services/impl/workflow/workflow_generic_steps/workflow_value_copy_step.cpp
+    src/services/impl/workflow/workflow_generic_steps/workflow_value_default_step.cpp
 )
 
 set(FRAME_WORKFLOW_SOURCES
-    src/services/impl/workflow_frame_begin_step.cpp
-    src/services/impl/workflow_frame_camera_step.cpp
-    src/services/impl/workflow_frame_bullet_physics_step.cpp
-    src/services/impl/workflow_frame_physics_step.cpp
-    src/services/impl/workflow_frame_scene_step.cpp
-    src/services/impl/workflow_frame_render_step.cpp
-    src/services/impl/workflow_frame_audio_step.cpp
-    src/services/impl/workflow_frame_gui_step.cpp
-    src/services/impl/workflow_soundboard_catalog_scan_step.cpp
-    src/services/impl/workflow_soundboard_gui_step.cpp
-    src/services/impl/workflow_soundboard_audio_step.cpp
-    src/services/impl/workflow_validation_checkpoint_step.cpp
-    src/services/impl/frame_workflow_step_registrar.cpp
-    src/services/impl/frame_workflow_service.cpp
+    src/services/impl/workflow/frame/workflow_frame_begin_step.cpp
+    src/services/impl/workflow/frame/workflow_frame_camera_step.cpp
+    src/services/impl/workflow/frame/workflow_frame_bullet_physics_step.cpp
+    src/services/impl/workflow/frame/workflow_frame_physics_step.cpp
+    src/services/impl/workflow/frame/workflow_frame_scene_step.cpp
+    src/services/impl/workflow/frame/workflow_frame_render_step.cpp
+    src/services/impl/workflow/frame/workflow_frame_audio_step.cpp
+    src/services/impl/workflow/frame/workflow_frame_gui_step.cpp
+    src/services/impl/workflow/workflow_soundboard_catalog_scan_step.cpp
+    src/services/impl/workflow/workflow_soundboard_gui_step.cpp
+    src/services/impl/workflow/workflow_soundboard_audio_step.cpp
+    src/services/impl/workflow/workflow_validation_checkpoint_step.cpp
+    src/services/impl/workflow/frame/frame_workflow_step_registrar.cpp
+    src/services/impl/workflow/frame/frame_workflow_service.cpp
     src/services/impl/soundboard_state_service.cpp
     src/services/impl/soundboard_path_resolver.cpp
 )
@@ -343,9 +343,9 @@ if(BUILD_SDL3_APP)
             ${WORKFLOW_SOURCES}
             ${FRAME_WORKFLOW_SOURCES}
             ${MATERIALX_SCRIPT_SOURCES}
-            src/services/impl/config_compiler_service.cpp
+            src/services/impl/config/config_compiler_service.cpp
             src/services/impl/command_line_service.cpp
-            src/services/impl/json_config_writer_service.cpp
+            src/services/impl/config/json_config_writer_service.cpp
             src/services/impl/logger_service.cpp
             src/services/impl/ecs_service.cpp
             src/services/impl/platform_service.cpp
@@ -826,8 +826,8 @@ add_test(NAME json_config_schema_validation_test COMMAND json_config_schema_vali
 # Test: Workflow definition parser
 add_executable(workflow_definition_parser_test
     tests/workflow_definition_parser_test.cpp
-    src/services/impl/workflow_definition_parser.cpp
-    src/services/impl/json_config_document_parser.cpp
+    src/services/impl/workflow/workflow_definition_parser.cpp
+    src/services/impl/config/json_config_document_parser.cpp
 )
 target_include_directories(workflow_definition_parser_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(workflow_definition_parser_test PRIVATE
@@ -840,7 +840,7 @@ add_test(NAME workflow_definition_parser_test COMMAND workflow_definition_parser
 # Test: Config compiler reference validation
 add_executable(config_compiler_reference_validation_test
     tests/config_compiler_reference_validation_test.cpp
-    src/services/impl/config_compiler_service.cpp
+    src/services/impl/config/config_compiler_service.cpp
 )
 target_include_directories(config_compiler_reference_validation_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(config_compiler_reference_validation_test PRIVATE
@@ -853,7 +853,7 @@ add_test(NAME config_compiler_reference_validation_test COMMAND config_compiler_
 # Test: Shader system registry selection
 add_executable(shader_system_registry_test
     tests/shader_system_registry_test.cpp
-    src/services/impl/config_compiler_service.cpp
+    src/services/impl/config/config_compiler_service.cpp
     src/services/impl/shader_system_registry.cpp
     src/services/impl/glsl_shader_system.cpp
     src/services/impl/materialx_shader_system.cpp

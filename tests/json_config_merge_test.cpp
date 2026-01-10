@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "services/impl/json_config_service.hpp"
+#include "services/impl/config/json_config_service.hpp"
 #include "services/interfaces/i_logger.hpp"
 
 #include <array>

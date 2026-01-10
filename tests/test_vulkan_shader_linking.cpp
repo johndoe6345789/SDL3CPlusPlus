@@ -1,6 +1,6 @@
 #include "services/impl/bgfx_graphics_backend.hpp"
 #include "services/impl/bgfx_gui_service.hpp"
-#include "services/impl/json_config_service.hpp"
+#include "services/impl/config/json_config_service.hpp"
 #include "services/impl/platform_service.hpp"
 #include "services/impl/sdl_window_service.hpp"
 #include "services/impl/pipeline_compiler_service.hpp"

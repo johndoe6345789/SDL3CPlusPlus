@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "services/impl/workflow_definition_parser.hpp"
+#include "services/impl/workflow/workflow_definition_parser.hpp"
 
 #include <chrono>
 #include <filesystem>

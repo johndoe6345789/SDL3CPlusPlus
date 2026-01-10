@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../interfaces/i_logger.hpp"
-#include "../interfaces/i_validation_tour_service.hpp"
-#include "../interfaces/i_workflow_step.hpp"
+#include "services/interfaces/i_logger.hpp"
+#include "services/interfaces/i_validation_tour_service.hpp"
+#include "services/interfaces/i_workflow_step.hpp"
 
 #include <memory>
 #include <string>

@@ -1,7 +1,7 @@
 #include "workflow_frame_camera_step.hpp"
-#include "workflow_step_io_resolver.hpp"
+#include "../workflow_step_io_resolver.hpp"
 
-#include "../interfaces/graphics_types.hpp"
+#include "services/interfaces/graphics_types.hpp"
 
 #include <rapidjson/document.h>
 

@@ -1,12 +1,12 @@
 #pragma once
 
-#include "../interfaces/gui_types.hpp"
-#include "../interfaces/i_config_service.hpp"
-#include "../interfaces/i_input_service.hpp"
-#include "../interfaces/i_logger.hpp"
-#include "../interfaces/i_soundboard_state_service.hpp"
-#include "../interfaces/i_workflow_step.hpp"
-#include "../interfaces/soundboard_types.hpp"
+#include "services/interfaces/gui_types.hpp"
+#include "services/interfaces/i_config_service.hpp"
+#include "services/interfaces/i_input_service.hpp"
+#include "services/interfaces/i_logger.hpp"
+#include "services/interfaces/i_soundboard_state_service.hpp"
+#include "services/interfaces/i_workflow_step.hpp"
+#include "services/interfaces/soundboard_types.hpp"
 
 #include <cstdint>
 #include <memory>
