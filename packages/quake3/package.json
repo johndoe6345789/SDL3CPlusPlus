@@ -15,8 +15,7 @@
   ],
   "shaders": [
     "shaders/quake3_glsl.json"
-  ]
-,
+  ],
   "dependencies": [
     "materialx"
   ]

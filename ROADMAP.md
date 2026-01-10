@@ -86,7 +86,7 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 - Deliverable: app boot always compiles config and prefers IR-derived data.
 - Acceptance: running with only a JSON config triggers IR compilation, and Lua scene load only happens if explicitly enabled.
 
-- Introduce an npm-like dependency manifest per package plus a top-level `packages/registry.json`, allowing packages to declare other packages (e.g., `materialx`) they rely on before their workflows run; this keeps each workflow self-contained and enforces the “only register what the workflow references” rule.
+- Introduce an npm-like dependency manifest per package and rely on the `packages/` directory (resolved through `scripts/package_lint.py`) so packages can declare dependencies (e.g., `materialx`) before their workflows run; this keeps each workflow self-contained and enforces the “only register what the workflow references” rule.
 - Current catalog entries: `packages/seed` (spinning cube), `packages/gui` (GUI panels), `packages/soundboard`, `packages/quake3`, `packages/engine_tester`, and `packages/materialx`; each package lists its dependency graph and workflow entry point so a loader can resolve them in dependency order.
 
 ### Phase 1: Schema Extensions For Config-First Runtime (2-4 days)
@@ -395,7 +395,7 @@ Option B: per-shader only
 ### Manifest Expectations
 - Treat each package like an npm module: `package.json` + `workflows/` folder + clear `assets/`, `scene/` (not “levels”), optional `shaders/`, `gui/`, and `assets/sound` sub-folders so editors, artists, and automation can find the data without guessing.
 - Include `defaultWorkflow`, `workflows`, `assets`, `scene`, and `dependencies` fields in `package.json`; bundle notes, template guidance, and a `bundled` flag for platform-specific exports. A package linter will scan these manifests and warn when fields are missing, workflows are orphaned, dependencies are unspecified, or an active workflow lacks an associated C++ step registry entry.
-- Keep the `packages/registry.json` catalog in sync with the manifest layer so workflow loaders can resolve dependencies (e.g., `materialx`) before executing the JSON control plane. Packages that list unused services should emit warnings at lint time—if the workflow does not run it, the service should not register itself or consume startup budget.
+- Let `scripts/package_lint.py` scan `packages/` for `package.json` manifests so workflow loaders can validate dependencies (e.g., `materialx`) before executing the JSON control plane. Packages that list unused services should emit lint warnings and remain dormant unless a workflow references them.
 
 ### Asset & Vendor Hygiene
 - Copy static assets from `MaterialX/` and the legacy `config/` asset folders (poster textures, fonts, audio catalogs, procedural generator outputs like `scripts/generate_audio_assets.py` and `scripts/generate_cube_stl.py`) into the appropriate `packages/<name>/assets/` subfolders. When a package owns enough copies, the on-disk `MaterialX` depot becomes optional; treat it as historical/archival until the workflow-only path is exercised.
@@ -430,7 +430,7 @@ Option B: per-shader only
 - Build a package linter that runs as part of `scripts/lint.sh` (or a dedicated CI job) and flags:
   - missing `defaultWorkflow` or `workflow` definitions that cover boot/frame phases,
   - absent `assets`/`scene` references that the workflow expects,
-  - dependencies listed in `registry.json` but not declared in `package.json`,
+-  - dependencies pointing at packages or directories that do not exist,
   - unused services or steps referenced by the workflow but lacking C++ counterparts.
 - When we repackage an existing demo, the linter should compare the legacy config/workflow + assets (e.g., the old Lua-driven bundle) to the restored package and warn about any missing pieces (assets, scenes, workflows, or service steps) so we can see what still needs to be ported.
 - The linter also ensures that packages import the right assets (GUI folder under `gui/`, sound under `assets/sound`, fonts under `assets/fonts`, shaders under `shaders/`) so the runtime can find them deterministically.

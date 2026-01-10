@@ -12,8 +12,7 @@
   ],
   "scene": [
     "scene/teleport_points.json"
-  ]
-,
+  ],
   "dependencies": [
     "materialx"
   ]

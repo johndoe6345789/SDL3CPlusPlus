@@ -22,6 +22,7 @@ SDL3 + bgfx demo app with Lua-driven runtime configuration, audio playback, and 
    - Linux/macOS: `source build/conanrun.sh`
    - Windows (cmd.exe): `build\conanrun.bat`
 5. `python scripts/dev_commands.py run`
+6. Use the guardrail prefix helper before invoking Codex if you want to prepend standard instructions: `python scripts/auto_prompt_prefixer.py --prompt "Describe the package layout"`. It defaults to `config/prompt_prefix.txt`, or pass `--prefix-file`/`--prefix-text` to change it.
 
 ## Build helper commands
 - `python scripts/dev_commands.py configure` uses Ninja by default (Ninja+MSVC on Windows) and writes to `build-ninja`/`build-ninja-msvc`; override with `--generator` and `--build-dir`.

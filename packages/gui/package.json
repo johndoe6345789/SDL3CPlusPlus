@@ -18,8 +18,7 @@
   ],
   "shaders": [
     "shaders/gui_font.json"
-  ]
-,
+  ],
   "dependencies": [
     "materialx"
   ]
