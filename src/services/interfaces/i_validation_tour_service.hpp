@@ -27,6 +27,14 @@ public:
     virtual ~IValidationTourService() = default;
 
     /**
+     * @brief Request a specific checkpoint by id.
+     *
+     * @param checkpointId Checkpoint identifier from validation_tour config
+     * @return true if the checkpoint was accepted or validation is disabled
+     */
+    virtual bool RequestCheckpoint(const std::string& checkpointId) = 0;
+
+    /**
      * @brief Prepare validation state for the upcoming frame.
      *
      * @param aspect Aspect ratio for view/projection math

@@ -6,6 +6,7 @@
 #include "../interfaces/i_validation_tour_service.hpp"
 #include <filesystem>
 #include <optional>
+#include <unordered_map>
 
 namespace sdl3cpp::services::impl {
 
@@ -15,6 +16,7 @@ public:
                           std::shared_ptr<IProbeService> probeService,
                           std::shared_ptr<ILogger> logger);
 
+    bool RequestCheckpoint(const std::string& checkpointId) override;
     ValidationFramePlan BeginFrame(float aspect) override;
     ValidationFrameResult EndFrame() override;
     bool IsActive() const override { return active_ && !completed_ && !failed_; }
@@ -47,6 +49,7 @@ private:
     std::shared_ptr<IProbeService> probeService_;
     std::shared_ptr<ILogger> logger_;
     ValidationTourConfig config_{};
+    std::unordered_map<std::string, size_t> checkpointIndexById_{};
     std::filesystem::path resolvedOutputDir_{};
     size_t checkpointIndex_ = 0;
     uint32_t warmupRemaining_ = 0;

@@ -8,6 +8,7 @@
 #include "workflow_frame_render_step.hpp"
 #include "workflow_frame_scene_step.hpp"
 #include "workflow_step_registry.hpp"
+#include "workflow_validation_checkpoint_step.hpp"
 
 #include <stdexcept>
 #include <unordered_set>
@@ -19,13 +20,15 @@ FrameWorkflowStepRegistrar::FrameWorkflowStepRegistrar(std::shared_ptr<ILogger> 
                                                        std::shared_ptr<IInputService> inputService,
                                                        std::shared_ptr<IPhysicsService> physicsService,
                                                        std::shared_ptr<ISceneService> sceneService,
-                                                       std::shared_ptr<IRenderCoordinatorService> renderService)
+                                                       std::shared_ptr<IRenderCoordinatorService> renderService,
+                                                       std::shared_ptr<IValidationTourService> validationTourService)
     : logger_(std::move(logger)),
       audioService_(std::move(audioService)),
       inputService_(std::move(inputService)),
       physicsService_(std::move(physicsService)),
       sceneService_(std::move(sceneService)),
-      renderService_(std::move(renderService)) {}
+      renderService_(std::move(renderService)),
+      validationTourService_(std::move(validationTourService)) {}
 
 void FrameWorkflowStepRegistrar::RegisterUsedSteps(
     const WorkflowDefinition& workflow,
@@ -58,6 +61,10 @@ void FrameWorkflowStepRegistrar::RegisterUsedSteps(
     }
     if (plugins.contains("frame.gui")) {
         registry->RegisterStep(std::make_shared<WorkflowFrameGuiStep>(inputService_, logger_));
+    }
+    if (plugins.contains("validation.tour.checkpoint")) {
+        registry->RegisterStep(std::make_shared<WorkflowValidationCheckpointStep>(
+            validationTourService_, logger_));
     }
 }
 

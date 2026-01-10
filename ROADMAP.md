@@ -1,5 +1,7 @@
 # ROADMAP
 
+See docs/PROMPT.md
+
 ## North Star
 Treat JSON config as a declarative control plane that compiles into scene, resource, and render graphs with strict validation, budget enforcement, and crash-resistant policies.
 

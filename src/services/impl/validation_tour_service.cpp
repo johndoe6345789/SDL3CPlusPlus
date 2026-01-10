@@ -29,6 +29,14 @@ ValidationTourService::ValidationTourService(std::shared_ptr<IConfigService> con
     if (configService) {
         config_ = configService->GetValidationTourConfig();
     }
+    checkpointIndexById_.clear();
+    for (size_t i = 0; i < config_.checkpoints.size(); ++i) {
+        const auto& checkpoint = config_.checkpoints[i];
+        if (checkpoint.id.empty()) {
+            continue;
+        }
+        checkpointIndexById_.emplace(checkpoint.id, i);
+    }
 
     if (config_.enabled && config_.checkpoints.empty()) {
         if (logger_) {
@@ -64,6 +72,43 @@ ValidationTourService::ValidationTourService(std::shared_ptr<IConfigService> con
 
     checkpointIndex_ = 0;
     AdvanceCheckpoint();
+}
+
+bool ValidationTourService::RequestCheckpoint(const std::string& checkpointId) {
+    if (!config_.enabled) {
+        if (logger_) {
+            logger_->Trace("ValidationTourService", "RequestCheckpoint",
+                           "checkpoint=" + checkpointId,
+                           "Validation tour disabled");
+        }
+        return true;
+    }
+    if (checkpointId.empty()) {
+        if (logger_) {
+            logger_->Error("ValidationTourService::RequestCheckpoint: checkpoint id is empty");
+        }
+        return false;
+    }
+    auto it = checkpointIndexById_.find(checkpointId);
+    if (it == checkpointIndexById_.end()) {
+        if (logger_) {
+            logger_->Error("ValidationTourService::RequestCheckpoint: checkpoint not found id=" + checkpointId);
+        }
+        return false;
+    }
+    checkpointIndex_ = it->second;
+    pendingCapture_.reset();
+    failed_ = false;
+    completed_ = false;
+    active_ = true;
+    AdvanceCheckpoint();
+    if (logger_) {
+        logger_->Trace("ValidationTourService", "RequestCheckpoint",
+                       "checkpoint=" + checkpointId +
+                           ", index=" + std::to_string(checkpointIndex_),
+                       "Checkpoint requested");
+    }
+    return true;
 }
 
 ValidationFramePlan ValidationTourService::BeginFrame(float aspect) {

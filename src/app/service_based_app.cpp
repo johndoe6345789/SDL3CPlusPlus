@@ -311,7 +311,8 @@ void ServiceBasedApp::RegisterServices() {
         registry_.GetService<services::IInputService>(),
         registry_.GetService<services::IPhysicsService>(),
         registry_.GetService<services::ISceneService>(),
-        registry_.GetService<services::IRenderCoordinatorService>());
+        registry_.GetService<services::IRenderCoordinatorService>(),
+        registry_.GetService<services::IValidationTourService>());
 
     // Script bridge services
     registry_.RegisterService<services::IMeshService, services::impl::MeshService>(

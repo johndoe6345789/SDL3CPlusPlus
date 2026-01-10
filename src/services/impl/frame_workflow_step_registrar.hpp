@@ -12,6 +12,7 @@ class IInputService;
 class IPhysicsService;
 class IRenderCoordinatorService;
 class ISceneService;
+class IValidationTourService;
 }
 
 namespace sdl3cpp::services::impl {
@@ -23,7 +24,8 @@ public:
                                std::shared_ptr<IInputService> inputService,
                                std::shared_ptr<IPhysicsService> physicsService,
                                std::shared_ptr<ISceneService> sceneService,
-                               std::shared_ptr<IRenderCoordinatorService> renderService);
+                               std::shared_ptr<IRenderCoordinatorService> renderService,
+                               std::shared_ptr<IValidationTourService> validationTourService);
 
     void RegisterUsedSteps(const WorkflowDefinition& workflow,
                            const std::shared_ptr<IWorkflowStepRegistry>& registry) const;
@@ -35,6 +37,7 @@ private:
     std::shared_ptr<IPhysicsService> physicsService_;
     std::shared_ptr<ISceneService> sceneService_;
     std::shared_ptr<IRenderCoordinatorService> renderService_;
+    std::shared_ptr<IValidationTourService> validationTourService_;
 };
 
 }  // namespace sdl3cpp::services::impl
