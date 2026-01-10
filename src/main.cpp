@@ -12,10 +12,10 @@
 #include <SDL3/SDL_main.h>
 
 #include "app/service_based_app.hpp"
-#include "services/impl/command_line_service.hpp"
-#include "services/impl/json_config_writer_service.hpp"
-#include "services/impl/logger_service.hpp"
-#include "services/impl/platform_service.hpp"
+#include "services/impl/app/command_line_service.hpp"
+#include "services/impl/config/json_config_writer_service.hpp"
+#include "services/impl/diagnostics/logger_service.hpp"
+#include "services/impl/platform/platform_service.hpp"
 #include "services/interfaces/i_logger.hpp"
 
 namespace sdl3cpp::app {

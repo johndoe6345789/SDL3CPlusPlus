@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "services/impl/graphics_service.hpp"
+#include "services/impl/graphics/graphics_service.hpp"
 #include "services/interfaces/i_graphics_backend.hpp"
 #include "services/interfaces/i_logger.hpp"
 #include "services/interfaces/i_window_service.hpp"

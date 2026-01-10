@@ -285,25 +285,27 @@ set(JSON_CONFIG_SOURCES
     src/services/impl/config/json_config_migration_service.cpp
 )
 
+file(GLOB WORKFLOW_GENERIC_STEP_SOURCES CONFIGURE_DEPENDS
+    src/services/impl/workflow/workflow_generic_steps/*.cpp
+)
+
 set(WORKFLOW_SOURCES
     src/services/impl/workflow/workflow_step_io_resolver.cpp
+    src/services/impl/workflow/workflow_step_parameter_resolver.cpp
     src/services/impl/workflow/workflow_step_registry.cpp
     src/services/impl/workflow/workflow_executor.cpp
     src/services/impl/workflow/workflow_definition_parser.cpp
     src/services/impl/workflow/workflow_template_resolver.cpp
+    src/services/impl/workflow/workflow_camera_view_state_builder.cpp
     src/services/impl/workflow/workflow_config_pipeline.cpp
     src/services/impl/workflow/workflow_config_load_step.cpp
     src/services/impl/workflow/workflow_config_version_step.cpp
     src/services/impl/workflow/workflow_config_migration_step.cpp
     src/services/impl/workflow/workflow_config_schema_step.cpp
     src/services/impl/workflow/workflow_default_step_registrar.cpp
-    src/services/impl/workflow/workflow_generic_steps/workflow_list_filter_equals_step.cpp
-    src/services/impl/workflow/workflow_generic_steps/workflow_list_map_add_step.cpp
-    src/services/impl/workflow/workflow_generic_steps/workflow_list_reduce_sum_step.cpp
-    src/services/impl/workflow/workflow_generic_steps/workflow_number_add_step.cpp
+    src/services/impl/workflow/workflow_mesh_payload_converter.cpp
     src/services/impl/workflow/workflow_runtime_config_step.cpp
-    src/services/impl/workflow/workflow_generic_steps/workflow_value_copy_step.cpp
-    src/services/impl/workflow/workflow_generic_steps/workflow_value_default_step.cpp
+    ${WORKFLOW_GENERIC_STEP_SOURCES}
 )
 
 set(FRAME_WORKFLOW_SOURCES
@@ -321,16 +323,16 @@ set(FRAME_WORKFLOW_SOURCES
     src/services/impl/workflow/workflow_validation_checkpoint_step.cpp
     src/services/impl/workflow/frame/frame_workflow_step_registrar.cpp
     src/services/impl/workflow/frame/frame_workflow_service.cpp
-    src/services/impl/soundboard_state_service.cpp
-    src/services/impl/soundboard_path_resolver.cpp
+    src/services/impl/soundboard/soundboard_state_service.cpp
+    src/services/impl/soundboard/soundboard_path_resolver.cpp
 )
 
 set(MATERIALX_SCRIPT_SOURCES
-    src/services/impl/materialx_path_resolver.cpp
-    src/services/impl/materialx_search_path_builder.cpp
-    src/services/impl/materialx_document_loader.cpp
-    src/services/impl/materialx_surface_node_resolver.cpp
-    src/services/impl/materialx_surface_parameter_reader.cpp
+    src/services/impl/materialx/materialx_path_resolver.cpp
+    src/services/impl/materialx/materialx_search_path_builder.cpp
+    src/services/impl/materialx/materialx_document_loader.cpp
+    src/services/impl/materialx/materialx_surface_node_resolver.cpp
+    src/services/impl/materialx/materialx_surface_parameter_reader.cpp
 )
 
 if(BUILD_SDL3_APP)
@@ -344,45 +346,45 @@ if(BUILD_SDL3_APP)
             ${FRAME_WORKFLOW_SOURCES}
             ${MATERIALX_SCRIPT_SOURCES}
             src/services/impl/config/config_compiler_service.cpp
-            src/services/impl/command_line_service.cpp
+            src/services/impl/app/command_line_service.cpp
             src/services/impl/config/json_config_writer_service.cpp
-            src/services/impl/logger_service.cpp
-            src/services/impl/ecs_service.cpp
-            src/services/impl/platform_service.cpp
-            src/services/impl/probe_service.cpp
-            src/services/impl/script_engine_service.cpp
-            src/services/impl/lua_helpers.cpp
-            src/services/impl/scene_script_service.cpp
-            src/services/impl/shader_script_service.cpp
-            src/services/impl/shader_system_registry.cpp
-            src/services/impl/materialx_shader_system.cpp
-            src/services/impl/glsl_shader_system.cpp
-            src/services/impl/materialx_shader_generator.cpp
-            src/services/impl/shader_pipeline_validator.cpp
-            src/services/impl/gui_script_service.cpp
-            $<$<NOT:$<BOOL:${ENABLE_VITA}>>:src/services/impl/bgfx_gui_service.cpp>
-            $<$<NOT:$<BOOL:${ENABLE_VITA}>>:src/services/impl/bgfx_shader_compiler.cpp>
-            src/services/impl/audio_command_service.cpp
-            src/services/impl/physics_bridge_service.cpp
-            src/services/impl/mesh_service.cpp
-            src/services/impl/sdl_window_service.cpp
-            src/services/impl/sdl_input_service.cpp
-            src/services/impl/sdl_audio_service.cpp
-            src/services/impl/crash_recovery_service.cpp
-            src/services/impl/lifecycle_service.cpp
-            src/services/impl/application_loop_service.cpp
-            src/services/impl/render_coordinator_service.cpp
-            src/services/impl/validation_tour_service.cpp
-            src/services/impl/render_graph_service.cpp
-            src/services/impl/null_gui_service.cpp
-            src/services/impl/bgfx_gui_service.cpp
-            src/services/impl/bgfx_shader_compiler.cpp
-            src/services/impl/pipeline_compiler_service.cpp
-            src/services/impl/bullet_physics_service.cpp
-            src/services/impl/scene_service.cpp
-            src/services/impl/graphics_service.cpp
-            $<$<NOT:$<BOOL:${ENABLE_VITA}>>:src/services/impl/bgfx_graphics_backend.cpp>
-            $<$<BOOL:${ENABLE_VITA}>:src/services/impl/gxm_graphics_backend.cpp>
+            src/services/impl/diagnostics/logger_service.cpp
+            src/services/impl/scene/ecs_service.cpp
+            src/services/impl/platform/platform_service.cpp
+            src/services/impl/diagnostics/probe_service.cpp
+            src/services/impl/script/script_engine_service.cpp
+            src/services/impl/script/lua_helpers.cpp
+            src/services/impl/script/scene_script_service.cpp
+            src/services/impl/script/shader_script_service.cpp
+            src/services/impl/shader/shader_system_registry.cpp
+            src/services/impl/shader/materialx_shader_system.cpp
+            src/services/impl/shader/glsl_shader_system.cpp
+            src/services/impl/materialx/materialx_shader_generator.cpp
+            src/services/impl/shader/shader_pipeline_validator.cpp
+            src/services/impl/script/gui_script_service.cpp
+            $<$<NOT:$<BOOL:${ENABLE_VITA}>>:src/services/impl/gui/bgfx_gui_service.cpp>
+            $<$<NOT:$<BOOL:${ENABLE_VITA}>>:src/services/impl/graphics/bgfx_shader_compiler.cpp>
+            src/services/impl/audio/audio_command_service.cpp
+            src/services/impl/scene/physics_bridge_service.cpp
+            src/services/impl/scene/mesh_service.cpp
+            src/services/impl/platform/sdl_window_service.cpp
+            src/services/impl/input/sdl_input_service.cpp
+            src/services/impl/audio/sdl_audio_service.cpp
+            src/services/impl/diagnostics/crash_recovery_service.cpp
+            src/services/impl/app/lifecycle_service.cpp
+            src/services/impl/app/application_loop_service.cpp
+            src/services/impl/render/render_coordinator_service.cpp
+            src/services/impl/diagnostics/validation_tour_service.cpp
+            src/services/impl/render/render_graph_service.cpp
+            src/services/impl/gui/null_gui_service.cpp
+            src/services/impl/gui/bgfx_gui_service.cpp
+            src/services/impl/graphics/bgfx_shader_compiler.cpp
+            src/services/impl/shader/pipeline_compiler_service.cpp
+            src/services/impl/scene/bullet_physics_service.cpp
+            src/services/impl/scene/scene_service.cpp
+            src/services/impl/graphics/graphics_service.cpp
+            $<$<NOT:$<BOOL:${ENABLE_VITA}>>:src/services/impl/graphics/bgfx_graphics_backend.cpp>
+            $<$<BOOL:${ENABLE_VITA}>:src/services/impl/graphics/gxm_graphics_backend.cpp>
             src/app/service_based_app.cpp
         )
     target_include_directories(sdl3_app PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
@@ -461,28 +463,28 @@ enable_testing()
 if(NOT ENABLE_VITA)
 add_executable(script_engine_tests
     tests/test_cube_script.cpp
-    src/services/impl/bgfx_graphics_backend.cpp
-    src/services/impl/bgfx_shader_compiler.cpp
-    src/services/impl/logger_service.cpp
-    src/services/impl/mesh_service.cpp
-    src/services/impl/physics_bridge_service.cpp
-    src/services/impl/platform_service.cpp
-    src/services/impl/script_engine_service.cpp
+    src/services/impl/graphics/bgfx_graphics_backend.cpp
+    src/services/impl/graphics/bgfx_shader_compiler.cpp
+    src/services/impl/diagnostics/logger_service.cpp
+    src/services/impl/scene/mesh_service.cpp
+    src/services/impl/scene/physics_bridge_service.cpp
+    src/services/impl/platform/platform_service.cpp
+    src/services/impl/script/script_engine_service.cpp
     ${MATERIALX_SCRIPT_SOURCES}
-    src/services/impl/lua_helpers.cpp
-    src/services/impl/scene_script_service.cpp
-    src/services/impl/shader_script_service.cpp
-    src/services/impl/shader_system_registry.cpp
-    src/services/impl/materialx_shader_system.cpp
-    src/services/impl/glsl_shader_system.cpp
-    src/services/impl/materialx_shader_generator.cpp
-    src/services/impl/shader_pipeline_validator.cpp
-    src/services/impl/sdl_window_service.cpp
-    src/services/impl/ecs_service.cpp
-    src/services/impl/scene_service.cpp
+    src/services/impl/script/lua_helpers.cpp
+    src/services/impl/script/scene_script_service.cpp
+    src/services/impl/script/shader_script_service.cpp
+    src/services/impl/shader/shader_system_registry.cpp
+    src/services/impl/shader/materialx_shader_system.cpp
+    src/services/impl/shader/glsl_shader_system.cpp
+    src/services/impl/materialx/materialx_shader_generator.cpp
+    src/services/impl/shader/shader_pipeline_validator.cpp
+    src/services/impl/platform/sdl_window_service.cpp
+    src/services/impl/scene/ecs_service.cpp
+    src/services/impl/scene/scene_service.cpp
     src/events/event_bus.cpp
     src/stb_image.cpp
-    src/services/impl/pipeline_compiler_service.cpp
+    src/services/impl/shader/pipeline_compiler_service.cpp
 )
 target_include_directories(script_engine_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_include_directories(script_engine_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_tools/shaderc")
@@ -515,11 +517,11 @@ add_test(NAME script_engine_tests COMMAND script_engine_tests)
 
 add_executable(bgfx_gui_service_tests
     tests/test_bgfx_gui_service.cpp
-    src/services/impl/bgfx_gui_service.cpp
-    src/services/impl/bgfx_shader_compiler.cpp
-    src/services/impl/materialx_shader_generator.cpp
-    src/services/impl/shader_pipeline_validator.cpp
-    src/services/impl/pipeline_compiler_service.cpp
+    src/services/impl/gui/bgfx_gui_service.cpp
+    src/services/impl/graphics/bgfx_shader_compiler.cpp
+    src/services/impl/materialx/materialx_shader_generator.cpp
+    src/services/impl/shader/shader_pipeline_validator.cpp
+    src/services/impl/shader/pipeline_compiler_service.cpp
 )
 target_include_directories(bgfx_gui_service_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_include_directories(bgfx_gui_service_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_tools/shaderc")
@@ -546,11 +548,11 @@ add_test(NAME bgfx_gui_service_tests COMMAND bgfx_gui_service_tests)
 # Test: GUI budget enforcement (cache pruning)
 add_executable(bgfx_gui_budget_enforcement_test
     tests/bgfx_gui_budget_enforcement_test.cpp
-    src/services/impl/bgfx_gui_service.cpp
-    src/services/impl/bgfx_shader_compiler.cpp
-    src/services/impl/materialx_shader_generator.cpp
-    src/services/impl/shader_pipeline_validator.cpp
-    src/services/impl/pipeline_compiler_service.cpp
+    src/services/impl/gui/bgfx_gui_service.cpp
+    src/services/impl/graphics/bgfx_shader_compiler.cpp
+    src/services/impl/materialx/materialx_shader_generator.cpp
+    src/services/impl/shader/shader_pipeline_validator.cpp
+    src/services/impl/shader/pipeline_compiler_service.cpp
 )
 target_include_directories(bgfx_gui_budget_enforcement_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_include_directories(bgfx_gui_budget_enforcement_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_tools/shaderc")
@@ -578,8 +580,8 @@ add_test(NAME bgfx_gui_budget_enforcement_test COMMAND bgfx_gui_budget_enforceme
 # Test: Texture budget tracker (allocation + free)
 add_executable(bgfx_texture_budget_tracker_test
     tests/bgfx_texture_budget_tracker_test.cpp
-    src/services/impl/bgfx_graphics_backend.cpp
-    src/services/impl/bgfx_shader_compiler.cpp
+    src/services/impl/graphics/bgfx_graphics_backend.cpp
+    src/services/impl/graphics/bgfx_shader_compiler.cpp
     src/stb_image.cpp
 )
 target_include_directories(bgfx_texture_budget_tracker_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
@@ -606,18 +608,18 @@ add_test(NAME bgfx_texture_budget_tracker_test COMMAND bgfx_texture_budget_track
 # Test: Vulkan shader linking (TDD test for walls/ceiling/floor rendering)
 add_executable(vulkan_shader_linking_test
     tests/test_vulkan_shader_linking.cpp
-    src/services/impl/bgfx_graphics_backend.cpp
-    src/services/impl/bgfx_gui_service.cpp
-    src/services/impl/bgfx_shader_compiler.cpp
+    src/services/impl/graphics/bgfx_graphics_backend.cpp
+    src/services/impl/gui/bgfx_gui_service.cpp
+    src/services/impl/graphics/bgfx_shader_compiler.cpp
     ${JSON_CONFIG_SOURCES}
     ${WORKFLOW_SOURCES}
-    src/services/impl/materialx_shader_generator.cpp
-    src/services/impl/shader_pipeline_validator.cpp
-    src/services/impl/platform_service.cpp
-    src/services/impl/sdl_window_service.cpp
+    src/services/impl/materialx/materialx_shader_generator.cpp
+    src/services/impl/shader/shader_pipeline_validator.cpp
+    src/services/impl/platform/platform_service.cpp
+    src/services/impl/platform/sdl_window_service.cpp
     src/events/event_bus.cpp
     src/stb_image.cpp
-    src/services/impl/pipeline_compiler_service.cpp
+    src/services/impl/shader/pipeline_compiler_service.cpp
 )
 target_include_directories(vulkan_shader_linking_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_include_directories(vulkan_shader_linking_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_tools/shaderc")
@@ -644,7 +646,7 @@ add_test(NAME vulkan_shader_linking_test COMMAND vulkan_shader_linking_test)
 # Test: Shader Pipeline Validator (mega-strict validation system)
 add_executable(shader_pipeline_validator_test
     tests/shader_pipeline_validator_test.cpp
-    src/services/impl/shader_pipeline_validator.cpp
+    src/services/impl/shader/shader_pipeline_validator.cpp
 )
 target_include_directories(shader_pipeline_validator_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(shader_pipeline_validator_test PRIVATE
@@ -670,8 +672,8 @@ add_test(NAME shaderc_uniform_mapping_test COMMAND shaderc_uniform_mapping_test)
 # Test: MaterialX Shader Generator Integration (validates shader generation + validation together)
 add_executable(materialx_shader_generator_integration_test
     tests/materialx_shader_generator_integration_test.cpp
-    src/services/impl/materialx_shader_generator.cpp
-    src/services/impl/shader_pipeline_validator.cpp
+    src/services/impl/materialx/materialx_shader_generator.cpp
+    src/services/impl/shader/shader_pipeline_validator.cpp
 )
 target_include_directories(materialx_shader_generator_integration_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(materialx_shader_generator_integration_test PRIVATE
@@ -719,7 +721,7 @@ add_test(NAME bgfx_frame_requirement_test COMMAND bgfx_frame_requirement_test)
 # Test: Render coordinator initialization order (TDD guard for shader load timing)
 add_executable(render_coordinator_init_order_test
     tests/render_coordinator_init_order_test.cpp
-    src/services/impl/render_coordinator_service.cpp
+    src/services/impl/render/render_coordinator_service.cpp
 )
 target_include_directories(render_coordinator_init_order_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(render_coordinator_init_order_test PRIVATE
@@ -731,8 +733,8 @@ add_test(NAME render_coordinator_init_order_test COMMAND render_coordinator_init
 # Test: Bgfx backend frame guard (ensures texture loads are blocked before first frame)
 add_executable(bgfx_backend_frame_guard_test
     tests/bgfx_backend_frame_guard_test.cpp
-    src/services/impl/bgfx_graphics_backend.cpp
-    src/services/impl/bgfx_shader_compiler.cpp
+    src/services/impl/graphics/bgfx_graphics_backend.cpp
+    src/services/impl/graphics/bgfx_shader_compiler.cpp
     src/stb_image.cpp
 )
 target_include_directories(bgfx_backend_frame_guard_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
@@ -759,8 +761,8 @@ add_test(NAME bgfx_backend_frame_guard_test COMMAND bgfx_backend_frame_guard_tes
 # Test: Gui script service missing fields (logs trace and uses defaults)
 add_executable(gui_script_service_missing_fields_test
     tests/gui_script_service_missing_fields_test.cpp
-    src/services/impl/gui_script_service.cpp
-    src/services/impl/lua_helpers.cpp
+    src/services/impl/script/gui_script_service.cpp
+    src/services/impl/script/lua_helpers.cpp
 )
 target_include_directories(gui_script_service_missing_fields_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(gui_script_service_missing_fields_test PRIVATE
@@ -774,7 +776,7 @@ add_test(NAME gui_script_service_missing_fields_test COMMAND gui_script_service_
 # Test: Graphics service buffer lifecycle (TDD guard for VRAM leaks on reupload)
 add_executable(graphics_service_buffer_lifecycle_test
     tests/graphics_service_buffer_lifecycle_test.cpp
-    src/services/impl/graphics_service.cpp
+    src/services/impl/graphics/graphics_service.cpp
 )
 target_include_directories(graphics_service_buffer_lifecycle_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(graphics_service_buffer_lifecycle_test PRIVATE
@@ -786,7 +788,7 @@ add_test(NAME graphics_service_buffer_lifecycle_test COMMAND graphics_service_bu
 # Test: Render graph validation (cycles + unknown dependencies)
 add_executable(render_graph_service_test
     tests/render_graph_service_test.cpp
-    src/services/impl/render_graph_service.cpp
+    src/services/impl/render/render_graph_service.cpp
 )
 target_include_directories(render_graph_service_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(render_graph_service_test PRIVATE
@@ -854,11 +856,11 @@ add_test(NAME config_compiler_reference_validation_test COMMAND config_compiler_
 add_executable(shader_system_registry_test
     tests/shader_system_registry_test.cpp
     src/services/impl/config/config_compiler_service.cpp
-    src/services/impl/shader_system_registry.cpp
-    src/services/impl/glsl_shader_system.cpp
-    src/services/impl/materialx_shader_system.cpp
-    src/services/impl/materialx_shader_generator.cpp
-    src/services/impl/shader_pipeline_validator.cpp
+    src/services/impl/shader/shader_system_registry.cpp
+    src/services/impl/shader/glsl_shader_system.cpp
+    src/services/impl/shader/materialx_shader_system.cpp
+    src/services/impl/materialx/materialx_shader_generator.cpp
+    src/services/impl/shader/shader_pipeline_validator.cpp
 )
 target_include_directories(shader_system_registry_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_include_directories(shader_system_registry_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_tools/shaderc")
@@ -895,7 +897,7 @@ add_test(NAME gui_shader_linking_failure_test COMMAND gui_shader_linking_failure
 # Test: Crash recovery timeout (TDD test for main loop hang after timeout)
 add_executable(crash_recovery_timeout_test
     tests/crash_recovery_timeout_test.cpp
-    src/services/impl/crash_recovery_service.cpp
+    src/services/impl/diagnostics/crash_recovery_service.cpp
 )
 target_include_directories(crash_recovery_timeout_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 target_link_libraries(crash_recovery_timeout_test PRIVATE
@@ -972,7 +974,7 @@ endif()
 if(ENABLE_VITA)
     add_executable(gxm_backend_tests
         tests/test_gxm_backend.cpp
-        src/services/impl/gxm_graphics_backend.cpp
+        src/services/impl/graphics/gxm_graphics_backend.cpp
     )
     target_include_directories(gxm_backend_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
     target_link_libraries(gxm_backend_tests PRIVATE

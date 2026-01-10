@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "services/impl/bgfx_gui_service.hpp"
+#include "services/impl/gui/bgfx_gui_service.hpp"
 #include "services/interfaces/i_logger.hpp"
 
 namespace sdl3cpp::services::impl {

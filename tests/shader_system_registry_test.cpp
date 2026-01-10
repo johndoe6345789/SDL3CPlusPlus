@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "services/impl/config/config_compiler_service.hpp"
-#include "services/impl/shader_system_registry.hpp"
+#include "services/impl/shader/shader_system_registry.hpp"
 
 #include <string>
 

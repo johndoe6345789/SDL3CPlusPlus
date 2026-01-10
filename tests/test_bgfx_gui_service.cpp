@@ -1,4 +1,4 @@
-#include "services/impl/bgfx_gui_service.hpp"
+#include "services/impl/gui/bgfx_gui_service.hpp"
 #include "services/interfaces/gui_types.hpp"
 
 #include "services/interfaces/i_config_service.hpp"

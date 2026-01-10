@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "services/impl/gui_script_service.hpp"
+#include "services/impl/script/gui_script_service.hpp"
 #include "services/interfaces/i_logger.hpp"
 #include "services/interfaces/i_script_engine_service.hpp"
 

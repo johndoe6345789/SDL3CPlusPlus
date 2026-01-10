@@ -163,7 +163,7 @@ TEST(BgfxDrawBoundsValidationTest, NegativeVertexOffset) {
 
 // Test 7: Document the fix needed in BgfxGraphicsBackend::Draw
 TEST(BgfxDrawBoundsValidationTest, RequiredValidations) {
-    // File: src/services/impl/bgfx_graphics_backend.cpp
+    // File: src/services/impl/graphics/bgfx_graphics_backend.cpp
     // Function: BgfxGraphicsBackend::Draw (lines ~1093-1145)
     //
     // Missing validations:

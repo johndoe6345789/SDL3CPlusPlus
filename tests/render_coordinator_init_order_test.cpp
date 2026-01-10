@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "services/impl/render_coordinator_service.hpp"
+#include "services/impl/render/render_coordinator_service.hpp"
 #include "services/interfaces/i_config_compiler_service.hpp"
 #include "services/interfaces/i_config_service.hpp"
 #include "services/interfaces/i_graphics_service.hpp"

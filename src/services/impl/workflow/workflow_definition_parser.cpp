@@ -38,6 +38,59 @@ std::unordered_map<std::string, std::string> ReadStringMap(const rapidjson::Valu
     return result;
 }
 
+std::unordered_map<std::string, WorkflowParameterValue> ReadParameterMap(const rapidjson::Value& object,
+                                                                          const char* name) {
+    std::unordered_map<std::string, WorkflowParameterValue> result;
+    if (!object.HasMember(name)) {
+        return result;
+    }
+    const auto& mapValue = object[name];
+    if (!mapValue.IsObject()) {
+        throw std::runtime_error("Workflow member '" + std::string(name) + "' must be an object");
+    }
+    for (auto it = mapValue.MemberBegin(); it != mapValue.MemberEnd(); ++it) {
+        const std::string key = it->name.GetString();
+        const auto& value = it->value;
+        if (value.IsString()) {
+            result.emplace(key, WorkflowParameterValue::FromString(value.GetString()));
+            continue;
+        }
+        if (value.IsBool()) {
+            result.emplace(key, WorkflowParameterValue::FromBool(value.GetBool()));
+            continue;
+        }
+        if (value.IsNumber()) {
+            result.emplace(key, WorkflowParameterValue::FromNumber(value.GetDouble()));
+            continue;
+        }
+        if (value.IsArray()) {
+            std::vector<std::string> stringItems;
+            std::vector<double> numberItems;
+            for (rapidjson::SizeType i = 0; i < value.Size(); ++i) {
+                const auto& entry = value[i];
+                if (entry.IsString()) {
+                    stringItems.emplace_back(entry.GetString());
+                } else if (entry.IsNumber()) {
+                    numberItems.emplace_back(entry.GetDouble());
+                } else {
+                    throw std::runtime_error("Workflow parameter '" + key + "' must contain strings or numbers");
+                }
+            }
+            if (!stringItems.empty() && !numberItems.empty()) {
+                throw std::runtime_error("Workflow parameter '" + key + "' cannot mix string and number values");
+            }
+            if (!stringItems.empty() || value.Empty()) {
+                result.emplace(key, WorkflowParameterValue::FromStringList(std::move(stringItems)));
+            } else {
+                result.emplace(key, WorkflowParameterValue::FromNumberList(std::move(numberItems)));
+            }
+            continue;
+        }
+        throw std::runtime_error("Workflow parameter '" + key + "' must be a string, number, bool, or array");
+    }
+    return result;
+}
+
 std::string ReadNodeId(const rapidjson::Value& node, size_t index) {
     if (node.HasMember("id") && node["id"].IsString()) {
         return node["id"].GetString();
@@ -186,6 +239,7 @@ WorkflowDefinition WorkflowDefinitionParser::ParseFile(const std::filesystem::pa
             step.plugin = ReadRequiredString(entry, "plugin");
             step.inputs = ReadStringMap(entry, "inputs");
             step.outputs = ReadStringMap(entry, "outputs");
+            step.parameters = ReadParameterMap(entry, "parameters");
             workflow.steps.push_back(std::move(step));
         }
         return workflow;
@@ -207,6 +261,7 @@ WorkflowDefinition WorkflowDefinitionParser::ParseFile(const std::filesystem::pa
         step.plugin = ReadNodePlugin(entry, step.id);
         step.inputs = ReadStringMap(entry, "inputs");
         step.outputs = ReadStringMap(entry, "outputs");
+        step.parameters = ReadParameterMap(entry, "parameters");
         nodes.push_back(step);
         nodeOrder.push_back(step.id);
     }

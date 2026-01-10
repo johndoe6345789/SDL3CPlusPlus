@@ -18,6 +18,10 @@ public:
         return values_.find(key) != values_.end();
     }
 
+    bool Remove(const std::string& key) {
+        return values_.erase(key) > 0u;
+    }
+
     template <typename T>
     const T* TryGet(const std::string& key) const {
         auto it = values_.find(key);

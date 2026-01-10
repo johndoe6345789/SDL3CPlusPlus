@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "services/impl/crash_recovery_service.hpp"
+#include "services/impl/diagnostics/crash_recovery_service.hpp"
 
 #include <chrono>
 #include <future>

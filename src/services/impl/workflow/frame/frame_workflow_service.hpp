@@ -5,6 +5,7 @@
 #include "services/interfaces/i_audio_service.hpp"
 #include "services/interfaces/i_config_service.hpp"
 #include "services/interfaces/i_input_service.hpp"
+#include "services/interfaces/i_mesh_service.hpp"
 #include "services/interfaces/i_physics_service.hpp"
 #include "services/interfaces/i_render_coordinator_service.hpp"
 #include "services/interfaces/i_scene_service.hpp"
@@ -26,6 +27,7 @@ public:
                          std::shared_ptr<IConfigService> configService,
                          std::shared_ptr<IAudioService> audioService,
                          std::shared_ptr<IInputService> inputService,
+                         std::shared_ptr<IMeshService> meshService,
                          std::shared_ptr<IPhysicsService> physicsService,
                          std::shared_ptr<ISceneService> sceneService,
                          std::shared_ptr<IRenderCoordinatorService> renderService,

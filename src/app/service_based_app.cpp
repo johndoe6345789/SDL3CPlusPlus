@@ -7,37 +7,37 @@
 #include "services/interfaces/i_lifecycle_service.hpp"
 #include "services/impl/config/json_config_service.hpp"
 #include "services/impl/config/config_compiler_service.hpp"
-#include "services/impl/lifecycle_service.hpp"
-#include "services/impl/application_loop_service.hpp"
-#include "services/impl/render_coordinator_service.hpp"
-#include "services/impl/render_graph_service.hpp"
-#include "services/impl/platform_service.hpp"
-#include "services/impl/probe_service.hpp"
-#include "services/impl/sdl_window_service.hpp"
-#include "services/impl/sdl_input_service.hpp"
-#include "services/impl/ecs_service.hpp"
-#include "services/impl/graphics_service.hpp"
-#include "services/impl/bgfx_graphics_backend.hpp"
-#include "services/impl/script_engine_service.hpp"
-#include "services/impl/scene_script_service.hpp"
-#include "services/impl/shader_script_service.hpp"
-#include "services/impl/shader_system_registry.hpp"
-#include "services/impl/gui_script_service.hpp"
-#include "services/impl/audio_command_service.hpp"
-#include "services/impl/physics_bridge_service.hpp"
-#include "services/impl/mesh_service.hpp"
-#include "services/impl/scene_service.hpp"
-#include "services/impl/sdl_audio_service.hpp"
-#include "services/impl/null_gui_service.hpp"
+#include "services/impl/app/lifecycle_service.hpp"
+#include "services/impl/app/application_loop_service.hpp"
+#include "services/impl/render/render_coordinator_service.hpp"
+#include "services/impl/render/render_graph_service.hpp"
+#include "services/impl/platform/platform_service.hpp"
+#include "services/impl/diagnostics/probe_service.hpp"
+#include "services/impl/platform/sdl_window_service.hpp"
+#include "services/impl/input/sdl_input_service.hpp"
+#include "services/impl/scene/ecs_service.hpp"
+#include "services/impl/graphics/graphics_service.hpp"
+#include "services/impl/graphics/bgfx_graphics_backend.hpp"
+#include "services/impl/script/script_engine_service.hpp"
+#include "services/impl/script/scene_script_service.hpp"
+#include "services/impl/script/shader_script_service.hpp"
+#include "services/impl/shader/shader_system_registry.hpp"
+#include "services/impl/script/gui_script_service.hpp"
+#include "services/impl/audio/audio_command_service.hpp"
+#include "services/impl/scene/physics_bridge_service.hpp"
+#include "services/impl/scene/mesh_service.hpp"
+#include "services/impl/scene/scene_service.hpp"
+#include "services/impl/audio/sdl_audio_service.hpp"
+#include "services/impl/gui/null_gui_service.hpp"
 #if !defined(SDL3CPP_ENABLE_VITA)
-#include "services/impl/bgfx_gui_service.hpp"
+#include "services/impl/gui/bgfx_gui_service.hpp"
 #endif
-#include "services/impl/bullet_physics_service.hpp"
-#include "services/impl/crash_recovery_service.hpp"
-#include "services/impl/logger_service.hpp"
-#include "services/impl/pipeline_compiler_service.hpp"
-#include "services/impl/validation_tour_service.hpp"
-#include "services/impl/soundboard_state_service.hpp"
+#include "services/impl/scene/bullet_physics_service.hpp"
+#include "services/impl/diagnostics/crash_recovery_service.hpp"
+#include "services/impl/diagnostics/logger_service.hpp"
+#include "services/impl/shader/pipeline_compiler_service.hpp"
+#include "services/impl/diagnostics/validation_tour_service.hpp"
+#include "services/impl/soundboard/soundboard_state_service.hpp"
 #include "services/impl/workflow/workflow_default_step_registrar.hpp"
 #include "services/impl/workflow/workflow_definition_parser.hpp"
 #include "services/impl/workflow/workflow_executor.hpp"
@@ -309,11 +309,16 @@ void ServiceBasedApp::RegisterServices() {
     registry_.RegisterService<services::ISoundboardStateService, services::impl::SoundboardStateService>(
         registry_.GetService<services::ILogger>());
 
+    registry_.RegisterService<services::IMeshService, services::impl::MeshService>(
+        registry_.GetService<services::IConfigService>(),
+        registry_.GetService<services::ILogger>());
+
     registry_.RegisterService<services::IFrameWorkflowService, services::impl::FrameWorkflowService>(
         registry_.GetService<services::ILogger>(),
         registry_.GetService<services::IConfigService>(),
         registry_.GetService<services::IAudioService>(),
         registry_.GetService<services::IInputService>(),
+        registry_.GetService<services::IMeshService>(),
         registry_.GetService<services::IPhysicsService>(),
         registry_.GetService<services::ISceneService>(),
         registry_.GetService<services::IRenderCoordinatorService>(),
@@ -321,9 +326,6 @@ void ServiceBasedApp::RegisterServices() {
         registry_.GetService<services::ISoundboardStateService>());
 
     // Script bridge services
-    registry_.RegisterService<services::IMeshService, services::impl::MeshService>(
-        registry_.GetService<services::IConfigService>(),
-        registry_.GetService<services::ILogger>());
     registry_.RegisterService<services::IPhysicsBridgeService, services::impl::PhysicsBridgeService>(
         registry_.GetService<services::ILogger>());
     registry_.RegisterService<services::IAudioCommandService, services::impl::AudioCommandService>(

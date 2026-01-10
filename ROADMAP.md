@@ -24,6 +24,7 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 - Schema now covers assets/materials/shaders, `shader_systems`, and render-pass `view_id` + `clear` metadata.
 - Runtime rendering is still Lua-driven, with MaterialX shader generation, pipeline validation, sampler caps, and texture/GUI cache budget enforcement.
 - Diagnostics include ProbeService reports plus CrashRecoveryService heartbeats/GPU hang detection; runtime probe hooks (draw/present/frame) are still missing.
+- Package workflows still include stub placeholders in `packages/*/workflows/stubs`, so `scripts/package_lint.py` currently fails.
 
 ## Launch Packages (Cheesy Edition)
 
@@ -65,6 +66,7 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 - Enforce shader uniform compatibility using reflection + material metadata.
 - Validate soundboard workflow steps (catalog/GUI/audio) in runtime and retire the Lua soundboard UI path.
 - Port Lua demos (seed/gui/soundboard/quake3) into JSON-first packages and workflows.
+- Replace all workflow stubs in `packages/*/workflows/stubs` with fully implemented n8n JSON graphs derived from the existing Lua scripts + JSON configs (no placeholders).
 - Add tests for schema/merge rules, render graph validation, and budget enforcement.
 - Start service refactor program for large modules (approaching 2K LOC).
 - Remove the Lua-first execution path once config-first workflows (boot, frame, gameplay) can fully describe the engine; workflows should be able to teleport the camera to key spots, render expected visuals, and fail fast when actual output deviates from the JSON-specified state (no Lua required unless explicitly chosen).
@@ -171,9 +173,10 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 - MaterialXShaderGenerator (~1100 LOC): split MaterialX graph prep, shader emit, validation.
 
 ### Phase A: Mechanical Extraction (1-3 days)
-- [~] JsonConfigService: extracted config document load/merge helpers into `src/services/impl/json_config_document_loader.cpp` plus small parser/extend/merge services to keep files <100 LOC.
+- [~] JsonConfigService: extracted config document load/merge helpers into `src/services/impl/config/json_config_document_loader.cpp` plus small parser/extend/merge services to keep files <100 LOC.
 - [~] JsonConfigService: split schema validation/versioning/migration into `json_config_*` services (`schema_validator`, `version_validator`, `migration_service`).
 - [~] ScriptEngineService: extracted MaterialX helpers into micro services (`materialx_path_resolver`, `materialx_search_path_builder`, `materialx_document_loader`, `materialx_surface_node_resolver`, `materialx_surface_parameter_reader`).
+- [x] Reorganized `src/services/impl` into domain subfolders (app/audio/config/diagnostics/graphics/gui/input/materialx/platform/render/scene/script/shader/soundboard/workflow) to align with workflow boundaries and DI.
 - Move self-contained helpers into `*_helpers.cpp` with clear headers.
 - Extract pure data transforms into free functions with unit tests.
 - Preserve public interfaces; no behavior change in this phase.
@@ -258,18 +261,27 @@ Option B: per-shader only
 - [x] Boot config workflow execution (load/version/migrate/schema + runtime config build).
 - [x] Workflow schema: `config/schema/workflow_v1.schema.json` supports n8n nodes + connections.
 - [x] Templates: `config/workflows/templates/boot_default.json`, `config/workflows/templates/frame_default.json`.
-- [x] Package workflows converted to n8n nodes (`seed`, `gui`, `soundboard`, `quake3`, `engine_tester`).
+- [~] Package workflows converted to n8n nodes (`seed`, `gui`, `soundboard`, `quake3`, `engine_tester`); stub placeholders still present and must be replaced.
 - [x] Workflow steps implemented: `frame.bullet_physics`, `frame.camera`, `validation.tour.checkpoint`, `soundboard.catalog.scan`, `soundboard.gui`, `soundboard.audio`.
 - [x] Render coordinator supports workflow-supplied GUI command overrides (bypass Lua GUI path).
-- [~] Generic step library started (`value.copy`, `value.default`, `number.add`, `list.filter.equals`, `list.map.add`, `list.reduce.sum`).
+- [x] Generic step library implemented (core data ops + camera/audio/scene/model coverage).
+
+### Generic Step Catalog (Implemented)
+- Value: `value.copy`, `value.default`, `value.literal`, `value.clear`, `value.assert.exists`, `value.assert.type`.
+- Number: `number.add`, `number.sub`, `number.mul`, `number.div`, `number.min`, `number.max`, `number.clamp`, `number.abs`, `number.round`.
+- Compare: `compare.eq`, `compare.ne`, `compare.gt`, `compare.gte`, `compare.lt`, `compare.lte`.
+- Bool: `bool.and`, `bool.or`, `bool.not`.
+- String: `string.concat`, `string.trim`, `string.lower`, `string.upper`, `string.replace`, `string.contains`, `string.equals`, `string.split`, `string.join`.
+- List: `list.literal`, `list.append`, `list.concat`, `list.filter.equals`, `list.filter.gt`, `list.map.add`, `list.map.mul`, `list.reduce.sum`, `list.reduce.min`, `list.reduce.max`, `list.count`.
+- Camera: `camera.set_pose`, `camera.look_at`, `camera.teleport`, `camera.set_fov`, `camera.build_view_state`.
+- Audio: `audio.play`, `audio.stop`, `audio.set_volume`.
+- Mesh/Model/Scene: `mesh.load`, `model.spawn`, `model.despawn`, `model.set_transform`, `scene.load`, `scene.clear`, `scene.set_active`.
 
 ### Next Steps
 - [ ] Publish gameplay workflow templates (FPS/passive camera variants, bullet physics, validation/teleport checks).
 - [ ] Expand JSON-driven GUI steps beyond soundboard (replace Lua GUI scripts in demo packages).
-- [ ] Build out generic "software building blocks" step coverage (strings, math, comparisons, branching, fan-out, list transforms).
-- [ ] Add generic game workflow steps (camera controls, teleport/waypoints, audio cues, model spawn/despawn, animation toggles).
 - [ ] Publish a workflow step catalog with example JSON snippets for each generic step.
-- [ ] Add workflow step analytics (probe events with JSON path + node id).
+- [ ] Add workflow step analytics (probe events with JSON path + node id + per-step timing/counters).
 
 ## Feature Matrix (What You Get, When You Get It)
 
@@ -295,15 +307,15 @@ Option B: per-shader only
 ## Deliverables Checklist
 - [x] `config/schema/` with versioned JSON Schema and migration notes
 - [x] n8n workflow schema + parser support (nodes + connections)
-- [x] n8n templates + package workflow conversion
+- [~] n8n templates + package workflow conversion (templates shipped; package workflows still contain stubs)
 - [x] Workflow step plugins for camera + validation checkpoints + bullet physics + soundboard catalog/GUI/audio
-- [x] `src/services/impl/config_compiler_service.*` for JSON -> IR compilation
-- [x] `src/services/impl/render_graph_service.*` for graph build and scheduling
+- [x] `src/services/impl/config/config_compiler_service.*` for JSON -> IR compilation
+- [x] `src/services/impl/render/render_graph_service.*` for graph build and scheduling
 - [x] `src/services/interfaces/i_probe_service.hpp` plus report/event types
-- [x] `src/services/impl/probe_service.*` for logging/queueing probe reports
+- [x] `src/services/impl/diagnostics/probe_service.*` for logging/queueing probe reports
 - [x] `src/services/interfaces/config_ir_types.hpp` for typed IR payloads
-- [x] `src/services/impl/shader_pipeline_validator.*` for mesh/shader compatibility checks
-- [x] `src/services/impl/crash_recovery_service.*` for heartbeat + hang detection
+- [x] `src/services/impl/shader/shader_pipeline_validator.*` for mesh/shader compatibility checks
+- [x] `src/services/impl/diagnostics/crash_recovery_service.*` for heartbeat + hang detection
 - [~] Budget enforcement with clear failure modes and fallback resources (textures + GUI caches today)
 - [ ] Cube demo config-only boot path
 
@@ -367,11 +379,11 @@ Option B: per-shader only
 - Ensure bgfx is initialized and has seen a frame before loading textures/shaders.
 
 ### Known Hotspots To Inspect
-- Shader pipeline validation: `src/services/impl/shader_pipeline_validator.cpp`
-- Texture load guards + budgets: `src/services/impl/bgfx_graphics_backend.cpp`
-- Render graph scheduling: `src/services/impl/render_graph_service.cpp`
-- Config compiler diagnostics: `src/services/impl/config_compiler_service.cpp`
-- Crash recovery timeouts: `src/services/impl/crash_recovery_service.cpp`
+- Shader pipeline validation: `src/services/impl/shader/shader_pipeline_validator.cpp`
+- Texture load guards + budgets: `src/services/impl/graphics/bgfx_graphics_backend.cpp`
+- Render graph scheduling: `src/services/impl/render/render_graph_service.cpp`
+- Config compiler diagnostics: `src/services/impl/config/config_compiler_service.cpp`
+- Crash recovery timeouts: `src/services/impl/diagnostics/crash_recovery_service.cpp`
 
 ### Ordering Checklist (When Things Crash)
 - `InitializeDevice` → `InitializeSwapchain` → `BeginFrame` → `EndFrame` before loading shaders/textures.

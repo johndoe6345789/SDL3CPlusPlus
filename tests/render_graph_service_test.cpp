@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "services/impl/render_graph_service.hpp"
+#include "services/impl/render/render_graph_service.hpp"
 
 namespace {
 

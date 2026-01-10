@@ -161,7 +161,7 @@ TEST(BgfxDrawBoundsCrashTest, ValidDrawParameters_ShouldPass) {
 
 // TEST 6: Document what needs to be added to BgfxGraphicsBackend::Draw()
 TEST(BgfxDrawBoundsCrashTest, RequiredImplementation) {
-    // File: src/services/impl/bgfx_graphics_backend.cpp
+    // File: src/services/impl/graphics/bgfx_graphics_backend.cpp
     // Function: BgfxGraphicsBackend::Draw (lines ~1093-1145)
     //
     // REQUIRED CHANGES:
