@@ -1,9 +1,10 @@
 {
   "template": "frame.default",
-  "steps": [
+  "nodes": [
     {
       "id": "begin_frame",
       "plugin": "frame.begin",
+      "position": [0, 0],
       "inputs": {
         "delta": "frame.delta",
         "elapsed": "frame.elapsed"
@@ -12,6 +13,7 @@
     {
       "id": "camera_control",
       "plugin": "frame.camera",
+      "position": [260, 0],
       "inputs": {
         "delta": "frame.delta"
       }
@@ -19,6 +21,7 @@
     {
       "id": "bullet_physics",
       "plugin": "frame.bullet_physics",
+      "position": [520, 0],
       "inputs": {
         "delta": "frame.delta"
       }
@@ -26,6 +29,7 @@
     {
       "id": "scene",
       "plugin": "frame.scene",
+      "position": [780, 0],
       "inputs": {
         "delta": "frame.delta"
       }
@@ -33,6 +37,7 @@
     {
       "id": "render",
       "plugin": "frame.render",
+      "position": [1040, 0],
       "inputs": {
         "elapsed": "frame.elapsed"
       }
@@ -40,9 +45,47 @@
     {
       "id": "validate_capture",
       "plugin": "validation.tour.checkpoint",
+      "position": [1300, 0],
       "inputs": {
         "checkpoint": "gameplay.startup_camera"
       }
     }
-  ]
+  ],
+  "connections": {
+    "begin_frame": {
+      "main": [
+        [
+          { "node": "camera_control", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "camera_control": {
+      "main": [
+        [
+          { "node": "bullet_physics", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "bullet_physics": {
+      "main": [
+        [
+          { "node": "scene", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "scene": {
+      "main": [
+        [
+          { "node": "render", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "render": {
+      "main": [
+        [
+          { "node": "validate_capture", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  }
 }

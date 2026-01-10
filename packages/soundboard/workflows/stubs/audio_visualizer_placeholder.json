@@ -1,9 +1,0 @@
-{
-  "id": "frame.audio",
-  "summary": "Audio dispatch stub for the soundboard; actual cue scheduling + mixing service is pending.",
-  "stage": "planned",
-  "notes": [
-    "Should queue audio commands and report current sample index to UI.",
-    "Registered so workflows can mention the audio step without requiring implementation."
-  ]
-}

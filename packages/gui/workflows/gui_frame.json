@@ -1,9 +1,10 @@
 {
   "template": "frame.default",
-  "steps": [
+  "nodes": [
     {
       "id": "gui_begin",
       "plugin": "frame.begin",
+      "position": [0, 0],
       "inputs": {
         "delta": "frame.delta",
         "elapsed": "frame.elapsed"
@@ -12,6 +13,7 @@
     {
       "id": "gui_layout",
       "plugin": "frame.gui",
+      "position": [260, 0],
       "inputs": {
         "elapsed": "frame.elapsed"
       }
@@ -19,6 +21,7 @@
     {
       "id": "render_ui",
       "plugin": "frame.render",
+      "position": [520, 0],
       "inputs": {
         "elapsed": "frame.elapsed"
       }
@@ -26,9 +29,33 @@
     {
       "id": "capture_ui",
       "plugin": "validation.tour.checkpoint",
+      "position": [780, 0],
       "inputs": {
         "checkpoint": "packages.gui_demo"
       }
     }
-  ]
+  ],
+  "connections": {
+    "gui_begin": {
+      "main": [
+        [
+          { "node": "gui_layout", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "gui_layout": {
+      "main": [
+        [
+          { "node": "render_ui", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "render_ui": {
+      "main": [
+        [
+          { "node": "capture_ui", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  }
 }

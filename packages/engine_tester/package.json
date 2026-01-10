@@ -4,8 +4,7 @@
   "description": "Validation tour package with teleport checkpoints, captures, and diagnostics.",
   "defaultWorkflow": "workflows/validation_tour.json",
   "workflows": [
-    "workflows/validation_tour.json",
-    "workflows/stubs/validation_probe_placeholder.json"
+    "workflows/validation_tour.json"
   ],
   "assets": [
     "assets/validation_checks.json"

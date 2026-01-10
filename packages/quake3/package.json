@@ -4,8 +4,7 @@
   "description": "Quake3-style example package bundling physics, scene, and map metadata.",
   "defaultWorkflow": "workflows/quake3_frame.json",
   "workflows": [
-    "workflows/quake3_frame.json",
-    "workflows/stubs/quake3_physics_placeholder.json"
+    "workflows/quake3_frame.json"
   ],
   "assets": [
     "assets/quake3_materials.json"

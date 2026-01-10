@@ -1,9 +1,10 @@
 {
   "template": "frame.default",
-  "steps": [
+  "nodes": [
     {
       "id": "quake_begin",
       "plugin": "frame.begin",
+      "position": [0, 0],
       "inputs": {
         "delta": "frame.delta"
       }
@@ -11,6 +12,7 @@
     {
       "id": "quake_physics",
       "plugin": "frame.bullet_physics",
+      "position": [260, 0],
       "inputs": {
         "delta": "frame.delta"
       }
@@ -18,6 +20,7 @@
     {
       "id": "quake_scene",
       "plugin": "frame.scene",
+      "position": [520, 0],
       "inputs": {
         "delta": "frame.delta"
       }
@@ -25,6 +28,7 @@
     {
       "id": "quake_render",
       "plugin": "frame.render",
+      "position": [780, 0],
       "inputs": {
         "elapsed": "frame.elapsed"
       }
@@ -32,9 +36,40 @@
     {
       "id": "quake_validation",
       "plugin": "validation.tour.checkpoint",
+      "position": [1040, 0],
       "inputs": {
         "checkpoint": "packages.quake3_map"
       }
     }
-  ]
+  ],
+  "connections": {
+    "quake_begin": {
+      "main": [
+        [
+          { "node": "quake_physics", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "quake_physics": {
+      "main": [
+        [
+          { "node": "quake_scene", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "quake_scene": {
+      "main": [
+        [
+          { "node": "quake_render", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "quake_render": {
+      "main": [
+        [
+          { "node": "quake_validation", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  }
 }

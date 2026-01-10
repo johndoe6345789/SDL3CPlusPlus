@@ -1,9 +1,10 @@
 {
   "template": "boot.default",
-  "steps": [
+  "nodes": [
     {
       "id": "load_config",
       "plugin": "config.load",
+      "position": [0, 0],
       "inputs": {
         "path": "config.path"
       },
@@ -14,6 +15,7 @@
     {
       "id": "validate_schema",
       "plugin": "config.schema.validate",
+      "position": [260, 0],
       "inputs": {
         "document": "config.document",
         "path": "config.path"
@@ -22,6 +24,7 @@
     {
       "id": "build_runtime",
       "plugin": "runtime.config.build",
+      "position": [520, 0],
       "inputs": {
         "document": "config.document",
         "path": "config.path"
@@ -33,9 +36,33 @@
     {
       "id": "validation_probe",
       "plugin": "validation.tour.checkpoint",
+      "position": [780, 0],
       "inputs": {
         "checkpoint": "packages.engine_tester"
       }
     }
-  ]
+  ],
+  "connections": {
+    "load_config": {
+      "main": [
+        [
+          { "node": "validate_schema", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "validate_schema": {
+      "main": [
+        [
+          { "node": "build_runtime", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "build_runtime": {
+      "main": [
+        [
+          { "node": "validation_probe", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  }
 }

@@ -1,0 +1,34 @@
+{
+  "template": "n8n.skeleton",
+  "nodes": [
+    {
+      "id": "load_config",
+      "plugin": "config.load",
+      "position": [0, 0],
+      "inputs": {
+        "path": "config.path"
+      },
+      "outputs": {
+        "document": "config.document"
+      }
+    },
+    {
+      "id": "validate_schema",
+      "plugin": "config.schema.validate",
+      "position": [260, 0],
+      "inputs": {
+        "document": "config.document",
+        "path": "config.path"
+      }
+    }
+  ],
+  "connections": {
+    "load_config": {
+      "main": [
+        [
+          { "node": "validate_schema", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  }
+}

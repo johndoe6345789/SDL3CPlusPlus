@@ -4,11 +4,7 @@
   "description": "Workflow template for the soundboard experience (audio cues + GUI controls).",
   "defaultWorkflow": "workflows/soundboard_flow.json",
   "workflows": [
-    "workflows/soundboard_flow.json",
-    "workflows/stubs/soundboard_catalog_scan_stub.json",
-    "workflows/stubs/soundboard_gui_stub.json",
-    "workflows/stubs/soundboard_audio_stub.json",
-    "workflows/stubs/audio_visualizer_placeholder.json"
+    "workflows/soundboard_flow.json"
   ],
   "assets": [
     "assets/sound/sound_samples.json",

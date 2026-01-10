@@ -4,8 +4,7 @@
   "description": "Template package describing a boot-to-frame workflow, assets, and validation presets for the demo cube.",
   "defaultWorkflow": "workflows/demo_gameplay.json",
   "workflows": [
-    "workflows/demo_gameplay.json",
-    "workflows/stubs/bullet_physics_placeholder.json"
+    "workflows/demo_gameplay.json"
   ],
   "assets": [
     "assets/cube_materials.json"

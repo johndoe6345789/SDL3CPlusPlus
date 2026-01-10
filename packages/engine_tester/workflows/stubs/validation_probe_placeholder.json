@@ -1,9 +1,0 @@
-{
-  "id": "validation.tour.checkpoint",
-  "summary": "Validation probe step stub used to reserve workflow hooks before full diagnostics land.",
-  "stage": "planned",
-  "notes": [
-    "Should sample engine framebuffers, analyze capture stats, and report mismatches.",
-    "Currently registered as part of packages so workflows referencing checkpoints keep parsing."
-  ]
-}

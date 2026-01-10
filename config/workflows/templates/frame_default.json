@@ -1,9 +1,10 @@
 {
   "template": "frame.default",
-  "steps": [
+  "nodes": [
     {
       "id": "begin_frame",
       "plugin": "frame.begin",
+      "position": [0, 0],
       "inputs": {
         "delta": "frame.delta",
         "elapsed": "frame.elapsed"
@@ -12,6 +13,7 @@
     {
       "id": "step_physics",
       "plugin": "frame.physics",
+      "position": [260, 0],
       "inputs": {
         "delta": "frame.delta"
       }
@@ -19,6 +21,7 @@
     {
       "id": "update_scene",
       "plugin": "frame.scene",
+      "position": [520, 0],
       "inputs": {
         "delta": "frame.delta"
       }
@@ -26,17 +29,51 @@
     {
       "id": "render_frame",
       "plugin": "frame.render",
+      "position": [780, 0],
       "inputs": {
         "elapsed": "frame.elapsed"
       }
     },
     {
       "id": "update_audio",
-      "plugin": "frame.audio"
+      "plugin": "frame.audio",
+      "position": [1040, -120]
     },
     {
       "id": "dispatch_gui",
-      "plugin": "frame.gui"
+      "plugin": "frame.gui",
+      "position": [1040, 120]
     }
-  ]
+  ],
+  "connections": {
+    "begin_frame": {
+      "main": [
+        [
+          { "node": "step_physics", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "step_physics": {
+      "main": [
+        [
+          { "node": "update_scene", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "update_scene": {
+      "main": [
+        [
+          { "node": "render_frame", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "render_frame": {
+      "main": [
+        [
+          { "node": "update_audio", "type": "main", "index": 0 },
+          { "node": "dispatch_gui", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  }
 }

@@ -302,6 +302,7 @@ set(WORKFLOW_SOURCES
 
 set(FRAME_WORKFLOW_SOURCES
     src/services/impl/workflow_frame_begin_step.cpp
+    src/services/impl/workflow_frame_bullet_physics_step.cpp
     src/services/impl/workflow_frame_physics_step.cpp
     src/services/impl/workflow_frame_scene_step.cpp
     src/services/impl/workflow_frame_render_step.cpp

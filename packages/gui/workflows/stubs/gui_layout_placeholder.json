@@ -1,9 +1,0 @@
-{
-  "id": "frame.gui",
-  "summary": "Placeholder for GUI layout + input processing steps that are still being refactored.",
-  "stage": "planned",
-  "notes": [
-    "Should resolve UI command bundles and update ImGui state.",
-    "Currently registered so workflows can declare GUI dependencies without crashing."
-  ]
-}

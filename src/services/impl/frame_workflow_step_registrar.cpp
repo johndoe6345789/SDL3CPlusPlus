@@ -2,6 +2,7 @@
 
 #include "workflow_frame_audio_step.hpp"
 #include "workflow_frame_begin_step.hpp"
+#include "workflow_frame_bullet_physics_step.hpp"
 #include "workflow_frame_gui_step.hpp"
 #include "workflow_frame_physics_step.hpp"
 #include "workflow_frame_render_step.hpp"
@@ -42,6 +43,9 @@ void FrameWorkflowStepRegistrar::RegisterUsedSteps(
     }
     if (plugins.contains("frame.physics")) {
         registry->RegisterStep(std::make_shared<WorkflowFramePhysicsStep>(physicsService_, logger_));
+    }
+    if (plugins.contains("frame.bullet_physics")) {
+        registry->RegisterStep(std::make_shared<WorkflowFrameBulletPhysicsStep>(physicsService_, logger_));
     }
     if (plugins.contains("frame.scene")) {
         registry->RegisterStep(std::make_shared<WorkflowFrameSceneStep>(sceneService_, logger_));

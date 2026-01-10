@@ -4,8 +4,7 @@
   "description": "Workflow package describing the GUI demo, focused on UI updates + frame capture validation.",
   "defaultWorkflow": "workflows/gui_frame.json",
   "workflows": [
-    "workflows/gui_frame.json",
-    "workflows/stubs/gui_layout_placeholder.json"
+    "workflows/gui_frame.json"
   ],
   "assets": [
     "assets/gui_widgets.json",
