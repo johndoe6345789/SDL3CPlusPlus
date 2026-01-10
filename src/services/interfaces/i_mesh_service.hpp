@@ -6,7 +6,7 @@
 namespace sdl3cpp::services {
 
 /**
- * @brief Script-facing mesh loading service interface.
+ * @brief Mesh loading service interface.
  */
 class IMeshService {
 public:

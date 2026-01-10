@@ -87,29 +87,21 @@ void CopyConfigAssets(const std::filesystem::path& targetDir) {
     }
 }
 
-std::filesystem::path WriteLuaScript(const std::filesystem::path& rootDir) {
-    auto scriptPath = rootDir / "scripts" / "cube_logic.lua";
-    WriteFile(scriptPath, "-- test script\n");
-    return scriptPath;
-}
 
 TEST(JsonConfigMergeTest, OverlayOverridesBaseFields) {
     ScopedTempDir tempDir;
     CopyConfigAssets(tempDir.Path());
-    WriteLuaScript(tempDir.Path());
     auto logger = std::make_shared<NullLogger>();
 
     const std::string baseConfig = R"({
   "schema_version": 2,
   "configVersion": 2,
-  "scripts": { "entry": "scripts/cube_logic.lua", "lua_debug": false },
   "window": { "size": { "width": 800, "height": 600 } }
 })";
     const std::string overlayConfig = R"({
   "schema_version": 2,
   "configVersion": 2,
   "extends": "base.json",
-  "scripts": { "entry": "scripts/cube_logic.lua", "lua_debug": false },
   "window": { "size": { "width": 1024 } }
 })";
 
@@ -127,13 +119,11 @@ TEST(JsonConfigMergeTest, OverlayOverridesBaseFields) {
 TEST(JsonConfigMergeTest, DeleteDirectiveRemovesObject) {
     ScopedTempDir tempDir;
     CopyConfigAssets(tempDir.Path());
-    WriteLuaScript(tempDir.Path());
     auto logger = std::make_shared<NullLogger>();
 
     const std::string baseConfig = R"({
   "schema_version": 2,
   "configVersion": 2,
-  "scripts": { "entry": "scripts/cube_logic.lua", "lua_debug": false },
   "window": {
     "title": "Base Title",
     "mouse_grab": { "enabled": true }
@@ -143,7 +133,6 @@ TEST(JsonConfigMergeTest, DeleteDirectiveRemovesObject) {
   "schema_version": 2,
   "configVersion": 2,
   "extends": "base.json",
-  "scripts": { "entry": "scripts/cube_logic.lua", "lua_debug": false },
   "window": {
     "@delete": ["mouse_grab"],
     "title": "Overlay Title"
@@ -164,26 +153,22 @@ TEST(JsonConfigMergeTest, DeleteDirectiveRemovesObject) {
 TEST(JsonConfigMergeTest, ExtendsArrayAppliesInOrder) {
     ScopedTempDir tempDir;
     CopyConfigAssets(tempDir.Path());
-    WriteLuaScript(tempDir.Path());
     auto logger = std::make_shared<NullLogger>();
 
     const std::string baseOne = R"({
   "schema_version": 2,
   "configVersion": 2,
-  "scripts": { "entry": "scripts/cube_logic.lua", "lua_debug": false },
   "window": { "title": "Base One" }
 })";
     const std::string baseTwo = R"({
   "schema_version": 2,
   "configVersion": 2,
-  "scripts": { "entry": "scripts/cube_logic.lua", "lua_debug": false },
   "window": { "title": "Base Two" }
 })";
     const std::string overlayConfig = R"({
   "schema_version": 2,
   "configVersion": 2,
   "extends": ["base_one.json", "base_two.json"],
-  "scripts": { "entry": "scripts/cube_logic.lua", "lua_debug": false }
 })";
 
     WriteFile(tempDir.Path() / "base_one.json", baseOne);
@@ -200,20 +185,17 @@ TEST(JsonConfigMergeTest, ExtendsArrayAppliesInOrder) {
 TEST(JsonConfigMergeTest, ExtendsCycleThrows) {
     ScopedTempDir tempDir;
     CopyConfigAssets(tempDir.Path());
-    WriteLuaScript(tempDir.Path());
     auto logger = std::make_shared<NullLogger>();
 
     const std::string baseA = R"({
   "schema_version": 2,
   "configVersion": 2,
   "extends": "base_b.json",
-  "scripts": { "entry": "scripts/cube_logic.lua", "lua_debug": false }
 })";
     const std::string baseB = R"({
   "schema_version": 2,
   "configVersion": 2,
   "extends": "base_a.json",
-  "scripts": { "entry": "scripts/cube_logic.lua", "lua_debug": false }
 })";
 
     WriteFile(tempDir.Path() / "base_a.json", baseA);

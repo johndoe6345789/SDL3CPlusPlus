@@ -2,9 +2,8 @@
 
 #include "services/impl/render/render_coordinator_service.hpp"
 #include "services/interfaces/i_config_compiler_service.hpp"
-#include "services/interfaces/i_config_service.hpp"
 #include "services/interfaces/i_graphics_service.hpp"
-#include "services/interfaces/i_shader_script_service.hpp"
+#include "services/interfaces/i_shader_system_registry.hpp"
 
 #include <algorithm>
 #include <memory>
@@ -61,53 +60,21 @@ public:
     void* GetGraphicsQueue() const override { return nullptr; }
 };
 
-class StubShaderScriptService : public sdl3cpp::services::IShaderScriptService {
+class StubShaderSystemRegistry : public sdl3cpp::services::IShaderSystemRegistry {
 public:
-    std::unordered_map<std::string, sdl3cpp::services::ShaderPaths> LoadShaderPathsMap() override {
+    std::unordered_map<std::string, sdl3cpp::services::ShaderPaths> BuildShaderMap() override {
         return {};
     }
-};
-
-class StubConfigService final : public sdl3cpp::services::IConfigService {
-public:
-    explicit StubConfigService(sdl3cpp::services::SceneSource sceneSource = sdl3cpp::services::SceneSource::Lua)
-        : sceneSource_(sceneSource) {}
-
-    uint32_t GetWindowWidth() const override { return 1; }
-    uint32_t GetWindowHeight() const override { return 1; }
-    std::filesystem::path GetScriptPath() const override { return {}; }
-    bool IsLuaDebugEnabled() const override { return false; }
-    std::string GetWindowTitle() const override { return ""; }
-    sdl3cpp::services::SceneSource GetSceneSource() const override {
-        return sceneSource_;
+    sdl3cpp::services::ShaderReflection GetReflection(const std::string&) const override {
+        return {};
     }
-    const sdl3cpp::services::InputBindings& GetInputBindings() const override { return inputBindings_; }
-    const sdl3cpp::services::MouseGrabConfig& GetMouseGrabConfig() const override { return mouseGrabConfig_; }
-    const sdl3cpp::services::BgfxConfig& GetBgfxConfig() const override { return bgfxConfig_; }
-    const sdl3cpp::services::MaterialXConfig& GetMaterialXConfig() const override { return materialXConfig_; }
-    const std::vector<sdl3cpp::services::MaterialXMaterialConfig>& GetMaterialXMaterialConfigs() const override {
-        return materialXMaterials_;
+    std::vector<sdl3cpp::services::ShaderPaths::TextureBinding> GetDefaultTextures(
+        const std::string&) const override {
+        return {};
     }
-    const sdl3cpp::services::GuiFontConfig& GetGuiFontConfig() const override { return guiFontConfig_; }
-    const sdl3cpp::services::RenderBudgetConfig& GetRenderBudgetConfig() const override { return budgets_; }
-    const sdl3cpp::services::CrashRecoveryConfig& GetCrashRecoveryConfig() const override { return crashRecovery_; }
-    const sdl3cpp::services::ValidationTourConfig& GetValidationTourConfig() const override {
-        return validationTour_;
+    std::string GetActiveSystemId() const override {
+        return "materialx";
     }
-    const std::string& GetConfigJson() const override { return configJson_; }
-
-private:
-    sdl3cpp::services::SceneSource sceneSource_;
-    sdl3cpp::services::InputBindings inputBindings_{};
-    sdl3cpp::services::MouseGrabConfig mouseGrabConfig_{};
-    sdl3cpp::services::BgfxConfig bgfxConfig_{};
-    sdl3cpp::services::MaterialXConfig materialXConfig_{};
-    std::vector<sdl3cpp::services::MaterialXMaterialConfig> materialXMaterials_{};
-    sdl3cpp::services::GuiFontConfig guiFontConfig_{};
-    sdl3cpp::services::RenderBudgetConfig budgets_{};
-    sdl3cpp::services::CrashRecoveryConfig crashRecovery_{};
-    sdl3cpp::services::ValidationTourConfig validationTour_{};
-    std::string configJson_{};
 };
 
 class StubConfigCompilerService final : public sdl3cpp::services::IConfigCompilerService {

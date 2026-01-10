@@ -87,20 +87,15 @@ void CopyConfigAssets(const std::filesystem::path& targetDir) {
     }
 }
 
-void WriteLuaScript(const std::filesystem::path& rootDir) {
-    WriteFile(rootDir / "scripts" / "cube_logic.lua", "-- test script\n");
-}
 
 TEST(JsonConfigSchemaValidationTest, RejectsInvalidWindowWidthType) {
     ScopedTempDir tempDir;
     CopyConfigAssets(tempDir.Path());
-    WriteLuaScript(tempDir.Path());
     auto logger = std::make_shared<NullLogger>();
 
     const std::string config = R"({
   "schema_version": 2,
   "configVersion": 2,
-  "scripts": { "entry": "scripts/cube_logic.lua", "lua_debug": false },
   "window": { "size": { "width": "wide", "height": 600 } }
 })";
 
@@ -111,17 +106,15 @@ TEST(JsonConfigSchemaValidationTest, RejectsInvalidWindowWidthType) {
         std::runtime_error);
 }
 
-TEST(JsonConfigSchemaValidationTest, RejectsInvalidSceneSourceEnum) {
+TEST(JsonConfigSchemaValidationTest, RejectsInvalidProjectRootType) {
     ScopedTempDir tempDir;
     CopyConfigAssets(tempDir.Path());
-    WriteLuaScript(tempDir.Path());
     auto logger = std::make_shared<NullLogger>();
 
     const std::string config = R"({
   "schema_version": 2,
   "configVersion": 2,
-  "scripts": { "entry": "scripts/cube_logic.lua", "lua_debug": false },
-  "runtime": { "scene_source": "broken" }
+  "paths": { "project_root": 42 }
 })";
 
     WriteFile(tempDir.Path() / "config.json", config);

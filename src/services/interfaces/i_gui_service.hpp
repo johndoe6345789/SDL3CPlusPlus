@@ -11,7 +11,7 @@ struct GuiCommand;
 /**
  * @brief GUI rendering service interface.
  *
- * Consumes GUI commands produced by scripts and prepares any per-frame data.
+ * Consumes GUI commands and prepares per-frame data.
  */
 class IGuiService {
 public:
@@ -20,7 +20,7 @@ public:
     /**
      * @brief Prepare GUI commands for rendering.
      *
-     * Processes GUI commands from Lua and prepares rendering data.
+     * Processes GUI commands and prepares rendering data.
      *
      * @param commands Vector of GUI commands to render
      * @param width Viewport width in pixels

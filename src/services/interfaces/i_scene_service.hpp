@@ -10,7 +10,7 @@ namespace sdl3cpp::services {
  * @brief Scene management service interface.
  *
  * Maintains the scene graph and generates render commands for the graphics service.
- * Separated from script service to decouple scene state from Lua execution.
+ * Separated from runtime input to decouple scene state from scripting concerns.
  */
 class ISceneService {
 public:
