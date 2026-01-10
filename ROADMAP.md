@@ -33,7 +33,7 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 - [~] JSON-path diagnostics (schema validator pointers + compiler-generated paths; not full JSON Pointer coverage)
 - [~] Layered config merges (supports `extends` + `@delete`; no profile/local/CLI yet)
 - [x] Trace logging around config load, validation, and merge steps
-- [~] Migration stubs for future versions (notes + stubbed hook)
+- [~] Migration hooks for future versions (notes + hook implementation)
 
 ### Pro Plan: "Graph Builder"
 - [~] Typed IRs: `SceneIR`, `ResourceIR`, `RenderGraphIR` (compiled; not yet consumed by runtime)
@@ -63,6 +63,8 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 - Execute render graph schedule in the renderer (attachments, lifetimes, view ordering).
 - Add runtime probe hooks and map probe severity to crash recovery policies.
 - Enforce shader uniform compatibility using reflection + material metadata.
+- Finish soundboard workflow steps (`soundboard.catalog.scan`, `soundboard.gui`, `soundboard.audio`) with real plugins.
+- Port Lua demos (seed/gui/soundboard/quake3) into JSON-first packages and workflows.
 - Add tests for schema/merge rules, render graph validation, and budget enforcement.
 - Start service refactor program for large modules (approaching 2K LOC).
 - Remove the Lua-first execution path once config-first workflows (boot, frame, gameplay) can fully describe the engine; workflows should be able to teleport the camera to key spots, render expected visuals, and fail fast when actual output deviates from the JSON-specified state (no Lua required unless explicitly chosen).
@@ -106,7 +108,7 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 - Update shader loading to use the selected shader system to build `ShaderPaths`.
 - Deliverable: shader generation/compilation becomes a plugin choice, not hardcoded.
 - Status: `IShaderSystem` + registry wired into shader loading, with `materialx` and `glsl` systems registered; config compiler validates shader system declarations; registry exposes reflection + default textures (reflection uses shader texture bindings where available).
-- Acceptance: MaterialX stays working, and a second stub system (e.g., `glsl`) can be registered without touching `IGraphicsService`.
+- Acceptance: MaterialX stays working, and a second system (e.g., `glsl`) can be registered without touching `IGraphicsService`.
 
 ### Phase 3: Resource IR → Runtime Resource Registry (3-6 days)
 - Create a resource registry service to own `TextureIR`, `MeshIR`, `ShaderIR`, `MaterialIR` lifecycles.
@@ -251,17 +253,20 @@ Option B: per-shader only
 - Allow workflows to reference other files or templates when they grow large so each JSON artifact stays focused on one responsibility.
 
 ### Status
-- [~] Workflow core: step registry + executor + JSON definition parser.
-- [~] Default step package: `config.load`, `config.version.validate`, `config.schema.validate`.
-- [~] Boot config workflow execution (load/version/migrate/schema); runtime config parsing still outside workflow.
-- [x] Workflow schema: `config/schema/workflow_v1.schema.json`.
-- [x] Template package: `config/workflows/templates/boot_default.json`.
+- [x] Workflow core: step registry + executor + JSON definition parser (n8n nodes + legacy steps).
+- [x] Default step package: `config.load`, `config.version.validate`, `config.migrate`, `config.schema.validate`, `runtime.config.build`.
+- [x] Boot config workflow execution (load/version/migrate/schema + runtime config build).
+- [x] Workflow schema: `config/schema/workflow_v1.schema.json` supports n8n nodes + connections.
+- [x] Templates: `config/workflows/templates/boot_default.json`, `config/workflows/templates/frame_default.json`.
+- [x] Package workflows converted to n8n nodes (`seed`, `gui`, `soundboard`, `quake3`, `engine_tester`).
+- [x] Workflow steps implemented: `frame.bullet_physics`, `frame.camera`, `validation.tour.checkpoint`.
+- [ ] Workflow steps pending: `soundboard.catalog.scan`, `soundboard.gui`, `soundboard.audio`.
 
 ### Next Steps
-- [x] Move RuntimeConfig parsing into a workflow step.
-- [ ] Add frame workflow template (BeginFrame → RenderGraph → Capture → Validate).
-- [ ] Publish gameplay workflow templates (e.g., default FPS/passive camera steps, bullet physics, validation/teleport checks) so users can switch camera styles or physics by swapping workflow nodes.
-- [ ] Create a packages directory containing reusable template payloads (`package.json`, workflows, assets, shaders, and level data); each package should expose optional stub steps for features that are not yet wired so the workflow parser can reference them early without crashing.
+- [ ] Implement soundboard workflow steps with real plugins (catalog scan, GUI render, audio dispatch).
+- [ ] Publish gameplay workflow templates (FPS/passive camera variants, bullet physics, validation/teleport checks).
+- [ ] Add JSON-driven GUI step(s) to replace Lua GUI scripts in demo packages.
+- [ ] Add workflow step analytics (probe events with JSON path + node id).
 
 ## Feature Matrix (What You Get, When You Get It)
 
@@ -286,6 +291,9 @@ Option B: per-shader only
 
 ## Deliverables Checklist
 - [x] `config/schema/` with versioned JSON Schema and migration notes
+- [x] n8n workflow schema + parser support (nodes + connections)
+- [x] n8n templates + package workflow conversion
+- [~] Workflow step plugins for camera + validation checkpoints + bullet physics (soundboard steps pending)
 - [x] `src/services/impl/config_compiler_service.*` for JSON -> IR compilation
 - [x] `src/services/impl/render_graph_service.*` for graph build and scheduling
 - [x] `src/services/interfaces/i_probe_service.hpp` plus report/event types
@@ -304,7 +312,7 @@ Option B: per-shader only
 - [~] Budget enforcement tests (GUI cache pruning + texture tracker covered; transient pool pending)
 - [~] Config-driven validation tour (checkpoint captures + image/ratio/luma/sample-point checks)
 - [ ] Smoke test: cube demo boots with config-first scene definition
-- [x] Workflow parser tests (template loading + invalid step diagnostics)
+- [x] Workflow parser tests (template loading + invalid step diagnostics + n8n connections)
 
 ## Test Strategy (Solid Coverage Plan)
 ### Goals
@@ -402,7 +410,7 @@ Option B: per-shader only
 ### Asset & Vendor Hygiene
 - Copy static assets from `MaterialX/` and the legacy `config/` asset folders (poster textures, fonts, audio catalogs, procedural generator outputs like `scripts/generate_audio_assets.py` and `scripts/generate_cube_stl.py`) into the appropriate `packages/<name>/assets/` subfolders. When a package owns enough copies, the on-disk `MaterialX` depot becomes optional; treat it as historical/archival until the workflow-only path is exercised.
 - Soundboard is more than a GUI prototype—its package must ship fonts, audio samples, and `scene/soundboard_layout.json` definitions so the workflow can reconstitute the old experience. Don’t assume baked-in MaterialX files are canonical; any library code or shaders pasted into `src/` or `MaterialX/` must be audited because they are often locally modified (treat them as untrusted until verified).
-- Every package that replaced a Lua-heavy example (seed, gui, soundboard, quake3, engine_tester) needs a workflow that reproduces or improves upon the Lua experience, including teleport checkpoints, animation graphs, GUI cues, and audio triggers. Stub steps are acceptable for yet-unimplemented services, but the workflow should look “real enough” to guide the forthcoming C++ plugin implementation.
+- Every package that replaced a Lua-heavy example (seed, gui, soundboard, quake3, engine_tester) needs a workflow that reproduces or improves upon the Lua experience, including teleport checkpoints, animation graphs, GUI cues, and audio triggers. Stub steps are not allowed; workflows must only reference real plugins or they should fail fast.
 
 ### Engine Tester & Workflow Templates
 - Feature packages ship template workflows and assets so users rarely start from scratch. When a new mechanic is required (e.g., bullet physics, FPS vs. third-person toggles), the workflow simply adds a counted micro step and selects the appropriate scene/shader package.
@@ -414,7 +422,7 @@ Option B: per-shader only
 ### Micro-Stepped Execution
 - Think in n8n-sized micro steps: each JSON action maps to a C++ service/plugin with as few methods as possible (aim for <5) and a single well-defined responsibility. Keep files below 100 LOC unless the complexity genuinely demands it, and prefer loops, references, and declarative templates over copy/pasted branches.
 - Organize the codebase into plugin/service/controller modules wired through DI registries. A workflow should be able to describe the entire boot → frame → capture pipeline, including teleporting, physics, rendering, GUI, and audio, without falling back to Lua. If “bullet physics” is required, add that step to the workflow and link it to a `BulletPhysicsStep` plugin; if it is absent, the service stays unregistered and unloaded.
-- Every workflow must pair a step with a real C++ implementation (even if it’s a stub) so the runtime can reason about ordering before hitting the backend. Services that are not referenced by at least one workflow should log a warning and remain dormant.
+- Every workflow must pair a step with a real C++ implementation; stub steps are prohibited. Services that are not referenced by at least one workflow should log a warning and remain dormant.
 
 ### Schema & Shader System Extensions
 - Continue extending `runtime_config_v2.schema.json` so that scene components, passes, attachments, budgets, and shader-system selectors are validated before runtime. Allow schema extensions per package and support `@extends`/`@delete` so templates can be layered without copying everything.
