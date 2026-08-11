@@ -2,6 +2,8 @@
   "name": "engine-tester",
   "version": "0.1.0",
   "description": "Validation tour package with teleport checkpoints, captures, and diagnostics.",
+  "type": "game",
+  "category": "validation",
   "defaultWorkflow": "workflows/validation_tour.json",
   "workflows": [
     "workflows/validation_tour.json"
@@ -13,6 +15,5 @@
     "scene/teleport_points.json"
   ],
   "dependencies": [
-    "materialx"
   ]
 }

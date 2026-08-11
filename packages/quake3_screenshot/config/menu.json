@@ -1,0 +1,57 @@
+{
+  "default_screen": "main",
+  "screens": {
+    "main": {
+      "title": "QUAKE III ARENA",
+      "items": [
+        { "label": "RESUME GAME",  "action": "close"             },
+        { "label": "SETUP",        "action": "screen:setup"      },
+        { "label": "CHANGE MAP",   "action": "screen:map_select" },
+        { "label": "LEAVE ARENA",  "action": "quit"              }
+      ]
+    },
+    "setup": {
+      "title": "SETUP",
+      "items": [
+        { "label": "PLAYER",       "action": "screen:player"   },
+        { "label": "CONTROLS",     "action": "screen:controls" },
+        { "label": "GAME OPTIONS", "action": "screen:options"  },
+        { "label": "BACK",         "action": "back"            }
+      ],
+      "back": "main"
+    },
+    "player": {
+      "title": "PLAYER",
+      "items": [
+        { "label": "NAME   : SARGE",   "action": "none" },
+        { "label": "MODEL  : KEEL",    "action": "none" },
+        { "label": "HANDEDNESS : RIGHT", "action": "none" },
+        { "label": "BACK",             "action": "back" }
+      ],
+      "back": "setup"
+    },
+    "controls": {
+      "title": "CONTROLS",
+      "items": [
+        { "label": "MOUSE SENSITIVITY",  "action": "none" },
+        { "label": "INVERT MOUSE : OFF", "action": "none" },
+        { "label": "BACK",               "action": "back" }
+      ],
+      "back": "setup"
+    },
+    "options": {
+      "title": "GAME OPTIONS",
+      "items": [
+        { "label": "SKILL : HURT ME PLENTY", "action": "none" },
+        { "label": "FRIENDLY FIRE : OFF",    "action": "none" },
+        { "label": "BACK",                   "action": "back" }
+      ],
+      "back": "setup"
+    },
+    "map_select": {
+      "title": "SKIRMISH",
+      "items": "maps",
+      "back": "main"
+    }
+  }
+}

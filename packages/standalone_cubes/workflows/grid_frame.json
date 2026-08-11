@@ -1,0 +1,19 @@
+{
+  "name": "Grid Frame",
+  "active": true,
+  "settings": {},
+  "tags": [
+    { "name": "frame" },
+    { "name": "grid" }
+  ],
+  "nodes": [
+    {
+      "id": "grid_draw",
+      "name": "Draw Grid Frame",
+      "type": "render.grid.draw",
+      "typeVersion": 1,
+      "position": [0, 0]
+    }
+  ],
+  "connections": {}
+}

@@ -1,0 +1,63 @@
+{
+  "name": "Q3 3D Render",
+  "description": "Prepare render state, cull with portal PVS, GPU frame, draw world + bots + viewmodel.",
+  "steps": [
+    {
+      "id": "render_prepare",
+      "plugin": "render.prepare"
+    },
+    {
+      "id": "portal_view",
+      "plugin": "bsp.portal_view"
+    },
+    {
+      "id": "frame_begin",
+      "plugin": "frame.gpu.begin",
+      "parameters": {
+        "clear_r": 0.3,
+        "clear_g": 0.5,
+        "clear_b": 0.8
+      }
+    },
+    {
+      "id": "draw_map",
+      "plugin": "draw.map",
+      "parameters": {
+        "default_texture": "walls_texture",
+        "pipeline_key":    "gpu_pipeline_bsp",
+        "roughness":       0.7,
+        "metallic":        0.0
+      }
+    },
+    {
+      "id": "draw_pickups",
+      "plugin": "q3.pickups.draw"
+    },
+    {
+      "id": "draw_bots",
+      "plugin": "q3.bots.draw",
+      "parameters": {
+        "lower_prefix":  "lower",
+        "upper_prefix":  "upper",
+        "head_prefix":   "head",
+        "weapon_prefix": "weapon_mg"
+      }
+    },
+    {
+      "id": "draw_weapon_viewmodel",
+      "plugin": "q3.md3.draw",
+      "parameters": {
+        "prefix":   "weapon_mg",
+        "viewmodel": true,
+        "vm_right":  0.25,
+        "vm_down":  -0.22,
+        "vm_fwd":    0.45,
+        "fps":       15.0
+      }
+    },
+    {
+      "id": "end_scene",
+      "plugin": "frame.gpu.end_scene"
+    }
+  ]
+}

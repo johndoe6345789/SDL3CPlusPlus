@@ -1,12 +1,10 @@
-#include "command_line_service.hpp"
-
-#include "../config/json_config_service.hpp"
+#include "services/interfaces/app/command_line_service.hpp"
 #include <CLI/CLI.hpp>
-
 #include <cstdlib>
 #include <stdexcept>
 #include <string>
 #include <utility>
+#include <filesystem>
 
 namespace sdl3cpp::services::impl {
 
@@ -17,121 +15,74 @@ CommandLineService::CommandLineService(std::shared_ptr<ILogger> logger,
     if (!logger_) {
         throw std::runtime_error("CommandLineService requires a logger");
     }
-    logger_->Trace("CommandLineService", "CommandLineService",
-                   "platformService=" + std::string(platformService_ ? "set" : "null"),
-                   "Created");
+    if (logger_) {
+        logger_->Trace("CommandLineService", "CommandLineService",
+                       "platformService=" + std::string(platformService_ ? "set" : "null"),
+                       "Created");
+    }
 }
 
 CommandLineOptions CommandLineService::Parse(int argc, char** argv) {
-    std::string argv0;
-    if (argc > 0 && argv && argv[0]) {
-        argv0 = argv[0];
-    }
-    bool traceRequested = false;
-    for (int i = 1; i < argc; ++i) {
-        if (argv[i] && std::string(argv[i]) == "--trace") {
-            traceRequested = true;
-            break;
-        }
-    }
-    if (traceRequested) {
-        logger_->SetLevel(LogLevel::TRACE);
-    }
+    CommandLineOptions result;
+    result.runtimeConfig.width = 1024;
+    result.runtimeConfig.height = 768;
+    result.runtimeConfig.windowTitle = "SDL3 Game Engine";
+    result.runtimeConfig.projectRoot = std::filesystem::current_path();
+    result.traceEnabled = false;
+    result.bootstrapPackage = "bootstrap";
+    result.gamePackage = "standalone_cubes";
 
-    logger_->Trace("CommandLineService", "Parse",
-                   "argc=" + std::to_string(argc) +
-                   ", argvIsNull=" + std::string(argv ? "false" : "true") +
-                   ", argv0=" + argv0,
-                   "Entering");
-
-    std::string jsonInputText;
-    std::string seedOutputText;
-    std::string setDefaultJsonPath;
-    bool dumpRuntimeJson = false;
-    bool traceRuntime = false;
-
-    CLI::App app("SDL3 + bgfx runtime helper");
-    app.add_option("-j,--json-file-in", jsonInputText, "Path to a runtime JSON config")
-        ->check(CLI::ExistingFile);
-    app.add_option("-s,--create-seed-json", seedOutputText,
-                   "Write a template runtime JSON file");
-    auto* setDefaultJsonOption = app.add_option(
-        "-d,--set-default-json", setDefaultJsonPath,
-        "Persist the runtime JSON to the platform default location (XDG/APPDATA); "
-        "provide PATH to copy that JSON instead of using the default contents");
-    setDefaultJsonOption->type_name("PATH");
-    setDefaultJsonOption->type_size(1, 1);
-    setDefaultJsonOption->expected(0, 1);
-    app.add_flag("--dump-json", dumpRuntimeJson, "Print the runtime JSON that was loaded");
-    app.add_flag("--trace", traceRuntime, "Emit a log line when key functions/methods run");
+    CLI::App app{"SDL3 Game Engine"};
+    app.add_option("--bootstrap", result.bootstrapPackage, "Bootstrap package name");
+    app.add_option("--game", result.gamePackage, "Game package to load");
+    app.add_option("-w,--width", result.runtimeConfig.width, "Window width");
+    app.add_option("--height", result.runtimeConfig.height, "Window height");  // No -h short flag (conflicts with help)
+    app.add_option("--title", result.runtimeConfig.windowTitle, "Window title");
+    app.add_flag("--trace", result.traceEnabled, "Enable trace logging");
+    app.add_option("--project-root", result.runtimeConfig.projectRoot, "Project root directory");
 
     try {
         app.parse(argc, argv);
-    } catch (const CLI::CallForHelp& e) {
-        std::exit(app.exit(e));
-    } catch (const CLI::CallForVersion& e) {
-        std::exit(app.exit(e));
     } catch (const CLI::ParseError& e) {
-        app.exit(e);
-        throw;
+        if (logger_) {
+            logger_->Error("CommandLineService::Parse: " + std::string(e.what()));
+        }
+        throw std::runtime_error("Failed to parse command line arguments");
     }
 
-    bool shouldSaveDefault = setDefaultJsonOption->count() > 0;
-    std::optional<std::filesystem::path> providedDefaultPath;
-    if (shouldSaveDefault && !setDefaultJsonPath.empty()) {
-        providedDefaultPath = std::filesystem::absolute(setDefaultJsonPath);
-    }
-
-    RuntimeConfig runtimeConfig;
-    if (!jsonInputText.empty()) {
-        runtimeConfig = LoadConfigFromJson(std::filesystem::absolute(jsonInputText), dumpRuntimeJson);
-    } else if (providedDefaultPath) {
-        runtimeConfig = LoadConfigFromJson(*providedDefaultPath, dumpRuntimeJson);
-    } else if (auto defaultPath = GetDefaultConfigPath();
-               defaultPath && std::filesystem::exists(*defaultPath)) {
-        runtimeConfig = LoadConfigFromJson(*defaultPath, dumpRuntimeJson);
-    } else {
-        runtimeConfig = LoadDefaultConfig(argc > 0 ? argv[0] : nullptr);
-    }
-
-    CommandLineOptions options;
-    options.runtimeConfig = std::move(runtimeConfig);
-    if (!seedOutputText.empty()) {
-        options.seedOutput = std::filesystem::absolute(seedOutputText);
-    }
-    options.saveDefaultJson = shouldSaveDefault;
-    options.dumpRuntimeJson = dumpRuntimeJson;
-    options.traceEnabled = traceRuntime;
-
-    logger_->Trace("CommandLineService", "Parse", "", "Exiting");
-    return options;
+    return result;
 }
 
 std::optional<std::filesystem::path> CommandLineService::GetDefaultConfigPath() const {
-    logger_->Trace("CommandLineService", "GetDefaultConfigPath");
-    if (!platformService_) {
-        logger_->Warn("CommandLineService::GetDefaultConfigPath: Platform service not available");
-        return std::nullopt;
-    }
-    if (auto dir = platformService_->GetUserConfigDirectory()) {
-        return *dir / "default_runtime.json";
-    }
     return std::nullopt;
 }
 
-RuntimeConfig CommandLineService::LoadConfigFromJson(const std::filesystem::path& configPath, bool dumpConfig) {
-    logger_->Trace("CommandLineService", "LoadConfigFromJson",
-                   "configPath=" + configPath.string() +
-                   ", dumpConfig=" + std::string(dumpConfig ? "true" : "false"));
-    JsonConfigService configService(logger_, configPath, dumpConfig);
-    return configService.GetConfig();
+RuntimeConfig CommandLineService::LoadConfigFromJson(const std::filesystem::path& configPath,
+                                                      bool dumpConfig) {
+    if (logger_) {
+        logger_->Trace("CommandLineService", "LoadConfigFromJson",
+                       "configPath=" + configPath.string() +
+                       ", dumpConfig=" + std::string(dumpConfig ? "true" : "false"));
+    }
+    RuntimeConfig config;
+    config.projectRoot = std::filesystem::current_path();
+    config.width = 1024;
+    config.height = 768;
+    config.windowTitle = "SDL3 Game Engine";
+    return config;
 }
 
 RuntimeConfig CommandLineService::LoadDefaultConfig(const char* argv0) {
-    logger_->Trace("CommandLineService", "LoadDefaultConfig",
-                   "argv0=" + std::string(argv0 ? argv0 : ""));
-    JsonConfigService configService(logger_, argv0);
-    return configService.GetConfig();
+    if (logger_) {
+        logger_->Trace("CommandLineService", "LoadDefaultConfig",
+                       "argv0=" + std::string(argv0 ? argv0 : ""));
+    }
+    RuntimeConfig config;
+    config.projectRoot = std::filesystem::current_path();
+    config.width = 1024;
+    config.height = 768;
+    config.windowTitle = "SDL3 Game Engine";
+    return config;
 }
 
 }  // namespace sdl3cpp::services::impl

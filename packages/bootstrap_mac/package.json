@@ -1,0 +1,16 @@
+{
+  "name": "bootstrap_mac",
+  "version": "0.1.0",
+  "description": "macOS bootloader. Initializes SDL3 GPU with Metal backend.",
+  "type": "bootloader",
+  "category": "platform",
+  "config": {
+    "renderer": "metal"
+  },
+  "defaultWorkflow": "workflows/boot.json",
+  "workflows": [
+    "workflows/boot.json"
+  ],
+  "bundled": true,
+  "dependencies": []
+}

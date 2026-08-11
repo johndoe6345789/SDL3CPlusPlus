@@ -1,0 +1,36 @@
+{
+  "id": "quake3_units",
+  "name": "Quake 3 Unit System",
+  "description": "Quake 3 uses different unit scales than UE5. This configuration handles conversion.",
+
+  "source": {
+    "engine": "Quake 3",
+    "units_per_meter": 32,
+    "description": "Quake 3: ~32 units = 1 real-world meter (16 units ≈ 2.54cm based on player height)"
+  },
+
+  "target": {
+    "engine": "UE5/MetaBuilder",
+    "units_per_meter": 100,
+    "description": "UE5: 1 unit = 1cm, so 100 units = 1 real-world meter"
+  },
+
+  "conversion_factor": 3.125,
+  "explanation": "To convert Quake 3 to UE5: multiply all coordinates and sizes by 3.125 (100/32)",
+
+  "scale_mapping": {
+    "player_height_q3": 56,
+    "player_height_q3_cm": "~180cm (typical human)",
+    "player_height_ue5": 180,
+    "player_height_ue5_units": "180 units = 180cm",
+    "verification": "56 * 3.125 = 175 ✓ (close to 180)"
+  },
+
+  "common_scales": {
+    "weapon_scale_q3": 1.0,
+    "weapon_scale_ue5": 3.125,
+    "door_height_q3": 96,
+    "door_height_ue5": 300,
+    "door_height_ue5_cm": "300cm = 3m"
+  }
+}

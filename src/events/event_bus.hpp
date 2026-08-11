@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../di/lifecycle.hpp"
-#include "event_listener.hpp"
-#include "event_types.hpp"
-#include "i_event_bus.hpp"
+#include "di/lifecycle.hpp"
+#include "events/event_listener.hpp"
+#include "events/event_types.hpp"
+#include "events/i_event_bus.hpp"
 #include <mutex>
 #include <queue>
 #include <unordered_map>

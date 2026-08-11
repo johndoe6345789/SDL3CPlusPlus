@@ -1,0 +1,669 @@
+{
+  "name": "Frame Tick",
+  "active": true,
+  "settings": {},
+  "tags": [
+    { "name": "frame" },
+    { "name": "fps" },
+    { "name": "textured" }
+  ],
+  "meta": {
+    "engine": "sdl3_gpu",
+    "description": "Per-frame sub-workflow: poll input, move player, step physics, update camera, render bodies + textured room."
+  },
+  "nodes": [
+    {
+      "id": "input_poll",
+      "name": "Poll Input",
+      "type": "input.poll",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "id": "physics_move",
+      "name": "FPS Move",
+      "type": "physics.fps.move",
+      "typeVersion": 1,
+      "position": [200, 0],
+      "parameters": {
+        "move_speed": 6.0,
+        "sprint_multiplier": 1.8,
+        "crouch_multiplier": 0.4,
+        "jump_height": 2.0,
+        "jump_duration": 0.5,
+        "air_control": 0.3,
+        "gravity_scale": 0.5,
+        "crouch_height": 0.7,
+        "stand_height": 1.5
+      }
+    },
+    {
+      "id": "physics_step",
+      "name": "Physics Step",
+      "type": "physics.step",
+      "typeVersion": 1,
+      "position": [400, 0],
+      "parameters": {
+        "delta_time": 0.01667
+      }
+    },
+    {
+      "id": "sync_transforms",
+      "name": "Sync Body Transforms",
+      "type": "physics.sync_transforms",
+      "typeVersion": 1,
+      "position": [500, 0]
+    },
+    {
+      "id": "camera_update",
+      "name": "FPS Camera",
+      "type": "camera.fps.update",
+      "typeVersion": 1,
+      "position": [600, 0],
+      "parameters": {
+        "sensitivity": 0.003,
+        "eye_height": 1.5,
+        "fov": 75.0,
+        "near": 0.1,
+        "far": 500.0
+      }
+    },
+    {
+      "id": "shadow_pass",
+      "name": "Shadow Pass",
+      "type": "shadow.pass",
+      "typeVersion": 1,
+      "position": [700, 0]
+    },
+    {
+      "id": "render_prepare",
+      "name": "Prepare Render State",
+      "type": "render.prepare",
+      "typeVersion": 1,
+      "position": [750, 0]
+    },
+    {
+      "id": "spotlight_update",
+      "name": "Update Spotlight",
+      "type": "spotlight.update",
+      "typeVersion": 1,
+      "position": [760, 0]
+    },
+    {
+      "id": "frame_begin",
+      "name": "Begin Offscreen Frame",
+      "type": "frame.gpu.begin_offscreen",
+      "typeVersion": 1,
+      "position": [800, 0],
+      "parameters": {
+        "clear_r": 0.05,
+        "clear_g": 0.05,
+        "clear_b": 0.08
+      }
+    },
+    {
+      "id": "draw_bodies",
+      "name": "Draw Bodies",
+      "type": "frame.gpu.draw_bodies",
+      "typeVersion": 1,
+      "position": [1000, 0]
+    },
+    {
+      "id": "draw_map",
+      "name": "Draw Map (glTF)",
+      "type": "draw.map",
+      "typeVersion": 1,
+      "position": [1050, 0],
+      "parameters": {
+        "default_texture": "walls_texture",
+        "floor": "floor_texture",
+        "platform": "floor_texture",
+        "ceiling": "ceiling_texture",
+        "roughness": 0.8,
+        "metallic": 0.0
+      }
+    },
+    {
+      "id": "draw_floor",
+      "name": "Draw Floor",
+      "type": "draw.textured",
+      "typeVersion": 1,
+      "position": [0, 100],
+      "parameters": {
+        "mesh": "floor_plane",
+        "texture": "floor_texture",
+        "facing": "up",
+        "pos_y": 0,
+        "roughness": 0.55,
+        "metallic": 0.0
+      }
+    },
+    {
+      "id": "draw_wall_n",
+      "name": "Draw North Wall",
+      "type": "draw.textured",
+      "typeVersion": 1,
+      "position": [200, 100],
+      "parameters": {
+        "mesh": "wall_plane",
+        "texture": "walls_texture",
+        "facing": "south",
+        "pos_y": 2.5,
+        "pos_z": -10,
+        "roughness": 0.85,
+        "metallic": 0.0
+      }
+    },
+    {
+      "id": "draw_wall_s",
+      "name": "Draw South Wall",
+      "type": "draw.textured",
+      "typeVersion": 1,
+      "position": [400, 100],
+      "parameters": {
+        "mesh": "wall_plane",
+        "texture": "walls_texture",
+        "facing": "north",
+        "pos_y": 2.5,
+        "pos_z": 10,
+        "roughness": 0.85,
+        "metallic": 0.0
+      }
+    },
+    {
+      "id": "draw_wall_e",
+      "name": "Draw East Wall",
+      "type": "draw.textured",
+      "typeVersion": 1,
+      "position": [600, 100],
+      "parameters": {
+        "mesh": "wall_plane",
+        "texture": "walls_texture",
+        "facing": "west",
+        "pos_x": 10,
+        "pos_y": 2.5,
+        "roughness": 0.85,
+        "metallic": 0.0
+      }
+    },
+    {
+      "id": "draw_wall_w",
+      "name": "Draw West Wall",
+      "type": "draw.textured",
+      "typeVersion": 1,
+      "position": [800, 100],
+      "parameters": {
+        "mesh": "wall_plane",
+        "texture": "walls_texture",
+        "facing": "east",
+        "pos_x": -10,
+        "pos_y": 2.5,
+        "roughness": 0.85,
+        "metallic": 0.0
+      }
+    },
+    {
+      "id": "draw_ceiling",
+      "name": "Draw Ceiling",
+      "type": "draw.textured",
+      "typeVersion": 1,
+      "position": [1000, 100],
+      "parameters": {
+        "mesh": "ceiling_plane",
+        "texture": "ceiling_texture",
+        "facing": "down",
+        "pos_y": 5,
+        "roughness": 0.92,
+        "metallic": 0.0
+      }
+    },
+    {
+      "id": "draw_platform_top",
+      "name": "Draw Platform Top",
+      "type": "draw.textured",
+      "typeVersion": 1,
+      "position": [0, 200],
+      "parameters": {
+        "mesh": "platform_plane",
+        "texture": "floor_texture",
+        "facing": "up",
+        "pos_x": -4,
+        "pos_y": 0.8,
+        "pos_z": 2,
+        "roughness": 0.55,
+        "metallic": 0.0
+      }
+    },
+    {
+      "id": "draw_alcove_left",
+      "name": "Draw Alcove Left",
+      "type": "draw.textured",
+      "typeVersion": 1,
+      "position": [200, 200],
+      "parameters": {
+        "mesh": "alcove_plane",
+        "texture": "walls_texture",
+        "facing": "east",
+        "pos_x": -8,
+        "pos_y": 1.75,
+        "pos_z": -4,
+        "roughness": 0.85,
+        "metallic": 0.0
+      }
+    },
+    {
+      "id": "draw_alcove_back",
+      "name": "Draw Alcove Back",
+      "type": "draw.textured",
+      "typeVersion": 1,
+      "position": [400, 200],
+      "parameters": {
+        "mesh": "alcove_back_plane",
+        "texture": "walls_texture",
+        "facing": "south",
+        "pos_x": -9,
+        "pos_y": 1.75,
+        "pos_z": -4,
+        "roughness": 0.85,
+        "metallic": 0.0
+      }
+    },
+    {
+      "id": "draw_alcove_right",
+      "name": "Draw Alcove Right",
+      "type": "draw.textured",
+      "typeVersion": 1,
+      "position": [600, 200],
+      "parameters": {
+        "mesh": "alcove_plane",
+        "texture": "walls_texture",
+        "facing": "east",
+        "pos_x": -8,
+        "pos_y": 1.75,
+        "pos_z": -5.5,
+        "roughness": 0.85,
+        "metallic": 0.0
+      }
+    },
+    {
+      "id": "draw_pillar_nw",
+      "name": "Draw Pillar NW",
+      "type": "draw.textured_box",
+      "typeVersion": 1,
+      "position": [0, 300],
+      "parameters": {
+        "texture": "walls_texture",
+        "pos_x": -6, "pos_y": 2.5, "pos_z": -6,
+        "size_x": 1.2, "size_y": 5, "size_z": 1.2,
+        "uv_density": 1.0
+      }
+    },
+    {
+      "id": "draw_pillar_ne",
+      "name": "Draw Pillar NE",
+      "type": "draw.textured_box",
+      "typeVersion": 1,
+      "position": [200, 300],
+      "parameters": {
+        "texture": "walls_texture",
+        "pos_x": 6, "pos_y": 2.5, "pos_z": -6,
+        "size_x": 1.2, "size_y": 5, "size_z": 1.2,
+        "uv_density": 1.0
+      }
+    },
+    {
+      "id": "draw_pillar_sw",
+      "name": "Draw Pillar SW",
+      "type": "draw.textured_box",
+      "typeVersion": 1,
+      "position": [400, 300],
+      "parameters": {
+        "texture": "walls_texture",
+        "pos_x": -6, "pos_y": 2.5, "pos_z": 6,
+        "size_x": 1.2, "size_y": 5, "size_z": 1.2,
+        "uv_density": 1.0
+      }
+    },
+    {
+      "id": "draw_pillar_se",
+      "name": "Draw Pillar SE",
+      "type": "draw.textured_box",
+      "typeVersion": 1,
+      "position": [600, 300],
+      "parameters": {
+        "texture": "walls_texture",
+        "pos_x": 6, "pos_y": 2.5, "pos_z": 6,
+        "size_x": 1.2, "size_y": 5, "size_z": 1.2,
+        "uv_density": 1.0
+      }
+    },
+    {
+      "id": "draw_platform_box",
+      "name": "Draw Platform",
+      "type": "draw.textured_box",
+      "typeVersion": 1,
+      "position": [800, 300],
+      "parameters": {
+        "texture": "floor_texture",
+        "pos_x": -4, "pos_y": 0.4, "pos_z": 2,
+        "size_x": 5, "size_y": 0.8, "size_z": 4,
+        "uv_density": 0.5
+      }
+    },
+    {
+      "id": "draw_crate1",
+      "name": "Draw Crate 1",
+      "type": "draw.textured_box",
+      "typeVersion": 1,
+      "position": [0, 400],
+      "parameters": {
+        "texture": "floor_texture",
+        "pos_x": 7, "pos_y": 0.5, "pos_z": -3,
+        "size_x": 1.0, "size_y": 1.0, "size_z": 1.0,
+        "uv_density": 1.0
+      }
+    },
+    {
+      "id": "draw_crate2",
+      "name": "Draw Crate 2",
+      "type": "draw.textured_box",
+      "typeVersion": 1,
+      "position": [200, 400],
+      "parameters": {
+        "texture": "floor_texture",
+        "pos_x": 7.8, "pos_y": 0.5, "pos_z": -2.2,
+        "size_x": 1.0, "size_y": 1.0, "size_z": 1.0,
+        "uv_density": 1.0
+      }
+    },
+    {
+      "id": "draw_crate3",
+      "name": "Draw Crate 3",
+      "type": "draw.textured_box",
+      "typeVersion": 1,
+      "position": [400, 400],
+      "parameters": {
+        "texture": "floor_texture",
+        "pos_x": 7, "pos_y": 1.5, "pos_z": -3,
+        "size_x": 1.0, "size_y": 1.0, "size_z": 1.0,
+        "uv_density": 1.0
+      }
+    },
+    {
+      "id": "draw_crate4",
+      "name": "Draw Crate 4",
+      "type": "draw.textured_box",
+      "typeVersion": 1,
+      "position": [600, 400],
+      "parameters": {
+        "texture": "floor_texture",
+        "pos_x": -8, "pos_y": 0.5, "pos_z": -7,
+        "size_x": 1.2, "size_y": 1.0, "size_z": 0.8,
+        "uv_density": 1.0
+      }
+    },
+    {
+      "id": "draw_cube",
+      "name": "Draw Spinning Cube",
+      "type": "draw.textured_box",
+      "typeVersion": 1,
+      "position": [800, 400],
+      "parameters": {
+        "texture": "walls_texture",
+        "pos_x": 0, "pos_y": 1.5, "pos_z": -2,
+        "size_x": 1.0, "size_y": 1.0, "size_z": 1.0,
+        "uv_density": 2.0,
+        "body": "cube"
+      }
+    },
+    {
+      "id": "draw_torch",
+      "name": "Draw Torch Viewmodel",
+      "type": "draw.viewmodel",
+      "typeVersion": 1,
+      "position": [1100, 0],
+      "parameters": {
+        "mesh": "torch_model",
+        "offset_x": 0.35,
+        "offset_y": -0.35,
+        "offset_z": -0.35,
+        "scale": 1.0,
+        "rot_x": -75,
+        "roughness": 0.5,
+        "metallic": 0.6
+      }
+    },
+    {
+      "id": "end_scene",
+      "name": "End Scene Pass",
+      "type": "frame.gpu.end_scene",
+      "typeVersion": 1,
+      "position": [1200, 0]
+    },
+    {
+      "id": "postfx_taa",
+      "name": "TAA Resolve",
+      "type": "postfx.taa",
+      "typeVersion": 1,
+      "position": [1250, 0],
+      "parameters": {
+        "blend_factor": 0.02
+      }
+    },
+    {
+      "id": "postfx_ssao",
+      "name": "SSAO Pass",
+      "type": "postfx.ssao",
+      "typeVersion": 1,
+      "position": [1300, 0]
+    },
+    {
+      "id": "bloom_extract",
+      "name": "Bloom Extract",
+      "type": "postfx.bloom_extract",
+      "typeVersion": 1,
+      "position": [1400, 0]
+    },
+    {
+      "id": "bloom_blur",
+      "name": "Bloom Blur",
+      "type": "postfx.bloom_blur",
+      "typeVersion": 1,
+      "position": [1500, 0]
+    },
+    {
+      "id": "postfx_composite",
+      "name": "Composite to Swapchain",
+      "type": "postfx.composite",
+      "typeVersion": 1,
+      "position": [1600, 0]
+    }
+  ],
+  "connections": {
+    "input_poll": {
+      "main": {
+        "0": [{ "node": "physics_move", "type": "main", "index": 0 }]
+      }
+    },
+    "physics_move": {
+      "main": {
+        "0": [{ "node": "physics_step", "type": "main", "index": 0 }]
+      }
+    },
+    "physics_step": {
+      "main": {
+        "0": [{ "node": "sync_transforms", "type": "main", "index": 0 }]
+      }
+    },
+    "sync_transforms": {
+      "main": {
+        "0": [{ "node": "camera_update", "type": "main", "index": 0 }]
+      }
+    },
+    "camera_update": {
+      "main": {
+        "0": [{ "node": "shadow_pass", "type": "main", "index": 0 }]
+      }
+    },
+    "shadow_pass": {
+      "main": {
+        "0": [{ "node": "render_prepare", "type": "main", "index": 0 }]
+      }
+    },
+    "render_prepare": {
+      "main": {
+        "0": [{ "node": "spotlight_update", "type": "main", "index": 0 }]
+      }
+    },
+    "spotlight_update": {
+      "main": {
+        "0": [{ "node": "frame_begin", "type": "main", "index": 0 }]
+      }
+    },
+    "frame_begin": {
+      "main": {
+        "0": [{ "node": "draw_bodies", "type": "main", "index": 0 }]
+      }
+    },
+    "draw_bodies": {
+      "main": {
+        "0": [{ "node": "draw_map", "type": "main", "index": 0 }]
+      }
+    },
+    "draw_map": {
+      "main": {
+        "0": [{ "node": "draw_torch", "type": "main", "index": 0 }]
+      }
+    },
+    "draw_floor": {
+      "main": {
+        "0": [{ "node": "draw_wall_n", "type": "main", "index": 0 }]
+      }
+    },
+    "draw_wall_n": {
+      "main": {
+        "0": [{ "node": "draw_wall_s", "type": "main", "index": 0 }]
+      }
+    },
+    "draw_wall_s": {
+      "main": {
+        "0": [{ "node": "draw_wall_e", "type": "main", "index": 0 }]
+      }
+    },
+    "draw_wall_e": {
+      "main": {
+        "0": [{ "node": "draw_wall_w", "type": "main", "index": 0 }]
+      }
+    },
+    "draw_wall_w": {
+      "main": {
+        "0": [{ "node": "draw_ceiling", "type": "main", "index": 0 }]
+      }
+    },
+    "draw_ceiling": {
+      "main": {
+        "0": [{ "node": "draw_platform_top", "type": "main", "index": 0 }]
+      }
+    },
+    "draw_platform_top": {
+      "main": {
+        "0": [{ "node": "draw_alcove_left", "type": "main", "index": 0 }]
+      }
+    },
+    "draw_alcove_left": {
+      "main": {
+        "0": [{ "node": "draw_alcove_back", "type": "main", "index": 0 }]
+      }
+    },
+    "draw_alcove_back": {
+      "main": {
+        "0": [{ "node": "draw_alcove_right", "type": "main", "index": 0 }]
+      }
+    },
+    "draw_alcove_right": {
+      "main": {
+        "0": [{ "node": "draw_pillar_nw", "type": "main", "index": 0 }]
+      }
+    },
+    "draw_pillar_nw": {
+      "main": {
+        "0": [{ "node": "draw_pillar_ne", "type": "main", "index": 0 }]
+      }
+    },
+    "draw_pillar_ne": {
+      "main": {
+        "0": [{ "node": "draw_pillar_sw", "type": "main", "index": 0 }]
+      }
+    },
+    "draw_pillar_sw": {
+      "main": {
+        "0": [{ "node": "draw_pillar_se", "type": "main", "index": 0 }]
+      }
+    },
+    "draw_pillar_se": {
+      "main": {
+        "0": [{ "node": "draw_platform_box", "type": "main", "index": 0 }]
+      }
+    },
+    "draw_platform_box": {
+      "main": {
+        "0": [{ "node": "draw_crate1", "type": "main", "index": 0 }]
+      }
+    },
+    "draw_crate1": {
+      "main": {
+        "0": [{ "node": "draw_crate2", "type": "main", "index": 0 }]
+      }
+    },
+    "draw_crate2": {
+      "main": {
+        "0": [{ "node": "draw_crate3", "type": "main", "index": 0 }]
+      }
+    },
+    "draw_crate3": {
+      "main": {
+        "0": [{ "node": "draw_crate4", "type": "main", "index": 0 }]
+      }
+    },
+    "draw_crate4": {
+      "main": {
+        "0": [{ "node": "draw_cube", "type": "main", "index": 0 }]
+      }
+    },
+    "draw_cube": {
+      "main": {
+        "0": [{ "node": "draw_torch", "type": "main", "index": 0 }]
+      }
+    },
+    "draw_torch": {
+      "main": {
+        "0": [{ "node": "end_scene", "type": "main", "index": 0 }]
+      }
+    },
+    "end_scene": {
+      "main": {
+        "0": [{ "node": "postfx_taa", "type": "main", "index": 0 }]
+      }
+    },
+    "postfx_taa": {
+      "main": {
+        "0": [{ "node": "postfx_ssao", "type": "main", "index": 0 }]
+      }
+    },
+    "postfx_ssao": {
+      "main": {
+        "0": [{ "node": "bloom_extract", "type": "main", "index": 0 }]
+      }
+    },
+    "bloom_extract": {
+      "main": {
+        "0": [{ "node": "bloom_blur", "type": "main", "index": 0 }]
+      }
+    },
+    "bloom_blur": {
+      "main": {
+        "0": [{ "node": "postfx_composite", "type": "main", "index": 0 }]
+      }
+    }
+  }
+}

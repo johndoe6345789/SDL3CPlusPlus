@@ -1,6 +1,6 @@
 #pragma once
 
-#include "i_workflow_step.hpp"
+#include "services/interfaces/i_workflow_step.hpp"
 
 #include <memory>
 #include <string>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "graphics_types.hpp"
+#include "services/interfaces/graphics_types.hpp"
 #include "gui_types.hpp"
 
 #include <vector>

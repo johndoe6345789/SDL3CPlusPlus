@@ -1,4 +1,4 @@
-#include "service_registry.hpp"
+#include "di/service_registry.hpp"
 #include <algorithm>
 
 namespace sdl3cpp::di {

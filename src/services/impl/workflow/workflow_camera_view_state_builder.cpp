@@ -1,4 +1,4 @@
-#include "workflow_camera_view_state_builder.hpp"
+#include "services/interfaces/workflow/workflow_camera_view_state_builder.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -15,7 +15,10 @@ std::array<float, 16> ToArray(const glm::mat4& matrix) {
 }
 }  // namespace
 
-ViewState BuildViewState(const CameraPose& pose, float aspect) {
+ViewState BuildViewState(const CameraPose& pose, float aspect, const std::shared_ptr<ILogger>& logger) {
+    if (logger) {
+        logger->Trace("WorkflowCameraViewStateBuilder", "BuildViewState", "Entry");
+    }
     glm::vec3 position(pose.position[0], pose.position[1], pose.position[2]);
     glm::vec3 lookAt(pose.lookAt[0], pose.lookAt[1], pose.lookAt[2]);
     glm::vec3 up(pose.up[0], pose.up[1], pose.up[2]);

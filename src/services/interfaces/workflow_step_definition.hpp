@@ -1,6 +1,6 @@
 #pragma once
 
-#include "workflow_parameter_value.hpp"
+#include "services/interfaces/workflow_parameter_value.hpp"
 
 #include <string>
 #include <unordered_map>

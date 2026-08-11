@@ -1,12 +1,23 @@
-#include "workflow_step_parameter_resolver.hpp"
+#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
 
 #include <stdexcept>
+#include <utility>
 
 namespace sdl3cpp::services::impl {
+
+WorkflowStepParameterResolver::WorkflowStepParameterResolver(std::shared_ptr<ILogger> logger)
+    : logger_(std::move(logger)) {
+    if (logger_) {
+        logger_->Trace("WorkflowStepParameterResolver", "Constructor", "Entry");
+    }
+}
 
 const WorkflowParameterValue* WorkflowStepParameterResolver::FindParameter(
     const WorkflowStepDefinition& step,
     const std::string& name) const {
+    if (logger_) {
+        logger_->Trace("WorkflowStepParameterResolver", "FindParameter", "Entry");
+    }
     auto it = step.parameters.find(name);
     if (it == step.parameters.end()) {
         return nullptr;
@@ -17,6 +28,9 @@ const WorkflowParameterValue* WorkflowStepParameterResolver::FindParameter(
 const WorkflowParameterValue& WorkflowStepParameterResolver::GetRequiredParameter(
     const WorkflowStepDefinition& step,
     const std::string& name) const {
+    if (logger_) {
+        logger_->Trace("WorkflowStepParameterResolver", "GetRequiredParameter", "Entry");
+    }
     const auto* param = FindParameter(step, name);
     if (!param) {
         throw std::runtime_error("Workflow step '" + step.id + "' missing parameter '" + name + "'");
@@ -26,6 +40,9 @@ const WorkflowParameterValue& WorkflowStepParameterResolver::GetRequiredParamete
 
 std::string WorkflowStepParameterResolver::GetRequiredString(const WorkflowStepDefinition& step,
                                                              const std::string& name) const {
+    if (logger_) {
+        logger_->Trace("WorkflowStepParameterResolver", "GetRequiredString", "Entry");
+    }
     const auto& param = GetRequiredParameter(step, name);
     if (param.type != WorkflowParameterValue::Type::String) {
         throw std::runtime_error("Workflow step '" + step.id + "' parameter '" + name + "' must be a string");
@@ -35,6 +52,9 @@ std::string WorkflowStepParameterResolver::GetRequiredString(const WorkflowStepD
 
 double WorkflowStepParameterResolver::GetRequiredNumber(const WorkflowStepDefinition& step,
                                                         const std::string& name) const {
+    if (logger_) {
+        logger_->Trace("WorkflowStepParameterResolver", "GetRequiredNumber", "Entry");
+    }
     const auto& param = GetRequiredParameter(step, name);
     if (param.type != WorkflowParameterValue::Type::Number) {
         throw std::runtime_error("Workflow step '" + step.id + "' parameter '" + name + "' must be a number");
@@ -44,6 +64,9 @@ double WorkflowStepParameterResolver::GetRequiredNumber(const WorkflowStepDefini
 
 bool WorkflowStepParameterResolver::GetRequiredBool(const WorkflowStepDefinition& step,
                                                     const std::string& name) const {
+    if (logger_) {
+        logger_->Trace("WorkflowStepParameterResolver", "GetRequiredBool", "Entry");
+    }
     const auto& param = GetRequiredParameter(step, name);
     if (param.type != WorkflowParameterValue::Type::Bool) {
         throw std::runtime_error("Workflow step '" + step.id + "' parameter '" + name + "' must be a bool");
@@ -54,6 +77,9 @@ bool WorkflowStepParameterResolver::GetRequiredBool(const WorkflowStepDefinition
 std::vector<std::string> WorkflowStepParameterResolver::GetRequiredStringList(
     const WorkflowStepDefinition& step,
     const std::string& name) const {
+    if (logger_) {
+        logger_->Trace("WorkflowStepParameterResolver", "GetRequiredStringList", "Entry");
+    }
     const auto& param = GetRequiredParameter(step, name);
     if (param.type != WorkflowParameterValue::Type::StringList) {
         throw std::runtime_error("Workflow step '" + step.id + "' parameter '" + name + "' must be string list");
@@ -64,6 +90,9 @@ std::vector<std::string> WorkflowStepParameterResolver::GetRequiredStringList(
 std::vector<double> WorkflowStepParameterResolver::GetRequiredNumberList(
     const WorkflowStepDefinition& step,
     const std::string& name) const {
+    if (logger_) {
+        logger_->Trace("WorkflowStepParameterResolver", "GetRequiredNumberList", "Entry");
+    }
     const auto& param = GetRequiredParameter(step, name);
     if (param.type != WorkflowParameterValue::Type::NumberList) {
         throw std::runtime_error("Workflow step '" + step.id + "' parameter '" + name + "' must be number list");

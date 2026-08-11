@@ -1,0 +1,330 @@
+{
+  "name": "Standalone Cubes - JSON Workflow Driven",
+  "description": "Complete workflow demonstrating JSON-driven rendering of 121 colored spinning cubes",
+  "version": "1.0.0",
+  "id": "workflow_standalone_cubes",
+
+  "variables": {
+    "grid_width": {
+      "type": "number",
+      "value": 11,
+      "description": "Number of cubes horizontally (11x11 = 121 total)"
+    },
+    "grid_height": {
+      "type": "number",
+      "value": 11,
+      "description": "Number of cubes vertically"
+    },
+    "cube_spacing": {
+      "type": "number",
+      "value": 3.0,
+      "description": "Distance between cube centers"
+    },
+    "grid_start_x": {
+      "type": "number",
+      "value": -15.0,
+      "description": "Starting X position of grid (-(width-1)/2 * spacing)"
+    },
+    "grid_start_y": {
+      "type": "number",
+      "value": -15.0,
+      "description": "Starting Y position of grid"
+    },
+    "rotation_offset_x": {
+      "type": "number",
+      "value": 0.21,
+      "description": "Per-cube rotation offset multiplier (X axis)"
+    },
+    "rotation_offset_y": {
+      "type": "number",
+      "value": 0.37,
+      "description": "Per-cube rotation offset multiplier (Y axis)"
+    },
+    "camera_distance": {
+      "type": "number",
+      "value": 35.0,
+      "description": "Camera Z distance from origin"
+    },
+    "camera_fov": {
+      "type": "number",
+      "value": 60.0,
+      "description": "Camera field of view in degrees"
+    },
+    "window_width": {
+      "type": "number",
+      "value": 1280,
+      "description": "Render window width in pixels"
+    },
+    "window_height": {
+      "type": "number",
+      "value": 720,
+      "description": "Render window height in pixels"
+    },
+    "background_color_r": {
+      "type": "number",
+      "value": 0.18,
+      "description": "Background color red (0.0-1.0), ABGR format"
+    },
+    "background_color_g": {
+      "type": "number",
+      "value": 0.18,
+      "description": "Background color green"
+    },
+    "background_color_b": {
+      "type": "number",
+      "value": 0.18,
+      "description": "Background color blue"
+    },
+    "num_frames": {
+      "type": "number",
+      "value": 600,
+      "description": "Number of frames to render before exiting (600 @ 52 FPS = ~12 seconds visible)"
+    },
+    "screenshot_enabled": {
+      "type": "boolean",
+      "value": true,
+      "description": "Whether to capture screenshot on final frame"
+    },
+    "screenshot_path": {
+      "type": "string",
+      "value": "test_outputs/workflow_cubes_frame.png",
+      "description": "Path where screenshot will be saved"
+    },
+    "csv_output_path": {
+      "type": "string",
+      "value": "test_outputs/workflow_cubes_frame.csv",
+      "description": "Path where CSV pixel data will be saved"
+    },
+    "cube_vertex_colors": {
+      "type": "array",
+      "description": "Per-vertex colors for cube (ABGR format)",
+      "value": [
+        "0xff000000",
+        "0xff0000ff",
+        "0xff00ff00",
+        "0xff00ffff",
+        "0xffff0000",
+        "0xffff00ff",
+        "0xffffff00",
+        "0xffffffff"
+      ]
+    }
+  },
+
+  "nodes": [
+    {
+      "id": "initialize_graphics",
+      "name": "Initialize Graphics System",
+      "type": "graphics.init",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {
+        "window_width": "${variables.window_width}",
+        "window_height": "${variables.window_height}",
+        "window_title": "Standalone Cubes - JSON Workflow",
+        "renderer": "metal",
+        "debug": true
+      }
+    },
+
+    {
+      "id": "create_cube_geometry",
+      "name": "Create Cube Mesh Geometry",
+      "type": "geometry.create_cube",
+      "typeVersion": 1,
+      "position": [130, 0],
+      "parameters": {
+        "vertex_colors": "${variables.cube_vertex_colors}",
+        "output_key": "cube_mesh"
+      }
+    },
+
+    {
+      "id": "load_shaders",
+      "name": "Load Metal Shader Binaries",
+      "type": "shader.load_binary",
+      "typeVersion": 1,
+      "position": [260, 0],
+      "parameters": {
+        "vertex_shader_path": "vs_cubes.bin",
+        "fragment_shader_path": "fs_cubes.bin",
+        "output_key": "cube_program"
+      }
+    },
+
+    {
+      "id": "setup_camera",
+      "name": "Setup Camera (Perspective View)",
+      "type": "camera.setup",
+      "typeVersion": 1,
+      "position": [390, 0],
+      "parameters": {
+        "camera_distance": "${variables.camera_distance}",
+        "camera_fov": "${variables.camera_fov}",
+        "aspect_ratio": "${variables.window_width}/${variables.window_height}",
+        "near_plane": 0.1,
+        "far_plane": 100.0,
+        "output_key": "camera_state"
+      }
+    },
+
+    {
+      "id": "render_frame_loop",
+      "name": "Render Frame Loop (121 Cubes)",
+      "type": "render.cube_grid",
+      "typeVersion": 1,
+      "position": [520, 0],
+      "parameters": {
+        "inputs": {
+          "geometry": "cube_mesh",
+          "program": "cube_program",
+          "camera": "camera_state"
+        },
+        "grid_width": "${variables.grid_width}",
+        "grid_height": "${variables.grid_height}",
+        "grid_spacing": "${variables.cube_spacing}",
+        "grid_start_x": "${variables.grid_start_x}",
+        "grid_start_y": "${variables.grid_start_y}",
+        "rotation_offset_x": "${variables.rotation_offset_x}",
+        "rotation_offset_y": "${variables.rotation_offset_y}",
+        "background_color": {
+          "r": "${variables.background_color_r}",
+          "g": "${variables.background_color_g}",
+          "b": "${variables.background_color_b}"
+        },
+        "num_frames": "${variables.num_frames}"
+      }
+    },
+
+    {
+      "id": "capture_screenshot",
+      "name": "Capture Screenshot (Final Frame)",
+      "type": "graphics.capture_screenshot",
+      "typeVersion": 1,
+      "position": [650, 0],
+      "parameters": {
+        "enabled": "${variables.screenshot_enabled}",
+        "output_path": "${variables.screenshot_path}",
+        "frame_number": "${variables.num_frames}"
+      }
+    },
+
+    {
+      "id": "convert_png_to_csv",
+      "name": "Convert PNG to CSV (Colored Pixel Data)",
+      "type": "graphics.png_to_csv",
+      "typeVersion": 1,
+      "position": [780, 0],
+      "parameters": {
+        "input_path": "${variables.screenshot_path}",
+        "output_path": "${variables.csv_output_path}",
+        "include_alpha": true
+      }
+    },
+
+    {
+      "id": "validate_output",
+      "name": "Validate CSV Has Colored Pixels",
+      "type": "validation.csv_has_colors",
+      "typeVersion": 1,
+      "position": [910, 0],
+      "parameters": {
+        "csv_path": "${variables.csv_output_path}",
+        "min_non_black_pixels": 100,
+        "description": "Ensure CSV output contains actual colored data, not just black"
+      }
+    },
+
+    {
+      "id": "exit_app",
+      "name": "Exit Application",
+      "type": "system.exit",
+      "typeVersion": 1,
+      "position": [1040, 0],
+      "parameters": {
+        "status_code": 0,
+        "message": "Successfully rendered 121 cubes with JSON workflow configuration"
+      }
+    }
+  ],
+
+  "connections": {
+    "initialize_graphics": {
+      "main": {
+        "0": [
+          {"node": "create_cube_geometry", "type": "main", "index": 0}
+        ]
+      }
+    },
+    "create_cube_geometry": {
+      "main": {
+        "0": [
+          {"node": "load_shaders", "type": "main", "index": 0}
+        ]
+      }
+    },
+    "load_shaders": {
+      "main": {
+        "0": [
+          {"node": "setup_camera", "type": "main", "index": 0}
+        ]
+      }
+    },
+    "setup_camera": {
+      "main": {
+        "0": [
+          {"node": "render_frame_loop", "type": "main", "index": 0}
+        ]
+      }
+    },
+    "render_frame_loop": {
+      "main": {
+        "0": [
+          {"node": "capture_screenshot", "type": "main", "index": 0}
+        ]
+      }
+    },
+    "capture_screenshot": {
+      "main": {
+        "0": [
+          {"node": "convert_png_to_csv", "type": "main", "index": 0}
+        ]
+      }
+    },
+    "convert_png_to_csv": {
+      "main": {
+        "0": [
+          {"node": "validate_output", "type": "main", "index": 0}
+        ]
+      }
+    },
+    "validate_output": {
+      "main": {
+        "0": [
+          {"node": "exit_app", "type": "main", "index": 0}
+        ]
+      }
+    }
+  },
+
+  "documentation": {
+    "purpose": "Demonstrates that complex rendering (121 colored spinning cubes) can be entirely driven by JSON configuration",
+    "key_features": [
+      "11x11 grid of colored cubes - configurable via JSON",
+      "Per-cube rotation offsets - data-driven, no hardcoding",
+      "Camera setup - FOV, distance, aspect ratio all in JSON",
+      "Window resolution - configurable parameters",
+      "Background color - RGB values in JSON variables",
+      "Shader loading - Metal binary paths in JSON",
+      "Output paths - screenshot and CSV locations configurable",
+      "Workflow orchestration - step-by-step execution via DAG"
+    ],
+    "proof_points": [
+      "No hardcoded cube positions - all calculated from grid_width, grid_height, grid_spacing",
+      "No hardcoded colors - vertex colors from array in JSON",
+      "No hardcoded camera parameters - all in variables",
+      "No hardcoded render loop logic - fully declarative workflow",
+      "Screenshot and CSV conversion - automated via workflow steps"
+    ]
+  }
+}

@@ -1,0 +1,145 @@
+{
+  "id": "engine_unit_systems",
+  "name": "Game Engine Unit System Registry",
+  "description": "Standardized unit conversion between different game engines and map formats",
+  "version": "2.0.0",
+
+  "reference_system": {
+    "engine": "UE5/MetaBuilder",
+    "units_per_meter": 100,
+    "units_per_cm": 1,
+    "convention": "1 unit = 1 cm (100 units = 1 real-world meter)"
+  },
+
+  "supported_engines": {
+    "ue5": {
+      "engine": "Unreal Engine 5",
+      "units_per_meter": 100,
+      "units_per_cm": 1,
+      "description": "UE5 uses centimeters as base unit",
+      "example_object_sizes": {
+        "player_height": 180,
+        "player_height_cm": "180cm (typical human)",
+        "door_width": 100,
+        "door_width_cm": "100cm",
+        "room_width": 500,
+        "room_width_cm": "5m"
+      }
+    },
+
+    "unity": {
+      "engine": "Unity Engine",
+      "units_per_meter": 1.0,
+      "units_per_cm": 0.01,
+      "description": "Unity uses meters as base unit (though arbitrary)",
+      "conversion_from_ue5": 0.01,
+      "conversion_to_ue5": 100.0,
+      "example_object_sizes": {
+        "player_height": 1.8,
+        "player_height_units": "1.8 units = 1.8m",
+        "door_width": 1.0,
+        "door_width_units": "1.0 units = 1m"
+      }
+    },
+
+    "quake3": {
+      "engine": "Quake 3",
+      "units_per_meter": 32,
+      "units_per_cm": 0.32,
+      "description": "Quake 3 uses game units (~32 per meter based on player scale)",
+      "reasoning": "Player height is 56 units ≈ 180cm, so 56/180 ≈ 0.31 units/cm",
+      "conversion_from_ue5": 0.32,
+      "conversion_to_ue5": 3.125,
+      "example_object_sizes": {
+        "player_height": 56,
+        "player_height_cm": "~180cm (derived from player scale)",
+        "typical_door": 96,
+        "typical_door_cm": "~300cm (3m)"
+      }
+    },
+
+    "quake2": {
+      "engine": "Quake 2",
+      "units_per_meter": 32,
+      "units_per_cm": 0.32,
+      "description": "Similar to Quake 3, uses ~32 units per meter",
+      "conversion_from_ue5": 0.32,
+      "conversion_to_ue5": 3.125,
+      "note": "Some sources suggest Q2 was 40 units/meter - verify per map"
+    },
+
+    "doom3": {
+      "engine": "Doom 3",
+      "units_per_meter": 39.3701,
+      "units_per_cm": 0.39,
+      "description": "Doom 3 uses different scale (related to 1 unit ≈ 2.54cm or 1 inch)",
+      "conversion_from_ue5": 0.39,
+      "conversion_to_ue5": 2.54,
+      "reasoning": "1 Doom 3 unit ≈ 2.54cm (1 inch), so ~39.4 units per meter"
+    },
+
+    "halflife2": {
+      "engine": "Half-Life 2 / Source Engine",
+      "units_per_meter": 39.3701,
+      "units_per_cm": 0.39,
+      "description": "Source engine uses same scale as Doom 3 (1 unit ≈ 1 inch)",
+      "conversion_from_ue5": 0.39,
+      "conversion_to_ue5": 2.54,
+      "example_object_sizes": {
+        "player_height": 72,
+        "player_height_units": "~72 units (about 6 feet)"
+      }
+    },
+
+    "godot": {
+      "engine": "Godot Engine",
+      "units_per_meter": 1.0,
+      "units_per_cm": 0.01,
+      "description": "Godot uses arbitrary units, conventionally 1 unit = 1 meter",
+      "conversion_from_ue5": 0.01,
+      "conversion_to_ue5": 100.0,
+      "note": "Can be configured per project"
+    },
+
+    "cryengine": {
+      "engine": "CryEngine",
+      "units_per_meter": 1.0,
+      "units_per_cm": 0.01,
+      "description": "CryEngine uses 1 unit = 1 meter",
+      "conversion_from_ue5": 0.01,
+      "conversion_to_ue5": 100.0
+    },
+
+    "unreal3": {
+      "engine": "Unreal Engine 3",
+      "units_per_meter": 50,
+      "units_per_cm": 0.5,
+      "description": "UE3 used 50 units per meter (100 in UE4+)",
+      "conversion_from_ue5": 0.5,
+      "conversion_to_ue5": 2.0,
+      "note": "Changed in UE4 to 100 units/meter"
+    }
+  },
+
+  "conversion_matrix": {
+    "description": "To convert FROM source TO target, multiply by the factor",
+    "example": "To convert 56 Quake3 units to UE5: 56 * 3.125 = 175 UE5 units",
+    "ue5_to_unity": 0.01,
+    "ue5_to_quake3": 0.32,
+    "ue5_to_doom3": 0.39,
+    "ue5_to_ue3": 0.5,
+    "quake3_to_ue5": 3.125,
+    "quake3_to_unity": 0.03125,
+    "unity_to_ue5": 100,
+    "unity_to_quake3": 32
+  },
+
+  "best_practices": [
+    "Always define unit_system in map metadata",
+    "Convert at load time (not at render time)",
+    "Apply same scale to geometry, physics, and animations",
+    "Verify with known object sizes (player height, door width)",
+    "Test physics behavior after conversion",
+    "Document any non-standard unit conventions"
+  ]
+}

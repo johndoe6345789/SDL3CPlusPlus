@@ -1,0 +1,93 @@
+{
+  "id": "seed_default_camera",
+  "name": "Default Camera Setup",
+  "active": true,
+  "versionId": "1.0.0",
+  "createdAt": "2026-02-14T00:00:00Z",
+  "updatedAt": "2026-02-14T00:00:00Z",
+  "tags": [
+    { "id": "1", "name": "camera" },
+    { "id": "2", "name": "seed" }
+  ],
+  "meta": {
+    "description": "Default third-person camera looking at the cube grid center."
+  },
+  "variables": {
+    "eye_x": {
+      "name": "eye_x",
+      "type": "number",
+      "description": "Camera position X",
+      "defaultValue": 0.0
+    },
+    "eye_y": {
+      "name": "eye_y",
+      "type": "number",
+      "description": "Camera position Y (height)",
+      "defaultValue": 8.0
+    },
+    "eye_z": {
+      "name": "eye_z",
+      "type": "number",
+      "description": "Camera position Z (distance)",
+      "defaultValue": 35.0
+    },
+    "target_x": {
+      "name": "target_x",
+      "type": "number",
+      "description": "Look-at target X",
+      "defaultValue": 0.0
+    },
+    "target_y": {
+      "name": "target_y",
+      "type": "number",
+      "description": "Look-at target Y",
+      "defaultValue": 0.0
+    },
+    "target_z": {
+      "name": "target_z",
+      "type": "number",
+      "description": "Look-at target Z",
+      "defaultValue": 0.0
+    },
+    "fov": {
+      "name": "fov",
+      "type": "number",
+      "description": "Field of view in degrees",
+      "defaultValue": 60.0,
+      "validation": { "min": 30.0, "max": 120.0 }
+    },
+    "near": {
+      "name": "near",
+      "type": "number",
+      "description": "Near clip plane",
+      "defaultValue": 0.1
+    },
+    "far": {
+      "name": "far",
+      "type": "number",
+      "description": "Far clip plane",
+      "defaultValue": 100.0
+    }
+  },
+  "nodes": [
+    {
+      "id": "camera_setup",
+      "name": "Setup Camera",
+      "type": "camera.setup",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {
+        "eye_x": "{{ $workflow.variables.eye_x }}",
+        "eye_y": "{{ $workflow.variables.eye_y }}",
+        "eye_z": "{{ $workflow.variables.eye_z }}",
+        "target_x": "{{ $workflow.variables.target_x }}",
+        "target_y": "{{ $workflow.variables.target_y }}",
+        "target_z": "{{ $workflow.variables.target_z }}",
+        "fov": "{{ $workflow.variables.fov }}",
+        "near": "{{ $workflow.variables.near }}",
+        "far": "{{ $workflow.variables.far }}"
+      }
+    }
+  ],
+  "connections": {}
+}

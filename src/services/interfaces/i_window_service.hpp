@@ -1,6 +1,6 @@
 #pragma once
 
-#include "config_types.hpp"
+#include "services/interfaces/config_types.hpp"
 #include <cstdint>
 #include <string>
 #include <utility>

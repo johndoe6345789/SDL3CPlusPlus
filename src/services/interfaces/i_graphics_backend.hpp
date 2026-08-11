@@ -6,7 +6,7 @@
 #include <vector>
 #include <array>
 #include <utility>
-#include "graphics_types.hpp"
+#include "services/interfaces/graphics_types.hpp"
 
 namespace sdl3cpp::services {
 
@@ -34,7 +34,7 @@ using GraphicsTextureHandle = void*;
  * @brief Graphics backend interface for abstracted rendering.
  *
  * Provides backend-agnostic methods for device management, pipelines, buffers, and rendering.
- * Implementations handle platform-specific details (bgfx, GXM, etc.).
+ * Implementations handle platform-specific details (SDL3 GPU, GXM, etc.).
  */
 class IGraphicsBackend {
 public:
@@ -157,15 +157,12 @@ public:
     virtual void SetViewState(const ViewState& viewState) = 0;
 
     /**
-     * @brief Configure a view for a render pass.
+     * @brief Redirect rendering to the off-screen framebuffer (for screenshot capture).
      *
-     * @param device Device handle
-     * @param viewId View id to configure
-     * @param clearConfig Clear configuration
+     * This allows screenshots to be captured reliably on all platforms,
+     * especially Metal which has issues reading from the presentation surface.
      */
-    virtual void ConfigureView(GraphicsDeviceHandle device,
-                               uint16_t viewId,
-                               const ViewClearConfig& clearConfig) = 0;
+    virtual void SetViewFrameBuffer() = 0;
 
     /**
      * @brief Draw with a pipeline.

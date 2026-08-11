@@ -1,0 +1,299 @@
+{
+  "name": "Cube Demo Simple",
+  "active": false,
+  "settings": {
+    "executionTimeout": 30
+  },
+  "tags": [
+    { "name": "demo" },
+    { "name": "gpu" }
+  ],
+  "nodes": [
+    {
+      "id": "sdl_init",
+      "name": "SDL Init",
+      "type": "sdl.init",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "id": "sdl_window",
+      "name": "SDL Window Create",
+      "type": "sdl.window.create",
+      "typeVersion": 1,
+      "position": [200, 0]
+    },
+    {
+      "id": "gpu_init_viewport",
+      "name": "GPU Init Viewport",
+      "type": "graphics.gpu.init_viewport",
+      "typeVersion": 1,
+      "position": [400, 0],
+      "parameters": {
+        "inputs": {
+          "width": "window_width",
+          "height": "window_height"
+        },
+        "outputs": {
+          "viewport_config": "viewport_config"
+        }
+      }
+    },
+    {
+      "id": "gpu_init_renderer",
+      "name": "GPU Init Renderer",
+      "type": "graphics.gpu.init_renderer",
+      "typeVersion": 1,
+      "position": [600, 0],
+      "parameters": {
+        "inputs": {
+          "renderer_type": "renderer_type"
+        },
+        "outputs": {
+          "selected_renderer": "selected_renderer"
+        }
+      }
+    },
+    {
+      "id": "gpu_init",
+      "name": "GPU Init",
+      "type": "graphics.gpu.init",
+      "typeVersion": 1,
+      "position": [800, 0],
+      "parameters": {
+        "inputs": {
+          "viewport_config": "viewport_config",
+          "selected_renderer": "selected_renderer"
+        },
+        "outputs": {
+          "gpu_handle": "gpu_handle"
+        }
+      }
+    },
+    {
+      "id": "geometry",
+      "name": "Create Cube Geometry",
+      "type": "geometry.create_cube",
+      "typeVersion": 1,
+      "position": [1000, 0]
+    },
+    {
+      "id": "compile_vertex",
+      "name": "Compile Vertex Shader",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [1200, 0],
+      "parameters": {
+        "stage": "vertex",
+        "output_key": "vertex_shader",
+        "num_uniform_buffers": 1,
+        "num_samplers": 0
+      },
+      "inputs": {
+        "shader_path": "vertex_shader_path"
+      }
+    },
+    {
+      "id": "compile_fragment",
+      "name": "Compile Fragment Shader",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [1400, 0],
+      "parameters": {
+        "stage": "fragment",
+        "output_key": "fragment_shader",
+        "num_uniform_buffers": 0,
+        "num_samplers": 0
+      },
+      "inputs": {
+        "shader_path": "fragment_shader_path"
+      }
+    },
+    {
+      "id": "create_pipeline",
+      "name": "Create Pipeline",
+      "type": "graphics.gpu.pipeline.create",
+      "typeVersion": 1,
+      "position": [1600, 0],
+      "parameters": {
+        "vertex_shader_key": "vertex_shader",
+        "fragment_shader_key": "fragment_shader",
+        "vertex_format": "position_color",
+        "pipeline_key": "gpu_pipeline"
+      }
+    },
+    {
+      "id": "camera",
+      "name": "Camera Setup",
+      "type": "camera.setup",
+      "typeVersion": 1,
+      "position": [1800, 0],
+      "parameters": {
+        "outputs": {
+          "camera_state": "camera.state"
+        }
+      }
+    },
+    {
+      "id": "grid_setup",
+      "name": "Grid Setup",
+      "type": "render.grid.setup",
+      "typeVersion": 1,
+      "position": [2000, 0],
+      "parameters": {
+        "grid_width": 11,
+        "grid_height": 11,
+        "grid_spacing": 3.0,
+        "grid_start_x": -15.0,
+        "grid_start_y": -15.0,
+        "num_frames": 600,
+        "background_color_r": 0.18,
+        "background_color_g": 0.18,
+        "background_color_b": 0.18
+      },
+      "inputs": {
+        "geometry": "cube_mesh",
+        "program": "program.cube",
+        "camera": "camera.state"
+      }
+    },
+    {
+      "id": "set_running",
+      "name": "Set Grid Running",
+      "type": "value.literal",
+      "typeVersion": 1,
+      "position": [2200, 0],
+      "parameters": {
+        "value": true,
+        "outputs": {
+          "value": "grid.running"
+        }
+      }
+    },
+    {
+      "id": "grid_loop",
+      "name": "Grid Frame Loop",
+      "type": "control.loop.while",
+      "typeVersion": 1,
+      "position": [2400, 0],
+      "parameters": {
+        "condition_key": "grid.running",
+        "package": "standalone_cubes",
+        "workflow": "grid_frame"
+      }
+    },
+    {
+      "id": "exit",
+      "name": "System Exit",
+      "type": "system.exit",
+      "typeVersion": 1,
+      "position": [2600, 0]
+    }
+  ],
+  "connections": {
+    "sdl_init": {
+      "main": {
+        "0": [{ "node": "sdl_window", "type": "main", "index": 0 }]
+      }
+    },
+    "sdl_window": {
+      "main": {
+        "0": [{ "node": "gpu_init_viewport", "type": "main", "index": 0 }]
+      }
+    },
+    "gpu_init_viewport": {
+      "main": {
+        "0": [{ "node": "gpu_init_renderer", "type": "main", "index": 0 }]
+      }
+    },
+    "gpu_init_renderer": {
+      "main": {
+        "0": [{ "node": "gpu_init", "type": "main", "index": 0 }]
+      }
+    },
+    "gpu_init": {
+      "main": {
+        "0": [{ "node": "geometry", "type": "main", "index": 0 }]
+      }
+    },
+    "geometry": {
+      "main": {
+        "0": [{ "node": "compile_vertex", "type": "main", "index": 0 }]
+      }
+    },
+    "compile_vertex": {
+      "main": {
+        "0": [{ "node": "compile_fragment", "type": "main", "index": 0 }]
+      }
+    },
+    "compile_fragment": {
+      "main": {
+        "0": [{ "node": "create_pipeline", "type": "main", "index": 0 }]
+      }
+    },
+    "create_pipeline": {
+      "main": {
+        "0": [{ "node": "camera", "type": "main", "index": 0 }]
+      }
+    },
+    "camera": {
+      "main": {
+        "0": [{ "node": "grid_setup", "type": "main", "index": 0 }]
+      }
+    },
+    "grid_setup": {
+      "main": {
+        "0": [{ "node": "set_running", "type": "main", "index": 0 }]
+      }
+    },
+    "set_running": {
+      "main": {
+        "0": [{ "node": "grid_loop", "type": "main", "index": 0 }]
+      }
+    },
+    "grid_loop": {
+      "main": {
+        "0": [{ "node": "exit", "type": "main", "index": 0 }]
+      }
+    }
+  },
+  "variables": {
+    "window_width": {
+      "name": "window_width",
+      "type": "number",
+      "description": "Window width in pixels",
+      "defaultValue": 1024
+    },
+    "window_height": {
+      "name": "window_height",
+      "type": "number",
+      "description": "Window height in pixels",
+      "defaultValue": 768
+    },
+    "window_title": {
+      "name": "window_title",
+      "type": "string",
+      "description": "Window title",
+      "defaultValue": "Standalone Cubes - SDL3 GPU"
+    },
+    "renderer_type": {
+      "name": "renderer_type",
+      "type": "string",
+      "description": "GPU renderer backend (auto, metal, vulkan, d3d12)",
+      "defaultValue": "auto",
+      "validation": {
+        "enum": ["auto", "metal", "vulkan", "d3d12"]
+      }
+    },
+    "vertex_shader_path": {
+      "name": "vertex_shader_path",
+      "type": "string",
+      "description": "Path to vertex shader file"
+    },
+    "fragment_shader_path": {
+      "name": "fragment_shader_path",
+      "type": "string",
+      "description": "Path to fragment shader file"
+    }
+  }
+}

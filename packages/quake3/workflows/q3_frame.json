@@ -1,0 +1,36 @@
+{
+  "name": "Q3 Frame Tick",
+  "description": "Per-frame composition: each section is a reusable sub-workflow included like a React component.",
+  "steps": [
+    {
+      "id": "input_group",
+      "plugin": "workflow.include",
+      "parameters": { "path": "packages/quake3/workflows/q3_input.json" }
+    },
+    {
+      "id": "physics_group",
+      "plugin": "workflow.include",
+      "parameters": { "path": "packages/quake3/workflows/q3_physics.json" }
+    },
+    {
+      "id": "combat_group",
+      "plugin": "workflow.include",
+      "parameters": { "path": "packages/quake3/workflows/q3_combat.json" }
+    },
+    {
+      "id": "render_group",
+      "plugin": "workflow.include",
+      "parameters": { "path": "packages/quake3/workflows/q3_render.json" }
+    },
+    {
+      "id": "overlay_group",
+      "plugin": "workflow.include",
+      "parameters": { "path": "packages/quake3/workflows/q3_overlay.json" }
+    },
+    {
+      "id": "postfx_group",
+      "plugin": "workflow.include",
+      "parameters": { "path": "packages/quake3/workflows/q3_postfx.json" }
+    }
+  ]
+}

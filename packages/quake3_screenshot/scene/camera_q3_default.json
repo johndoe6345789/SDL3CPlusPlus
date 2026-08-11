@@ -1,0 +1,29 @@
+{
+  "id": "camera_q3_default",
+  "name": "Quake 3 Default Camera Configuration",
+  "description": "Camera setup for Q3 maps with correct 90° FOV and aspect ratio handling",
+
+  "camera": {
+    "position": [0.0, 0.0, -40.0],
+    "look_at": [0.0, 0.0, 0.0],
+    "up": [0.0, 1.0, 0.0],
+    "fov_degrees": 90,
+    "fov_notes": "Q3 hardcoded 90° FOV. Keep this value for maps designed in Q3.",
+    "near": 0.1,
+    "far": 100.0
+  },
+
+  "viewport": {
+    "recommended_aspect_ratio": "4:3",
+    "aspect_ratio_notes": "Q3 was designed for 4:3 (640x480, 800x600, 1024x768). Modern 16:9 will stretch horizontally.",
+    "widescreen_correction": "If using 16:9, either: (a) add black bars, or (b) adjust FOV horizontally"
+  },
+
+  "player_spawn": {
+    "default_position": [0.0, 176.0, 0.0],
+    "position_notes": "Adjusted for 3.125× unit scaling. Original Q3 player spawn is ~56 units above floor.",
+    "eye_height_above_ground": 56,
+    "eye_height_ue5_units": 175,
+    "eye_position_explanation": "Player eyes are 56 units above feet in Q3 (≈ 175 cm in UE5)"
+  }
+}

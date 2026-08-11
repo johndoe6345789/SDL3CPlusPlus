@@ -1,6 +1,6 @@
-#include "workflow_string_trim_step.hpp"
+#include "services/interfaces/workflow/workflow_generic_steps/workflow_string_trim_step.hpp"
 
-#include "../workflow_step_io_resolver.hpp"
+#include "services/interfaces/workflow/workflow_step_io_resolver.hpp"
 
 #include <cctype>
 #include <stdexcept>

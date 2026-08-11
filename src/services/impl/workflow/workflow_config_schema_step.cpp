@@ -1,6 +1,6 @@
-#include "workflow_config_schema_step.hpp"
-#include "../config/json_config_schema_validator.hpp"
-#include "workflow_step_io_resolver.hpp"
+#include "services/interfaces/workflow/workflow_config_schema_step.hpp"
+#include "services/interfaces/config/json_config_schema_validator.hpp"
+#include "services/interfaces/workflow/workflow_step_io_resolver.hpp"
 
 #include <rapidjson/document.h>
 
@@ -14,13 +14,23 @@ namespace sdl3cpp::services::impl {
 WorkflowConfigSchemaStep::WorkflowConfigSchemaStep(std::shared_ptr<ILogger> logger,
                                                    std::shared_ptr<IProbeService> probeService)
     : logger_(std::move(logger)),
-      probeService_(std::move(probeService)) {}
+      probeService_(std::move(probeService)) {
+    if (logger_) {
+        logger_->Trace("WorkflowConfigSchemaStep", "Constructor", "Entry");
+    }
+}
 
 std::string WorkflowConfigSchemaStep::GetPluginId() const {
+    if (logger_) {
+        logger_->Trace("WorkflowConfigSchemaStep", "GetPluginId", "Entry");
+    }
     return "config.schema.validate";
 }
 
 void WorkflowConfigSchemaStep::Execute(const WorkflowStepDefinition& step, WorkflowContext& context) {
+    if (logger_) {
+        logger_->Trace("WorkflowConfigSchemaStep", "Execute", "Entry");
+    }
     WorkflowStepIoResolver resolver;
     const std::string documentKey = resolver.GetRequiredInputKey(step, "document");
     const std::string pathKey = resolver.GetRequiredInputKey(step, "path");

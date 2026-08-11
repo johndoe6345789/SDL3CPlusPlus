@@ -1,0 +1,41 @@
+{
+  "name": "Q3 Frame Tick (Screenshot)",
+  "description": "Per-frame composition: shared Q3 sub-workflows + screenshot-check component. Exits after frame 240.",
+  "steps": [
+    {
+      "id": "input_group",
+      "plugin": "workflow.include",
+      "parameters": { "path": "packages/quake3/workflows/q3_input.json" }
+    },
+    {
+      "id": "physics_group",
+      "plugin": "workflow.include",
+      "parameters": { "path": "packages/quake3/workflows/q3_physics.json" }
+    },
+    {
+      "id": "combat_group",
+      "plugin": "workflow.include",
+      "parameters": { "path": "packages/quake3/workflows/q3_combat.json" }
+    },
+    {
+      "id": "render_group",
+      "plugin": "workflow.include",
+      "parameters": { "path": "packages/quake3/workflows/q3_render.json" }
+    },
+    {
+      "id": "screenshot_group",
+      "plugin": "workflow.include",
+      "parameters": { "path": "packages/quake3_screenshot/workflows/q3_screenshot_check.json" }
+    },
+    {
+      "id": "overlay_group",
+      "plugin": "workflow.include",
+      "parameters": { "path": "packages/quake3/workflows/q3_overlay.json" }
+    },
+    {
+      "id": "postfx_group",
+      "plugin": "workflow.include",
+      "parameters": { "path": "packages/quake3/workflows/q3_postfx.json" }
+    }
+  ]
+}

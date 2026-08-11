@@ -1,6 +1,6 @@
-#include "workflow_audio_stop_step.hpp"
+#include "services/interfaces/workflow/workflow_generic_steps/workflow_audio_stop_step.hpp"
 
-#include "../workflow_step_parameter_resolver.hpp"
+#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
 
 #include <algorithm>
 #include <cctype>

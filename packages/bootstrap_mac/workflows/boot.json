@@ -1,0 +1,64 @@
+{
+  "name": "macOS Boot",
+  "variables": {
+    "graphicsRenderer": {
+      "name": "graphicsRenderer",
+      "type": "string",
+      "description": "Graphics renderer to use (metal, vulkan, d3d12, auto)",
+      "defaultValue": "metal",
+      "required": true
+    }
+  },
+  "nodes": [
+    {
+      "id": "init_gpu_viewport",
+      "name": "Initialize GPU Viewport",
+      "type": "graphics.gpu.init_viewport",
+      "typeVersion": 1,
+      "position": [-390, 0],
+      "parameters": {}
+    },
+    {
+      "id": "init_gpu_renderer",
+      "name": "Select GPU Renderer",
+      "type": "graphics.gpu.init_renderer",
+      "typeVersion": 1,
+      "position": [-130, 0],
+      "parameters": {
+        "renderer": "{{ $workflow.variables.graphicsRenderer }}"
+      }
+    },
+    {
+      "id": "init_gpu_device",
+      "name": "Initialize GPU Device",
+      "type": "graphics.gpu.init",
+      "typeVersion": 1,
+      "position": [130, 0],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "init_gpu_viewport": {
+      "main": {
+        "0": [
+          {
+            "node": "init_gpu_renderer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "init_gpu_renderer": {
+      "main": {
+        "0": [
+          {
+            "node": "init_gpu_device",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    }
+  }
+}

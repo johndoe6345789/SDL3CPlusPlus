@@ -1,0 +1,153 @@
+{
+  "project": {
+    "name": "SDL3App",
+    "cmake_minimum_version": "3.24",
+    "default_build_type": "Release",
+    "cxx_standard": 20,
+    "description": "SDL3 GPU 2D/3D game engine with workflow system"
+  },
+  "options": [
+    {
+      "name": "BUILD_SDL3_APP",
+      "type": "BOOL",
+      "default": "ON",
+      "description": "Build the SDL3 GPU demo"
+    },
+    {
+      "name": "ENABLE_CLANG_TIDY",
+      "type": "BOOL",
+      "default": "OFF",
+      "description": "Automatically run clang-tidy on every target"
+    },
+    {
+      "name": "SDL_VERSION",
+      "type": "STRING",
+      "default": "SDL3",
+      "description": "SDL version to use",
+      "allowed_values": [
+        "SDL3",
+        "sdl"
+      ]
+    }
+  ],
+  "test_defaults": {
+    "include_directories": [
+      "src"
+    ],
+    "link_libraries": [
+      "GTest::gtest_main",
+      "GTest::gmock",
+      "glm::glm",
+      "Bullet::Bullet",
+      "EnTT::EnTT"
+    ]
+  },
+  "dependencies": {
+    "always": [
+      "SDL3",
+      "RapidJSON",
+      "nlohmann_json",
+      "Bullet",
+      "glm",
+      "stb",
+      "EnTT",
+      "assimp",
+      "libzip"
+    ]
+  },
+  "source_exclusions": [
+    "tests/",
+    "src/services/impl/config/",
+    "src/services/impl/workflow/workflow_config_load_step.cpp",
+    "src/services/impl/workflow/workflow_config_migration_step.cpp",
+    "src/services/impl/workflow/workflow_config_schema_step.cpp",
+    "src/services/impl/workflow/workflow_config_version_step.cpp",
+    "src/services/impl/workflow/workflow_config_pipeline.cpp",
+    "src/services/impl/workflow/graphics/workflow_graphics_shader_load_step.cpp",
+    "src/services/impl/workflow/rendering/workflow_render_cube_grid_step.cpp"
+  ],
+  "targets": [
+    {
+      "type": "executable",
+      "sources": [
+        "src/main.cpp",
+        "src/services/impl/diagnostics/logger_service.cpp",
+        "src/services/impl/workflow/workflow_executor.cpp",
+        "src/services/impl/workflow/workflow_step_registry.cpp",
+        "src/services/impl/workflow/workflow_exit_step.cpp",
+        "src/services/impl/workflow/workflow_parameter_reader.cpp",
+        "src/services/impl/workflow/workflow_step_io_resolver.cpp",
+        "src/services/impl/workflow/workflow_step_parameter_resolver.cpp",
+        "src/services/impl/workflow/workflow_registrar.cpp",
+        "src/services/impl/workflow/workflow_sdl_init_step.cpp",
+        "src/services/impl/workflow/workflow_sdl_window_create_step.cpp",
+        "src/services/impl/workflow/workflow_app_init_step.cpp",
+        "src/services/impl/workflow/workflow_load_workflow_step.cpp",
+        "src/services/impl/workflow/workflow_definition_parser.cpp",
+        "src/services/impl/workflow/workflow_definition_parser_nodes.cpp",
+        "src/services/impl/workflow/workflow_definition_parser_variables.cpp",
+        "src/services/impl/workflow/workflow_connection_resolver.cpp",
+        "src/services/impl/workflow/workflow_execute_step.cpp",
+        "src/stb_image.cpp",
+        "src/services/impl/workflow/workflow_generic_steps/*.cpp",
+        "src/services/impl/workflow/geometry/*.cpp",
+        "src/services/impl/workflow/rendering/*.cpp",
+        "src/services/impl/workflow/graphics/*.cpp",
+        "src/services/impl/workflow/input/*.cpp",
+        "src/services/impl/workflow/scene/*.cpp",
+        "src/services/impl/workflow/compute/*.cpp",
+        "src/services/impl/workflow/workflow_camera_view_state_builder.cpp",
+        "src/services/impl/workflow/workflow_cmdline_args_step.cpp",
+        "src/services/impl/workflow/workflow_data_deserialize_step.cpp",
+        "src/services/impl/workflow/workflow_data_serialize_step.cpp",
+        "src/services/impl/workflow/workflow_graphics_init_device_step.cpp",
+        "src/services/impl/workflow/workflow_graphics_init_swapchain_step.cpp",
+        "src/services/impl/workflow/workflow_media_catalog_scan_step.cpp",
+        "src/services/impl/workflow/workflow_media_item_select_step.cpp",
+        "src/services/impl/workflow/workflow_network_connect_step.cpp",
+        "src/services/impl/workflow/workflow_network_receive_step.cpp",
+        "src/services/impl/workflow/workflow_network_send_step.cpp",
+        "src/services/impl/workflow/workflow_package_shader_loader_step.cpp",
+
+        "src/services/impl/workflow/workflow_shader_builtin_constant_color_step.cpp",
+        "src/services/impl/workflow/workflow_shader_compile_step.cpp",
+        "src/services/impl/workflow/workflow_shader_system_initialize_step.cpp",
+        "src/services/impl/workflow/workflow_shader_system_set_step.cpp",
+        "src/services/impl/workflow/workflow_state_clear_step.cpp",
+        "src/services/impl/workflow/workflow_state_load_step.cpp",
+        "src/services/impl/workflow/workflow_state_save_step.cpp",
+        "src/services/impl/workflow/workflow_template_resolver.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "${SDL_TARGET}",
+        "rapidjson",
+        "nlohmann_json::nlohmann_json",
+        "Bullet::Bullet",
+        "glm::glm",
+        "stb::stb",
+        "EnTT::EnTT",
+        "libzip::zip",
+        "assimp::assimp"
+      ],
+      "compile_definitions": [],
+      "name": "sdl3_app",
+      "enabled_when": "BUILD_SDL3_APP"
+    }
+  ],
+  "test_targets": [],
+  "file_copying": [
+    {
+      "condition": "BUILD_SDL3_APP",
+      "copies": [
+        {
+          "source": "packages",
+          "destination": "${CMAKE_CURRENT_BINARY_DIR}"
+        }
+      ]
+    }
+  ],
+  "libraries": []
+}

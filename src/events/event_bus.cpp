@@ -1,4 +1,4 @@
-#include "event_bus.hpp"
+#include "events/event_bus.hpp"
 
 namespace sdl3cpp::events {
 

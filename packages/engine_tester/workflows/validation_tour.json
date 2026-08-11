@@ -6,7 +6,10 @@
       "name": "Load Config",
       "type": "config.load",
       "typeVersion": 1,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "parameters": {
         "inputs": {
           "path": "config.path"
@@ -21,7 +24,10 @@
       "name": "Validate Schema",
       "type": "config.schema.validate",
       "typeVersion": 1,
-      "position": [260, 0],
+      "position": [
+        260,
+        0
+      ],
       "parameters": {
         "inputs": {
           "document": "config.document",
@@ -34,7 +40,10 @@
       "name": "Build Runtime Config",
       "type": "runtime.config.build",
       "typeVersion": 1,
-      "position": [520, 0],
+      "position": [
+        520,
+        0
+      ],
       "parameters": {
         "inputs": {
           "document": "config.document",
@@ -50,7 +59,10 @@
       "name": "Validation Probe",
       "type": "validation.tour.checkpoint",
       "typeVersion": 1,
-      "position": [780, 0],
+      "position": [
+        780,
+        0
+      ],
       "parameters": {
         "inputs": {
           "checkpoint": "packages.engine_tester"
@@ -62,23 +74,38 @@
     "Load Config": {
       "main": {
         "0": [
-          { "node": "Validate Schema", "type": "main", "index": 0 }
+          {
+            "node": "Validate Schema",
+            "type": "main",
+            "index": 0
+          }
         ]
       }
     },
     "Validate Schema": {
       "main": {
         "0": [
-          { "node": "Build Runtime Config", "type": "main", "index": 0 }
+          {
+            "node": "Build Runtime Config",
+            "type": "main",
+            "index": 0
+          }
         ]
       }
     },
     "Build Runtime Config": {
       "main": {
         "0": [
-          { "node": "Validation Probe", "type": "main", "index": 0 }
+          {
+            "node": "Validation Probe",
+            "type": "main",
+            "index": 0
+          }
         ]
       }
     }
-  }
+  },
+  "id": "workflow_validation_tour",
+  "version": "3.0.0",
+  "tenantId": "${TENANT_ID}"
 }

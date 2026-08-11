@@ -1,0 +1,67 @@
+{# cmake/compiler_config.cmake.jinja2 - Compiler and build configuration #}
+
+# Build type configuration
+if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "{{ config.project.default_build_type }}" CACHE STRING "Build type" FORCE)
+endif()
+
+# C++ standard
+set(CMAKE_CXX_STANDARD {{ config.project.cxx_standard }})
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Warning flags - enforce no macros culture
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    add_compile_options(
+        -Wmacro-redefined
+        -Wreserved-id-macro
+    )
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    add_compile_options(
+        -Wbuiltin-macro-redefined
+    )
+endif()
+if(MSVC)
+    add_compile_options(/we4005)  # macro redefinition
+endif()
+
+# Conan toolchain
+if(EXISTS "${CMAKE_BINARY_DIR}/conan_toolchain.cmake")
+    include("${CMAKE_BINARY_DIR}/conan_toolchain.cmake")
+endif()
+
+# Ninja generator fixes
+if(CMAKE_GENERATOR MATCHES "Ninja" OR CMAKE_GENERATOR MATCHES "Ninja Multi-Config")
+    if(DEFINED CMAKE_GENERATOR_PLATFORM)
+        set(CMAKE_GENERATOR_PLATFORM "" CACHE STRING "" FORCE)
+    endif()
+    if(DEFINED CMAKE_GENERATOR_TOOLSET)
+        set(CMAKE_GENERATOR_TOOLSET "" CACHE STRING "" FORCE)
+    endif()
+endif()
+
+# Windows Chocolatey paths
+list(APPEND CMAKE_PROGRAM_PATH "C:/ProgramData/chocolatey/bin")
+
+# Clang-tidy support
+if(ENABLE_CLANG_TIDY)
+    find_program(CLANG_TIDY_EXE NAMES clang-tidy clang-tidy.exe HINTS "C:/Program Files/LLVM/bin" "C:/ProgramData/chocolatey/bin")
+    if(CLANG_TIDY_EXE)
+        if(WIN32)
+            set(CLANG_TIDY_WRAPPER "${CMAKE_CURRENT_BINARY_DIR}/clang_tidy_wrapper.bat")
+            file(WRITE ${CLANG_TIDY_WRAPPER}
+                "@echo off\nsetlocal\nset \"CLANG_TIDY_EXE=${CLANG_TIDY_EXE}\"\necho [clang-tidy] starting %*\n\"%CLANG_TIDY_EXE%\" %*\nset RET=%ERRORLEVEL%\necho [clang-tidy] finished (exit %RET%)\nexit /b %RET%\n"
+            )
+        else()
+            set(CLANG_TIDY_WRAPPER "${CMAKE_CURRENT_BINARY_DIR}/clang_tidy_wrapper.sh")
+            file(WRITE ${CLANG_TIDY_WRAPPER}
+                "#!/bin/sh\necho \"[clang-tidy] starting $@\"\n\"${CLANG_TIDY_EXE}\" \"$@\"\nret=$?\necho \"[clang-tidy] finished (exit $ret)\"\nexit $ret\n"
+            )
+            execute_process(COMMAND ${CMAKE_COMMAND} -E chmod +x ${CLANG_TIDY_WRAPPER})
+        endif()
+        set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES ${CLANG_TIDY_WRAPPER})
+        set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_WRAPPER}")
+    else()
+        message(WARNING "clang-tidy requested but not found")
+    endif()
+endif()

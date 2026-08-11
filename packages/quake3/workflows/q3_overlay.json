@@ -1,0 +1,48 @@
+{
+  "name": "Q3 Overlay",
+  "description": "SDL software overlay: FPS counter, HUD, crosshair, hitmarker, menu, map-select. Composable like a React component.",
+  "steps": [
+    {
+      "id": "overlay_fps",
+      "plugin": "overlay.fps"
+    },
+    {
+      "id": "overlay_begin",
+      "plugin": "overlay.sw.begin",
+      "parameters": {
+        "vert_shader_path_msl":   "packages/quake3/shaders/msl/overlay.vert.metal",
+        "frag_shader_path_msl":   "packages/quake3/shaders/msl/overlay.frag.metal",
+        "vert_shader_path_spirv": "packages/quake3/shaders/spirv/overlay.vert.spv",
+        "frag_shader_path_spirv": "packages/quake3/shaders/spirv/overlay.frag.spv"
+      }
+    },
+    {
+      "id": "q3_hud_head",
+      "plugin": "q3.hud_head_render"
+    },
+    {
+      "id": "q3_hud",
+      "plugin": "q3.hud"
+    },
+    {
+      "id": "q3_crosshair",
+      "plugin": "q3.crosshair"
+    },
+    {
+      "id": "q3_hitmarker",
+      "plugin": "q3.hitmarker"
+    },
+    {
+      "id": "q3_menu_frame",
+      "plugin": "q3.menu.frame"
+    },
+    {
+      "id": "q3_mapselect",
+      "plugin": "q3.mapselect"
+    },
+    {
+      "id": "overlay_end",
+      "plugin": "overlay.sw.end"
+    }
+  ]
+}

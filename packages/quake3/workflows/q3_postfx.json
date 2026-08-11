@@ -1,0 +1,27 @@
+{
+  "name": "Q3 Post FX",
+  "description": "TAA, SSAO, bloom extract+blur, composite.",
+  "steps": [
+    {
+      "id": "postfx_taa",
+      "plugin": "postfx.taa",
+      "parameters": { "blend_factor": 0.05 }
+    },
+    {
+      "id": "postfx_ssao",
+      "plugin": "postfx.ssao"
+    },
+    {
+      "id": "bloom_extract",
+      "plugin": "postfx.bloom_extract"
+    },
+    {
+      "id": "bloom_blur",
+      "plugin": "postfx.bloom_blur"
+    },
+    {
+      "id": "postfx_composite",
+      "plugin": "postfx.composite"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "config_types.hpp"
+#include "services/interfaces/config_types.hpp"
 #include <filesystem>
 #include <optional>
 
@@ -15,6 +15,8 @@ struct CommandLineOptions {
     bool saveDefaultJson = false;
     bool dumpRuntimeJson = false;
     bool traceEnabled = false;
+    std::string bootstrapPackage;  // Bootstrap package name (e.g., "bootstrap_mac")
+    std::string gamePackage;       // Game package name (e.g., "seed")
 };
 
 /**

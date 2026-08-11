@@ -1,0 +1,69 @@
+{
+  "name": "Asset Loader",
+  "version": "1.0.0",
+  "id": "asset_loader",
+  "type": "utility",
+  "category": "tools",
+  "description": "Universal asset loading with cross-engine unit conversion (100% JSON-driven)",
+
+  "defaultWorkflow": "workflows/universal_map_loader.json",
+
+  "workflows": [
+    "workflows/universal_map_loader.json"
+  ],
+
+  "unitSystems": {
+    "reference": {
+      "engine": "UE5",
+      "unitsPerMeter": 100,
+      "unitsCm": 1
+    },
+    "quake3": {
+      "engine": "Quake 3",
+      "unitsPerMeter": 32,
+      "conversionToUE5": 3.125,
+      "conversionFromUE5": 0.32
+    },
+    "quake2": {
+      "engine": "Quake 2",
+      "unitsPerMeter": 32,
+      "conversionToUE5": 3.125,
+      "conversionFromUE5": 0.32
+    },
+    "doom3": {
+      "engine": "Doom 3",
+      "unitsPerMeter": 39.3701,
+      "conversionToUE5": 2.54,
+      "conversionFromUE5": 0.39
+    },
+    "halflife2": {
+      "engine": "Half-Life 2 / Source",
+      "unitsPerMeter": 39.3701,
+      "conversionToUE5": 2.54,
+      "conversionFromUE5": 0.39
+    },
+    "unity": {
+      "engine": "Unity",
+      "unitsPerMeter": 1.0,
+      "conversionToUE5": 100,
+      "conversionFromUE5": 0.01
+    },
+    "godot": {
+      "engine": "Godot",
+      "unitsPerMeter": 1.0,
+      "conversionToUE5": 100,
+      "conversionFromUE5": 0.01
+    },
+    "ue3": {
+      "engine": "Unreal Engine 3",
+      "unitsPerMeter": 50,
+      "conversionToUE5": 2.0,
+      "conversionFromUE5": 0.5
+    }
+  },
+
+  "notes": "100% JSON-driven unit mapping. Each engine has conversionToUE5 factor. Use in workflow variables. No separate config files needed.",
+
+  "bundled": true,
+  "dependencies": []
+}

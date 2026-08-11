@@ -40,19 +40,6 @@ struct ShaderPaths {
 };
 
 /**
- * @brief View clear configuration for a render pass.
- */
-struct ViewClearConfig {
-    bool enabled = false;
-    bool clearColor = false;
-    bool clearDepth = false;
-    bool clearStencil = false;
-    std::array<float, 4> color{0.0f, 0.0f, 0.0f, 1.0f};
-    float depth = 1.0f;
-    uint8_t stencil = 0;
-};
-
-/**
  * @brief View state used for per-frame uniforms.
  */
 struct ViewState {

@@ -86,6 +86,42 @@ public:
      * Call regularly from the main loop to feed audio data.
      */
     virtual void Update() = 0;
+
+    /**
+     * @brief Pause background music playback.
+     *
+     * The audio position is preserved and can be resumed later.
+     */
+    virtual void PauseBackground() = 0;
+
+    /**
+     * @brief Resume background music playback from where it was paused.
+     *
+     * Does nothing if background is not currently paused.
+     */
+    virtual void ResumeBackground() = 0;
+
+    /**
+     * @brief Set looping mode for background music.
+     *
+     * @param loop Whether to loop the background track
+     */
+    virtual void SetBackgroundLooping(bool loop) = 0;
+
+    /**
+     * @brief Seek to a position in the background music.
+     *
+     * @param positionMs Seek position in milliseconds
+     * @throws std::runtime_error if seeking fails
+     */
+    virtual void SeekBackground(uint32_t positionMs) = 0;
+
+    /**
+     * @brief Get the current playback position of background music.
+     *
+     * @return Current position in milliseconds
+     */
+    virtual uint32_t GetBackgroundPosition() const = 0;
 };
 
 }  // namespace sdl3cpp::services

@@ -1,0 +1,39 @@
+{
+  "name": "Q3 Screenshot Check",
+  "description": "After frame 240: write screenshot path, stop the frame loop, and signal quit so the outer loop exits to desktop.",
+  "steps": [
+    {
+      "id": "set_threshold",
+      "plugin": "value.literal",
+      "parameters": { "value": 240.0 },
+      "outputs": { "value": "screenshot_threshold" }
+    },
+    {
+      "id": "check_frame_240",
+      "plugin": "compare.gte",
+      "inputs":  { "left": "loop.iteration", "right": "screenshot_threshold" },
+      "outputs": { "value": "screenshot_due" }
+    },
+    {
+      "id": "set_screenshot_path",
+      "plugin": "value.set_if",
+      "inputs":  { "condition": "screenshot_due" },
+      "parameters": { "value": "/tmp/q3_screenshot.bmp" },
+      "outputs": { "value": "screenshot_output_path" }
+    },
+    {
+      "id": "stop_after_screenshot",
+      "plugin": "value.set_if",
+      "inputs":  { "condition": "screenshot_due" },
+      "parameters": { "value": false },
+      "outputs": { "value": "game_running" }
+    },
+    {
+      "id": "quit_after_screenshot",
+      "plugin": "value.set_if",
+      "inputs":  { "condition": "screenshot_due" },
+      "parameters": { "value": true },
+      "outputs": { "value": "q3.quit_requested" }
+    }
+  ]
+}

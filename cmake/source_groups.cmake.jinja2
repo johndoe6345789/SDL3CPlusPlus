@@ -1,0 +1,36 @@
+{# cmake/source_groups.cmake.jinja2 - Source file groupings and variables #}
+
+# ============================================================================
+# SOURCE FILE GROUPINGS
+# ============================================================================
+# Auto-discover source files from key directories using file(GLOB)
+
+# JSON config service sources
+file(GLOB JSON_CONFIG_SOURCES src/config/json_config*.cpp)
+
+# Workflow service sources (all workflow steps in main workflow directory)
+file(GLOB WORKFLOW_SOURCES src/services/impl/workflow/*.cpp)
+{%- if config.get('source_exclusions') %}
+# Remove problematic files with missing dependencies or incomplete implementations
+list(REMOVE_ITEM WORKFLOW_SOURCES
+{%- for exclusion in config.source_exclusions %}
+    "${CMAKE_CURRENT_SOURCE_DIR}/{{ exclusion }}"
+{%- endfor %}
+)
+{%- endif %}
+
+# Frame-specific workflow steps
+file(GLOB FRAME_WORKFLOW_SOURCES src/services/impl/workflow/frame/*.cpp)
+{%- if config.get('source_exclusions') %}
+# Apply same exclusions to frame sources
+list(REMOVE_ITEM FRAME_WORKFLOW_SOURCES
+{%- for exclusion in config.source_exclusions %}
+{%- if exclusion.startswith('src/services/impl/workflow/frame/') %}
+    "${CMAKE_CURRENT_SOURCE_DIR}/{{ exclusion }}"
+{%- endif %}
+{%- endfor %}
+)
+{%- endif %}
+
+# Generic workflow steps (atomic, reusable steps)
+file(GLOB GENERIC_WORKFLOW_SOURCES src/services/impl/workflow/generic_steps/*.cpp)

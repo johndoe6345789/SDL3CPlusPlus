@@ -5,7 +5,6 @@
 *.slo
 *.lo
 *.o
-*.obj
 
 # Precompiled Headers
 *.gch
@@ -61,3 +60,4 @@ sdl3_app.*.log
 /.idea/modules.xml
 /.idea/SDL3CPlusPlus.iml
 /.idea/vcs.xml
+_build/

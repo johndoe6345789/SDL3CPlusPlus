@@ -6,7 +6,10 @@
       "name": "Begin Frame",
       "type": "frame.begin",
       "typeVersion": 1,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "parameters": {
         "inputs": {
           "delta": "frame.delta",
@@ -19,7 +22,10 @@
       "name": "Catalog Scan",
       "type": "soundboard.catalog.scan",
       "typeVersion": 1,
-      "position": [260, -120],
+      "position": [
+        260,
+        -120
+      ],
       "parameters": {
         "outputs": {
           "catalog": "soundboard.catalog"
@@ -31,7 +37,10 @@
       "name": "GUI Render",
       "type": "soundboard.gui",
       "typeVersion": 1,
-      "position": [520, -120],
+      "position": [
+        520,
+        -120
+      ],
       "parameters": {
         "inputs": {
           "catalog": "soundboard.catalog"
@@ -47,7 +56,10 @@
       "name": "Audio Dispatch",
       "type": "soundboard.audio",
       "typeVersion": 1,
-      "position": [780, -120],
+      "position": [
+        780,
+        -120
+      ],
       "parameters": {
         "inputs": {
           "selection": "soundboard.selection"
@@ -62,7 +74,10 @@
       "name": "Render Frame",
       "type": "frame.render",
       "typeVersion": 1,
-      "position": [520, 120],
+      "position": [
+        520,
+        120
+      ],
       "parameters": {
         "inputs": {
           "elapsed": "frame.elapsed",
@@ -75,7 +90,10 @@
       "name": "Validation Capture",
       "type": "validation.tour.checkpoint",
       "typeVersion": 1,
-      "position": [780, 120],
+      "position": [
+        780,
+        120
+      ],
       "parameters": {
         "inputs": {
           "checkpoint": "packages.soundboard"
@@ -87,38 +105,65 @@
     "Begin Frame": {
       "main": {
         "0": [
-          { "node": "Catalog Scan", "type": "main", "index": 0 }
+          {
+            "node": "Catalog Scan",
+            "type": "main",
+            "index": 0
+          }
         ]
       }
     },
     "Catalog Scan": {
       "main": {
         "0": [
-          { "node": "GUI Render", "type": "main", "index": 0 }
+          {
+            "node": "GUI Render",
+            "type": "main",
+            "index": 0
+          }
         ]
       }
     },
     "GUI Render": {
       "main": {
         "0": [
-          { "node": "Audio Dispatch", "type": "main", "index": 0 },
-          { "node": "Render Frame", "type": "main", "index": 0 }
+          {
+            "node": "Audio Dispatch",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Render Frame",
+            "type": "main",
+            "index": 0
+          }
         ]
       }
     },
     "Audio Dispatch": {
       "main": {
         "0": [
-          { "node": "Validation Capture", "type": "main", "index": 0 }
+          {
+            "node": "Validation Capture",
+            "type": "main",
+            "index": 0
+          }
         ]
       }
     },
     "Render Frame": {
       "main": {
         "0": [
-          { "node": "Validation Capture", "type": "main", "index": 0 }
+          {
+            "node": "Validation Capture",
+            "type": "main",
+            "index": 0
+          }
         ]
       }
     }
-  }
+  },
+  "id": "workflow_soundboard_flow",
+  "version": "3.0.0",
+  "tenantId": "${TENANT_ID}"
 }

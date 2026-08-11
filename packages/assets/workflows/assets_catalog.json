@@ -6,7 +6,10 @@
       "name": "Asset Roots",
       "type": "list.literal",
       "typeVersion": 1,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "parameters": {
         "items": [
           "assets/audio",
@@ -24,7 +27,10 @@
       "name": "Assert Asset Roots",
       "type": "value.assert.type",
       "typeVersion": 1,
-      "position": [260, 0],
+      "position": [
+        260,
+        0
+      ],
       "parameters": {
         "inputs": {
           "value": "assets.roots"
@@ -37,9 +43,16 @@
     "Asset Roots": {
       "main": {
         "0": [
-          { "node": "Assert Asset Roots", "type": "main", "index": 0 }
+          {
+            "node": "Assert Asset Roots",
+            "type": "main",
+            "index": 0
+          }
         ]
       }
     }
-  }
+  },
+  "id": "workflow_assets_catalog",
+  "version": "3.0.0",
+  "tenantId": "${TENANT_ID}"
 }

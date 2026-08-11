@@ -1,6 +1,6 @@
-#include "workflow_config_load_step.hpp"
-#include "../config/json_config_document_loader.hpp"
-#include "workflow_step_io_resolver.hpp"
+#include "services/interfaces/workflow/workflow_config_load_step.hpp"
+#include "services/interfaces/config/json_config_document_loader.hpp"
+#include "services/interfaces/workflow/workflow_step_io_resolver.hpp"
 
 #include <rapidjson/document.h>
 
@@ -13,13 +13,23 @@
 namespace sdl3cpp::services::impl {
 
 WorkflowConfigLoadStep::WorkflowConfigLoadStep(std::shared_ptr<ILogger> logger)
-    : logger_(std::move(logger)) {}
+    : logger_(std::move(logger)) {
+    if (logger_) {
+        logger_->Trace("WorkflowConfigLoadStep", "Constructor", "Entry");
+    }
+}
 
 std::string WorkflowConfigLoadStep::GetPluginId() const {
+    if (logger_) {
+        logger_->Trace("WorkflowConfigLoadStep", "GetPluginId", "Entry");
+    }
     return "config.load";
 }
 
 void WorkflowConfigLoadStep::Execute(const WorkflowStepDefinition& step, WorkflowContext& context) {
+    if (logger_) {
+        logger_->Trace("WorkflowConfigLoadStep", "Execute", "Entry");
+    }
     WorkflowStepIoResolver resolver;
     const std::string pathKey = resolver.GetRequiredInputKey(step, "path");
     std::filesystem::path pathValue;

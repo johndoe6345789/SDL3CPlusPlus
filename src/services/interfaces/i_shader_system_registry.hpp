@@ -1,7 +1,7 @@
 #pragma once
 
-#include "graphics_types.hpp"
-#include "shader_system_types.hpp"
+#include "services/interfaces/graphics_types.hpp"
+#include "services/interfaces/shader_system_types.hpp"
 
 #include <string>
 #include <unordered_map>

@@ -1,0 +1,102 @@
+{
+  "id": "quake3_rendering_config",
+  "name": "Quake 3 Rendering Configuration",
+  "description": "Quake 3 engine defaults and how they map to UE5",
+
+  "camera": {
+    "fov_degrees": 90,
+    "notes": "Quake 3 hardcoded 90° FOV. This is the default. Do NOT change without understanding visual consequences.",
+    "why_90": "Q3 was designed with 90° as the standard. Changing this breaks visual asset alignment (texture scale, level proportions, sight lines)",
+    "ue5_equivalent": "90 degrees in UE5 = 90 degrees in Q3 (direct match)"
+  },
+
+  "viewport": {
+    "aspect_ratio": "4:3",
+    "notes": "Q3 was designed for 4:3 displays (CRT monitors). Modern widescreen (16:9, 16:10) will distort the image unless corrected."
+  },
+
+  "rendering": {
+    "unit_scale": {
+      "q3_units_per_meter": 32,
+      "ue5_units_per_meter": 100,
+      "conversion_factor": 3.125,
+      "explanation": "Q3 geometry is 3.125× smaller than UE5. Multiply all coordinates by 3.125."
+    },
+
+    "texture_scale": {
+      "note": "After unit conversion, textures should display at correct physical size",
+      "warning": "If textures look too small after unit conversion, verify the conversion factor is correct"
+    },
+
+    "lighting": {
+      "q3_system": "Radiosity-based (pre-calculated lightmaps)",
+      "q3_lightmaps": "128x128 or 256x256 per surface",
+      "ue5_approach": "Real-time lighting or baked GI (different system)"
+    },
+
+    "polygon_count": {
+      "q3_typical_level": "8,000-20,000 triangles for outdoor map",
+      "q3_typical_arena": "3,000-8,000 triangles for arena",
+      "notes": "Q3 was optimized for Pentium 3 era hardware (~1 GHz CPU, 256-512 MB RAM)"
+    }
+  },
+
+  "physics": {
+    "player_height": 56,
+    "player_height_ue5": 175,
+    "calculation": "56 * 3.125 = 175 UE5 units (1.75m)",
+
+    "player_dimensions": {
+      "width": 32,
+      "height": 56,
+      "depth": 32,
+      "notes": "Collision box, not visual model"
+    },
+
+    "movement": {
+      "walk_speed": 320,
+      "walk_speed_ue5_units_per_sec": 1000,
+      "walk_speed_kmh": "3.6 km/h (human walking pace) ✓",
+      "sprint_speed": 600,
+      "air_acceleration": 1.0,
+      "friction": 0.7
+    },
+
+    "gravity": {
+      "value": 800,
+      "ue5_comparison": "980 (9.8 m/s²) - Q3 is slightly lower",
+      "notes": "Q3's 800 units/sec² ≈ 8.0 m/s² (slightly reduced gravity for gameplay)"
+    },
+
+    "jump_height": {
+      "q3_units": 64,
+      "ue5_units": 200,
+      "approximate_height": "2.0 meters"
+    }
+  },
+
+  "weapon_scaling": {
+    "note": "Q3 models are very small. After 3.125× unit scaling, they should be appropriately sized.",
+    "example": {
+      "plasma_gun": "Original ~2 units tall, after scaling: ~6.25 UE5 units (6.25cm) - this is TINY",
+      "recommendation": "Consider upscaling weapon models separately (2-4×) for visibility"
+    }
+  },
+
+  "animation": {
+    "framerate": 10,
+    "notes": "Q3 animation frames run at 10 FPS internally. This should be scaled to 60 FPS for modern playback.",
+    "conversion": "Q3 animations should be played at 6× speed (60/10) or re-timed to 60 FPS"
+  },
+
+  "asset_import_checklist": [
+    "☐ Apply 3.125× scale to all geometry (unit conversion)",
+    "☐ Set camera FOV to 90° (Q3 standard)",
+    "☐ Verify lightmaps transfer correctly (if converting lighting)",
+    "☐ Check texture scale (should be correct after unit scaling)",
+    "☐ Scale animations to 60 FPS (from Q3's 10 FPS internal)",
+    "☐ Test player movement speed (should feel natural)",
+    "☐ Verify weapon sizing (may need additional upscale)",
+    "☐ Check collision detection (physics bodies should match geometry)"
+  ]
+}

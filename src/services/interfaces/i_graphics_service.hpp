@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../../core/vertex.hpp"
-#include "graphics_types.hpp"
-#include "i_graphics_backend.hpp"
+#include "core/vertex.hpp"
+#include "services/interfaces/graphics_types.hpp"
+#include "services/interfaces/i_graphics_backend.hpp"
 #include <array>
 #include <cstdint>
 #include <filesystem>
@@ -93,14 +93,6 @@ public:
      */
     virtual void RenderScene(const std::vector<RenderCommand>& commands,
                             const ViewState& viewState) = 0;
-
-    /**
-     * @brief Configure a view for a render pass.
-     *
-     * @param viewId View id to configure
-     * @param clearConfig Clear configuration
-     */
-    virtual void ConfigureView(uint16_t viewId, const ViewClearConfig& clearConfig) = 0;
 
     /**
      * @brief End the frame and present the rendered image.

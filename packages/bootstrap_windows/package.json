@@ -1,0 +1,16 @@
+{
+  "name": "bootstrap_windows",
+  "version": "0.1.0",
+  "description": "Windows bootloader. Initializes SDL3 GPU with D3D12 backend.",
+  "type": "bootloader",
+  "category": "platform",
+  "config": {
+    "renderer": "d3d12"
+  },
+  "defaultWorkflow": "workflows/boot.json",
+  "workflows": [
+    "workflows/boot.json"
+  ],
+  "bundled": true,
+  "dependencies": []
+}

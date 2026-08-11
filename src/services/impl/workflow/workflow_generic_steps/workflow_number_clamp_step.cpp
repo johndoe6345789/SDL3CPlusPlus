@@ -1,6 +1,6 @@
-#include "workflow_number_clamp_step.hpp"
+#include "services/interfaces/workflow/workflow_generic_steps/workflow_number_clamp_step.hpp"
 
-#include "../workflow_step_io_resolver.hpp"
+#include "services/interfaces/workflow/workflow_step_io_resolver.hpp"
 
 #include <algorithm>
 #include <stdexcept>

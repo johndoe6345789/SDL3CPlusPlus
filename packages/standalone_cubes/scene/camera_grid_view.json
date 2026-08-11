@@ -1,0 +1,19 @@
+{
+  "id": "camera_grid_view",
+  "description": "Camera positioned to view entire 11x11 cube grid",
+  "camera": {
+    "position": [0.0, 0.0, -40.0],
+    "look_at": [0.0, 0.0, 0.0],
+    "up": [0.0, 1.0, 0.0],
+    "fov_degrees": 60.0,
+    "near": 0.1,
+    "far": 100.0
+  },
+  "physics": {
+    "gravity": [0.0, -9.81, 0.0],
+    "collision": "scene.bounds"
+  },
+  "validation": {
+    "checks": ["non_black_ratio", "luma_range", "mean_color"]
+  }
+}

@@ -82,8 +82,8 @@ struct AtmosphericsConfig {
     float pbrMetallic = 0.1f;
 };
 
-struct BgfxConfig {
-    std::string renderer = "vulkan";
+struct GpuConfig {
+    std::string renderer = "auto";  // Auto-select: Metal on macOS, Vulkan on Linux, D3D on Windows
 };
 
 struct MaterialXConfig {
@@ -217,11 +217,11 @@ struct RuntimeConfig {
     uint32_t width = 1024;
     uint32_t height = 768;
     std::filesystem::path projectRoot;
-    std::string windowTitle = "SDL3 Bgfx Demo";
+    std::string windowTitle = "SDL3 GPU Demo";
     MouseGrabConfig mouseGrab{};
     InputBindings inputBindings{};
     AtmosphericsConfig atmospherics{};
-    BgfxConfig bgfx{};
+    GpuConfig gpu{};
     MaterialXConfig materialX{};
     std::vector<MaterialXMaterialConfig> materialXMaterials{};
     RenderBudgetConfig budgets{};

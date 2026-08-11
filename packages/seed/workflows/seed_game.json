@@ -1,0 +1,1516 @@
+{
+  "name": "Seed FPS Demo",
+  "active": true,
+  "settings": {
+    "executionTimeout": 0
+  },
+  "tags": [
+    { "name": "game" },
+    { "name": "seed" },
+    { "name": "fps" },
+    { "name": "physics" },
+    { "name": "textured" }
+  ],
+  "meta": {
+    "engine": "sdl3_gpu",
+    "description": "FPS demo: textured room with spinning cube, WASD movement, mouse look, jump. Compute tessellation for brick walls."
+  },
+  "variables": {
+    "window_width": {
+      "name": "window_width",
+      "type": "number",
+      "defaultValue": 1024
+    },
+    "window_height": {
+      "name": "window_height",
+      "type": "number",
+      "defaultValue": 768
+    },
+    "window_title": {
+      "name": "window_title",
+      "type": "string",
+      "defaultValue": "Seed FPS Demo"
+    },
+    "renderer_type": {
+      "name": "renderer_type",
+      "type": "string",
+      "defaultValue": "auto"
+    },
+    "shader_vertex_path": {
+      "name": "shader_vertex_path",
+      "type": "string",
+      "defaultValue": "packages/seed/shaders/msl/constant_color.vert.metal"
+    },
+    "shader_fragment_path": {
+      "name": "shader_fragment_path",
+      "type": "string",
+      "defaultValue": "packages/seed/shaders/msl/constant_color.frag.metal"
+    },
+    "shader_textured_vert_path": {
+      "name": "shader_textured_vert_path",
+      "type": "string",
+      "defaultValue": "packages/seed/shaders/msl/textured.vert.metal"
+    },
+    "shader_textured_frag_path": {
+      "name": "shader_textured_frag_path",
+      "type": "string",
+      "defaultValue": "packages/seed/shaders/msl/textured.frag.metal"
+    },
+    "tex_floor_path": {
+      "name": "tex_floor_path",
+      "type": "string",
+      "defaultValue": "packages/seed/assets/textures/floor/WoodFloor007_1K-JPG_Color.jpg"
+    },
+    "tex_walls_path": {
+      "name": "tex_walls_path",
+      "type": "string",
+      "defaultValue": "packages/seed/assets/textures/walls/Bricks058_1K-JPG_Color.jpg"
+    },
+    "tex_walls_disp_path": {
+      "name": "tex_walls_disp_path",
+      "type": "string",
+      "defaultValue": "packages/seed/assets/textures/walls/Bricks058_1K-JPG_Displacement.jpg"
+    },
+    "tex_ceiling_path": {
+      "name": "tex_ceiling_path",
+      "type": "string",
+      "defaultValue": "packages/seed/assets/textures/ceiling/Plaster001_1K-JPG_Color.jpg"
+    },
+    "compute_shader_path": {
+      "name": "compute_shader_path",
+      "type": "string",
+      "defaultValue": "packages/seed/shaders/msl/tessellate.comp.metal"
+    },
+    "shadow_vert_path": {
+      "name": "shadow_vert_path",
+      "type": "string",
+      "defaultValue": "packages/seed/shaders/msl/shadow_depth.vert.metal"
+    },
+    "shadow_frag_path": {
+      "name": "shadow_frag_path",
+      "type": "string",
+      "defaultValue": "packages/seed/shaders/msl/shadow_depth.frag.metal"
+    },
+    "postfx_vert_path": {
+      "name": "postfx_vert_path",
+      "type": "string",
+      "defaultValue": "packages/seed/shaders/msl/postfx_fullscreen.vert.metal"
+    },
+    "postfx_composite_frag_path": {
+      "name": "postfx_composite_frag_path",
+      "type": "string",
+      "defaultValue": "packages/seed/shaders/msl/postfx_composite.frag.metal"
+    },
+    "postfx_ssao_frag_path": {
+      "name": "postfx_ssao_frag_path",
+      "type": "string",
+      "defaultValue": "packages/seed/shaders/msl/postfx_ssao.frag.metal"
+    },
+    "postfx_bloom_extract_frag_path": {
+      "name": "postfx_bloom_extract_frag_path",
+      "type": "string",
+      "defaultValue": "packages/seed/shaders/msl/postfx_bloom_extract.frag.metal"
+    },
+    "postfx_bloom_blur_frag_path": {
+      "name": "postfx_bloom_blur_frag_path",
+      "type": "string",
+      "defaultValue": "packages/seed/shaders/msl/postfx_bloom_blur.frag.metal"
+    },
+    "postfx_taa_frag_path": {
+      "name": "postfx_taa_frag_path",
+      "type": "string",
+      "defaultValue": "packages/seed/shaders/msl/postfx_taa.frag.metal"
+    }
+  },
+  "nodes": [
+    {
+      "id": "sdl_init",
+      "name": "SDL Init",
+      "type": "sdl.init",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "id": "sdl_window",
+      "name": "Create Window",
+      "type": "sdl.window.create",
+      "typeVersion": 1,
+      "position": [200, 0],
+      "parameters": {
+        "width": 1024,
+        "height": 768,
+        "title": "Seed FPS Demo"
+      }
+    },
+    {
+      "id": "gpu_viewport",
+      "name": "Set Viewport",
+      "type": "graphics.gpu.init_viewport",
+      "typeVersion": 1,
+      "position": [400, 0],
+      "inputs": {
+        "width": "window_width",
+        "height": "window_height"
+      },
+      "outputs": {
+        "viewport_config": "viewport_config"
+      }
+    },
+    {
+      "id": "gpu_renderer",
+      "name": "Select Renderer",
+      "type": "graphics.gpu.init_renderer",
+      "typeVersion": 1,
+      "position": [600, 0],
+      "inputs": {
+        "renderer_type": "renderer_type"
+      },
+      "outputs": {
+        "selected_renderer": "selected_renderer"
+      }
+    },
+    {
+      "id": "gpu_init",
+      "name": "Initialize GPU",
+      "type": "graphics.gpu.init",
+      "typeVersion": 1,
+      "position": [800, 0],
+      "inputs": {
+        "viewport_config": "viewport_config",
+        "selected_renderer": "selected_renderer"
+      },
+      "outputs": {
+        "gpu_handle": "gpu_handle"
+      }
+    },
+    {
+      "id": "create_geometry",
+      "name": "Create Cube Geometry",
+      "type": "geometry.create_cube",
+      "typeVersion": 1,
+      "position": [1000, 0]
+    },
+    {
+      "id": "compile_vert_shader",
+      "name": "Compile Vertex Shader",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [1200, 0],
+      "parameters": {
+        "stage": "vertex",
+        "output_key": "vertex_shader",
+        "num_uniform_buffers": 1,
+        "num_samplers": 0
+      },
+      "inputs": {
+        "shader_path": "shader_vertex_path"
+      }
+    },
+    {
+      "id": "compile_frag_shader",
+      "name": "Compile Fragment Shader",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [1300, 0],
+      "parameters": {
+        "stage": "fragment",
+        "output_key": "fragment_shader",
+        "num_uniform_buffers": 0,
+        "num_samplers": 0
+      },
+      "inputs": {
+        "shader_path": "shader_fragment_path"
+      }
+    },
+    {
+      "id": "create_pipeline",
+      "name": "Create Pipeline",
+      "type": "graphics.gpu.pipeline.create",
+      "typeVersion": 1,
+      "position": [1400, 0],
+      "parameters": {
+        "vertex_shader_key": "vertex_shader",
+        "fragment_shader_key": "fragment_shader",
+        "vertex_format": "position_color",
+        "pipeline_key": "gpu_pipeline",
+        "color_format": "rgba16_float"
+      }
+    },
+    {
+      "id": "compile_tex_vert",
+      "name": "Compile Textured Vertex Shader",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [1500, 0],
+      "parameters": {
+        "stage": "vertex",
+        "output_key": "textured_vertex_shader",
+        "num_uniform_buffers": 1,
+        "num_samplers": 0
+      },
+      "inputs": {
+        "shader_path": "shader_textured_vert_path"
+      }
+    },
+    {
+      "id": "compile_tex_frag",
+      "name": "Compile Textured Fragment Shader",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [1600, 0],
+      "parameters": {
+        "stage": "fragment",
+        "output_key": "textured_fragment_shader",
+        "num_uniform_buffers": 1,
+        "num_samplers": 2
+      },
+      "inputs": {
+        "shader_path": "shader_textured_frag_path"
+      }
+    },
+    {
+      "id": "create_tex_pipeline",
+      "name": "Create Textured Pipeline",
+      "type": "graphics.gpu.pipeline.create",
+      "typeVersion": 1,
+      "position": [1700, 0],
+      "parameters": {
+        "vertex_shader_key": "textured_vertex_shader",
+        "fragment_shader_key": "textured_fragment_shader",
+        "vertex_format": "position_uv",
+        "pipeline_key": "gpu_pipeline_textured",
+        "cull_mode": "none",
+        "color_format": "rgba16_float"
+      }
+    },
+    {
+      "id": "tex_floor",
+      "name": "Load Floor Texture",
+      "type": "texture.load",
+      "typeVersion": 1,
+      "position": [0, 100],
+      "inputs": {
+        "image_path": "tex_floor_path"
+      },
+      "outputs": {
+        "texture": "floor_texture"
+      }
+    },
+    {
+      "id": "tex_walls",
+      "name": "Load Walls Texture",
+      "type": "texture.load",
+      "typeVersion": 1,
+      "position": [200, 100],
+      "inputs": {
+        "image_path": "tex_walls_path"
+      },
+      "outputs": {
+        "texture": "walls_texture"
+      }
+    },
+    {
+      "id": "tex_walls_disp",
+      "name": "Load Walls Displacement",
+      "type": "texture.load",
+      "typeVersion": 1,
+      "position": [400, 100],
+      "inputs": {
+        "image_path": "tex_walls_disp_path"
+      },
+      "outputs": {
+        "texture": "walls_disp_texture"
+      }
+    },
+    {
+      "id": "tex_ceiling",
+      "name": "Load Ceiling Texture",
+      "type": "texture.load",
+      "typeVersion": 1,
+      "position": [600, 100],
+      "inputs": {
+        "image_path": "tex_ceiling_path"
+      },
+      "outputs": {
+        "texture": "ceiling_texture"
+      }
+    },
+    {
+      "id": "load_map",
+      "name": "Load Map (glTF)",
+      "type": "map.load",
+      "typeVersion": 1,
+      "position": [750, 100],
+      "parameters": {
+        "file_path": "packages/seed/map.glb",
+        "scale": 1.0,
+        "create_physics": 1
+      }
+    },
+    {
+      "id": "plane_floor",
+      "name": "Create Floor Plane",
+      "type": "geometry.create_plane",
+      "typeVersion": 1,
+      "position": [800, 100],
+      "parameters": {
+        "width": 20,
+        "depth": 20,
+        "uv_scale_x": 4,
+        "uv_scale_y": 4,
+        "name": "floor_plane"
+      }
+    },
+    {
+      "id": "plane_ceiling",
+      "name": "Create Ceiling Plane",
+      "type": "geometry.create_plane",
+      "typeVersion": 1,
+      "position": [1000, 100],
+      "parameters": {
+        "width": 20,
+        "depth": 20,
+        "uv_scale_x": 4,
+        "uv_scale_y": 4,
+        "name": "ceiling_plane"
+      }
+    },
+    {
+      "id": "tess_wall",
+      "name": "Create Wall Plane",
+      "type": "geometry.create_plane",
+      "typeVersion": 1,
+      "position": [1200, 100],
+      "parameters": {
+        "width": 20,
+        "depth": 5,
+        "uv_scale_x": 4,
+        "uv_scale_y": 1,
+        "name": "wall_plane"
+      }
+    },
+    {
+      "id": "plane_platform",
+      "name": "Create Platform Plane",
+      "type": "geometry.create_plane",
+      "typeVersion": 1,
+      "position": [1400, 100],
+      "parameters": {
+        "width": 5,
+        "depth": 4,
+        "uv_scale_x": 1,
+        "uv_scale_y": 0.8,
+        "name": "platform_plane"
+      }
+    },
+    {
+      "id": "plane_alcove",
+      "name": "Create Alcove Wall Plane",
+      "type": "geometry.create_plane",
+      "typeVersion": 1,
+      "position": [1600, 100],
+      "parameters": {
+        "width": 3,
+        "depth": 3.5,
+        "uv_scale_x": 0.6,
+        "uv_scale_y": 0.7,
+        "name": "alcove_plane"
+      }
+    },
+    {
+      "id": "plane_alcove_back",
+      "name": "Create Alcove Back Plane",
+      "type": "geometry.create_plane",
+      "typeVersion": 1,
+      "position": [1800, 100],
+      "parameters": {
+        "width": 2,
+        "depth": 3.5,
+        "uv_scale_x": 0.4,
+        "uv_scale_y": 0.7,
+        "name": "alcove_back_plane"
+      }
+    },
+    {
+      "id": "plane_unit",
+      "name": "Create Unit Plane",
+      "type": "geometry.create_plane",
+      "typeVersion": 1,
+      "position": [2000, 100],
+      "parameters": {
+        "width": 1,
+        "depth": 1,
+        "uv_scale_x": 1,
+        "uv_scale_y": 1,
+        "name": "unit"
+      }
+    },
+    {
+      "id": "setup_camera",
+      "name": "Camera Setup",
+      "type": "camera.setup",
+      "typeVersion": 1,
+      "position": [2000, 100],
+      "outputs": {
+        "camera_state": "camera.state"
+      }
+    },
+    {
+      "id": "physics_world",
+      "name": "Create Physics World",
+      "type": "physics.world.create",
+      "typeVersion": 1,
+      "position": [0, 200],
+      "parameters": {
+        "gravity_x": 0,
+        "gravity_y": -9.81,
+        "gravity_z": 0
+      }
+    },
+    {
+      "id": "floor",
+      "name": "Add Floor",
+      "type": "physics.body.add",
+      "typeVersion": 1,
+      "position": [200, 200],
+      "parameters": {
+        "name": "floor",
+        "shape": "box",
+        "mass": 0,
+        "pos_x": 0,
+        "pos_y": -0.5,
+        "pos_z": 0,
+        "size_x": 20,
+        "size_y": 1,
+        "size_z": 20,
+        "visible": 0
+      }
+    },
+    {
+      "id": "wall_north",
+      "name": "Add North Wall",
+      "type": "physics.body.add",
+      "typeVersion": 1,
+      "position": [400, 200],
+      "parameters": {
+        "name": "wall_north",
+        "shape": "box",
+        "mass": 0,
+        "pos_x": 0,
+        "pos_y": 2.5,
+        "pos_z": -10,
+        "size_x": 20,
+        "size_y": 5,
+        "size_z": 0.5,
+        "visible": 0
+      }
+    },
+    {
+      "id": "wall_south",
+      "name": "Add South Wall",
+      "type": "physics.body.add",
+      "typeVersion": 1,
+      "position": [500, 200],
+      "parameters": {
+        "name": "wall_south",
+        "shape": "box",
+        "mass": 0,
+        "pos_x": 0,
+        "pos_y": 2.5,
+        "pos_z": 10,
+        "size_x": 20,
+        "size_y": 5,
+        "size_z": 0.5,
+        "visible": 0
+      }
+    },
+    {
+      "id": "wall_east",
+      "name": "Add East Wall",
+      "type": "physics.body.add",
+      "typeVersion": 1,
+      "position": [600, 200],
+      "parameters": {
+        "name": "wall_east",
+        "shape": "box",
+        "mass": 0,
+        "pos_x": 10,
+        "pos_y": 2.5,
+        "pos_z": 0,
+        "size_x": 0.5,
+        "size_y": 5,
+        "size_z": 20,
+        "visible": 0
+      }
+    },
+    {
+      "id": "wall_west",
+      "name": "Add West Wall",
+      "type": "physics.body.add",
+      "typeVersion": 1,
+      "position": [700, 200],
+      "parameters": {
+        "name": "wall_west",
+        "shape": "box",
+        "mass": 0,
+        "pos_x": -10,
+        "pos_y": 2.5,
+        "pos_z": 0,
+        "size_x": 0.5,
+        "size_y": 5,
+        "size_z": 20,
+        "visible": 0
+      }
+    },
+    {
+      "id": "ceiling",
+      "name": "Add Ceiling",
+      "type": "physics.body.add",
+      "typeVersion": 1,
+      "position": [800, 200],
+      "parameters": {
+        "name": "ceiling",
+        "shape": "box",
+        "mass": 0,
+        "pos_x": 0,
+        "pos_y": 5,
+        "pos_z": 0,
+        "size_x": 20,
+        "size_y": 0.5,
+        "size_z": 20,
+        "visible": 0
+      }
+    },
+    {
+      "id": "cube",
+      "name": "Add Spinning Cube",
+      "type": "physics.body.add",
+      "typeVersion": 1,
+      "position": [900, 200],
+      "parameters": {
+        "name": "cube",
+        "shape": "box",
+        "mass": 0,
+        "pos_x": 0,
+        "pos_y": 1.5,
+        "pos_z": -2,
+        "size_x": 1.0,
+        "size_y": 1.0,
+        "size_z": 1.0,
+        "spinning": 1,
+        "spin_speed_x": 1.0,
+        "spin_speed_y": 0.7,
+        "visible": 0
+      }
+    },
+    {
+      "id": "pillar_nw",
+      "name": "Pillar NW",
+      "type": "physics.body.add",
+      "typeVersion": 1,
+      "position": [0, 300],
+      "parameters": {
+        "name": "pillar_nw",
+        "shape": "box",
+        "mass": 0,
+        "pos_x": -6,
+        "pos_y": 2.5,
+        "pos_z": -6,
+        "size_x": 1.2,
+        "size_y": 5,
+        "size_z": 1.2,
+        "visible": 0
+      }
+    },
+    {
+      "id": "pillar_ne",
+      "name": "Pillar NE",
+      "type": "physics.body.add",
+      "typeVersion": 1,
+      "position": [100, 300],
+      "parameters": {
+        "name": "pillar_ne",
+        "shape": "box",
+        "mass": 0,
+        "pos_x": 6,
+        "pos_y": 2.5,
+        "pos_z": -6,
+        "size_x": 1.2,
+        "size_y": 5,
+        "size_z": 1.2,
+        "visible": 0
+      }
+    },
+    {
+      "id": "pillar_sw",
+      "name": "Pillar SW",
+      "type": "physics.body.add",
+      "typeVersion": 1,
+      "position": [200, 300],
+      "parameters": {
+        "name": "pillar_sw",
+        "shape": "box",
+        "mass": 0,
+        "pos_x": -6,
+        "pos_y": 2.5,
+        "pos_z": 6,
+        "size_x": 1.2,
+        "size_y": 5,
+        "size_z": 1.2,
+        "visible": 0
+      }
+    },
+    {
+      "id": "pillar_se",
+      "name": "Pillar SE",
+      "type": "physics.body.add",
+      "typeVersion": 1,
+      "position": [300, 300],
+      "parameters": {
+        "name": "pillar_se",
+        "shape": "box",
+        "mass": 0,
+        "pos_x": 6,
+        "pos_y": 2.5,
+        "pos_z": 6,
+        "size_x": 1.2,
+        "size_y": 5,
+        "size_z": 1.2,
+        "visible": 0
+      }
+    },
+    {
+      "id": "platform",
+      "name": "Raised Platform",
+      "type": "physics.body.add",
+      "typeVersion": 1,
+      "position": [400, 300],
+      "parameters": {
+        "name": "platform",
+        "shape": "box",
+        "mass": 0,
+        "pos_x": -4,
+        "pos_y": 0.4,
+        "pos_z": 2,
+        "size_x": 5,
+        "size_y": 0.8,
+        "size_z": 4,
+        "visible": 0
+      }
+    },
+    {
+      "id": "crate1",
+      "name": "Crate 1",
+      "type": "physics.body.add",
+      "typeVersion": 1,
+      "position": [500, 300],
+      "parameters": {
+        "name": "crate1",
+        "shape": "box",
+        "mass": 0,
+        "pos_x": 7,
+        "pos_y": 0.5,
+        "pos_z": -3,
+        "size_x": 1.0,
+        "size_y": 1.0,
+        "size_z": 1.0,
+        "visible": 0
+      }
+    },
+    {
+      "id": "crate2",
+      "name": "Crate 2",
+      "type": "physics.body.add",
+      "typeVersion": 1,
+      "position": [600, 300],
+      "parameters": {
+        "name": "crate2",
+        "shape": "box",
+        "mass": 0,
+        "pos_x": 7.8,
+        "pos_y": 0.5,
+        "pos_z": -2.2,
+        "size_x": 1.0,
+        "size_y": 1.0,
+        "size_z": 1.0,
+        "visible": 0
+      }
+    },
+    {
+      "id": "crate3",
+      "name": "Crate 3 (stacked)",
+      "type": "physics.body.add",
+      "typeVersion": 1,
+      "position": [700, 300],
+      "parameters": {
+        "name": "crate3",
+        "shape": "box",
+        "mass": 0,
+        "pos_x": 7,
+        "pos_y": 1.5,
+        "pos_z": -3,
+        "size_x": 1.0,
+        "size_y": 1.0,
+        "size_z": 1.0,
+        "visible": 0
+      }
+    },
+    {
+      "id": "crate4",
+      "name": "Crate 4",
+      "type": "physics.body.add",
+      "typeVersion": 1,
+      "position": [800, 300],
+      "parameters": {
+        "name": "crate4",
+        "shape": "box",
+        "mass": 0,
+        "pos_x": -8,
+        "pos_y": 0.5,
+        "pos_z": -7,
+        "size_x": 1.2,
+        "size_y": 1.0,
+        "size_z": 0.8,
+        "visible": 0
+      }
+    },
+    {
+      "id": "alcove_left",
+      "name": "Alcove Left Wall",
+      "type": "physics.body.add",
+      "typeVersion": 1,
+      "position": [0, 400],
+      "parameters": {
+        "name": "alcove_left",
+        "shape": "box",
+        "mass": 0,
+        "pos_x": -8,
+        "pos_y": 1.75,
+        "pos_z": -2.5,
+        "size_x": 0.4,
+        "size_y": 3.5,
+        "size_z": 3,
+        "visible": 0
+      }
+    },
+    {
+      "id": "alcove_back",
+      "name": "Alcove Back Wall",
+      "type": "physics.body.add",
+      "typeVersion": 1,
+      "position": [100, 400],
+      "parameters": {
+        "name": "alcove_back",
+        "shape": "box",
+        "mass": 0,
+        "pos_x": -9,
+        "pos_y": 1.75,
+        "pos_z": -4,
+        "size_x": 2,
+        "size_y": 3.5,
+        "size_z": 0.4,
+        "visible": 0
+      }
+    },
+    {
+      "id": "alcove_right",
+      "name": "Alcove Right Wall",
+      "type": "physics.body.add",
+      "typeVersion": 1,
+      "position": [200, 400],
+      "parameters": {
+        "name": "alcove_right",
+        "shape": "box",
+        "mass": 0,
+        "pos_x": -8,
+        "pos_y": 1.75,
+        "pos_z": -5.5,
+        "size_x": 0.4,
+        "size_y": 3.5,
+        "size_z": 3,
+        "visible": 0
+      }
+    },
+    {
+      "id": "player",
+      "name": "Add Player",
+      "type": "physics.body.add",
+      "typeVersion": 1,
+      "position": [1000, 200],
+      "parameters": {
+        "name": "player",
+        "shape": "capsule",
+        "mass": 80,
+        "pos_x": 0,
+        "pos_y": 1.5,
+        "pos_z": 8,
+        "radius": 0.4,
+        "height": 1.2,
+        "lock_rotation": 1,
+        "is_player": 1
+      }
+    },
+    {
+      "id": "lighting_setup",
+      "name": "Setup Lighting",
+      "type": "lighting.setup",
+      "typeVersion": 1,
+      "position": [1100, 200],
+      "parameters": {
+        "light_dir_x": -0.3,
+        "light_dir_y": -0.5,
+        "light_dir_z": -0.6,
+        "light_color_r": 0.4,
+        "light_color_g": 0.45,
+        "light_color_b": 0.6,
+        "light_intensity": 0.3,
+        "ambient_r": 0.04,
+        "ambient_g": 0.04,
+        "ambient_b": 0.06,
+        "ambient_intensity": 1.0,
+        "exposure": 1.2
+      }
+    },
+    {
+      "id": "flashlight",
+      "name": "Flashlight (Camera Spotlight)",
+      "type": "spotlight.setup",
+      "typeVersion": 1,
+      "position": [1125, 200],
+      "parameters": {
+        "attach": "camera",
+        "inner_cone": 3,
+        "outer_cone": 12,
+        "intensity": 3.0,
+        "range": 25,
+        "color_r": 1.0,
+        "color_g": 0.95,
+        "color_b": 0.85,
+        "offset_x": 0.15,
+        "offset_y": -0.1,
+        "offset_z": -0.1,
+        "aim_distance": 50
+      }
+    },
+    {
+      "id": "load_torch",
+      "name": "Create Flashlight Geometry",
+      "type": "geometry.create_flashlight",
+      "typeVersion": 1,
+      "position": [1135, 200],
+      "parameters": {
+        "name": "torch_model",
+        "segments": 16,
+        "body_radius": 0.045,
+        "body_length": 0.28,
+        "head_radius": 0.065,
+        "head_length": 0.09,
+        "lens_radius": 0.055
+      }
+    },
+    {
+      "id": "shadow_setup",
+      "name": "Setup Shadow Map",
+      "type": "shadow.setup",
+      "typeVersion": 1,
+      "position": [1150, 200],
+      "parameters": {
+        "map_size": 2048,
+        "scene_extent": 15
+      },
+      "inputs": {
+        "vertex_shader": "shadow_vert_path",
+        "fragment_shader": "shadow_frag_path"
+      }
+    },
+    {
+      "id": "compile_shadow_vert",
+      "name": "Compile Shadow Vertex Shader",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [1200, 200],
+      "parameters": {
+        "stage": "vertex",
+        "output_key": "shadow_vertex_shader",
+        "num_uniform_buffers": 1,
+        "num_samplers": 0
+      },
+      "inputs": {
+        "shader_path": "shadow_vert_path"
+      }
+    },
+    {
+      "id": "compile_shadow_frag",
+      "name": "Compile Shadow Fragment Shader",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [1220, 200],
+      "parameters": {
+        "stage": "fragment",
+        "output_key": "shadow_fragment_shader",
+        "num_uniform_buffers": 0,
+        "num_samplers": 0
+      },
+      "inputs": {
+        "shader_path": "shadow_frag_path"
+      }
+    },
+    {
+      "id": "create_shadow_pipeline",
+      "name": "Create Shadow Pipeline",
+      "type": "graphics.gpu.pipeline.create",
+      "typeVersion": 1,
+      "position": [1240, 200],
+      "parameters": {
+        "vertex_shader_key": "shadow_vertex_shader",
+        "fragment_shader_key": "shadow_fragment_shader",
+        "vertex_format": "position_uv",
+        "pipeline_key": "shadow_pipeline",
+        "num_color_targets": 0,
+        "depth_write": 1,
+        "depth_test": 1,
+        "depth_bias": 2.0,
+        "depth_bias_slope": 2.0,
+        "cull_mode": "front"
+      }
+    },
+    {
+      "id": "postfx_setup",
+      "name": "PostFX Setup",
+      "type": "postfx.setup",
+      "typeVersion": 1,
+      "position": [1260, 200]
+    },
+    {
+      "id": "compile_postfx_vert",
+      "name": "Compile PostFX Vertex Shader",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [1250, 200],
+      "parameters": {
+        "stage": "vertex",
+        "output_key": "postfx_vertex_shader",
+        "num_uniform_buffers": 0,
+        "num_samplers": 0
+      },
+      "inputs": {
+        "shader_path": "postfx_vert_path"
+      }
+    },
+    {
+      "id": "compile_postfx_composite_frag",
+      "name": "Compile Composite Fragment Shader",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [1300, 200],
+      "parameters": {
+        "stage": "fragment",
+        "output_key": "postfx_composite_fragment_shader",
+        "num_uniform_buffers": 0,
+        "num_samplers": 3
+      },
+      "inputs": {
+        "shader_path": "postfx_composite_frag_path"
+      }
+    },
+    {
+      "id": "compile_postfx_ssao_frag",
+      "name": "Compile SSAO Fragment Shader",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [1310, 200],
+      "parameters": {
+        "stage": "fragment",
+        "output_key": "postfx_ssao_fragment_shader",
+        "num_uniform_buffers": 1,
+        "num_samplers": 1
+      },
+      "inputs": {
+        "shader_path": "postfx_ssao_frag_path"
+      }
+    },
+    {
+      "id": "compile_postfx_bloom_extract_frag",
+      "name": "Compile Bloom Extract Fragment Shader",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [1330, 200],
+      "parameters": {
+        "stage": "fragment",
+        "output_key": "postfx_bloom_extract_fragment_shader",
+        "num_uniform_buffers": 1,
+        "num_samplers": 1
+      },
+      "inputs": {
+        "shader_path": "postfx_bloom_extract_frag_path"
+      }
+    },
+    {
+      "id": "compile_postfx_bloom_blur_frag",
+      "name": "Compile Bloom Blur Fragment Shader",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [1340, 200],
+      "parameters": {
+        "stage": "fragment",
+        "output_key": "postfx_bloom_blur_fragment_shader",
+        "num_uniform_buffers": 1,
+        "num_samplers": 1
+      },
+      "inputs": {
+        "shader_path": "postfx_bloom_blur_frag_path"
+      }
+    },
+    {
+      "id": "compile_taa_frag",
+      "name": "Compile TAA Fragment",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [1315, 200],
+      "parameters": {
+        "stage": "fragment",
+        "output_key": "taa_fragment_shader",
+        "num_uniform_buffers": 1,
+        "num_samplers": 2
+      },
+      "inputs": {
+        "shader_path": "postfx_taa_frag_path"
+      }
+    },
+    {
+      "id": "create_ssao_pipeline",
+      "name": "Create SSAO Pipeline",
+      "type": "graphics.gpu.pipeline.create",
+      "typeVersion": 1,
+      "position": [1320, 200],
+      "parameters": {
+        "vertex_shader_key": "postfx_vertex_shader",
+        "fragment_shader_key": "postfx_ssao_fragment_shader",
+        "vertex_format": "none",
+        "pipeline_key": "postfx_ssao_pipeline",
+        "color_format": "r8_unorm",
+        "depth_test": 0,
+        "depth_write": 0,
+        "has_depth": 0,
+        "cull_mode": "none",
+        "release_shaders": 0
+      }
+    },
+    {
+      "id": "create_bloom_extract_pipeline",
+      "name": "Create Bloom Extract Pipeline",
+      "type": "graphics.gpu.pipeline.create",
+      "typeVersion": 1,
+      "position": [1360, 200],
+      "parameters": {
+        "vertex_shader_key": "postfx_vertex_shader",
+        "fragment_shader_key": "postfx_bloom_extract_fragment_shader",
+        "vertex_format": "none",
+        "pipeline_key": "postfx_bloom_extract_pipeline",
+        "color_format": "rgba16_float",
+        "depth_test": 0,
+        "depth_write": 0,
+        "has_depth": 0,
+        "cull_mode": "none",
+        "release_shaders": 0
+      }
+    },
+    {
+      "id": "create_bloom_blur_pipeline",
+      "name": "Create Bloom Blur Pipeline",
+      "type": "graphics.gpu.pipeline.create",
+      "typeVersion": 1,
+      "position": [1370, 200],
+      "parameters": {
+        "vertex_shader_key": "postfx_vertex_shader",
+        "fragment_shader_key": "postfx_bloom_blur_fragment_shader",
+        "vertex_format": "none",
+        "pipeline_key": "postfx_bloom_blur_pipeline",
+        "color_format": "rgba16_float",
+        "depth_test": 0,
+        "depth_write": 0,
+        "has_depth": 0,
+        "cull_mode": "none",
+        "release_shaders": 0
+      }
+    },
+    {
+      "id": "create_composite_pipeline",
+      "name": "Create Composite Pipeline",
+      "type": "graphics.gpu.pipeline.create",
+      "typeVersion": 1,
+      "position": [1350, 200],
+      "parameters": {
+        "vertex_shader_key": "postfx_vertex_shader",
+        "fragment_shader_key": "postfx_composite_fragment_shader",
+        "vertex_format": "none",
+        "pipeline_key": "postfx_composite_pipeline",
+        "depth_test": 0,
+        "depth_write": 0,
+        "has_depth": 0,
+        "cull_mode": "none"
+      }
+    },
+    {
+      "id": "grab_mouse",
+      "name": "Grab Mouse",
+      "type": "input.mouse.grab",
+      "typeVersion": 1,
+      "position": [1400, 200],
+      "parameters": {
+        "enabled": 1
+      }
+    },
+    {
+      "id": "game_loop",
+      "name": "Game Loop",
+      "type": "control.loop.while",
+      "typeVersion": 1,
+      "position": [1400, 200],
+      "parameters": {
+        "condition_key": "game_running",
+        "package": "seed",
+        "workflow": "frame_tick"
+      }
+    },
+    {
+      "id": "exit",
+      "name": "System Exit",
+      "type": "system.exit",
+      "typeVersion": 1,
+      "position": [1600, 200]
+    }
+  ],
+  "connections": {
+    "sdl_init": {
+      "main": {
+        "0": [{ "node": "sdl_window", "type": "main", "index": 0 }]
+      }
+    },
+    "sdl_window": {
+      "main": {
+        "0": [{ "node": "gpu_viewport", "type": "main", "index": 0 }]
+      }
+    },
+    "gpu_viewport": {
+      "main": {
+        "0": [{ "node": "gpu_renderer", "type": "main", "index": 0 }]
+      }
+    },
+    "gpu_renderer": {
+      "main": {
+        "0": [{ "node": "gpu_init", "type": "main", "index": 0 }]
+      }
+    },
+    "gpu_init": {
+      "main": {
+        "0": [{ "node": "create_geometry", "type": "main", "index": 0 }]
+      }
+    },
+    "create_geometry": {
+      "main": {
+        "0": [{ "node": "compile_vert_shader", "type": "main", "index": 0 }]
+      }
+    },
+    "compile_vert_shader": {
+      "main": {
+        "0": [{ "node": "compile_frag_shader", "type": "main", "index": 0 }]
+      }
+    },
+    "compile_frag_shader": {
+      "main": {
+        "0": [{ "node": "create_pipeline", "type": "main", "index": 0 }]
+      }
+    },
+    "create_pipeline": {
+      "main": {
+        "0": [{ "node": "compile_tex_vert", "type": "main", "index": 0 }]
+      }
+    },
+    "compile_tex_vert": {
+      "main": {
+        "0": [{ "node": "compile_tex_frag", "type": "main", "index": 0 }]
+      }
+    },
+    "compile_tex_frag": {
+      "main": {
+        "0": [{ "node": "create_tex_pipeline", "type": "main", "index": 0 }]
+      }
+    },
+    "create_tex_pipeline": {
+      "main": {
+        "0": [{ "node": "tex_floor", "type": "main", "index": 0 }]
+      }
+    },
+    "tex_floor": {
+      "main": {
+        "0": [{ "node": "tex_walls", "type": "main", "index": 0 }]
+      }
+    },
+    "tex_walls": {
+      "main": {
+        "0": [{ "node": "tex_walls_disp", "type": "main", "index": 0 }]
+      }
+    },
+    "tex_walls_disp": {
+      "main": {
+        "0": [{ "node": "tex_ceiling", "type": "main", "index": 0 }]
+      }
+    },
+    "tex_ceiling": {
+      "main": {
+        "0": [{ "node": "load_map", "type": "main", "index": 0 }]
+      }
+    },
+    "load_map": {
+      "main": {
+        "0": [{ "node": "player", "type": "main", "index": 0 }]
+      }
+    },
+    "plane_floor": {
+      "main": {
+        "0": [{ "node": "plane_ceiling", "type": "main", "index": 0 }]
+      }
+    },
+    "plane_ceiling": {
+      "main": {
+        "0": [{ "node": "tess_wall", "type": "main", "index": 0 }]
+      }
+    },
+    "tess_wall": {
+      "main": {
+        "0": [{ "node": "plane_platform", "type": "main", "index": 0 }]
+      }
+    },
+    "plane_platform": {
+      "main": {
+        "0": [{ "node": "plane_alcove", "type": "main", "index": 0 }]
+      }
+    },
+    "plane_alcove": {
+      "main": {
+        "0": [{ "node": "plane_alcove_back", "type": "main", "index": 0 }]
+      }
+    },
+    "plane_alcove_back": {
+      "main": {
+        "0": [{ "node": "plane_unit", "type": "main", "index": 0 }]
+      }
+    },
+    "plane_unit": {
+      "main": {
+        "0": [{ "node": "setup_camera", "type": "main", "index": 0 }]
+      }
+    },
+    "setup_camera": {
+      "main": {
+        "0": [{ "node": "physics_world", "type": "main", "index": 0 }]
+      }
+    },
+    "physics_world": {
+      "main": {
+        "0": [{ "node": "floor", "type": "main", "index": 0 }]
+      }
+    },
+    "floor": {
+      "main": {
+        "0": [{ "node": "wall_north", "type": "main", "index": 0 }]
+      }
+    },
+    "wall_north": {
+      "main": {
+        "0": [{ "node": "wall_south", "type": "main", "index": 0 }]
+      }
+    },
+    "wall_south": {
+      "main": {
+        "0": [{ "node": "wall_east", "type": "main", "index": 0 }]
+      }
+    },
+    "wall_east": {
+      "main": {
+        "0": [{ "node": "wall_west", "type": "main", "index": 0 }]
+      }
+    },
+    "wall_west": {
+      "main": {
+        "0": [{ "node": "ceiling", "type": "main", "index": 0 }]
+      }
+    },
+    "ceiling": {
+      "main": {
+        "0": [{ "node": "cube", "type": "main", "index": 0 }]
+      }
+    },
+    "cube": {
+      "main": {
+        "0": [{ "node": "pillar_nw", "type": "main", "index": 0 }]
+      }
+    },
+    "pillar_nw": {
+      "main": {
+        "0": [{ "node": "pillar_ne", "type": "main", "index": 0 }]
+      }
+    },
+    "pillar_ne": {
+      "main": {
+        "0": [{ "node": "pillar_sw", "type": "main", "index": 0 }]
+      }
+    },
+    "pillar_sw": {
+      "main": {
+        "0": [{ "node": "pillar_se", "type": "main", "index": 0 }]
+      }
+    },
+    "pillar_se": {
+      "main": {
+        "0": [{ "node": "platform", "type": "main", "index": 0 }]
+      }
+    },
+    "platform": {
+      "main": {
+        "0": [{ "node": "crate1", "type": "main", "index": 0 }]
+      }
+    },
+    "crate1": {
+      "main": {
+        "0": [{ "node": "crate2", "type": "main", "index": 0 }]
+      }
+    },
+    "crate2": {
+      "main": {
+        "0": [{ "node": "crate3", "type": "main", "index": 0 }]
+      }
+    },
+    "crate3": {
+      "main": {
+        "0": [{ "node": "crate4", "type": "main", "index": 0 }]
+      }
+    },
+    "crate4": {
+      "main": {
+        "0": [{ "node": "alcove_left", "type": "main", "index": 0 }]
+      }
+    },
+    "alcove_left": {
+      "main": {
+        "0": [{ "node": "alcove_back", "type": "main", "index": 0 }]
+      }
+    },
+    "alcove_back": {
+      "main": {
+        "0": [{ "node": "alcove_right", "type": "main", "index": 0 }]
+      }
+    },
+    "alcove_right": {
+      "main": {
+        "0": [{ "node": "player", "type": "main", "index": 0 }]
+      }
+    },
+    "player": {
+      "main": {
+        "0": [{ "node": "lighting_setup", "type": "main", "index": 0 }]
+      }
+    },
+    "lighting_setup": {
+      "main": {
+        "0": [{ "node": "flashlight", "type": "main", "index": 0 }]
+      }
+    },
+    "flashlight": {
+      "main": {
+        "0": [{ "node": "load_torch", "type": "main", "index": 0 }]
+      }
+    },
+    "load_torch": {
+      "main": {
+        "0": [{ "node": "shadow_setup", "type": "main", "index": 0 }]
+      }
+    },
+    "shadow_setup": {
+      "main": {
+        "0": [{ "node": "compile_shadow_vert", "type": "main", "index": 0 }]
+      }
+    },
+    "compile_shadow_vert": {
+      "main": {
+        "0": [{ "node": "compile_shadow_frag", "type": "main", "index": 0 }]
+      }
+    },
+    "compile_shadow_frag": {
+      "main": {
+        "0": [{ "node": "create_shadow_pipeline", "type": "main", "index": 0 }]
+      }
+    },
+    "create_shadow_pipeline": {
+      "main": {
+        "0": [{ "node": "postfx_setup", "type": "main", "index": 0 }]
+      }
+    },
+    "postfx_setup": {
+      "main": {
+        "0": [{ "node": "compile_postfx_vert", "type": "main", "index": 0 }]
+      }
+    },
+    "compile_postfx_vert": {
+      "main": {
+        "0": [{ "node": "compile_postfx_composite_frag", "type": "main", "index": 0 }]
+      }
+    },
+    "compile_postfx_composite_frag": {
+      "main": {
+        "0": [{ "node": "compile_postfx_ssao_frag", "type": "main", "index": 0 }]
+      }
+    },
+    "compile_postfx_ssao_frag": {
+      "main": {
+        "0": [{ "node": "compile_postfx_bloom_extract_frag", "type": "main", "index": 0 }]
+      }
+    },
+    "compile_postfx_bloom_extract_frag": {
+      "main": {
+        "0": [{ "node": "compile_postfx_bloom_blur_frag", "type": "main", "index": 0 }]
+      }
+    },
+    "compile_postfx_bloom_blur_frag": {
+      "main": {
+        "0": [{ "node": "compile_taa_frag", "type": "main", "index": 0 }]
+      }
+    },
+    "compile_taa_frag": {
+      "main": {
+        "0": [{ "node": "create_ssao_pipeline", "type": "main", "index": 0 }]
+      }
+    },
+    "create_ssao_pipeline": {
+      "main": {
+        "0": [{ "node": "create_bloom_extract_pipeline", "type": "main", "index": 0 }]
+      }
+    },
+    "create_bloom_extract_pipeline": {
+      "main": {
+        "0": [{ "node": "create_bloom_blur_pipeline", "type": "main", "index": 0 }]
+      }
+    },
+    "create_bloom_blur_pipeline": {
+      "main": {
+        "0": [{ "node": "create_composite_pipeline", "type": "main", "index": 0 }]
+      }
+    },
+    "create_composite_pipeline": {
+      "main": {
+        "0": [{ "node": "grab_mouse", "type": "main", "index": 0 }]
+      }
+    },
+    "grab_mouse": {
+      "main": {
+        "0": [{ "node": "game_loop", "type": "main", "index": 0 }]
+      }
+    },
+    "game_loop": {
+      "main": {
+        "0": [{ "node": "exit", "type": "main", "index": 0 }]
+      }
+    }
+  }
+}

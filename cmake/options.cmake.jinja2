@@ -1,0 +1,11 @@
+{# cmake/options.cmake.jinja2 - Project options configuration #}
+{% for option in config.options -%}
+{% if option.type == "BOOL" -%}
+option({{ option.name }} "{{ option.description }}" {{ option.default }})
+{% else -%}
+set({{ option.name }} "{{ option.default }}" CACHE {{ option.type }} "{{ option.description }}")
+{% endif -%}
+{% if option.allowed_values -%}
+set_property(CACHE {{ option.name }} PROPERTY STRINGS {{ option.allowed_values | join(' ') }})
+{% endif -%}
+{% endfor %}

@@ -1,0 +1,103 @@
+{
+  "name": "Universal Map Loader with Unit Conversion",
+  "description": "Load maps from any game engine with automatic unit conversion to UE5 scale. Configure sourceEngine variable to match your map's origin (quake3=3.125x, unity=100x, etc.)",
+  "version": "1.0.0",
+  "id": "workflow_universal_map_loader",
+  "tenantId": "${TENANT_ID}",
+
+  "variables": {
+    "sourceEngine": {
+      "type": "string",
+      "value": "quake3",
+      "description": "Source engine: quake3, quake2, doom3, halflife2, unity, godot, ue3"
+    },
+    "mapFile": {
+      "type": "string",
+      "value": "${PACKAGE_ROOT}/maps/map.bsp",
+      "description": "Full path to map file"
+    },
+    "conversionFactor": {
+      "type": "number",
+      "value": 3.125,
+      "description": "Unit conversion factor. Set based on sourceEngine: quake3=3.125, doom3=2.54, unity=100, ue3=2.0"
+    },
+    "createColliders": {
+      "type": "boolean",
+      "value": true,
+      "description": "Generate physics colliders for all geometry"
+    }
+  },
+
+  "nodes": [
+    {
+      "id": "load_map",
+      "name": "Load Map File",
+      "type": "asset.load_map",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {
+        "file_path": "${variables.mapFile}",
+        "format_hint": "${variables.sourceEngine}",
+        "output_key": "raw_map"
+      }
+    },
+
+    {
+      "id": "convert_units",
+      "name": "Convert Units and Scale Geometry",
+      "type": "geometry.apply_scale_transform",
+      "typeVersion": 1,
+      "position": [200, 0],
+      "parameters": {
+        "inputs": {
+          "geometry": "raw_map"
+        },
+        "scale_factor": "${variables.conversionFactor}",
+        "apply_to": "positions,sizes,physics",
+        "recursive": true,
+        "output_key": "map_converted"
+      }
+    },
+
+    {
+      "id": "load_to_scene",
+      "name": "Load Converted Map to Scene",
+      "type": "scene.load_geometry",
+      "typeVersion": 1,
+      "position": [400, 0],
+      "parameters": {
+        "inputs": {
+          "geometry": "map_converted"
+        },
+        "create_colliders": "${variables.createColliders}",
+        "shader_key": "bsp_default",
+        "output_key": "loaded_scene"
+      }
+    }
+  ],
+
+  "connections": {
+    "load_map": {
+      "main": {
+        "0": [
+          {
+            "node": "convert_units",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "convert_units": {
+      "main": {
+        "0": [
+          {
+            "node": "load_to_scene",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    }
+  }
+}

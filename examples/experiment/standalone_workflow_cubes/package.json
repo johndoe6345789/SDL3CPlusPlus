@@ -1,0 +1,25 @@
+{
+  "name": "Standalone Workflow Cubes",
+  "version": "0.1.0",
+  "description": "Minimal workflow-based demo: single cube, colored, with screenshot capture",
+  "type": "game",
+  "category": "experiment",
+  "defaultWorkflow": "workflows/render.json",
+  "workflows": [
+    "workflows/render.json"
+  ],
+  "scene": [
+    "scene/camera.json"
+  ],
+  "shaders": [
+    {
+      "id": "cube_color",
+      "backends": {
+        "glsl": {
+          "vertex": "shaders/glsl/cube.vert",
+          "fragment": "shaders/glsl/cube.frag"
+        }
+      }
+    }
+  ]
+}

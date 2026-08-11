@@ -1,0 +1,16 @@
+{
+  "name": "bootstrap_linux",
+  "version": "0.1.0",
+  "description": "Linux bootloader. Initializes SDL3 GPU with Vulkan backend.",
+  "type": "bootloader",
+  "category": "platform",
+  "config": {
+    "renderer": "vulkan"
+  },
+  "defaultWorkflow": "workflows/boot.json",
+  "workflows": [
+    "workflows/boot.json"
+  ],
+  "bundled": true,
+  "dependencies": []
+}

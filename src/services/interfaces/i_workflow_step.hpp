@@ -1,7 +1,7 @@
 #pragma once
 
-#include "workflow_context.hpp"
-#include "workflow_step_definition.hpp"
+#include "services/interfaces/workflow_context.hpp"
+#include "services/interfaces/workflow_step_definition.hpp"
 
 #include <string>
 

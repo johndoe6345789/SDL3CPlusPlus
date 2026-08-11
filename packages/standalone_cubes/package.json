@@ -1,0 +1,47 @@
+{
+  "name": "Standalone Cubes Grid",
+  "version": "0.2.0",
+  "description": "11x11 grid of spinning colored cubes with per-cube animation offsets. SDL3 GPU rendering.",
+  "type": "game",
+  "category": "demo",
+  "config": {
+    "gpu": {
+      "renderer": "auto"
+    },
+    "validation": {
+      "maxDurationSeconds": 30
+    }
+  },
+  "defaultWorkflow": "workflows/cube_demo_simple.json",
+  "workflows": [
+    "workflows/cube_demo_simple.json"
+  ],
+  "scene": [
+    "scene/camera_grid_view.json"
+  ],
+  "shaders": [
+    {
+      "id": "constant_color",
+      "backendOrder": ["spirv", "msl"],
+      "description": "Shader backend selection: spirv (Vulkan/cross-platform), msl (Metal native)",
+      "backends": {
+        "spirv": {
+          "vertex": "shaders/spirv/constant_color.vert.spv",
+          "fragment": "shaders/spirv/constant_color.frag.spv"
+        },
+        "msl": {
+          "vertex": "shaders/msl/constant_color.vert.metal",
+          "fragment": "shaders/msl/constant_color.frag.metal"
+        },
+        "dx12": {
+          "vertex": "shaders/dx12/constant_color.vert",
+          "fragment": "shaders/dx12/constant_color.frag"
+        }
+      },
+      "useConstantColor": true,
+      "constantColor": [0.8, 0.4, 0.2]
+    }
+  ],
+  "bundled": true,
+  "dependencies": []
+}

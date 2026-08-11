@@ -1,0 +1,51 @@
+{# cmake/dependencies.cmake.jinja2 - External package dependencies #}
+
+# SDL selection
+{% set sdl_required = config.dependencies.always %}
+{% if 'SDL3' in sdl_required %}
+if(SDL_VERSION STREQUAL "SDL3")
+    find_package(SDL3 CONFIG REQUIRED)
+    set(SDL_TARGET SDL3::SDL3)
+elseif(SDL_VERSION STREQUAL "sdl")
+    find_package(SDL CONFIG REQUIRED)
+    set(SDL_TARGET SDL::SDL)
+else()
+    message(FATAL_ERROR "Invalid SDL_VERSION: ${SDL_VERSION}")
+endif()
+{% endif %}
+
+# Find all required packages
+{% for dep in config.dependencies.always -%}
+{%- if dep not in ['SDL3', 'sdl'] %}
+find_package({{ dep }} CONFIG REQUIRED)
+{% endif -%}
+{% endfor %}
+
+# Build render stack library group
+set(SDL3CPP_RENDER_STACK_LIBS EnTT::EnTT)
+
+# Freetype library group
+set(SDL3CPP_FREETYPE_LIBS)
+if(TARGET Freetype::Freetype)
+    list(APPEND SDL3CPP_FREETYPE_LIBS Freetype::Freetype)
+elseif(TARGET freetype::freetype)
+    list(APPEND SDL3CPP_FREETYPE_LIBS freetype::freetype)
+endif()
+
+# libzip library group
+set(SDL3CPP_ZIP_LIBS)
+if(TARGET libzip::zip)
+    list(APPEND SDL3CPP_ZIP_LIBS libzip::zip)
+elseif(TARGET libzip::libzip)
+    list(APPEND SDL3CPP_ZIP_LIBS libzip::libzip)
+endif()
+
+# stb library group
+set(SDL3CPP_STB_LIBS)
+if(TARGET stb::stb_image)
+    list(APPEND SDL3CPP_STB_LIBS stb::stb_image)
+elseif(TARGET stb::stb)
+    list(APPEND SDL3CPP_STB_LIBS stb::stb)
+elseif(TARGET stb)
+    list(APPEND SDL3CPP_STB_LIBS stb)
+endif()

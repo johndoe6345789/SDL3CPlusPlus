@@ -1,0 +1,11 @@
+{
+  "id": "quake3_map",
+  "description": "Legacy Quake3 arena map metadata for validation captures.",
+  "spawn": {
+    "position": [0.0, 1.5, 0.0],
+    "orientation": [0.0, 0.0, 0.0]
+  },
+  "validation": {
+    "checks": ["non_black_ratio", "mean_color", "sample_points"]
+  }
+}

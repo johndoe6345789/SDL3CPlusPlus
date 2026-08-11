@@ -1,6 +1,6 @@
-#include "workflow_config_version_step.hpp"
-#include "../config/json_config_version_validator.hpp"
-#include "workflow_step_io_resolver.hpp"
+#include "services/interfaces/workflow/workflow_config_version_step.hpp"
+#include "services/interfaces/config/json_config_version_validator.hpp"
+#include "services/interfaces/workflow/workflow_step_io_resolver.hpp"
 
 #include <rapidjson/document.h>
 
@@ -12,13 +12,23 @@
 namespace sdl3cpp::services::impl {
 
 WorkflowConfigVersionStep::WorkflowConfigVersionStep(std::shared_ptr<ILogger> logger)
-    : logger_(std::move(logger)) {}
+    : logger_(std::move(logger)) {
+    if (logger_) {
+        logger_->Trace("WorkflowConfigVersionStep", "Constructor", "Entry");
+    }
+}
 
 std::string WorkflowConfigVersionStep::GetPluginId() const {
+    if (logger_) {
+        logger_->Trace("WorkflowConfigVersionStep", "GetPluginId", "Entry");
+    }
     return "config.version.validate";
 }
 
 void WorkflowConfigVersionStep::Execute(const WorkflowStepDefinition& step, WorkflowContext& context) {
+    if (logger_) {
+        logger_->Trace("WorkflowConfigVersionStep", "Execute", "Entry");
+    }
     WorkflowStepIoResolver resolver;
     const std::string documentKey = resolver.GetRequiredInputKey(step, "document");
     const std::string pathKey = resolver.GetRequiredInputKey(step, "path");

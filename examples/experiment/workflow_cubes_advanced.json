@@ -1,0 +1,226 @@
+{
+  "name": "Advanced Cubes - With Control Structures",
+  "description": "Demonstrates loops, conditionals, and scopes in workflow JSON",
+  "version": "2.0.0",
+  "id": "workflow_advanced_cubes",
+
+  "variables": {
+    "grid_width": {"type": "number", "value": 11},
+    "grid_height": {"type": "number", "value": 11},
+    "cube_spacing": {"type": "number", "value": 3.0},
+    "grid_start_x": {"type": "number", "value": -15.0},
+    "grid_start_y": {"type": "number", "value": -15.0},
+    "rotation_offset_x": {"type": "number", "value": 0.21},
+    "rotation_offset_y": {"type": "number", "value": 0.37},
+    "camera_distance": {"type": "number", "value": 35.0},
+    "camera_fov": {"type": "number", "value": 60.0},
+    "window_width": {"type": "number", "value": 1280},
+    "window_height": {"type": "number", "value": 720},
+    "num_frames": {"type": "number", "value": 120},
+    "enable_advanced_features": {"type": "boolean", "value": true},
+    "cube_count": {"type": "number", "value": 0}
+  },
+
+  "nodes": [
+    {
+      "id": "init_graphics",
+      "type": "graphics.init",
+      "parameters": {
+        "window_width": "${variables.window_width}",
+        "window_height": "${variables.window_height}",
+        "window_title": "Advanced Cubes with Control Flow"
+      }
+    },
+
+    {
+      "id": "init_scope",
+      "type": "scope",
+      "locals": {
+        "temp_width": 8,
+        "temp_height": 8,
+        "loop_counter": 0
+      },
+      "nodes": [
+        {
+          "id": "create_cube_geometry",
+          "type": "geometry.create_cube",
+          "parameters": {
+            "vertex_colors": "${variables.cube_vertex_colors}"
+          }
+        }
+      ]
+    },
+
+    {
+      "id": "conditional_shader_load",
+      "type": "if",
+      "condition": {
+        "op": "==",
+        "left": "${variables.enable_advanced_features}",
+        "right": true
+      },
+      "then": [
+        {
+          "id": "load_shaders_advanced",
+          "type": "shader.load_binary",
+          "parameters": {
+            "vertex_shader_path": "./experiment/vs_cubes.bin",
+            "fragment_shader_path": "./experiment/fs_cubes.bin"
+          }
+        }
+      ],
+      "else": [
+        {
+          "id": "load_shaders_basic",
+          "type": "shader.load_binary",
+          "parameters": {
+            "vertex_shader_path": "./experiment/vs_cubes.bin",
+            "fragment_shader_path": "./experiment/fs_cubes.bin"
+          }
+        }
+      ]
+    },
+
+    {
+      "id": "setup_camera",
+      "type": "camera.setup",
+      "parameters": {
+        "camera_distance": "${variables.camera_distance}",
+        "camera_fov": "${variables.camera_fov}",
+        "aspect_ratio": "${variables.window_width}/${variables.window_height}"
+      }
+    },
+
+    {
+      "id": "grid_loop",
+      "type": "for",
+      "variable": "row",
+      "start": 0,
+      "end": "${variables.grid_height}",
+      "step": 1,
+      "nodes": [
+        {
+          "id": "inner_column_loop",
+          "type": "for",
+          "variable": "col",
+          "start": 0,
+          "end": "${variables.grid_width}",
+          "step": 1,
+          "nodes": [
+            {
+              "id": "calculate_cube_position",
+              "type": "scope",
+              "locals": {
+                "x_pos": "${variables.grid_start_x}",
+                "y_pos": "${variables.grid_start_y}",
+                "spacing": "${variables.cube_spacing}",
+                "rot_offset_x": "${variables.rotation_offset_x}",
+                "rot_offset_y": "${variables.rotation_offset_y}"
+              },
+              "nodes": [
+                {
+                  "id": "increment_cube_count",
+                  "type": "var",
+                  "op": "increment",
+                  "name": "cube_count"
+                },
+                {
+                  "id": "render_single_cube",
+                  "type": "render.cube_grid",
+                  "parameters": {
+                    "grid_width": 1,
+                    "grid_height": 1,
+                    "grid_spacing": "${variables.cube_spacing}",
+                    "grid_start_x": "${variables.grid_start_x}",
+                    "grid_start_y": "${variables.grid_start_y}",
+                    "rotation_offset_x": "${variables.rotation_offset_x}",
+                    "rotation_offset_y": "${variables.rotation_offset_y}",
+                    "num_frames": 1
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "log_row_progress",
+          "type": "var",
+          "op": "log",
+          "message": "Completed row ${row}"
+        }
+      ]
+    },
+
+    {
+      "id": "main_render_loop",
+      "type": "while",
+      "condition": {
+        "op": "<",
+        "left": "${variables.cube_count}",
+        "right": "${variables.num_frames}"
+      },
+      "nodes": [
+        {
+          "id": "render_all_cubes",
+          "type": "render.cube_grid",
+          "parameters": {
+            "grid_width": "${variables.grid_width}",
+            "grid_height": "${variables.grid_height}",
+            "grid_spacing": "${variables.cube_spacing}",
+            "grid_start_x": "${variables.grid_start_x}",
+            "grid_start_y": "${variables.grid_start_y}",
+            "rotation_offset_x": "${variables.rotation_offset_x}",
+            "rotation_offset_y": "${variables.rotation_offset_y}",
+            "num_frames": 1
+          }
+        },
+        {
+          "id": "increment_frame",
+          "type": "var",
+          "op": "increment",
+          "name": "cube_count"
+        }
+      ]
+    },
+
+    {
+      "id": "final_scope",
+      "type": "scope",
+      "locals": {
+        "final_frame_count": "${variables.cube_count}",
+        "success": true
+      },
+      "nodes": [
+        {
+          "id": "conditional_screenshot",
+          "type": "if",
+          "condition": {
+            "op": "==",
+            "left": "${success}",
+            "right": true
+          },
+          "then": [
+            {
+              "id": "capture_screenshot",
+              "type": "graphics.capture_screenshot",
+              "parameters": {
+                "enabled": true,
+                "output_path": "test_outputs/workflow_advanced_frame.png",
+                "frame_number": "${final_frame_count}"
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "exit",
+      "type": "system.exit",
+      "parameters": {
+        "status_code": 0,
+        "message": "Successfully rendered with control structures!"
+      }
+    }
+  ]
+}

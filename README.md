@@ -1,108 +1,155 @@
-# SDL3CPlusPlus
-SDL3 + bgfx demo app with Lua-driven runtime configuration, audio playback, and a small GUI sample.
+# GameEngine
 
-## Overview
-- Renders a spinning cube with bgfx (Vulkan renderer by default) via SDL3.
-- Lua scripts control behavior under `scripts/`.
-- JSON runtime configs live in `config/`.
-- Optional helpers for audio asset generation and workflow diagnostics.
+SDL3 GPU 2D/3D game engine with a JSON-driven workflow system. Built with C++20, using Conan for dependency management and CMake + Ninja for builds.
 
-## Prerequisites
-- Python 3 for helper scripts.
-- Conan for dependency resolution.
-- CMake and a C++ compiler.
-- Ninja (default generator) or Visual Studio 2022 on Windows.
-- Vulkan runtime/driver for the default bgfx renderer (or set `bgfx.renderer` in config).
+## Quick Start
 
-## Quick start
-1. `python scripts/dev_commands.py dependencies`
-2. `python scripts/dev_commands.py configure`
-3. `python scripts/dev_commands.py build`
-4. If you used Conan, load the runtime env vars:
-   - Linux/macOS: `source build/conanrun.sh`
-   - Windows (cmd.exe): `build\conanrun.bat`
-5. `python scripts/dev_commands.py run`
-6. Use the guardrail prefix helper before invoking Codex if you want to prepend standard instructions: `python scripts/auto_prompt_prefixer.py --prompt "Describe the package layout"`. It defaults to `config/prompt_prefix.txt`, or pass `--prefix-file`/`--prefix-text` to change it.
+### Prerequisites
 
-## Build helper commands
-- `python scripts/dev_commands.py configure` uses Ninja by default (Ninja+MSVC on Windows) and writes to `build-ninja`/`build-ninja-msvc`; override with `--generator` and `--build-dir`.
-- `python scripts/dev_commands.py build` runs `cmake --build` for that folder (use `--build-dir` and `--target` as needed).
-- `python scripts/dev_commands.py msvc-quick` runs `vcvarsall.bat` plus a build command (Windows only).
-- Prefix any subcommand with `--dry-run` to print the shell command without executing it.
+- C++20 compiler (MSVC, Clang, or GCC)
+- [CMake](https://cmake.org/) 3.24+
+- [Conan](https://conan.io/) 2.x
+- [Ninja](https://ninja-build.org/) (recommended)
+- Python 3.9+ (build helper)
 
-## Running
-- Default build dir: `build-ninja` on Linux/macOS, `build-ninja-msvc` on Windows.
-- `python scripts/dev_commands.py run --build-dir <path>` to run from a custom build directory.
-- `python scripts/dev_commands.py run --target spinning_cube` to launch another executable.
-- `python scripts/dev_commands.py run -- --json-file-in config/gui_runtime.json` to pass app flags (use `--` before app args).
+### Build & Run (Recommended)
 
-### JSON config examples
-- `python scripts/dev_commands.py run -- --json-file-in config/seed_runtime.json`
-- `python scripts/dev_commands.py run -- --json-file-in config/soundboard_runtime.json`
-- `python scripts/dev_commands.py run -- --json-file-in config/gui_runtime.json`
+The `dev_commands.py` build helper runs the full pipeline: Conan install, CMake generate, configure, and build.
 
-## Runtime configuration
-- `sdl3_app --json-file-in <path>` loads JSON configs (script path, window size, `lua_debug`, etc.).
-- `sdl3_app --create-seed-json config/seed_runtime.json` writes a starter file assuming `scripts/cube_logic.lua` sits beside the binary.
-- `sdl3_app --set-default-json [path]` stores or overrides the runtime JSON; Windows writes `%APPDATA%/sdl3cpp`, other OSes use `$XDG_CONFIG_HOME/sdl3cpp/default_runtime.json` (fallback `~/.config/sdl3cpp`).
+```bash
+# Build and run the seed demo (auto-detects platform bootstrap)
+python python/dev_commands.py all --run
 
-### Input bindings
-`config/seed_runtime.json` includes an `input_bindings` section that maps keyboard keys and gamepad inputs to action names consumed by the Lua script (see `scripts/cube_logic.lua`).
+# Equivalent explicit form on Windows
+python python/dev_commands.py all --run --bootstrap bootstrap_windows --game seed
 
-Keyboard bindings use SDL key names (e.g. `W`, `Space`, `Left Shift`). Gamepad bindings use SDL gamepad names (e.g. `start`, `south`, `dpad_up`, `leftx`).
+# macOS
+python python/dev_commands.py all --run --bootstrap bootstrap_mac --game seed
 
-Example:
-```
-"input_bindings": {
-  "move_forward": "W",
-  "move_back": "S",
-  "move_left": "A",
-  "move_right": "D",
-  "music_toggle": "M",
-  "music_toggle_gamepad": "start",
-  "gamepad_move_x_axis": "leftx",
-  "gamepad_move_y_axis": "lefty",
-  "gamepad_look_x_axis": "rightx",
-  "gamepad_look_y_axis": "righty",
-  "gamepad_dpad_up": "dpad_up",
-  "gamepad_dpad_down": "dpad_down",
-  "gamepad_dpad_left": "dpad_left",
-  "gamepad_dpad_right": "dpad_right",
-  "gamepad_button_actions": {
-    "south": "gamepad_a",
-    "east": "gamepad_b",
-    "west": "gamepad_x",
-    "north": "gamepad_y",
-    "left_shoulder": "gamepad_lb",
-    "right_shoulder": "gamepad_rb",
-    "left_stick": "gamepad_ls",
-    "right_stick": "gamepad_rs",
-    "back": "gamepad_back",
-    "start": "gamepad_start"
-  },
-  "gamepad_axis_actions": {
-    "left_trigger": "gamepad_lt",
-    "right_trigger": "gamepad_rt"
-  },
-  "gamepad_axis_action_threshold": 0.5
-}
+# Linux
+python python/dev_commands.py all --run --bootstrap bootstrap_linux --game seed
 ```
 
-## GUI demo
-`scripts/gui_demo.lua` exercises the Lua GUI framework; rendering hooks are currently stubbed while bgfx GUI integration is wired up. Launch it as `python scripts/dev_commands.py run -- --json-file-in config/gui_runtime.json` or register that config via `sdl3_app --set-default-json`.
+### Build Steps (Manual)
 
-## Audio assets
-Install the dependencies that power `scripts/generate_audio_assets.py`:
-- `python -m pip install --user numpy soundfile pedalboard piper-tts`
+```bash
+# 1. Install Conan dependencies
+python python/dev_commands.py dependencies
 
-Before translating phrases, download a Piper voice (the script defaults to `en_US-lessac-medium`):
+# 2. Generate CMakeLists.txt from cmake_config.json
+python python/dev_commands.py generate
+
+# 3. Configure CMake
+python python/dev_commands.py configure --preset conan-default
+
+# 4. Build
+python python/dev_commands.py build
+
+# 5. Run
+python python/dev_commands.py run -- --bootstrap bootstrap_windows --game seed
+```
+
+### Makefile (Unix)
+
+```bash
+make build                              # Build sdl3_app
+make build TARGET=sdl3_app              # Build specific target
+make test                               # Build and run all tests
+make rebuild                            # Clean + build
+make list-targets                       # Show available targets
+```
+
+## CLI Arguments
+
+The compiled `sdl3_app` binary accepts:
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--bootstrap` | `bootstrap_mac` | Platform bootstrap package |
+| `--game` | `standalone_cubes` | Game package to load |
+| `--project-root` | Current directory | Path to gameengine root |
+
+## Packages
+
+Game content and platform initialization are defined as JSON packages in `packages/`:
+
+| Package | Type | Description |
+|---------|------|-------------|
+| `bootstrap_windows` | bootloader | Windows init, SDL3 GPU with D3D12 |
+| `bootstrap_mac` | bootloader | macOS init, SDL3 GPU with Metal |
+| `bootstrap_linux` | bootloader | Linux init, SDL3 GPU with Vulkan |
+| `seed` | game | FPS demo: room with spinning cube, WASD movement, mouse look, jump. Bullet3 physics |
+| `standalone_cubes` | game | 11x11 grid of spinning colored cubes with per-cube animation offsets |
+| `quake3` | game | Quake 3 BSP map viewer with FPS controls |
+| `soundboard` | game | Audio cues + GUI controls |
+| `engine_tester` | game | Validation tour with teleport checkpoints, captures, and diagnostics |
+| `asset_loader` | library | Universal asset loading with cross-engine unit conversion (JSON-driven) |
+| `assets` | library | Shared runtime assets (audio, fonts, images) |
+| `materialx` | library | MaterialX integration |
+
+## Architecture
 
 ```
-python -m piper.download_voices en_US-lessac-medium --download-dir scripts/assets/audio/tts/voices
+src/
+  main.cpp                          # Entry point, CLI parsing, workflow bootstrap
+  services/
+    interfaces/                     # Abstract service interfaces (16 services)
+      i_audio_service.hpp
+      i_graphics_service.hpp
+      i_input_service.hpp
+      i_physics_service.hpp
+      i_scene_service.hpp
+      i_window_service.hpp
+      i_workflow_executor.hpp
+      ...
+    impl/                           # Concrete implementations
+      workflow/                     # Workflow step implementations
+      diagnostics/                  # Logging
+      app/                          # CLI, platform services
+
+packages/                           # JSON-driven game content
+  {package}/
+    package.json                    # Package metadata, config, shader list
+    workflows/*.json                # Workflow definitions (v2.2.0 format)
+    shaders/spirv/                  # SPIR-V shaders (Vulkan, D3D12)
+    shaders/msl/                    # Metal shaders (macOS)
+    scene/*.json                    # Scene definitions
+    assets/                         # Package-specific assets
+
+python/
+  dev_commands.py                   # Build helper CLI
+  generate_cmake.py                 # CMakeLists.txt generator from cmake_config.json
+  export_room_gltf.py              # Seed demo room glTF exporter
 ```
 
-Running the generator recreates procedural effects under `scripts/assets/audio/sfx/` and voice clips under `scripts/assets/audio/tts/`. Use `--force` to rebuild every file and `--skip-sfx` / `--skip-tts` if you only need one subset; add `--verbose` to see the internal logging as the files are created. Override the voice files with `--piper-voice-model <path>` and (optionally) `--piper-voice-config <path>` if you downloaded a different voice or location. Pass `--download-voice` to have the script invoke `piper.download_voices` automatically before rendering (requires `piper-tts` and network access).
+## Dependencies (Conan)
 
-## GitHub Actions workflow diagnostics
-- `python -m pip install pyyaml` installs the YAML dependency for the workflow analyzer.
-- `python scripts/workflow_doctor.py [--workflows-dir .github/workflows]` inspects workflows for missing permissions, floating action references, and other reproducibility/security hints.
+| Library | Version | Purpose |
+|---------|---------|---------|
+| SDL | 3.2.20 | Windowing, input, GPU API |
+| Bullet3 | 3.25 | 3D physics |
+| Box2D | 3.1.1 | 2D physics |
+| EnTT | 3.16.0 | Entity Component System |
+| Assimp | 6.0.2 | 3D model import |
+| glm | 1.0.1 | Math library |
+| nlohmann_json | 3.11.3 | JSON parsing |
+| RapidJSON | cci.20230929 | JSON parsing (performance) |
+| FFmpeg | 8.0.1 | Audio/video decoding |
+| FreeType | 2.13.2 | Font rendering |
+| Cairo | 1.18.0 | 2D vector graphics |
+| stb | cci.20230920 | Image loading |
+| LunaSVG | 3.0.1 | SVG rendering |
+| libzip | 1.10.1 | ZIP archive support |
+| cpptrace | 1.0.4 | Stack traces |
+| CLI11 | 2.6.0 | Command-line parsing |
+| GTest | 1.17.0 | Testing framework |
+
+## Testing
+
+```bash
+# Via Makefile
+make test
+
+# Via dev_commands.py
+python python/dev_commands.py build --target test_exit_step
+```

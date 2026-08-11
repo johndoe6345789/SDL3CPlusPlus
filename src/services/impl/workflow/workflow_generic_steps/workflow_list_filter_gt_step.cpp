@@ -1,6 +1,6 @@
-#include "workflow_list_filter_gt_step.hpp"
+#include "services/interfaces/workflow/workflow_generic_steps/workflow_list_filter_gt_step.hpp"
 
-#include "../workflow_step_io_resolver.hpp"
+#include "services/interfaces/workflow/workflow_step_io_resolver.hpp"
 
 #include <stdexcept>
 #include <utility>

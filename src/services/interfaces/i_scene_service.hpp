@@ -1,6 +1,6 @@
 #pragma once
 
-#include "i_graphics_service.hpp"
+#include "services/interfaces/i_graphics_service.hpp"
 #include "scene_types.hpp"
 #include <vector>
 

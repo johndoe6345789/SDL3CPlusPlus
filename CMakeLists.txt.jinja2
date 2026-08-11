@@ -1,0 +1,109 @@
+{# CMakeLists.txt.jinja2 - Main template for game engine build configuration
+   This template is generated from cmake_config.json. DO NOT EDIT DIRECTLY.
+   To modify the build, edit cmake_config.json and run: python3 generate_cmake.py
+#}
+cmake_minimum_required(VERSION {{ config.project.cmake_minimum_version }})
+
+{%- include 'cmake/options.cmake.jinja2' %}
+
+project({{ config.project.name }} LANGUAGES CXX)
+
+{%- include 'cmake/compiler_config.cmake.jinja2' %}
+
+{%- include 'cmake/dependencies.cmake.jinja2' %}
+
+{%- include 'cmake/source_groups.cmake.jinja2' %}
+
+{%- if config.libraries %}
+
+# ============================================================================
+# LIBRARY TARGETS
+# ============================================================================
+{%- for library in config.libraries %}
+{%- if library.get('enabled_when') %}
+if({{ library.enabled_when }})
+{%- endif %}
+    add_library({{ library.name }} STATIC)
+{%- for source in library.sources %}
+    target_sources({{ library.name }} PRIVATE {{ source }})
+{%- endfor %}
+{%- if library.include_directories %}
+    target_include_directories({{ library.name }}
+{%- for inc_dir in library.include_directories %}
+        PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/{{ inc_dir }}"
+{%- endfor %}
+    )
+{%- endif %}
+{%- if library.link_libraries %}
+    target_link_libraries({{ library.name }} PUBLIC
+{%- for lib in library.link_libraries %}
+        {{ lib }}
+{%- endfor %}
+    )
+{%- endif %}
+{%- if library.compile_definitions %}
+    target_compile_definitions({{ library.name }} PRIVATE
+{%- for def in library.compile_definitions %}
+        {{ def }}
+{%- endfor %}
+    )
+{%- endif %}
+{%- if library.get('enabled_when') %}
+endif()
+{%- endif %}
+
+{%- endfor %}
+{%- endif %}
+
+{%- if config.targets %}
+
+# ============================================================================
+# EXECUTABLE TARGETS
+# ============================================================================
+{%- for target in config.targets %}
+{%- if target.get('enabled_when') %}
+if({{ target.enabled_when }})
+{%- endif %}
+    add_executable({{ target.name }}
+{%- for source in target.sources %}
+        {{ source }}
+{%- endfor %}
+    )
+    target_include_directories({{ target.name }} PRIVATE
+{%- for inc_dir in target.include_directories %}
+        "${CMAKE_CURRENT_SOURCE_DIR}/{{ inc_dir }}"
+{%- endfor %}
+    )
+    target_link_libraries({{ target.name }} PRIVATE
+{%- for lib in target.link_libraries %}
+        {{ lib }}
+{%- endfor %}
+    )
+{%- if target.compile_definitions %}
+    target_compile_definitions({{ target.name }} PRIVATE
+{%- for def in target.compile_definitions %}
+        {{ def }}
+{%- endfor %}
+    )
+{%- endif %}
+{%- if target.get('enabled_when') %}
+endif()
+{%- endif %}
+
+{%- endfor %}
+{%- endif %}
+
+# ============================================================================
+# FILE COPYING
+# ============================================================================
+{%- if config.file_copying %}
+{%- for copy_rule in config.file_copying %}
+if({{ copy_rule.condition }})
+{%- for copy in copy_rule.copies %}
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/{{ copy.source }}")
+        file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/{{ copy.source }}" DESTINATION "{{ copy.destination }}")
+    endif()
+{%- endfor %}
+endif()
+{%- endfor %}
+{%- endif %}

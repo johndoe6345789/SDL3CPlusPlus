@@ -1,0 +1,51 @@
+{
+  "name": "Q3 Physics",
+  "description": "FPS movement, physics step, transform sync, BSP entity update, camera.",
+  "steps": [
+    {
+      "id": "movers_init",
+      "plugin": "q3.movers.init"
+    },
+    {
+      "id": "movers_update",
+      "plugin": "q3.movers.update"
+    },
+    {
+      "id": "triggers_check",
+      "plugin": "q3.triggers.check"
+    },
+    {
+      "id": "triggers_apply",
+      "plugin": "q3.triggers.apply"
+    },
+    { "id": "pm_crouch",     "plugin": "q3.pm.crouch" },
+    { "id": "pm_ground",     "plugin": "q3.pm.ground" },
+    { "id": "pm_friction",   "plugin": "q3.pm.friction" },
+    { "id": "pm_accelerate", "plugin": "q3.pm.accelerate" },
+    { "id": "pm_jump",       "plugin": "q3.pm.jump" },
+    { "id": "pm_slide",      "plugin": "q3.pm.slide_move" },
+    {
+      "id": "physics_step",
+      "plugin": "physics.step"
+    },
+    {
+      "id": "sync_transforms",
+      "plugin": "physics.sync_transforms"
+    },
+    {
+      "id": "bsp_entities_update",
+      "plugin": "bsp.entities.update"
+    },
+    {
+      "id": "camera_update",
+      "plugin": "camera.fps.update",
+      "parameters": {
+        "sensitivity": 0.003,
+        "eye_height":  1.4,
+        "fov":         90.0,
+        "near":        0.1,
+        "far":         500.0
+      }
+    }
+  ]
+}

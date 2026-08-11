@@ -1,35 +1,26 @@
 #pragma once
 
-#include "probe_types.hpp"
-#include <vector>
+#include <memory>
+#include <string>
 
 namespace sdl3cpp::services {
 
 /**
- * @brief Probe service interface for structured diagnostics.
+ * Probe service interface for diagnostic and configuration operations.
+ *
+ * This service provides mechanisms for:
+ * - Configuration schema probing
+ * - Configuration migration
+ * - Diagnostic data collection
  */
 class IProbeService {
 public:
     virtual ~IProbeService() = default;
 
     /**
-     * @brief Record a probe report.
-     *
-     * @param report Report data
+     * Get a unique identifier for this service.
      */
-    virtual void Report(const ProbeReport& report) = 0;
-
-    /**
-     * @brief Drain all queued reports.
-     *
-     * @return Collected reports (clears internal storage)
-     */
-    virtual std::vector<ProbeReport> DrainReports() = 0;
-
-    /**
-     * @brief Clear all queued reports.
-     */
-    virtual void ClearReports() = 0;
+    virtual std::string GetServiceId() const = 0;
 };
 
 }  // namespace sdl3cpp::services

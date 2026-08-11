@@ -1,7 +1,7 @@
 #pragma once
 
-#include "event_listener.hpp"
-#include "event_types.hpp"
+#include "events/event_listener.hpp"
+#include "events/event_types.hpp"
 #include <cstddef>
 
 namespace sdl3cpp::events {

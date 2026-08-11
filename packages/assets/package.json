@@ -2,6 +2,8 @@
   "name": "assets",
   "version": "0.1.0",
   "description": "Shared runtime assets (audio, fonts, images) used by demo packages.",
+  "type": "library",
+  "category": "asset",
   "defaultWorkflow": "workflows/assets_catalog.json",
   "workflows": [
     "workflows/assets_catalog.json"

@@ -1,84 +1,24 @@
+
 cmake_minimum_required(VERSION 3.24)
-option(ENABLE_VITA "Enable Vita SDK integration" OFF)
-if(ENABLE_VITA)
-    if(NOT DEFINED ENV{VITASDK})
-        message(FATAL_ERROR "VITASDK environment variable must be set when ENABLE_VITA is ON")
-    endif()
-    set(CMAKE_TOOLCHAIN_FILE "$ENV{VITASDK}/share/vita.toolchain.cmake" CACHE FILEPATH "Vita SDK toolchain" FORCE)
-    include_directories("$ENV{VITASDK}/arm-vita-eabi/include")
-    link_directories("$ENV{VITASDK}/arm-vita-eabi/lib")
-    # Disable SDL3 app when building for Vita
-    set(BUILD_SDL3_APP OFF CACHE BOOL "Build the SDL3 bgfx demo" FORCE)
-    set(BUILD_SCRIPT_TESTS OFF CACHE BOOL "Build script engine tests" FORCE)
-endif()
+option(BUILD_SDL3_APP "Build the SDL3 GPU demo" ON)
+option(ENABLE_CLANG_TIDY "Automatically run clang-tidy on every target" OFF)
+set(SDL_VERSION "SDL3" CACHE STRING "SDL version to use")
+set_property(CACHE SDL_VERSION PROPERTY STRINGS SDL3 sdl)
 
 
 project(SDL3App LANGUAGES CXX)
-list(APPEND CMAKE_PROGRAM_PATH "C:/ProgramData/chocolatey/bin")
+
+# Build type configuration
 if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build configuration for single-config generators" FORCE)
-endif()
-option(ENABLE_CLANG_TIDY "Automatically run clang-tidy on every target when configuring via CMake" OFF)
-
-if(ENABLE_CLANG_TIDY)
-    find_program(CLANG_TIDY_EXE
-        NAMES clang-tidy clang-tidy.exe
-        HINTS "C:/Program Files/LLVM/bin" "C:/ProgramData/chocolatey/bin"
-    )
-    if(CLANG_TIDY_EXE)
-        if(WIN32)
-            set(CLANG_TIDY_WRAPPER "${CMAKE_CURRENT_BINARY_DIR}/clang_tidy_wrapper.bat")
-            file(WRITE ${CLANG_TIDY_WRAPPER}
-                "@echo off\n"
-                "setlocal\n"
-                "set \"CLANG_TIDY_EXE=${CLANG_TIDY_EXE}\"\n"
-                "echo [clang-tidy] starting %*\n"
-                "\"%CLANG_TIDY_EXE%\" %*\n"
-                "set RET=%ERRORLEVEL%\n"
-                "echo [clang-tidy] finished (exit %RET%)\n"
-                "exit /b %RET%\n"
-            )
-        else()
-            set(CLANG_TIDY_WRAPPER "${CMAKE_CURRENT_BINARY_DIR}/clang_tidy_wrapper.sh")
-            file(WRITE ${CLANG_TIDY_WRAPPER}
-                "#!/bin/sh\n"
-                "echo \"[clang-tidy] starting $@\"\n"
-                "\"${CLANG_TIDY_EXE}\" \"$@\"\n"
-                "ret=$?\n"
-                "echo \"[clang-tidy] finished (exit $ret)\"\n"
-                "exit $ret\n"
-            )
-            execute_process(COMMAND ${CMAKE_COMMAND} -E chmod +x ${CLANG_TIDY_WRAPPER})
-        endif()
-        set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES ${CLANG_TIDY_WRAPPER})
-        set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_WRAPPER}")
-    else()
-        message(WARNING "clang-tidy requested but not found on the PATH; disabling lint step")
-    endif()
-endif()
-if(ENABLE_VITA)
-    include("$ENV{VITASDK}/share/vita.cmake" REQUIRED)
-    set(VITA_APP_NAME "SDL3App")
-    set(VITA_TITLEID "ABCD00001")
-endif()
-option(BUILD_SDL3_APP "Build the SDL3 bgfx demo" ON)
-set(SDL_VERSION "SDL3" CACHE STRING "SDL version to use: SDL3 or sdl")
-set_property(CACHE SDL_VERSION PROPERTY STRINGS "SDL3" "sdl")
-
-if(BUILD_SDL3_APP AND NOT SDL_VERSION STREQUAL "SDL3")
-    message(STATUS "Disabling BUILD_SDL3_APP because SDL_VERSION is set to '${SDL_VERSION}' instead of SDL3")
-    set(BUILD_SDL3_APP OFF CACHE BOOL "Build the SDL3 bgfx demo" FORCE)
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type" FORCE)
 endif()
 
-if(ENABLE_VITA)
-    set(CMAKE_CXX_STANDARD 17)
-else()
-    set(CMAKE_CXX_STANDARD 23)
-endif()
+# C++ standard
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Enforce "no macros" culture mechanically
+# Warning flags - enforce no macros culture
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options(
         -Wmacro-redefined
@@ -90,14 +30,15 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     )
 endif()
 if(MSVC)
-    # MSVC equivalent warnings
     add_compile_options(/we4005)  # macro redefinition
 endif()
 
+# Conan toolchain
 if(EXISTS "${CMAKE_BINARY_DIR}/conan_toolchain.cmake")
     include("${CMAKE_BINARY_DIR}/conan_toolchain.cmake")
 endif()
 
+# Ninja generator fixes
 if(CMAKE_GENERATOR MATCHES "Ninja" OR CMAKE_GENERATOR MATCHES "Ninja Multi-Config")
     if(DEFINED CMAKE_GENERATOR_PLATFORM)
         set(CMAKE_GENERATOR_PLATFORM "" CACHE STRING "" FORCE)
@@ -107,11 +48,35 @@ if(CMAKE_GENERATOR MATCHES "Ninja" OR CMAKE_GENERATOR MATCHES "Ninja Multi-Confi
     endif()
 endif()
 
-if(BUILD_SDL3_APP AND NOT ENABLE_VITA)
-    find_package(shaderc CONFIG REQUIRED)
+# Windows Chocolatey paths
+list(APPEND CMAKE_PROGRAM_PATH "C:/ProgramData/chocolatey/bin")
+
+# Clang-tidy support
+if(ENABLE_CLANG_TIDY)
+    find_program(CLANG_TIDY_EXE NAMES clang-tidy clang-tidy.exe HINTS "C:/Program Files/LLVM/bin" "C:/ProgramData/chocolatey/bin")
+    if(CLANG_TIDY_EXE)
+        if(WIN32)
+            set(CLANG_TIDY_WRAPPER "${CMAKE_CURRENT_BINARY_DIR}/clang_tidy_wrapper.bat")
+            file(WRITE ${CLANG_TIDY_WRAPPER}
+                "@echo off\nsetlocal\nset \"CLANG_TIDY_EXE=${CLANG_TIDY_EXE}\"\necho [clang-tidy] starting %*\n\"%CLANG_TIDY_EXE%\" %*\nset RET=%ERRORLEVEL%\necho [clang-tidy] finished (exit %RET%)\nexit /b %RET%\n"
+            )
+        else()
+            set(CLANG_TIDY_WRAPPER "${CMAKE_CURRENT_BINARY_DIR}/clang_tidy_wrapper.sh")
+            file(WRITE ${CLANG_TIDY_WRAPPER}
+                "#!/bin/sh\necho \"[clang-tidy] starting $@\"\n\"${CLANG_TIDY_EXE}\" \"$@\"\nret=$?\necho \"[clang-tidy] finished (exit $ret)\"\nexit $ret\n"
+            )
+            execute_process(COMMAND ${CMAKE_COMMAND} -E chmod +x ${CLANG_TIDY_WRAPPER})
+        endif()
+        set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES ${CLANG_TIDY_WRAPPER})
+        set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_WRAPPER}")
+    else()
+        message(WARNING "clang-tidy requested but not found")
+    endif()
 endif()
 
-# SDL is required for both the demo app and cube_script_tests (used by audio_player)
+# SDL selection
+
+
 if(SDL_VERSION STREQUAL "SDL3")
     find_package(SDL3 CONFIG REQUIRED)
     set(SDL_TARGET SDL3::SDL3)
@@ -119,58 +84,35 @@ elseif(SDL_VERSION STREQUAL "sdl")
     find_package(SDL CONFIG REQUIRED)
     set(SDL_TARGET SDL::SDL)
 else()
-    message(FATAL_ERROR "Invalid SDL_VERSION: ${SDL_VERSION}. Must be SDL3 or sdl")
+    message(FATAL_ERROR "Invalid SDL_VERSION: ${SDL_VERSION}")
 endif()
 
-if(NOT ENABLE_VITA)
-find_package(CLI11 CONFIG REQUIRED)
+
+# Find all required packages
+
 find_package(RapidJSON CONFIG REQUIRED)
-find_package(EnTT CONFIG REQUIRED)
-find_package(bgfx CONFIG REQUIRED)
-find_package(spirv-cross CONFIG REQUIRED)
-find_package(materialx CONFIG REQUIRED)
-find_package(Freetype CONFIG REQUIRED)
-find_package(lunasvg CONFIG REQUIRED)
-find_package(assimp CONFIG REQUIRED)
-find_package(libzip CONFIG REQUIRED)
+
+find_package(nlohmann_json CONFIG REQUIRED)
+
 find_package(Bullet CONFIG REQUIRED)
-find_package(Vorbis CONFIG REQUIRED)
+
 find_package(glm CONFIG REQUIRED)
-find_package(cpptrace REQUIRED)
+
 find_package(stb CONFIG REQUIRED)
-find_package(GTest CONFIG REQUIRED)
 
+find_package(EnTT CONFIG REQUIRED)
+
+find_package(assimp CONFIG REQUIRED)
+
+find_package(libzip CONFIG REQUIRED)
+
+find_package(spdlog CONFIG REQUIRED)
+
+
+# Build render stack library group
 set(SDL3CPP_RENDER_STACK_LIBS EnTT::EnTT)
-if(TARGET bgfx::bgfx)
-    list(APPEND SDL3CPP_RENDER_STACK_LIBS bgfx::bgfx)
-endif()
-if(TARGET bgfx::bx)
-    list(APPEND SDL3CPP_RENDER_STACK_LIBS bgfx::bx)
-endif()
-if(TARGET bimg::bimg)
-    list(APPEND SDL3CPP_RENDER_STACK_LIBS bimg::bimg)
-endif()
 
-set(SDL3CPP_MATERIALX_LIBS)
-if(TARGET materialx::materialx)
-    list(APPEND SDL3CPP_MATERIALX_LIBS materialx::materialx)
-else()
-    foreach(candidate IN ITEMS
-            materialx::MaterialXCore
-            materialx::MaterialXFormat
-            materialx::MaterialXGenShader
-            materialx::MaterialXGenGlsl
-            materialx::MaterialXRender)
-        if(TARGET ${candidate})
-            list(APPEND SDL3CPP_MATERIALX_LIBS ${candidate})
-        endif()
-    endforeach()
-endif()
-if(SDL3CPP_MATERIALX_LIBS)
-    message(TRACE "MaterialX targets selected: ${SDL3CPP_MATERIALX_LIBS}")
-    list(APPEND SDL3CPP_RENDER_STACK_LIBS ${SDL3CPP_MATERIALX_LIBS})
-endif()
-
+# Freetype library group
 set(SDL3CPP_FREETYPE_LIBS)
 if(TARGET Freetype::Freetype)
     list(APPEND SDL3CPP_FREETYPE_LIBS Freetype::Freetype)
@@ -178,6 +120,7 @@ elseif(TARGET freetype::freetype)
     list(APPEND SDL3CPP_FREETYPE_LIBS freetype::freetype)
 endif()
 
+# libzip library group
 set(SDL3CPP_ZIP_LIBS)
 if(TARGET libzip::zip)
     list(APPEND SDL3CPP_ZIP_LIBS libzip::zip)
@@ -185,6 +128,7 @@ elseif(TARGET libzip::libzip)
     list(APPEND SDL3CPP_ZIP_LIBS libzip::libzip)
 endif()
 
+# stb library group
 set(SDL3CPP_STB_LIBS)
 if(TARGET stb::stb_image)
     list(APPEND SDL3CPP_STB_LIBS stb::stb_image)
@@ -193,719 +137,310 @@ elseif(TARGET stb::stb)
 elseif(TARGET stb)
     list(APPEND SDL3CPP_STB_LIBS stb)
 endif()
-endif()
 
-## Local build of bgfx_tools shaderc sources as a library so we can link in-process.
-add_library(shaderc_local STATIC
-    src/bgfx_tools/shaderc/shaderc_hlsl.cpp
-    src/bgfx_tools/shaderc/shaderc_metal.cpp
-    src/bgfx_tools/shaderc/shaderc_mem.cpp
-    src/bgfx_tools/shaderc/shaderc_spirv.cpp
-    src/bgfx_tools/shaderc/shaderc_utils.cpp
-)
-target_include_directories(shaderc_local PUBLIC
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_tools/shaderc"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_deps/glslang"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_deps/glslang/Include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_deps/glslang/glslang/Public")
-target_include_directories(shaderc_local PRIVATE
-    "${CMAKE_CURRENT_SOURCE_DIR}/src")
-if(TARGET bgfx::bx)
-    target_link_libraries(shaderc_local PUBLIC bgfx::bx)
-endif()
-if(TARGET bgfx::bgfx)
-    target_link_libraries(shaderc_local PUBLIC bgfx::bgfx)
-endif()
-if(TARGET spirv-cross::spirv-cross)
-    target_link_libraries(shaderc_local PUBLIC spirv-cross::spirv-cross)
-    target_include_directories(shaderc_local BEFORE PRIVATE
-        $<TARGET_PROPERTY:spirv-cross::spirv-cross,INTERFACE_INCLUDE_DIRECTORIES>)
-    target_compile_definitions(shaderc_local PRIVATE
-        $<TARGET_PROPERTY:spirv-cross::spirv-cross,INTERFACE_COMPILE_DEFINITIONS>)
-    target_compile_options(shaderc_local PRIVATE
-        $<TARGET_PROPERTY:spirv-cross::spirv-cross,INTERFACE_COMPILE_OPTIONS>)
-endif()
-# Link shaderc dependencies
-if(TARGET glslang::glslang)
-    target_link_libraries(shaderc_local PUBLIC glslang::glslang)
-    target_include_directories(shaderc_local PRIVATE
-        $<TARGET_PROPERTY:glslang::glslang,INTERFACE_INCLUDE_DIRECTORIES>)
-    target_compile_definitions(shaderc_local PRIVATE
-        $<TARGET_PROPERTY:glslang::glslang,INTERFACE_COMPILE_DEFINITIONS>)
-    target_compile_options(shaderc_local PRIVATE
-        $<TARGET_PROPERTY:glslang::glslang,INTERFACE_COMPILE_OPTIONS>)
-endif()
-if(TARGET spirv-tools::spirv-tools)
-    target_link_libraries(shaderc_local PUBLIC spirv-tools::spirv-tools)
-    target_include_directories(shaderc_local PRIVATE
-        $<TARGET_PROPERTY:spirv-tools::spirv-tools,INTERFACE_INCLUDE_DIRECTORIES>)
-    target_compile_definitions(shaderc_local PRIVATE
-        $<TARGET_PROPERTY:spirv-tools::spirv-tools,INTERFACE_COMPILE_DEFINITIONS>)
-    target_compile_options(shaderc_local PRIVATE
-        $<TARGET_PROPERTY:spirv-tools::spirv-tools,INTERFACE_COMPILE_OPTIONS>)
-endif()
-if(TARGET shaderc::shaderc)
-    target_link_libraries(shaderc_local PUBLIC shaderc::shaderc)
-endif()
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
-    target_compile_options(shaderc_local PRIVATE
-        -Wno-old-style-cast
-        -Wno-sign-conversion
-        -Wno-conversion
-        -Wno-format
-        -Wno-extra
-        -Wno-unused-parameter)
-endif()
+# ============================================================================
+# SOURCE FILE GROUPINGS
+# ============================================================================
+# Auto-discover source files from key directories using file(GLOB)
 
-## Build geometryc tool
-# add_executable(geometryc
-#     src/bgfx_tools/geometryc/geometryc.cpp
-# )
-# target_include_directories(geometryc PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-# target_link_libraries(geometryc PRIVATE ${SDL3CPP_RENDER_STACK_LIBS} meshoptimizer::meshoptimizer cgltf::cgltf)
+# JSON config service sources
+file(GLOB JSON_CONFIG_SOURCES src/config/json_config*.cpp)
 
-## Build texturev tool
-# add_executable(texturev
-#     src/bgfx_tools/texturev/texturev.cpp
-# )
-# target_include_directories(texturev PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-# target_link_libraries(texturev PRIVATE ${SDL3CPP_RENDER_STACK_LIBS})
-
-set(JSON_CONFIG_SOURCES
-    src/services/impl/config/json_config_service.cpp
-    src/services/impl/config/runtime_config_builder.cpp
-    src/services/impl/config/json_config_document_loader.cpp
-    src/services/impl/config/json_config_document_parser.cpp
-    src/services/impl/config/json_config_extend_resolver.cpp
-    src/services/impl/config/json_config_merge_service.cpp
-    src/services/impl/config/json_config_schema_path_resolver.cpp
-    src/services/impl/config/json_config_schema_validator.cpp
-    src/services/impl/config/json_config_version_validator.cpp
-    src/services/impl/config/json_config_migration_service.cpp
+# Workflow service sources (all workflow steps in main workflow directory)
+file(GLOB WORKFLOW_SOURCES src/services/impl/workflow/*.cpp)
+# Remove problematic files with missing dependencies or incomplete implementations
+list(REMOVE_ITEM WORKFLOW_SOURCES
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/services/impl/config/"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/services/impl/workflow/workflow_config_load_step.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/services/impl/workflow/workflow_config_migration_step.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/services/impl/workflow/workflow_config_schema_step.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/services/impl/workflow/workflow_config_version_step.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/services/impl/workflow/workflow_config_pipeline.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/services/impl/workflow/graphics/workflow_graphics_shader_load_step.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/services/impl/workflow/rendering/workflow_render_cube_grid_step.cpp"
 )
 
-file(GLOB WORKFLOW_GENERIC_STEP_SOURCES CONFIGURE_DEPENDS
-    src/services/impl/workflow/workflow_generic_steps/*.cpp
+# Frame-specific workflow steps
+file(GLOB FRAME_WORKFLOW_SOURCES src/services/impl/workflow/frame/*.cpp)
+# Apply same exclusions to frame sources
+list(REMOVE_ITEM FRAME_WORKFLOW_SOURCES
 )
 
-set(WORKFLOW_SOURCES
-    src/services/impl/workflow/workflow_step_io_resolver.cpp
-    src/services/impl/workflow/workflow_step_parameter_resolver.cpp
-    src/services/impl/workflow/workflow_step_registry.cpp
-    src/services/impl/workflow/workflow_executor.cpp
-    src/services/impl/workflow/workflow_definition_parser.cpp
-    src/services/impl/workflow/workflow_template_resolver.cpp
-    src/services/impl/workflow/workflow_camera_view_state_builder.cpp
-    src/services/impl/workflow/workflow_config_pipeline.cpp
-    src/services/impl/workflow/workflow_config_load_step.cpp
-    src/services/impl/workflow/workflow_config_version_step.cpp
-    src/services/impl/workflow/workflow_config_migration_step.cpp
-    src/services/impl/workflow/workflow_config_schema_step.cpp
-    src/services/impl/workflow/workflow_default_step_registrar.cpp
-    src/services/impl/workflow/workflow_mesh_payload_converter.cpp
-    src/services/impl/workflow/workflow_runtime_config_step.cpp
-    ${WORKFLOW_GENERIC_STEP_SOURCES}
-)
+# Generic workflow steps (atomic, reusable steps)
+file(GLOB GENERIC_WORKFLOW_SOURCES src/services/impl/workflow/generic_steps/*.cpp)
 
-set(FRAME_WORKFLOW_SOURCES
-    src/services/impl/workflow/frame/workflow_frame_begin_step.cpp
-    src/services/impl/workflow/frame/workflow_frame_camera_step.cpp
-    src/services/impl/workflow/frame/workflow_frame_bullet_physics_step.cpp
-    src/services/impl/workflow/frame/workflow_frame_physics_step.cpp
-    src/services/impl/workflow/frame/workflow_frame_scene_step.cpp
-    src/services/impl/workflow/frame/workflow_frame_render_step.cpp
-    src/services/impl/workflow/frame/workflow_frame_audio_step.cpp
-    src/services/impl/workflow/frame/workflow_frame_gui_step.cpp
-    src/services/impl/workflow/workflow_soundboard_catalog_scan_step.cpp
-    src/services/impl/workflow/workflow_soundboard_gui_step.cpp
-    src/services/impl/workflow/workflow_soundboard_audio_step.cpp
-    src/services/impl/workflow/workflow_validation_checkpoint_step.cpp
-    src/services/impl/workflow/frame/frame_workflow_step_registrar.cpp
-    src/services/impl/workflow/frame/frame_workflow_service.cpp
-    src/services/impl/soundboard/soundboard_state_service.cpp
-    src/services/impl/soundboard/soundboard_path_resolver.cpp
-)
-
-set(MATERIALX_SCRIPT_SOURCES
-    src/services/impl/materialx/materialx_path_resolver.cpp
-    src/services/impl/materialx/materialx_search_path_builder.cpp
-    src/services/impl/materialx/materialx_document_loader.cpp
-    src/services/impl/materialx/materialx_surface_node_resolver.cpp
-    src/services/impl/materialx/materialx_surface_parameter_reader.cpp
-)
-
+# ============================================================================
+# EXECUTABLE TARGETS
+# ============================================================================
 if(BUILD_SDL3_APP)
     add_executable(sdl3_app
-            src/main.cpp
-            src/stb_image.cpp
-            src/di/service_registry.cpp
-            src/events/event_bus.cpp
-            ${JSON_CONFIG_SOURCES}
-            ${WORKFLOW_SOURCES}
-            ${FRAME_WORKFLOW_SOURCES}
-            ${MATERIALX_SCRIPT_SOURCES}
-            src/services/impl/config/config_compiler_service.cpp
-            src/services/impl/app/command_line_service.cpp
-            src/services/impl/config/json_config_writer_service.cpp
-            src/services/impl/diagnostics/logger_service.cpp
-            src/services/impl/scene/ecs_service.cpp
-            src/services/impl/platform/platform_service.cpp
-            src/services/impl/diagnostics/probe_service.cpp
-            src/services/impl/shader/shader_system_registry.cpp
-            src/services/impl/shader/materialx_shader_system.cpp
-            src/services/impl/shader/glsl_shader_system.cpp
-            src/services/impl/materialx/materialx_shader_generator.cpp
-            src/services/impl/shader/shader_pipeline_validator.cpp
-            $<$<NOT:$<BOOL:${ENABLE_VITA}>>:src/services/impl/gui/bgfx_gui_service.cpp>
-            $<$<NOT:$<BOOL:${ENABLE_VITA}>>:src/services/impl/graphics/bgfx_shader_compiler.cpp>
-            src/services/impl/audio/audio_command_service.cpp
-            src/services/impl/scene/physics_bridge_service.cpp
-            src/services/impl/scene/mesh_service.cpp
-            src/services/impl/platform/sdl_window_service.cpp
-            src/services/impl/input/sdl_input_service.cpp
-            src/services/impl/audio/sdl_audio_service.cpp
-            src/services/impl/diagnostics/crash_recovery_service.cpp
-            src/services/impl/app/lifecycle_service.cpp
-            src/services/impl/app/application_loop_service.cpp
-            src/services/impl/render/render_coordinator_service.cpp
-            src/services/impl/diagnostics/validation_tour_service.cpp
-            src/services/impl/render/render_graph_service.cpp
-            src/services/impl/gui/null_gui_service.cpp
-            src/services/impl/gui/bgfx_gui_service.cpp
-            src/services/impl/graphics/bgfx_shader_compiler.cpp
-            src/services/impl/shader/pipeline_compiler_service.cpp
-            src/services/impl/scene/bullet_physics_service.cpp
-            src/services/impl/scene/scene_service.cpp
-            src/services/impl/graphics/graphics_service.cpp
-            $<$<NOT:$<BOOL:${ENABLE_VITA}>>:src/services/impl/graphics/bgfx_graphics_backend.cpp>
-            $<$<BOOL:${ENABLE_VITA}>:src/services/impl/graphics/gxm_graphics_backend.cpp>
-            src/app/service_based_app.cpp
-        )
-    target_include_directories(sdl3_app PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-    target_include_directories(sdl3_app PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_tools/shaderc")
+        src/main.cpp
+        src/services/impl/diagnostics/logger_service.cpp
+        src/services/impl/workflow/workflow_executor.cpp
+        src/services/impl/workflow/workflow_step_registry.cpp
+        src/services/impl/workflow/workflow_exit_step.cpp
+        src/services/impl/workflow/workflow_parameter_reader.cpp
+        src/services/impl/workflow/workflow_step_io_resolver.cpp
+        src/services/impl/workflow/workflow_step_parameter_resolver.cpp
+        src/services/impl/workflow/workflow_registrar.cpp
+        src/services/impl/workflow/workflow_sdl_init_step.cpp
+        src/services/impl/workflow/workflow_sdl_window_create_step.cpp
+        src/services/impl/workflow/workflow_app_init_step.cpp
+        src/services/impl/workflow/workflow_load_workflow_step.cpp
+        src/services/impl/workflow/workflow_definition_parser.cpp
+        src/services/impl/workflow/workflow_definition_parser_nodes.cpp
+        src/services/impl/workflow/workflow_definition_parser_variables.cpp
+        src/services/impl/workflow/workflow_definition_parser_includes.cpp
+        src/services/impl/workflow/workflow_connection_resolver.cpp
+        src/services/impl/workflow/workflow_execute_step.cpp
+        src/stb_image.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_array_append_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_array_create_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_audio_pause_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_audio_play_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_audio_resume_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_audio_seek_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_audio_set_looping_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_audio_set_volume_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_audio_stop_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_bool_and_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_bool_not_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_bool_or_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_camera_build_view_state_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_camera_fps_update_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_camera_look_at_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_camera_set_fov_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_camera_set_pose_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_camera_setup_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_camera_teleport_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_compare_eq_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_compare_gt_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_compare_gte_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_compare_lt_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_compare_lte_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_compare_ne_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_control_for_each_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_control_if_else_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_control_switch_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_control_while_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_debug_log_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_debug_metrics_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_input_gamepad_axis_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_input_gamepad_button_pressed_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_input_key_pressed_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_input_mouse_button_pressed_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_input_mouse_grab_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_input_mouse_position_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_input_poll_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_list_append_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_list_concat_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_list_count_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_list_filter_equals_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_list_filter_gt_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_list_literal_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_list_map_add_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_list_map_mul_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_list_reduce_max_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_list_reduce_min_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_list_reduce_sum_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_model_despawn_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_model_set_transform_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_number_abs_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_number_add_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_number_clamp_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_number_div_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_number_max_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_number_min_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_number_mul_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_number_round_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_number_sub_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_particle_emit_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_particle_update_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_physics_body_add_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_physics_fps_move_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_physics_step_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_physics_sync_transforms_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_physics_world_create_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_string_concat_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_string_contains_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_string_equals_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_string_format_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_string_join_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_string_lower_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_string_replace_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_string_split_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_string_trim_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_string_upper_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_try_catch_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_value_assert_exists_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_value_assert_type_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_value_clear_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_value_copy_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_value_default_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_value_literal_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_value_set_if_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_variable_get_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_variable_set_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_vfx_destroy_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_vfx_spawn_step.cpp
+        src/services/impl/workflow/geometry/workflow_geometry_create_cube_step.cpp
+        src/services/impl/workflow/geometry/workflow_geometry_create_plane_step.cpp
+        src/services/impl/workflow/geometry/workflow_geometry_cube_generate_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_menu_update_step.cpp
+        src/services/impl/workflow/rendering/workflow_overlay_sw_begin_step.cpp
+        src/services/impl/workflow/rendering/workflow_overlay_sw_end_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_hud_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_hud_head_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_crosshair_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_hitmarker_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_menu_frame_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_mapselect_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_pickups_draw_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_weapon_update_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_md3_load_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_md3_draw_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_bots_spawn_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_bots_update_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_bots_draw_step.cpp
+        # Q3 pmove
+        src/services/impl/workflow/quake3/workflow_q3_pm_crouch_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_pm_ground_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_pm_friction_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_pm_accelerate_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_pm_jump_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_pm_slide_move_step.cpp
+        # Q3 weapons + missiles
+        src/services/impl/workflow/quake3/workflow_q3_weapon_select_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_weapon_fire_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_missiles_move_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_missiles_impact_step.cpp
+        # Q3 damage + pickups + ammo
+        src/services/impl/workflow/quake3/workflow_q3_ammo_init_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_damage_apply_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_bots_damage_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_player_death_check_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_player_respawn_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_pickups_touch_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_pickups_respawn_step.cpp
+        # Q3 movers + triggers + nav
+        src/services/impl/workflow/quake3/workflow_q3_movers_init_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_movers_update_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_triggers_check_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_triggers_apply_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_nav_build_step.cpp
+        src/services/impl/workflow/rendering/workflow_bsp_build_collision_step.cpp
+        src/services/impl/workflow/rendering/workflow_bsp_build_geometry_step.cpp
+        src/services/impl/workflow/rendering/workflow_bsp_entity_update_step.cpp
+        src/services/impl/workflow/rendering/workflow_bsp_extract_textures_step.cpp
+        src/services/impl/workflow/rendering/workflow_bsp_lightmap_atlas_step.cpp
+        src/services/impl/workflow/rendering/workflow_bsp_load_step.cpp
+        src/services/impl/workflow/rendering/workflow_bsp_parse_spawn_step.cpp
+        src/services/impl/workflow/rendering/workflow_bsp_portal_view_step.cpp
+        src/services/impl/workflow/rendering/workflow_bsp_upload_geometry_step.cpp
+        src/services/impl/workflow/rendering/workflow_draw_map_step.cpp
+        src/services/impl/workflow/rendering/workflow_draw_textured_box_step.cpp
+        src/services/impl/workflow/rendering/workflow_draw_textured_step.cpp
+        src/services/impl/workflow/rendering/workflow_draw_viewmodel_step.cpp
+        src/services/impl/workflow/rendering/workflow_frame_begin_gpu_step.cpp
+        src/services/impl/workflow/rendering/workflow_frame_begin_offscreen_step.cpp
+        src/services/impl/workflow/rendering/workflow_frame_draw_bodies_step.cpp
+        src/services/impl/workflow/rendering/workflow_frame_end_gpu_step.cpp
+        src/services/impl/workflow/rendering/workflow_frame_end_scene_step.cpp
+        src/services/impl/workflow/rendering/workflow_geometry_create_flashlight_step.cpp
+        src/services/impl/workflow/rendering/workflow_lighting_setup_step.cpp
+        src/services/impl/workflow/rendering/workflow_map_load_step.cpp
+        src/services/impl/workflow/rendering/workflow_model_load_step.cpp
+        src/services/impl/workflow/rendering/workflow_postfx_bloom_blur_step.cpp
+        src/services/impl/workflow/rendering/workflow_postfx_bloom_extract_step.cpp
+        src/services/impl/workflow/rendering/workflow_debug_screenshot_step.cpp
+        src/services/impl/workflow/rendering/workflow_overlay_fps_step.cpp
+        src/services/impl/workflow/rendering/workflow_postfx_composite_step.cpp
+        src/services/impl/workflow/rendering/workflow_postfx_setup_step.cpp
+        src/services/impl/workflow/rendering/workflow_postfx_ssao_step.cpp
+        src/services/impl/workflow/rendering/workflow_postfx_taa_step.cpp
+        src/services/impl/workflow/rendering/workflow_render_grid_draw_step.cpp
+        src/services/impl/workflow/rendering/workflow_render_grid_setup_step.cpp
+        src/services/impl/workflow/rendering/workflow_render_prepare_step.cpp
+        src/services/impl/workflow/rendering/workflow_shadow_pass_step.cpp
+        src/services/impl/workflow/rendering/workflow_shadow_setup_step.cpp
+        src/services/impl/workflow/rendering/workflow_spawn_apply_step.cpp
+        src/services/impl/workflow/rendering/workflow_spotlight_setup_step.cpp
+        src/services/impl/workflow/rendering/workflow_spotlight_update_step.cpp
+        src/services/impl/workflow/graphics/workflow_gpu_pipeline_create_step.cpp
+        src/services/impl/workflow/graphics/workflow_gpu_shader_compile_step.cpp
+        src/services/impl/workflow/graphics/workflow_graphics_buffer_create_index_step.cpp
+        src/services/impl/workflow/graphics/workflow_graphics_buffer_create_vertex_step.cpp
+        src/services/impl/workflow/graphics/workflow_graphics_buffer_upload_step.cpp
+        src/services/impl/workflow/graphics/workflow_graphics_draw_submit_step.cpp
+        src/services/impl/workflow/graphics/workflow_graphics_frame_begin_step.cpp
+        src/services/impl/workflow/graphics/workflow_graphics_frame_end_step.cpp
+        src/services/impl/workflow/graphics/workflow_graphics_framebuffer_readback_step.cpp
+        src/services/impl/workflow/graphics/workflow_graphics_gpu_init_step.cpp
+        src/services/impl/workflow/graphics/workflow_graphics_init_renderer_step.cpp
+        src/services/impl/workflow/graphics/workflow_graphics_init_viewport_step.cpp
+        src/services/impl/workflow/graphics/workflow_graphics_screenshot_request_step.cpp
+        src/services/impl/workflow/graphics/workflow_texture_load_step.cpp
+        src/services/impl/workflow/input/workflow_input_axis_combine_step.cpp
+        src/services/impl/workflow/input/workflow_input_button_combine_step.cpp
+        src/services/impl/workflow/input/workflow_input_gamepad_poll_step.cpp
+        src/services/impl/workflow/input/workflow_input_keyboard_poll_step.cpp
+        src/services/impl/workflow/input/workflow_input_mouse_poll_step.cpp
+        src/services/impl/workflow/input/workflow_input_poll_all_step.cpp
+        src/services/impl/workflow/scene/workflow_scene_add_geometry_step.cpp
+        src/services/impl/workflow/scene/workflow_scene_clear_step.cpp
+        src/services/impl/workflow/scene/workflow_scene_create_step.cpp
+        src/services/impl/workflow/scene/workflow_scene_get_bounds_step.cpp
+        src/services/impl/workflow/scene/workflow_scene_load_step.cpp
+        src/services/impl/workflow/scene/workflow_scene_remove_geometry_step.cpp
+        src/services/impl/workflow/scene/workflow_scene_set_active_step.cpp
+        src/services/impl/workflow/scene/workflow_scene_update_step.cpp
+        src/services/impl/workflow/compute/workflow_compute_pipeline_create_step.cpp
+        src/services/impl/workflow/compute/workflow_compute_tessellate_dispatch_step.cpp
+        src/services/impl/workflow/compute/workflow_compute_tessellate_step.cpp
+        src/services/impl/workflow/workflow_camera_view_state_builder.cpp
+        src/services/impl/workflow/workflow_cmdline_args_step.cpp
+        src/services/impl/workflow/workflow_data_deserialize_step.cpp
+        src/services/impl/workflow/workflow_data_serialize_step.cpp
+        src/services/impl/workflow/workflow_graphics_init_device_step.cpp
+        src/services/impl/workflow/workflow_graphics_init_swapchain_step.cpp
+        src/services/impl/workflow/workflow_media_catalog_scan_step.cpp
+        src/services/impl/workflow/workflow_media_item_select_step.cpp
+        src/services/impl/workflow/workflow_network_connect_step.cpp
+        src/services/impl/workflow/workflow_network_receive_step.cpp
+        src/services/impl/workflow/workflow_network_send_step.cpp
+        src/services/impl/workflow/workflow_package_shader_loader_step.cpp
+        src/services/impl/workflow/workflow_shader_builtin_constant_color_step.cpp
+        src/services/impl/workflow/workflow_shader_compile_step.cpp
+        src/services/impl/workflow/workflow_shader_system_initialize_step.cpp
+        src/services/impl/workflow/workflow_shader_system_set_step.cpp
+        src/services/impl/workflow/workflow_state_clear_step.cpp
+        src/services/impl/workflow/workflow_state_load_step.cpp
+        src/services/impl/workflow/workflow_state_save_step.cpp
+        src/services/impl/workflow/workflow_template_resolver.cpp
+    )
+    target_include_directories(sdl3_app PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/src"
+    )
     target_link_libraries(sdl3_app PRIVATE
         ${SDL_TARGET}
-        CLI11::CLI11
         rapidjson
-        ${SDL3CPP_STB_LIBS}
-        ${SDL3CPP_RENDER_STACK_LIBS}
-        ${SDL3CPP_FREETYPE_LIBS}
-        $<$<NOT:$<BOOL:${ENABLE_VITA}>>:lunasvg::lunasvg>
-        ${SDL3CPP_ZIP_LIBS}
-        assimp::assimp
+        nlohmann_json::nlohmann_json
         Bullet::Bullet
         glm::glm
-        Vorbis::vorbisfile
-        Vorbis::vorbis
-        lunasvg::lunasvg
-        cpptrace::cpptrace
+        stb::stb
+        EnTT::EnTT
+        libzip::zip
+        assimp::assimp
+        spdlog::spdlog
     )
-    if(NOT ENABLE_VITA)
-        if(TARGET shaderc_local)
-            target_link_libraries(sdl3_app PRIVATE shaderc_local)
-        else()
-            message(WARNING "shaderc_local target not found; in-process shader compilation will be unavailable.")
-        endif()
-        if(TARGET shaderc::shaderc)
-            target_link_libraries(sdl3_app PRIVATE shaderc::shaderc)
-        elseif(TARGET shaderc::shaderc_combined)
-            target_link_libraries(sdl3_app PRIVATE shaderc::shaderc_combined)
-        else()
-            message(WARNING "shaderc CMake target not found; PipelineCompilerService will be unavailable.")
-        endif()
+endif()
+
+# ============================================================================
+# FILE COPYING
+# ============================================================================
+if(BUILD_SDL3_APP)
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/packages")
+        file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/packages" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
     endif()
-    target_compile_definitions(sdl3_app PRIVATE SDL_MAIN_HANDLED
-        $<$<BOOL:${ENABLE_VITA}>:SDL3CPP_ENABLE_VITA>)
-
-    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/shaders")
-        file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/shaders" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
-    endif()
-
-    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/scripts")
-        file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/scripts" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
-    endif()
-
-    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/config")
-        if(ENABLE_VITA)
-            # For Vita builds, copy only Vita-specific configs            file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/config/vita_system_config.json" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/config")            file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/config/vita_gui_runtime.json" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/config")
-            file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/config/vita_cube_runtime.json" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/config")
-            file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/config/vita_soundboard_runtime.json" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/config")
-        else()
-            # For desktop builds, copy all configs
-            file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/config" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
-        endif()
-    endif()
-endif()
-
-# Copy config files for all builds (including Vita test builds)
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/config")
-    if(ENABLE_VITA)
-        # For Vita builds, copy only Vita-specific configs
-        file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/config/vita_system_config.json" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/config")
-        file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/config/vita_gui_runtime.json" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/config")
-        file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/config/vita_cube_runtime.json" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/config")
-        file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/config/vita_soundboard_runtime.json" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/config")
-    else()
-        # For desktop builds, copy all configs
-        file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/config" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
-    endif()
-endif()
-
-enable_testing()
-
-if(NOT ENABLE_VITA)
-add_executable(bgfx_gui_service_tests
-    tests/test_bgfx_gui_service.cpp
-    src/services/impl/gui/bgfx_gui_service.cpp
-    src/services/impl/graphics/bgfx_shader_compiler.cpp
-    src/services/impl/materialx/materialx_shader_generator.cpp
-    src/services/impl/shader/shader_pipeline_validator.cpp
-    src/services/impl/shader/pipeline_compiler_service.cpp
-)
-target_include_directories(bgfx_gui_service_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_include_directories(bgfx_gui_service_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_tools/shaderc")
-target_link_libraries(bgfx_gui_service_tests PRIVATE
-    ${SDL_TARGET}
-    ${SDL3CPP_RENDER_STACK_LIBS}
-    ${SDL3CPP_FREETYPE_LIBS}
-    lunasvg::lunasvg
-)
-if(TARGET shaderc_local)
-    target_link_libraries(bgfx_gui_service_tests PRIVATE shaderc_local)
-elseif(TARGET shaderc::shaderc)
-elseif(TARGET shaderc::shaderc_combined)
-    target_link_libraries(bgfx_gui_service_tests PRIVATE shaderc::shaderc_combined)
-else()
-    if(TARGET shaderc_local)
-        target_link_libraries(bgfx_gui_service_tests PRIVATE shaderc_local)
-    else()
-        message(WARNING "shaderc CMake target not found; skipping link for bgfx_gui_service_tests.")
-    endif()
-endif()
-add_test(NAME bgfx_gui_service_tests COMMAND bgfx_gui_service_tests)
-
-# Test: GUI budget enforcement (cache pruning)
-add_executable(bgfx_gui_budget_enforcement_test
-    tests/bgfx_gui_budget_enforcement_test.cpp
-    src/services/impl/gui/bgfx_gui_service.cpp
-    src/services/impl/graphics/bgfx_shader_compiler.cpp
-    src/services/impl/materialx/materialx_shader_generator.cpp
-    src/services/impl/shader/shader_pipeline_validator.cpp
-    src/services/impl/shader/pipeline_compiler_service.cpp
-)
-target_include_directories(bgfx_gui_budget_enforcement_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_include_directories(bgfx_gui_budget_enforcement_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_tools/shaderc")
-target_link_libraries(bgfx_gui_budget_enforcement_test PRIVATE
-    GTest::gtest
-    GTest::gtest_main
-    ${SDL3CPP_RENDER_STACK_LIBS}
-    ${SDL3CPP_FREETYPE_LIBS}
-    lunasvg::lunasvg
-)
-if(TARGET shaderc_local)
-    target_link_libraries(bgfx_gui_budget_enforcement_test PRIVATE shaderc_local)
-elseif(TARGET shaderc::shaderc)
-elseif(TARGET shaderc::shaderc_combined)
-    target_link_libraries(bgfx_gui_budget_enforcement_test PRIVATE shaderc::shaderc_combined)
-else()
-    if(TARGET shaderc_local)
-        target_link_libraries(bgfx_gui_budget_enforcement_test PRIVATE shaderc_local)
-    else()
-        message(WARNING "shaderc CMake target not found; skipping link for bgfx_gui_budget_enforcement_test.")
-    endif()
-endif()
-add_test(NAME bgfx_gui_budget_enforcement_test COMMAND bgfx_gui_budget_enforcement_test)
-
-# Test: Texture budget tracker (allocation + free)
-add_executable(bgfx_texture_budget_tracker_test
-    tests/bgfx_texture_budget_tracker_test.cpp
-    src/services/impl/graphics/bgfx_graphics_backend.cpp
-    src/services/impl/graphics/bgfx_shader_compiler.cpp
-    src/stb_image.cpp
-)
-target_include_directories(bgfx_texture_budget_tracker_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_include_directories(bgfx_texture_budget_tracker_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_tools/shaderc")
-target_link_libraries(bgfx_texture_budget_tracker_test PRIVATE
-    GTest::gtest
-    GTest::gtest_main
-    ${SDL3CPP_RENDER_STACK_LIBS}
-    ${SDL3CPP_STB_LIBS}
-    glm::glm
-    SDL3::SDL3
-)
-if(TARGET shaderc_local)
-    target_link_libraries(bgfx_texture_budget_tracker_test PRIVATE shaderc_local)
-elseif(TARGET shaderc::shaderc)
-    target_link_libraries(bgfx_texture_budget_tracker_test PRIVATE shaderc::shaderc)
-elseif(TARGET shaderc::shaderc_combined)
-    target_link_libraries(bgfx_texture_budget_tracker_test PRIVATE shaderc::shaderc_combined)
-else()
-    message(WARNING "shaderc CMake target not found; skipping link for bgfx_texture_budget_tracker_test.")
-endif()
-add_test(NAME bgfx_texture_budget_tracker_test COMMAND bgfx_texture_budget_tracker_test)
-
-# Test: Vulkan shader linking (TDD test for walls/ceiling/floor rendering)
-add_executable(vulkan_shader_linking_test
-    tests/test_vulkan_shader_linking.cpp
-    src/services/impl/graphics/bgfx_graphics_backend.cpp
-    src/services/impl/gui/bgfx_gui_service.cpp
-    src/services/impl/graphics/bgfx_shader_compiler.cpp
-    ${JSON_CONFIG_SOURCES}
-    ${WORKFLOW_SOURCES}
-    src/services/impl/materialx/materialx_shader_generator.cpp
-    src/services/impl/shader/shader_pipeline_validator.cpp
-    src/services/impl/platform/platform_service.cpp
-    src/services/impl/platform/sdl_window_service.cpp
-    src/events/event_bus.cpp
-    src/stb_image.cpp
-    src/services/impl/shader/pipeline_compiler_service.cpp
-)
-target_include_directories(vulkan_shader_linking_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_include_directories(vulkan_shader_linking_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_tools/shaderc")
-target_link_libraries(vulkan_shader_linking_test PRIVATE
-    ${SDL_TARGET}
-    ${SDL3CPP_RENDER_STACK_LIBS}
-    ${SDL3CPP_FREETYPE_LIBS}
-    ${SDL3CPP_STB_LIBS}
-    lunasvg::lunasvg
-    rapidjson
-    glm::glm
-)
-if(TARGET shaderc_local)
-    target_link_libraries(vulkan_shader_linking_test PRIVATE shaderc_local)
-elseif(TARGET shaderc::shaderc)
-    target_link_libraries(vulkan_shader_linking_test PRIVATE shaderc::shaderc)
-elseif(TARGET shaderc::shaderc_combined)
-    target_link_libraries(vulkan_shader_linking_test PRIVATE shaderc::shaderc_combined)
-else()
-    message(WARNING "shaderc CMake target not found; skipping link for vulkan_shader_linking_test.")
-endif()
-add_test(NAME vulkan_shader_linking_test COMMAND vulkan_shader_linking_test)
-
-# Test: Shader Pipeline Validator (mega-strict validation system)
-add_executable(shader_pipeline_validator_test
-    tests/shader_pipeline_validator_test.cpp
-    src/services/impl/shader/shader_pipeline_validator.cpp
-)
-target_include_directories(shader_pipeline_validator_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_link_libraries(shader_pipeline_validator_test PRIVATE
-    GTest::gtest
-    GTest::gtest_main
-)
-add_test(NAME shader_pipeline_validator_test COMMAND shader_pipeline_validator_test)
-
-# Test: Shaderc Uniform Mapping (guards Vulkan uniform metadata correctness)
-add_executable(shaderc_uniform_mapping_test
-    tests/shaderc_uniform_mapping_test.cpp
-)
-target_include_directories(shaderc_uniform_mapping_test PRIVATE
-    "${CMAKE_CURRENT_SOURCE_DIR}/src"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_tools/shaderc")
-target_link_libraries(shaderc_uniform_mapping_test PRIVATE
-    GTest::gtest
-    GTest::gtest_main
-    shaderc_local
-)
-add_test(NAME shaderc_uniform_mapping_test COMMAND shaderc_uniform_mapping_test)
-
-# Test: MaterialX Shader Generator Integration (validates shader generation + validation together)
-add_executable(materialx_shader_generator_integration_test
-    tests/materialx_shader_generator_integration_test.cpp
-    src/services/impl/materialx/materialx_shader_generator.cpp
-    src/services/impl/shader/shader_pipeline_validator.cpp
-)
-target_include_directories(materialx_shader_generator_integration_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_link_libraries(materialx_shader_generator_integration_test PRIVATE
-    GTest::gtest
-    GTest::gtest_main
-    ${SDL3CPP_MATERIALX_LIBS}
-)
-add_test(NAME materialx_shader_generator_integration_test COMMAND materialx_shader_generator_integration_test)
-
-# Test: Bgfx Texture Loading (investigates texture loading crash)
-add_executable(bgfx_texture_loading_test
-    tests/bgfx_texture_loading_test.cpp
-)
-target_include_directories(bgfx_texture_loading_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_link_libraries(bgfx_texture_loading_test PRIVATE
-    GTest::gtest
-    GTest::gtest_main
-)
-add_test(NAME bgfx_texture_loading_test COMMAND bgfx_texture_loading_test)
-
-# Test: Bgfx Initialization Order (documents timing requirements and crash fix)
-add_executable(bgfx_initialization_order_test
-    tests/bgfx_initialization_order_test.cpp
-)
-target_include_directories(bgfx_initialization_order_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_link_libraries(bgfx_initialization_order_test PRIVATE
-    GTest::gtest
-    GTest::gtest_main
-)
-add_test(NAME bgfx_initialization_order_test COMMAND bgfx_initialization_order_test)
-
-# Test: Bgfx Frame Requirement (TDD test - validates the actual bgfx behavior)
-add_executable(bgfx_frame_requirement_test
-    tests/bgfx_frame_requirement_test.cpp
-)
-target_include_directories(bgfx_frame_requirement_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_link_libraries(bgfx_frame_requirement_test PRIVATE
-    GTest::gtest
-    GTest::gtest_main
-    ${SDL3CPP_RENDER_STACK_LIBS}
-    SDL3::SDL3
-)
-add_test(NAME bgfx_frame_requirement_test COMMAND bgfx_frame_requirement_test)
-
-# Test: Render coordinator initialization order (TDD guard for shader load timing)
-add_executable(render_coordinator_init_order_test
-    tests/render_coordinator_init_order_test.cpp
-    src/services/impl/render/render_coordinator_service.cpp
-)
-target_include_directories(render_coordinator_init_order_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_link_libraries(render_coordinator_init_order_test PRIVATE
-    GTest::gtest
-    GTest::gtest_main
-)
-add_test(NAME render_coordinator_init_order_test COMMAND render_coordinator_init_order_test)
-
-# Test: Bgfx backend frame guard (ensures texture loads are blocked before first frame)
-add_executable(bgfx_backend_frame_guard_test
-    tests/bgfx_backend_frame_guard_test.cpp
-    src/services/impl/graphics/bgfx_graphics_backend.cpp
-    src/services/impl/graphics/bgfx_shader_compiler.cpp
-    src/stb_image.cpp
-)
-target_include_directories(bgfx_backend_frame_guard_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_include_directories(bgfx_backend_frame_guard_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_tools/shaderc")
-target_link_libraries(bgfx_backend_frame_guard_test PRIVATE
-    GTest::gtest
-    GTest::gtest_main
-    ${SDL3CPP_RENDER_STACK_LIBS}
-    ${SDL3CPP_STB_LIBS}
-    glm::glm
-    SDL3::SDL3
-)
-if(TARGET shaderc_local)
-    target_link_libraries(bgfx_backend_frame_guard_test PRIVATE shaderc_local)
-elseif(TARGET shaderc::shaderc)
-    target_link_libraries(bgfx_backend_frame_guard_test PRIVATE shaderc::shaderc)
-elseif(TARGET shaderc::shaderc_combined)
-    target_link_libraries(bgfx_backend_frame_guard_test PRIVATE shaderc::shaderc_combined)
-else()
-    message(WARNING "shaderc CMake target not found; skipping link for bgfx_backend_frame_guard_test.")
-endif()
-add_test(NAME bgfx_backend_frame_guard_test COMMAND bgfx_backend_frame_guard_test)
-
-# Test: Graphics service buffer lifecycle (TDD guard for VRAM leaks on reupload)
-add_executable(graphics_service_buffer_lifecycle_test
-    tests/graphics_service_buffer_lifecycle_test.cpp
-    src/services/impl/graphics/graphics_service.cpp
-)
-target_include_directories(graphics_service_buffer_lifecycle_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_link_libraries(graphics_service_buffer_lifecycle_test PRIVATE
-    GTest::gtest
-    GTest::gtest_main
-)
-add_test(NAME graphics_service_buffer_lifecycle_test COMMAND graphics_service_buffer_lifecycle_test)
-
-# Test: Render graph validation (cycles + unknown dependencies)
-add_executable(render_graph_service_test
-    tests/render_graph_service_test.cpp
-    src/services/impl/render/render_graph_service.cpp
-)
-target_include_directories(render_graph_service_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_link_libraries(render_graph_service_test PRIVATE
-    GTest::gtest
-    GTest::gtest_main
-)
-add_test(NAME render_graph_service_test COMMAND render_graph_service_test)
-
-# Test: JSON config merge rules (extends + @delete)
-add_executable(json_config_merge_test
-    tests/json_config_merge_test.cpp
-    ${JSON_CONFIG_SOURCES}
-    ${WORKFLOW_SOURCES}
-)
-target_include_directories(json_config_merge_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_link_libraries(json_config_merge_test PRIVATE
-    GTest::gtest
-    GTest::gtest_main
-    rapidjson
-)
-add_test(NAME json_config_merge_test COMMAND json_config_merge_test)
-
-# Test: JSON schema validation
-add_executable(json_config_schema_validation_test
-    tests/json_config_schema_validation_test.cpp
-    ${JSON_CONFIG_SOURCES}
-    ${WORKFLOW_SOURCES}
-)
-target_include_directories(json_config_schema_validation_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_link_libraries(json_config_schema_validation_test PRIVATE
-    GTest::gtest
-    GTest::gtest_main
-    rapidjson
-)
-add_test(NAME json_config_schema_validation_test COMMAND json_config_schema_validation_test)
-
-# Test: Workflow definition parser
-add_executable(workflow_definition_parser_test
-    tests/workflow_definition_parser_test.cpp
-    src/services/impl/workflow/workflow_definition_parser.cpp
-    src/services/impl/config/json_config_document_parser.cpp
-)
-target_include_directories(workflow_definition_parser_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_link_libraries(workflow_definition_parser_test PRIVATE
-    GTest::gtest
-    GTest::gtest_main
-    rapidjson
-)
-add_test(NAME workflow_definition_parser_test COMMAND workflow_definition_parser_test)
-
-# Test: Config compiler reference validation
-add_executable(config_compiler_reference_validation_test
-    tests/config_compiler_reference_validation_test.cpp
-    src/services/impl/config/config_compiler_service.cpp
-)
-target_include_directories(config_compiler_reference_validation_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_link_libraries(config_compiler_reference_validation_test PRIVATE
-    GTest::gtest
-    GTest::gtest_main
-    rapidjson
-)
-add_test(NAME config_compiler_reference_validation_test COMMAND config_compiler_reference_validation_test)
-
-# Test: Shader system registry selection
-add_executable(shader_system_registry_test
-    tests/shader_system_registry_test.cpp
-    src/services/impl/config/config_compiler_service.cpp
-    src/services/impl/shader/shader_system_registry.cpp
-    src/services/impl/shader/glsl_shader_system.cpp
-    src/services/impl/shader/materialx_shader_system.cpp
-    src/services/impl/materialx/materialx_shader_generator.cpp
-    src/services/impl/shader/shader_pipeline_validator.cpp
-)
-target_include_directories(shader_system_registry_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_include_directories(shader_system_registry_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/bgfx_tools/shaderc")
-target_link_libraries(shader_system_registry_test PRIVATE
-    GTest::gtest
-    GTest::gtest_main
-    rapidjson
-    ${SDL3CPP_RENDER_STACK_LIBS}
-)
-add_test(NAME shader_system_registry_test COMMAND shader_system_registry_test)
-
-# Test: Bgfx Draw bounds validation (TDD test for buffer overflow crash)
-add_executable(bgfx_draw_bounds_validation_test
-    tests/bgfx_draw_bounds_validation_test.cpp
-)
-target_include_directories(bgfx_draw_bounds_validation_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_link_libraries(bgfx_draw_bounds_validation_test PRIVATE
-    GTest::gtest
-    GTest::gtest_main
-)
-add_test(NAME bgfx_draw_bounds_validation_test COMMAND bgfx_draw_bounds_validation_test)
-
-# Test: GUI shader linking failure (TDD test for int→sampler mapping bug)
-add_executable(gui_shader_linking_failure_test
-    tests/gui_shader_linking_failure_test.cpp
-)
-target_include_directories(gui_shader_linking_failure_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_link_libraries(gui_shader_linking_failure_test PRIVATE
-    GTest::gtest
-    GTest::gtest_main
-)
-add_test(NAME gui_shader_linking_failure_test COMMAND gui_shader_linking_failure_test)
-
-# Test: Crash recovery timeout (TDD test for main loop hang after timeout)
-add_executable(crash_recovery_timeout_test
-    tests/crash_recovery_timeout_test.cpp
-    src/services/impl/diagnostics/crash_recovery_service.cpp
-)
-target_include_directories(crash_recovery_timeout_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_link_libraries(crash_recovery_timeout_test PRIVATE
-    GTest::gtest
-    GTest::gtest_main
-    cpptrace::cpptrace
-)
-add_test(NAME crash_recovery_timeout_test COMMAND crash_recovery_timeout_test)
-
-# Test: Bgfx Draw bounds crash test (REAL TDD - tests should be DISABLED until fix implemented)
-add_executable(bgfx_draw_bounds_crash_test
-    tests/bgfx_draw_bounds_crash_test.cpp
-)
-target_include_directories(bgfx_draw_bounds_crash_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_link_libraries(bgfx_draw_bounds_crash_test PRIVATE
-    GTest::gtest
-    GTest::gtest_main
-)
-add_test(NAME bgfx_draw_bounds_crash_test COMMAND bgfx_draw_bounds_crash_test)
-
-# Integration Test: Bgfx Draw with real backend
-add_executable(bgfx_draw_integration_test
-    tests/bgfx_draw_integration_test.cpp
-)
-target_include_directories(bgfx_draw_integration_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_link_libraries(bgfx_draw_integration_test PRIVATE
-    bgfx::bgfx
-    bx
-    bimg
-    GTest::gtest
-    GTest::gtest_main
-)
-add_test(NAME bgfx_draw_integration_test COMMAND bgfx_draw_integration_test)
-
-# Integration Test: Shader uniform type mapping
-add_executable(shader_uniform_type_integration_test
-    tests/shader_uniform_type_integration_test.cpp
-)
-target_include_directories(shader_uniform_type_integration_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_link_libraries(shader_uniform_type_integration_test PRIVATE
-    GTest::gtest
-    GTest::gtest_main
-)
-add_test(NAME shader_uniform_type_integration_test COMMAND shader_uniform_type_integration_test)
-
-# Integration Test: Bgfx initialization order
-add_executable(bgfx_initialization_order_integration_test
-    tests/bgfx_initialization_order_integration_test.cpp
-)
-target_include_directories(bgfx_initialization_order_integration_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_link_libraries(bgfx_initialization_order_integration_test PRIVATE
-    bgfx::bgfx
-    bx
-    bimg
-    GTest::gtest
-    GTest::gtest_main
-)
-add_test(NAME bgfx_initialization_order_integration_test COMMAND bgfx_initialization_order_integration_test)
-
-# Integration Test: Vulkan crash reproduction with REAL renderer
-add_executable(vulkan_crash_reproduction_test
-    tests/vulkan_crash_reproduction_test.cpp
-)
-target_include_directories(vulkan_crash_reproduction_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-target_link_libraries(vulkan_crash_reproduction_test PRIVATE
-    bgfx::bgfx
-    bx
-    bimg
-    GTest::gtest
-)
-add_test(NAME vulkan_crash_reproduction_test COMMAND vulkan_crash_reproduction_test)
-endif()
-
-if(ENABLE_VITA)
-    add_executable(gxm_backend_tests
-        tests/test_gxm_backend.cpp
-        src/services/impl/graphics/gxm_graphics_backend.cpp
-    )
-    target_include_directories(gxm_backend_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-    target_link_libraries(gxm_backend_tests PRIVATE
-        SceGxm_stub
-        SceDisplay_stub
-        SceSysmem_stub
-        SceLibKernel_stub
-    )
-    add_test(NAME gxm_backend_tests COMMAND gxm_backend_tests)
 endif()

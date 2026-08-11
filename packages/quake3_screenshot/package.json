@@ -1,0 +1,79 @@
+{
+  "name": "Quake 3 Screenshot",
+  "version": "1.0.0",
+  "id": "quake3_screenshot",
+  "type": "game",
+  "category": "demo",
+  "description": "Renders 240 frames then saves a screenshot and exits",
+
+  "defaultWorkflow": "workflows/q3_game.json",
+
+  "workflows": [
+    "workflows/load_map_with_unit_conversion.json"
+  ],
+
+  "assets": [
+    "assets/quake3_materials.json"
+  ],
+
+  "config": [
+    "config/q3_rendering.json",
+    "config/menu.json"
+  ],
+
+  "scene": [
+    "scene/quake3_map.json",
+    "scene/camera_q3_default.json"
+  ],
+
+  "shaders": [],
+
+  "q3_specifications": {
+    "unit_scale": {
+      "units_per_meter": 32,
+      "conversion_to_ue5": 3.125,
+      "explanation": "Multiply all Q3 coordinates by 3.125 to get UE5 units"
+    },
+
+    "camera": {
+      "fov_degrees": 90,
+      "aspect_ratio": "4:3",
+      "critical": "Q3 was designed with 90° FOV. DO NOT change - textures and geometry align to this value."
+    },
+
+    "player": {
+      "height_q3_units": 56,
+      "height_ue5_units": 175,
+      "height_cm": 175,
+      "walk_speed_ue5_units_per_sec": 1000,
+      "walk_speed_kmh": 3.6
+    },
+
+    "physics": {
+      "gravity": 800,
+      "sprint_speed_q3": 600,
+      "jump_height_q3_units": 64,
+      "jump_height_ue5_units": 200
+    },
+
+    "animation": {
+      "internal_framerate": 10,
+      "upsample_to": 60,
+      "upsampling_factor": 6
+    }
+  },
+
+  "import_notes": "Quake 3 maps are designed around 90° FOV (field of view). This is not arbitrary - all texture scaling, weapon visibility, and sight lines assume 90°. Changing FOV will misalign textures and break the visual design.",
+
+  "bundled": true,
+
+  "dependencies": [
+    {
+      "name": "asset_loader",
+      "version": ">=1.0.0",
+      "usage": "map_loading_and_unit_conversion"
+    },
+    {
+    }
+  ]
+}

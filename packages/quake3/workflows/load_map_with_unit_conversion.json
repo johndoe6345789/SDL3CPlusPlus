@@ -1,0 +1,92 @@
+{
+  "name": "Quake 3 Map Loader with Unit Conversion",
+  "description": "Load Quake 3 BSP maps and convert to UE5 units (3.125x scale: 32 Q3 units/meter → 100 UE5 units/meter)",
+  "version": "1.0.0",
+  "id": "workflow_quake3_map_loader",
+  "tenantId": "${TENANT_ID}",
+
+  "variables": {
+    "mapFile": {
+      "type": "string",
+      "value": "${PACKAGE_ROOT}/maps/q3dm1.bsp",
+      "description": "Path to Quake 3 BSP map file"
+    },
+    "q3ToUE5Scale": {
+      "type": "number",
+      "value": 3.125,
+      "description": "Q3: 32 units/meter, UE5: 100 units/meter. Multiply all coordinates by 3.125"
+    }
+  },
+
+  "nodes": [
+    {
+      "id": "load_bsp",
+      "name": "Load Quake 3 BSP",
+      "type": "asset.load_map",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {
+        "file_path": "${variables.mapFile}",
+        "format_hint": "quake3",
+        "output_key": "q3_map"
+      }
+    },
+
+    {
+      "id": "scale_to_ue5",
+      "name": "Scale to UE5 Units (3.125x)",
+      "type": "geometry.apply_scale_transform",
+      "typeVersion": 1,
+      "position": [200, 0],
+      "parameters": {
+        "inputs": {
+          "geometry": "q3_map"
+        },
+        "scale_factor": "${variables.q3ToUE5Scale}",
+        "apply_to": "positions,sizes,physics",
+        "output_key": "map_scaled"
+      }
+    },
+
+    {
+      "id": "load_scene",
+      "name": "Load to Scene with Colliders",
+      "type": "scene.load_geometry",
+      "typeVersion": 1,
+      "position": [400, 0],
+      "parameters": {
+        "inputs": {
+          "geometry": "map_scaled"
+        },
+        "create_colliders": true,
+        "shader_key": "bsp_default",
+        "output_key": "loaded_map"
+      }
+    }
+  ],
+
+  "connections": {
+    "load_bsp": {
+      "main": {
+        "0": [
+          {
+            "node": "scale_to_ue5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "scale_to_ue5": {
+      "main": {
+        "0": [
+          {
+            "node": "load_scene",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,23 +1,136 @@
 {
-  "name": "demo-spinning-cube",
-  "version": "0.1.0",
-  "description": "Template package describing a boot-to-frame workflow, assets, and validation presets for the demo cube.",
-  "defaultWorkflow": "workflows/demo_gameplay.json",
+  "name": "seed",
+  "version": "1.0.0",
+  "description": "FPS demo: room with spinning cube, WASD movement, mouse look, jump. Bullet3 physics.",
+  "type": "game",
+  "category": "demo",
+  "config": {
+    "gpu": {
+      "renderer": "auto"
+    },
+    "window": {
+      "width": 1024,
+      "height": 768,
+      "title": "Seed Demo",
+      "resizable": true
+    },
+    "camera": {
+      "fov": 60.0,
+      "near": 0.1,
+      "far": 100.0,
+      "position": [0.0, 1.6, 8.0],
+      "lookAt": [0.0, 2.5, 0.0]
+    },
+    "render": {
+      "clearColor": [0.05, 0.05, 0.08, 1.0],
+      "maxFrames": 0,
+      "targetFps": 60
+    },
+    "input": {
+      "mouseGrab": false,
+      "mouseSensitivity": 0.3
+    }
+  },
+  "defaultWorkflow": "workflows/seed_game.json",
   "workflows": [
-    "workflows/demo_gameplay.json"
-  ],
-  "assets": [
-    "assets/cube_materials.json"
+    "workflows/seed_game.json",
+    "workflows/frame_tick.json"
   ],
   "scene": [
-    "scene/startup_camera.json"
+    "scene/default_camera.json"
   ],
   "shaders": [
-    "shaders/mx_pbr.json"
+    {
+      "id": "constant_color",
+      "backendOrder": ["spirv", "msl"],
+      "backends": {
+        "spirv": {
+          "vertex": "shaders/spirv/constant_color.vert.spv",
+          "fragment": "shaders/spirv/constant_color.frag.spv"
+        },
+        "msl": {
+          "vertex": "shaders/msl/constant_color.vert.metal",
+          "fragment": "shaders/msl/constant_color.frag.metal"
+        }
+      }
+    },
+    {
+      "id": "textured",
+      "backendOrder": ["spirv", "msl"],
+      "backends": {
+        "spirv": {
+          "vertex": "shaders/spirv/textured.vert.spv",
+          "fragment": "shaders/spirv/textured.frag.spv"
+        },
+        "msl": {
+          "vertex": "shaders/msl/textured.vert.metal",
+          "fragment": "shaders/msl/textured.frag.metal"
+        }
+      }
+    },
+    {
+      "id": "shadow_depth",
+      "backendOrder": ["spirv", "msl"],
+      "backends": {
+        "spirv": {
+          "vertex": "shaders/spirv/shadow_depth.vert.spv",
+          "fragment": "shaders/spirv/shadow_depth.frag.spv"
+        },
+        "msl": {
+          "vertex": "shaders/msl/shadow_depth.vert.metal",
+          "fragment": "shaders/msl/shadow_depth.frag.metal"
+        }
+      }
+    },
+    {
+      "id": "postfx_fullscreen",
+      "backendOrder": ["spirv", "msl"],
+      "backends": {
+        "spirv": { "vertex": "shaders/spirv/postfx_fullscreen.vert.spv" },
+        "msl": { "vertex": "shaders/msl/postfx_fullscreen.vert.metal" }
+      }
+    },
+    {
+      "id": "postfx_bloom_blur",
+      "backendOrder": ["spirv", "msl"],
+      "backends": {
+        "spirv": { "fragment": "shaders/spirv/postfx_bloom_blur.frag.spv" },
+        "msl": { "fragment": "shaders/msl/postfx_bloom_blur.frag.metal" }
+      }
+    },
+    {
+      "id": "postfx_bloom_extract",
+      "backendOrder": ["spirv", "msl"],
+      "backends": {
+        "spirv": { "fragment": "shaders/spirv/postfx_bloom_extract.frag.spv" },
+        "msl": { "fragment": "shaders/msl/postfx_bloom_extract.frag.metal" }
+      }
+    },
+    {
+      "id": "postfx_composite",
+      "backendOrder": ["spirv", "msl"],
+      "backends": {
+        "spirv": { "fragment": "shaders/spirv/postfx_composite.frag.spv" },
+        "msl": { "fragment": "shaders/msl/postfx_composite.frag.metal" }
+      }
+    },
+    {
+      "id": "postfx_ssao",
+      "backendOrder": ["spirv", "msl"],
+      "backends": {
+        "spirv": { "fragment": "shaders/spirv/postfx_ssao.frag.spv" },
+        "msl": { "fragment": "shaders/msl/postfx_ssao.frag.metal" }
+      }
+    },
+    {
+      "id": "tessellate",
+      "backendOrder": ["spirv", "msl"],
+      "backends": {
+        "spirv": { "compute": "shaders/spirv/tessellate.comp.spv" },
+        "msl": { "compute": "shaders/msl/tessellate.comp.metal" }
+      }
+    }
   ],
   "bundled": true,
-  "notes": "Follow the workflow->services rule: only steps listed here should be registered at runtime.",
-  "dependencies": [
-    "materialx"
-  ]
+  "dependencies": []
 }

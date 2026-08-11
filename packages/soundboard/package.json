@@ -2,6 +2,8 @@
   "name": "soundboard-demo",
   "version": "0.1.0",
   "description": "Workflow template for the soundboard experience (audio cues + GUI controls).",
+  "type": "game",
+  "category": "demo",
   "defaultWorkflow": "workflows/soundboard_flow.json",
   "workflows": [
     "workflows/soundboard_flow.json"
@@ -15,10 +17,7 @@
   "scene": [
     "scene/soundboard_layout.json"
   ],
-  "shaders": [
-    "shaders/audio_visualizer.json"
-  ],
+  "shaders": [],
   "dependencies": [
-    "materialx"
   ]
 }

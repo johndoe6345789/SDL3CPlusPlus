@@ -1,6 +1,6 @@
 #pragma once
 
-#include "lifecycle.hpp"
+#include "di/lifecycle.hpp"
 #include <functional>
 #include <memory>
 #include <stdexcept>
