@@ -57,6 +57,15 @@ void WorkflowControlWhileStep::Execute(
                       (maxIterations > 0 ? ", max=" + std::to_string(maxIterations) : ""));
     }
 
+    // A key that was never set reads as false, so the loop would exit after
+    // zero iterations and the workflow would report success having rendered
+    // nothing. Warn so that is distinguishable from a deliberate false.
+    if (logger_ && !context.Contains(conditionKey)) {
+        logger_->Warn("control.loop.while: condition '" + conditionKey +
+                      "' is not set in the context; the loop body will not "
+                      "run. Set it with a value.literal step beforehand.");
+    }
+
     // Suppress per-step logging inside the frame loop for performance
     context.Set<bool>("_in_frame_loop", true);
 
