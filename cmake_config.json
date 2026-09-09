@@ -263,6 +263,71 @@
         "GTest::gtest_main",
         "glm::glm"
       ]
+    },
+    {
+      "name": "q3_movement_integration_test",
+      "sources": [
+        "tests/q3_movement_integration_test.cpp",
+        "src/services/impl/workflow/quake3/workflow_q3_pm_accelerate_step.cpp",
+        "src/services/impl/workflow/quake3/workflow_q3_pm_friction_step.cpp",
+        "src/services/impl/workflow/quake3/workflow_q3_pm_ground_step.cpp",
+        "src/services/impl/workflow/quake3/workflow_q3_pm_step_slide_step.cpp",
+        "src/services/impl/workflow/quake3/q3_slide_move.cpp",
+        "src/services/impl/workflow/quake3/q3_slide_planes.cpp",
+        "src/services/impl/workflow/quake3/q3_wish_dir.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main",
+        "glm::glm",
+        "Bullet::Bullet"
+      ]
+    },
+    {
+      "name": "q3_input_axes_test",
+      "sources": [
+        "tests/q3_input_axes_test.cpp",
+        "src/services/impl/workflow/input/workflow_input_axis_combine_step.cpp",
+        "src/services/impl/workflow/input/workflow_input_button_combine_step.cpp",
+        "src/services/impl/workflow/workflow_step_parameter_resolver.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main",
+        "nlohmann_json::nlohmann_json",
+        "${SDL_TARGET}"
+      ]
+    },
+    {
+      "name": "q3_map_movement_test",
+      "sources": [
+        "tests/q3_map_movement_test.cpp",
+        "src/services/impl/workflow/quake3/workflow_q3_pm_accelerate_step.cpp",
+        "src/services/impl/workflow/quake3/workflow_q3_pm_friction_step.cpp",
+        "src/services/impl/workflow/quake3/workflow_q3_pm_ground_step.cpp",
+        "src/services/impl/workflow/quake3/workflow_q3_pm_step_slide_step.cpp",
+        "src/services/impl/workflow/quake3/q3_slide_move.cpp",
+        "src/services/impl/workflow/quake3/q3_slide_planes.cpp",
+        "src/services/impl/workflow/quake3/q3_wish_dir.cpp",
+        "src/services/impl/workflow/rendering/workflow_bsp_load_step.cpp",
+        "src/services/impl/workflow/rendering/workflow_bsp_build_collision_step.cpp",
+        "src/services/impl/workflow/rendering/workflow_bsp_parse_spawn_step.cpp",
+        "src/services/impl/workflow/workflow_step_parameter_resolver.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main",
+        "glm::glm",
+        "Bullet::Bullet",
+        "nlohmann_json::nlohmann_json",
+        "libzip::zip"
+      ]
     }
   ],
   "file_copying": [

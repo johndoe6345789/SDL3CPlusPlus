@@ -563,6 +563,65 @@ target_link_libraries(q3_wish_dir_test PRIVATE
 )
 add_test(NAME q3_wish_dir_test COMMAND q3_wish_dir_test)
 
+add_executable(q3_movement_integration_test)
+target_sources(q3_movement_integration_test PRIVATE tests/q3_movement_integration_test.cpp)
+target_sources(q3_movement_integration_test PRIVATE src/services/impl/workflow/quake3/workflow_q3_pm_accelerate_step.cpp)
+target_sources(q3_movement_integration_test PRIVATE src/services/impl/workflow/quake3/workflow_q3_pm_friction_step.cpp)
+target_sources(q3_movement_integration_test PRIVATE src/services/impl/workflow/quake3/workflow_q3_pm_ground_step.cpp)
+target_sources(q3_movement_integration_test PRIVATE src/services/impl/workflow/quake3/workflow_q3_pm_step_slide_step.cpp)
+target_sources(q3_movement_integration_test PRIVATE src/services/impl/workflow/quake3/q3_slide_move.cpp)
+target_sources(q3_movement_integration_test PRIVATE src/services/impl/workflow/quake3/q3_slide_planes.cpp)
+target_sources(q3_movement_integration_test PRIVATE src/services/impl/workflow/quake3/q3_wish_dir.cpp)
+target_include_directories(q3_movement_integration_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(q3_movement_integration_test PRIVATE
+    GTest::gtest_main
+    glm::glm
+    Bullet::Bullet
+)
+add_test(NAME q3_movement_integration_test COMMAND q3_movement_integration_test)
+
+add_executable(q3_input_axes_test)
+target_sources(q3_input_axes_test PRIVATE tests/q3_input_axes_test.cpp)
+target_sources(q3_input_axes_test PRIVATE src/services/impl/workflow/input/workflow_input_axis_combine_step.cpp)
+target_sources(q3_input_axes_test PRIVATE src/services/impl/workflow/input/workflow_input_button_combine_step.cpp)
+target_sources(q3_input_axes_test PRIVATE src/services/impl/workflow/workflow_step_parameter_resolver.cpp)
+target_include_directories(q3_input_axes_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(q3_input_axes_test PRIVATE
+    GTest::gtest_main
+    nlohmann_json::nlohmann_json
+    ${SDL_TARGET}
+)
+add_test(NAME q3_input_axes_test COMMAND q3_input_axes_test)
+
+add_executable(q3_map_movement_test)
+target_sources(q3_map_movement_test PRIVATE tests/q3_map_movement_test.cpp)
+target_sources(q3_map_movement_test PRIVATE src/services/impl/workflow/quake3/workflow_q3_pm_accelerate_step.cpp)
+target_sources(q3_map_movement_test PRIVATE src/services/impl/workflow/quake3/workflow_q3_pm_friction_step.cpp)
+target_sources(q3_map_movement_test PRIVATE src/services/impl/workflow/quake3/workflow_q3_pm_ground_step.cpp)
+target_sources(q3_map_movement_test PRIVATE src/services/impl/workflow/quake3/workflow_q3_pm_step_slide_step.cpp)
+target_sources(q3_map_movement_test PRIVATE src/services/impl/workflow/quake3/q3_slide_move.cpp)
+target_sources(q3_map_movement_test PRIVATE src/services/impl/workflow/quake3/q3_slide_planes.cpp)
+target_sources(q3_map_movement_test PRIVATE src/services/impl/workflow/quake3/q3_wish_dir.cpp)
+target_sources(q3_map_movement_test PRIVATE src/services/impl/workflow/rendering/workflow_bsp_load_step.cpp)
+target_sources(q3_map_movement_test PRIVATE src/services/impl/workflow/rendering/workflow_bsp_build_collision_step.cpp)
+target_sources(q3_map_movement_test PRIVATE src/services/impl/workflow/rendering/workflow_bsp_parse_spawn_step.cpp)
+target_sources(q3_map_movement_test PRIVATE src/services/impl/workflow/workflow_step_parameter_resolver.cpp)
+target_include_directories(q3_map_movement_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(q3_map_movement_test PRIVATE
+    GTest::gtest_main
+    glm::glm
+    Bullet::Bullet
+    nlohmann_json::nlohmann_json
+    libzip::zip
+)
+add_test(NAME q3_map_movement_test COMMAND q3_map_movement_test)
+
 # ============================================================================
 # FILE COPYING
 # ============================================================================
