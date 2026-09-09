@@ -370,6 +370,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/quake3/q3_slide_move.cpp
         src/services/impl/workflow/quake3/q3_slide_planes.cpp
         src/services/impl/workflow/quake3/q3_sound_bank.cpp
+        src/services/impl/workflow/quake3/q3_wish_dir.cpp
         src/services/impl/workflow/quake3/workflow_q3_ammo_init_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_bots_damage_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_bots_draw_step.cpp
@@ -549,6 +550,18 @@ target_link_libraries(q3_anim_cfg_test PRIVATE
     GTest::gtest_main
 )
 add_test(NAME q3_anim_cfg_test COMMAND q3_anim_cfg_test)
+
+add_executable(q3_wish_dir_test)
+target_sources(q3_wish_dir_test PRIVATE tests/q3_wish_dir_test.cpp)
+target_sources(q3_wish_dir_test PRIVATE src/services/impl/workflow/quake3/q3_wish_dir.cpp)
+target_include_directories(q3_wish_dir_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(q3_wish_dir_test PRIVATE
+    GTest::gtest_main
+    glm::glm
+)
+add_test(NAME q3_wish_dir_test COMMAND q3_wish_dir_test)
 
 # ============================================================================
 # FILE COPYING

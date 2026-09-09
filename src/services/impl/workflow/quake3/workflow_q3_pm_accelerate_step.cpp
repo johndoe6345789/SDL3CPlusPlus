@@ -1,6 +1,7 @@
 #include "services/interfaces/workflow/quake3/workflow_q3_pm_accelerate_step.hpp"
 #include "services/interfaces/workflow/quake3/q3_pm_types.hpp"
 #include "services/interfaces/workflow/quake3/q3_pm_constants.hpp"
+#include "services/interfaces/workflow/quake3/q3_wish_dir.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
 #include <glm/glm.hpp>
@@ -29,28 +30,14 @@ void WorkflowQ3PmAccelerateStep::Execute(
     const float moveRight   = context.Get<float>("input.move_right",   0.f);
     const float yaw         = context.Get<float>("q3.player_yaw",      0.f);
 
-    // Build wish direction in XZ plane, rotated by player yaw
-    // yaw is the angle from +Z toward +X (standard Q3 / OpenGL convention)
-    const float sinY = std::sin(yaw);
-    const float cosY = std::cos(yaw);
-
-    // Forward vector: -sinY, 0, -cosY  (same convention as fps_move_step)
-    // Right   vector:  cosY, 0, -sinY
-    glm::vec3 wishDir{
-        -sinY * moveForward + cosY * moveRight,
-        0.f,
-        -cosY * moveForward - sinY * moveRight
-    };
-
-    const float wishLen = std::sqrt(wishDir.x * wishDir.x + wishDir.z * wishDir.z);
-    if (wishLen < 0.001f) {
+    const auto wish = q3::ComputeWish(moveForward, moveRight, yaw,
+                                      q3::kMaxSpeed);
+    if (wish.speed <= 0.f) {
         context.Set("q3.ps", ps);
         return;
     }
-
-    const float maxSpeed   = ps.onGround ? q3::kMaxSpeed : q3::kMaxSpeed;
-    const float wishSpeed  = wishLen * maxSpeed;
-    wishDir /= wishLen;   // normalize
+    const glm::vec3 wishDir = wish.direction;
+    const float wishSpeed = wish.speed;
 
     const float accel        = ps.onGround ? q3::kAccelerate : q3::kAirAccelerate;
     const float currentSpeed = ps.velocity.x * wishDir.x + ps.velocity.z * wishDir.z;

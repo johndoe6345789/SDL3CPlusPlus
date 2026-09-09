@@ -249,6 +249,20 @@
       "link_libraries": [
         "GTest::gtest_main"
       ]
+    },
+    {
+      "name": "q3_wish_dir_test",
+      "sources": [
+        "tests/q3_wish_dir_test.cpp",
+        "src/services/impl/workflow/quake3/q3_wish_dir.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main",
+        "glm::glm"
+      ]
     }
   ],
   "file_copying": [
