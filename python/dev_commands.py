@@ -678,6 +678,9 @@ def gui(args: argparse.Namespace) -> None:
 
     import sys
 
+    import platform_target
+    from cmake_presets import resolve_binary_dir, resolve_configure_preset
+
     class BuildSettingsDialog(QDialog):
         """Dialog for configuring build settings"""
         def __init__(self, parent=None):
@@ -755,6 +758,10 @@ def gui(args: argparse.Namespace) -> None:
                     cache = nested / "CMakeCache.txt"
                     if cache.is_file():
                         candidates.append((cache.stat().st_mtime, nested))
+                # Multi-config layout (Visual Studio): <gen>/build/
+                cache = base / "build" / "CMakeCache.txt"
+                if cache.is_file():
+                    candidates.append((cache.stat().st_mtime, base / "build"))
                 # Flat layout: <gen>/
                 cache = base / "CMakeCache.txt"
                 if cache.is_file():
@@ -769,7 +776,7 @@ def gui(args: argparse.Namespace) -> None:
 
         def _find_binary(self) -> "str | None":
             """Return the path to the most recently built sdl3_app binary, or None."""
-            exe_name = "sdl3_app.exe" if IS_WINDOWS else "sdl3_app"
+            exe_name = platform_target.app_executable()
             best: tuple[float, str] | None = None
             for build_dir in self._candidate_build_dirs():
                 exe = build_dir / exe_name
@@ -817,6 +824,11 @@ def gui(args: argparse.Namespace) -> None:
                     print(f"Warning: Could not load bootloader {package_json}: {e}")
                     continue
 
+            # Put this platform's bootstrap first so the default
+            # selection is the one that can actually start: picking
+            # bootstrap_windows on a Mac fails at GPU init.
+            preferred = platform_target.bootstrap_package()
+            bootloaders.sort(key=lambda b: b["id"] != preferred)
             return bootloaders
 
         def load_game_packages(self):
@@ -1294,15 +1306,31 @@ def gui(args: argparse.Namespace) -> None:
                 return
 
             self.log(f"Binary: {binary}")
-            cmd = [binary]
-            if self.current_bootloader:
-                cmd.extend(["--bootstrap", self.current_bootloader["id"]])
+            # packages/ is copied next to the binary at build time, and
+            # the app resolves package paths against --project-root.
+            build_dir = Path(binary).parent
+            cmd = [binary, "--project-root", str(build_dir)]
+            bootstrap = (self.current_bootloader["id"]
+                         if self.current_bootloader
+                         else platform_target.bootstrap_package())
+            cmd.extend(["--bootstrap", bootstrap])
             if self.current_game:
                 cmd.extend(["--game", self.current_game["id"]])
 
+            # Packages read owned game data through ${env:...}; the
+            # command line runner does this too, so the GUI matches.
+            game_data: dict[str, str] = {}
+            try:
+                from steam_detector import detect_and_export
+                game_data = detect_and_export()
+            except Exception as exc:
+                self.log(f"[steam_detector] skipped: {exc}")
+            for key, value in game_data.items():
+                self.log(f"{key}={value}")
+
             self.log(f"Bootloader: {self.current_bootloader.get('name', 'default') if self.current_bootloader else 'default'}")
             self.log(f"Game: {self.current_game_package.get('name', 'default') if self.current_game_package else 'default'}")
-            self.run_command(cmd)
+            self.run_command(cmd, env_overrides=game_data or None)
 
         def stop_process(self):
             """Stop the running process"""
@@ -1351,6 +1379,10 @@ def gui(args: argparse.Namespace) -> None:
             self.process.readyReadStandardOutput.connect(self.handle_stdout)
             self.process.readyReadStandardError.connect(self.handle_stderr)
             self.process.finished.connect(self.process_finished)
+            # Conan and CMake are invoked with paths relative to the
+            # repository, so run from there regardless of where the GUI
+            # itself was started.
+            self.process.setWorkingDirectory(str(self._project_root()))
             self.process.start(args[0], args[1:])
 
             self.play_btn.setEnabled(False)
@@ -1392,19 +1424,32 @@ def gui(args: argparse.Namespace) -> None:
             if self.preset != "default":
                 cmd.extend(["--preset", self.preset])
             else:
-                cmd.extend([
-                    "--generator", self.generator,
-                    "--build-type", self.build_type
-                ])
+                # Conan names its preset after the generator's config
+                # model, so ask which one it wrote rather than assuming.
+                preset = resolve_configure_preset(self.build_type,
+                                                  self._project_root())
+                if preset:
+                    cmd.extend(["--preset", preset])
+                else:
+                    cmd.extend(["--generator", self.generator,
+                                "--build-type", self.build_type])
             self.run_command(cmd)
+
+        def _fallback_build_dir(self) -> "Path":
+            """Where CMake would have written, if nothing is configured."""
+            root = self._project_root()
+            preset = resolve_configure_preset(self.build_type, root)
+            if preset:
+                resolved = resolve_binary_dir(preset, root)
+                if resolved:
+                    return Path(resolved)
+            gen_dir = GENERATOR_DEFAULT_DIR.get(self.generator,
+                                                DEFAULT_BUILD_DIR)
+            return root / gen_dir / "build" / self.build_type
 
         def run_build(self):
             """Run build command"""
-            build_dir = self._find_build_dir()
-            if not build_dir:
-                # No configured build found — default to Conan nested layout for chosen generator
-                root = self._project_root()
-                build_dir = root / GENERATOR_DEFAULT_DIR.get(self.generator, DEFAULT_BUILD_DIR) / "build" / self.build_type
+            build_dir = self._find_build_dir() or self._fallback_build_dir()
             cmd = [
                 sys.executable, __file__, "build",
                 "--build-dir", str(build_dir),
@@ -1414,10 +1459,7 @@ def gui(args: argparse.Namespace) -> None:
 
         def run_tests(self):
             """Build and run tests"""
-            build_dir = self._find_build_dir()
-            if not build_dir:
-                root = self._project_root()
-                build_dir = root / GENERATOR_DEFAULT_DIR.get(self.generator, DEFAULT_BUILD_DIR) / "build" / self.build_type
+            build_dir = self._find_build_dir() or self._fallback_build_dir()
             cmd = [
                 sys.executable, __file__, "tests",
                 "--build-dir", str(build_dir),
