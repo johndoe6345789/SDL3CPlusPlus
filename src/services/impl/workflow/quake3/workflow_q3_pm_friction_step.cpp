@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/quake3/workflow_q3_pm_friction_step.hpp"
 #include "services/interfaces/workflow/quake3/q3_pm_types.hpp"
+#include "services/interfaces/workflow/quake3/q3_pm_constants.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
 #include <glm/glm.hpp>
@@ -9,8 +10,6 @@
 
 namespace sdl3cpp::services::impl {
 
-static constexpr float kStopSpeed = 1.5f;   // pm_stopspeed (scaled)
-static constexpr float kFriction  = 8.0f;   // pm_friction  (scaled)
 
 WorkflowQ3PmFrictionStep::WorkflowQ3PmFrictionStep(std::shared_ptr<ILogger> logger)
     : logger_(std::move(logger)) {}
@@ -41,8 +40,8 @@ void WorkflowQ3PmFrictionStep::Execute(
         return;
     }
 
-    const float control  = std::max(speed, kStopSpeed);
-    const float drop     = control * kFriction * dt;
+    const float control  = std::max(speed, q3::kStopSpeed);
+    const float drop     = control * q3::kFriction * dt;
     const float newSpeed = std::max(0.f, speed - drop);
 
     const float scale = newSpeed / speed;

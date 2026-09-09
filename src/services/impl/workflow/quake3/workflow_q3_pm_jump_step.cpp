@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/quake3/workflow_q3_pm_jump_step.hpp"
 #include "services/interfaces/workflow/quake3/q3_pm_types.hpp"
+#include "services/interfaces/workflow/quake3/q3_pm_constants.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
 #include <glm/glm.hpp>
@@ -8,7 +9,6 @@
 namespace sdl3cpp::services::impl {
 
 // 270 q3units/s * 0.03125 world/q3unit = 8.4375 ≈ 8.5
-static constexpr float kJumpVelocity = 8.5f;
 
 WorkflowQ3PmJumpStep::WorkflowQ3PmJumpStep(std::shared_ptr<ILogger> logger)
     : logger_(std::move(logger)) {}
@@ -27,7 +27,7 @@ void WorkflowQ3PmJumpStep::Execute(
     const bool jumpHeld    = context.GetBool("q3.pm_jump_held", false);
 
     if (jumpPressed && !jumpHeld && ps.onGround) {
-        ps.velocity.y = kJumpVelocity;
+        ps.velocity.y = q3::kJumpVelocity;
         ps.onGround   = false;
     }
 

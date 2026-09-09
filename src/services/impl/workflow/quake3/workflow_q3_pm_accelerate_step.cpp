@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/quake3/workflow_q3_pm_accelerate_step.hpp"
 #include "services/interfaces/workflow/quake3/q3_pm_types.hpp"
+#include "services/interfaces/workflow/quake3/q3_pm_constants.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
 #include <glm/glm.hpp>
@@ -9,10 +10,6 @@
 
 namespace sdl3cpp::services::impl {
 
-static constexpr float kMaxSpeedGround = 7.5f;   // scaled Q3 ground max speed
-static constexpr float kMaxSpeedAir    = 6.0f;   // scaled Q3 air max speed
-static constexpr float kAccelGround    = 50.0f;  // ground acceleration
-static constexpr float kAccelAir       = 2.0f;   // air acceleration
 
 WorkflowQ3PmAccelerateStep::WorkflowQ3PmAccelerateStep(std::shared_ptr<ILogger> logger)
     : logger_(std::move(logger)) {}
@@ -51,11 +48,11 @@ void WorkflowQ3PmAccelerateStep::Execute(
         return;
     }
 
-    const float maxSpeed   = ps.onGround ? kMaxSpeedGround : kMaxSpeedAir;
+    const float maxSpeed   = ps.onGround ? q3::kMaxSpeed : q3::kMaxSpeed;
     const float wishSpeed  = wishLen * maxSpeed;
     wishDir /= wishLen;   // normalize
 
-    const float accel        = ps.onGround ? kAccelGround : kAccelAir;
+    const float accel        = ps.onGround ? q3::kAccelerate : q3::kAirAccelerate;
     const float currentSpeed = ps.velocity.x * wishDir.x + ps.velocity.z * wishDir.z;
     const float addSpeed     = wishSpeed - currentSpeed;
 

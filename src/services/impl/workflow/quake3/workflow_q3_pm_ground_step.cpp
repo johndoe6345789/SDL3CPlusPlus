@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/quake3/workflow_q3_pm_ground_step.hpp"
 #include "services/interfaces/workflow/quake3/q3_pm_types.hpp"
+#include "services/interfaces/workflow/quake3/q3_pm_constants.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
 #include <btBulletDynamicsCommon.h>
@@ -9,7 +10,6 @@
 namespace sdl3cpp::services::impl {
 
 // Gravity in world units/s² at our Q3 scale (800 q3units * 0.03125 ≈ 25, using 20 as spec'd)
-static constexpr float kGravity = 20.f;
 // Walkable slope: normal.y must exceed this (cos 45°≈0.7)
 static constexpr float kMinGroundNormalY = 0.7f;
 // Distance to probe below origin for ground detection
@@ -48,7 +48,7 @@ void WorkflowQ3PmGroundStep::Execute(
     if (!grounded) {
         ps.onGround    = false;
         // Apply gravity
-        ps.velocity.y -= kGravity * dt;
+        ps.velocity.y -= q3::kGravity * dt;
     }
 
     ps.groundFraction = grounded ? 1.f : 0.f;

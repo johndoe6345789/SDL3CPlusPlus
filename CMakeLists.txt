@@ -471,6 +471,16 @@ target_link_libraries(q3_overlay_scale_test PRIVATE
 )
 add_test(NAME q3_overlay_scale_test COMMAND q3_overlay_scale_test)
 
+add_executable(q3_pm_constants_test)
+target_sources(q3_pm_constants_test PRIVATE tests/q3_pm_constants_test.cpp)
+target_include_directories(q3_pm_constants_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(q3_pm_constants_test PRIVATE
+    GTest::gtest_main
+)
+add_test(NAME q3_pm_constants_test COMMAND q3_pm_constants_test)
+
 # ============================================================================
 # FILE COPYING
 # ============================================================================
