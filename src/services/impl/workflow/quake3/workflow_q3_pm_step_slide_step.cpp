@@ -45,7 +45,14 @@ void WorkflowQ3PmStepSlideStep::Execute(const WorkflowStepDefinition&,
     const bool movingHorizontally =
         glm::dot(horizontal, horizontal) > 0.01f;
 
-    if (!q3::SlideMove(ps, world, dt) || !movingHorizontally) {
+    // Deliberately stricter than ioq3, which will also step while
+    // airborne. Every airborne step attempt here has ended up letting
+    // the player ratchet up a flat wall, and stepping exists to get up
+    // stairs and ledges while walking, so it is gated on standing on
+    // something. Revisit if ledge-grabbing while jumping is wanted.
+    const bool canStep = ps.onGround && movingHorizontally;
+
+    if (!q3::SlideMove(ps, world, dt) || !canStep) {
         context.Set("q3.ps", ps);
         context.Set("q3.player_pos", ps.origin);
         context.Set<float>("q3.step_delta", 0.f);
