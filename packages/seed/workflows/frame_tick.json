@@ -532,7 +532,7 @@
     },
     "draw_map": {
       "main": {
-        "0": [{ "node": "draw_torch", "type": "main", "index": 0 }]
+        "0": [{ "node": "draw_floor", "type": "main", "index": 0 }]
       }
     },
     "draw_floor": {

@@ -1275,7 +1275,7 @@
     },
     "load_map": {
       "main": {
-        "0": [{ "node": "player", "type": "main", "index": 0 }]
+        "0": [{ "node": "plane_floor", "type": "main", "index": 0 }]
       }
     },
     "plane_floor": {
