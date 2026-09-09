@@ -322,7 +322,7 @@ def generate(args: argparse.Namespace) -> None:
     """Generate CMakeLists.txt from cmake_config.json using Jinja2."""
     env = {"PYTHONIOENCODING": "utf-8"}
     cmd = [
-        "python", "generate_cmake.py",
+        sys.executable, "generate_cmake.py",
         "--config", args.config,
         "--output", args.output,
     ]
@@ -410,9 +410,14 @@ def full_build(args: argparse.Namespace) -> None:
     generate(gen_args)
 
     print("\n=== Step 3/4: Configuring CMake ===")
+    # Conan names the preset after the generator's config model, so ask
+    # which presets were actually written instead of assuming Windows.
+    from cmake_presets import resolve_binary_dir, resolve_configure_preset
+
+    preset = resolve_configure_preset(args.build_type) or "conan-default"
     conf_args = argparse.Namespace(
         dry_run=args.dry_run,
-        preset="conan-default",
+        preset=preset,
         generator=None,
         build_dir=None,
         build_type=args.build_type,
@@ -421,9 +426,11 @@ def full_build(args: argparse.Namespace) -> None:
     configure(conf_args)
 
     print("\n=== Step 4/4: Building ===")
+    # Single-config generators nest the cache under the config name, so
+    # build where this preset actually wrote it rather than guessing.
     bld_args = argparse.Namespace(
         dry_run=args.dry_run,
-        build_dir="build-ninja/build",
+        build_dir=resolve_binary_dir(preset) or "build-ninja/build",
         config=args.build_type,
         target=args.target,
         build_tool_args=None,
