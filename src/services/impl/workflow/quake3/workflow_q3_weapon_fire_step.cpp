@@ -88,6 +88,15 @@ void WorkflowQ3WeaponFireStep::Execute(const WorkflowStepDefinition& /*step*/, W
     const bool wantsFire = firePressed || (fireHeld && IsAutoFire(weapon));
     const bool canFire   = lastFire == 0u || frame >= lastFire + interval;
 
+    if (logger_ && (fireHeld || firePressed)) {
+        logger_->Warn("FIREDIAG held=" + std::to_string(fireHeld) +
+                      " pressed=" + std::to_string(firePressed) +
+                      " weapon=" + weapon +
+                      " frame=" + std::to_string(frame) +
+                      " lastFire=" + std::to_string(lastFire) +
+                      " wants=" + std::to_string(wantsFire) +
+                      " can=" + std::to_string(canFire));
+    }
     if (!wantsFire || !canFire) {
         return;
     }

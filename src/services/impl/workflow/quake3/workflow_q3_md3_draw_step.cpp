@@ -5,6 +5,7 @@
 
 #include <SDL3/SDL_gpu.h>
 #include <glm/glm.hpp>
+#include <cmath>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <nlohmann/json.hpp>
@@ -153,14 +154,15 @@ void WorkflowQ3Md3DrawStep::Execute(const WorkflowStepDefinition& step, Workflow
         glm::vec3 up     (view[0][1], view[1][1], view[2][1]);
         glm::vec3 forward(-view[0][2],-view[1][2],-view[2][2]);
         glm::vec3 pos = camPos + right * vmRight + up * vmDown + forward * vmFwd;
-        // MD3 weapon models have barrel along local +X.
-        // Map: model X → world forward (barrel points into screen)
-        //      model Y → world up
-        //      model Z → world right  (right-handed: right × forward = up ✓)
+        // MD3 models use Quake's Z-up axes: X forward, Y left, Z up.
+        // ioq3 q_math.c AnglesToAxis() builds exactly that, taking
+        // axis[1] as -right. Mapping Y to world up instead rolls the
+        // model 90 degrees about its barrel and, because forward x up
+        // is -right, mirrors it as well.
         glm::mat4 orient(1.0f);
         orient[0] = glm::vec4(forward, 0.0f);
-        orient[1] = glm::vec4(up,      0.0f);
-        orient[2] = glm::vec4(right,   0.0f);
+        orient[1] = glm::vec4(-right,  0.0f);
+        orient[2] = glm::vec4(up,      0.0f);
         model = glm::translate(glm::mat4(1.0f), pos) * orient;
     } else {
         glm::vec3 pos(0.0f);
@@ -171,8 +173,16 @@ void WorkflowQ3Md3DrawStep::Execute(const WorkflowStepDefinition& step, Workflow
         }
         float yaw = 0.0f;
         if (!yaw_key.empty()) yaw = context.Get<float>(yaw_key, 0.0f);
-        model = glm::translate(glm::mat4(1.0f), pos)
-              * glm::rotate(glm::mat4(1.0f), yaw, glm::vec3(0.0f, 1.0f, 0.0f));
+        // Same Z-up remap as the viewmodel: a bare yaw rotation about
+        // world Y leaves a Z-up model lying on its side.
+        const glm::vec3 f(-std::sin(yaw), 0.0f, -std::cos(yaw));
+        const glm::vec3 u(0.0f, 1.0f, 0.0f);
+        const glm::vec3 l = glm::cross(u, f);
+        glm::mat4 orient(1.0f);
+        orient[0] = glm::vec4(f, 0.0f);
+        orient[1] = glm::vec4(l, 0.0f);
+        orient[2] = glm::vec4(u, 0.0f);
+        model = glm::translate(glm::mat4(1.0f), pos) * orient;
     }
 
     auto* shadowTex  = context.Get<SDL_GPUTexture*>("shadow_depth_texture", nullptr);
