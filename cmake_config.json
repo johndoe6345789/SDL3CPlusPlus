@@ -157,6 +157,19 @@
         "GTest::gtest_main",
         "glm::glm"
       ]
+    },
+    {
+      "name": "q3_overlay_scale_test",
+      "sources": [
+        "tests/q3_overlay_scale_test.cpp",
+        "src/services/impl/workflow/quake3/q3_overlay_scale.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main"
+      ]
     }
   ],
   "file_copying": [

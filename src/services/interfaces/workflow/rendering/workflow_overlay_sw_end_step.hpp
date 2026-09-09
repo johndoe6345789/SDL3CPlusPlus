@@ -15,6 +15,7 @@ public:
     void Execute(const WorkflowStepDefinition& step, WorkflowContext& context) override;
 private:
     void TryInit(SDL_GPUDevice* device, SDL_Window* window,
+                 int surfaceWidth, int surfaceHeight,
                  const std::string& vertPath, const std::string& fragPath);
     std::shared_ptr<ILogger> logger_;
     void BlitHeadPortrait(SDL_GPUCommandBuffer* cmd, SDL_GPUTexture* swapchain,

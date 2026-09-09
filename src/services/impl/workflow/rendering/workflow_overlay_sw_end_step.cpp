@@ -36,6 +36,7 @@ std::string WorkflowOverlaySwEndStep::GetPluginId() const { return "overlay.sw.e
 
 void WorkflowOverlaySwEndStep::TryInit(
         SDL_GPUDevice* device, SDL_Window* window,
+        int surfaceWidth, int surfaceHeight,
         const std::string& vertPath, const std::string& fragPath) {
     device_ = device;
     const char* driver = SDL_GetGPUDeviceDriver(device);
@@ -94,11 +95,13 @@ void WorkflowOverlaySwEndStep::TryInit(
 
     SDL_GPUTextureCreateInfo tci{}; tci.type=SDL_GPU_TEXTURETYPE_2D;
     tci.format=SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
-    tci.width=kW; tci.height=kH; tci.layer_count_or_depth=1; tci.num_levels=1;
+    tci.width=(uint32_t)surfaceWidth; tci.height=(uint32_t)surfaceHeight;
+    tci.layer_count_or_depth=1; tci.num_levels=1;
     tci.usage=SDL_GPU_TEXTUREUSAGE_SAMPLER;
     tex_=SDL_CreateGPUTexture(device,&tci);
     SDL_GPUTransferBufferCreateInfo tbci{}; tbci.usage=SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD;
-    tbci.size=kW*kH*4; transfer_=SDL_CreateGPUTransferBuffer(device,&tbci);
+    tbci.size=(uint32_t)(surfaceWidth*surfaceHeight*4);
+    transfer_=SDL_CreateGPUTransferBuffer(device,&tbci);
     SDL_GPUBufferCreateInfo bci{}; bci.usage=SDL_GPU_BUFFERUSAGE_VERTEX;
     bci.size=6u*5u*(uint32_t)sizeof(float); vtx_buf_=SDL_CreateGPUBuffer(device,&bci);
     SDL_GPUSamplerCreateInfo sci{}; sci.min_filter=SDL_GPU_FILTER_NEAREST;
@@ -231,20 +234,24 @@ void WorkflowOverlaySwEndStep::Execute(
             fp = getStr("frag_shader_path_spirv",
                         "packages/quake3/shaders/spirv/overlay.frag.spv");
         }
-        TryInit(device, context.Get<SDL_Window*>("sdl_window", nullptr), vp, fp);
+        TryInit(device, context.Get<SDL_Window*>("sdl_window", nullptr),
+                surface->w, surface->h, vp, fp);
     }
     if (!ready_) return;
 
     // Upload surface pixels to GPU texture
     void* mapped = SDL_MapGPUTransferBuffer(device, transfer_, false);
     if (!mapped) return;
-    std::memcpy(mapped, surface->pixels, kW * kH * 4);
+    std::memcpy(mapped, surface->pixels,
+                (size_t)surface->w * surface->h * 4);
     SDL_UnmapGPUTransferBuffer(device, transfer_);
     auto* copy = SDL_BeginGPUCopyPass(cmd);
     if (copy) {
         SDL_GPUTextureTransferInfo src{}; src.transfer_buffer=transfer_;
-        src.pixels_per_row=kW; src.rows_per_layer=kH;
-        SDL_GPUTextureRegion dst{}; dst.texture=tex_; dst.w=kW; dst.h=kH; dst.d=1;
+        src.pixels_per_row=(uint32_t)surface->w;
+        src.rows_per_layer=(uint32_t)surface->h;
+        SDL_GPUTextureRegion dst{}; dst.texture=tex_;
+        dst.w=(uint32_t)surface->w; dst.h=(uint32_t)surface->h; dst.d=1;
         SDL_UploadToGPUTexture(copy, &src, &dst, false);
         SDL_EndGPUCopyPass(copy);
     }

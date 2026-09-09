@@ -363,6 +363,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/compute/workflow_compute_pipeline_create_step.cpp
         src/services/impl/workflow/compute/workflow_compute_tessellate_dispatch_step.cpp
         src/services/impl/workflow/compute/workflow_compute_tessellate_step.cpp
+        src/services/impl/workflow/quake3/q3_overlay_scale.cpp
         src/services/impl/workflow/quake3/q3_slide_planes.cpp
         src/services/impl/workflow/quake3/workflow_q3_ammo_init_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_bots_damage_step.cpp
@@ -458,6 +459,17 @@ target_link_libraries(q3_slide_planes_test PRIVATE
     glm::glm
 )
 add_test(NAME q3_slide_planes_test COMMAND q3_slide_planes_test)
+
+add_executable(q3_overlay_scale_test)
+target_sources(q3_overlay_scale_test PRIVATE tests/q3_overlay_scale_test.cpp)
+target_sources(q3_overlay_scale_test PRIVATE src/services/impl/workflow/quake3/q3_overlay_scale.cpp)
+target_include_directories(q3_overlay_scale_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(q3_overlay_scale_test PRIVATE
+    GTest::gtest_main
+)
+add_test(NAME q3_overlay_scale_test COMMAND q3_overlay_scale_test)
 
 # ============================================================================
 # FILE COPYING
