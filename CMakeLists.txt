@@ -177,6 +177,7 @@ if(BUILD_SDL3_APP)
     add_executable(sdl3_app
         src/main.cpp
         src/services/impl/diagnostics/logger_service.cpp
+        src/services/impl/app/cli_env_override.cpp
         src/services/impl/workflow/workflow_executor.cpp
         src/services/impl/workflow/workflow_step_registry.cpp
         src/services/impl/workflow/workflow_exit_step.cpp

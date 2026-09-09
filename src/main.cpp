@@ -16,6 +16,7 @@
 #include "services/interfaces/workflow/workflow_definition_parser.hpp"
 #include "services/interfaces/workflow/workflow_app_init_step.hpp"
 #include "services/interfaces/workflow/workflow_load_workflow_step.hpp"
+#include "services/interfaces/app/cli_env_override.hpp"
 
 int main(int argc, char** argv) {
     SDL_SetMainReady();
@@ -34,6 +35,16 @@ int main(int argc, char** argv) {
                 bootstrapPackage = argv[++i];
             } else if (arg == "--project-root" && i + 1 < argc) {
                 projectRoot = argv[++i];
+            } else if (arg == "--env" && i + 1 < argc) {
+                // Workflow JSON reads paths such as the Quake 3 pk3 through
+                // ${env:NAME}; this supplies one for the run without editing
+                // the workflow or exporting anything in the shell.
+                const std::string assignment = argv[++i];
+                if (!sdl3cpp::services::app::ApplyEnvOverride(assignment)) {
+                    std::cerr << "Invalid --env argument (expected NAME=VALUE): "
+                              << assignment << std::endl;
+                    return 1;
+                }
             }
         }
 
