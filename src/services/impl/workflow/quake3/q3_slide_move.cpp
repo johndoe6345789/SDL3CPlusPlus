@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/quake3/q3_slide_move.hpp"
 #include "services/interfaces/workflow/quake3/q3_slide_planes.hpp"
+#include "services/interfaces/workflow/quake3/q3_pm_constants.hpp"
 
 #include <array>
 #include <glm/glm.hpp>
@@ -35,7 +36,11 @@ bool SlideMove(services::impl::Q3PlayerState& ps,
         bool samePlane = false;
         for (int p = 0; p < numPlanes; ++p) {
             if (glm::dot(tr.normal, planes[p]) > kSamePlaneDot) {
-                ps.velocity += tr.normal;
+                // ioq3 adds the bare unit normal, but its velocities are
+                // in Quake units where that is 1/320th of walk speed.
+                // In metres it would be 1 m/s, a tenth of walk speed and
+                // straight up off a floor, which launched the player.
+                ps.velocity += tr.normal * FromQuakeUnits(1.0f);
                 samePlane = true;
                 break;
             }

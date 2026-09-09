@@ -37,9 +37,25 @@ void WorkflowQ3SoundInitStep::Execute(const WorkflowStepDefinition&,
         return;
     }
 
+    // Streams must be created against the device's real format; a null
+    // destination spec silently produces a stream that plays nothing.
+    SDL_AudioSpec deviceSpec{};
+    int frames = 0;
+    if (!SDL_GetAudioDeviceFormat(device, &deviceSpec, &frames)) {
+        deviceSpec.format = SDL_AUDIO_F32;
+        deviceSpec.channels = 2;
+        deviceSpec.freq = 48000;
+    }
+
     context.Set<SDL_AudioDeviceID>("q3.sound.device", device);
+    context.Set<SDL_AudioSpec>("q3.sound.device_spec", deviceSpec);
+    SDL_ResumeAudioDevice(device);
+
     if (logger_) {
-        logger_->Info("q3.sound.init: audio device opened");
+        logger_->Info("q3.sound.init: device open, " +
+                      std::to_string(deviceSpec.freq) + "Hz x" +
+                      std::to_string(deviceSpec.channels) + " fmt=" +
+                      std::to_string(static_cast<int>(deviceSpec.format)));
     }
 }
 

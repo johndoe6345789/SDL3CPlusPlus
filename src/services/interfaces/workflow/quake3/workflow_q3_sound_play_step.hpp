@@ -3,8 +3,11 @@
 #include "services/interfaces/i_logger.hpp"
 #include "services/interfaces/i_workflow_step.hpp"
 
+#include <SDL3/SDL_audio.h>
+
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace sdl3cpp::services::impl {
 
@@ -28,7 +31,11 @@ public:
                  WorkflowContext& context) override;
 
 private:
+    /// Streams are freed once drained; SDL does not reclaim them.
+    void ReapFinished();
+
     std::shared_ptr<ILogger> logger_;
+    std::vector<SDL_AudioStream*> playing_;
 };
 
 }  // namespace sdl3cpp::services::impl

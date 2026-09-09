@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/quake3/workflow_q3_pm_crouch_step.hpp"
 #include "services/interfaces/workflow/quake3/q3_pm_types.hpp"
+#include "services/interfaces/workflow/quake3/q3_pm_constants.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
 #include <btBulletDynamicsCommon.h>
@@ -8,8 +9,6 @@
 
 namespace sdl3cpp::services::impl {
 
-static constexpr float kStandMaxsY  = 1.4f;
-static constexpr float kCrouchMaxsY = 0.85f;
 
 WorkflowQ3PmCrouchStep::WorkflowQ3PmCrouchStep(std::shared_ptr<ILogger> logger)
     : logger_(std::move(logger)) {}
@@ -30,20 +29,20 @@ void WorkflowQ3PmCrouchStep::Execute(
     if (crouchPressed && !ps.crouching) {
         // Transition: standing → crouching
         ps.crouching  = true;
-        ps.maxs.y     = kCrouchMaxsY;
+        ps.maxs.y     = q3::kPlayerCrouchHead;
     } else if (!crouchPressed && ps.crouching) {
         // Transition: crouching → standing — only if there is room above
         bool canStand = true;
         if (world) {
             // Trace upward by the height difference to check for headroom
-            const float rise = kStandMaxsY - kCrouchMaxsY;
+            const float rise = q3::kPlayerHead - q3::kPlayerCrouchHead;
             const glm::vec3 traceEnd = ps.origin + glm::vec3(0.f, rise, 0.f);
             Q3Trace tr = TraceBox(world, ps.origin, traceEnd, ps.mins, ps.maxs);
             canStand = (tr.fraction >= 1.f);
         }
         if (canStand) {
             ps.crouching = false;
-            ps.maxs.y    = kStandMaxsY;
+            ps.maxs.y    = q3::kPlayerHead;
         }
     }
 

@@ -26,4 +26,17 @@ inline constexpr float kAccelerate = 10.0f;      // pm_accelerate
 inline constexpr float kAirAccelerate = 1.0f;    // pm_airaccelerate
 inline constexpr float kDuckScale = 0.25f;       // pm_duckScale
 
+// The player's box, from ioq3 g_client.c playerMins/playerMaxs. The
+// origin sits 24 units above the feet, not at them: every spawn point,
+// step and ceiling in a Quake map is authored around that, so getting
+// it wrong misplaces the player against all of the geometry at once.
+inline constexpr float kPlayerHalfWidth = FromQuakeUnits(15.0f);
+inline constexpr float kPlayerFeet = FromQuakeUnits(-24.0f);
+inline constexpr float kPlayerHead = FromQuakeUnits(32.0f);
+inline constexpr float kPlayerCrouchHead = FromQuakeUnits(16.0f);
+
+// bg_public.h DEFAULT_VIEWHEIGHT / CROUCH_VIEWHEIGHT, above the origin.
+inline constexpr float kViewHeight = FromQuakeUnits(26.0f);
+inline constexpr float kCrouchViewHeight = FromQuakeUnits(12.0f);
+
 }  // namespace sdl3cpp::q3

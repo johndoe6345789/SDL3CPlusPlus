@@ -37,7 +37,15 @@ void WorkflowQ3PmStepSlideStep::Execute(const WorkflowStepDefinition&,
     const glm::vec3 startOrigin = ps.origin;
     const glm::vec3 startVelocity = ps.velocity;
 
-    if (!q3::SlideMove(ps, world, dt)) {
+    // Stepping is for walking into something. Falling onto the floor
+    // also reports the move as obstructed, and attempting a step there
+    // lifted the player a little every frame until they floated away
+    // from the map entirely.
+    const glm::vec3 horizontal(startVelocity.x, 0.f, startVelocity.z);
+    const bool movingHorizontally =
+        glm::dot(horizontal, horizontal) > 0.01f;
+
+    if (!q3::SlideMove(ps, world, dt) || !movingHorizontally) {
         context.Set("q3.ps", ps);
         context.Set("q3.player_pos", ps.origin);
         context.Set<float>("q3.step_delta", 0.f);

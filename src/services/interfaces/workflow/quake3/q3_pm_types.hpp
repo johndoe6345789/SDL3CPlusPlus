@@ -1,5 +1,7 @@
 #pragma once
 
+#include "services/interfaces/workflow/quake3/q3_pm_constants.hpp"
+
 #include <glm/glm.hpp>
 #include <btBulletDynamicsCommon.h>
 #include <BulletCollision/CollisionDispatch/btCollisionWorld.h>
@@ -14,8 +16,10 @@ namespace sdl3cpp::services::impl {
 struct Q3PlayerState {
     glm::vec3 origin{0.f, 1.f, 0.f};
     glm::vec3 velocity{0.f, 0.f, 0.f};
-    glm::vec3 mins{-0.28f,  0.f,  -0.28f};
-    glm::vec3 maxs{ 0.28f,  1.4f,  0.28f};
+    glm::vec3 mins{-q3::kPlayerHalfWidth, q3::kPlayerFeet,
+                   -q3::kPlayerHalfWidth};
+    glm::vec3 maxs{ q3::kPlayerHalfWidth, q3::kPlayerHead,
+                    q3::kPlayerHalfWidth};
     bool  onGround{false};
     bool  crouching{false};
     float groundFraction{0.f};   // 0 = air, 1 = fully grounded
