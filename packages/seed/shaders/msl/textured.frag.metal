@@ -4,11 +4,17 @@ using namespace metal;
 // PBR Cook-Torrance + PCF Shadow Mapping + Hemisphere Ambient
 // Outputs linear HDR — tonemapping handled by postfx composite
 
+// Must mirror sdl3cpp::services::rendering::FragmentUniformData exactly;
+// the C++ side uploads all seven float4s regardless of what is declared
+// here, so omitting the flash members silently drops the flashlight.
 struct PBRUniforms {
     float4 u_lightDir;      // xyz = direction (toward scene), w = unused
     float4 u_lightColor;    // rgb = light color * intensity, a = exposure
     float4 u_ambient;       // rgb = ambient color * intensity, a = unused
     float4 u_material;      // x = roughness, y = metallic, zw = unused
+    float4 u_flashPos;      // xyz = position, w = cos(inner cone angle)
+    float4 u_flashDir;      // xyz = direction, w = cos(outer cone angle)
+    float4 u_flashColor;    // rgb = color * intensity, a = range
 };
 
 struct FragmentInput {
@@ -39,6 +45,51 @@ float G_Smith(float NdotV, float NdotL, float roughness) {
 
 float3 F_Schlick(float cosTheta, float3 F0) {
     return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
+
+// Cone falloff between the inner and outer angles, as cosines.
+float SpotlightAtten(float3 lightToFrag, float3 spotDir,
+                     float cosInner, float cosOuter) {
+    float cosAngle = dot(normalize(lightToFrag), spotDir);
+    return clamp((cosAngle - cosOuter) / max(cosInner - cosOuter, 0.001),
+                 0.0, 1.0);
+}
+
+// Ray march camera->surface through the cone so the beam is visible in
+// the air, not just where it lands. Mirrors the GLSL path.
+float3 VolumetricBeam(float3 camPos, float3 fragPos, float3 flashPos,
+                      float3 flashDir, float cosInner, float cosOuter,
+                      float3 flashColor, float flashRange, float2 fragCoord) {
+    const int NUM_STEPS = 48;
+    const float FOG_DENSITY = 0.05;
+
+    float3 rayDir = fragPos - camPos;
+    float rayLen = length(rayDir);
+    if (rayLen < 0.0001) return float3(0.0);
+    float3 rayNorm = rayDir / rayLen;
+    float stepSize = rayLen / float(NUM_STEPS);
+
+    // Interleaved gradient noise breaks up banding along the ray.
+    float dither = fract(52.9829189 * fract(0.06711056 * fragCoord.x +
+                                            0.00583715 * fragCoord.y));
+
+    float viewDot = max(dot(rayNorm, flashDir), 0.0);
+    float scatter = mix(1.0, 2.5, viewDot * viewDot);
+
+    float3 accumulated = float3(0.0);
+    for (int i = 0; i < NUM_STEPS; ++i) {
+        float t = (float(i) + dither) * stepSize;
+        float3 samplePos = camPos + rayNorm * t;
+
+        float3 toSample = samplePos - flashPos;
+        float dist = length(toSample);
+        float atten = clamp(1.0 - dist / flashRange, 0.0, 1.0);
+        atten *= atten;
+
+        float spot = SpotlightAtten(toSample, flashDir, cosInner, cosOuter);
+        accumulated += flashColor * spot * atten * FOG_DENSITY * stepSize;
+    }
+    return accumulated * scatter;
 }
 
 float ComputeShadowPCF(float4 shadowPos, float NdotL,
@@ -111,6 +162,39 @@ fragment float4 main0(
     // Outgoing radiance (shadowed)
     float3 Lo = (diffuse + specular) * pbr.u_lightColor.rgb * NdotL * shadow;
 
+    // Spotlight (flashlight / torch), driven by spotlight.update
+    float3 volumetric = float3(0.0);
+    float flashRange = pbr.u_flashColor.a;
+    if (flashRange > 0.0) {
+        float3 spotDir = normalize(pbr.u_flashDir.xyz);
+        float3 lightToFrag = in.worldPos - pbr.u_flashPos.xyz;
+        float dist = length(lightToFrag);
+        float atten = clamp(1.0 - dist / flashRange, 0.0, 1.0);
+        atten *= atten;
+        float spot = SpotlightAtten(lightToFrag, spotDir,
+                                    pbr.u_flashPos.w, pbr.u_flashDir.w);
+
+        float3 Lf = normalize(-lightToFrag);
+        float NdotLf = max(dot(N, Lf), 0.0);
+        float3 Hf = normalize(V + Lf);
+        float NdotHf = max(dot(N, Hf), 0.0);
+        float HdotVf = max(dot(Hf, V), 0.0);
+
+        float  Df = D_GGX(NdotHf, roughness);
+        float  Gf = G_Smith(NdotV, NdotLf, roughness);
+        float3 Ff = F_Schlick(HdotVf, F0);
+        float3 specF = (Df * Gf * Ff) / max(4.0 * NdotV * NdotLf, 0.001);
+        float3 diffF = (float3(1.0) - Ff) * (1.0 - metallic) * albedo / M_PI_F;
+
+        Lo += (diffF + specF) * NdotLf * pbr.u_flashColor.rgb * atten * spot;
+
+        volumetric = VolumetricBeam(in.cameraPos, in.worldPos,
+                                    pbr.u_flashPos.xyz, spotDir,
+                                    pbr.u_flashPos.w, pbr.u_flashDir.w,
+                                    pbr.u_flashColor.rgb, flashRange,
+                                    in.position.xy);
+    }
+
     // Hemisphere ambient: sky tint above, warm ground tint below
     float3 skyColor    = pbr.u_ambient.rgb;
     float3 groundColor = pbr.u_ambient.rgb * float3(0.6, 0.5, 0.4) * 0.5;
@@ -118,6 +202,6 @@ fragment float4 main0(
     float3 ambient     = mix(groundColor, skyColor, hemisphere) * albedo;
 
     // Output linear HDR — tonemapping in composite pass
-    float3 color = (Lo + ambient) * exposure;
+    float3 color = (Lo + ambient) * exposure + volumetric;
     return float4(color, 1.0);
 }

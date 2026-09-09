@@ -20,6 +20,16 @@
       "position": [0, 0]
     },
     {
+      "id": "quit_on_escape",
+      "name": "Quit On Escape",
+      "type": "value.set_if",
+      "typeVersion": 1,
+      "position": [60, 0],
+      "inputs": { "condition": "input_key_escape_pressed" },
+      "parameters": { "value": false },
+      "outputs": { "value": "game_running" }
+    },
+    {
       "id": "physics_move",
       "name": "FPS Move",
       "type": "physics.fps.move",
@@ -294,7 +304,7 @@
       "parameters": {
         "texture": "walls_texture",
         "pos_x": -6, "pos_y": 2.5, "pos_z": -6,
-        "size_x": 1.2, "size_y": 5, "size_z": 1.2,
+        "size_x": 1.2, "size_y": 4.99, "size_z": 1.2,
         "uv_density": 1.0
       }
     },
@@ -307,7 +317,7 @@
       "parameters": {
         "texture": "walls_texture",
         "pos_x": 6, "pos_y": 2.5, "pos_z": -6,
-        "size_x": 1.2, "size_y": 5, "size_z": 1.2,
+        "size_x": 1.2, "size_y": 4.99, "size_z": 1.2,
         "uv_density": 1.0
       }
     },
@@ -320,7 +330,7 @@
       "parameters": {
         "texture": "walls_texture",
         "pos_x": -6, "pos_y": 2.5, "pos_z": 6,
-        "size_x": 1.2, "size_y": 5, "size_z": 1.2,
+        "size_x": 1.2, "size_y": 4.99, "size_z": 1.2,
         "uv_density": 1.0
       }
     },
@@ -333,7 +343,7 @@
       "parameters": {
         "texture": "walls_texture",
         "pos_x": 6, "pos_y": 2.5, "pos_z": 6,
-        "size_x": 1.2, "size_y": 5, "size_z": 1.2,
+        "size_x": 1.2, "size_y": 4.99, "size_z": 1.2,
         "uv_density": 1.0
       }
     },
@@ -481,6 +491,11 @@
   ],
   "connections": {
     "input_poll": {
+      "main": {
+        "0": [{ "node": "quit_on_escape", "type": "main", "index": 0 }]
+      }
+    },
+    "quit_on_escape": {
       "main": {
         "0": [{ "node": "physics_move", "type": "main", "index": 0 }]
       }
