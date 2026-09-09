@@ -136,6 +136,7 @@
 // Q3 pmove
 #include "services/interfaces/workflow/quake3/workflow_q3_pm_crouch_step.hpp"
 #include "services/interfaces/workflow/quake3/workflow_q3_player_sync_step.hpp"
+#include "services/interfaces/workflow/quake3/workflow_q3_pm_step_slide_step.hpp"
 #include "services/interfaces/workflow/quake3/workflow_q3_player_commit_step.hpp"
 #include "services/interfaces/workflow/quake3/workflow_q3_pm_ground_step.hpp"
 #include "services/interfaces/workflow/quake3/workflow_q3_pm_friction_step.hpp"
@@ -384,6 +385,7 @@ void WorkflowRegistrar::RegisterSteps(std::shared_ptr<IWorkflowStepRegistry> reg
     registry->RegisterStep(std::make_shared<WorkflowQ3BotsDrawStep>(logger_));
     // Q3 pmove
     registry->RegisterStep(std::make_shared<WorkflowQ3PlayerSyncStep>(logger_));
+    registry->RegisterStep(std::make_shared<WorkflowQ3PmStepSlideStep>(logger_));
     registry->RegisterStep(std::make_shared<WorkflowQ3PlayerCommitStep>(logger_));
     registry->RegisterStep(std::make_shared<WorkflowQ3PmCrouchStep>(logger_));
     registry->RegisterStep(std::make_shared<WorkflowQ3PmGroundStep>(logger_));

@@ -44,7 +44,7 @@
     },
     {
       "id": "pm_slide",
-      "plugin": "q3.pm.slide_move"
+      "plugin": "q3.pm.step_slide"
     },
     {
       "id": "physics_step",

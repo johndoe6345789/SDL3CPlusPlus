@@ -364,6 +364,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/compute/workflow_compute_tessellate_dispatch_step.cpp
         src/services/impl/workflow/compute/workflow_compute_tessellate_step.cpp
         src/services/impl/workflow/quake3/q3_overlay_scale.cpp
+        src/services/impl/workflow/quake3/q3_slide_move.cpp
         src/services/impl/workflow/quake3/q3_slide_planes.cpp
         src/services/impl/workflow/quake3/workflow_q3_ammo_init_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_bots_damage_step.cpp
@@ -398,6 +399,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/quake3/workflow_q3_pm_ground_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_pm_jump_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_pm_slide_move_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_pm_step_slide_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_triggers_apply_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_triggers_check_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_weapon_fire_step.cpp
