@@ -263,9 +263,6 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/workflow_generic_steps/workflow_physics_step_step.cpp
         src/services/impl/workflow/workflow_generic_steps/workflow_physics_sync_transforms_step.cpp
         src/services/impl/workflow/workflow_generic_steps/workflow_physics_world_create_step.cpp
-        src/services/impl/workflow/workflow_generic_steps/workflow_scene_clear_step.cpp
-        src/services/impl/workflow/workflow_generic_steps/workflow_scene_load_step.cpp
-        src/services/impl/workflow/workflow_generic_steps/workflow_scene_set_active_step.cpp
         src/services/impl/workflow/workflow_generic_steps/workflow_string_concat_step.cpp
         src/services/impl/workflow/workflow_generic_steps/workflow_string_contains_step.cpp
         src/services/impl/workflow/workflow_generic_steps/workflow_string_equals_step.cpp
@@ -362,17 +359,6 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/compute/workflow_compute_pipeline_create_step.cpp
         src/services/impl/workflow/compute/workflow_compute_tessellate_dispatch_step.cpp
         src/services/impl/workflow/compute/workflow_compute_tessellate_step.cpp
-        src/services/impl/workflow/frame/frame_workflow_service.cpp
-        src/services/impl/workflow/frame/frame_workflow_step_registrar.cpp
-        src/services/impl/workflow/frame/workflow_frame_audio_step.cpp
-        src/services/impl/workflow/frame/workflow_frame_begin_step.cpp
-        src/services/impl/workflow/frame/workflow_frame_bullet_physics_step.cpp
-        src/services/impl/workflow/frame/workflow_frame_camera_step.cpp
-        src/services/impl/workflow/frame/workflow_frame_gui_step.cpp
-        src/services/impl/workflow/frame/workflow_frame_physics_step.cpp
-        src/services/impl/workflow/frame/workflow_frame_render_step.cpp
-        src/services/impl/workflow/frame/workflow_frame_scene_step.cpp
-        src/services/impl/workflow/media/workflow_image_encode_png_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_ammo_init_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_bots_damage_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_bots_draw_step.cpp
@@ -409,6 +395,8 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/quake3/workflow_q3_weapon_fire_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_weapon_select_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_weapon_update_step.cpp
+        src/services/impl/workflow/workflow_definition_parser_includes.cpp
+        src/services/impl/workflow/workflow_mesh_payload_converter.cpp
         src/services/impl/workflow/workflow_camera_view_state_builder.cpp
         src/services/impl/workflow/workflow_cmdline_args_step.cpp
         src/services/impl/workflow/workflow_data_deserialize_step.cpp
