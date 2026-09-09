@@ -1,4 +1,6 @@
 #include "services/interfaces/workflow/quake3/workflow_q3_md3_load_step.hpp"
+#include "services/interfaces/workflow/quake3/q3_skin_file.hpp"
+#include "services/interfaces/workflow/quake3/q3_pk3_reader.hpp"
 #include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
@@ -192,6 +194,18 @@ void WorkflowQ3Md3LoadStep::Execute(const WorkflowStepDefinition& step, Workflow
         return;
     }
 
+    // A .skin file names the texture per surface and is authoritative
+    // for player models, whose MD3 shader names are usually blank.
+    q3::SkinMap skinMap;
+    if (skin.size() > 5 && skin.compare(skin.size() - 5, 5, ".skin") == 0) {
+        const auto skinBytes = q3::ReadPk3Entry(pk3, skin);
+        if (!skinBytes.empty()) {
+            skinMap = q3::ParseSkinFile(std::string(
+                reinterpret_cast<const char*>(skinBytes.data()),
+                skinBytes.size()));
+        }
+    }
+
     auto md3raw = ReadFromPk3(pk3, path);
     if (md3raw.size() < sizeof(Md3Header)) {
         if (logger_) logger_->Warn("q3.md3.load[" + prefix + "]: cannot read " + path);
@@ -312,6 +326,17 @@ void WorkflowQ3Md3LoadStep::Execute(const WorkflowStepDefinition& step, Workflow
             shaderName = std::string(sh[0].name, strnlen(sh[0].name, 64));
         }
         std::vector<std::string> texCandidates;
+        // The skin's entry for this surface wins: it is what Quake uses.
+        const std::string surfName(surf.name, strnlen(surf.name, 64));
+        const std::string skinned = q3::SkinTextureFor(skinMap, surfName);
+        if (!skinned.empty()) {
+            texCandidates.push_back(skinned);
+            const auto dot = skinned.rfind('.');
+            if (dot != std::string::npos) {
+                texCandidates.push_back(skinned.substr(0, dot) + ".jpg");
+                texCandidates.push_back(skinned.substr(0, dot) + ".tga");
+            }
+        }
         if (!shaderName.empty()) {
             texCandidates.push_back(shaderName + ".tga");
             texCandidates.push_back(shaderName + ".jpg");

@@ -365,6 +365,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/compute/workflow_compute_tessellate_step.cpp
         src/services/impl/workflow/quake3/q3_overlay_scale.cpp
         src/services/impl/workflow/quake3/q3_pk3_reader.cpp
+        src/services/impl/workflow/quake3/q3_skin_file.cpp
         src/services/impl/workflow/quake3/q3_slide_move.cpp
         src/services/impl/workflow/quake3/q3_slide_planes.cpp
         src/services/impl/workflow/quake3/q3_sound_bank.cpp
@@ -407,6 +408,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/quake3/workflow_q3_sound_init_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_sound_load_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_sound_play_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_stats_init_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_triggers_apply_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_triggers_check_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_weapon_fire_step.cpp
@@ -524,6 +526,17 @@ target_link_libraries(q3_sound_bank_test PRIVATE
     ${SDL_TARGET}
 )
 add_test(NAME q3_sound_bank_test COMMAND q3_sound_bank_test)
+
+add_executable(q3_skin_file_test)
+target_sources(q3_skin_file_test PRIVATE tests/q3_skin_file_test.cpp)
+target_sources(q3_skin_file_test PRIVATE src/services/impl/workflow/quake3/q3_skin_file.cpp)
+target_include_directories(q3_skin_file_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(q3_skin_file_test PRIVATE
+    GTest::gtest_main
+)
+add_test(NAME q3_skin_file_test COMMAND q3_skin_file_test)
 
 # ============================================================================
 # FILE COPYING

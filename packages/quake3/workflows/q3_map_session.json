@@ -115,7 +115,8 @@
       "parameters": {
         "prefix": "lower",
         "path": "models/players/keel/lower.md3",
-        "anim": "models/players/keel/animation.cfg"
+        "anim": "models/players/keel/animation.cfg",
+        "skin": "models/players/keel/lower_default.skin"
       }
     },
     {
@@ -128,7 +129,8 @@
       ],
       "parameters": {
         "prefix": "upper",
-        "path": "models/players/keel/upper.md3"
+        "path": "models/players/keel/upper.md3",
+        "skin": "models/players/keel/upper_default.skin"
       }
     },
     {
@@ -141,7 +143,8 @@
       ],
       "parameters": {
         "prefix": "head",
-        "path": "models/players/keel/head.md3"
+        "path": "models/players/keel/head.md3",
+        "skin": "models/players/keel/head_default.skin"
       }
     },
     {
@@ -168,6 +171,15 @@
       "parameters": {
         "count": 4
       }
+    },
+    {
+      "id": "stats_init",
+      "type": "q3.stats.init",
+      "typeVersion": 1,
+      "position": [
+        765,
+        0
+      ]
     },
     {
       "id": "ammo_init",
@@ -369,7 +381,7 @@
       "main": {
         "0": [
           {
-            "node": "ammo_init",
+            "node": "stats_init",
             "type": "main",
             "index": 0
           }
@@ -436,6 +448,17 @@
         "0": [
           {
             "node": "bsp_spawn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "stats_init": {
+      "main": {
+        "0": [
+          {
+            "node": "ammo_init",
             "type": "main",
             "index": 0
           }

@@ -223,6 +223,19 @@
         "GTest::gtest_main",
         "${SDL_TARGET}"
       ]
+    },
+    {
+      "name": "q3_skin_file_test",
+      "sources": [
+        "tests/q3_skin_file_test.cpp",
+        "src/services/impl/workflow/quake3/q3_skin_file.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main"
+      ]
     }
   ],
   "file_copying": [
