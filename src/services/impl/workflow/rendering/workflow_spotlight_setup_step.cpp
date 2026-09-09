@@ -51,6 +51,16 @@ void WorkflowSpotlightSetupStep::Execute(const WorkflowStepDefinition& step, Wor
         };
     }
 
+    // Build rotation array for spotlights attached to a viewmodel, so it
+    // can be handed to the same transform the model is drawn with
+    if (spotlight.contains("rot_x") || spotlight.contains("rot_y") || spotlight.contains("rot_z")) {
+        spotlight["rotation"] = {
+            spotlight.value("rot_x", 0.0),
+            spotlight.value("rot_y", 0.0),
+            spotlight.value("rot_z", 0.0)
+        };
+    }
+
     // Build position/direction arrays for static spotlights
     if (spotlight.contains("pos_x") || spotlight.contains("pos_y") || spotlight.contains("pos_z")) {
         spotlight["position"] = {

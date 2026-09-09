@@ -119,21 +119,6 @@
       "position": [1000, 0]
     },
     {
-      "id": "draw_map",
-      "name": "Draw Map (glTF)",
-      "type": "draw.map",
-      "typeVersion": 1,
-      "position": [1050, 0],
-      "parameters": {
-        "default_texture": "walls_texture",
-        "floor": "floor_texture",
-        "platform": "floor_texture",
-        "ceiling": "ceiling_texture",
-        "roughness": 0.8,
-        "metallic": 0.0
-      }
-    },
-    {
       "id": "draw_floor",
       "name": "Draw Floor",
       "type": "draw.textured",
@@ -541,11 +526,6 @@
       }
     },
     "draw_bodies": {
-      "main": {
-        "0": [{ "node": "draw_map", "type": "main", "index": 0 }]
-      }
-    },
-    "draw_map": {
       "main": {
         "0": [{ "node": "draw_floor", "type": "main", "index": 0 }]
       }

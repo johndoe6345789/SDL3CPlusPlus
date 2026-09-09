@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/rendering/workflow_spotlight_update_step.hpp"
 #include "services/interfaces/workflow/rendering/rendering_types.hpp"
+#include "services/interfaces/workflow/rendering/viewmodel_transform.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -30,7 +31,33 @@ void WorkflowSpotlightUpdateStep::Execute(const WorkflowStepDefinition& step, Wo
 
     glm::vec3 spotPos, spotDir;
 
-    if (attach == "camera") {
+    if (attach == "viewmodel") {
+        // Place the light at the model's lens by running the point
+        // through the same matrix draw.viewmodel uses, so the beam
+        // cannot drift from the torch it is supposed to come from.
+        const auto viewMatrix = context.Get<glm::mat4>("render.view_matrix", glm::mat4(1.0f));
+        const auto cameraPos = context.Get<glm::vec3>("render.camera_pos", glm::vec3(0.0f));
+        const std::string mesh = spot->value("mesh", std::string());
+        const auto* meta = context.TryGet<nlohmann::json>("plane_" + mesh);
+        const float lensY = meta ? meta->value("lens_y", 0.0f) : 0.0f;
+
+        const auto rot = spot->value("rotation", std::vector<float>{});
+        const glm::vec3 rotation(rot.size() > 0 ? rot[0] : 0.0f,
+                                 rot.size() > 1 ? rot[1] : 0.0f,
+                                 rot.size() > 2 ? rot[2] : 0.0f);
+        const float scale = spot->value("scale", 1.0f);
+
+        const glm::mat4 model = rendering::BuildViewmodelMatrix(
+            viewMatrix, cameraPos, off, rotation, scale);
+
+        spotPos = glm::vec3(model * glm::vec4(0.0f, lensY, 0.0f, 1.0f));
+        spotDir = glm::normalize(glm::vec3(model * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f)));
+
+        if (logger_ && !meta) {
+            logger_->Warn("spotlight.update: mesh '" + mesh +
+                          "' has no lens_y; beam starts at the model origin");
+        }
+    } else if (attach == "camera") {
         const auto viewMatrix = context.Get<glm::mat4>("render.view_matrix", glm::mat4(1.0f));
         const auto cameraPos = context.Get<glm::vec3>("render.camera_pos", glm::vec3(0.0f));
 

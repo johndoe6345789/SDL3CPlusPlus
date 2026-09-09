@@ -153,8 +153,13 @@ void WorkflowGeometryCreateFlashlightStep::Execute(const WorkflowStepDefinition&
 
     context.Set<SDL_GPUBuffer*>("plane_" + name + "_vb", vertex_buffer);
     context.Set<SDL_GPUBuffer*>("plane_" + name + "_ib", index_buffer);
+    // The barrel runs along +Y and the lens cap sits at its far end, so
+    // publish that so a spotlight can be placed at the lens rather than
+    // guessing an offset that drifts from the model.
     context.Set("plane_" + name, nlohmann::json{
-        {"vertex_count", vertex_count}, {"index_count", index_count}, {"stride", 20}
+        {"vertex_count", vertex_count}, {"index_count", index_count},
+        {"stride", 20}, {"lens_y", body_length + head_length},
+        {"emit_axis", "y"}
     });
 
     if (logger_) {

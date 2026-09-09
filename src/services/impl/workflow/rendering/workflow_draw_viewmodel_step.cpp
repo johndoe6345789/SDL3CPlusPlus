@@ -1,4 +1,5 @@
 #include "services/interfaces/workflow/rendering/workflow_draw_viewmodel_step.hpp"
+#include "services/interfaces/workflow/rendering/viewmodel_transform.hpp"
 #include "services/interfaces/workflow/rendering/rendering_types.hpp"
 #include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
 
@@ -66,28 +67,13 @@ void WorkflowDrawViewmodelStep::Execute(const WorkflowStepDefinition& step, Work
     auto projMatrix = context.Get<glm::mat4>("render.proj_matrix", glm::mat4(1.0f));
     auto camPos = context.Get<glm::vec3>("render.camera_pos", glm::vec3(0.0f));
 
-    // Extract camera basis vectors
-    glm::vec3 camRight = glm::vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]);
-    glm::vec3 camUp = glm::vec3(viewMatrix[0][1], viewMatrix[1][1], viewMatrix[2][1]);
-    glm::vec3 camForward = -glm::vec3(viewMatrix[0][2], viewMatrix[1][2], viewMatrix[2][2]);
-
-    // Position the viewmodel relative to the camera (locked to view)
-    glm::vec3 modelPos = camPos + camRight * offset_x + camUp * offset_y + camForward * (-offset_z);
-
-    // Build local rotation first (to orient the mesh correctly)
-    glm::mat4 localRot = glm::mat4(1.0f);
-    if (rot_x != 0.0f) localRot = glm::rotate(localRot, glm::radians(rot_x), glm::vec3(1, 0, 0));
-    if (rot_y != 0.0f) localRot = glm::rotate(localRot, glm::radians(rot_y), glm::vec3(0, 1, 0));
-    if (rot_z != 0.0f) localRot = glm::rotate(localRot, glm::radians(rot_z), glm::vec3(0, 0, 1));
-
-    // Camera orientation matrix (maps local space to world-aligned-with-camera)
-    glm::mat4 camOrient = glm::mat4(1.0f);
-    camOrient[0] = glm::vec4(camRight, 0.0f);
-    camOrient[1] = glm::vec4(camUp, 0.0f);
-    camOrient[2] = glm::vec4(-camForward, 0.0f);  // -forward because camera looks down -Z
-
-    // Final model: translate to position, orient to camera, apply local rotation, then scale
-    glm::mat4 model = glm::translate(glm::mat4(1.0f), modelPos) * camOrient * localRot * glm::scale(glm::mat4(1.0f), glm::vec3(model_scale));
+    // Shared with spotlight.update so a light attached to this model
+    // starts exactly where the model is drawn.
+    const auto basis = rendering::ExtractCameraBasis(viewMatrix);
+    const glm::vec3 camUp = basis.up;
+    const glm::mat4 model = rendering::BuildViewmodelMatrix(
+        viewMatrix, camPos, glm::vec3(offset_x, offset_y, offset_z),
+        glm::vec3(rot_x, rot_y, rot_z), model_scale);
 
     glm::mat4 mvp = projMatrix * viewMatrix * model;
 
