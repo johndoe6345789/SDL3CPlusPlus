@@ -77,6 +77,7 @@ std::string WorkflowQ3WeaponFireStep::GetPluginId() const {
 }
 
 void WorkflowQ3WeaponFireStep::Execute(const WorkflowStepDefinition& /*step*/, WorkflowContext& context) {
+    context.Set<bool>("q3.weapon_fired", false);
     const bool fireHeld    = context.GetBool("input_mouse_left", false);
     const bool firePressed = context.GetBool("input_mouse_left_pressed", false);
     const std::string weapon = context.Get<std::string>("q3.current_weapon", "weapon_machinegun");
@@ -115,6 +116,20 @@ void WorkflowQ3WeaponFireStep::Execute(const WorkflowStepDefinition& /*step*/, W
     const uint32_t fireFrame = (frame == 0u) ? 1u : frame;
     context.Set<uint32_t>("q3.weapon_last_fire_frame", fireFrame);
     context.Set<uint32_t>("q3.weapon_flash_until_frame", fireFrame + 4u);
+
+    // ioq3 registers four machinegun flash sounds and picks one at
+    // random per shot (cg_weapons.c); publishing the choice lets the
+    // workflow decide whether and how to play it.
+    context.Set<bool>("q3.weapon_fired", true);
+    if (weapon == "weapon_machinegun") {
+        static const char* kFlash[] = {
+            "sound/weapons/machinegun/machgf1b.wav",
+            "sound/weapons/machinegun/machgf2b.wav",
+            "sound/weapons/machinegun/machgf3b.wav",
+            "sound/weapons/machinegun/machgf4b.wav"};
+        context.Set<std::string>("q3.weapon_fire_sound",
+                                 kFlash[fireFrame & 3u]);
+    }
     context.Set<bool>("q3.last_shot_hit", false);
     context.Set("q3.player_ammo", ammo);
 

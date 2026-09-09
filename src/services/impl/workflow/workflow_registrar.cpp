@@ -138,6 +138,9 @@
 #include "services/interfaces/workflow/quake3/workflow_q3_player_sync_step.hpp"
 #include "services/interfaces/workflow/quake3/workflow_q3_pm_step_slide_step.hpp"
 #include "services/interfaces/workflow/quake3/workflow_q3_frame_time_step.hpp"
+#include "services/interfaces/workflow/quake3/workflow_q3_sound_init_step.hpp"
+#include "services/interfaces/workflow/quake3/workflow_q3_sound_load_step.hpp"
+#include "services/interfaces/workflow/quake3/workflow_q3_sound_play_step.hpp"
 #include "services/interfaces/workflow/quake3/workflow_q3_player_commit_step.hpp"
 #include "services/interfaces/workflow/quake3/workflow_q3_pm_ground_step.hpp"
 #include "services/interfaces/workflow/quake3/workflow_q3_pm_friction_step.hpp"
@@ -388,6 +391,9 @@ void WorkflowRegistrar::RegisterSteps(std::shared_ptr<IWorkflowStepRegistry> reg
     registry->RegisterStep(std::make_shared<WorkflowQ3PlayerSyncStep>(logger_));
     registry->RegisterStep(std::make_shared<WorkflowQ3PmStepSlideStep>(logger_));
     registry->RegisterStep(std::make_shared<WorkflowQ3FrameTimeStep>(logger_));
+    registry->RegisterStep(std::make_shared<WorkflowQ3SoundInitStep>(logger_));
+    registry->RegisterStep(std::make_shared<WorkflowQ3SoundLoadStep>(logger_));
+    registry->RegisterStep(std::make_shared<WorkflowQ3SoundPlayStep>(logger_));
     registry->RegisterStep(std::make_shared<WorkflowQ3PlayerCommitStep>(logger_));
     registry->RegisterStep(std::make_shared<WorkflowQ3PmCrouchStep>(logger_));
     registry->RegisterStep(std::make_shared<WorkflowQ3PmGroundStep>(logger_));

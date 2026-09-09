@@ -11,6 +11,14 @@
       "plugin": "q3.weapon.fire"
     },
     {
+      "id": "weapon_fire_sound",
+      "plugin": "q3.sound.play",
+      "inputs": {
+        "when": "q3.weapon_fired",
+        "sound_key": "q3.weapon_fire_sound"
+      }
+    },
+    {
       "id": "missiles_move",
       "plugin": "q3.missiles.move"
     },
@@ -22,17 +30,35 @@
       "id": "q3_bots_update",
       "plugin": "q3.bots.update",
       "parameters": {
-        "chase_range":    20.0,
-        "shoot_range":     6.0,
-        "move_speed":      3.5,
+        "chase_range": 20.0,
+        "shoot_range": 6.0,
+        "move_speed": 3.5,
         "shoot_interval": 30
       }
     },
-    { "id": "damage_apply",    "plugin": "q3.damage.apply" },
-    { "id": "bots_damage",     "plugin": "q3.damage.bots" },
-    { "id": "death_check",     "plugin": "q3.player.death_check" },
-    { "id": "player_respawn",  "plugin": "q3.player.respawn" },
-    { "id": "pickups_touch",   "plugin": "q3.pickups.touch" },
-    { "id": "pickups_respawn", "plugin": "q3.pickups.respawn" }
+    {
+      "id": "damage_apply",
+      "plugin": "q3.damage.apply"
+    },
+    {
+      "id": "bots_damage",
+      "plugin": "q3.damage.bots"
+    },
+    {
+      "id": "death_check",
+      "plugin": "q3.player.death_check"
+    },
+    {
+      "id": "player_respawn",
+      "plugin": "q3.player.respawn"
+    },
+    {
+      "id": "pickups_touch",
+      "plugin": "q3.pickups.touch"
+    },
+    {
+      "id": "pickups_respawn",
+      "plugin": "q3.pickups.respawn"
+    }
   ]
 }

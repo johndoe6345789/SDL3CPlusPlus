@@ -366,6 +366,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/quake3/q3_overlay_scale.cpp
         src/services/impl/workflow/quake3/q3_slide_move.cpp
         src/services/impl/workflow/quake3/q3_slide_planes.cpp
+        src/services/impl/workflow/quake3/q3_sound_bank.cpp
         src/services/impl/workflow/quake3/workflow_q3_ammo_init_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_bots_damage_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_bots_draw_step.cpp
@@ -401,6 +402,9 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/quake3/workflow_q3_pm_jump_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_pm_slide_move_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_pm_step_slide_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_sound_init_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_sound_load_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_sound_play_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_triggers_apply_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_triggers_check_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_weapon_fire_step.cpp
@@ -506,6 +510,18 @@ target_link_libraries(q3_prop_font_test PRIVATE
     libzip::zip
 )
 add_test(NAME q3_prop_font_test COMMAND q3_prop_font_test)
+
+add_executable(q3_sound_bank_test)
+target_sources(q3_sound_bank_test PRIVATE tests/q3_sound_bank_test.cpp)
+target_sources(q3_sound_bank_test PRIVATE src/services/impl/workflow/quake3/q3_sound_bank.cpp)
+target_include_directories(q3_sound_bank_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(q3_sound_bank_test PRIVATE
+    GTest::gtest_main
+    ${SDL_TARGET}
+)
+add_test(NAME q3_sound_bank_test COMMAND q3_sound_bank_test)
 
 # ============================================================================
 # FILE COPYING

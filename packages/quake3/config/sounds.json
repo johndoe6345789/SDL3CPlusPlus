@@ -1,0 +1,19 @@
+{
+  "description": "Sounds decoded from pak0.pk3 at map load, named exactly as ioq3 registers them with trap_S_RegisterSound.",
+  "sounds": [
+    "sound/weapons/machinegun/machgf1b.wav",
+    "sound/weapons/machinegun/machgf2b.wav",
+    "sound/weapons/machinegun/machgf3b.wav",
+    "sound/weapons/machinegun/machgf4b.wav",
+    "sound/weapons/noammo.wav",
+    "sound/player/sarge/jump1.wav",
+    "sound/player/land1.wav",
+    "sound/player/footsteps/step1.wav",
+    "sound/player/footsteps/step2.wav",
+    "sound/player/footsteps/step3.wav",
+    "sound/player/footsteps/step4.wav",
+    "sound/items/s_health.wav",
+    "sound/misc/menu1.wav",
+    "sound/misc/menu2.wav"
+  ]
+}

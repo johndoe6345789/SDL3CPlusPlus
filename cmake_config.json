@@ -209,6 +209,20 @@
         "stb::stb",
         "libzip::zip"
       ]
+    },
+    {
+      "name": "q3_sound_bank_test",
+      "sources": [
+        "tests/q3_sound_bank_test.cpp",
+        "src/services/impl/workflow/quake3/q3_sound_bank.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main",
+        "${SDL_TARGET}"
+      ]
     }
   ],
   "file_copying": [
