@@ -364,6 +364,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/compute/workflow_compute_tessellate_dispatch_step.cpp
         src/services/impl/workflow/compute/workflow_compute_tessellate_step.cpp
         src/services/impl/workflow/quake3/q3_overlay_scale.cpp
+        src/services/impl/workflow/quake3/q3_pk3_reader.cpp
         src/services/impl/workflow/quake3/q3_slide_move.cpp
         src/services/impl/workflow/quake3/q3_slide_planes.cpp
         src/services/impl/workflow/quake3/q3_sound_bank.cpp
@@ -387,6 +388,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/quake3/workflow_q3_missiles_move_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_movers_init_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_movers_update_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_music_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_nav_build_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_pickups_draw_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_pickups_respawn_step.cpp

@@ -5,32 +5,52 @@
     {
       "id": "input_group",
       "plugin": "workflow.include",
-      "parameters": { "path": "packages/quake3/workflows/q3_input.json" }
+      "parameters": {
+        "path": "packages/quake3/workflows/q3_input.json"
+      }
     },
     {
       "id": "physics_group",
       "plugin": "workflow.include",
-      "parameters": { "path": "packages/quake3/workflows/q3_physics.json" }
+      "parameters": {
+        "path": "packages/quake3/workflows/q3_physics.json"
+      }
     },
     {
       "id": "combat_group",
       "plugin": "workflow.include",
-      "parameters": { "path": "packages/quake3/workflows/q3_combat.json" }
+      "parameters": {
+        "path": "packages/quake3/workflows/q3_combat.json"
+      }
     },
     {
       "id": "render_group",
       "plugin": "workflow.include",
-      "parameters": { "path": "packages/quake3/workflows/q3_render.json" }
+      "parameters": {
+        "path": "packages/quake3/workflows/q3_render.json"
+      }
     },
     {
       "id": "overlay_group",
       "plugin": "workflow.include",
-      "parameters": { "path": "packages/quake3/workflows/q3_overlay.json" }
+      "parameters": {
+        "path": "packages/quake3/workflows/q3_overlay.json"
+      }
     },
     {
       "id": "postfx_group",
       "plugin": "workflow.include",
-      "parameters": { "path": "packages/quake3/workflows/q3_postfx.json" }
+      "parameters": {
+        "path": "packages/quake3/workflows/q3_postfx.json"
+      }
+    },
+    {
+      "id": "music",
+      "plugin": "q3.music.play",
+      "parameters": {
+        "intro": "music/fla22k_01_intro.wav",
+        "loop": "music/fla22k_01_loop.wav"
+      }
     }
   ]
 }
