@@ -94,6 +94,35 @@ endif()
 {%- endif %}
 
 # ============================================================================
+# TEST TARGETS
+# ============================================================================
+{%- if config.test_targets %}
+enable_testing()
+{%- for test in config.test_targets %}
+
+add_executable({{ test.name }})
+{%- for source in test.sources %}
+target_sources({{ test.name }} PRIVATE {{ source }})
+{%- endfor %}
+{%- if test.include_directories %}
+target_include_directories({{ test.name }} PRIVATE
+{%- for inc_dir in test.include_directories %}
+    "${CMAKE_CURRENT_SOURCE_DIR}/{{ inc_dir }}"
+{%- endfor %}
+)
+{%- endif %}
+{%- if test.link_libraries %}
+target_link_libraries({{ test.name }} PRIVATE
+{%- for lib in test.link_libraries %}
+    {{ lib }}
+{%- endfor %}
+)
+{%- endif %}
+add_test(NAME {{ test.name }} COMMAND {{ test.name }})
+{%- endfor %}
+{%- endif %}
+
+# ============================================================================
 # FILE COPYING
 # ============================================================================
 {%- if config.file_copying %}

@@ -108,6 +108,8 @@ find_package(libzip CONFIG REQUIRED)
 
 find_package(spdlog CONFIG REQUIRED)
 
+find_package(GTest CONFIG REQUIRED)
+
 
 # Build render stack library group
 set(SDL3CPP_RENDER_STACK_LIBS EnTT::EnTT)
@@ -361,6 +363,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/compute/workflow_compute_pipeline_create_step.cpp
         src/services/impl/workflow/compute/workflow_compute_tessellate_dispatch_step.cpp
         src/services/impl/workflow/compute/workflow_compute_tessellate_step.cpp
+        src/services/impl/workflow/quake3/q3_slide_planes.cpp
         src/services/impl/workflow/quake3/workflow_q3_ammo_init_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_bots_damage_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_bots_draw_step.cpp
@@ -438,6 +441,23 @@ if(BUILD_SDL3_APP)
         spdlog::spdlog
     )
 endif()
+
+# ============================================================================
+# TEST TARGETS
+# ============================================================================
+enable_testing()
+
+add_executable(q3_slide_planes_test)
+target_sources(q3_slide_planes_test PRIVATE tests/q3_slide_planes_test.cpp)
+target_sources(q3_slide_planes_test PRIVATE src/services/impl/workflow/quake3/q3_slide_planes.cpp)
+target_include_directories(q3_slide_planes_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(q3_slide_planes_test PRIVATE
+    GTest::gtest_main
+    glm::glm
+)
+add_test(NAME q3_slide_planes_test COMMAND q3_slide_planes_test)
 
 # ============================================================================
 # FILE COPYING

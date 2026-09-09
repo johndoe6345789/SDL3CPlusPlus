@@ -189,8 +189,28 @@ void WorkflowQ3Md3DrawStep::Execute(const WorkflowStepDefinition& step, Workflow
     auto* shadowSamp = context.Get<SDL_GPUSampler*>("shadow_depth_sampler", nullptr);
 
     SDL_BindGPUGraphicsPipeline(pass, pipeline);
+
+    // The view weapon sits centimetres from the eye, so world geometry
+    // wins the depth test and the gun buries itself in any wall the
+    // player touches. Quake compresses it into the front of the depth
+    // buffer instead (ioq3 tr_backend.c: glDepthRange(0, 0.3)); the same
+    // trick here is the viewport's depth range.
+    const auto viewW = context.Get<uint32_t>("frame_width", 1280u);
+    const auto viewH = context.Get<uint32_t>("frame_height", 960u);
+    if (viewmodel) {
+        SDL_GPUViewport vp{0.0f, 0.0f, static_cast<float>(viewW),
+                           static_cast<float>(viewH), 0.0f, 0.3f};
+        SDL_SetGPUViewport(pass, &vp);
+    }
+
     DrawMd3Surfaces(prefix, frame, model, view, proj, camPos, shadowVP, fu,
                     pass, cmd, shadowTex, shadowSamp, context);
+
+    if (viewmodel) {
+        SDL_GPUViewport full{0.0f, 0.0f, static_cast<float>(viewW),
+                             static_cast<float>(viewH), 0.0f, 1.0f};
+        SDL_SetGPUViewport(pass, &full);
+    }
 }
 
 }  // namespace sdl3cpp::services::impl

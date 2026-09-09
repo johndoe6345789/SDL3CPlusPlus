@@ -53,7 +53,8 @@
       "EnTT",
       "assimp",
       "libzip",
-      "spdlog"
+      "spdlog",
+      "GTest"
     ]
   },
   "source_exclusions": [
@@ -113,7 +114,6 @@
         "src/services/impl/workflow/workflow_network_receive_step.cpp",
         "src/services/impl/workflow/workflow_network_send_step.cpp",
         "src/services/impl/workflow/workflow_package_shader_loader_step.cpp",
-
         "src/services/impl/workflow/workflow_shader_builtin_constant_color_step.cpp",
         "src/services/impl/workflow/workflow_shader_compile_step.cpp",
         "src/services/impl/workflow/workflow_shader_system_initialize_step.cpp",
@@ -143,7 +143,22 @@
       "enabled_when": "BUILD_SDL3_APP"
     }
   ],
-  "test_targets": [],
+  "test_targets": [
+    {
+      "name": "q3_slide_planes_test",
+      "sources": [
+        "tests/q3_slide_planes_test.cpp",
+        "src/services/impl/workflow/quake3/q3_slide_planes.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main",
+        "glm::glm"
+      ]
+    }
+  ],
   "file_copying": [
     {
       "condition": "BUILD_SDL3_APP",

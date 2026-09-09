@@ -1,4 +1,5 @@
 #include "services/interfaces/workflow/quake3/workflow_q3_pm_slide_move_step.hpp"
+#include "services/interfaces/workflow/quake3/q3_slide_planes.hpp"
 #include "services/interfaces/workflow/quake3/q3_pm_types.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
@@ -72,36 +73,30 @@ void WorkflowQ3PmSlideMoveStep::Execute(
         // No collision this bump: we moved the full remaining distance
         if (tr.fraction >= 1.f || !tr.hit) break;
 
-        // Record this normal
+        // Hitting a plane we already have means the previous slide left
+        // us a hair inside it. ioq3 nudges out along the normal and
+        // retries rather than recording a duplicate; without this the
+        // plane list fills with copies of the same wall and the move is
+        // cancelled, which is what left the player stuck against walls.
+        bool samePlane = false;
+        for (int p = 0; p < numPlanes; ++p) {
+            if (glm::dot(tr.normal, planes[p]) > q3::kSamePlaneDot) {
+                ps.velocity += tr.normal;
+                samePlane = true;
+                break;
+            }
+        }
+        if (samePlane) continue;
+
         if (numPlanes < kMaxBumps) {
             planes[numPlanes++] = tr.normal;
         }
 
-        // Clip velocity against the surface we hit
-        ps.velocity = ClipVelocity(ps.velocity, tr.normal, kOverbounce);
-
-        // If the new velocity re-enters any previously stored plane,
-        // project along the crease formed by the two planes.
-        for (int p = 0; p < numPlanes - 1; ++p) {
-            if (glm::dot(ps.velocity, planes[p]) < 0.f) {
-                const glm::vec3 crease = glm::normalize(glm::cross(tr.normal, planes[p]));
-                const float     proj   = glm::dot(ps.velocity, crease);
-                ps.velocity            = crease * proj;
-                break;
-            }
-        }
-
-        // If we're now moving into a plane we hit earlier too, stop entirely
-        // to avoid tunnelling between two walls.
-        bool stoppedByCrease = false;
-        for (int p = 0; p < numPlanes; ++p) {
-            if (glm::dot(ps.velocity, planes[p]) < 0.f) {
-                ps.velocity    = glm::vec3(0.f);
-                stoppedByCrease = true;
-                break;
-            }
-        }
-        if (stoppedByCrease) break;
+        // Make the velocity parallel to every plane it is entering.
+        // Only a genuine three-plane corner stops the player dead.
+        ps.velocity = q3::ResolveAgainstPlanes(ps.velocity, planes.data(),
+                                               numPlanes);
+        if (glm::dot(ps.velocity, ps.velocity) <= 0.f) break;
     }
 
     context.Set("q3.ps", ps);
