@@ -1,9 +1,9 @@
-#include "workflow_model_spawn_step.hpp"
+#include "services/interfaces/workflow/workflow_generic_steps/workflow_model_spawn_step.hpp"
 
-#include "../workflow_mesh_payload_converter.hpp"
-#include "../workflow_step_io_resolver.hpp"
-#include "../workflow_step_parameter_resolver.hpp"
-#include "../../interfaces/scene_types.hpp"
+#include "services/interfaces/workflow/workflow_mesh_payload_converter.hpp"
+#include "services/interfaces/workflow/workflow_step_io_resolver.hpp"
+#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
+#include "services/interfaces/scene_types.hpp"
 
 #include <stdexcept>
 #include <utility>

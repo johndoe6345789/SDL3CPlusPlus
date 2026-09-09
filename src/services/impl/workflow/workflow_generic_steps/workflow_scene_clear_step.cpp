@@ -1,4 +1,4 @@
-#include "workflow_scene_clear_step.hpp"
+#include "services/interfaces/workflow/workflow_generic_steps/workflow_scene_clear_step.hpp"
 
 #include <stdexcept>
 #include <utility>

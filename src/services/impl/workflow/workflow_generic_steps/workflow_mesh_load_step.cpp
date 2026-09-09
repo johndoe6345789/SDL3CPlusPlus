@@ -1,6 +1,6 @@
-#include "workflow_mesh_load_step.hpp"
+#include "services/interfaces/workflow/workflow_generic_steps/workflow_mesh_load_step.hpp"
 
-#include "../workflow_step_io_resolver.hpp"
+#include "services/interfaces/workflow/workflow_step_io_resolver.hpp"
 
 #include <filesystem>
 #include <stdexcept>
