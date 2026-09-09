@@ -52,7 +52,8 @@
       "stb",
       "EnTT",
       "assimp",
-      "libzip"
+      "libzip",
+      "spdlog"
     ]
   },
   "source_exclusions": [
@@ -96,6 +97,9 @@
         "src/services/impl/workflow/input/*.cpp",
         "src/services/impl/workflow/scene/*.cpp",
         "src/services/impl/workflow/compute/*.cpp",
+        "src/services/impl/workflow/frame/*.cpp",
+        "src/services/impl/workflow/media/*.cpp",
+        "src/services/impl/workflow/quake3/*.cpp",
         "src/services/impl/workflow/workflow_camera_view_state_builder.cpp",
         "src/services/impl/workflow/workflow_cmdline_args_step.cpp",
         "src/services/impl/workflow/workflow_data_deserialize_step.cpp",
@@ -130,7 +134,8 @@
         "stb::stb",
         "EnTT::EnTT",
         "libzip::zip",
-        "assimp::assimp"
+        "assimp::assimp",
+        "spdlog::spdlog"
       ],
       "compile_definitions": [],
       "name": "sdl3_app",

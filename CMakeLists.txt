@@ -191,7 +191,6 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/workflow_definition_parser.cpp
         src/services/impl/workflow/workflow_definition_parser_nodes.cpp
         src/services/impl/workflow/workflow_definition_parser_variables.cpp
-        src/services/impl/workflow/workflow_definition_parser_includes.cpp
         src/services/impl/workflow/workflow_connection_resolver.cpp
         src/services/impl/workflow/workflow_execute_step.cpp
         src/stb_image.cpp
@@ -244,8 +243,10 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/workflow_generic_steps/workflow_list_reduce_max_step.cpp
         src/services/impl/workflow/workflow_generic_steps/workflow_list_reduce_min_step.cpp
         src/services/impl/workflow/workflow_generic_steps/workflow_list_reduce_sum_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_mesh_load_step.cpp
         src/services/impl/workflow/workflow_generic_steps/workflow_model_despawn_step.cpp
         src/services/impl/workflow/workflow_generic_steps/workflow_model_set_transform_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_model_spawn_step.cpp
         src/services/impl/workflow/workflow_generic_steps/workflow_number_abs_step.cpp
         src/services/impl/workflow/workflow_generic_steps/workflow_number_add_step.cpp
         src/services/impl/workflow/workflow_generic_steps/workflow_number_clamp_step.cpp
@@ -262,6 +263,9 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/workflow_generic_steps/workflow_physics_step_step.cpp
         src/services/impl/workflow/workflow_generic_steps/workflow_physics_sync_transforms_step.cpp
         src/services/impl/workflow/workflow_generic_steps/workflow_physics_world_create_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_scene_clear_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_scene_load_step.cpp
+        src/services/impl/workflow/workflow_generic_steps/workflow_scene_set_active_step.cpp
         src/services/impl/workflow/workflow_generic_steps/workflow_string_concat_step.cpp
         src/services/impl/workflow/workflow_generic_steps/workflow_string_contains_step.cpp
         src/services/impl/workflow/workflow_generic_steps/workflow_string_equals_step.cpp
@@ -287,48 +291,6 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/geometry/workflow_geometry_create_cube_step.cpp
         src/services/impl/workflow/geometry/workflow_geometry_create_plane_step.cpp
         src/services/impl/workflow/geometry/workflow_geometry_cube_generate_step.cpp
-        src/services/impl/workflow/quake3/workflow_q3_menu_update_step.cpp
-        src/services/impl/workflow/rendering/workflow_overlay_sw_begin_step.cpp
-        src/services/impl/workflow/rendering/workflow_overlay_sw_end_step.cpp
-        src/services/impl/workflow/quake3/workflow_q3_hud_step.cpp
-        src/services/impl/workflow/quake3/workflow_q3_hud_head_step.cpp
-        src/services/impl/workflow/quake3/workflow_q3_crosshair_step.cpp
-        src/services/impl/workflow/quake3/workflow_q3_hitmarker_step.cpp
-        src/services/impl/workflow/quake3/workflow_q3_menu_frame_step.cpp
-        src/services/impl/workflow/quake3/workflow_q3_mapselect_step.cpp
-        src/services/impl/workflow/quake3/workflow_q3_pickups_draw_step.cpp
-        src/services/impl/workflow/quake3/workflow_q3_weapon_update_step.cpp
-        src/services/impl/workflow/quake3/workflow_q3_md3_load_step.cpp
-        src/services/impl/workflow/quake3/workflow_q3_md3_draw_step.cpp
-        src/services/impl/workflow/quake3/workflow_q3_bots_spawn_step.cpp
-        src/services/impl/workflow/quake3/workflow_q3_bots_update_step.cpp
-        src/services/impl/workflow/quake3/workflow_q3_bots_draw_step.cpp
-        # Q3 pmove
-        src/services/impl/workflow/quake3/workflow_q3_pm_crouch_step.cpp
-        src/services/impl/workflow/quake3/workflow_q3_pm_ground_step.cpp
-        src/services/impl/workflow/quake3/workflow_q3_pm_friction_step.cpp
-        src/services/impl/workflow/quake3/workflow_q3_pm_accelerate_step.cpp
-        src/services/impl/workflow/quake3/workflow_q3_pm_jump_step.cpp
-        src/services/impl/workflow/quake3/workflow_q3_pm_slide_move_step.cpp
-        # Q3 weapons + missiles
-        src/services/impl/workflow/quake3/workflow_q3_weapon_select_step.cpp
-        src/services/impl/workflow/quake3/workflow_q3_weapon_fire_step.cpp
-        src/services/impl/workflow/quake3/workflow_q3_missiles_move_step.cpp
-        src/services/impl/workflow/quake3/workflow_q3_missiles_impact_step.cpp
-        # Q3 damage + pickups + ammo
-        src/services/impl/workflow/quake3/workflow_q3_ammo_init_step.cpp
-        src/services/impl/workflow/quake3/workflow_q3_damage_apply_step.cpp
-        src/services/impl/workflow/quake3/workflow_q3_bots_damage_step.cpp
-        src/services/impl/workflow/quake3/workflow_q3_player_death_check_step.cpp
-        src/services/impl/workflow/quake3/workflow_q3_player_respawn_step.cpp
-        src/services/impl/workflow/quake3/workflow_q3_pickups_touch_step.cpp
-        src/services/impl/workflow/quake3/workflow_q3_pickups_respawn_step.cpp
-        # Q3 movers + triggers + nav
-        src/services/impl/workflow/quake3/workflow_q3_movers_init_step.cpp
-        src/services/impl/workflow/quake3/workflow_q3_movers_update_step.cpp
-        src/services/impl/workflow/quake3/workflow_q3_triggers_check_step.cpp
-        src/services/impl/workflow/quake3/workflow_q3_triggers_apply_step.cpp
-        src/services/impl/workflow/quake3/workflow_q3_nav_build_step.cpp
         src/services/impl/workflow/rendering/workflow_bsp_build_collision_step.cpp
         src/services/impl/workflow/rendering/workflow_bsp_build_geometry_step.cpp
         src/services/impl/workflow/rendering/workflow_bsp_entity_update_step.cpp
@@ -338,6 +300,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/rendering/workflow_bsp_parse_spawn_step.cpp
         src/services/impl/workflow/rendering/workflow_bsp_portal_view_step.cpp
         src/services/impl/workflow/rendering/workflow_bsp_upload_geometry_step.cpp
+        src/services/impl/workflow/rendering/workflow_debug_screenshot_step.cpp
         src/services/impl/workflow/rendering/workflow_draw_map_step.cpp
         src/services/impl/workflow/rendering/workflow_draw_textured_box_step.cpp
         src/services/impl/workflow/rendering/workflow_draw_textured_step.cpp
@@ -351,10 +314,11 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/rendering/workflow_lighting_setup_step.cpp
         src/services/impl/workflow/rendering/workflow_map_load_step.cpp
         src/services/impl/workflow/rendering/workflow_model_load_step.cpp
+        src/services/impl/workflow/rendering/workflow_overlay_fps_step.cpp
+        src/services/impl/workflow/rendering/workflow_overlay_sw_begin_step.cpp
+        src/services/impl/workflow/rendering/workflow_overlay_sw_end_step.cpp
         src/services/impl/workflow/rendering/workflow_postfx_bloom_blur_step.cpp
         src/services/impl/workflow/rendering/workflow_postfx_bloom_extract_step.cpp
-        src/services/impl/workflow/rendering/workflow_debug_screenshot_step.cpp
-        src/services/impl/workflow/rendering/workflow_overlay_fps_step.cpp
         src/services/impl/workflow/rendering/workflow_postfx_composite_step.cpp
         src/services/impl/workflow/rendering/workflow_postfx_setup_step.cpp
         src/services/impl/workflow/rendering/workflow_postfx_ssao_step.cpp
@@ -398,6 +362,53 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/compute/workflow_compute_pipeline_create_step.cpp
         src/services/impl/workflow/compute/workflow_compute_tessellate_dispatch_step.cpp
         src/services/impl/workflow/compute/workflow_compute_tessellate_step.cpp
+        src/services/impl/workflow/frame/frame_workflow_service.cpp
+        src/services/impl/workflow/frame/frame_workflow_step_registrar.cpp
+        src/services/impl/workflow/frame/workflow_frame_audio_step.cpp
+        src/services/impl/workflow/frame/workflow_frame_begin_step.cpp
+        src/services/impl/workflow/frame/workflow_frame_bullet_physics_step.cpp
+        src/services/impl/workflow/frame/workflow_frame_camera_step.cpp
+        src/services/impl/workflow/frame/workflow_frame_gui_step.cpp
+        src/services/impl/workflow/frame/workflow_frame_physics_step.cpp
+        src/services/impl/workflow/frame/workflow_frame_render_step.cpp
+        src/services/impl/workflow/frame/workflow_frame_scene_step.cpp
+        src/services/impl/workflow/media/workflow_image_encode_png_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_ammo_init_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_bots_damage_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_bots_draw_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_bots_spawn_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_bots_update_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_crosshair_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_damage_apply_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_hitmarker_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_hud_head_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_hud_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_mapselect_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_md3_draw_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_md3_load_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_menu_frame_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_menu_update_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_missiles_impact_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_missiles_move_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_movers_init_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_movers_update_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_nav_build_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_pickups_draw_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_pickups_respawn_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_pickups_touch_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_player_death_check_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_player_respawn_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_pm_accelerate_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_pm_crouch_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_pm_friction_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_pm_ground_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_pm_jump_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_pm_slide_move_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_triggers_apply_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_triggers_check_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_weapon_fire_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_weapon_select_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_weapon_update_step.cpp
         src/services/impl/workflow/workflow_camera_view_state_builder.cpp
         src/services/impl/workflow/workflow_cmdline_args_step.cpp
         src/services/impl/workflow/workflow_data_deserialize_step.cpp
