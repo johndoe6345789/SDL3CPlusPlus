@@ -384,8 +384,10 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/quake3/workflow_q3_pickups_draw_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_pickups_respawn_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_pickups_touch_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_player_commit_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_player_death_check_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_player_respawn_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_player_sync_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_pm_accelerate_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_pm_crouch_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_pm_friction_step.cpp

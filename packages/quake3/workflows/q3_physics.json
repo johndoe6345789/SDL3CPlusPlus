@@ -18,12 +18,38 @@
       "id": "triggers_apply",
       "plugin": "q3.triggers.apply"
     },
-    { "id": "pm_crouch",     "plugin": "q3.pm.crouch" },
-    { "id": "pm_ground",     "plugin": "q3.pm.ground" },
-    { "id": "pm_friction",   "plugin": "q3.pm.friction" },
-    { "id": "pm_accelerate", "plugin": "q3.pm.accelerate" },
-    { "id": "pm_jump",       "plugin": "q3.pm.jump" },
-    { "id": "pm_slide",      "plugin": "q3.pm.slide_move" },
+    {
+      "id": "player_sync",
+      "plugin": "q3.player.sync"
+    },
+    {
+      "id": "pm_crouch",
+      "plugin": "q3.pm.crouch"
+    },
+    {
+      "id": "pm_ground",
+      "plugin": "q3.pm.ground"
+    },
+    {
+      "id": "pm_friction",
+      "plugin": "q3.pm.friction"
+    },
+    {
+      "id": "pm_accelerate",
+      "plugin": "q3.pm.accelerate"
+    },
+    {
+      "id": "pm_jump",
+      "plugin": "q3.pm.jump"
+    },
+    {
+      "id": "pm_slide",
+      "plugin": "q3.pm.slide_move"
+    },
+    {
+      "id": "player_commit",
+      "plugin": "q3.player.commit"
+    },
     {
       "id": "physics_step",
       "plugin": "physics.step"
@@ -41,10 +67,10 @@
       "plugin": "camera.fps.update",
       "parameters": {
         "sensitivity": 0.003,
-        "eye_height":  1.4,
-        "fov":         90.0,
-        "near":        0.1,
-        "far":         500.0
+        "eye_height": 1.4,
+        "fov": 90.0,
+        "near": 0.1,
+        "far": 500.0
       }
     }
   ]
