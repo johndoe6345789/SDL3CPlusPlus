@@ -19,16 +19,24 @@ namespace sdl3cpp::services::impl {
 namespace {
 
 // Build a column-major glm matrix from a tag stored in engine Y-up coords.
-// Tags are stored with axis[i] as the i-th row of the Q3 rotation matrix.
-// In column-major (glm), we must transpose: column j = (axis[0][j], axis[1][j], axis[2][j]).
+// An MD3 tag stores axis[i] as the child's basis vectors already
+// expressed in the parent's space, so ioq3 attaches with
+// VectorMA(origin, lerped.origin[i], parent->axis[i], origin)
+// (cg_ents.c CG_PositionRotatedEntityOnTag): the i-th axis scales the
+// i-th component, which makes each axis a column. Transposing here
+// applies the inverse rotation, which twists the torso and head off the
+// legs instead of following them.
 glm::mat4 TagMatrix(const nlohmann::json& tag) {
     const auto& ax = tag["axis"];
     const auto& o  = tag["origin"];
+    auto axis = [&](int i) {
+        return glm::vec4(ax[i][0].get<float>(), ax[i][1].get<float>(),
+                         ax[i][2].get<float>(), 0.0f);
+    };
     return glm::mat4(
-        glm::vec4(ax[0][0].get<float>(), ax[1][0].get<float>(), ax[2][0].get<float>(), 0.0f),
-        glm::vec4(ax[0][1].get<float>(), ax[1][1].get<float>(), ax[2][1].get<float>(), 0.0f),
-        glm::vec4(ax[0][2].get<float>(), ax[1][2].get<float>(), ax[2][2].get<float>(), 0.0f),
-        glm::vec4(o[0].get<float>(),     o[1].get<float>(),     o[2].get<float>(),     1.0f)
+        axis(0), axis(1), axis(2),
+        glm::vec4(o[0].get<float>(), o[1].get<float>(),
+                  o[2].get<float>(), 1.0f)
     );
 }
 
