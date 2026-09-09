@@ -34,7 +34,8 @@ void WorkflowQ3PmGroundStep::Execute(
     bool grounded = false;
     if (world) {
         const glm::vec3 traceEnd = ps.origin - glm::vec3(0.f, kGroundProbe, 0.f);
-        Q3Trace tr = TraceBox(world, ps.origin, traceEnd, ps.mins, ps.maxs);
+        Q3Trace tr = TraceBox(world, ps.origin, traceEnd, ps.mins, ps.maxs,
+                              PlayerBody(context));
         if (tr.hit && tr.normal.y >= kMinGroundNormalY) {
             grounded     = true;
             ps.onGround  = true;

@@ -34,6 +34,7 @@ void WorkflowQ3PmStepSlideStep::Execute(const WorkflowStepDefinition&,
         return;
     }
 
+    const btCollisionObject* self = PlayerBody(context);
     const glm::vec3 startOrigin = ps.origin;
     const glm::vec3 startVelocity = ps.velocity;
 
@@ -52,7 +53,7 @@ void WorkflowQ3PmStepSlideStep::Execute(const WorkflowStepDefinition&,
     // something. Revisit if ledge-grabbing while jumping is wanted.
     const bool canStep = ps.onGround && movingHorizontally;
 
-    const bool blocked = q3::SlideMove(ps, world, dt);
+    const bool blocked = q3::SlideMove(ps, world, dt, self);
     if (!blocked || !canStep) {
         context.Set("q3.ps", ps);
         context.Set("q3.player_pos", ps.origin);
@@ -62,7 +63,8 @@ void WorkflowQ3PmStepSlideStep::Execute(const WorkflowStepDefinition&,
 
     // Never step while still rising, unless there is ground below.
     const glm::vec3 down = startOrigin - glm::vec3(0.f, q3::kStepSize, 0.f);
-    const auto downTrace = TraceBox(world, startOrigin, down, ps.mins, ps.maxs);
+    const auto downTrace = TraceBox(world, startOrigin, down, ps.mins,
+                                    ps.maxs, self);
     if (startVelocity.y > 0.f &&
         (downTrace.fraction == 1.f || downTrace.normal.y < 0.7f)) {
         context.Set("q3.ps", ps);
@@ -71,7 +73,8 @@ void WorkflowQ3PmStepSlideStep::Execute(const WorkflowStepDefinition&,
     }
 
     const glm::vec3 up = startOrigin + glm::vec3(0.f, q3::kStepSize, 0.f);
-    const auto upTrace = TraceBox(world, startOrigin, up, ps.mins, ps.maxs);
+    const auto upTrace = TraceBox(world, startOrigin, up, ps.mins, ps.maxs,
+                                  self);
     if (upTrace.startSolid) {
         context.Set("q3.ps", ps);
         context.Set("q3.player_pos", ps.origin);
@@ -84,13 +87,14 @@ void WorkflowQ3PmStepSlideStep::Execute(const WorkflowStepDefinition&,
     Q3PlayerState stepped = ps;
     stepped.origin = upTrace.endPos;
     stepped.velocity = startVelocity;
-    q3::SlideMove(stepped, world, dt);
+    q3::SlideMove(stepped, world, dt, self);
 
     // Settle back down onto whatever was stepped onto.
     const glm::vec3 settle =
         stepped.origin - glm::vec3(0.f, stepSize, 0.f);
     const auto settleTrace =
-        TraceBox(world, stepped.origin, settle, stepped.mins, stepped.maxs);
+        TraceBox(world, stepped.origin, settle, stepped.mins,
+                 stepped.maxs, self);
     // The step is only real if there is something to stand on within a
     // step height. A settle trace that reaches the bottom found nothing,
     // and a trace that cannot start found nothing knowable: in both

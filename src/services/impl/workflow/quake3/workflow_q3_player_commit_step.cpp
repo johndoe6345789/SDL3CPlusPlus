@@ -3,6 +3,7 @@
 
 #include <btBulletDynamicsCommon.h>
 
+
 namespace sdl3cpp::services::impl {
 
 WorkflowQ3PlayerCommitStep::WorkflowQ3PlayerCommitStep(std::shared_ptr<ILogger> logger)

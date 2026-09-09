@@ -40,6 +40,25 @@ struct Scene {
     void AddFloor() {
         Add(btVector3(0, -10.f, 0), btVector3(50.f, 10.f, 50.f));
     }
+
+    /// The player's own capsule, as physics.body.add creates it: a
+    /// dynamic body of mass 80, not a static one. The distinction
+    /// matters — Bullet's sweep reports a dynamic body it starts inside
+    /// but not a static one, so a harness that uses mass 0 cannot see a
+    /// trace failing to exclude the player.
+    btRigidBody* AddPlayerBody(btVector3 at) {
+        shapes.push_back(std::make_unique<btBoxShape>(
+            btVector3(0.3f, 0.5f, 0.3f)));
+        motions.push_back(std::make_unique<btDefaultMotionState>(
+            btTransform(btQuaternion(0, 0, 0, 1), at)));
+        btVector3 inertia(0, 0, 0);
+        shapes.back()->calculateLocalInertia(80.f, inertia);
+        bodies.push_back(std::make_unique<btRigidBody>(
+            btRigidBody::btRigidBodyConstructionInfo(
+                80.f, motions.back().get(), shapes.back().get(), inertia)));
+        world.addRigidBody(bodies.back().get());
+        return bodies.back().get();
+    }
 };
 
 }  // namespace q3test

@@ -37,7 +37,8 @@ void WorkflowQ3PmCrouchStep::Execute(
             // Trace upward by the height difference to check for headroom
             const float rise = q3::kPlayerHead - q3::kPlayerCrouchHead;
             const glm::vec3 traceEnd = ps.origin + glm::vec3(0.f, rise, 0.f);
-            Q3Trace tr = TraceBox(world, ps.origin, traceEnd, ps.mins, ps.maxs);
+            Q3Trace tr = TraceBox(world, ps.origin, traceEnd, ps.mins, ps.maxs,
+                                  PlayerBody(context));
             canStand = (tr.fraction >= 1.f);
         }
         if (canStand) {

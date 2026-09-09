@@ -19,6 +19,7 @@ inline constexpr float kStepSize = 18.0f / 32.0f;
  *         step up is worth attempting.
  */
 bool SlideMove(services::impl::Q3PlayerState& ps,
-               btDiscreteDynamicsWorld* world, float dt);
+               btDiscreteDynamicsWorld* world, float dt,
+               const btCollisionObject* ignore = nullptr);
 
 }  // namespace sdl3cpp::q3

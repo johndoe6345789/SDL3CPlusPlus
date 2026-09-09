@@ -62,7 +62,8 @@ void WorkflowQ3PmSlideMoveStep::Execute(
         if (timeLeft <= 0.f) break;
 
         const glm::vec3 target = ps.origin + ps.velocity * timeLeft;
-        Q3Trace tr = TraceBox(world, ps.origin, target, ps.mins, ps.maxs);
+        Q3Trace tr = TraceBox(world, ps.origin, target, ps.mins, ps.maxs,
+                              PlayerBody(context));
 
         // Advance as far as the trace allows
         if (tr.fraction > kMinFraction) {

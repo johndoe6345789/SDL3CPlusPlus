@@ -8,7 +8,8 @@
 namespace sdl3cpp::q3 {
 
 bool SlideMove(services::impl::Q3PlayerState& ps,
-               btDiscreteDynamicsWorld* world, float dt) {
+               btDiscreteDynamicsWorld* world, float dt,
+               const btCollisionObject* ignore) {
     constexpr int kMaxBumps = 4;
     constexpr float kMinFraction = 0.001f;
 
@@ -20,7 +21,7 @@ bool SlideMove(services::impl::Q3PlayerState& ps,
     for (int bump = 0; bump < kMaxBumps && timeLeft > 0.f; ++bump) {
         const glm::vec3 target = ps.origin + ps.velocity * timeLeft;
         auto tr = services::impl::TraceBox(world, ps.origin, target,
-                                           ps.mins, ps.maxs);
+                                           ps.mins, ps.maxs, ignore);
         tr.normal = FaceNormal(tr.normal);
         if (tr.fraction > kMinFraction) {
             ps.origin = tr.endPos;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "services/interfaces/workflow/quake3/q3_pm_constants.hpp"
+#include "services/interfaces/workflow_context.hpp"
 
 #include <glm/glm.hpp>
 #include <btBulletDynamicsCommon.h>
@@ -58,6 +59,17 @@ struct Q3NotMeCallback final : public btCollisionWorld::ClosestConvexResultCallb
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// PlayerBody
+//   The player's own collision object, which pmove traces must ignore.
+//   Null when the package has no player body, as the tests do.
+// ─────────────────────────────────────────────────────────────────────────────
+inline const btCollisionObject* PlayerBody(const WorkflowContext& context) {
+    const auto name = context.GetString("physics_player_body", "");
+    if (name.empty()) return nullptr;
+    return context.Get<btRigidBody*>("physics_body_" + name, nullptr);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // TraceBox
 //   Sweeps an AABB (defined by mins/maxs) from `from` to `to` in the given
 //   Bullet world and returns collision info.
@@ -67,7 +79,8 @@ inline Q3Trace TraceBox(
     glm::vec3 from,
     glm::vec3 to,
     glm::vec3 mins,
-    glm::vec3 maxs)
+    glm::vec3 maxs,
+    const btCollisionObject* ignore = nullptr)
 {
     Q3Trace result;
     result.endPos = to;
@@ -89,6 +102,10 @@ inline Q3Trace TraceBox(
     toTr.setOrigin(btVector3(to.x + centre.x, to.y + centre.y, to.z + centre.z));
 
     Q3NotMeCallback cb;
+    // Without this the sweep hits the player's own capsule, which
+    // q3.player.commit has just teleported onto the trace's start
+    // point, so every move is blocked at fraction 0.
+    cb.me = ignore;
     cb.m_collisionFilterGroup = btBroadphaseProxy::DefaultFilter;
     cb.m_collisionFilterMask  = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::DefaultFilter;
 

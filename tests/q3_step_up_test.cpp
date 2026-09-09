@@ -52,3 +52,20 @@ TEST(StepUp, OpenGroundGainsNoHeight) {
     EXPECT_NEAR(result.rise, 0.0f, 0.05f);
     EXPECT_GT(result.travelledX, 5.0f);
 }
+
+
+TEST(StepUp, WalksWithTheirOwnBodyInTheWorld) {
+    // The game keeps the player's dynamic capsule in the world and
+    // q3.player.commit teleports it onto them every frame. This guards
+    // the invariant that its presence must not impede movement.
+    //
+    // It does not reproduce the fault that setting Q3NotMeCallback::me
+    // fixed in game: Bullet's convexSweepTest declines to report a body
+    // the sweep starts inside, so this passes with or without that
+    // assignment. Kept as a guard, not as that bug's regression test.
+    Scene scene;
+    scene.AddFloor();
+    const auto result = WalkForward(scene, /*withPlayerBody=*/true);
+    EXPECT_GT(result.travelledX, 5.0f)
+        << "the player was blocked by their own collision body";
+}
