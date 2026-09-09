@@ -38,9 +38,12 @@ void WorkflowQ3PmGroundStep::Execute(
         if (tr.hit && tr.normal.y >= kMinGroundNormalY) {
             grounded     = true;
             ps.onGround  = true;
-            // Snap origin to ground surface
-            ps.origin    = tr.endPos;
-            // Kill any downward velocity when landing
+            // Deliberately does not move the origin. ioq3's
+            // PM_GroundTrace only records the ground plane; snapping the
+            // box flush onto the surface makes every horizontal sweep
+            // afterwards start in contact, so the trace returns
+            // fraction 0, a bump is spent going nowhere, and movement
+            // is quietly degraded.
             if (ps.velocity.y < 0.f) ps.velocity.y = 0.f;
         }
     }
