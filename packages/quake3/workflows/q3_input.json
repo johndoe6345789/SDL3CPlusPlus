@@ -7,39 +7,80 @@
       "plugin": "input.poll"
     },
     {
+      "id": "keyboard_poll",
+      "plugin": "input.keyboard.poll"
+    },
+    {
+      "id": "move_axes",
+      "plugin": "input.axis.combine",
+      "parameters": {
+        "config_path": "packages/quake3/config/input_aggregation.json"
+      }
+    },
+    {
+      "id": "move_buttons",
+      "plugin": "input.button.combine",
+      "parameters": {
+        "config_path": "packages/quake3/config/input_aggregation.json"
+      }
+    },
+    {
       "id": "q3_menu",
       "plugin": "q3.menu.update"
     },
     {
       "id": "should_stop",
       "plugin": "bool.or",
-      "inputs":  { "left": "q3.menu_quit_pressed", "right": "q3.menu_map_selected" },
-      "outputs": { "value": "q3.stop_game" }
+      "inputs": {
+        "left": "q3.menu_quit_pressed",
+        "right": "q3.menu_map_selected"
+      },
+      "outputs": {
+        "value": "q3.stop_game"
+      }
     },
     {
       "id": "stop_game_loop",
       "plugin": "value.set_if",
-      "inputs":  { "condition": "q3.stop_game" },
-      "parameters": { "value": false },
-      "outputs": { "value": "game_running" }
+      "inputs": {
+        "condition": "q3.stop_game"
+      },
+      "parameters": {
+        "value": false
+      },
+      "outputs": {
+        "value": "game_running"
+      }
     },
     {
       "id": "set_quit_requested",
       "plugin": "value.set_if",
-      "inputs":  { "condition": "q3.menu_quit_pressed" },
-      "parameters": { "value": true },
-      "outputs": { "value": "q3.quit_requested" }
+      "inputs": {
+        "condition": "q3.menu_quit_pressed"
+      },
+      "parameters": {
+        "value": true
+      },
+      "outputs": {
+        "value": "q3.quit_requested"
+      }
     },
     {
       "id": "compute_movement_active",
       "plugin": "bool.not",
-      "inputs":  { "value": "q3.menu_open" },
-      "outputs": { "value": "movement_active" }
+      "inputs": {
+        "value": "q3.menu_open"
+      },
+      "outputs": {
+        "value": "movement_active"
+      }
     },
     {
       "id": "update_mouse_grab",
       "plugin": "input.mouse.grab",
-      "inputs":  { "enabled": "movement_active" }
+      "inputs": {
+        "enabled": "movement_active"
+      }
     }
   ]
 }

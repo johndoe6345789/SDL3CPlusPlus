@@ -88,6 +88,9 @@
 #include "services/interfaces/workflow/workflow_generic_steps/workflow_input_poll_step.hpp"
 #include "services/interfaces/workflow/workflow_generic_steps/workflow_input_mouse_grab_step.hpp"
 #include "services/interfaces/workflow/input/workflow_input_poll_all_step.hpp"
+#include "services/interfaces/workflow/input/workflow_input_keyboard_poll_step.hpp"
+#include "services/interfaces/workflow/input/workflow_input_axis_combine_step.hpp"
+#include "services/interfaces/workflow/input/workflow_input_button_combine_step.hpp"
 
 // Input (service-dependent, registered with nullptr)
 #include "services/interfaces/workflow/workflow_generic_steps/workflow_input_key_pressed_step.hpp"
@@ -438,6 +441,9 @@ void WorkflowRegistrar::RegisterSteps(std::shared_ptr<IWorkflowStepRegistry> reg
     registry->RegisterStep(std::make_shared<WorkflowInputPollStep>(logger_));
     registry->RegisterStep(std::make_shared<WorkflowInputMouseGrabStep>(logger_));
     registry->RegisterStep(std::make_shared<WorkflowInputPollAllStep>(logger_));
+    registry->RegisterStep(std::make_shared<WorkflowInputKeyboardPollStep>(logger_));
+    registry->RegisterStep(std::make_shared<WorkflowInputAxisCombineStep>(logger_));
+    registry->RegisterStep(std::make_shared<WorkflowInputButtonCombineStep>(logger_));
     count += 3;
 
     // ── Input (service-dependent, nullptr until wired) ─────────

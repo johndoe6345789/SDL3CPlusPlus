@@ -1,0 +1,42 @@
+{
+  "description": "Maps the keyboard to the movement axes and buttons the q3.pm.* steps read. Key names are SDL scancode names as published by input.keyboard.poll.",
+  "inputBindings": {
+    "axes": {
+      "move_forward": {
+        "sources": [
+          { "type": "key", "key": "W", "scale": 1.0 },
+          { "type": "key", "key": "Up", "scale": 1.0 },
+          { "type": "key", "key": "S", "scale": -1.0 },
+          { "type": "key", "key": "Down", "scale": -1.0 },
+          { "type": "gamepad_axis", "axis": "left_y", "scale": -1.0, "deadzone": 0.15 }
+        ],
+        "outputs": ["input.move_forward"]
+      },
+      "move_right": {
+        "sources": [
+          { "type": "key", "key": "D", "scale": 1.0 },
+          { "type": "key", "key": "A", "scale": -1.0 },
+          { "type": "gamepad_axis", "axis": "left_x", "scale": 1.0, "deadzone": 0.15 }
+        ],
+        "outputs": ["input.move_right"]
+      }
+    },
+    "buttons": {
+      "jump": {
+        "sources": [
+          { "type": "key", "key": "Space" },
+          { "type": "gamepad_button", "button": "a" }
+        ],
+        "outputs": ["input.jump"]
+      },
+      "crouch": {
+        "sources": [
+          { "type": "key", "key": "Left Ctrl" },
+          { "type": "key", "key": "C" },
+          { "type": "gamepad_button", "button": "b" }
+        ],
+        "outputs": ["input.crouch"]
+      }
+    }
+  }
+}
