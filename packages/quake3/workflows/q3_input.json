@@ -3,6 +3,10 @@
   "description": "Poll input, update menu state, compute movement gate.",
   "steps": [
     {
+      "id": "frame_delta",
+      "plugin": "time.frame_delta"
+    },
+    {
       "id": "input_poll",
       "plugin": "input.poll"
     },

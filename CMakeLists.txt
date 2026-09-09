@@ -373,6 +373,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/quake3/workflow_q3_bots_update_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_crosshair_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_damage_apply_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_frame_time_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_hitmarker_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_hud_head_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_hud_step.cpp
@@ -482,6 +483,16 @@ target_link_libraries(q3_pm_constants_test PRIVATE
     GTest::gtest_main
 )
 add_test(NAME q3_pm_constants_test COMMAND q3_pm_constants_test)
+
+add_executable(q3_frame_time_test)
+target_sources(q3_frame_time_test PRIVATE tests/q3_frame_time_test.cpp)
+target_include_directories(q3_frame_time_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(q3_frame_time_test PRIVATE
+    GTest::gtest_main
+)
+add_test(NAME q3_frame_time_test COMMAND q3_frame_time_test)
 
 # ============================================================================
 # FILE COPYING

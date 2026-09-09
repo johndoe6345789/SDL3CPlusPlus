@@ -75,24 +75,26 @@ void WorkflowQ3PmStepSlideStep::Execute(const WorkflowStepDefinition&,
         stepped.origin - glm::vec3(0.f, stepSize, 0.f);
     const auto settleTrace =
         TraceBox(world, stepped.origin, settle, stepped.mins, stepped.maxs);
-    if (!settleTrace.startSolid) {
-        stepped.origin = settleTrace.endPos;
+    if (settleTrace.startSolid) {
+        // Could not settle back down, so we have no idea what is under
+        // the player. Keeping the raised origin here is what let the
+        // player ratchet up a flat wall a step per frame; discard the
+        // attempt and use the plain slide instead.
+        context.Set("q3.ps", ps);
+        context.Set("q3.player_pos", ps.origin);
+        return;
     }
+    stepped.origin = settleTrace.endPos;
     if (settleTrace.fraction < 1.f) {
         stepped.velocity = q3::ClipVelocity(
             stepped.velocity, settleTrace.normal, q3::kOverclip);
     }
 
-    // Only keep the stepped move if it actually got further along.
-    const glm::vec3 flatStep = stepped.origin - startOrigin;
-    const glm::vec3 flatSlid = slidResult - startOrigin;
-    const float steppedDist =
-        flatStep.x * flatStep.x + flatStep.z * flatStep.z;
-    const float slidDist = flatSlid.x * flatSlid.x + flatSlid.z * flatSlid.z;
-    if (steppedDist > slidDist) {
-        ps = stepped;
-        context.Set<float>("q3.step_delta", ps.origin.y - startOrigin.y);
-    }
+    // ioq3 takes the stepped move; the guard above is what keeps it
+    // honest. Record the rise so a step sound can be chosen later.
+    (void)slidResult;
+    ps = stepped;
+    context.Set<float>("q3.step_delta", ps.origin.y - startOrigin.y);
 
     context.Set("q3.ps", ps);
     context.Set("q3.player_pos", ps.origin);

@@ -182,6 +182,18 @@
       "link_libraries": [
         "GTest::gtest_main"
       ]
+    },
+    {
+      "name": "q3_frame_time_test",
+      "sources": [
+        "tests/q3_frame_time_test.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main"
+      ]
     }
   ],
   "file_copying": [
