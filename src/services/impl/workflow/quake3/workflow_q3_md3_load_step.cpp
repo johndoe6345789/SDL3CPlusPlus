@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/quake3/workflow_q3_md3_load_step.hpp"
 #include "services/interfaces/workflow/quake3/q3_skin_file.hpp"
+#include "services/interfaces/workflow/quake3/q3_anim_cfg.hpp"
 #include "services/interfaces/workflow/quake3/q3_pk3_reader.hpp"
 #include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
 #include "services/interfaces/workflow_context.hpp"
@@ -141,25 +142,6 @@ static SDL_GPUTexture* TryLoadTexture(SDL_GPUDevice* dev, const std::string& pk3
     return nullptr;
 }
 
-// ── animation.cfg parser ─────────────────────────────────────────────────────
-
-static nlohmann::json ParseAnimCfg(const std::vector<uint8_t>& data) {
-    nlohmann::json result = nlohmann::json::array();
-    std::string txt(data.begin(), data.end());
-    std::istringstream ss(txt);
-    std::string line;
-    while (std::getline(ss, line)) {
-        auto cp = line.find("//");
-        if (cp != std::string::npos) line = line.substr(0, cp);
-        std::istringstream ls(line);
-        int first, num, loop, fps;
-        if (ls >> first >> num >> loop >> fps) {
-            result.push_back({{"first", first}, {"num", num},
-                              {"loop", loop},   {"fps", fps}});
-        }
-    }
-    return result;
-}
 
 }  // namespace
 
@@ -260,8 +242,19 @@ void WorkflowQ3Md3LoadStep::Execute(const WorkflowStepDefinition& step, Workflow
     // ── animation.cfg ─────────────────────────────────────────────────────────
     if (!anim.empty()) {
         auto animData = ReadFromPk3(pk3, anim);
-        if (!animData.empty())
-            context.Set("q3.md3." + prefix + "_anim", ParseAnimCfg(animData));
+        if (!animData.empty()) {
+            const auto clips = q3::ParseAnimCfg(std::string(
+                reinterpret_cast<const char*>(animData.data()),
+                animData.size()));
+            nlohmann::json animJson = nlohmann::json::array();
+            for (const auto& clip : clips) {
+                animJson.push_back({{"first", clip.firstFrame},
+                                    {"num",   clip.numFrames},
+                                    {"loop",  clip.loopingFrames},
+                                    {"fps",   clip.fps}});
+            }
+            context.Set("q3.md3." + prefix + "_anim", animJson);
+        }
     }
 
     // Derive the directory from path (for relative skin lookups)

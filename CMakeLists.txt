@@ -363,6 +363,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/compute/workflow_compute_pipeline_create_step.cpp
         src/services/impl/workflow/compute/workflow_compute_tessellate_dispatch_step.cpp
         src/services/impl/workflow/compute/workflow_compute_tessellate_step.cpp
+        src/services/impl/workflow/quake3/q3_anim_cfg.cpp
         src/services/impl/workflow/quake3/q3_overlay_scale.cpp
         src/services/impl/workflow/quake3/q3_pk3_reader.cpp
         src/services/impl/workflow/quake3/q3_skin_file.cpp
@@ -537,6 +538,17 @@ target_link_libraries(q3_skin_file_test PRIVATE
     GTest::gtest_main
 )
 add_test(NAME q3_skin_file_test COMMAND q3_skin_file_test)
+
+add_executable(q3_anim_cfg_test)
+target_sources(q3_anim_cfg_test PRIVATE tests/q3_anim_cfg_test.cpp)
+target_sources(q3_anim_cfg_test PRIVATE src/services/impl/workflow/quake3/q3_anim_cfg.cpp)
+target_include_directories(q3_anim_cfg_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(q3_anim_cfg_test PRIVATE
+    GTest::gtest_main
+)
+add_test(NAME q3_anim_cfg_test COMMAND q3_anim_cfg_test)
 
 # ============================================================================
 # FILE COPYING

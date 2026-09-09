@@ -236,6 +236,19 @@
       "link_libraries": [
         "GTest::gtest_main"
       ]
+    },
+    {
+      "name": "q3_anim_cfg_test",
+      "sources": [
+        "tests/q3_anim_cfg_test.cpp",
+        "src/services/impl/workflow/quake3/q3_anim_cfg.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main"
+      ]
     }
   ],
   "file_copying": [
