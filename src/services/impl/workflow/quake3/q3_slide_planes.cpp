@@ -9,6 +9,15 @@ bool EntersPlane(const glm::vec3& velocity, const glm::vec3& plane) {
 
 }  // namespace
 
+glm::vec3 FaceNormal(const glm::vec3& normal) {
+    if (normal.y >= kMinWalkNormal || normal.y <= -kMinWalkNormal) {
+        return normal;  // ground or ceiling
+    }
+    glm::vec3 wall(normal.x, 0.0f, normal.z);
+    const float length = glm::length(wall);
+    return length > 1e-6f ? wall / length : normal;
+}
+
 glm::vec3 ClipVelocity(const glm::vec3& velocity, const glm::vec3& normal,
                        float overbounce) {
     const float backoff = glm::dot(velocity, normal) * overbounce;

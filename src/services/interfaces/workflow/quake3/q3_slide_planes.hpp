@@ -16,6 +16,24 @@ inline constexpr float kIntoEpsilon = 0.1f;
 /// Planes closer than this in orientation are treated as the same plane.
 inline constexpr float kSamePlaneDot = 0.99f;
 
+/// ioq3 bg_local.h MIN_WALK_NORMAL: a contact this upright is ground.
+inline constexpr float kMinWalkNormal = 0.7f;
+
+/**
+ * @brief Turn a Bullet contact normal into the face normal Quake expects.
+ *
+ * Quake traces return brush face planes, so a floor is always straight
+ * up. Bullet's convex sweep returns the minimum separation direction,
+ * which at a box edge is diagonal. Clipping a horizontal velocity
+ * against such a normal converts it into vertical speed and launches
+ * the player off kerbs and up walls.
+ *
+ * Contacts at least MIN_WALK_NORMAL upright are ground and kept as is.
+ * Anything shallower that still points partly up is an edge artefact
+ * and is flattened into the wall it belongs to.
+ */
+glm::vec3 FaceNormal(const glm::vec3& normal);
+
 /// v with its component along `normal` removed, scaled by `overbounce`.
 glm::vec3 ClipVelocity(const glm::vec3& velocity, const glm::vec3& normal,
                        float overbounce);

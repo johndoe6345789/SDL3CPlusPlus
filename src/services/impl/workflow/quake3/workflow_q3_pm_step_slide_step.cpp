@@ -52,7 +52,8 @@ void WorkflowQ3PmStepSlideStep::Execute(const WorkflowStepDefinition&,
     // something. Revisit if ledge-grabbing while jumping is wanted.
     const bool canStep = ps.onGround && movingHorizontally;
 
-    if (!q3::SlideMove(ps, world, dt) || !canStep) {
+    const bool blocked = q3::SlideMove(ps, world, dt);
+    if (!blocked || !canStep) {
         context.Set("q3.ps", ps);
         context.Set("q3.player_pos", ps.origin);
         context.Set<float>("q3.step_delta", 0.f);
@@ -106,8 +107,13 @@ void WorkflowQ3PmStepSlideStep::Execute(const WorkflowStepDefinition&,
     }
     stepped.origin = settleTrace.endPos;
     if (settleTrace.fraction < 1.f) {
-        stepped.velocity = q3::ClipVelocity(
-            stepped.velocity, settleTrace.normal, q3::kOverclip);
+        // The settle is a straight-down probe onto whatever was stepped
+        // onto, so the only thing to take out of the velocity is its
+        // downward part. Clipping against the reported normal here is
+        // what launched the player: the box overhangs the step's edge,
+        // Bullet reports the edge's diagonal, and horizontal speed came
+        // back as vertical.
+        if (stepped.velocity.y < 0.f) stepped.velocity.y = 0.f;
     }
 
     // ioq3 takes the stepped move; the guard above is what keeps it

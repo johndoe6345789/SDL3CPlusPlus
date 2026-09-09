@@ -19,8 +19,9 @@ bool SlideMove(services::impl::Q3PlayerState& ps,
 
     for (int bump = 0; bump < kMaxBumps && timeLeft > 0.f; ++bump) {
         const glm::vec3 target = ps.origin + ps.velocity * timeLeft;
-        const auto tr = services::impl::TraceBox(world, ps.origin, target,
-                                                 ps.mins, ps.maxs);
+        auto tr = services::impl::TraceBox(world, ps.origin, target,
+                                           ps.mins, ps.maxs);
+        tr.normal = FaceNormal(tr.normal);
         if (tr.fraction > kMinFraction) {
             ps.origin = tr.endPos;
             timeLeft *= (1.f - tr.fraction);

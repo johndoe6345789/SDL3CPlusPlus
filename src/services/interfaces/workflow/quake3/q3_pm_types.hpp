@@ -100,9 +100,16 @@ inline Q3Trace TraceBox(
         const btVector3& n = cb.m_hitNormalWorld;
         result.normal   = glm::vec3(n.x(), n.y(), n.z());
 
-        // Interpolate end position along the sweep
+        // Interpolate end position along the sweep, then back off along
+        // the normal by Quake's SURFACE_CLIP_EPSILON (cm_local.h, 0.125
+        // units). A Quake trace never ends in contact, so the next sweep
+        // never starts in contact; Bullet's does, which stalls the player
+        // against every surface they touch. When the sweep began in
+        // contact (fraction 0) this also eases them back out.
+        constexpr float kSurfaceClipEpsilon = 0.125f / 32.0f;
         glm::vec3 delta = to - from;
-        result.endPos   = from + delta * result.fraction;
+        result.endPos   = from + delta * result.fraction
+                        + result.normal * kSurfaceClipEpsilon;
     }
 
     return result;

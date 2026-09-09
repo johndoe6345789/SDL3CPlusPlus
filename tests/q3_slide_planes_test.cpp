@@ -93,3 +93,50 @@ TEST(ResolveAgainstPlanes, NoPlanesLeavesVelocityUnchanged) {
     const glm::vec3 out = ResolveAgainstPlanes(velocity, nullptr, 0);
     EXPECT_NEAR(glm::length(out - velocity), 0.0f, kTol);
 }
+
+TEST(FaceNormal, KeepsAFloor) {
+    const glm::vec3 n = sdl3cpp::q3::FaceNormal({0.f, 1.f, 0.f});
+    EXPECT_NEAR(n.y, 1.f, kTol);
+}
+
+TEST(FaceNormal, KeepsAWalkableSlope) {
+    const glm::vec3 slope = glm::normalize(glm::vec3(0.3f, 1.f, 0.f));
+    const glm::vec3 n = sdl3cpp::q3::FaceNormal(slope);
+    EXPECT_NEAR(n.y, slope.y, kTol);
+}
+
+TEST(FaceNormal, KeepsAWall) {
+    const glm::vec3 n = sdl3cpp::q3::FaceNormal(kWallEast);
+    EXPECT_NEAR(n.x, -1.f, kTol);
+    EXPECT_NEAR(n.y, 0.f, kTol);
+}
+
+TEST(FaceNormal, FlattensAShallowEdgeIntoItsWall) {
+    // An edge normal below MIN_WALK_NORMAL is not something Quake would
+    // ever stand on, so it is treated as the wall it came from.
+    const glm::vec3 edge = glm::normalize(glm::vec3(-0.8f, 0.6f, 0.f));
+    const glm::vec3 n = sdl3cpp::q3::FaceNormal(edge);
+    EXPECT_NEAR(n.y, 0.f, kTol) << "an edge must not act as a ramp";
+    EXPECT_NEAR(n.x, -1.f, kTol);
+    EXPECT_NEAR(glm::length(n), 1.f, kTol);
+}
+
+TEST(FaceNormal, ClippingAgainstAShallowEdgeNoLongerLaunches) {
+    const glm::vec3 edge = glm::normalize(glm::vec3(-0.8f, 0.6f, 0.f));
+    const glm::vec3 v = ClipVelocity({7.f, 0.f, 0.f},
+                                     sdl3cpp::q3::FaceNormal(edge), 1.001f);
+    EXPECT_NEAR(v.y, 0.f, kTol) << "horizontal motion gained height";
+}
+
+TEST(FaceNormal, KeepsACeiling) {
+    const glm::vec3 n = sdl3cpp::q3::FaceNormal({0.f, -1.f, 0.f});
+    EXPECT_NEAR(n.y, -1.f, kTol);
+}
+
+TEST(FaceNormal, FortyFiveDegreesIsWalkableAsInQuake) {
+    // MIN_WALK_NORMAL is 0.7 and cos(45deg) is 0.707, so a true 45
+    // degree ramp is ground. Edge artefacts at that angle are handled
+    // where they arise, in the step settle, not by lying about slopes.
+    const glm::vec3 ramp = glm::normalize(glm::vec3(-1.f, 1.f, 0.f));
+    EXPECT_NEAR(sdl3cpp::q3::FaceNormal(ramp).y, ramp.y, kTol);
+}

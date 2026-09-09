@@ -622,6 +622,43 @@ target_link_libraries(q3_map_movement_test PRIVATE
 )
 add_test(NAME q3_map_movement_test COMMAND q3_map_movement_test)
 
+add_executable(q3_input_to_motion_test)
+target_sources(q3_input_to_motion_test PRIVATE tests/q3_input_to_motion_test.cpp)
+target_sources(q3_input_to_motion_test PRIVATE src/services/impl/workflow/input/workflow_input_axis_combine_step.cpp)
+target_sources(q3_input_to_motion_test PRIVATE src/services/impl/workflow/quake3/workflow_q3_pm_accelerate_step.cpp)
+target_sources(q3_input_to_motion_test PRIVATE src/services/impl/workflow/quake3/q3_wish_dir.cpp)
+target_sources(q3_input_to_motion_test PRIVATE src/services/impl/workflow/workflow_step_parameter_resolver.cpp)
+target_include_directories(q3_input_to_motion_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(q3_input_to_motion_test PRIVATE
+    GTest::gtest_main
+    glm::glm
+    Bullet::Bullet
+    nlohmann_json::nlohmann_json
+    ${SDL_TARGET}
+)
+add_test(NAME q3_input_to_motion_test COMMAND q3_input_to_motion_test)
+
+add_executable(q3_step_up_test)
+target_sources(q3_step_up_test PRIVATE tests/q3_step_up_test.cpp)
+target_sources(q3_step_up_test PRIVATE src/services/impl/workflow/quake3/workflow_q3_pm_accelerate_step.cpp)
+target_sources(q3_step_up_test PRIVATE src/services/impl/workflow/quake3/workflow_q3_pm_friction_step.cpp)
+target_sources(q3_step_up_test PRIVATE src/services/impl/workflow/quake3/workflow_q3_pm_ground_step.cpp)
+target_sources(q3_step_up_test PRIVATE src/services/impl/workflow/quake3/workflow_q3_pm_step_slide_step.cpp)
+target_sources(q3_step_up_test PRIVATE src/services/impl/workflow/quake3/q3_slide_move.cpp)
+target_sources(q3_step_up_test PRIVATE src/services/impl/workflow/quake3/q3_slide_planes.cpp)
+target_sources(q3_step_up_test PRIVATE src/services/impl/workflow/quake3/q3_wish_dir.cpp)
+target_include_directories(q3_step_up_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(q3_step_up_test PRIVATE
+    GTest::gtest_main
+    glm::glm
+    Bullet::Bullet
+)
+add_test(NAME q3_step_up_test COMMAND q3_step_up_test)
+
 # ============================================================================
 # FILE COPYING
 # ============================================================================
