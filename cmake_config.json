@@ -194,6 +194,21 @@
       "link_libraries": [
         "GTest::gtest_main"
       ]
+    },
+    {
+      "name": "q3_prop_font_test",
+      "sources": [
+        "tests/q3_prop_font_test.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main",
+        "${SDL_TARGET}",
+        "stb::stb",
+        "libzip::zip"
+      ]
     }
   ],
   "file_copying": [

@@ -73,7 +73,7 @@ inline float PropStringWidth(const char* text) {
         int ch = (unsigned char)*p & 127;
         int cw = kPropMap[ch][2];
         if (cw < 0) continue;
-        w += (float)(cw == kPropSpace ? kPropSpace : cw + kPropGap);
+        w += (float)(ch == ' ' ? kPropSpace : cw + kPropGap);
     }
     return w > 0.f ? w - kPropGap : 0.f;
 }
@@ -90,7 +90,11 @@ inline void DrawPropText(SDL_Renderer* r, SDL_Texture* font,
         int ch = (unsigned char)*p & 127;
         int cw = kPropMap[ch][2];
         if (cw < 0) continue;
-        if (cw == kPropSpace) { cx += kPropSpace * scale; continue; }
+        // Test the character, not its width: ioq3 does this on ch
+        // (cg_drawtools.c). Comparing widths silently hid every glyph
+        // that happens to be kPropSpace wide, which is '(', 'I' and 'i'
+        // as well as the space itself, so EXIT drew as "EX T".
+        if (ch == ' ') { cx += kPropSpace * scale; continue; }
         SDL_FRect src{(float)kPropMap[ch][0], (float)kPropMap[ch][1], (float)cw, (float)kPropHeight};
         SDL_FRect dst{cx, y, cw * scale, kPropHeight * scale};
         SDL_RenderTexture(r, font, &src, &dst);

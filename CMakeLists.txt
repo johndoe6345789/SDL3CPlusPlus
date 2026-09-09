@@ -494,6 +494,19 @@ target_link_libraries(q3_frame_time_test PRIVATE
 )
 add_test(NAME q3_frame_time_test COMMAND q3_frame_time_test)
 
+add_executable(q3_prop_font_test)
+target_sources(q3_prop_font_test PRIVATE tests/q3_prop_font_test.cpp)
+target_include_directories(q3_prop_font_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(q3_prop_font_test PRIVATE
+    GTest::gtest_main
+    ${SDL_TARGET}
+    stb::stb
+    libzip::zip
+)
+add_test(NAME q3_prop_font_test COMMAND q3_prop_font_test)
+
 # ============================================================================
 # FILE COPYING
 # ============================================================================

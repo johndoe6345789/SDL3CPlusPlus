@@ -75,7 +75,12 @@ void WorkflowQ3PmStepSlideStep::Execute(const WorkflowStepDefinition&,
         stepped.origin - glm::vec3(0.f, stepSize, 0.f);
     const auto settleTrace =
         TraceBox(world, stepped.origin, settle, stepped.mins, stepped.maxs);
-    if (settleTrace.startSolid) {
+    // The step is only real if there is something to stand on within a
+    // step height. A settle trace that reaches the bottom found nothing,
+    // and a trace that cannot start found nothing knowable: in both
+    // cases keeping the raised origin lets the player ratchet up a flat
+    // wall a step per frame, which is exactly what happened.
+    if (settleTrace.startSolid || settleTrace.fraction >= 1.f) {
         // Could not settle back down, so we have no idea what is under
         // the player. Keeping the raised origin here is what let the
         // player ratchet up a flat wall a step per frame; discard the
