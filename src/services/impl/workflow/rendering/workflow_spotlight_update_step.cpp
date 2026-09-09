@@ -50,8 +50,19 @@ void WorkflowSpotlightUpdateStep::Execute(const WorkflowStepDefinition& step, Wo
         const glm::mat4 model = rendering::BuildViewmodelMatrix(
             viewMatrix, cameraPos, off, rotation, scale);
 
-        spotPos = glm::vec3(model * glm::vec4(0.0f, lensY, 0.0f, 1.0f));
+        const glm::vec3 lens = glm::vec3(model * glm::vec4(0.0f, lensY, 0.0f, 1.0f));
         spotDir = glm::normalize(glm::vec3(model * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f)));
+
+        // The lens sits ahead of the eye, so against a wall it can land on
+        // the far side and light the room beyond it. The player's collision
+        // capsule cannot overlap geometry, so any point within its radius is
+        // guaranteed to be in open space: keep the origin inside that.
+        const float maxOffset = spot->value("max_origin_offset", 0.25f);
+        const glm::vec3 fromEye = lens - cameraPos;
+        const float reach = glm::length(fromEye);
+        spotPos = (reach > maxOffset && reach > 0.0f)
+                      ? cameraPos + fromEye * (maxOffset / reach)
+                      : lens;
 
         if (logger_ && !meta) {
             logger_->Warn("spotlight.update: mesh '" + mesh +
