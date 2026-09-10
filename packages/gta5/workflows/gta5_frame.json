@@ -37,7 +37,7 @@
       "id": "tiles_draw",
       "plugin": "gta5.tiles.draw",
       "parameters": {
-        "pipeline_key": "gpu_pipeline_textured",
+        "pipeline_key": "gpu_pipeline_gta5",
         "texture_key": "walls_texture_gpu",
         "sampler_key": "walls_texture_sampler"
       }

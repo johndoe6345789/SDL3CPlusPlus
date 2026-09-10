@@ -72,13 +72,66 @@ It also conjugates entity rotations. A `CEntityDef` stores the *inverse* of
 the entity's orientation — place buildings with the quaternion as written and
 every rotated prop on the map comes out mirrored.
 
+## Exporting, in one script
+
+`tools/export_map.bat` drives the placement half end to end: GTAUtil
+`exportmeta` turns ymaps into XML, then `import_codewalker_export.py`
+pairs them with meshes and writes tiles. Edit the four paths at the top
+and run it.
+
+It cannot do the meshes. GTAUtil has no drawable export command, so
+`.ydr`/`.ydd` still have to come out of CodeWalker as glTF, OBJ, FBX,
+DAE or PLY, named after their archetype. Point `MODEL_SRC` at them and
+re-run; until then placements are written with `model: null`, reported,
+and skipped at load, so a placements-only run still works.
+
+The `exportmeta` flags in that script are unverified: GTAUtil scans the
+whole install on startup and would not return `--help` in reasonable
+time here. If it rejects them, fix the one marked line. The script
+counts the XML files afterwards and fails if none appeared, so a wrong
+flag stops the run instead of quietly producing an empty map.
+
+## Shaders
+
+The package has its own pair, `shaders/spirv/gta5_model.{vert,frag}`,
+because neither existing shader fits:
+
+- seed's `textured.vert` feeds the fragment stage one constant normal
+  from a uniform, so every building wall shaded as though it faced the
+  sky. The gta5 vertex shader passes the real per-vertex normal.
+- seed's `textured.frag` is a room-scale demo: its fog is hardcoded at
+  `1 - exp(-dist * 0.06)`, which is 99.95% opaque by 128 m, so every
+  building past the near kerb collapsed to a black silhouette. It also
+  ray-marches a 48-step volumetric beam per fragment, far too expensive
+  across a skyline. The gta5 fragment shader is a plain textured Lambert
+  with kilometre-scale haze and a Reinhard tone map.
+- the BSP shader carries normals but lights purely from a baked
+  lightmap, which streamed GTA geometry does not have.
+
+Rebuild them with the Vulkan SDK's `glslc` after editing:
+
+```bash
+glslc -fshader-stage=vert shaders/spirv/gta5_model.vert.glsl   -o shaders/spirv/gta5_model.vert.spv
+```
+
+**Only SPIR-V is built.** The workflow names the `shaders/msl/` path
+because the engine rewrites it to `shaders/spirv/` off Metal, so Windows
+and Linux work; a Metal build needs someone to write the two `.metal`
+variants.
+
 ## What still needs writing
 
-The streaming workflow references four plugins that do not exist yet:
+Everything the package references now exists: `gta5.tiles.resolve`,
+`.load`, `.evict`, `.draw` and `gta5.lod.select` alongside the `q3.pm.*`
+movement chain, physics and camera steps.
 
-    gta5.tiles.resolve   gta5.tiles.load   gta5.tiles.evict   gta5.lod.select
+Known gaps:
 
-They are listed in `workflows/gta5_streaming.json` under
-`unimplemented_plugins`. Everything else this package references
-(`q3.pm.*`, `model.spawn`, `model.set_transform`, `model.despawn`,
-`physics.*`, `camera.fps.update`) already exists.
+- **Metal shaders.** See above; SPIR-V only.
+- **Normals under non-uniform scale.** The vertex shader transforms the
+  normal by `mat3(u_model)`, matching `bsp.vert`. A placement with
+  `scaleXY != scaleZ` -- which real ymaps do use -- would want the
+  inverse-transpose to stay exactly perpendicular.
+- **No frustum culling.** Every instance in every resident tile is
+  drawn. Fine for a few hundred; a real district will want culling
+  before it is fine for tens of thousands.

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "services/interfaces/workflow/gta5/gta5_geometry.hpp"
-#include "services/interfaces/workflow/rendering/model_load_helpers.hpp"
+#include "services/interfaces/workflow/gta5/gta5_mesh_extract.hpp"
 
 namespace sdl3cpp::services::impl {
 
@@ -11,7 +11,7 @@ namespace sdl3cpp::services::impl {
 ///
 /// Returns false for a mesh with no triangles. The arrays it fills live
 /// on the geometry because Bullet indexes them rather than copying.
-bool BuildGta5CollisionShape(const AssimpMeshData& mesh,
+bool BuildGta5CollisionShape(const Gta5MeshData& mesh,
                              Gta5Geometry& geometry);
 
 /// Free the collision shape and its backing arrays.

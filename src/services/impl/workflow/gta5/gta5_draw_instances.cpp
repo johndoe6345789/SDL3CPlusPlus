@@ -30,15 +30,10 @@ int DrawGta5Instances(const Gta5StreamState& state,
                       const Gta5DrawContext& draw) {
     if (!draw.pass || !draw.cmd || !draw.texture || !draw.sampler) return 0;
 
-    // The shadow map is optional; falling back to the diffuse texture
-    // keeps the two-sampler binding the pipeline expects.
-    SDL_GPUTexture* shadowTex =
-        draw.shadowTexture ? draw.shadowTexture : draw.texture;
-    SDL_GPUSampler* shadowSamp =
-        draw.shadowSampler ? draw.shadowSampler : draw.sampler;
-    SDL_GPUTextureSamplerBinding bindings[2] = {
-        {draw.texture, draw.sampler}, {shadowTex, shadowSamp}};
-    SDL_BindGPUFragmentSamplers(draw.pass, 0, bindings, 2);
+    // The gta5 fragment shader takes albedo only: it does no shadow
+    // lookup, so binding a second sampler here would not match it.
+    SDL_GPUTextureSamplerBinding binding = {draw.texture, draw.sampler};
+    SDL_BindGPUFragmentSamplers(draw.pass, 0, &binding, 1);
 
     int drawn = 0;
     for (const auto& entry : state.resident) {

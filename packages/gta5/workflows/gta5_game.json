@@ -44,6 +44,16 @@
       "name": "tex_walls_path",
       "type": "string",
       "defaultValue": "packages/seed/assets/textures/walls/Bricks058_1K-JPG_Color.jpg"
+    },
+    "shader_gta5_vert_path": {
+      "name": "shader_gta5_vert_path",
+      "type": "string",
+      "defaultValue": "packages/gta5/shaders/msl/gta5_model.vert.metal"
+    },
+    "shader_gta5_frag_path": {
+      "name": "shader_gta5_frag_path",
+      "type": "string",
+      "defaultValue": "packages/gta5/shaders/msl/gta5_model.frag.metal"
     }
   },
   "nodes": [
@@ -120,54 +130,54 @@
       }
     },
     {
-      "id": "compile_tex_vert",
+      "id": "compile_gta5_vert",
       "type": "graphics.gpu.shader.compile",
       "typeVersion": 1,
       "position": [
-        1000,
+        1250,
         0
       ],
       "parameters": {
         "stage": "vertex",
-        "output_key": "textured_vertex_shader",
+        "output_key": "gta5_vertex_shader",
         "num_uniform_buffers": 1,
         "num_samplers": 0
       },
       "inputs": {
-        "shader_path": "shader_textured_vert_path"
+        "shader_path": "shader_gta5_vert_path"
       }
     },
     {
-      "id": "compile_tex_frag",
+      "id": "compile_gta5_frag",
       "type": "graphics.gpu.shader.compile",
       "typeVersion": 1,
       "position": [
-        1100,
+        1260,
         0
       ],
       "parameters": {
         "stage": "fragment",
-        "output_key": "textured_fragment_shader",
+        "output_key": "gta5_fragment_shader",
         "num_uniform_buffers": 1,
-        "num_samplers": 2
+        "num_samplers": 1
       },
       "inputs": {
-        "shader_path": "shader_textured_frag_path"
+        "shader_path": "shader_gta5_frag_path"
       }
     },
     {
-      "id": "create_tex_pipeline",
+      "id": "create_gta5_pipeline",
       "type": "graphics.gpu.pipeline.create",
       "typeVersion": 1,
       "position": [
-        1200,
+        1280,
         0
       ],
       "parameters": {
-        "vertex_shader_key": "textured_vertex_shader",
-        "fragment_shader_key": "textured_fragment_shader",
-        "vertex_format": "position_uv",
-        "pipeline_key": "gpu_pipeline_textured"
+        "vertex_shader_key": "gta5_vertex_shader",
+        "fragment_shader_key": "gta5_fragment_shader",
+        "vertex_format": "position_uv_lmuv_normal",
+        "pipeline_key": "gpu_pipeline_gta5"
       }
     },
     {
@@ -243,12 +253,12 @@
         "light_dir_x": -0.4,
         "light_dir_y": -0.85,
         "light_dir_z": -0.3,
-        "light_intensity": 1.6,
+        "light_intensity": 2.2,
         "ambient_r": 0.42,
         "ambient_g": 0.47,
         "ambient_b": 0.58,
-        "ambient_intensity": 1.4,
-        "exposure": 0.7
+        "ambient_intensity": 0.9,
+        "exposure": 1.0
       }
     },
     {
@@ -339,40 +349,7 @@
       "main": {
         "0": [
           {
-            "node": "compile_tex_vert",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      }
-    },
-    "compile_tex_vert": {
-      "main": {
-        "0": [
-          {
-            "node": "compile_tex_frag",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      }
-    },
-    "compile_tex_frag": {
-      "main": {
-        "0": [
-          {
-            "node": "create_tex_pipeline",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      }
-    },
-    "create_tex_pipeline": {
-      "main": {
-        "0": [
-          {
-            "node": "tex_walls",
+            "node": "compile_gta5_vert",
             "type": "main",
             "index": 0
           }
@@ -450,6 +427,39 @@
         "0": [
           {
             "node": "exit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "compile_gta5_vert": {
+      "main": {
+        "0": [
+          {
+            "node": "compile_gta5_frag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "create_gta5_pipeline": {
+      "main": {
+        "0": [
+          {
+            "node": "tex_walls",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "compile_gta5_frag": {
+      "main": {
+        "0": [
+          {
+            "node": "create_gta5_pipeline",
             "type": "main",
             "index": 0
           }

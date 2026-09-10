@@ -94,9 +94,13 @@ def write_gltf(path, positions, uvs, indices):
         json.dump(doc, fh)
 
 
+# Block pitch. The road slab is exactly this wide so neighbouring slabs
+# meet edge to edge: anything smaller leaves strips of missing floor.
+SPACING = 128.0
+
 # name -> (width, height, depth, lod band)
 ARCHETYPES = {
-    "test_road":     (64.0, 0.4, 64.0, "slod2"),
+    "test_road":     (SPACING, 0.4, SPACING, "slod2"),
     "test_block":    (28.0, 14.0, 28.0, "hd"),
     "test_tower_a":  (22.0, 55.0, 22.0, "lod"),
     "test_tower_b":  (18.0, 90.0, 18.0, "slod1"),
@@ -128,13 +132,12 @@ def main():
         models[name] = path
     print("wrote %d models -> %s" % (len(models), model_dir))
 
-    spacing = 128.0
     half = args.blocks // 2
     tiles = {}
     for bx in range(-half, half + 1):
         for bz in range(-half, half + 1):
-            x = SPAWN[0] + bx * spacing
-            z = SPAWN[2] + bz * spacing
+            x = SPAWN[0] + bx * SPACING
+            z = SPAWN[2] + bz * SPACING
             # A road slab under every block, then something on top of it.
             entries = [("test_road", x, SPAWN[1], z)]
             ring = max(abs(bx), abs(bz))

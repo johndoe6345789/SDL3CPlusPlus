@@ -790,6 +790,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_json_file.cpp
         src/services/impl/workflow/gta5/gta5_lod.cpp
         src/services/impl/workflow/gta5/gta5_lod_select_step.cpp
+        src/services/impl/workflow/gta5/gta5_mesh_extract.cpp
         src/services/impl/workflow/gta5/gta5_model_matrix.cpp
         src/services/impl/workflow/gta5/gta5_placement_parse.cpp
         src/services/impl/workflow/gta5/gta5_spawn_tile.cpp

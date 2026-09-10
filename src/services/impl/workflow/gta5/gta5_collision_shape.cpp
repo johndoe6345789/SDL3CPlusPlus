@@ -2,13 +2,13 @@
 
 namespace sdl3cpp::services::impl {
 
-bool BuildGta5CollisionShape(const AssimpMeshData& mesh,
+bool BuildGta5CollisionShape(const Gta5MeshData& mesh,
                              Gta5Geometry& geometry) {
     const std::size_t triangles = mesh.indices.size() / 3u;
     if (triangles == 0u || mesh.vertices.empty()) return false;
 
     geometry.collisionVertices.reserve(mesh.vertices.size() * 3u);
-    for (const PosUvVertex& vertex : mesh.vertices) {
+    for (const BspRenderVertex& vertex : mesh.vertices) {
         geometry.collisionVertices.push_back(vertex.x);
         geometry.collisionVertices.push_back(vertex.y);
         geometry.collisionVertices.push_back(vertex.z);

@@ -1,12 +1,11 @@
 #include "services/interfaces/workflow/gta5/gta5_geometry_upload.hpp"
 
-#include "services/interfaces/workflow/gta5/gta5_collision_shape.hpp"
 #include "services/interfaces/workflow/graphics/graphics_gpu_buffer_upload.hpp"
-#include "services/interfaces/workflow/rendering/model_load_helpers.hpp"
+#include "services/interfaces/workflow/gta5/gta5_collision_shape.hpp"
+#include "services/interfaces/workflow/gta5/gta5_mesh_extract.hpp"
 
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
-#include <assimp/scene.h>
 
 #include <cstring>
 #include <exception>
@@ -38,10 +37,9 @@ bool BuildGta5Geometry(const Gta5Placement& placement, SDL_GPUDevice* device,
         return false;
     }
 
-    const AssimpMeshData mesh = ExtractAssimpMeshData(*scene, 1.0f);
+    const Gta5MeshData mesh = ExtractGta5Mesh(*scene);
     if (mesh.vertices.empty()) {
-        Warn(logger, "'" + placement.modelPath + "' gave no vertices from " +
-                         std::to_string(scene->mNumMeshes) + " meshes");
+        Warn(logger, "'" + placement.modelPath + "' gave no vertices");
         return false;
     }
     if (mesh.vertices.size() >= kGta5MaxVerticesPerMesh) {
@@ -53,7 +51,8 @@ bool BuildGta5Geometry(const Gta5Placement& placement, SDL_GPUDevice* device,
         return false;
     }
 
-    std::vector<uint8_t> bytes(mesh.vertices.size() * sizeof(PosUvVertex));
+    std::vector<uint8_t> bytes(mesh.vertices.size() *
+                               sizeof(BspRenderVertex));
     std::memcpy(bytes.data(), mesh.vertices.data(), bytes.size());
     try {
         // CreateAndUploadGpuBuffers throws on GPU failure. One bad
