@@ -18,7 +18,10 @@ rem ===================================================================
 
 rem --- edit these four ------------------------------------------------
 set "GTAUTIL=D:\gtautil-2.2.13\GTAUtil.exe"
-set "YMAP_SRC=D:\gtautil-2.2.13\levels\gta5\_citye\downtown_01"
+rem Read the ymaps straight out of the Legacy install. Feeding it the
+rem Enhanced-extracted files instead risks a tool that predates that
+rem edition misreading them, so keep the whole chain on one edition.
+set "YMAP_SRC=D:\SteamLibrary\steamapps\common\Grand Theft Auto V"
 set "MODEL_SRC=D:\gta5_export\models"
 set "WORK=D:\gta5_export"
 rem Must be a LEGACY install: GTAUtil predates the Enhanced edition and
@@ -60,7 +63,23 @@ rem which is normal.
 rem
 rem The XML count check below stays regardless: it turns a run that
 rem produced nothing into a loud failure rather than an empty map.
-echo [1/2] Converting ymaps to XML...
+rem --- 1. build GTAUtil cache (once) ----------------------------------
+rem exportmeta reads through GTAUtil cache of the install, which does not
+rem exist until buildcache has run. It is slow, so a marker file keeps it
+rem to once; delete the marker to force a rebuild after patching GTA V.
+if not exist "%WORK%\.cache_built" (
+    echo [1/3] Building GTAUtil cache. This is slow and only happens once.
+    "%GTAUTIL%" buildcache
+    if errorlevel 1 (
+        echo ERROR: buildcache failed. Nothing downstream will work.
+        exit /b 1
+    )
+    echo built > "%WORK%\.cache_built"
+) else (
+    echo [1/3] GTAUtil cache already built, skipping.
+)
+
+echo [2/3] Converting ymaps to XML...
 echo.
 echo   If GTAUtil asks "GTAV folder :" it is waiting for input --
 echo   it has already been given -i and -o. Paste this and press enter:
@@ -97,7 +116,7 @@ if not exist "%MODEL_SRC%" (
     echo       named after their archetype, then re-run this script.
 )
 
-echo [2/2] Building tiles...
+echo [3/3] Building tiles...
 python "%REPO%\packages\gta5\tools\import_codewalker_export.py" ^
     --ymap-dir "%XML_OUT%" ^
     --model-dir "%MODEL_SRC%" ^

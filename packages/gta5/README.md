@@ -75,9 +75,19 @@ every rotated prop on the map comes out mirrored.
 ## Exporting, in one script
 
 `tools/export_map.bat` drives the placement half end to end: GTAUtil
-`exportmeta` turns ymaps into XML, then `import_codewalker_export.py`
-pairs them with meshes and writes tiles. Edit the four paths at the top
-and run it.
+builds its cache of the install, `exportmeta` turns ymaps into XML, then
+`import_codewalker_export.py` pairs them with meshes and writes tiles.
+Edit the paths at the top and run it.
+
+It reads the **Legacy** install directly rather than a pile of
+previously extracted files, so the whole chain stays on one edition.
+Feeding a tool that predates the Enhanced edition a set of
+Enhanced-extracted ymaps may parse cleanly or may quietly misread them,
+and a map that loads but is subtly wrong is the worst outcome to debug.
+
+The cache build is slow and happens once; the script drops a
+`.cache_built` marker in the work folder to skip it afterwards. Delete
+that marker to force a rebuild after patching the game.
 
 It cannot do the meshes. GTAUtil has no drawable export command, so
 `.ydr`/`.ydd` still have to come out of CodeWalker as glTF, OBJ, FBX,
