@@ -10,18 +10,22 @@
 namespace sdl3cpp::services::impl {
 
 /**
- * @brief Advances a chasing bot toward the player along its cached nav path.
+ * @brief Which way a chasing bot wants to go, as a unit world direction.
  *
  * Re-plans via A* when the path is empty or `replanFrames` have passed since
  * the last plan; steers toward the path's next waypoint (or straight at the
  * player with no nav graph) and pops the waypoint once close to it. Mutates
- * `bot["pos"]` and `bot["last_plan_frame"]`, and the bot's cached path in the
- * context under `q3.bot_path_{botIndex}`.
+ * `bot["last_plan_frame"]` and the bot's cached path in the context under
+ * `q3.bot_path_{botIndex}`.
+ *
+ * It deliberately does not move the bot. Wanting to be somewhere and
+ * getting there are separate in Quake: this is the goal half, and pmove
+ * decides what actually happens, so a bot cannot walk through a wall
+ * just because its path said to. Zero when it has nowhere to go.
  */
-void UpdateBotChaseMovement(const q3::NavGraph* navGraph,
+glm::vec3 BotChaseDirection(const q3::NavGraph* navGraph,
                             WorkflowContext& context, int botIndex,
                             nlohmann::json& bot, const glm::vec3& playerPos,
-                            const BotUpdateParams& params, double dt,
-                            int globalFrame);
+                            const BotUpdateParams& params, int globalFrame);
 
 }  // namespace sdl3cpp::services::impl

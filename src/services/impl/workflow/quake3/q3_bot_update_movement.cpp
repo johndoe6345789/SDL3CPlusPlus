@@ -1,6 +1,6 @@
 #include "services/interfaces/workflow/quake3/q3_bot_update_movement.hpp"
-#include "services/interfaces/workflow/quake3/q3_nav_pathfinding.hpp"
 #include "services/interfaces/workflow/quake3/q3_nav_nearest.hpp"
+#include "services/interfaces/workflow/quake3/q3_nav_pathfinding.hpp"
 
 #include <nlohmann/json.hpp>
 
@@ -10,16 +10,15 @@
 
 namespace sdl3cpp::services::impl {
 
-void UpdateBotChaseMovement(const q3::NavGraph* navGraph,
+glm::vec3 BotChaseDirection(const q3::NavGraph* navGraph,
                             WorkflowContext& context, int botIndex,
                             nlohmann::json& bot, const glm::vec3& playerPos,
-                            const BotUpdateParams& params, double dt,
-                            int globalFrame) {
+                            const BotUpdateParams& params, int globalFrame) {
     const auto& posJ = bot["pos"];
-    glm::vec3 bpos(posJ[0].get<float>(), posJ[1].get<float>(),
-                   posJ[2].get<float>());
+    const glm::vec3 bpos(posJ[0].get<float>(), posJ[1].get<float>(),
+                         posJ[2].get<float>());
     if (glm::distance(playerPos, bpos) <= 0.5f) {
-        return;
+        return glm::vec3(0.0f);
     }
 
     const std::string pathKey = "q3.bot_path_" + std::to_string(botIndex);
@@ -50,20 +49,16 @@ void UpdateBotChaseMovement(const q3::NavGraph* navGraph,
         }
     }
 
-    const glm::vec3 toTarget = moveTarget - bpos;
     const float toTargetDist = glm::distance(moveTarget, bpos);
-    if (toTargetDist > 0.1f) {
-        const glm::vec3 dir = toTarget / toTargetDist;
-        bpos.x += dir.x * params.moveSpeed * static_cast<float>(dt);
-        bpos.z += dir.z * params.moveSpeed * static_cast<float>(dt);
-
-        if (navGraph && path.size() >= 2 && toTargetDist < 0.8f) {
-            path.erase(path.begin());
-            context.Set(pathKey, std::make_shared<std::vector<int>>(path));
-        }
+    if (toTargetDist <= 0.1f) {
+        return glm::vec3(0.0f);
     }
 
-    bot["pos"] = nlohmann::json::array({bpos.x, bpos.y, bpos.z});
+    if (navGraph && path.size() >= 2 && toTargetDist < 0.8f) {
+        path.erase(path.begin());
+        context.Set(pathKey, std::make_shared<std::vector<int>>(path));
+    }
+    return (moveTarget - bpos) / toTargetDist;
 }
 
 }  // namespace sdl3cpp::services::impl
