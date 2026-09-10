@@ -51,6 +51,9 @@ int RegisterRenderingQ3CombatSteps(
     std::shared_ptr<IWorkflowStepRegistry> registry,
     std::shared_ptr<ILogger> logger);
 
+int RegisterGta5StreamingSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
+                               std::shared_ptr<ILogger> logger);
+
 int RegisterGraphicsMiscSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
                               std::shared_ptr<ILogger> logger);
 
