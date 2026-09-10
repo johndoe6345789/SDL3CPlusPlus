@@ -1,0 +1,116 @@
+name: Build
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-amd64
+            runner: ubuntu-24.04
+            platform: linux
+            arch: amd64
+          - name: linux-arm64
+            runner: ubuntu-24.04-arm
+            platform: linux
+            arch: arm64
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 180
+    env:
+      BUILD_DIR: build/${{ matrix.name }}
+      ZIP_NAME: sdl3_app-${{ matrix.name }}.zip
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Enforce macro policy
+        run: ./scripts/check_macros.sh
+
+      - name: Install system build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            cmake \
+            ninja-build \
+            pkg-config \
+            libegl-dev \
+            libegl1-mesa-dev \
+            libgl-dev \
+            libgl1-mesa-dev \
+            libudev-dev \
+            libwayland-dev \
+            libxcb-util-dev \
+            libxcb-util0-dev \
+            libxkbcommon-dev \
+            libxrandr-dev \
+            libx11-dev
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Conan
+        run: pip install --upgrade "conan>=2"
+
+      # Building this dependency tree from source takes over an hour, so the
+      # Conan home is cached and only rebuilt when conanfile.py changes.
+      - name: Restore Conan cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.conan2
+          key: conan-${{ matrix.name }}-${{ hashFiles('conanfile.py') }}
+          restore-keys: |
+            conan-${{ matrix.name }}-
+
+      - name: Detect Conan profile
+        run: conan profile detect --force
+
+      - name: Install Conan dependencies
+        run: |
+          conan install . \
+            --build=missing \
+            -s build_type=Release \
+            -c tools.system.package_manager:mode=install \
+            -c tools.system.package_manager:sudo=True \
+            -c 'tools.build:cxxflags=["-include","cstdint"]'
+
+      - name: Configure
+        run: |
+          set -euo pipefail
+          toolchain=$(find "${GITHUB_WORKSPACE}" -type f -name conan_toolchain.cmake -path '*/generators/*' | head -n 1)
+          if [ -z "$toolchain" ]; then
+            echo "conan_toolchain.cmake was not generated" >&2
+            exit 1
+          fi
+          echo "Using toolchain: $toolchain"
+          cmake -S . -B "$BUILD_DIR" \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_TOOLCHAIN_FILE="$toolchain" \
+            -DSDL_VERSION=SDL3 \
+            -DBUILD_SDL3_APP=ON
+
+      - name: Build
+        run: cmake --build "$BUILD_DIR" --config Release
+
+      - name: Test
+        run: ctest --test-dir "$BUILD_DIR" --output-on-failure --no-tests=error
+
+      - name: Package release ZIP
+        run: python scripts/package_release.py
+
+      - name: Upload release ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdl3_app-${{ matrix.name }}
+          path: release/${{ env.ZIP_NAME }}
+          if-no-files-found: error

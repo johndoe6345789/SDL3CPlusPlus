@@ -1,23 +1,61 @@
-name: Release Demo
+name: Release
 
 on:
   push:
+    branches:
+      - main
+  workflow_dispatch:
 
 permissions:
   contents: write
-  packages: write
+
+# Releases are cut in commit order, so never cancel one part way through.
+concurrency:
+  group: release-main
+  cancel-in-progress: false
 
 jobs:
-  upload-build-artifact:
-    uses: ./.github/workflows/upload-build-artifact.yml
-    secrets: inherit
+  build:
+    uses: ./.github/workflows/build.yml
 
-  package-release:
-    needs: upload-build-artifact
-    uses: ./.github/workflows/package-release.yml
-    secrets: inherit
+  release:
+    name: Publish release
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
 
-  publish-container:
-    needs: upload-build-artifact
-    uses: ./.github/workflows/publish-container.yml
-    secrets: inherit
+      - name: Download release ZIPs
+        uses: actions/download-artifact@v4
+        with:
+          pattern: sdl3_app-*
+          path: release
+          merge-multiple: true
+
+      - name: Describe the release
+        id: describe
+        run: |
+          set -euo pipefail
+          tag="v0.1.${GITHUB_RUN_NUMBER}"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          {
+            echo "subject<<EOF_SUBJECT"
+            git log -1 --pretty=%s
+            echo "EOF_SUBJECT"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.describe.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          name: ${{ steps.describe.outputs.tag }} — ${{ steps.describe.outputs.subject }}
+          body: |
+            Automated build of [`${{ github.sha }}`](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}).
+
+            > ${{ steps.describe.outputs.subject }}
+          files: release/*.zip
+          fail_on_unmatched_files: true
