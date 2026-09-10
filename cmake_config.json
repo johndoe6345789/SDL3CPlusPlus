@@ -141,6 +141,8 @@
         "src/services/impl/workflow/workflow_media_item_select_step.cpp",
         "src/services/impl/workflow/network_connect_helpers.cpp",
         "src/services/impl/workflow/network_receive_helpers.cpp",
+        "src/services/impl/workflow/network_receive_params.cpp",
+        "src/services/impl/workflow/network_receive_output_keys.cpp",
         "src/services/impl/workflow/network_send_simulation.cpp",
         "src/services/impl/workflow/workflow_network_connect_step.cpp",
         "src/services/impl/workflow/workflow_network_receive_step.cpp",
