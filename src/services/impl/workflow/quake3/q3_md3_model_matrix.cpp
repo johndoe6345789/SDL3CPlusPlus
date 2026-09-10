@@ -19,7 +19,7 @@ glm::mat4 BuildMd3ModelMatrix(const WorkflowContext& context,
 
         glm::mat4 orient(1.0f);
         orient[0] = glm::vec4(forward, 0.0f);
-        orient[1] = glm::vec4(-right, 0.0f);
+        orient[1] = glm::vec4(right, 0.0f);
         orient[2] = glm::vec4(up, 0.0f);
         return glm::translate(glm::mat4(1.0f), pos) * orient;
     }
@@ -37,13 +37,14 @@ glm::mat4 BuildMd3ModelMatrix(const WorkflowContext& context,
         yaw = context.Get<float>(params.yawKey, 0.0f);
     }
     // Same Z-up remap as the viewmodel: a bare yaw rotation about world Y
-    // leaves a Z-up model lying on its side.
+    // leaves a Z-up model lying on its side. u x f is world "right" for
+    // this f, matching the viewmodel's forward/right/up basis.
     const glm::vec3 f(-std::sin(yaw), 0.0f, -std::cos(yaw));
     const glm::vec3 u(0.0f, 1.0f, 0.0f);
-    const glm::vec3 l = glm::cross(u, f);
+    const glm::vec3 r = glm::cross(u, f);
     glm::mat4 orient(1.0f);
     orient[0] = glm::vec4(f, 0.0f);
-    orient[1] = glm::vec4(l, 0.0f);
+    orient[1] = glm::vec4(r, 0.0f);
     orient[2] = glm::vec4(u, 0.0f);
     return glm::translate(glm::mat4(1.0f), pos) * orient;
 }
