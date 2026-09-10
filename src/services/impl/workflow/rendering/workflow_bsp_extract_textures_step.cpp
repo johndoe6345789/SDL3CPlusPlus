@@ -9,12 +9,70 @@
 #include <algorithm>
 #include <cstring>
 #include <memory>
+#include <map>
 #include <set>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
 namespace sdl3cpp::services::impl {
+
+// A BSP names a shader, not an image. Most of id's shaders share a name
+// with a file on disk, but the ones defined only in scripts/*.shader do
+// not: on q3dm1 that is the tongue, the sky, the lava and six others,
+// every one of which fell back to white. Take the first image a shader's
+// stages actually reference. The extension is dropped because a script
+// says .tga where the pk3 ships .jpg.
+static void ParseShaderScript(const std::string& text,
+                              std::map<std::string, std::string>& out) {
+    std::string shader;
+    int depth = 0;
+    std::istringstream lines(text);
+    std::string line;
+    while (std::getline(lines, line)) {
+        const auto comment = line.find("//");
+        if (comment != std::string::npos) line.erase(comment);
+        std::istringstream words(line);
+        std::string word;
+        if (!(words >> word)) continue;
+        if (word == "{") { ++depth; continue; }
+        if (word == "}") { if (depth > 0) --depth; continue; }
+        if (depth == 0) { shader = word; continue; }
+        if (shader.empty() || out.count(shader)) continue;
+        std::string lowered = word;
+        std::transform(lowered.begin(), lowered.end(), lowered.begin(),
+                       [](unsigned char c) { return std::tolower(c); });
+        if (lowered != "map" && lowered != "clampmap") continue;
+        std::string image;
+        if (!(words >> image) || image.empty() || image[0] == '$') continue;
+        const auto dot = image.rfind('.');
+        if (dot != std::string::npos) image.erase(dot);
+        out[shader] = image;
+    }
+}
+
+static std::map<std::string, std::string> LoadShaderImages(zip_t* archive) {
+    std::map<std::string, std::string> out;
+    const zip_int64_t count = zip_get_num_entries(archive, 0);
+    for (zip_int64_t i = 0; i < count; ++i) {
+        const char* raw = zip_get_name(archive, i, 0);
+        if (!raw) continue;
+        const std::string entry(raw);
+        if (entry.rfind("scripts/", 0) != 0) continue;
+        if (entry.size() < 7 ||
+            entry.compare(entry.size() - 7, 7, ".shader") != 0) continue;
+        zip_stat_t st;
+        if (zip_stat_index(archive, i, 0, &st) != 0) continue;
+        zip_file_t* file = zip_fopen_index(archive, i, 0);
+        if (!file) continue;
+        std::string text(static_cast<size_t>(st.size), '\0');
+        zip_fread(file, text.data(), st.size);
+        zip_fclose(file);
+        ParseShaderScript(text, out);
+    }
+    return out;
+}
 
 // Helper: create a 1x1 white RGBA texture + sampler as fallback
 static void CreateWhiteTexture(SDL_GPUDevice* device, const std::string& texKey, const std::string& sampKey,
@@ -90,8 +148,10 @@ void WorkflowBspExtractTexturesStep::Execute(const WorkflowStepDefinition& step,
     zip_t* archive = zip_open(pk3_path.c_str(), ZIP_RDONLY, &zip_err);
     if (!archive) throw std::runtime_error("bsp.extract_textures: Failed to open pk3: " + pk3_path);
 
+    const auto shaderImages = LoadShaderImages(archive);
     int loadedTextures = 0;
     int missingTextures = 0;
+    int viaShader = 0;
 
     for (int texIdx : *usedTextures) {
         if (texIdx < 0 || texIdx >= numTextures) continue;
@@ -103,8 +163,14 @@ void WorkflowBspExtractTexturesStep::Execute(const WorkflowStepDefinition& step,
         static const char* extensions[] = { ".jpg", ".tga", ".png" };
         bool found = false;
 
+        std::vector<std::string> bases{texName};
+        const auto viaScript = shaderImages.find(texName);
+        if (viaScript != shaderImages.end() && viaScript->second != texName) {
+            bases.push_back(viaScript->second);
+        }
+        for (const std::string& base : bases) {
         for (const char* ext : extensions) {
-            std::string entryName = texName + ext;
+            std::string entryName = base + ext;
             zip_stat_t texStat;
             if (zip_stat(archive, entryName.c_str(), 0, &texStat) != 0) continue;
 
@@ -181,7 +247,10 @@ void WorkflowBspExtractTexturesStep::Execute(const WorkflowStepDefinition& step,
             context.Set<SDL_GPUSampler*>(sampKey, samp);
             found = true;
             ++loadedTextures;
+            if (base != texName) ++viaShader;
             break;
+        }
+        if (found) break;
         }
 
         if (!found) {
@@ -194,6 +263,7 @@ void WorkflowBspExtractTexturesStep::Execute(const WorkflowStepDefinition& step,
 
     if (logger_) {
         logger_->Info("bsp.extract_textures: Loaded " + std::to_string(loadedTextures) +
+                     " (" + std::to_string(viaShader) + " via shader script)" +
                      ", missing (white fallback): " + std::to_string(missingTextures));
     }
 }
