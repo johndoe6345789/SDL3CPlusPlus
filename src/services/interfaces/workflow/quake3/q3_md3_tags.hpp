@@ -1,5 +1,6 @@
 #pragma once
 
+#include <glm/glm.hpp>
 #include <nlohmann/json.hpp>
 
 #include <stdint.h>
@@ -18,5 +19,14 @@ namespace sdl3cpp::q3 {
  * @return Array indexed by frame, each an object of tag name -> {origin, axis}.
  */
 nlohmann::json BuildMd3TagsJson(const std::vector<uint8_t>& md3Bytes);
+
+/**
+ * @brief Builds a glm matrix from one engine-space tag (as produced by
+ * BuildMd3TagsJson): {"origin": [x,y,z], "axis": [[x,y,z] x 3]}.
+ *
+ * The tag's axis rows (already coord-converted to engine space) must be
+ * transposed to form the columns of a column-major glm matrix.
+ */
+glm::mat4 TagMatrix(const nlohmann::json& tag);
 
 }  // namespace sdl3cpp::q3
