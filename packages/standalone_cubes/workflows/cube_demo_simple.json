@@ -288,12 +288,14 @@
     "vertex_shader_path": {
       "name": "vertex_shader_path",
       "type": "string",
-      "description": "Path to vertex shader file"
+      "description": "Path to vertex shader file",
+      "defaultValue": "packages/standalone_cubes/shaders/msl/constant_color.vert.metal"
     },
     "fragment_shader_path": {
       "name": "fragment_shader_path",
       "type": "string",
-      "description": "Path to fragment shader file"
+      "description": "Path to fragment shader file",
+      "defaultValue": "packages/standalone_cubes/shaders/msl/constant_color.frag.metal"
     }
   }
 }
