@@ -695,7 +695,9 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/quake3/q3_skin_file.cpp
         src/services/impl/workflow/quake3/q3_sky_cloud_uv.cpp
         src/services/impl/workflow/quake3/q3_sky_dome.cpp
+        src/services/impl/workflow/quake3/q3_sky_dome_upload.cpp
         src/services/impl/workflow/quake3/q3_sky_resources.cpp
+        src/services/impl/workflow/quake3/q3_sky_scroll.cpp
         src/services/impl/workflow/quake3/q3_sky_texture_name.cpp
         src/services/impl/workflow/quake3/q3_sky_uniforms.cpp
         src/services/impl/workflow/quake3/q3_slide_move.cpp

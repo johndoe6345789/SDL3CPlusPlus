@@ -15,8 +15,7 @@ constexpr float kThetaMax = kPi * 0.58f;
 
 }  // namespace
 
-SkyDomeMesh BuildSkyDome(float radius, int segments, int rings,
-                         float uvScale) {
+SkyDomeMesh BuildSkyDome(float radius, int segments, int rings) {
     SkyDomeMesh mesh;
     if (segments < 3 || rings < 1) {
         return mesh;
@@ -36,8 +35,7 @@ SkyDomeMesh BuildSkyDome(float radius, int segments, int rings,
 
             const glm::vec3 dir(sinT * std::cos(phi), cosT,
                                 sinT * std::sin(phi));
-            const glm::vec2 uv =
-                CloudTexCoords(dir, kDefaultCloudHeight) * uvScale;
+            const glm::vec2 uv = CloudTexCoords(dir, kDefaultCloudHeight);
 
             BspRenderVertex vert{};
             vert.x    = radius * dir.x;

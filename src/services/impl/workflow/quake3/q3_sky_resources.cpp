@@ -1,7 +1,6 @@
 #include "services/interfaces/workflow/quake3/q3_sky_resources.hpp"
 
-#include "services/interfaces/workflow/graphics/graphics_gpu_buffer_upload.hpp"
-#include "services/interfaces/workflow/quake3/q3_sky_dome.hpp"
+#include "services/interfaces/workflow/quake3/q3_sky_dome_upload.hpp"
 #include "services/interfaces/workflow/quake3/q3_sky_texture_name.hpp"
 #include "services/interfaces/workflow/rendering/bsp_shader_script.hpp"
 #include "services/interfaces/workflow/rendering/bsp_texture_gpu_upload.hpp"
@@ -9,23 +8,11 @@
 #include <nlohmann/json.hpp>
 #include <zip.h>
 
-#include <cstring>
-#include <exception>
+#include <memory>
 #include <string>
 #include <vector>
 
 namespace sdl3cpp::services::impl {
-namespace {
-
-/// Comfortably outside any q3 map's extents but inside the camera's
-/// 100-unit far plane, so the dome is never clipped away.
-constexpr float kRadius   = 70.0f;
-constexpr int kSegments   = 32;
-constexpr int kRings      = 12;
-/// tim_hell applies `tcMod scale 2 2` to its cloud stages.
-constexpr float kUvScale = 2.0f;
-
-}  // namespace
 
 bool InitSkyResources(WorkflowContext& context, SkyResources& out) {
     out.attempted = true;
@@ -53,16 +40,7 @@ bool InitSkyResources(WorkflowContext& context, SkyResources& out) {
         return false;
     }
 
-    const SkyDomeMesh mesh =
-        BuildSkyDome(kRadius, kSegments, kRings, kUvScale);
-    std::vector<uint8_t> vertexBytes(mesh.vertices.size() *
-                                     sizeof(BspRenderVertex));
-    std::memcpy(vertexBytes.data(), mesh.vertices.data(), vertexBytes.size());
-
-    UploadedGpuBuffers buffers;
-    try {
-        buffers = CreateAndUploadGpuBuffers(device, vertexBytes, mesh.indices);
-    } catch (const std::exception&) {
+    if (!UploadSkyDome(device, out)) {
         return false;
     }
 
@@ -71,9 +49,6 @@ bool InitSkyResources(WorkflowContext& context, SkyResources& out) {
     out.cloudSampler             = cloud.sampler;
     out.whiteTex                 = white.texture;
     out.whiteSampler             = white.sampler;
-    out.vertexBuffer             = buffers.vertexBuffer;
-    out.indexBuffer              = buffers.indexBuffer;
-    out.indexCount               = static_cast<uint32_t>(mesh.indices.size());
     return true;
 }
 

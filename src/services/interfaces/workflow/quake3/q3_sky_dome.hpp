@@ -17,15 +17,16 @@ struct SkyDomeMesh {
 
 /**
  * @brief Builds a dome of `radius` spanning zenith to below the horizon,
- * with ioq3 cloud-layer texture coordinates scaled by `uvScale`.
+ * carrying ioq3's raw cloud-layer texture coordinates.
  *
  * Quake skies are a cloud layer projected onto a dome rather than a
  * six-sided box: q3dm1's textures/skies/tim_hell declares
  * `skyparms - 384 -`, so both box slots are empty and only the shader's
  * cloud stages exist. Triangles are wound to be visible from inside,
- * since the camera sits at the dome's centre.
+ * since the camera sits at the dome's centre. The shader's tcMod scroll
+ * and scale are applied per frame by UpdateSkyScroll(), so the uvs baked
+ * here are the unmodified projection.
  */
-SkyDomeMesh BuildSkyDome(float radius, int segments, int rings,
-                         float uvScale);
+SkyDomeMesh BuildSkyDome(float radius, int segments, int rings);
 
 }  // namespace sdl3cpp::services::impl

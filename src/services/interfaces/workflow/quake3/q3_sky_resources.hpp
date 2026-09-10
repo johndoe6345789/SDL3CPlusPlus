@@ -1,10 +1,12 @@
 #pragma once
 
+#include "services/interfaces/workflow/rendering/bsp_types.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
 #include <SDL3/SDL_gpu.h>
 
 #include <cstdint>
+#include <vector>
 
 namespace sdl3cpp::services::impl {
 
@@ -17,6 +19,14 @@ struct SkyResources {
     SDL_GPUBuffer* vertexBuffer  = nullptr;
     SDL_GPUBuffer* indexBuffer   = nullptr;
     uint32_t indexCount          = 0;
+
+    /// The dome's unscrolled cloud coordinates, kept so each frame's
+    /// scroll offset is applied to the original rather than accumulating
+    /// on the previous frame's result. `scratch` is the reused staging
+    /// copy, and `transfer` the reused upload buffer.
+    std::vector<BspRenderVertex> baseVertices;
+    std::vector<BspRenderVertex> scratch;
+    SDL_GPUTransferBuffer* transfer = nullptr;
     /// Set on the first attempt, successful or not, so a map without a
     /// sky is not re-probed every frame.
     bool attempted = false;
