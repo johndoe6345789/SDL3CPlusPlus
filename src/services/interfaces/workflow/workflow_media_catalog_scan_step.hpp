@@ -13,8 +13,8 @@ namespace sdl3cpp::services::impl {
 /**
  * Generic step: Scan and load a media catalog from JSON configuration
  *
- * Parametric, reusable step that loads ANY media catalog (audio, video, images, etc.)
- * from a JSON file with structure:
+ * Parametric, reusable step that loads ANY media catalog (audio, video,
+ * images, etc.) from a JSON file with structure:
  * {
  *   "categories": [
  *     {
@@ -26,19 +26,23 @@ namespace sdl3cpp::services::impl {
  * }
  *
  * Parameters:
- *   catalog_config_path: Path to JSON catalog file (relative to package root)
- *   package_root_key: Context key where package root is stored (default: "package.root")
+ *   catalog_config_path: Path to JSON catalog file (relative to package
+ *     root)
+ *   package_root_key: Context key where package root is stored (default:
+ *     "package.root")
  *
  * Output:
  *   output_key: Context key where MediaCatalog is stored
  */
 class WorkflowMediaCatalogScanStep final : public IWorkflowStep {
 public:
-    WorkflowMediaCatalogScanStep(std::shared_ptr<IConfigService> configService,
-                                 std::shared_ptr<ILogger> logger);
+    WorkflowMediaCatalogScanStep(
+        std::shared_ptr<IConfigService> configService,
+        std::shared_ptr<ILogger> logger);
 
     std::string GetPluginId() const override;
-    void Execute(const WorkflowStepDefinition& step, WorkflowContext& context) override;
+    void Execute(const WorkflowStepDefinition& step,
+                 WorkflowContext& context) override;
 
 private:
     MediaCatalog LoadCatalog(const std::filesystem::path& catalogPath,

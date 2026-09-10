@@ -101,6 +101,7 @@
         "src/services/impl/workflow/workflow_data_serialize_step.cpp",
         "src/services/impl/workflow/workflow_graphics_init_device_step.cpp",
         "src/services/impl/workflow/workflow_graphics_init_swapchain_step.cpp",
+        "src/services/impl/workflow/media_catalog_builder.cpp",
         "src/services/impl/workflow/workflow_media_catalog_scan_step.cpp",
         "src/services/impl/workflow/workflow_media_item_select_step.cpp",
         "src/services/impl/workflow/workflow_network_connect_step.cpp",

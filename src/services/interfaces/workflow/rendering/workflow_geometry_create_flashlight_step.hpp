@@ -7,11 +7,23 @@
 
 namespace sdl3cpp::services::impl {
 
-class WorkflowGeometryCreateFlashlightStep : public IWorkflowStep {
+/**
+ * Plugin ID: geometry.create_flashlight
+ *
+ * Builds a flashlight mesh (grip cylinder, head cylinder, lens cap) and
+ * uploads it to GPU vertex/index buffers under "plane_<name>_vb"/"_ib",
+ * with mesh metadata (including the lens Y for spotlight placement) under
+ * "plane_<name>".
+ */
+class WorkflowGeometryCreateFlashlightStep final : public IWorkflowStep {
 public:
-    explicit WorkflowGeometryCreateFlashlightStep(std::shared_ptr<ILogger> logger);
+    explicit WorkflowGeometryCreateFlashlightStep(
+        std::shared_ptr<ILogger> logger);
+
     std::string GetPluginId() const override;
-    void Execute(const WorkflowStepDefinition& step, WorkflowContext& context) override;
+    void Execute(const WorkflowStepDefinition& step,
+                 WorkflowContext& context) override;
+
 private:
     std::shared_ptr<ILogger> logger_;
 };

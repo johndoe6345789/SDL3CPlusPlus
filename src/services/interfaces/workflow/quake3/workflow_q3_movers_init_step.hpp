@@ -10,8 +10,9 @@ namespace sdl3cpp::services::impl {
 /**
  * Plugin ID: q3.movers.init
  *
- * One-shot step (guard on q3.movers_initialized).
- * Reads bsp.entities and creates Q3Mover objects for each func_door / func_plat entity.
+ * One-shot step (guard on q3.movers_initialized). Reads bsp.entities and
+ * creates a Q3Mover for each func_door/func_plat entity. See
+ * q3_mover_init.hpp for the entity-to-mover construction.
  *
  * Reads:  bsp.entities (nlohmann::json array)
  * Writes: q3.movers (MoverList), q3.movers_initialized (bool)
@@ -19,8 +20,11 @@ namespace sdl3cpp::services::impl {
 class WorkflowQ3MoversInitStep final : public IWorkflowStep {
 public:
     explicit WorkflowQ3MoversInitStep(std::shared_ptr<ILogger> logger);
+
     std::string GetPluginId() const override;
-    void Execute(const WorkflowStepDefinition& step, WorkflowContext& context) override;
+    void Execute(const WorkflowStepDefinition& step,
+                 WorkflowContext& context) override;
+
 private:
     std::shared_ptr<ILogger> logger_;
 };
