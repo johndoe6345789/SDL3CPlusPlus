@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/compute/workflow_compute_tessellate_step.hpp"
-#include "services/interfaces/workflow/compute/compute_shader_pipeline.hpp"
+#include "services/interfaces/workflow/compute/compute_pipeline_create.hpp"
+#include "services/interfaces/workflow/compute/compute_shader_binary.hpp"
 #include "services/interfaces/workflow/compute/compute_tessellate_grid.hpp"
 #include "services/interfaces/workflow/workflow_step_io_resolver.hpp"
 

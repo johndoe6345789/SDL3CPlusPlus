@@ -1,5 +1,7 @@
 #include "services/interfaces/workflow/compute/workflow_compute_pipeline_create_step.hpp"
-#include "services/interfaces/workflow/compute/compute_shader_pipeline.hpp"
+#include "services/interfaces/workflow/compute/compute_pipeline_create.hpp"
+#include "services/interfaces/workflow/compute/compute_pipeline_params.hpp"
+#include "services/interfaces/workflow/compute/compute_shader_binary.hpp"
 #include "services/interfaces/workflow/workflow_step_io_resolver.hpp"
 
 #include <SDL3/SDL_gpu.h>
