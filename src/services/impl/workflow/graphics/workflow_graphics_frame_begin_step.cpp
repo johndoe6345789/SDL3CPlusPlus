@@ -1,5 +1,9 @@
 #include "services/interfaces/workflow/graphics/workflow_graphics_frame_begin_step.hpp"
-#include "services/interfaces/workflow/graphics/frame_begin_render.hpp"
+#include "services/interfaces/workflow/graphics/frame_begin_describe.hpp"
+#include "services/interfaces/workflow/graphics/frame_clear_color.hpp"
+#include "services/interfaces/workflow/graphics/frame_depth_texture.hpp"
+#include "services/interfaces/workflow/graphics/frame_render_pass.hpp"
+#include "services/interfaces/workflow/graphics/frame_swapchain.hpp"
 #include "services/interfaces/workflow/workflow_step_io_resolver.hpp"
 
 #include <SDL3/SDL_gpu.h>
@@ -39,7 +43,6 @@ void WorkflowGraphicsFrameBeginStep::Execute(const WorkflowStepDefinition& step,
     SDL_GPUCommandBuffer* cmd = AcquireFrameCommandBufferOrThrow(device);
     const SwapchainAcquireResult swap =
         AcquireSwapchainTextureOrThrow(cmd, window);
-
     static uint32_t frame_counter = 0;
 
     if (!swap.texture) {
@@ -50,8 +53,7 @@ void WorkflowGraphicsFrameBeginStep::Execute(const WorkflowStepDefinition& step,
         return;
     }
 
-    // Store command buffer and swapchain texture for render pass and
-    // frame end
+    // Store command buffer and swapchain texture for render pass/frame end.
     context.Set<SDL_GPUCommandBuffer*>("gpu_cmd", cmd);
     context.Set<SDL_GPUTexture*>("gpu_swapchain_texture", swap.texture);
 

@@ -11,14 +11,16 @@
 
 namespace sdl3cpp::services::impl {
 
-WorkflowDefinitionParser::WorkflowDefinitionParser(std::shared_ptr<ILogger> logger)
+WorkflowDefinitionParser::WorkflowDefinitionParser(
+    std::shared_ptr<ILogger> logger)
     : logger_(std::move(logger)) {
     if (logger_) {
         logger_->Trace("WorkflowDefinitionParser", "Constructor", "Entry");
     }
 }
 
-WorkflowDefinition WorkflowDefinitionParser::ParseFile(const std::filesystem::path& path) const {
+WorkflowDefinition WorkflowDefinitionParser::ParseFile(
+    const std::filesystem::path& path) const {
     if (logger_) {
         logger_->Trace("WorkflowDefinitionParser", "ParseFile", "Entry");
     }
@@ -30,10 +32,12 @@ WorkflowDefinition WorkflowDefinitionParser::ParseFile(const std::filesystem::pa
     const bool hasSteps = document.HasMember("steps");
     const bool hasNodes = document.HasMember("nodes");
     if (hasSteps && hasNodes) {
-        throw std::runtime_error("Workflow cannot define both 'steps' and 'nodes'");
+        throw std::runtime_error(
+            "Workflow cannot define both 'steps' and 'nodes'");
     }
     if (!hasSteps && !hasNodes) {
-        throw std::runtime_error("Workflow must contain a 'steps' array or 'nodes' array");
+        throw std::runtime_error(
+            "Workflow must contain a 'steps' array or 'nodes' array");
     }
 
     WorkflowParameterReader paramReader;
@@ -41,7 +45,8 @@ WorkflowDefinition WorkflowDefinitionParser::ParseFile(const std::filesystem::pa
 
     // Read optional template name
     if (document.HasMember("template")) {
-        workflow.templateName = paramReader.ReadRequiredString(document, "template");
+        workflow.templateName =
+            paramReader.ReadRequiredString(document, "template");
     }
 
     // Read workflow variables (n8n-style)
@@ -56,34 +61,12 @@ WorkflowDefinition WorkflowDefinitionParser::ParseFile(const std::filesystem::pa
     }
     const std::filesystem::path baseDir = path.parent_path();
 
-    // Handle "steps" format (simple sequential)
-    if (hasSteps) {
-        if (!document["steps"].IsArray()) {
-            throw std::runtime_error("Workflow must contain a 'steps' array");
-        }
-        for (const auto& entry : document["steps"].GetArray()) {
-            if (!entry.IsObject()) {
-                throw std::runtime_error("Workflow steps must be objects");
-            }
-            WorkflowStepDefinition step;
-            step.id = paramReader.ReadRequiredString(entry, "id");
-            step.plugin = paramReader.ReadRequiredString(entry, "plugin");
-            step.inputs = paramReader.ReadStringMap(entry, "inputs");
-            step.outputs = paramReader.ReadStringMap(entry, "outputs");
-            step.parameters = paramReader.ReadParameterMap(entry, "parameters");
-            workflow.steps.push_back(std::move(step));
-        }
-        // Expand workflow.include nodes (parse-time composition, like React imports)
-        ResolveIncludes(workflow.steps, baseDir, visited);
-        return workflow;
-    }
-
-    // Handle "nodes" format (n8n with connections)
-    workflow.steps = ParseNodes(document);
-
-    // Expand workflow.include nodes (parse-time composition, like React imports)
+    // "steps" is the simple sequential format; "nodes" is n8n-style with
+    // connections. Either way, expand workflow.include nodes afterward
+    // (parse-time composition, like React imports).
+    workflow.steps = hasSteps ? ParseStepsFormat(document, paramReader)
+                              : ParseNodes(document);
     ResolveIncludes(workflow.steps, baseDir, visited);
-
     return workflow;
 }
 

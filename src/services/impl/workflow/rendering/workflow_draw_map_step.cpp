@@ -1,5 +1,8 @@
 #include "services/interfaces/workflow/rendering/workflow_draw_map_step.hpp"
-#include "services/interfaces/workflow/rendering/draw_map_helpers.hpp"
+#include "services/interfaces/workflow/rendering/draw_bsp_map_geometry.hpp"
+#include "services/interfaces/workflow/rendering/draw_legacy_map_geometry.hpp"
+#include "services/interfaces/workflow/rendering/draw_map_texture_config.hpp"
+#include "services/interfaces/workflow/rendering/draw_map_vertex_uniforms.hpp"
 #include "services/interfaces/workflow/rendering/rendering_types.hpp"
 
 #include <SDL3/SDL_gpu.h>
