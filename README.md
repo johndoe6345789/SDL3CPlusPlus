@@ -75,7 +75,7 @@ Game content and platform initialization are defined as JSON packages in `packag
 
 | Package | Type | Description |
 |---------|------|-------------|
-| `bootstrap_windows` | bootloader | Windows init, SDL3 GPU with D3D12 |
+| `bootstrap_windows` | bootloader | Windows init, SDL3 GPU with Vulkan |
 | `bootstrap_mac` | bootloader | macOS init, SDL3 GPU with Metal |
 | `bootstrap_linux` | bootloader | Linux init, SDL3 GPU with Vulkan |
 | `seed` | game | FPS demo: room with spinning cube, WASD movement, mouse look, jump. Bullet3 physics |
@@ -111,7 +111,7 @@ packages/                           # JSON-driven game content
   {package}/
     package.json                    # Package metadata, config, shader list
     workflows/*.json                # Workflow definitions (v2.2.0 format)
-    shaders/spirv/                  # SPIR-V shaders (Vulkan, D3D12)
+    shaders/spirv/                  # SPIR-V shaders (Vulkan)
     shaders/msl/                    # Metal shaders (macOS)
     scene/*.json                    # Scene definitions
     assets/                         # Package-specific assets

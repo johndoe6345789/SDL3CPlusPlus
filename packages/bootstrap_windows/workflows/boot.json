@@ -4,8 +4,8 @@
     "graphicsRenderer": {
       "name": "graphicsRenderer",
       "type": "string",
-      "description": "Graphics renderer to use (d3d12, vulkan, auto)",
-      "defaultValue": "d3d12",
+      "description": "Graphics renderer to use (vulkan, auto)",
+      "defaultValue": "vulkan",
       "required": true
     }
   },

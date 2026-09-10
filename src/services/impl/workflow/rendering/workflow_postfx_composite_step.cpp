@@ -54,7 +54,7 @@ void WorkflowPostfxCompositeStep::TryInitOverlay(SDL_GPUDevice* device,
         return;
     }
 
-    // Only SPIRV supported (D3D12/Metal paths would need DXIL/MSL variants)
+    // Only SPIRV supported (the Metal path would need MSL variants)
     SDL_GPUShaderFormat fmt = SDL_GPU_SHADERFORMAT_SPIRV;
     const char* drv = SDL_GetGPUDeviceDriver(device);
     if (drv && std::string(drv) != "vulkan") {

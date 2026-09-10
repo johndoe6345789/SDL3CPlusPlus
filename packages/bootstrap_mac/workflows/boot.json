@@ -4,7 +4,7 @@
     "graphicsRenderer": {
       "name": "graphicsRenderer",
       "type": "string",
-      "description": "Graphics renderer to use (metal, vulkan, d3d12, auto)",
+      "description": "Graphics renderer to use (metal, vulkan, auto)",
       "defaultValue": "metal",
       "required": true
     }

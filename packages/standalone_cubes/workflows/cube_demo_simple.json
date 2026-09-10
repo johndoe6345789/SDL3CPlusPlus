@@ -279,10 +279,10 @@
     "renderer_type": {
       "name": "renderer_type",
       "type": "string",
-      "description": "GPU renderer backend (auto, metal, vulkan, d3d12)",
+      "description": "GPU renderer backend (auto, metal, vulkan)",
       "defaultValue": "auto",
       "validation": {
-        "enum": ["auto", "metal", "vulkan", "d3d12"]
+        "enum": ["auto", "metal", "vulkan"]
       }
     },
     "vertex_shader_path": {

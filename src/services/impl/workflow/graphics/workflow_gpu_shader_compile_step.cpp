@@ -90,9 +90,6 @@ void WorkflowGpuShaderCompileStep::Execute(const WorkflowStepDefinition& step, W
     if (driver_name == "metal") {
         format = SDL_GPU_SHADERFORMAT_MSL;
         format_name = "msl";
-    } else if (driver_name == "direct3d12") {
-        format = SDL_GPU_SHADERFORMAT_DXIL;
-        format_name = "dxil";
     }
 
     // MSL uses "main0" entrypoint, SPIRV uses "main"

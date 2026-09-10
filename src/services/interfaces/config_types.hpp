@@ -83,7 +83,7 @@ struct AtmosphericsConfig {
 };
 
 struct GpuConfig {
-    std::string renderer = "auto";  // Auto-select: Metal on macOS, Vulkan on Linux, D3D on Windows
+    std::string renderer = "auto";  // Auto-select: Metal on macOS, Vulkan on Windows and Linux
 };
 
 struct MaterialXConfig {

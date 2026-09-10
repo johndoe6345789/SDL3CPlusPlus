@@ -24,11 +24,10 @@ void WorkflowGraphicsInitRendererStep::Execute(const WorkflowStepDefinition& ste
 
     std::string renderer = *renderer_str;
 
-    // Validate renderer type - SDL3 GPU supports metal, vulkan, d3d12 (no OpenGL)
-    if (renderer != "metal" && renderer != "vulkan" &&
-        renderer != "d3d12" && renderer != "auto") {
+    // Validate renderer type - this engine ships Vulkan and Metal only (no OpenGL, no D3D12)
+    if (renderer != "metal" && renderer != "vulkan" && renderer != "auto") {
         throw std::runtime_error("graphics.gpu.init_renderer: unsupported renderer type '" + renderer +
-                                 "' (valid: metal, vulkan, d3d12, auto)");
+                                 "' (valid: metal, vulkan, auto)");
     }
 
     if (logger_) {

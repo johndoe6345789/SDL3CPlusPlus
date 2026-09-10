@@ -46,13 +46,10 @@ void WorkflowGraphicsGpuInitStep::Execute(const WorkflowStepDefinition& step, Wo
     } else if (renderer == "vulkan") {
         shader_format = SDL_GPU_SHADERFORMAT_SPIRV;
         driver_name = "vulkan";
-    } else if (renderer == "d3d12") {
-        shader_format = SDL_GPU_SHADERFORMAT_DXIL;
-        driver_name = "direct3d12";
     } else {
-        // auto: accept all formats so SDL picks best available backend
+        // auto: accept every shipped format so SDL picks best available backend
         shader_format = static_cast<SDL_GPUShaderFormat>(
-            SDL_GPU_SHADERFORMAT_SPIRV | SDL_GPU_SHADERFORMAT_MSL | SDL_GPU_SHADERFORMAT_DXIL);
+            SDL_GPU_SHADERFORMAT_SPIRV | SDL_GPU_SHADERFORMAT_MSL);
     }
 
     // Debug mode: SDL sets MTL_DEBUG_LAYER=1 which triggers a macOS 26 Metal
@@ -70,7 +67,7 @@ void WorkflowGraphicsGpuInitStep::Execute(const WorkflowStepDefinition& step, Wo
 
         // Fallback: let SDL auto-select
         device = SDL_CreateGPUDevice(
-            SDL_GPU_SHADERFORMAT_SPIRV | SDL_GPU_SHADERFORMAT_MSL | SDL_GPU_SHADERFORMAT_DXIL,
+            SDL_GPU_SHADERFORMAT_SPIRV | SDL_GPU_SHADERFORMAT_MSL,
             debugMode, nullptr);
 
         if (!device) {
