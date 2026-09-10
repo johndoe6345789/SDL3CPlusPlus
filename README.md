@@ -30,7 +30,32 @@ python python/dev_commands.py all --run --bootstrap bootstrap_mac --game seed
 python python/dev_commands.py all --run --bootstrap bootstrap_linux --game seed
 ```
 
+### Running Demos
+
+```bash
+# What can I run? Lists packages by type, plus any ${env:...} they need
+python python/dev_commands.py demos
+
+# Run a demo (bootstrap auto-detected, build dir resolved from the Conan preset)
+python python/dev_commands.py run --game seed
+python python/dev_commands.py run --game quake3
+
+# Quake 3: list the maps inside pak0.pk3, then pick one
+python python/dev_commands.py maps
+python python/dev_commands.py run --game quake3 --map q3dm1
+
+# Any other environment variable a package reads (repeatable)
+python python/dev_commands.py run --game quake3 --env QUAKE3_PAK0=/path/to/pak0.pk3
+
+# Point-and-click launcher (PyQt6): pick bootloader, game, and map
+python python/dev_commands.py gui
+```
+
+`QUAKE3_PAK0` is auto-detected from a Steam install when present, so `--game quake3`
+usually needs no extra arguments; the map defaults to `q3dm7` if none is given.
+
 ### Build Steps (Manual)
+
 
 ```bash
 # 1. Install Conan dependencies
@@ -46,7 +71,7 @@ python python/dev_commands.py configure --preset conan-default
 python python/dev_commands.py build
 
 # 5. Run
-python python/dev_commands.py run -- --bootstrap bootstrap_windows --game seed
+python python/dev_commands.py run --bootstrap bootstrap_windows --game seed
 ```
 
 ### Makefile (Unix)
