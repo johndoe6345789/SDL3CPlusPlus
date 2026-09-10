@@ -29,20 +29,11 @@ public:
     explicit WorkflowDebugLogStep(std::shared_ptr<ILogger> logger);
 
     std::string GetPluginId() const override;
-    void Execute(const WorkflowStepDefinition& step, WorkflowContext& context) override;
+    void Execute(const WorkflowStepDefinition& step,
+                WorkflowContext& context) override;
 
 private:
     std::shared_ptr<ILogger> logger_;
-
-    enum class LogLevel {
-        TRACE,
-        DEBUG,
-        INFO,
-        WARN,
-        ERROR
-    };
-
-    LogLevel ParseLogLevel(const std::string& levelStr) const;
 };
 
 }  // namespace sdl3cpp::services::impl
