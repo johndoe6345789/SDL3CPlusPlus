@@ -395,11 +395,13 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/compute/workflow_compute_tessellate_dispatch_step.cpp
         src/services/impl/workflow/compute/workflow_compute_tessellate_step.cpp
         src/services/impl/workflow/quake3/q3_anim_cfg.cpp
+        src/services/impl/workflow/quake3/q3_bot_update_kinematics.cpp
         src/services/impl/workflow/quake3/q3_md3_gpu_upload.cpp
         src/services/impl/workflow/quake3/q3_md3_source.cpp
         src/services/impl/workflow/quake3/q3_md3_surface_uploader.cpp
         src/services/impl/workflow/quake3/q3_md3_tags.cpp
         src/services/impl/workflow/quake3/q3_md3_texture_candidates.cpp
+        src/services/impl/workflow/quake3/q3_nav_pathfinding.cpp
         src/services/impl/workflow/quake3/q3_overlay_scale.cpp
         src/services/impl/workflow/quake3/q3_pk3_reader.cpp
         src/services/impl/workflow/quake3/q3_skin_file.cpp
