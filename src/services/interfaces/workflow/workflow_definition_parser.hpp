@@ -32,6 +32,14 @@ private:
                          const std::filesystem::path& baseDir,
                          std::unordered_set<std::string>& visited) const;
 
+    // Expands one workflow.include step, appending the resulting steps
+    // (namespaced under `step.id`/) to `expanded`. A no-op if `step` isn't
+    // a workflow.include step or its "path" parameter is missing.
+    void ExpandInclude(WorkflowStepDefinition& step,
+                       const std::filesystem::path& baseDir,
+                       std::unordered_set<std::string>& visited,
+                       std::vector<WorkflowStepDefinition>& expanded) const;
+
     std::shared_ptr<ILogger> logger_;
 };
 
