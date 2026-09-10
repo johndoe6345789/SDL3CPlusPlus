@@ -316,6 +316,8 @@
 #include "services/interfaces/workflow/workflow_shader_builtin_constant_color_step.hpp"
 #include "services/interfaces/workflow/workflow_shader_compile_step.hpp"
 #include "services/interfaces/workflow/workflow_shader_system_initialize_step.hpp"
+#include "services/interfaces/workflow/workflow_shader_system_gltf_load_step.hpp"
+#include "services/interfaces/workflow/workflow_shader_system_compile_step.hpp"
 #include "services/interfaces/workflow/workflow_shader_system_set_step.hpp"
 
 #include <memory>
@@ -678,9 +680,12 @@ void WorkflowRegistrar::RegisterSteps(std::shared_ptr<IWorkflowStepRegistry> reg
     std::shared_ptr<IShaderSystemRegistry> shaderRegistry = nullptr;
     registry->RegisterStep(std::make_shared<WorkflowShaderBuiltinConstantColorStep>(logger_, graphicsSvc));
     registry->RegisterStep(std::make_shared<WorkflowShaderCompileStep>(logger_, shaderRegistry, graphicsSvc));
-    registry->RegisterStep(std::make_shared<WorkflowShaderSystemInitializeStep>(logger_, shaderRegistry, graphicsSvc));
+    // shader.system.initialize split into atomic steps; chain in order.
+    registry->RegisterStep(std::make_shared<WorkflowShaderSystemInitializeStep>(logger_));
+    registry->RegisterStep(std::make_shared<WorkflowShaderSystemGltfLoadStep>(logger_));
+    registry->RegisterStep(std::make_shared<WorkflowShaderSystemCompileStep>(logger_, shaderRegistry, graphicsSvc));
     registry->RegisterStep(std::make_shared<WorkflowShaderSystemSetStep>(logger_, shaderRegistry));
-    count += 4;
+    count += 6;
 
     // ── System ─────────────────────────────────────────────────
     registry->RegisterStep(std::make_shared<WorkflowExitStep>(logger_));

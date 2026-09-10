@@ -31,9 +31,6 @@ public:
                  WorkflowContext& context) override;
 
 private:
-    /// Streams are freed once drained; SDL does not reclaim them.
-    void ReapFinished();
-
     std::shared_ptr<ILogger> logger_;
     std::vector<SDL_AudioStream*> playing_;
 };

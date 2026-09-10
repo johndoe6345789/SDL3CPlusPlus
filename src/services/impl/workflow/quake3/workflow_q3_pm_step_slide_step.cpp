@@ -1,6 +1,5 @@
 #include "services/interfaces/workflow/quake3/workflow_q3_pm_step_slide_step.hpp"
-#include "services/interfaces/workflow/quake3/q3_slide_move.hpp"
-#include "services/interfaces/workflow/quake3/q3_slide_planes.hpp"
+#include "services/interfaces/workflow/quake3/q3_step_slide.hpp"
 #include "services/interfaces/workflow/quake3/q3_pm_types.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
@@ -35,110 +34,13 @@ void WorkflowQ3PmStepSlideStep::Execute(const WorkflowStepDefinition&,
     }
 
     const btCollisionObject* self = PlayerBody(context);
-    const glm::vec3 startOrigin = ps.origin;
-    const glm::vec3 startVelocity = ps.velocity;
+    const auto stepDelta = q3::ApplyQ3StepSlideMove(ps, world, dt, self);
 
-    // Stepping is for walking into something. Falling onto the floor
-    // also reports the move as obstructed, and attempting a step there
-    // lifted the player a little every frame until they floated away
-    // from the map entirely.
-    const glm::vec3 horizontal(startVelocity.x, 0.f, startVelocity.z);
-    const bool movingHorizontally =
-        glm::dot(horizontal, horizontal) > 0.01f;
-
-    // Deliberately stricter than ioq3, which will also step while
-    // airborne. Every airborne step attempt here has ended up letting
-    // the player ratchet up a flat wall, and stepping exists to get up
-    // stairs and ledges while walking, so it is gated on standing on
-    // something.
-    const bool canStep = ps.onGround && movingHorizontally;
-
-    const bool blocked = q3::SlideMove(ps, world, dt, self);
-    if (!blocked || !canStep) {
-        context.Set("q3.ps", ps);
-        context.Set("q3.player_pos", ps.origin);
-        context.Set<float>("q3.step_delta", 0.f);
-        return;  // reached the target first try, nothing to step over
+    // A rejected step attempt (nullopt) leaves q3.step_delta untouched,
+    // matching the original monolithic step's early returns.
+    if (stepDelta) {
+        context.Set<float>("q3.step_delta", *stepDelta);
     }
-
-    // Never step while still rising, unless there is ground below.
-    const auto downTrace = GroundProbe(world, startOrigin, q3::kStepSize,
-                                       ps.mins, ps.maxs, self);
-    if (startVelocity.y > 0.f &&
-        (downTrace.fraction == 1.f ||
-         downTrace.normal.y < q3::kMinWalkNormal)) {
-        context.Set("q3.ps", ps);
-        context.Set("q3.player_pos", ps.origin);
-        return;
-    }
-
-    const glm::vec3 up = startOrigin + glm::vec3(0.f, q3::kStepSize, 0.f);
-    const auto upTrace = TraceBox(world, startOrigin, up, ps.mins, ps.maxs,
-                                  self);
-    if (upTrace.startSolid) {
-        context.Set("q3.ps", ps);
-        context.Set("q3.player_pos", ps.origin);
-        return;  // no headroom to step into
-    }
-
-    const glm::vec3 slidResult = ps.origin;
-    const float stepSize = upTrace.endPos.y - startOrigin.y;
-
-    Q3PlayerState stepped = ps;
-    stepped.origin = upTrace.endPos;
-    stepped.velocity = startVelocity;
-    q3::SlideMove(stepped, world, dt, self);
-
-    // Settle back down onto whatever was stepped onto.
-    const glm::vec3 settle =
-        stepped.origin - glm::vec3(0.f, stepSize, 0.f);
-    const auto settleTrace =
-        TraceBox(world, stepped.origin, settle, stepped.mins,
-                 stepped.maxs, self);
-    // The step is only real if there is something to stand on within a
-    // step height. A settle trace that reaches the bottom found nothing,
-    // and a trace that cannot start found nothing knowable: in both
-    // cases keeping the raised origin lets the player ratchet up a flat
-    // wall a step per frame, which is exactly what happened.
-    // Only step onto something that could be stood on. Without this the
-    // step machinery climbs any slope at all, one step per frame, because
-    // the settle below zeroes the downward velocity that would otherwise
-    // carry the player back off it.
-    //
-    // The settle trace positions the player; ask what is underfoot to
-    // decide whether the step was legitimate.
-    const auto footing = GroundProbe(world, settleTrace.endPos,
-                                     q3::kStepSize, stepped.mins,
-                                     stepped.maxs, self);
-    const bool settledOnWalkable =
-        settleTrace.fraction < 1.f && footing.hit &&
-        footing.normal.y >= q3::kMinWalkNormal;
-    if (settleTrace.startSolid || !settledOnWalkable) {
-        // Could not settle back down, so we have no idea what is under
-        // the player. Keeping the raised origin here is what let the
-        // player ratchet up a flat wall a step per frame; discard the
-        // attempt and use the plain slide instead.
-        context.Set("q3.ps", ps);
-        context.Set("q3.player_pos", ps.origin);
-        return;
-    }
-    stepped.origin = settleTrace.endPos;
-    if (settleTrace.fraction < 1.f) {
-        // The settle is a straight-down probe onto whatever was stepped
-        // onto, so the only thing to take out of the velocity is its
-        // downward part. Clipping against the reported normal here is
-        // what launched the player: the box overhangs the step's edge,
-        // Bullet reports the edge's diagonal, and horizontal speed came
-        // back as vertical.
-        if (stepped.velocity.y < 0.f) stepped.velocity.y = 0.f;
-    }
-
-    // ioq3 takes the stepped move; the guard above is what keeps it
-    // honest. Record the rise so a step sound can be chosen later.
-    (void)slidResult;
-    ps = stepped;
-    context.Set<float>("q3.step_delta", ps.origin.y - startOrigin.y);
-
     context.Set("q3.ps", ps);
     context.Set("q3.player_pos", ps.origin);
 }

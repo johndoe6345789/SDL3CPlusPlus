@@ -6,39 +6,32 @@
 #include <memory>
 #include <string>
 
-namespace sdl3cpp::services {
-class IShaderSystemRegistry;
-class IGraphicsService;
-class IWorkflowExecutor;
-}
-
 namespace sdl3cpp::services::impl {
 
+/**
+ * @brief Phase 1 of shader system initialization: selects the active
+ * shader system.
+ *
+ * `shader.system.initialize` was split into three atomic, chained steps
+ * (`shader.system.initialize`, `shader.system.gltf_load`,
+ * `shader.system.compile`) so each phase is independently retryable and
+ * the flat workflow executor can run them in sequence.
+ *
+ * Context Output:
+ *   - shader.system.selected_id (std::string)
+ *   - shader.system.selection_status (std::string) = "set"
+ */
 class WorkflowShaderSystemInitializeStep : public IWorkflowStep {
 public:
     explicit WorkflowShaderSystemInitializeStep(
-        std::shared_ptr<ILogger> logger,
-        std::shared_ptr<IShaderSystemRegistry> shaderRegistry,
-        std::shared_ptr<IGraphicsService> graphicsService,
-        std::shared_ptr<IWorkflowExecutor> workflowExecutor = nullptr);
+        std::shared_ptr<ILogger> logger);
 
     std::string GetPluginId() const override;
-    void Execute(const WorkflowStepDefinition& step, WorkflowContext& context) override;
+    void Execute(const WorkflowStepDefinition& step,
+                WorkflowContext& context) override;
 
 private:
-    // Phase 1: Set active shader system
-    void ExecuteSystemSet(const WorkflowStepDefinition& step, WorkflowContext& context);
-
-    // Phase 2: Load glTF models
-    void ExecuteGltfLoad(const WorkflowStepDefinition& step, WorkflowContext& context);
-
-    // Phase 3: Compile shaders
-    void ExecuteCompile(const WorkflowStepDefinition& step, WorkflowContext& context);
-
     std::shared_ptr<ILogger> logger_;
-    std::shared_ptr<IShaderSystemRegistry> shaderRegistry_;
-    std::shared_ptr<IGraphicsService> graphicsService_;
-    std::shared_ptr<IWorkflowExecutor> workflowExecutor_;
 };
 
 }  // namespace sdl3cpp::services::impl
