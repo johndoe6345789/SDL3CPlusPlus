@@ -1,190 +1,58 @@
 #include <cstdlib>
 #include <exception>
-#include <iostream>
-#include <memory>
-#include <vector>
 #include <filesystem>
-#include <fstream>
+#include <iostream>
+#include <string>
 
-#include <nlohmann/json.hpp>
 #include <SDL3/SDL_main.h>
 
-#include "services/interfaces/diagnostics/logger_service.hpp"
-#include "services/interfaces/i_logger.hpp"
-#include "services/interfaces/workflow/workflow_executor.hpp"
-#include "services/interfaces/workflow/workflow_step_registry.hpp"
-#include "services/interfaces/workflow_registrar.hpp"
+#include "services/interfaces/app/app_bootstrap.hpp"
 #include "services/interfaces/workflow/workflow_definition_parser.hpp"
-#include "services/interfaces/workflow/workflow_app_init_step.hpp"
-#include "services/interfaces/workflow/workflow_load_workflow_step.hpp"
-#include "services/interfaces/app/cli_env_override.hpp"
+
+using sdl3cpp::services::WorkflowContext;
+namespace app = sdl3cpp::services::app;
 
 int main(int argc, char** argv) {
     SDL_SetMainReady();
 
     try {
-        // Parse command line (inline)
-        std::string gamePackage = "standalone_cubes";
-        std::string bootstrapPackage = "bootstrap_mac";
-        std::filesystem::path projectRoot = std::filesystem::current_path();
-        bool traceEnabled = false;
-
-        for (int i = 1; i < argc; ++i) {
-            std::string arg = argv[i];
-            if (arg == "--game" && i + 1 < argc) {
-                gamePackage = argv[++i];
-            } else if (arg == "--bootstrap" && i + 1 < argc) {
-                bootstrapPackage = argv[++i];
-            } else if (arg == "--project-root" && i + 1 < argc) {
-                projectRoot = argv[++i];
-            } else if (arg == "--env" && i + 1 < argc) {
-                // Workflow JSON reads paths such as the Quake 3 pk3 through
-                // ${env:NAME}; this supplies one for the run without editing
-                // the workflow or exporting anything in the shell.
-                const std::string assignment = argv[++i];
-                if (!sdl3cpp::services::app::ApplyEnvOverride(assignment)) {
-                    std::cerr << "Invalid --env argument (expected NAME=VALUE): "
-                              << assignment << std::endl;
-                    return 1;
-                }
-            } else if (arg == "--trace") {
-                traceEnabled = true;
-            } else {
-                std::cerr << "Unknown argument: " << arg << std::endl
-                          << "Usage: sdl3_app [--bootstrap NAME] [--game NAME] "
-                             "[--project-root PATH] [--env NAME=VALUE] [--trace]"
-                          << std::endl;
-                return 1;
-            }
-        }
-
-        // A mistyped package name used to fall through silently: the shader
-        // backend stayed on the macOS default and the run died later with an
-        // opaque vkCreateShaderModule error. Fail here instead, and list only
-        // the packages that are actually valid for the flag that was wrong.
-        const auto requirePackage = [&](const std::string& kind,
-                                        const std::string& expectedType,
-                                        const std::string& name) -> bool {
-            const std::filesystem::path manifest =
-                projectRoot / "packages" / name / "package.json";
-            if (std::filesystem::exists(manifest)) {
-                return true;
-            }
-            std::cerr << "Unknown " << kind << " package: " << name << std::endl;
-            std::cerr << "Looked for: " << manifest.string() << std::endl;
-
-            const std::filesystem::path packagesDir = projectRoot / "packages";
-            if (!std::filesystem::is_directory(packagesDir)) {
-                return false;
-            }
-            std::vector<std::string> candidates;
-            for (const auto& entry : std::filesystem::directory_iterator(packagesDir)) {
-                const std::filesystem::path candidateManifest = entry.path() / "package.json";
-                if (!std::filesystem::exists(candidateManifest)) {
-                    continue;
-                }
-                std::string type;
-                std::ifstream candidateFile(candidateManifest);
-                if (candidateFile.is_open()) {
-                    try {
-                        nlohmann::json candidateJson;
-                        candidateFile >> candidateJson;
-                        if (candidateJson.contains("type")) {
-                            type = candidateJson["type"].get<std::string>();
-                        }
-                    } catch (const std::exception&) {
-                        // Unreadable manifest: fall through and skip it.
-                    }
-                }
-                if (type == expectedType) {
-                    candidates.push_back(entry.path().filename().string());
-                }
-            }
-            if (candidates.empty()) {
-                return false;
-            }
-            std::cerr << "Available " << kind << " packages:" << std::endl;
-            for (const auto& candidate : candidates) {
-                std::cerr << "  " << candidate << std::endl;
-            }
-            return false;
-        };
-        if (!requirePackage("bootstrap", "bootloader", bootstrapPackage)) {
-            return 1;
-        }
-        if (!requirePackage("game", "game", gamePackage)) {
+        app::CliOptions options;
+        if (!app::ParseCliArgs(argc, argv, options)) {
             return 1;
         }
 
-        // Create logger
-        auto logger = std::make_shared<sdl3cpp::services::impl::LoggerService>();
-        logger->EnableConsoleOutput(false);
-        std::filesystem::path logPath = projectRoot / "sdl3_app.log";
-        logger->SetOutputFile(logPath.string());
-        if (traceEnabled) {
-            logger->SetLevel(sdl3cpp::services::LogLevel::TRACE);
+        if (!app::RequirePackage(options.projectRoot, "bootstrap",
+                                  "bootloader", options.bootstrapPackage)) {
+            return 1;
+        }
+        if (!app::RequirePackage(options.projectRoot, "game", "game",
+                                  options.gamePackage)) {
+            return 1;
         }
 
-        // Create workflow infrastructure
-        auto registry = std::make_shared<sdl3cpp::services::impl::WorkflowStepRegistry>();
-        auto registrar = std::make_unique<sdl3cpp::services::impl::WorkflowRegistrar>(logger);
-        registrar->RegisterSteps(registry);
+        auto logger =
+            app::CreateAppLogger(options.projectRoot, options.traceEnabled);
+        app::WorkflowRuntime runtime = app::BuildWorkflowRuntime(logger);
 
-        // Register application lifecycle steps
-        registry->RegisterStep(std::make_shared<sdl3cpp::services::impl::WorkflowAppInitStep>(logger));
-        registry->RegisterStep(std::make_shared<sdl3cpp::services::impl::WorkflowLoadWorkflowStep>(logger));
-
-        auto executor = std::make_shared<sdl3cpp::services::impl::WorkflowExecutor>(registry, logger);
-
-        // Register executor-dependent steps (control.loop.while, workflow.execute)
-        registrar->RegisterExecutorSteps(registry, executor);
-
-        // Create context with CLI arguments
-        sdl3cpp::services::WorkflowContext appContext;
-        appContext.Set("game_package", gamePackage);
-        appContext.Set("bootstrap_package", bootstrapPackage);
-        appContext.Set("project_root", projectRoot.string());
+        // Create context with CLI arguments.
+        WorkflowContext appContext;
+        appContext.Set("game_package", options.gamePackage);
+        appContext.Set("bootstrap_package", options.bootstrapPackage);
+        appContext.Set("project_root", options.projectRoot.string());
         appContext.Set("max_frames", 600.0);
 
-        // Load package.json to get defaultWorkflow
-        std::filesystem::path packageJsonPath = projectRoot / "packages" / gamePackage / "package.json";
-        std::string defaultWorkflow = "workflows/main.json";  // fallback
-
-        if (std::filesystem::exists(packageJsonPath)) {
-            std::ifstream packageFile(packageJsonPath);
-            if (packageFile.is_open()) {
-                try {
-                    nlohmann::json packageJson;
-                    packageFile >> packageJson;
-                    if (packageJson.contains("defaultWorkflow")) {
-                        defaultWorkflow = packageJson["defaultWorkflow"].get<std::string>();
-                        logger->Info("Loaded package.json, defaultWorkflow: " + defaultWorkflow);
-                    }
-                } catch (const std::exception& e) {
-                    logger->Warn("Failed to parse package.json: " + std::string(e.what()));
-                }
-            }
-        }
-
-        // Determine shader backend from bootstrap package
-        std::string shaderDir = "msl";  // default (Mac)
-        {
-            std::filesystem::path bootPkgPath = projectRoot / "packages" / bootstrapPackage / "package.json";
-            if (std::filesystem::exists(bootPkgPath)) {
-                std::ifstream bootFile(bootPkgPath);
-                nlohmann::json bootJson;
-                bootFile >> bootJson;
-                if (bootJson.contains("config") && bootJson["config"].contains("renderer")) {
-                    std::string renderer = bootJson["config"]["renderer"].get<std::string>();
-                    if (renderer != "metal") shaderDir = "spirv";
-                }
-            }
-        }
+        std::string defaultWorkflow = app::LoadDefaultWorkflowPath(
+            options.projectRoot, options.gamePackage, logger);
+        std::string shaderDir = app::DetermineShaderBackend(
+            options.projectRoot, options.bootstrapPackage);
         appContext.Set<std::string>("shader_backend", shaderDir);
-        logger->Info("Shader backend: " + shaderDir + " (bootstrap: " + bootstrapPackage + ")");
+        logger->Info("Shader backend: " + shaderDir + " (bootstrap: " +
+                     options.bootstrapPackage + ")");
 
-        // Load and execute the default workflow
-        std::filesystem::path mainWorkflowPath = projectRoot / "packages" / gamePackage / defaultWorkflow;
+        // Load and execute the default workflow.
+        std::filesystem::path mainWorkflowPath =
+            options.projectRoot / "packages" / options.gamePackage /
+            defaultWorkflow;
         if (!std::filesystem::exists(mainWorkflowPath)) {
             logger->Error("Workflow not found: " + mainWorkflowPath.string());
             return EXIT_FAILURE;
@@ -193,39 +61,13 @@ int main(int argc, char** argv) {
         logger->Info("Loading workflow: " + mainWorkflowPath.string());
         sdl3cpp::services::impl::WorkflowDefinitionParser parser(logger);
         auto mainWorkflow = parser.ParseFile(mainWorkflowPath);
-
-        // Load workflow variables into context, rewriting shader paths for platform
-        // Shader paths in workflows default to msl/ (Mac). Bootstrap determines the
-        // actual backend — if not Metal, rewrite msl/ → spirv/ and .metal → .spv
         const bool rewriteShaders = (shaderDir != "msl");
+        app::PopulateContextFromWorkflowVariables(
+            mainWorkflow, rewriteShaders, logger, appContext);
 
-        for (const auto& [name, var] : mainWorkflow.variables) {
-            if (var.defaultValue.empty()) continue;
-            if (var.type == "number") {
-                try {
-                    appContext.Set(name, std::stod(var.defaultValue));
-                } catch (...) {}
-            } else if (var.type == "string") {
-                std::string val = var.defaultValue;
-                if (rewriteShaders && val.find("/shaders/msl/") != std::string::npos) {
-                    // Rewrite msl path to spirv: shaders/msl/foo.metal → shaders/spirv/foo.spv
-                    auto pos = val.find("/shaders/msl/");
-                    val.replace(pos, 13, "/shaders/spirv/");
-                    // .vert.metal → .vert.spv, .frag.metal → .frag.spv, .comp.metal → .comp.spv
-                    auto ext = val.rfind(".metal");
-                    if (ext != std::string::npos) val.replace(ext, 6, ".spv");
-                    logger->Info("Shader rewrite: " + name + " → " + val);
-                }
-                appContext.Set(name, val);
-            } else if (var.type == "bool") {
-                appContext.Set(name, var.defaultValue == "true");
-            } else {
-                appContext.Set(name, var.defaultValue);
-            }
-        }
-
-        logger->Info("Executing main workflow (" + std::to_string(mainWorkflow.steps.size()) + " steps)");
-        executor->Execute(mainWorkflow, appContext);
+        logger->Info("Executing main workflow (" +
+                     std::to_string(mainWorkflow.steps.size()) + " steps)");
+        runtime.executor->Execute(mainWorkflow, appContext);
 
         logger->Info("===== APPLICATION COMPLETE =====");
 
