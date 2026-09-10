@@ -1,5 +1,7 @@
 #include "services/interfaces/workflow/quake3/workflow_q3_bots_update_step.hpp"
 #include "services/interfaces/workflow/quake3/q3_bot_update_kinematics.hpp"
+#include "services/interfaces/workflow/quake3/q3_bot_update_params.hpp"
+#include "services/interfaces/workflow/quake3/q3_bot_update_sensing.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
 #include <btBulletDynamicsCommon.h>

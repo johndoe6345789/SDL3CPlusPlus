@@ -1,6 +1,7 @@
 #pragma once
 
 #include "services/interfaces/i_logger.hpp"
+#include "services/interfaces/workflow/package_root_resolver.hpp"
 
 #include <filesystem>
 #include <memory>
@@ -17,15 +18,6 @@ struct ShaderPackageLoadResult {
     std::string packageJsonPath;
     std::string errorMessage;
 };
-
-/**
- * @brief Finds the packages directory nearest to `projectRoot`, trying
- * `<root>/gameengine/packages`, `<root>/packages`, then the same two
- * under the current working directory. Falls back to
- * `<root>/packages` (even if it doesn't exist) if none are found.
- */
-std::filesystem::path ResolvePackageRoot(
-    const std::filesystem::path& projectRoot);
 
 /**
  * @brief Reads `projectRoot/gamePackage/package.json` and pairs it with

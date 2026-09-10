@@ -1,42 +1,6 @@
 #include "services/interfaces/workflow/rendering/frame_begin_shared_helpers.hpp"
-#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
 
 namespace sdl3cpp::services::impl {
-
-ClearColorParams ReadClearColorParams(const WorkflowStepDefinition& step) {
-    WorkflowStepParameterResolver paramResolver;
-    ClearColorParams out;
-    auto readParam = [&](const char* name, float& value) {
-        if (const auto* p = paramResolver.FindParameter(step, name)) {
-            if (p->type == WorkflowParameterValue::Type::Number) {
-                value = static_cast<float>(p->numberValue);
-            }
-        }
-    };
-    readParam("clear_r", out.r);
-    readParam("clear_g", out.g);
-    readParam("clear_b", out.b);
-    return out;
-}
-
-AcquiredSwapchain AcquireSwapchainForFrame(SDL_GPUDevice* device,
-                                           SDL_Window* window) {
-    SDL_GPUCommandBuffer* cmd = SDL_AcquireGPUCommandBuffer(device);
-    if (!cmd) {
-        return {};
-    }
-
-    SDL_GPUTexture* swapchainTex = nullptr;
-    Uint32 sw = 0, sh = 0;
-    if (!SDL_WaitAndAcquireGPUSwapchainTexture(cmd, window, &swapchainTex, &sw,
-                                               &sh) ||
-        !swapchainTex) {
-        SDL_SubmitGPUCommandBuffer(cmd);
-        return {};
-    }
-
-    return AcquiredSwapchain{cmd, swapchainTex, sw, sh, true};
-}
 
 SDL_GPUTexture* GetOrResizeTexture(
     SDL_GPUDevice* device, WorkflowContext& context,

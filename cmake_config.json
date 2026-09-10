@@ -152,6 +152,7 @@
         "src/services/impl/workflow/workflow_network_connect_step.cpp",
         "src/services/impl/workflow/workflow_network_receive_step.cpp",
         "src/services/impl/workflow/workflow_network_send_step.cpp",
+        "src/services/impl/workflow/package_root_resolver.cpp",
         "src/services/impl/workflow/package_shader_load.cpp",
         "src/services/impl/workflow/workflow_package_shader_loader_step.cpp",
         "src/services/impl/workflow/workflow_shader_builtin_constant_color_step.cpp",
@@ -343,6 +344,9 @@
         "src/services/impl/workflow/input/input_axis_source_value.cpp",
         "src/services/impl/workflow/input/workflow_input_button_combine_step.cpp",
         "src/services/impl/workflow/input/input_button_combine_helpers.cpp",
+        "src/services/impl/workflow/input/input_button_combine_config.cpp",
+        "src/services/impl/workflow/input/input_button_gamepad_source.cpp",
+        "src/services/impl/workflow/input/input_button_combine_sources.cpp",
         "src/services/impl/workflow/workflow_step_parameter_resolver.cpp"
       ],
       "include_directories": [
@@ -377,6 +381,8 @@
         "src/services/impl/workflow/rendering/bsp_collision_body.cpp",
         "src/services/impl/workflow/rendering/workflow_bsp_parse_spawn_step.cpp",
         "src/services/impl/workflow/rendering/bsp_entity_lump_parser.cpp",
+        "src/services/impl/workflow/rendering/bsp_entity_lexer.cpp",
+        "src/services/impl/workflow/rendering/bsp_model_lump.cpp",
         "src/services/impl/workflow/rendering/bsp_entity_json_builder.cpp",
         "src/services/impl/workflow/rendering/bsp_entity_enrich.cpp",
         "src/services/impl/workflow/rendering/bsp_entity_origin.cpp",

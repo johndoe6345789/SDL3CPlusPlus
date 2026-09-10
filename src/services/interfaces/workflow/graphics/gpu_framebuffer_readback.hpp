@@ -1,51 +1,14 @@
 #pragma once
 
-#include "services/interfaces/workflow_step_definition.hpp"
+#include "services/interfaces/workflow/graphics/gpu_readback_blit.hpp"
+#include "services/interfaces/workflow/graphics/gpu_readback_keys.hpp"
 
 #include <SDL3/SDL_gpu.h>
-#include <SDL3/SDL_video.h>
 
 #include <cstdint>
-#include <string>
 #include <vector>
 
 namespace sdl3cpp::services::impl {
-
-class WorkflowStepIoResolver;
-
-/// False for a minimized/zero-size window, which can't be blitted from.
-bool HasValidWindowSize(SDL_Window* window);
-
-/// graphics.framebuffer.readback's input/output context key names.
-struct FramebufferReadbackKeys {
-    std::string sourceTextureKeyKey;
-    std::string outputDataKey;
-    std::string outputWidthKey;
-    std::string outputHeightKey;
-    std::string outputSuccessKey;
-};
-
-FramebufferReadbackKeys ResolveFramebufferReadbackKeys(
-    WorkflowStepIoResolver& resolver, const WorkflowStepDefinition& step);
-
-/// A staging texture holding a blitted copy of the swapchain, sized to
-/// match the swapchain's actual (not the window's requested) dimensions.
-struct BlittedSwapchainStaging {
-    SDL_GPUTexture* texture = nullptr;
-    uint32_t width          = 0;
-    uint32_t height         = 0;
-};
-
-/**
- * @brief Acquires the swapchain and blits it into a new staging texture.
- *
- * Submits its own command buffer. Returns a null-textured result (with
- * width/height left at 0) if the swapchain texture could not be acquired
- * or the staging texture could not be created — the caller then has
- * nothing further to release.
- */
-BlittedSwapchainStaging BlitSwapchainToStaging(SDL_GPUDevice* device,
-                                               SDL_Window* window);
 
 /**
  * @brief Downloads `staging` to a CPU buffer and releases it.
