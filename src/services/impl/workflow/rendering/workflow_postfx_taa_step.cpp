@@ -1,5 +1,8 @@
 #include "services/interfaces/workflow/rendering/workflow_postfx_taa_step.hpp"
-#include "services/interfaces/workflow/rendering/postfx_taa_helpers.hpp"
+#include "services/interfaces/workflow/rendering/postfx_taa_history.hpp"
+#include "services/interfaces/workflow/rendering/postfx_taa_jitter.hpp"
+#include "services/interfaces/workflow/rendering/postfx_taa_pipeline.hpp"
+#include "services/interfaces/workflow/rendering/postfx_taa_resolve.hpp"
 #include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
 
 #include <SDL3/SDL_gpu.h>

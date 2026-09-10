@@ -14,7 +14,4 @@ namespace sdl3cpp::q3 {
 std::vector<int> FindNavPath(const NavGraph& graph, int startNode,
                              int goalNode);
 
-/// The graph node closest (by straight-line distance) to a world position.
-int NearestNavNode(const NavGraph& graph, const glm::vec3& pos);
-
 }  // namespace sdl3cpp::q3

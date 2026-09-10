@@ -1,6 +1,8 @@
 #include "services/interfaces/workflow/quake3/workflow_q3_md3_draw_step.hpp"
+#include "services/interfaces/workflow/quake3/q3_md3_anim_frame.hpp"
 #include "services/interfaces/workflow/quake3/q3_md3_draw_params.hpp"
 #include "services/interfaces/workflow/quake3/q3_md3_draw_surfaces.hpp"
+#include "services/interfaces/workflow/quake3/q3_md3_model_matrix.hpp"
 #include "services/interfaces/workflow/rendering/rendering_types.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
@@ -24,14 +26,12 @@ void WorkflowQ3Md3DrawStep::Execute(const WorkflowStepDefinition& step,
     if (context.GetBool("frame_skip", false)) return;
 
     const Md3DrawParams params = ReadMd3DrawParams(step);
-
     auto* pass = context.Get<SDL_GPURenderPass*>("gpu_render_pass", nullptr);
     auto* cmd =
         context.Get<SDL_GPUCommandBuffer*>("gpu_command_buffer", nullptr);
     auto* pipeline =
         context.Get<SDL_GPUGraphicsPipeline*>("gpu_pipeline_textured", nullptr);
     if (!pass || !cmd || !pipeline) return;
-
     const int nFrames =
         context.Get<int>("q3.md3." + params.prefix + "_num_frames", 0);
     if (nFrames <= 0) return;

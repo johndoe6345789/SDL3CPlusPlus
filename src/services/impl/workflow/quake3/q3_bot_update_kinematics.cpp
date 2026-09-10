@@ -1,4 +1,5 @@
 #include "services/interfaces/workflow/quake3/q3_bot_update_kinematics.hpp"
+#include "services/interfaces/workflow/quake3/q3_nav_nearest.hpp"
 #include "services/interfaces/workflow/quake3/q3_nav_pathfinding.hpp"
 #include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
 

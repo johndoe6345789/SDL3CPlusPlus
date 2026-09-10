@@ -1,5 +1,7 @@
 #include "services/interfaces/workflow/quake3/workflow_q3_nav_build_step.hpp"
-#include "services/interfaces/workflow/quake3/q3_nav_build.hpp"
+#include "services/interfaces/workflow/quake3/q3_nav_aabb.hpp"
+#include "services/interfaces/workflow/quake3/q3_nav_connect.hpp"
+#include "services/interfaces/workflow/quake3/q3_nav_sample.hpp"
 #include "services/interfaces/workflow/quake3/q3_nav_types.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
