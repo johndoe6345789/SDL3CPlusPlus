@@ -36,6 +36,21 @@ struct Scene {
         world.addRigidBody(bodies.back().get());
     }
 
+    /// Static box rotated about +Z, so its top face slopes along X.
+    /// A ramp is the shape a slide move has to climb rather than stop
+    /// against, which a stack of axis-aligned boxes does not exercise.
+    void AddRamp(btVector3 centre, btVector3 half, float pitchRadians) {
+        shapes.push_back(std::make_unique<btBoxShape>(half));
+        btQuaternion rotation(btVector3(0.f, 0.f, 1.f), pitchRadians);
+        motions.push_back(std::make_unique<btDefaultMotionState>(
+            btTransform(rotation, centre)));
+        bodies.push_back(std::make_unique<btRigidBody>(
+            btRigidBody::btRigidBodyConstructionInfo(
+                0.f, motions.back().get(), shapes.back().get(),
+                btVector3(0, 0, 0))));
+        world.addRigidBody(bodies.back().get());
+    }
+
     /// A 100x100 floor whose top surface is y = 0.
     void AddFloor() {
         Add(btVector3(0, -10.f, 0), btVector3(50.f, 10.f, 50.f));

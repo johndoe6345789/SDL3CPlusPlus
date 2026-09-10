@@ -23,7 +23,10 @@ struct WalkResult {
 /// Start at x = -3 on the floor, face +X, hold forward for one second.
 /// When `withPlayerBody` is set the scene also contains the player's own
 /// capsule, as the game does, so traces must exclude it to move at all.
-inline WalkResult WalkForward(Scene& scene, bool withPlayerBody = false) {
+/// `forwardInput` scales the forward axis: 1.0 is a run, a small value
+/// is the slow walk that exposed the player sticking on a slope.
+inline WalkResult WalkForward(Scene& scene, bool withPlayerBody = false,
+                              float forwardInput = 1.0f) {
     namespace impl = sdl3cpp::services::impl;
     sdl3cpp::services::WorkflowContext context;
 
@@ -40,7 +43,7 @@ inline WalkResult WalkForward(Scene& scene, bool withPlayerBody = false) {
     }
     context.Set<double>("frame.delta_time", 1.0 / 125.0);
     context.Set<float>("q3.player_yaw", -1.5707963f);  // forward is +X
-    context.Set<float>("input.move_forward", 1.0f);
+    context.Set<float>("input.move_forward", forwardInput);
     context.Set<float>("input.move_right", 0.0f);
 
     impl::WorkflowQ3PmGroundStep ground(nullptr);

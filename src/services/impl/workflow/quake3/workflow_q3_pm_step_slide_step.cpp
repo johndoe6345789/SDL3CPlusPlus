@@ -50,7 +50,8 @@ void WorkflowQ3PmStepSlideStep::Execute(const WorkflowStepDefinition&,
     // airborne. Every airborne step attempt here has ended up letting
     // the player ratchet up a flat wall, and stepping exists to get up
     // stairs and ledges while walking, so it is gated on standing on
-    // something. Revisit if ledge-grabbing while jumping is wanted.
+    // something. q3.pm.ground has to keep reporting ground at the foot
+    // of a slope for this to hold, which is why its probe is inset.
     const bool canStep = ps.onGround && movingHorizontally;
 
     const bool blocked = q3::SlideMove(ps, world, dt, self);
@@ -61,12 +62,16 @@ void WorkflowQ3PmStepSlideStep::Execute(const WorkflowStepDefinition&,
         return;  // reached the target first try, nothing to step over
     }
 
-    // Never step while still rising, unless there is ground below.
-    const glm::vec3 down = startOrigin - glm::vec3(0.f, q3::kStepSize, 0.f);
-    const auto downTrace = TraceBox(world, startOrigin, down, ps.mins,
-                                    ps.maxs, self);
+    // Never step while still rising, unless there is ground below. This
+    // asks the same "what is underfoot" question as q3.pm.ground, so it
+    // uses the same inset probe: the full box's normal at a slope's foot
+    // is an edge artefact that reads as no ground, which refused the
+    // step exactly when walking up a slope needed it.
+    const auto downTrace = GroundProbe(world, startOrigin, q3::kStepSize,
+                                       ps.mins, ps.maxs, self);
     if (startVelocity.y > 0.f &&
-        (downTrace.fraction == 1.f || downTrace.normal.y < 0.7f)) {
+        (downTrace.fraction == 1.f ||
+         downTrace.normal.y < q3::kMinWalkNormal)) {
         context.Set("q3.ps", ps);
         context.Set("q3.player_pos", ps.origin);
         return;
@@ -100,7 +105,22 @@ void WorkflowQ3PmStepSlideStep::Execute(const WorkflowStepDefinition&,
     // and a trace that cannot start found nothing knowable: in both
     // cases keeping the raised origin lets the player ratchet up a flat
     // wall a step per frame, which is exactly what happened.
-    if (settleTrace.startSolid || settleTrace.fraction >= 1.f) {
+    // Only step onto something that could be stood on. Without this the
+    // step machinery climbs any slope at all, one step per frame, because
+    // the settle below zeroes the downward velocity that would otherwise
+    // carry the player back off it.
+    //
+    // The settle trace positions the player, but its normal is the whole
+    // box's separation direction and reads as a wall wherever the box
+    // overhangs an edge. Ask the same inset probe q3.pm.ground uses what
+    // is actually underfoot before deciding the step was legitimate.
+    const auto footing = GroundProbe(world, settleTrace.endPos,
+                                     q3::kStepSize, stepped.mins,
+                                     stepped.maxs, self);
+    const bool settledOnWalkable =
+        settleTrace.fraction < 1.f && footing.hit &&
+        footing.normal.y >= q3::kMinWalkNormal;
+    if (settleTrace.startSolid || !settledOnWalkable) {
         // Could not settle back down, so we have no idea what is under
         // the player. Keeping the raised origin here is what let the
         // player ratchet up a flat wall a step per frame; discard the

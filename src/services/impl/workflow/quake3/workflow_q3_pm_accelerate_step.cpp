@@ -2,6 +2,7 @@
 #include "services/interfaces/workflow/quake3/q3_pm_types.hpp"
 #include "services/interfaces/workflow/quake3/q3_pm_constants.hpp"
 #include "services/interfaces/workflow/quake3/q3_wish_dir.hpp"
+#include "services/interfaces/workflow/quake3/q3_slide_planes.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
 #include <glm/glm.hpp>
@@ -36,11 +37,25 @@ void WorkflowQ3PmAccelerateStep::Execute(
         context.Set("q3.ps", ps);
         return;
     }
-    const glm::vec3 wishDir = wish.direction;
+    // ioq3 PM_WalkMove projects the movement basis onto the ground plane
+    // before accelerating, so on a slope "forward" means up the slope.
+    // Without it the wish stays horizontal, the player pushes into the
+    // surface instead of along it, and only the step machinery gets them
+    // up — which is why walking up a slope used to stall where running
+    // up the same slope did not.
+    glm::vec3 wishDir = wish.direction;
+    if (ps.onGround) {
+        const glm::vec3 onPlane =
+            q3::ClipVelocity(wishDir, ps.groundNormal, q3::kOverclip);
+        const float length = glm::length(onPlane);
+        if (length > 0.001f) {
+            wishDir = onPlane / length;
+        }
+    }
     const float wishSpeed = wish.speed;
 
     const float accel        = ps.onGround ? q3::kAccelerate : q3::kAirAccelerate;
-    const float currentSpeed = ps.velocity.x * wishDir.x + ps.velocity.z * wishDir.z;
+    const float currentSpeed = glm::dot(ps.velocity, wishDir);
     const float addSpeed     = wishSpeed - currentSpeed;
 
     if (addSpeed <= 0.f) {
@@ -49,8 +64,7 @@ void WorkflowQ3PmAccelerateStep::Execute(
     }
 
     const float accelSpeed = std::min(addSpeed, accel * wishSpeed * dt);
-    ps.velocity.x += accelSpeed * wishDir.x;
-    ps.velocity.z += accelSpeed * wishDir.z;
+    ps.velocity += wishDir * accelSpeed;
 
     context.Set("q3.ps", ps);
 }

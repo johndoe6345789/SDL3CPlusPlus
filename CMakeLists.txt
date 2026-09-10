@@ -618,6 +618,7 @@ add_executable(q3_input_to_motion_test)
 target_sources(q3_input_to_motion_test PRIVATE tests/q3_input_to_motion_test.cpp)
 target_sources(q3_input_to_motion_test PRIVATE src/services/impl/workflow/input/workflow_input_axis_combine_step.cpp)
 target_sources(q3_input_to_motion_test PRIVATE src/services/impl/workflow/quake3/workflow_q3_pm_accelerate_step.cpp)
+target_sources(q3_input_to_motion_test PRIVATE src/services/impl/workflow/quake3/q3_slide_planes.cpp)
 target_sources(q3_input_to_motion_test PRIVATE src/services/impl/workflow/quake3/q3_wish_dir.cpp)
 target_sources(q3_input_to_motion_test PRIVATE src/services/impl/workflow/workflow_step_parameter_resolver.cpp)
 target_include_directories(q3_input_to_motion_test PRIVATE
@@ -650,6 +651,25 @@ target_link_libraries(q3_step_up_test PRIVATE
     Bullet::Bullet
 )
 add_test(NAME q3_step_up_test COMMAND q3_step_up_test)
+
+add_executable(q3_ramp_walk_test)
+target_sources(q3_ramp_walk_test PRIVATE tests/q3_ramp_walk_test.cpp)
+target_sources(q3_ramp_walk_test PRIVATE src/services/impl/workflow/quake3/workflow_q3_pm_accelerate_step.cpp)
+target_sources(q3_ramp_walk_test PRIVATE src/services/impl/workflow/quake3/workflow_q3_pm_friction_step.cpp)
+target_sources(q3_ramp_walk_test PRIVATE src/services/impl/workflow/quake3/workflow_q3_pm_ground_step.cpp)
+target_sources(q3_ramp_walk_test PRIVATE src/services/impl/workflow/quake3/workflow_q3_pm_step_slide_step.cpp)
+target_sources(q3_ramp_walk_test PRIVATE src/services/impl/workflow/quake3/q3_slide_move.cpp)
+target_sources(q3_ramp_walk_test PRIVATE src/services/impl/workflow/quake3/q3_slide_planes.cpp)
+target_sources(q3_ramp_walk_test PRIVATE src/services/impl/workflow/quake3/q3_wish_dir.cpp)
+target_include_directories(q3_ramp_walk_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(q3_ramp_walk_test PRIVATE
+    GTest::gtest_main
+    glm::glm
+    Bullet::Bullet
+)
+add_test(NAME q3_ramp_walk_test COMMAND q3_ramp_walk_test)
 
 # ============================================================================
 # FILE COPYING

@@ -24,6 +24,11 @@ struct Q3PlayerState {
     bool  onGround{false};
     bool  crouching{false};
     float groundFraction{0.f};   // 0 = air, 1 = fully grounded
+    /// Plane of the surface being stood on, as ioq3 keeps in
+    /// pml.groundTrace. Movement is projected onto it so that walking
+    /// on a slope pushes along the slope instead of into it. Straight
+    /// up whenever not grounded.
+    glm::vec3 groundNormal{0.f, 1.f, 0.f};
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -130,6 +135,39 @@ inline Q3Trace TraceBox(
     }
 
     return result;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GroundProbe
+//   "What am I standing on?" answered with a box inset from the player's
+//   own width.
+//
+//   Quake traces brush planes, so a trace always reports the plane of a
+//   face. Bullet's sweep reports the minimum separation direction, which
+//   where a floor meets a ramp is a diagonal edge normal shallower than
+//   either face — read as ground it says "too steep to stand on" at the
+//   foot of every slope. Insetting the box clears that seam so the sweep
+//   lands on the face actually beneath the player.
+//
+//   Positioning still uses the player's real box; only the walkable/not
+//   decision uses this.
+// ─────────────────────────────────────────────────────────────────────────────
+inline constexpr float kGroundProbeInset = 0.8f;
+
+inline Q3Trace GroundProbe(
+    btDiscreteDynamicsWorld* world,
+    glm::vec3 origin,
+    float distance,
+    glm::vec3 mins,
+    glm::vec3 maxs,
+    const btCollisionObject* ignore = nullptr)
+{
+    mins.x *= kGroundProbeInset;
+    maxs.x *= kGroundProbeInset;
+    mins.z *= kGroundProbeInset;
+    maxs.z *= kGroundProbeInset;
+    return TraceBox(world, origin, origin - glm::vec3(0.f, distance, 0.f),
+                    mins, maxs, ignore);
 }
 
 }  // namespace sdl3cpp::services::impl

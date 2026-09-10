@@ -33,12 +33,12 @@ void WorkflowQ3PmGroundStep::Execute(
     // ── Ground detection: trace down kGroundProbe units ──────────────────────
     bool grounded = false;
     if (world) {
-        const glm::vec3 traceEnd = ps.origin - glm::vec3(0.f, kGroundProbe, 0.f);
-        Q3Trace tr = TraceBox(world, ps.origin, traceEnd, ps.mins, ps.maxs,
-                              PlayerBody(context));
+        Q3Trace tr = GroundProbe(world, ps.origin, kGroundProbe,
+                                 ps.mins, ps.maxs, PlayerBody(context));
         if (tr.hit && tr.normal.y >= kMinGroundNormalY) {
             grounded     = true;
             ps.onGround  = true;
+            ps.groundNormal = tr.normal;
             // Deliberately does not move the origin. ioq3's
             // PM_GroundTrace only records the ground plane; snapping the
             // box flush onto the surface makes every horizontal sweep
@@ -51,6 +51,7 @@ void WorkflowQ3PmGroundStep::Execute(
 
     if (!grounded) {
         ps.onGround    = false;
+        ps.groundNormal = glm::vec3(0.f, 1.f, 0.f);
         // Apply gravity
         ps.velocity.y -= q3::kGravity * dt;
     }
