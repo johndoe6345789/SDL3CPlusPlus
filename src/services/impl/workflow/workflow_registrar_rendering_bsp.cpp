@@ -1,5 +1,7 @@
 #include "services/impl/workflow/workflow_registrar_categories.hpp"
 
+#include "services/interfaces/workflow/quake3/workflow_q3_sky_draw_step.hpp"
+
 #include "services/interfaces/workflow/rendering/workflow_bsp_load_step.hpp"
 #include "services/interfaces/workflow/rendering/workflow_bsp_lightmap_atlas_step.hpp"
 #include "services/interfaces/workflow/rendering/workflow_bsp_parse_spawn_step.hpp"
@@ -44,6 +46,7 @@ int RegisterRenderingBspSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
     registry->RegisterStep(
         std::make_shared<WorkflowBspBuildCollisionStep>(logger));
     registry->RegisterStep(std::make_shared<WorkflowSpawnApplyStep>(logger));
+    registry->RegisterStep(std::make_shared<WorkflowQ3SkyDrawStep>(logger));
 
     return count;
 }

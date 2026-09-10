@@ -693,6 +693,11 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/quake3/q3_player_position.cpp
         src/services/impl/workflow/quake3/q3_pm_slide_move_helpers.cpp
         src/services/impl/workflow/quake3/q3_skin_file.cpp
+        src/services/impl/workflow/quake3/q3_sky_cloud_uv.cpp
+        src/services/impl/workflow/quake3/q3_sky_dome.cpp
+        src/services/impl/workflow/quake3/q3_sky_resources.cpp
+        src/services/impl/workflow/quake3/q3_sky_texture_name.cpp
+        src/services/impl/workflow/quake3/q3_sky_uniforms.cpp
         src/services/impl/workflow/quake3/q3_slide_move.cpp
         src/services/impl/workflow/quake3/q3_slide_planes.cpp
         src/services/impl/workflow/quake3/q3_sound_bank.cpp
@@ -747,6 +752,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/quake3/workflow_q3_pm_jump_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_pm_slide_move_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_pm_step_slide_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_sky_draw_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_sound_init_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_sound_load_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_sound_play_step.cpp

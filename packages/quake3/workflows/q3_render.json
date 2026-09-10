@@ -20,6 +20,10 @@
       }
     },
     {
+      "id": "draw_sky",
+      "plugin": "q3.sky.draw"
+    },
+    {
       "id": "draw_map",
       "plugin": "draw.map",
       "parameters": {
