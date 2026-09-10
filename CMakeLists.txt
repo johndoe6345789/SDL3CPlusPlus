@@ -408,6 +408,10 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/quake3/q3_slide_move.cpp
         src/services/impl/workflow/quake3/q3_slide_planes.cpp
         src/services/impl/workflow/quake3/q3_sound_bank.cpp
+        src/services/impl/workflow/quake3/q3_weapon_fire_context.cpp
+        src/services/impl/workflow/quake3/q3_weapon_hitscan.cpp
+        src/services/impl/workflow/quake3/q3_weapon_projectile.cpp
+        src/services/impl/workflow/quake3/q3_weapon_stats.cpp
         src/services/impl/workflow/quake3/q3_wish_dir.cpp
         src/services/impl/workflow/quake3/workflow_q3_ammo_init_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_bots_damage_step.cpp
