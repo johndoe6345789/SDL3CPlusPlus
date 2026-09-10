@@ -1,7 +1,7 @@
 #include "services/interfaces/workflow/geometry/workflow_geometry_create_cube_step.hpp"
 #include "services/interfaces/workflow/geometry/cube_geometry_data.hpp"
 #include "services/interfaces/workflow/geometry/geometry_create_cube_helpers.hpp"
-#include "services/interfaces/workflow/graphics/graphics_buffer_upload_helpers.hpp"
+#include "services/interfaces/workflow/graphics/graphics_gpu_buffer_upload.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
 #include <SDL3/SDL_gpu.h>

@@ -1,5 +1,7 @@
 #include "services/interfaces/workflow/graphics/workflow_graphics_buffer_upload_step.hpp"
-#include "services/interfaces/workflow/graphics/graphics_buffer_upload_helpers.hpp"
+#include "services/interfaces/workflow/graphics/graphics_buffer_json_readers.hpp"
+#include "services/interfaces/workflow/graphics/graphics_buffer_upload_params.hpp"
+#include "services/interfaces/workflow/graphics/graphics_gpu_buffer_upload.hpp"
 #include "services/interfaces/workflow_context.hpp"
 #include "services/interfaces/workflow_step_definition.hpp"
 

@@ -1,5 +1,5 @@
 #include "services/interfaces/workflow/rendering/workflow_model_load_step.hpp"
-#include "services/interfaces/workflow/graphics/graphics_buffer_upload_helpers.hpp"
+#include "services/interfaces/workflow/graphics/graphics_gpu_buffer_upload.hpp"
 #include "services/interfaces/workflow/rendering/model_load_helpers.hpp"
 
 #include <SDL3/SDL_gpu.h>
