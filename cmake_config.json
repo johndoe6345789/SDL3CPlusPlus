@@ -108,6 +108,7 @@
         "src/services/impl/workflow/workflow_package_shader_loader_step.cpp",
         "src/services/impl/workflow/workflow_shader_builtin_constant_color_step.cpp",
         "src/services/impl/workflow/workflow_shader_compile_step.cpp",
+        "src/services/impl/workflow/shader_compile_step_helpers.cpp",
         "src/services/impl/workflow/workflow_shader_system_initialize_step.cpp",
         "src/services/impl/workflow/workflow_shader_system_set_step.cpp",
         "src/services/impl/workflow/workflow_state_clear_step.cpp",
