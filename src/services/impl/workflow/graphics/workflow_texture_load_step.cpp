@@ -1,5 +1,7 @@
 #include "services/interfaces/workflow/graphics/workflow_texture_load_step.hpp"
-#include "services/interfaces/workflow/graphics/texture_load_helpers.hpp"
+#include "services/interfaces/workflow/graphics/texture_gpu_upload.hpp"
+#include "services/interfaces/workflow/graphics/texture_image_io.hpp"
+#include "services/interfaces/workflow/graphics/texture_load_sampler.hpp"
 #include "services/interfaces/workflow/workflow_step_io_resolver.hpp"
 
 #include <SDL3/SDL_gpu.h>

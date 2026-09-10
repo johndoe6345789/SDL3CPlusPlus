@@ -1,5 +1,8 @@
 #include "services/interfaces/workflow/graphics/workflow_gpu_pipeline_create_step.hpp"
-#include "services/interfaces/workflow/graphics/gpu_graphics_pipeline.hpp"
+#include "services/interfaces/workflow/graphics/gpu_pipeline_create_info.hpp"
+#include "services/interfaces/workflow/graphics/gpu_pipeline_params.hpp"
+#include "services/interfaces/workflow/graphics/gpu_pipeline_shaders.hpp"
+#include "services/interfaces/workflow/graphics/gpu_pipeline_vertex_layout.hpp"
 
 #include <SDL3/SDL_gpu.h>
 #include <stdexcept>
