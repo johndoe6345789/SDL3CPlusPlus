@@ -1,5 +1,7 @@
 #include "services/interfaces/workflow/rendering/workflow_render_grid_draw_step.hpp"
-#include "services/interfaces/workflow/rendering/grid_draw_render.hpp"
+#include "services/interfaces/workflow/rendering/grid_draw_config.hpp"
+#include "services/interfaces/workflow/rendering/grid_draw_cubes.hpp"
+#include "services/interfaces/workflow/rendering/grid_gpu_resources.hpp"
 
 #include <nlohmann/json.hpp>
 #include <stdexcept>
