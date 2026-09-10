@@ -31,13 +31,12 @@ public:
     ~WorkflowExecuteStep() override = default;
 
     std::string GetPluginId() const override { return "workflow.execute"; }
-    void Execute(const WorkflowStepDefinition& step, WorkflowContext& context) override;
+    void Execute(const WorkflowStepDefinition& step,
+                WorkflowContext& context) override;
 
 private:
     std::shared_ptr<ILogger> logger_;
     std::shared_ptr<IWorkflowExecutor> executor_;
-
-    WorkflowDefinition LoadWorkflow(const std::string& package, const std::string& workflowName);
 };
 
 }  // namespace sdl3cpp::services::impl

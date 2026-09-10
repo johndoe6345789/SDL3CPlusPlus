@@ -83,6 +83,7 @@
         "src/services/impl/workflow/workflow_definition_parser_variables.cpp",
         "src/services/impl/workflow/workflow_connection_resolver.cpp",
         "src/services/impl/workflow/workflow_execute_step.cpp",
+        "src/services/impl/workflow/workflow_execute_helpers.cpp",
         "src/stb_image.cpp",
         "src/services/impl/workflow/workflow_generic_steps/*.cpp",
         "src/services/impl/workflow/geometry/*.cpp",
