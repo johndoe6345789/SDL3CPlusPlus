@@ -58,13 +58,7 @@
     ]
   },
   "source_exclusions": [
-    "tests/",
-    "src/services/impl/config/",
-    "src/services/impl/workflow/workflow_config_load_step.cpp",
-    "src/services/impl/workflow/workflow_config_migration_step.cpp",
-    "src/services/impl/workflow/workflow_config_schema_step.cpp",
-    "src/services/impl/workflow/workflow_config_version_step.cpp",
-    "src/services/impl/workflow/workflow_config_pipeline.cpp"
+    "tests/"
   ],
   "targets": [
     {

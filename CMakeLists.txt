@@ -153,12 +153,6 @@ file(GLOB WORKFLOW_SOURCES src/services/impl/workflow/*.cpp)
 # Remove problematic files with missing dependencies or incomplete implementations
 list(REMOVE_ITEM WORKFLOW_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/services/impl/config/"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/services/impl/workflow/workflow_config_load_step.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/services/impl/workflow/workflow_config_migration_step.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/services/impl/workflow/workflow_config_schema_step.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/services/impl/workflow/workflow_config_version_step.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/services/impl/workflow/workflow_config_pipeline.cpp"
 )
 
 # Frame-specific workflow steps
