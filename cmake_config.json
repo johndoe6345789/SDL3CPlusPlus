@@ -297,6 +297,9 @@
         "src/services/impl/workflow/input/input_axis_combine_helpers.cpp",
         "src/services/impl/workflow/input/workflow_input_button_combine_step.cpp",
         "src/services/impl/workflow/input/input_button_combine_helpers.cpp",
+        "src/services/impl/workflow/input/input_button_combine_config.cpp",
+        "src/services/impl/workflow/input/input_button_gamepad_source.cpp",
+        "src/services/impl/workflow/input/input_button_combine_sources.cpp",
         "src/services/impl/workflow/workflow_step_parameter_resolver.cpp"
       ],
       "include_directories": [
