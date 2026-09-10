@@ -7,6 +7,7 @@
 #include "services/interfaces/workflow/rendering/workflow_frame_begin_offscreen_step.hpp"
 #include "services/interfaces/workflow/rendering/workflow_frame_end_scene_step.hpp"
 #include "services/interfaces/workflow/rendering/workflow_postfx_composite_draw_step.hpp"
+#include "services/interfaces/workflow/rendering/workflow_postfx_composite_finish_step.hpp"
 #include "services/interfaces/workflow/rendering/workflow_postfx_overlay_fps_init_step.hpp"
 #include "services/interfaces/workflow/rendering/workflow_postfx_overlay_fps_upload_quad_step.hpp"
 #include "services/interfaces/workflow/rendering/workflow_postfx_overlay_fps_upload_text_step.hpp"
@@ -48,6 +49,7 @@ int RegisterRenderingPostfxSteps(
     registry->RegisterStep(
         std::make_shared<WorkflowGpuCommandBufferSubmitStep>(logger));
     registry->RegisterStep(
+        std::make_shared<WorkflowPostfxCompositeFinishStep>(logger));
 
     return count;
 }
