@@ -11,8 +11,6 @@
 
 namespace sdl3cpp::services::impl {
 
-bool HasPrefix(const std::string& value, const std::string& prefix);
-bool IsPickupClass(const std::string& classname);
 bool ReadVec3(const nlohmann::json& value, btVector3& out);
 
 /**

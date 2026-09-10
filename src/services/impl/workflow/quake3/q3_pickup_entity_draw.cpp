@@ -18,7 +18,7 @@ void DrawSinglePickup(const std::string& classname, glm::vec3 pos,
                       WorkflowContext& context) {
     const float bob =
         std::sin(time * 3.0f + static_cast<float>(drawIndex)) * 0.08f;
-    const float size = HasPrefix(classname, "weapon_") ? 0.9f : 0.55f;
+    const float size = HasClassnamePrefix(classname, "weapon_") ? 0.9f : 0.55f;
     pos.y += 0.45f + bob;
     glm::mat4 model(1.0f);
     model[0] = glm::vec4(camRight * size, 0.0f);

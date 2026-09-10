@@ -20,8 +20,8 @@ void ApplyPickupTouches(const nlohmann::json& entities,
 
         const bool isHealth = cls.find("item_health") != std::string::npos;
         const bool isArmor  = cls.find("item_armor") != std::string::npos;
-        const bool isAmmo   = HasPrefix(cls, "ammo_");
-        const bool isWeapon = HasPrefix(cls, "weapon_");
+        const bool isAmmo   = HasClassPrefix(cls, "ammo_");
+        const bool isWeapon = HasClassPrefix(cls, "weapon_");
         if (!isHealth && !isArmor && !isAmmo && !isWeapon) continue;
 
         const std::string id = ent.value("id", std::string{});

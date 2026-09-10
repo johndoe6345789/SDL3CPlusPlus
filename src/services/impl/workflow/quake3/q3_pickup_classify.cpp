@@ -2,18 +2,20 @@
 
 namespace sdl3cpp::services::impl {
 
-bool HasPrefix(const std::string& value, const std::string& prefix) {
+bool HasClassnamePrefix(const std::string& value, const std::string& prefix) {
     return value.rfind(prefix, 0) == 0;
 }
 
 bool IsPickup(const std::string& classname) {
-    return HasPrefix(classname, "weapon_") || HasPrefix(classname, "ammo_") ||
-           HasPrefix(classname, "item_") || HasPrefix(classname, "holdable_");
+    return HasClassnamePrefix(classname, "weapon_") ||
+           HasClassnamePrefix(classname, "ammo_") ||
+           HasClassnamePrefix(classname, "item_") ||
+           HasClassnamePrefix(classname, "holdable_");
 }
 
 std::string TextureKeyForClass(const std::string& classname) {
-    if (HasPrefix(classname, "weapon_")) return "q3_pickup_weapon";
-    if (HasPrefix(classname, "ammo_")) return "q3_pickup_ammo";
+    if (HasClassnamePrefix(classname, "weapon_")) return "q3_pickup_weapon";
+    if (HasClassnamePrefix(classname, "ammo_")) return "q3_pickup_ammo";
     if (classname.find("health") != std::string::npos) {
         return "q3_pickup_health";
     }

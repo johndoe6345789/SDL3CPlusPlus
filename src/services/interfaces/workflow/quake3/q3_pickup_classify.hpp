@@ -7,7 +7,7 @@
 namespace sdl3cpp::services::impl {
 
 /// True if `value` starts with `prefix`.
-bool HasPrefix(const std::string& value, const std::string& prefix);
+bool HasClassnamePrefix(const std::string& value, const std::string& prefix);
 
 /// True if `classname` names a Quake3 pickup entity (weapon, ammo, item,
 /// or holdable).

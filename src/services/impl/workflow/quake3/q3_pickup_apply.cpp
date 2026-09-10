@@ -15,7 +15,7 @@ constexpr double kRespawnWeapon = 30.0;
 
 }  // namespace
 
-bool HasPrefix(const std::string& s, const std::string& prefix) {
+bool HasClassPrefix(const std::string& s, const std::string& prefix) {
     return s.rfind(prefix, 0) == 0;
 }
 
@@ -44,13 +44,13 @@ double ApplyOnePickup(const std::string& cls, PickupTouchState& state) {
         }
         return kRespawnArmor;
     }
-    if (HasPrefix(cls, "ammo_")) {
+    if (HasClassPrefix(cls, "ammo_")) {
         const std::string weaponKey = AmmoWeaponKey(cls);
         const int current           = state.ammo.value(weaponKey, 0);
         state.ammo[weaponKey]       = current + DefaultAmmoAmount(cls);
         return kRespawnAmmo;
     }
-    if (HasPrefix(cls, "weapon_")) {
+    if (HasClassPrefix(cls, "weapon_")) {
         state.inventory[cls] = true;
         const int current    = state.ammo.value(cls, 0);
         state.ammo[cls]      = current + DefaultWeaponAmmo(cls);

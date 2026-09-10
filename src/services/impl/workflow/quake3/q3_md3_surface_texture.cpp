@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/quake3/q3_md3_surface_texture.hpp"
 
+#include "services/interfaces/workflow/quake3/q3_md3_gpu_upload.hpp"
 #include "services/interfaces/workflow/quake3/q3_md3_texture_candidates.hpp"
 
 #include <cstring>

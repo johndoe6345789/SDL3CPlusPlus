@@ -31,8 +31,7 @@ int RegisterRenderingOverlaySteps(
         std::make_shared<WorkflowOverlayFpsDrawStep>(logger));
     registry->RegisterStep(
         std::make_shared<WorkflowDebugScreenshotStep>(logger));
-    registry->RegisterStep(
-        std::make_shared<WorkflowPostfxSsaoStep>(logger));
+    registry->RegisterStep(std::make_shared<WorkflowPostfxSsaoStep>(logger));
     registry->RegisterStep(
         std::make_shared<WorkflowPostfxBloomExtractStep>(logger));
     registry->RegisterStep(

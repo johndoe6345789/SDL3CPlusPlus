@@ -333,6 +333,7 @@
         "src/services/impl/workflow/quake3/workflow_q3_pm_ground_step.cpp",
         "src/services/impl/workflow/quake3/workflow_q3_pm_step_slide_step.cpp",
         "src/services/impl/workflow/quake3/q3_step_slide.cpp",
+        "src/services/impl/workflow/quake3/q3_step_slide_trace.cpp",
         "src/services/impl/workflow/quake3/q3_slide_move.cpp",
         "src/services/impl/workflow/quake3/q3_slide_planes.cpp",
         "src/services/impl/workflow/quake3/q3_wish_dir.cpp"
@@ -382,6 +383,7 @@
         "src/services/impl/workflow/quake3/workflow_q3_pm_ground_step.cpp",
         "src/services/impl/workflow/quake3/workflow_q3_pm_step_slide_step.cpp",
         "src/services/impl/workflow/quake3/q3_step_slide.cpp",
+        "src/services/impl/workflow/quake3/q3_step_slide_trace.cpp",
         "src/services/impl/workflow/quake3/q3_slide_move.cpp",
         "src/services/impl/workflow/quake3/q3_slide_planes.cpp",
         "src/services/impl/workflow/quake3/q3_wish_dir.cpp",
@@ -454,6 +456,7 @@
         "src/services/impl/workflow/quake3/workflow_q3_pm_ground_step.cpp",
         "src/services/impl/workflow/quake3/workflow_q3_pm_step_slide_step.cpp",
         "src/services/impl/workflow/quake3/q3_step_slide.cpp",
+        "src/services/impl/workflow/quake3/q3_step_slide_trace.cpp",
         "src/services/impl/workflow/quake3/q3_slide_move.cpp",
         "src/services/impl/workflow/quake3/q3_slide_planes.cpp",
         "src/services/impl/workflow/quake3/q3_wish_dir.cpp"
@@ -476,6 +479,7 @@
         "src/services/impl/workflow/quake3/workflow_q3_pm_ground_step.cpp",
         "src/services/impl/workflow/quake3/workflow_q3_pm_step_slide_step.cpp",
         "src/services/impl/workflow/quake3/q3_step_slide.cpp",
+        "src/services/impl/workflow/quake3/q3_step_slide_trace.cpp",
         "src/services/impl/workflow/quake3/q3_slide_move.cpp",
         "src/services/impl/workflow/quake3/q3_slide_planes.cpp",
         "src/services/impl/workflow/quake3/q3_wish_dir.cpp"
