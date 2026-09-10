@@ -1,6 +1,7 @@
 #include "services/interfaces/workflow/quake3/workflow_q3_movers_update_step.hpp"
 #include "services/interfaces/workflow/quake3/q3_mover_kinematics.hpp"
 #include "services/interfaces/workflow/quake3/q3_mover_types.hpp"
+#include "services/interfaces/workflow/quake3/q3_player_position.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
 #include <glm/glm.hpp>

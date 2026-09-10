@@ -1,5 +1,9 @@
 #include "services/interfaces/workflow/workflow_generic_steps/workflow_physics_fps_move_step.hpp"
-#include "services/interfaces/workflow/workflow_generic_steps/physics_fps_move_kinematics.hpp"
+#include "services/interfaces/workflow/workflow_generic_steps/physics_fps_input.hpp"
+#include "services/interfaces/workflow/workflow_generic_steps/physics_fps_recovery.hpp"
+#include "services/interfaces/workflow/workflow_generic_steps/physics_fps_step_up.hpp"
+#include "services/interfaces/workflow/workflow_generic_steps/physics_fps_velocity_integration.hpp"
+#include "services/interfaces/workflow/workflow_generic_steps/physics_fps_wish_velocity.hpp"
 #include "services/interfaces/workflow_step_definition.hpp"
 #include "services/interfaces/workflow_context.hpp"
 

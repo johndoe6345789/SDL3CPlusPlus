@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/input/workflow_input_axis_combine_step.hpp"
-#include "services/interfaces/workflow/input/input_axis_combine_helpers.hpp"
+#include "services/interfaces/workflow/input/input_aggregation_config.hpp"
+#include "services/interfaces/workflow/input/input_axis_combine_write.hpp"
 
 #include <nlohmann/json.hpp>
 

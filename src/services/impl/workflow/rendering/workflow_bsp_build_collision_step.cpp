@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/rendering/workflow_bsp_build_collision_step.hpp"
-#include "services/interfaces/workflow/rendering/bsp_brush_collision.hpp"
+#include "services/interfaces/workflow/rendering/bsp_brush_collision_shapes.hpp"
+#include "services/interfaces/workflow/rendering/bsp_collision_body.hpp"
 #include "services/interfaces/workflow/rendering/bsp_types.hpp"
 
 #include <btBulletDynamicsCommon.h>
