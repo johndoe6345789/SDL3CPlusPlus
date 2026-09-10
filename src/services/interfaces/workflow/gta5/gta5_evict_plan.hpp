@@ -2,26 +2,22 @@
 
 #include "services/interfaces/workflow/gta5/gta5_stream_state.hpp"
 
-#include <string>
-#include <unordered_set>
-#include <vector>
-
 namespace sdl3cpp::services::impl {
 
-struct Gta5EvictPlan {
-    /// Scene-object tags whose objects must go.
-    std::unordered_set<std::string> purge;
-    /// Tiles that left the evict radius and are forgotten entirely.
-    std::vector<Gta5TileCoord> dropped;
-    /// Tiles kept but reset so load rebuilds them at a new detail band.
+struct Gta5EvictResult {
+    /// Tiles that left the evict radius and were forgotten entirely.
+    int dropped{0};
+    /// Tiles kept but reset, so load rebuilds them at a new detail band.
     int rebuilt{0};
+    /// Instances released between the two.
+    int instancesReleased{0};
 };
 
-/// Decide what eviction should remove this frame, and apply the resident
-/// side of it: dropped tiles are erased and rebuilt tiles are reset.
+/// Drop tiles outside the evict radius and reset the ones gta5.lod.select
+/// flagged, releasing each instance's hold on its archetype geometry.
 ///
-/// The caller is left to filter the scene object list against `purge`.
-Gta5EvictPlan ApplyGta5EvictPlan(Gta5StreamState& state,
-                                 const std::string& objectTypePrefix);
+/// Geometry buffers are not freed here: SweepGta5GeometryCache does that
+/// once, after the references have been given up.
+Gta5EvictResult ApplyGta5EvictPlan(Gta5StreamState& state);
 
 }  // namespace sdl3cpp::services::impl

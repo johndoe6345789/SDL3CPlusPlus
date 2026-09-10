@@ -23,4 +23,14 @@ int Gta5ParameterOrInt(const WorkflowStepDefinition& step,
     return static_cast<int>(it->second.numberValue);
 }
 
+std::string Gta5ResolvePath(const WorkflowStepDefinition& step,
+                            const WorkflowContext& context,
+                            const std::string& name,
+                            const std::string& fallback) {
+    const std::string relative = Gta5ParameterOr(step, name, fallback);
+    const std::string packageDir =
+        context.Get<std::string>("package_dir", "");
+    return packageDir.empty() ? relative : packageDir + "/" + relative;
+}
+
 }  // namespace sdl3cpp::services::impl

@@ -3,35 +3,12 @@
 #include "services/interfaces/workflow/gta5/gta5_geometry_cache.hpp"
 #include "services/interfaces/workflow/gta5/gta5_model_matrix.hpp"
 
-#include <utility>
-
 namespace sdl3cpp::services::impl {
-namespace {
-
-SceneObject MakeObject(const Gta5Placement& placement,
-                       const Gta5Geometry& geometry,
-                       const Gta5SpawnOptions& options,
-                       const std::string& tag) {
-    SceneObject object;
-    object.objectType = options.objectTypePrefix + tag;
-    object.vertices = geometry.vertices;
-    object.indices = geometry.indices;
-    object.shaderKeys = {options.shaderKey};
-    object.modelMatrix = BuildGta5ModelMatrix(placement);
-    object.hasCustomModelMatrix = true;
-    object.computeModelMatrixRef = -1;
-    return object;
-}
-
-}  // namespace
 
 int SpawnGta5TilePlacements(Gta5StreamState& state,
-                            const Gta5TileCoord& tile,
-                            Gta5ResidentTile& resident,
-                            const Gta5SpawnOptions& options, int budget,
-                            std::vector<SceneObject>& objects,
+                            Gta5ResidentTile& resident, int budget,
+                            SDL_GPUDevice* device,
                             const std::shared_ptr<ILogger>& logger) {
-    const std::string tag = MakeGta5TileTag(tile);
     int consumed = 0;
 
     while (resident.spawnedCount < resident.placements.size() &&
@@ -49,11 +26,15 @@ int SpawnGta5TilePlacements(Gta5StreamState& state,
             continue;
         }
 
-        const Gta5Geometry* geometry =
-            GetOrLoadGta5Geometry(state, placement, logger);
+        Gta5Geometry* geometry =
+            GetOrLoadGta5Geometry(state, placement, device, logger);
         if (!geometry) continue;
 
-        objects.push_back(MakeObject(placement, *geometry, options, tag));
+        Gta5Instance instance;
+        instance.geometry = geometry;
+        instance.modelMatrix = BuildGta5ModelMatrix(placement);
+        resident.instances.push_back(instance);
+        ++geometry->references;
     }
 
     return consumed;

@@ -7,6 +7,8 @@
 #include "services/interfaces/workflow/gta5/gta5_tile_order.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
+#include <SDL3/SDL_gpu.h>
+
 #include <utility>
 
 namespace sdl3cpp::services::impl {
@@ -23,26 +25,15 @@ void WorkflowGta5TilesLoadStep::Execute(const WorkflowStepDefinition& step,
                                         WorkflowContext& context) {
     if (!state_ || state_->wanted.empty()) return;
 
-    const std::string packageDir = context.Get<std::string>("package_dir", "");
-    const std::string tilesDir =
-        packageDir + "/" + Gta5ParameterOr(step, "tiles_dir", "assets/tiles");
-    const std::string objectsKey =
-        Gta5ParameterOr(step, "objects_key", "scene_objects");
+    auto* device = context.Get<SDL_GPUDevice*>("gpu_device", nullptr);
+    if (!device) return;
 
-    Gta5SpawnOptions options;
-    options.shaderKey =
-        Gta5ParameterOr(step, "shader_key", "gpu_pipeline_textured");
-    options.objectTypePrefix = Gta5ParameterOr(step, "object_type", "");
+    const std::string tilesDir = Gta5ResolvePath(
+        step, context, "tiles_dir", "packages/gta5/assets/tiles");
 
     int budget = Gta5ParameterOrInt(step, "max_spawns_per_frame",
                                     state_->streaming.maxSpawnsPerFrame);
     if (budget <= 0) budget = 64;
-
-    std::vector<SceneObject> objects;
-    if (const auto* existing =
-            context.TryGet<std::vector<SceneObject>>(objectsKey)) {
-        objects = *existing;
-    }
 
     int spawned = 0;
     for (const Gta5TileCoord& tile : OrderGta5TilesByDistance(*state_)) {
@@ -60,15 +51,22 @@ void WorkflowGta5TilesLoadStep::Execute(const WorkflowStepDefinition& step,
                               state_->centreOrigin);
             resident.bandAtSpawn =
                 Gta5BandForDistance(state_->world, distance);
+            if (logger_ && !resident.placements.empty()) {
+                logger_->Info("gta5.tiles.load: tile " +
+                              std::to_string(tile.x) + "_" +
+                              std::to_string(tile.z) + " has " +
+                              std::to_string(resident.placements.size()) +
+                              " placements");
+            }
         }
 
-        spawned += SpawnGta5TilePlacements(*state_, tile, resident, options,
-                                           budget - spawned, objects, logger_);
+        spawned += SpawnGta5TilePlacements(*state_, resident,
+                                           budget - spawned, device, logger_);
     }
 
-    if (spawned == 0) return;
-    context.Set(objectsKey, std::move(objects));
-    context.Set("gta5.tiles.spawned_last_frame", spawned);
+    if (spawned > 0) {
+        context.Set("gta5.tiles.spawned_last_frame", spawned);
+    }
 }
 
 }  // namespace sdl3cpp::services::impl

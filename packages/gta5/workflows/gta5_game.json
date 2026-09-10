@@ -1,0 +1,67 @@
+{
+  "name": "GTA V Map",
+  "active": true,
+  "settings": { "executionTimeout": 0 },
+  "variables": {
+    "window_width":  { "name": "window_width",  "type": "number", "defaultValue": 1280 },
+    "window_height": { "name": "window_height", "type": "number", "defaultValue": 960 },
+    "window_title":  { "name": "window_title",  "type": "string", "defaultValue": "GTA V - Map" },
+    "renderer_type": { "name": "renderer_type", "type": "string", "defaultValue": "auto" },
+    "present_mode":  { "name": "present_mode",  "type": "string", "defaultValue": "mailbox" },
+    "shader_textured_vert_path": { "name": "shader_textured_vert_path", "type": "string", "defaultValue": "packages/seed/shaders/msl/textured.vert.metal" },
+    "shader_textured_frag_path": { "name": "shader_textured_frag_path", "type": "string", "defaultValue": "packages/seed/shaders/msl/textured.frag.metal" },
+    "tex_walls_path":            { "name": "tex_walls_path",            "type": "string", "defaultValue": "packages/seed/assets/textures/walls/Bricks058_1K-JPG_Color.jpg" }
+  },
+  "nodes": [
+    { "id": "sdl_init",          "type": "sdl.init",                   "typeVersion": 1, "position": [0, 0] },
+    { "id": "sdl_window",        "type": "sdl.window.create",          "typeVersion": 1, "position": [200, 0] },
+    { "id": "gpu_init_viewport", "type": "graphics.gpu.init_viewport", "typeVersion": 1, "position": [400, 0],
+      "parameters": { "present_mode": "auto", "inputs": { "width": "window_width", "height": "window_height" }, "outputs": { "viewport_config": "viewport_config" } } },
+    { "id": "gpu_init_renderer", "type": "graphics.gpu.init_renderer", "typeVersion": 1, "position": [600, 0],
+      "parameters": { "inputs": { "renderer_type": "renderer_type" }, "outputs": { "selected_renderer": "selected_renderer" } } },
+    { "id": "gpu_init",          "type": "graphics.gpu.init",          "typeVersion": 1, "position": [800, 0],
+      "parameters": { "inputs": { "viewport_config": "viewport_config", "selected_renderer": "selected_renderer" }, "outputs": { "gpu_handle": "gpu_handle" } } },
+
+    { "id": "compile_tex_vert",   "type": "graphics.gpu.shader.compile", "typeVersion": 1, "position": [1000, 0],
+      "parameters": { "stage": "vertex",   "output_key": "textured_vertex_shader",   "num_uniform_buffers": 1, "num_samplers": 0 },
+      "inputs": { "shader_path": "shader_textured_vert_path" } },
+    { "id": "compile_tex_frag",   "type": "graphics.gpu.shader.compile", "typeVersion": 1, "position": [1100, 0],
+      "parameters": { "stage": "fragment", "output_key": "textured_fragment_shader", "num_uniform_buffers": 1, "num_samplers": 2 },
+      "inputs": { "shader_path": "shader_textured_frag_path" } },
+    { "id": "create_tex_pipeline","type": "graphics.gpu.pipeline.create","typeVersion": 1, "position": [1200, 0],
+      "parameters": { "vertex_shader_key": "textured_vertex_shader", "fragment_shader_key": "textured_fragment_shader", "vertex_format": "position_uv", "pipeline_key": "gpu_pipeline_textured" } },
+    { "id": "tex_walls",          "type": "texture.load",                "typeVersion": 1, "position": [1300, 0],
+      "parameters": { "inputs": { "image_path": "tex_walls_path" }, "outputs": { "texture": "walls_texture" } } },
+
+    { "id": "physics_world", "type": "physics.world.create", "typeVersion": 1, "position": [0, 200] },
+    { "id": "player",        "type": "physics.body.add",     "typeVersion": 1, "position": [200, 200],
+      "parameters": { "name": "player", "shape": "capsule", "mass": 80, "pos_x": 195.0, "pos_y": 34.0, "pos_z": 934.0, "radius": 0.3, "height": 1.0, "lock_rotation": 1, "is_player": 1 } },
+    { "id": "camera_setup",  "type": "camera.setup",         "typeVersion": 1, "position": [400, 200],
+      "parameters": { "outputs": { "camera_state": "camera.state" } } },
+    { "id": "lighting",      "type": "lighting.setup",       "typeVersion": 1, "position": [600, 200],
+      "parameters": { "light_dir_x": -0.4, "light_dir_y": -0.85, "light_dir_z": -0.3, "light_intensity": 2.2, "ambient_r": 0.35, "ambient_g": 0.38, "ambient_b": 0.45, "ambient_intensity": 1.6, "exposure": 1.0 } },
+
+    { "id": "init_game_running", "type": "value.literal",      "typeVersion": 1, "position": [800, 200],
+      "parameters": { "value": true, "outputs": { "value": "game_running" } } },
+    { "id": "game_loop",         "type": "control.loop.while", "typeVersion": 1, "position": [1000, 200],
+      "parameters": { "condition_key": "game_running", "package": "gta5", "workflow": "gta5_frame" } },
+    { "id": "exit",              "type": "system.exit",        "typeVersion": 1, "position": [1200, 200] }
+  ],
+  "connections": {
+    "sdl_init":            { "main": { "0": [{ "node": "sdl_window",          "type": "main", "index": 0 }] } },
+    "sdl_window":          { "main": { "0": [{ "node": "gpu_init_viewport",   "type": "main", "index": 0 }] } },
+    "gpu_init_viewport":   { "main": { "0": [{ "node": "gpu_init_renderer",   "type": "main", "index": 0 }] } },
+    "gpu_init_renderer":   { "main": { "0": [{ "node": "gpu_init",            "type": "main", "index": 0 }] } },
+    "gpu_init":            { "main": { "0": [{ "node": "compile_tex_vert",    "type": "main", "index": 0 }] } },
+    "compile_tex_vert":    { "main": { "0": [{ "node": "compile_tex_frag",    "type": "main", "index": 0 }] } },
+    "compile_tex_frag":    { "main": { "0": [{ "node": "create_tex_pipeline", "type": "main", "index": 0 }] } },
+    "create_tex_pipeline": { "main": { "0": [{ "node": "tex_walls",           "type": "main", "index": 0 }] } },
+    "tex_walls":           { "main": { "0": [{ "node": "physics_world",       "type": "main", "index": 0 }] } },
+    "physics_world":       { "main": { "0": [{ "node": "player",              "type": "main", "index": 0 }] } },
+    "player":              { "main": { "0": [{ "node": "camera_setup",        "type": "main", "index": 0 }] } },
+    "camera_setup":        { "main": { "0": [{ "node": "lighting",            "type": "main", "index": 0 }] } },
+    "lighting":            { "main": { "0": [{ "node": "init_game_running",   "type": "main", "index": 0 }] } },
+    "init_game_running":   { "main": { "0": [{ "node": "game_loop",           "type": "main", "index": 0 }] } },
+    "game_loop":           { "main": { "0": [{ "node": "exit",                "type": "main", "index": 0 }] } }
+  }
+}

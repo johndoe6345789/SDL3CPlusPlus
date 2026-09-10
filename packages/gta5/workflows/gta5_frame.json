@@ -1,0 +1,50 @@
+{
+  "name": "GTA V Frame Tick",
+  "description": "Per-frame composition: input, streaming, movement, then the draw.",
+  "steps": [
+    {
+      "id": "input_group",
+      "plugin": "workflow.include",
+      "parameters": {
+        "path": "packages/quake3/workflows/q3_input.json"
+      },
+      "comment": "The input group is reused verbatim from quake3. It only produces move/look/jump/crouch intent, which is exactly what the q3.pm.* steps consume, so there is nothing GTA-specific to restate."
+    },
+    {
+      "id": "physics_group",
+      "plugin": "workflow.include",
+      "parameters": {
+        "path": "packages/gta5/workflows/gta5_physics.json"
+      }
+    },
+    {
+      "id": "streaming_group",
+      "plugin": "workflow.include",
+      "parameters": {
+        "path": "packages/gta5/workflows/gta5_streaming.json"
+      },
+      "comment": "Streaming runs after movement so it centres on the origin this frame produced rather than the last one's."
+    },
+    {
+      "id": "render_prepare",
+      "plugin": "render.prepare"
+    },
+    {
+      "id": "frame_begin",
+      "plugin": "frame.gpu.begin"
+    },
+    {
+      "id": "tiles_draw",
+      "plugin": "gta5.tiles.draw",
+      "parameters": {
+        "pipeline_key": "gpu_pipeline_textured",
+        "texture_key": "walls_texture",
+        "sampler_key": "walls_texture_sampler"
+      }
+    },
+    {
+      "id": "frame_end",
+      "plugin": "frame.gpu.end_scene"
+    }
+  ]
+}

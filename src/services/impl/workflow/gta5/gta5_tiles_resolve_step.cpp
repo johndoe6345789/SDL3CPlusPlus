@@ -24,17 +24,16 @@ void WorkflowGta5TilesResolveStep::Execute(
     const WorkflowStepDefinition& step, WorkflowContext& context) {
     if (!state_) return;
 
-    const std::string packageDir = context.Get<std::string>("package_dir", "");
     if (!state_->world.loaded) {
         LoadGta5WorldConfig(
-            packageDir + "/" +
-                Gta5ParameterOr(step, "config", "config/gta5_world.json"),
+            Gta5ResolvePath(step, context, "config",
+                            "packages/gta5/config/gta5_world.json"),
             state_->world, logger_);
     }
     if (!state_->streaming.loaded) {
         LoadGta5StreamingConfig(
-            packageDir + "/" +
-                Gta5ParameterOr(step, "streaming", "config/streaming.json"),
+            Gta5ResolvePath(step, context, "streaming",
+                            "packages/gta5/config/streaming.json"),
             state_->streaming, logger_);
     }
 

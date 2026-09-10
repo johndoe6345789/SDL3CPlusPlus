@@ -1,0 +1,139 @@
+{
+  "tile": [
+    6,
+    18
+  ],
+  "bounds_min": [
+    -928.0,
+    1216.0
+  ],
+  "tile_size": 512.0,
+  "placements": [
+    {
+      "archetype": "test_road",
+      "model": "packages/gta5/assets/models/test_road.gltf",
+      "position": [
+        -445.0,
+        30.7,
+        1318.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "slod2"
+    },
+    {
+      "archetype": "test_block",
+      "model": "packages/gta5/assets/models/test_block.gltf",
+      "position": [
+        -445.0,
+        30.7,
+        1318.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "hd"
+    },
+    {
+      "archetype": "test_road",
+      "model": "packages/gta5/assets/models/test_road.gltf",
+      "position": [
+        -445.0,
+        30.7,
+        1446.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "slod2"
+    },
+    {
+      "archetype": "test_block",
+      "model": "packages/gta5/assets/models/test_block.gltf",
+      "position": [
+        -445.0,
+        30.7,
+        1446.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "hd"
+    },
+    {
+      "archetype": "test_road",
+      "model": "packages/gta5/assets/models/test_road.gltf",
+      "position": [
+        -445.0,
+        30.7,
+        1574.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "slod2"
+    },
+    {
+      "archetype": "test_block",
+      "model": "packages/gta5/assets/models/test_block.gltf",
+      "position": [
+        -445.0,
+        30.7,
+        1574.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "hd"
+    }
+  ]
+}

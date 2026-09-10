@@ -1,6 +1,7 @@
 #pragma once
 
 #include "services/interfaces/workflow/gta5/gta5_config_types.hpp"
+#include "services/interfaces/workflow/gta5/gta5_geometry.hpp"
 #include "services/interfaces/workflow/gta5/gta5_placement.hpp"
 #include "services/interfaces/workflow/gta5/gta5_tile_coord.hpp"
 
@@ -16,6 +17,8 @@ namespace sdl3cpp::services::impl {
 /// Bookkeeping for a tile that is loaded, or part-way through loading.
 struct Gta5ResidentTile {
     std::vector<Gta5Placement> placements;
+    /// Instances spawned so far, drawn by gta5.tiles.draw.
+    std::vector<Gta5Instance> instances;
     /// How many placements have been spawned. Spawning is spread over
     /// frames, so a tile is only fully resident at placements.size().
     std::size_t spawnedCount{0};
@@ -47,6 +50,10 @@ struct Gta5StreamState {
 
     /// Archetypes already reported missing, so the log says it once.
     std::unordered_set<std::string> reportedMissing;
+
+    /// Last draw count written to the log, so a steady frame stays quiet
+    /// and only real changes are reported.
+    int lastDrawLogged{-1};
 };
 
 }  // namespace sdl3cpp::services::impl

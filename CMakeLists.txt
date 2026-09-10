@@ -778,14 +778,14 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/quake3/workflow_q3_triggers_check_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_weapon_fire_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_weapon_select_step.cpp
+        src/services/impl/workflow/gta5/gta5_draw_instances.cpp
         src/services/impl/workflow/gta5/gta5_evict_plan.cpp
         src/services/impl/workflow/gta5/gta5_geometry_cache.cpp
+        src/services/impl/workflow/gta5/gta5_geometry_upload.cpp
         src/services/impl/workflow/gta5/gta5_grid.cpp
         src/services/impl/workflow/gta5/gta5_json_file.cpp
         src/services/impl/workflow/gta5/gta5_lod.cpp
         src/services/impl/workflow/gta5/gta5_lod_select_step.cpp
-        src/services/impl/workflow/gta5/gta5_mesh_append.cpp
-        src/services/impl/workflow/gta5/gta5_mesh_import.cpp
         src/services/impl/workflow/gta5/gta5_model_matrix.cpp
         src/services/impl/workflow/gta5/gta5_placement_parse.cpp
         src/services/impl/workflow/gta5/gta5_spawn_tile.cpp
@@ -794,6 +794,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_tile_coord.cpp
         src/services/impl/workflow/gta5/gta5_tile_io.cpp
         src/services/impl/workflow/gta5/gta5_tile_order.cpp
+        src/services/impl/workflow/gta5/gta5_tiles_draw_step.cpp
         src/services/impl/workflow/gta5/gta5_tiles_evict_step.cpp
         src/services/impl/workflow/gta5/gta5_tiles_load_step.cpp
         src/services/impl/workflow/gta5/gta5_tiles_resolve_step.cpp

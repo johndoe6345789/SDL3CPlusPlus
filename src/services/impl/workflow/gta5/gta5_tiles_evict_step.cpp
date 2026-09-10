@@ -1,13 +1,12 @@
 #include "services/interfaces/workflow/gta5/gta5_tiles_evict_step.hpp"
 
-#include "services/interfaces/scene_types.hpp"
 #include "services/interfaces/workflow/gta5/gta5_evict_plan.hpp"
-#include "services/interfaces/workflow/gta5/gta5_step_params.hpp"
+#include "services/interfaces/workflow/gta5/gta5_geometry_cache.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
-#include <cstddef>
+#include <SDL3/SDL_gpu.h>
+
 #include <utility>
-#include <vector>
 
 namespace sdl3cpp::services::impl {
 
@@ -19,36 +18,26 @@ std::string WorkflowGta5TilesEvictStep::GetPluginId() const {
     return "gta5.tiles.evict";
 }
 
-void WorkflowGta5TilesEvictStep::Execute(const WorkflowStepDefinition& step,
-                                         WorkflowContext& context) {
+void WorkflowGta5TilesEvictStep::Execute(
+    const WorkflowStepDefinition& /*step*/, WorkflowContext& context) {
     if (!state_ || state_->resident.empty()) return;
 
-    const std::string objectsKey =
-        Gta5ParameterOr(step, "objects_key", "scene_objects");
-    const Gta5EvictPlan plan = ApplyGta5EvictPlan(
-        *state_, Gta5ParameterOr(step, "object_type", ""));
-    if (plan.purge.empty()) return;
+    const Gta5EvictResult result = ApplyGta5EvictPlan(*state_);
+    if (result.instancesReleased == 0) return;
 
-    const auto* existing =
-        context.TryGet<std::vector<SceneObject>>(objectsKey);
-    if (!existing) return;
-
-    std::vector<SceneObject> remaining;
-    remaining.reserve(existing->size());
-    for (const auto& object : *existing) {
-        if (plan.purge.find(object.objectType) == plan.purge.end()) {
-            remaining.push_back(object);
-        }
-    }
-
-    const std::size_t removed = existing->size() - remaining.size();
-    context.Set(objectsKey, std::move(remaining));
+    // Only sweep once instances have given up their references, so an
+    // archetype shared with a still-resident tile is not freed underneath
+    // it.
+    SweepGta5GeometryCache(
+        *state_, context.Get<SDL_GPUDevice*>("gpu_device", nullptr), logger_);
 
     if (logger_) {
         logger_->Trace("WorkflowGta5TilesEvictStep", "Execute",
-                       "dropped=" + std::to_string(plan.dropped.size()) +
-                           " rebuilt=" + std::to_string(plan.rebuilt),
-                       "removed " + std::to_string(removed) + " objects");
+                       "dropped=" + std::to_string(result.dropped) +
+                           " rebuilt=" + std::to_string(result.rebuilt),
+                       "released " +
+                           std::to_string(result.instancesReleased) +
+                           " instances");
     }
 }
 

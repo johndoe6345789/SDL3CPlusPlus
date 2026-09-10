@@ -39,6 +39,10 @@ GRID_ORIGIN = (-4000.0, -8000.0)  # engine-space (x, z) of tile (0, 0)
 # lodDist thresholds, matching the rings in config/gta5_world.json.
 LOD_RINGS = (("hd", 300.0), ("lod", 1000.0), ("slod1", 3000.0), ("slod2", math.inf))
 
+# Anything assimp can read on the engine side. Which one you export as is
+# your converter's choice, not ours: glTF keeps materials, OBJ is simplest.
+MODEL_EXTENSIONS = (".gltf", ".glb", ".obj", ".fbx", ".dae", ".ply", ".3ds")
+
 
 def _f(node, attr="value", default=0.0):
     """CodeWalker writes scalars as <tag value="1.0" />."""
@@ -106,7 +110,7 @@ def index_models(model_dir):
     for root, _, files in os.walk(model_dir):
         for name in files:
             stem, ext = os.path.splitext(name)
-            if ext.lower() in (".gltf", ".glb"):
+            if ext.lower() in MODEL_EXTENSIONS:
                 models[stem.lower()] = os.path.join(root, name).replace("\\", "/")
     return models
 

@@ -1,9 +1,7 @@
 {
   "name": "GTA V Map Streaming",
   "description": "Residency pass: decide which 512 m tiles should be loaded around the player, spawn their instances, and despawn what fell out of range.",
-
   "rationale": "The full map is far too large to hold at once, so tiles are spawned and despawned around the player each frame under a fixed per-frame budget. Load and evict radii differ so that tiles do not thrash when the player walks back and forth over a tile boundary.",
-
   "steps": [
     {
       "id": "read_player_origin",
@@ -14,8 +12,8 @@
       "id": "tiles_resolve",
       "plugin": "gta5.tiles.resolve",
       "parameters": {
-        "config": "config/gta5_world.json",
-        "streaming": "config/streaming.json"
+        "config": "packages/gta5/config/gta5_world.json",
+        "streaming": "packages/gta5/config/streaming.json"
       },
       "comment": "Maps the player origin onto the tile grid and produces the wanted set, biased along velocity by prefetch.velocity_lead_seconds."
     },
@@ -23,7 +21,7 @@
       "id": "tiles_load",
       "plugin": "gta5.tiles.load",
       "parameters": {
-        "tiles_dir": "assets/tiles",
+        "tiles_dir": "packages/gta5/assets/tiles",
         "objects_key": "scene_objects",
         "shader_key": "gpu_pipeline_textured",
         "max_spawns_per_frame": 64
@@ -44,7 +42,6 @@
       "comment": "Flags tiles whose distance band changed. Banding is per tile, not per placement: a band change is then one teardown instead of thousands."
     }
   ],
-
   "diagnostics": [
     "gta5.tiles.wanted_count",
     "gta5.tiles.resident_count",
