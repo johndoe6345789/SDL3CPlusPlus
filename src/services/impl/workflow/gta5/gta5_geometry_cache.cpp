@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/gta5/gta5_geometry_cache.hpp"
 
+#include "services/interfaces/workflow/gta5/gta5_collision_shape.hpp"
 #include "services/interfaces/workflow/gta5/gta5_geometry_upload.hpp"
 
 namespace sdl3cpp::services::impl {
@@ -45,6 +46,7 @@ void SweepGta5GeometryCache(Gta5StreamState& state, SDL_GPUDevice* device,
         }
         SDL_ReleaseGPUBuffer(device, geometry.vertexBuffer);
         SDL_ReleaseGPUBuffer(device, geometry.indexBuffer);
+        ReleaseGta5CollisionShape(geometry);
         it = state.geometryCache.erase(it);
         ++released;
     }

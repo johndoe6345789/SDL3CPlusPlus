@@ -8,6 +8,7 @@
 #include "services/interfaces/workflow_context.hpp"
 
 #include <SDL3/SDL_gpu.h>
+#include <btBulletDynamicsCommon.h>
 
 #include <utility>
 
@@ -27,6 +28,8 @@ void WorkflowGta5TilesLoadStep::Execute(const WorkflowStepDefinition& step,
 
     auto* device = context.Get<SDL_GPUDevice*>("gpu_device", nullptr);
     if (!device) return;
+    auto* world =
+        context.Get<btDiscreteDynamicsWorld*>("physics_world", nullptr);
 
     const std::string tilesDir = Gta5ResolvePath(
         step, context, "tiles_dir", "packages/gta5/assets/tiles");
@@ -60,8 +63,8 @@ void WorkflowGta5TilesLoadStep::Execute(const WorkflowStepDefinition& step,
             }
         }
 
-        spawned += SpawnGta5TilePlacements(*state_, resident,
-                                           budget - spawned, device, logger_);
+        spawned += SpawnGta5TilePlacements(
+            *state_, resident, budget - spawned, device, world, logger_);
     }
 
     if (spawned > 0) {

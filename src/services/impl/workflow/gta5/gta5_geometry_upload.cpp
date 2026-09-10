@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/gta5/gta5_geometry_upload.hpp"
 
+#include "services/interfaces/workflow/gta5/gta5_collision_shape.hpp"
 #include "services/interfaces/workflow/graphics/graphics_gpu_buffer_upload.hpp"
 #include "services/interfaces/workflow/rendering/model_load_helpers.hpp"
 
@@ -68,6 +69,10 @@ bool BuildGta5Geometry(const Gta5Placement& placement, SDL_GPUDevice* device,
     }
 
     geometry.indexCount = static_cast<std::uint32_t>(mesh.indices.size());
+    // Collide against the drawn triangles: stand on what is visible.
+    if (!BuildGta5CollisionShape(mesh, geometry)) {
+        Warn(logger, "'" + placement.archetype + "' is not collidable");
+    }
     geometry.usable = true;
     return true;
 }

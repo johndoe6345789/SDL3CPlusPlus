@@ -5,6 +5,7 @@
 #include "services/interfaces/workflow_context.hpp"
 
 #include <SDL3/SDL_gpu.h>
+#include <btBulletDynamicsCommon.h>
 
 #include <utility>
 
@@ -22,7 +23,10 @@ void WorkflowGta5TilesEvictStep::Execute(
     const WorkflowStepDefinition& /*step*/, WorkflowContext& context) {
     if (!state_ || state_->resident.empty()) return;
 
-    const Gta5EvictResult result = ApplyGta5EvictPlan(*state_);
+    const Gta5EvictResult result = ApplyGta5EvictPlan(
+        *state_,
+        context.Get<btDiscreteDynamicsWorld*>("physics_world",
+                                              nullptr));
     if (result.instancesReleased == 0) return;
 
     // Only sweep once instances have given up their references, so an

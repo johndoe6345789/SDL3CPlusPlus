@@ -18,6 +18,7 @@ struct Gta5EvictResult {
 ///
 /// Geometry buffers are not freed here: SweepGta5GeometryCache does that
 /// once, after the references have been given up.
-Gta5EvictResult ApplyGta5EvictPlan(Gta5StreamState& state);
+Gta5EvictResult ApplyGta5EvictPlan(Gta5StreamState& state,
+                                  btDiscreteDynamicsWorld* world);
 
 }  // namespace sdl3cpp::services::impl

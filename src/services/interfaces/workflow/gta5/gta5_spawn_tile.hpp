@@ -18,6 +18,7 @@ namespace sdl3cpp::services::impl {
 int SpawnGta5TilePlacements(Gta5StreamState& state,
                             Gta5ResidentTile& resident, int budget,
                             SDL_GPUDevice* device,
+                            btDiscreteDynamicsWorld* world,
                             const std::shared_ptr<ILogger>& logger);
 
 }  // namespace sdl3cpp::services::impl

@@ -243,12 +243,12 @@
         "light_dir_x": -0.4,
         "light_dir_y": -0.85,
         "light_dir_z": -0.3,
-        "light_intensity": 2.2,
-        "ambient_r": 0.35,
-        "ambient_g": 0.38,
-        "ambient_b": 0.45,
-        "ambient_intensity": 1.6,
-        "exposure": 1.0
+        "light_intensity": 1.6,
+        "ambient_r": 0.42,
+        "ambient_g": 0.47,
+        "ambient_b": 0.58,
+        "ambient_intensity": 1.4,
+        "exposure": 0.7
       }
     },
     {

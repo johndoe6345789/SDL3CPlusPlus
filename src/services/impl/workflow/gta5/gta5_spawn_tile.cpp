@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/gta5/gta5_spawn_tile.hpp"
 
+#include "services/interfaces/workflow/gta5/gta5_collision_body.hpp"
 #include "services/interfaces/workflow/gta5/gta5_geometry_cache.hpp"
 #include "services/interfaces/workflow/gta5/gta5_model_matrix.hpp"
 
@@ -8,6 +9,7 @@ namespace sdl3cpp::services::impl {
 int SpawnGta5TilePlacements(Gta5StreamState& state,
                             Gta5ResidentTile& resident, int budget,
                             SDL_GPUDevice* device,
+                            btDiscreteDynamicsWorld* world,
                             const std::shared_ptr<ILogger>& logger) {
     int consumed = 0;
 
@@ -33,6 +35,7 @@ int SpawnGta5TilePlacements(Gta5StreamState& state,
         Gta5Instance instance;
         instance.geometry = geometry;
         instance.modelMatrix = BuildGta5ModelMatrix(placement);
+        AddGta5InstanceBody(world, placement, *geometry, instance);
         resident.instances.push_back(instance);
         ++geometry->references;
     }
