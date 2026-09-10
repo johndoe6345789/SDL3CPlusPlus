@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/rendering/workflow_map_load_step.hpp"
-#include "services/interfaces/workflow/rendering/map_load_helpers.hpp"
+#include "services/interfaces/workflow/rendering/map_load_params.hpp"
+#include "services/interfaces/workflow/rendering/map_scene_node_processor.hpp"
 
 #include <SDL3/SDL_gpu.h>
 #include <assimp/Importer.hpp>
