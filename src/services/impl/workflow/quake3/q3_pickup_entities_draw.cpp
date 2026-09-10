@@ -9,15 +9,10 @@ void DrawPickupEntities(const nlohmann::json& entities,
                         const glm::mat4& proj, const glm::vec3& camPos,
                         const glm::mat4& shadowVP, float time,
                         SDL_GPURenderPass* pass, SDL_GPUCommandBuffer* cmd,
-                        const PickupQuadBuffers& buffers,
                         WorkflowContext& context) {
+    // Each item draws its own md3, which binds its own buffers.
     const glm::vec3 camRight(view[0][0], view[1][0], view[2][0]);
     const glm::vec3 camUp(view[0][1], view[1][1], view[2][1]);
-
-    SDL_GPUBufferBinding vb = {buffers.quadVb, 0};
-    SDL_BindGPUVertexBuffers(pass, 0, &vb, 1);
-    SDL_GPUBufferBinding ib = {buffers.quadIb, 0};
-    SDL_BindGPUIndexBuffer(pass, &ib, SDL_GPU_INDEXELEMENTSIZE_16BIT);
 
     int drawn = 0;
     for (const auto& ent : entities) {

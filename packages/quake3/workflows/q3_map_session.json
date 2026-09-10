@@ -769,6 +769,591 @@
       }
     },
     {
+      "id": "load_item_armor_shard_read",
+      "type": "q3.md3.read",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "item_armor_shard",
+        "path": "models/powerups/armor/shard.md3"
+      }
+    },
+    {
+      "id": "load_item_armor_shard_parse_tags",
+      "type": "q3.md3.parse_tags",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "item_armor_shard",
+        "path": "models/powerups/armor/shard.md3"
+      }
+    },
+    {
+      "id": "load_item_armor_shard_upload_surfaces",
+      "type": "q3.md3.upload_surfaces",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "item_armor_shard",
+        "path": "models/powerups/armor/shard.md3"
+      }
+    },
+    {
+      "id": "load_item_armor_combat_read",
+      "type": "q3.md3.read",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "item_armor_combat",
+        "path": "models/powerups/armor/armor_yel.md3"
+      }
+    },
+    {
+      "id": "load_item_armor_combat_parse_tags",
+      "type": "q3.md3.parse_tags",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "item_armor_combat",
+        "path": "models/powerups/armor/armor_yel.md3"
+      }
+    },
+    {
+      "id": "load_item_armor_combat_upload_surfaces",
+      "type": "q3.md3.upload_surfaces",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "item_armor_combat",
+        "path": "models/powerups/armor/armor_yel.md3"
+      }
+    },
+    {
+      "id": "load_item_armor_body_read",
+      "type": "q3.md3.read",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "item_armor_body",
+        "path": "models/powerups/armor/armor_red.md3"
+      }
+    },
+    {
+      "id": "load_item_armor_body_parse_tags",
+      "type": "q3.md3.parse_tags",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "item_armor_body",
+        "path": "models/powerups/armor/armor_red.md3"
+      }
+    },
+    {
+      "id": "load_item_armor_body_upload_surfaces",
+      "type": "q3.md3.upload_surfaces",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "item_armor_body",
+        "path": "models/powerups/armor/armor_red.md3"
+      }
+    },
+    {
+      "id": "load_item_health_small_read",
+      "type": "q3.md3.read",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "item_health_small",
+        "path": "models/powerups/health/small_cross.md3"
+      }
+    },
+    {
+      "id": "load_item_health_small_parse_tags",
+      "type": "q3.md3.parse_tags",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "item_health_small",
+        "path": "models/powerups/health/small_cross.md3"
+      }
+    },
+    {
+      "id": "load_item_health_small_upload_surfaces",
+      "type": "q3.md3.upload_surfaces",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "item_health_small",
+        "path": "models/powerups/health/small_cross.md3"
+      }
+    },
+    {
+      "id": "load_item_health_read",
+      "type": "q3.md3.read",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "item_health",
+        "path": "models/powerups/health/medium_cross.md3"
+      }
+    },
+    {
+      "id": "load_item_health_parse_tags",
+      "type": "q3.md3.parse_tags",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "item_health",
+        "path": "models/powerups/health/medium_cross.md3"
+      }
+    },
+    {
+      "id": "load_item_health_upload_surfaces",
+      "type": "q3.md3.upload_surfaces",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "item_health",
+        "path": "models/powerups/health/medium_cross.md3"
+      }
+    },
+    {
+      "id": "load_item_health_large_read",
+      "type": "q3.md3.read",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "item_health_large",
+        "path": "models/powerups/health/large_cross.md3"
+      }
+    },
+    {
+      "id": "load_item_health_large_parse_tags",
+      "type": "q3.md3.parse_tags",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "item_health_large",
+        "path": "models/powerups/health/large_cross.md3"
+      }
+    },
+    {
+      "id": "load_item_health_large_upload_surfaces",
+      "type": "q3.md3.upload_surfaces",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "item_health_large",
+        "path": "models/powerups/health/large_cross.md3"
+      }
+    },
+    {
+      "id": "load_item_health_mega_read",
+      "type": "q3.md3.read",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "item_health_mega",
+        "path": "models/powerups/health/mega_cross.md3"
+      }
+    },
+    {
+      "id": "load_item_health_mega_parse_tags",
+      "type": "q3.md3.parse_tags",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "item_health_mega",
+        "path": "models/powerups/health/mega_cross.md3"
+      }
+    },
+    {
+      "id": "load_item_health_mega_upload_surfaces",
+      "type": "q3.md3.upload_surfaces",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "item_health_mega",
+        "path": "models/powerups/health/mega_cross.md3"
+      }
+    },
+    {
+      "id": "load_ammo_bullets_read",
+      "type": "q3.md3.read",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "ammo_bullets",
+        "path": "models/powerups/ammo/machinegunam.md3"
+      }
+    },
+    {
+      "id": "load_ammo_bullets_parse_tags",
+      "type": "q3.md3.parse_tags",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "ammo_bullets",
+        "path": "models/powerups/ammo/machinegunam.md3"
+      }
+    },
+    {
+      "id": "load_ammo_bullets_upload_surfaces",
+      "type": "q3.md3.upload_surfaces",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "ammo_bullets",
+        "path": "models/powerups/ammo/machinegunam.md3"
+      }
+    },
+    {
+      "id": "load_ammo_shells_read",
+      "type": "q3.md3.read",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "ammo_shells",
+        "path": "models/powerups/ammo/shotgunam.md3"
+      }
+    },
+    {
+      "id": "load_ammo_shells_parse_tags",
+      "type": "q3.md3.parse_tags",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "ammo_shells",
+        "path": "models/powerups/ammo/shotgunam.md3"
+      }
+    },
+    {
+      "id": "load_ammo_shells_upload_surfaces",
+      "type": "q3.md3.upload_surfaces",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "ammo_shells",
+        "path": "models/powerups/ammo/shotgunam.md3"
+      }
+    },
+    {
+      "id": "load_ammo_grenades_read",
+      "type": "q3.md3.read",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "ammo_grenades",
+        "path": "models/powerups/ammo/grenadeam.md3"
+      }
+    },
+    {
+      "id": "load_ammo_grenades_parse_tags",
+      "type": "q3.md3.parse_tags",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "ammo_grenades",
+        "path": "models/powerups/ammo/grenadeam.md3"
+      }
+    },
+    {
+      "id": "load_ammo_grenades_upload_surfaces",
+      "type": "q3.md3.upload_surfaces",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "ammo_grenades",
+        "path": "models/powerups/ammo/grenadeam.md3"
+      }
+    },
+    {
+      "id": "load_ammo_rockets_read",
+      "type": "q3.md3.read",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "ammo_rockets",
+        "path": "models/powerups/ammo/rocketam.md3"
+      }
+    },
+    {
+      "id": "load_ammo_rockets_parse_tags",
+      "type": "q3.md3.parse_tags",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "ammo_rockets",
+        "path": "models/powerups/ammo/rocketam.md3"
+      }
+    },
+    {
+      "id": "load_ammo_rockets_upload_surfaces",
+      "type": "q3.md3.upload_surfaces",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "ammo_rockets",
+        "path": "models/powerups/ammo/rocketam.md3"
+      }
+    },
+    {
+      "id": "load_ammo_cells_read",
+      "type": "q3.md3.read",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "ammo_cells",
+        "path": "models/powerups/ammo/plasmaam.md3"
+      }
+    },
+    {
+      "id": "load_ammo_cells_parse_tags",
+      "type": "q3.md3.parse_tags",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "ammo_cells",
+        "path": "models/powerups/ammo/plasmaam.md3"
+      }
+    },
+    {
+      "id": "load_ammo_cells_upload_surfaces",
+      "type": "q3.md3.upload_surfaces",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "ammo_cells",
+        "path": "models/powerups/ammo/plasmaam.md3"
+      }
+    },
+    {
+      "id": "load_ammo_lightning_read",
+      "type": "q3.md3.read",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "ammo_lightning",
+        "path": "models/powerups/ammo/lightningam.md3"
+      }
+    },
+    {
+      "id": "load_ammo_lightning_parse_tags",
+      "type": "q3.md3.parse_tags",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "ammo_lightning",
+        "path": "models/powerups/ammo/lightningam.md3"
+      }
+    },
+    {
+      "id": "load_ammo_lightning_upload_surfaces",
+      "type": "q3.md3.upload_surfaces",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "ammo_lightning",
+        "path": "models/powerups/ammo/lightningam.md3"
+      }
+    },
+    {
+      "id": "load_ammo_slugs_read",
+      "type": "q3.md3.read",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "ammo_slugs",
+        "path": "models/powerups/ammo/railgunam.md3"
+      }
+    },
+    {
+      "id": "load_ammo_slugs_parse_tags",
+      "type": "q3.md3.parse_tags",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "ammo_slugs",
+        "path": "models/powerups/ammo/railgunam.md3"
+      }
+    },
+    {
+      "id": "load_ammo_slugs_upload_surfaces",
+      "type": "q3.md3.upload_surfaces",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "ammo_slugs",
+        "path": "models/powerups/ammo/railgunam.md3"
+      }
+    },
+    {
+      "id": "load_ammo_bfg_read",
+      "type": "q3.md3.read",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "ammo_bfg",
+        "path": "models/powerups/ammo/bfgam.md3"
+      }
+    },
+    {
+      "id": "load_ammo_bfg_parse_tags",
+      "type": "q3.md3.parse_tags",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "ammo_bfg",
+        "path": "models/powerups/ammo/bfgam.md3"
+      }
+    },
+    {
+      "id": "load_ammo_bfg_upload_surfaces",
+      "type": "q3.md3.upload_surfaces",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ],
+      "parameters": {
+        "prefix": "ammo_bfg",
+        "path": "models/powerups/ammo/bfgam.md3"
+      }
+    },
+    {
       "id": "bots_spawn",
       "type": "q3.bots.spawn",
       "typeVersion": 1,

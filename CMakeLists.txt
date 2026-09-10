@@ -653,6 +653,8 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/quake3/q3_hud_head_render.cpp
         src/services/impl/workflow/quake3/q3_hud_head_sway.cpp
         src/services/impl/workflow/quake3/q3_hud_head_targets.cpp
+        src/services/impl/workflow/quake3/q3_item_models.cpp
+        src/services/impl/workflow/quake3/q3_item_transform.cpp
         src/services/impl/workflow/quake3/q3_mapselect_draw.cpp
         src/services/impl/workflow/quake3/q3_mapselect_info.cpp
         src/services/impl/workflow/quake3/q3_mapselect_levelshot.cpp
@@ -663,6 +665,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/quake3/q3_md3_draw_surfaces.cpp
         src/services/impl/workflow/quake3/q3_md3_gpu_upload.cpp
         src/services/impl/workflow/quake3/q3_md3_model_matrix.cpp
+        src/services/impl/workflow/quake3/q3_md3_shader_images.cpp
         src/services/impl/workflow/quake3/q3_md3_source.cpp
         src/services/impl/workflow/quake3/q3_md3_surface_geometry.cpp
         src/services/impl/workflow/quake3/q3_md3_surface_texture.cpp
@@ -687,13 +690,11 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/quake3/q3_pickup_apply.cpp
         src/services/impl/workflow/quake3/q3_pickup_can_grab.cpp
         src/services/impl/workflow/quake3/q3_pickup_classify.cpp
-        src/services/impl/workflow/quake3/q3_pickup_color_texture.cpp
         src/services/impl/workflow/quake3/q3_pickup_effects.cpp
         src/services/impl/workflow/quake3/q3_pickup_entities_draw.cpp
         src/services/impl/workflow/quake3/q3_pickup_entity_draw.cpp
         src/services/impl/workflow/quake3/q3_pickup_lookup_tables.cpp
         src/services/impl/workflow/quake3/q3_pickup_position.cpp
-        src/services/impl/workflow/quake3/q3_pickup_quad_buffers.cpp
         src/services/impl/workflow/quake3/q3_pk3_reader.cpp
         src/services/impl/workflow/quake3/q3_player_position.cpp
         src/services/impl/workflow/quake3/q3_pm_slide_move_helpers.cpp

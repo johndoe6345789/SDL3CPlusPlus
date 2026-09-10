@@ -13,10 +13,6 @@ WorkflowQ3PickupsDrawStep::WorkflowQ3PickupsDrawStep(
     std::shared_ptr<ILogger> logger)
     : logger_(std::move(logger)) {}
 
-WorkflowQ3PickupsDrawStep::~WorkflowQ3PickupsDrawStep() {
-    ReleasePickupQuadBuffers(quadBuffers_);
-}
-
 std::string WorkflowQ3PickupsDrawStep::GetPluginId() const {
     return "q3.pickups.draw";
 }
@@ -36,14 +32,6 @@ void WorkflowQ3PickupsDrawStep::Execute(const WorkflowStepDefinition& step,
         return;
     }
 
-    EnsurePickupQuadBuffers(device, quadBuffers_);
-    EnsurePickupColorTexture(device, context, "q3_pickup_weapon", 255, 210, 40);
-    EnsurePickupColorTexture(device, context, "q3_pickup_ammo", 255, 120, 45);
-    EnsurePickupColorTexture(device, context, "q3_pickup_health", 40, 235, 85);
-    EnsurePickupColorTexture(device, context, "q3_pickup_armor", 70, 150, 255);
-    EnsurePickupColorTexture(device, context, "q3_pickup_powerup", 190, 90,
-                             255);
-
     auto collected =
         context.Get<nlohmann::json>("q3.collected", nlohmann::json::object());
     auto view   = context.Get<glm::mat4>("render.view_matrix", glm::mat4(1.0f));
@@ -54,7 +42,7 @@ void WorkflowQ3PickupsDrawStep::Execute(const WorkflowStepDefinition& step,
 
     SDL_BindGPUGraphicsPipeline(pass, pipeline);
     DrawPickupEntities(*entities, collected, view, proj, camPos, shadowVP, time,
-                       pass, cmd, quadBuffers_, context);
+                       pass, cmd, context);
 }
 
 }  // namespace sdl3cpp::services::impl
