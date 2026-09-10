@@ -492,6 +492,29 @@
         "glm::glm",
         "Bullet::Bullet"
       ]
+    },
+    {
+      "name": "q3_stairs_test",
+      "sources": [
+        "tests/q3_stairs_test.cpp",
+        "src/services/impl/workflow/quake3/workflow_q3_pm_accelerate_step.cpp",
+        "src/services/impl/workflow/quake3/workflow_q3_pm_friction_step.cpp",
+        "src/services/impl/workflow/quake3/workflow_q3_pm_ground_step.cpp",
+        "src/services/impl/workflow/quake3/workflow_q3_pm_step_slide_step.cpp",
+        "src/services/impl/workflow/quake3/q3_step_slide.cpp",
+        "src/services/impl/workflow/quake3/q3_step_slide_trace.cpp",
+        "src/services/impl/workflow/quake3/q3_slide_move.cpp",
+        "src/services/impl/workflow/quake3/q3_slide_planes.cpp",
+        "src/services/impl/workflow/quake3/q3_wish_dir.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main",
+        "glm::glm",
+        "Bullet::Bullet"
+      ]
     }
   ],
   "file_copying": [

@@ -96,7 +96,8 @@ inline const btCollisionObject* PlayerBody(const WorkflowContext& context) {
 // ─────────────────────────────────────────────────────────────────────
 inline glm::vec3 FaceNormalAt(const btCollisionObject* object, int child,
                               const btVector3& contact,
-                              const glm::vec3& swept) {
+                              const glm::vec3& swept,
+                              const glm::vec3& sweepDir = glm::vec3(0.f)) {
     if (!object) return swept;
     const btCollisionShape* shape = object->getCollisionShape();
     btTransform to = object->getWorldTransform();
@@ -112,7 +113,17 @@ inline glm::vec3 FaceNormalAt(const btCollisionObject* object, int child,
         static_cast<const btPolyhedralConvexShape*>(shape);
 
     const btVector3 local = to.inverse() * contact;
-    const btVector3 towards(swept.x, swept.y, swept.z);
+    // Prefer the sweep's own direction to decide which faces could have
+    // stopped it: a face that blocks a move has to point back against
+    // it. Bullet's reported hit normal is arbitrary when the sweep
+    // starts already in contact, and trusting it there picked a face at
+    // right angles to the motion -- a downward probe onto a step came
+    // back with the step's side normal, so the player was neither
+    // standing on it nor able to fall off it.
+    const bool haveDir = glm::dot(sweepDir, sweepDir) > 0.f;
+    const btVector3 towards =
+        haveDir ? btVector3(-sweepDir.x, -sweepDir.y, -sweepDir.z)
+                : btVector3(swept.x, swept.y, swept.z);
     btVector3 best(0.f, 0.f, 0.f);
     btScalar nearest = SIMD_INFINITY;
 
@@ -195,9 +206,13 @@ inline Q3Trace TraceBox(
         result.hit      = true;
         result.fraction = cb.m_closestHitFraction;
         const btVector3& n = cb.m_hitNormalWorld;
+        const glm::vec3 sweep = to - from;
+        const float sweepLength = glm::length(sweep);
         result.normal   = FaceNormalAt(cb.m_hitCollisionObject, cb.hitChild,
                                        cb.m_hitPointWorld,
-                                       glm::vec3(n.x(), n.y(), n.z()));
+                                       glm::vec3(n.x(), n.y(), n.z()),
+                                       sweepLength > 0.f ? sweep / sweepLength
+                                                         : glm::vec3(0.f));
 
         // Interpolate end position along the sweep, then back off along
         // the normal by Quake's SURFACE_CLIP_EPSILON (cm_local.h, 0.125

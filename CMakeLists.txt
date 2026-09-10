@@ -1087,6 +1087,27 @@ target_link_libraries(q3_ramp_walk_test PRIVATE
 )
 add_test(NAME q3_ramp_walk_test COMMAND q3_ramp_walk_test)
 
+add_executable(q3_stairs_test)
+target_sources(q3_stairs_test PRIVATE tests/q3_stairs_test.cpp)
+target_sources(q3_stairs_test PRIVATE src/services/impl/workflow/quake3/workflow_q3_pm_accelerate_step.cpp)
+target_sources(q3_stairs_test PRIVATE src/services/impl/workflow/quake3/workflow_q3_pm_friction_step.cpp)
+target_sources(q3_stairs_test PRIVATE src/services/impl/workflow/quake3/workflow_q3_pm_ground_step.cpp)
+target_sources(q3_stairs_test PRIVATE src/services/impl/workflow/quake3/workflow_q3_pm_step_slide_step.cpp)
+target_sources(q3_stairs_test PRIVATE src/services/impl/workflow/quake3/q3_step_slide.cpp)
+target_sources(q3_stairs_test PRIVATE src/services/impl/workflow/quake3/q3_step_slide_trace.cpp)
+target_sources(q3_stairs_test PRIVATE src/services/impl/workflow/quake3/q3_slide_move.cpp)
+target_sources(q3_stairs_test PRIVATE src/services/impl/workflow/quake3/q3_slide_planes.cpp)
+target_sources(q3_stairs_test PRIVATE src/services/impl/workflow/quake3/q3_wish_dir.cpp)
+target_include_directories(q3_stairs_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(q3_stairs_test PRIVATE
+    GTest::gtest_main
+    glm::glm
+    Bullet::Bullet
+)
+add_test(NAME q3_stairs_test COMMAND q3_stairs_test)
+
 # ============================================================================
 # FILE COPYING
 # ============================================================================

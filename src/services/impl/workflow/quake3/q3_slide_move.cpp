@@ -23,8 +23,17 @@ bool SlideMove(services::impl::Q3PlayerState& ps,
         auto tr = services::impl::TraceBox(world, ps.origin, target,
                                            ps.mins, ps.maxs, ignore);
         tr.normal = FaceNormal(tr.normal);
+        // Always take the trace's end position. Bullet reports a sweep
+        // that starts in contact as a hit at fraction 0, and TraceBox
+        // turns that into an end position eased back out along the
+        // normal (Quake's SURFACE_CLIP_EPSILON). Guarding the
+        // assignment on a minimum fraction threw that escape away in
+        // exactly the case it exists for, so a player who ended a move
+        // touching a surface could never leave it: every later sweep
+        // started in the same contact, returned fraction 0, and moved
+        // them nowhere. That is what wedged them against a stair.
+        ps.origin = tr.endPos;
         if (tr.fraction > kMinFraction) {
-            ps.origin = tr.endPos;
             timeLeft *= (1.f - tr.fraction);
         }
         if (tr.fraction >= 1.f || !tr.hit) {
