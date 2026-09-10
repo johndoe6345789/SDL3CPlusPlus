@@ -23,15 +23,18 @@ namespace sdl3cpp::services::impl {
  *   - config_path (string, optional): Path to input_aggregation.json
  *
  * Context Input:
- *   - input.aggregation.config (nlohmann::json, optional): Config loaded into context
- *   - input.keyboard.state (nlohmann::json): Keyboard state from keyboard poll
+ *   - input.aggregation.config (nlohmann::json, optional): Config loaded
+ *     into context
+ *   - input.keyboard.state (nlohmann::json): Keyboard state from keyboard
+ *     poll
  *   - input.mouse.x, input.mouse.y (float): Mouse position from mouse poll
  *   - input.gamepad.* (float): Gamepad axes from gamepad poll
  *   - input.gamepad.connected (bool): Whether gamepad is available
  *
  * Context Output:
- *   - Configured output keys (float): Combined axis values clamped to [-1, 1]
- *     e.g., input.forward_axis, input.right_axis, input.look_yaw_delta
+ *   - Configured output keys (float): Combined axis values clamped to
+ *     [-1, 1], e.g., input.forward_axis, input.right_axis,
+ *     input.look_yaw_delta
  */
 class WorkflowInputAxisCombineStep final : public IWorkflowStep {
 public:
@@ -40,15 +43,11 @@ public:
     );
 
     std::string GetPluginId() const override;
-    void Execute(const WorkflowStepDefinition& step, WorkflowContext& context) override;
+    void Execute(const WorkflowStepDefinition& step,
+                WorkflowContext& context) override;
 
 private:
     std::shared_ptr<ILogger> logger_;
-
-    /**
-     * Apply deadzone to axis value (clamp to [-1, 1] range after threshold).
-     */
-    static float ApplyDeadzone(float value, float deadzone);
 };
 
 }  // namespace sdl3cpp::services::impl
