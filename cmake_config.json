@@ -86,6 +86,8 @@
         "src/services/impl/workflow/workflow_load_workflow_step.cpp",
         "src/services/impl/workflow/workflow_definition_parser.cpp",
         "src/services/impl/workflow/workflow_definition_parser_nodes.cpp",
+        "src/services/impl/workflow/workflow_definition_parser_node_parse.cpp",
+        "src/services/impl/workflow/workflow_definition_parser_node_sort.cpp",
         "src/services/impl/workflow/workflow_definition_parser_variables.cpp",
         "src/services/impl/workflow/workflow_connection_resolver.cpp",
         "src/services/impl/workflow/workflow_execute_step.cpp",
