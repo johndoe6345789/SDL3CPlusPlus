@@ -712,6 +712,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/quake3/q3_step_slide_trace.cpp
         src/services/impl/workflow/quake3/q3_trigger_load.cpp
         src/services/impl/workflow/quake3/q3_trigger_overlap.cpp
+        src/services/impl/workflow/quake3/q3_weapon_cycle.cpp
         src/services/impl/workflow/quake3/q3_weapon_fire_context.cpp
         src/services/impl/workflow/quake3/q3_weapon_hitscan.cpp
         src/services/impl/workflow/quake3/q3_weapon_hitscan_common.cpp
@@ -1137,6 +1138,18 @@ target_link_libraries(q3_brush_trace_test PRIVATE
     Bullet::Bullet
 )
 add_test(NAME q3_brush_trace_test COMMAND q3_brush_trace_test)
+
+add_executable(q3_weapon_cycle_test)
+target_sources(q3_weapon_cycle_test PRIVATE tests/q3_weapon_cycle_test.cpp)
+target_sources(q3_weapon_cycle_test PRIVATE src/services/impl/workflow/quake3/q3_weapon_cycle.cpp)
+target_include_directories(q3_weapon_cycle_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(q3_weapon_cycle_test PRIVATE
+    GTest::gtest_main
+    nlohmann_json::nlohmann_json
+)
+add_test(NAME q3_weapon_cycle_test COMMAND q3_weapon_cycle_test)
 
 # ============================================================================
 # FILE COPYING

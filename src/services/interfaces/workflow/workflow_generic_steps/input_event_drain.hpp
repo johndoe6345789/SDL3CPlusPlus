@@ -14,6 +14,10 @@ struct PolledInputEvents {
     bool keyDownPressed   = false;
     bool keyQPressed      = false;
     bool mouseLeftPressed = false;
+    /// Notches this frame, positive away from the user. Quake binds the
+    /// wheel to weapnext/weapprev, so it arrives as discrete steps
+    /// rather than an axis.
+    float mouseWheelY = 0.0f;
 };
 
 /**

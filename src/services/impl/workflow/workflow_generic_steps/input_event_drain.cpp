@@ -34,6 +34,9 @@ PolledInputEvents DrainInputEvents(WorkflowContext& context) {
                     out.mouseLeftPressed = true;
                 }
                 break;
+            case SDL_EVENT_MOUSE_WHEEL:
+                out.mouseWheelY += event.wheel.y;
+                break;
             case SDL_EVENT_MOUSE_MOTION:
                 out.mouseRelX += event.motion.xrel;
                 out.mouseRelY += event.motion.yrel;
@@ -53,6 +56,7 @@ void WriteInputEventFlags(WorkflowContext& context,
     context.Set<bool>("input_key_down_pressed", events.keyDownPressed);
     context.Set<bool>("input_key_q_pressed", events.keyQPressed);
     context.Set<bool>("input_mouse_left_pressed", events.mouseLeftPressed);
+    context.Set<float>("input_mouse_wheel_y", events.mouseWheelY);
 }
 
 }  // namespace sdl3cpp::services::impl

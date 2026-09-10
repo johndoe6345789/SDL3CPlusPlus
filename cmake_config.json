@@ -543,6 +543,20 @@
         "glm::glm",
         "Bullet::Bullet"
       ]
+    },
+    {
+      "name": "q3_weapon_cycle_test",
+      "sources": [
+        "tests/q3_weapon_cycle_test.cpp",
+        "src/services/impl/workflow/quake3/q3_weapon_cycle.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main",
+        "nlohmann_json::nlohmann_json"
+      ]
     }
   ],
   "file_copying": [

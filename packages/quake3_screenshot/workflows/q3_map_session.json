@@ -353,6 +353,422 @@
       }
     },
     {
+      "id": "load_weapon_gauntlet_read",
+      "type": "q3.md3.read",
+      "typeVersion": 1,
+      "position": [
+        760,
+        0
+      ],
+      "parameters": {
+        "prefix": "weapon_gauntlet",
+        "path": "models/weapons2/gauntlet/gauntlet.md3"
+      }
+    },
+    {
+      "id": "load_weapon_gauntlet_parse_tags",
+      "type": "q3.md3.parse_tags",
+      "typeVersion": 1,
+      "position": [
+        760,
+        0
+      ],
+      "parameters": {
+        "prefix": "weapon_gauntlet",
+        "path": "models/weapons2/gauntlet/gauntlet.md3"
+      }
+    },
+    {
+      "id": "load_weapon_gauntlet_parse_anim",
+      "type": "q3.md3.parse_anim",
+      "typeVersion": 1,
+      "position": [
+        760,
+        0
+      ],
+      "parameters": {
+        "prefix": "weapon_gauntlet",
+        "path": "models/weapons2/gauntlet/gauntlet.md3"
+      }
+    },
+    {
+      "id": "load_weapon_gauntlet_upload_surfaces",
+      "type": "q3.md3.upload_surfaces",
+      "typeVersion": 1,
+      "position": [
+        760,
+        0
+      ],
+      "parameters": {
+        "prefix": "weapon_gauntlet",
+        "path": "models/weapons2/gauntlet/gauntlet.md3"
+      }
+    },
+    {
+      "id": "load_weapon_shotgun_read",
+      "type": "q3.md3.read",
+      "typeVersion": 1,
+      "position": [
+        760,
+        0
+      ],
+      "parameters": {
+        "prefix": "weapon_shotgun",
+        "path": "models/weapons2/shotgun/shotgun.md3"
+      }
+    },
+    {
+      "id": "load_weapon_shotgun_parse_tags",
+      "type": "q3.md3.parse_tags",
+      "typeVersion": 1,
+      "position": [
+        760,
+        0
+      ],
+      "parameters": {
+        "prefix": "weapon_shotgun",
+        "path": "models/weapons2/shotgun/shotgun.md3"
+      }
+    },
+    {
+      "id": "load_weapon_shotgun_parse_anim",
+      "type": "q3.md3.parse_anim",
+      "typeVersion": 1,
+      "position": [
+        760,
+        0
+      ],
+      "parameters": {
+        "prefix": "weapon_shotgun",
+        "path": "models/weapons2/shotgun/shotgun.md3"
+      }
+    },
+    {
+      "id": "load_weapon_shotgun_upload_surfaces",
+      "type": "q3.md3.upload_surfaces",
+      "typeVersion": 1,
+      "position": [
+        760,
+        0
+      ],
+      "parameters": {
+        "prefix": "weapon_shotgun",
+        "path": "models/weapons2/shotgun/shotgun.md3"
+      }
+    },
+    {
+      "id": "load_weapon_grenadel_read",
+      "type": "q3.md3.read",
+      "typeVersion": 1,
+      "position": [
+        760,
+        0
+      ],
+      "parameters": {
+        "prefix": "weapon_grenadel",
+        "path": "models/weapons2/grenadel/grenadel.md3"
+      }
+    },
+    {
+      "id": "load_weapon_grenadel_parse_tags",
+      "type": "q3.md3.parse_tags",
+      "typeVersion": 1,
+      "position": [
+        760,
+        0
+      ],
+      "parameters": {
+        "prefix": "weapon_grenadel",
+        "path": "models/weapons2/grenadel/grenadel.md3"
+      }
+    },
+    {
+      "id": "load_weapon_grenadel_parse_anim",
+      "type": "q3.md3.parse_anim",
+      "typeVersion": 1,
+      "position": [
+        760,
+        0
+      ],
+      "parameters": {
+        "prefix": "weapon_grenadel",
+        "path": "models/weapons2/grenadel/grenadel.md3"
+      }
+    },
+    {
+      "id": "load_weapon_grenadel_upload_surfaces",
+      "type": "q3.md3.upload_surfaces",
+      "typeVersion": 1,
+      "position": [
+        760,
+        0
+      ],
+      "parameters": {
+        "prefix": "weapon_grenadel",
+        "path": "models/weapons2/grenadel/grenadel.md3"
+      }
+    },
+    {
+      "id": "load_weapon_rocketl_read",
+      "type": "q3.md3.read",
+      "typeVersion": 1,
+      "position": [
+        760,
+        0
+      ],
+      "parameters": {
+        "prefix": "weapon_rocketl",
+        "path": "models/weapons2/rocketl/rocketl.md3"
+      }
+    },
+    {
+      "id": "load_weapon_rocketl_parse_tags",
+      "type": "q3.md3.parse_tags",
+      "typeVersion": 1,
+      "position": [
+        760,
+        0
+      ],
+      "parameters": {
+        "prefix": "weapon_rocketl",
+        "path": "models/weapons2/rocketl/rocketl.md3"
+      }
+    },
+    {
+      "id": "load_weapon_rocketl_parse_anim",
+      "type": "q3.md3.parse_anim",
+      "typeVersion": 1,
+      "position": [
+        760,
+        0
+      ],
+      "parameters": {
+        "prefix": "weapon_rocketl",
+        "path": "models/weapons2/rocketl/rocketl.md3"
+      }
+    },
+    {
+      "id": "load_weapon_rocketl_upload_surfaces",
+      "type": "q3.md3.upload_surfaces",
+      "typeVersion": 1,
+      "position": [
+        760,
+        0
+      ],
+      "parameters": {
+        "prefix": "weapon_rocketl",
+        "path": "models/weapons2/rocketl/rocketl.md3"
+      }
+    },
+    {
+      "id": "load_weapon_lightning_read",
+      "type": "q3.md3.read",
+      "typeVersion": 1,
+      "position": [
+        760,
+        0
+      ],
+      "parameters": {
+        "prefix": "weapon_lightning",
+        "path": "models/weapons2/lightning/lightning.md3"
+      }
+    },
+    {
+      "id": "load_weapon_lightning_parse_tags",
+      "type": "q3.md3.parse_tags",
+      "typeVersion": 1,
+      "position": [
+        760,
+        0
+      ],
+      "parameters": {
+        "prefix": "weapon_lightning",
+        "path": "models/weapons2/lightning/lightning.md3"
+      }
+    },
+    {
+      "id": "load_weapon_lightning_parse_anim",
+      "type": "q3.md3.parse_anim",
+      "typeVersion": 1,
+      "position": [
+        760,
+        0
+      ],
+      "parameters": {
+        "prefix": "weapon_lightning",
+        "path": "models/weapons2/lightning/lightning.md3"
+      }
+    },
+    {
+      "id": "load_weapon_lightning_upload_surfaces",
+      "type": "q3.md3.upload_surfaces",
+      "typeVersion": 1,
+      "position": [
+        760,
+        0
+      ],
+      "parameters": {
+        "prefix": "weapon_lightning",
+        "path": "models/weapons2/lightning/lightning.md3"
+      }
+    },
+    {
+      "id": "load_weapon_railgun_read",
+      "type": "q3.md3.read",
+      "typeVersion": 1,
+      "position": [
+        760,
+        0
+      ],
+      "parameters": {
+        "prefix": "weapon_railgun",
+        "path": "models/weapons2/railgun/railgun.md3"
+      }
+    },
+    {
+      "id": "load_weapon_railgun_parse_tags",
+      "type": "q3.md3.parse_tags",
+      "typeVersion": 1,
+      "position": [
+        760,
+        0
+      ],
+      "parameters": {
+        "prefix": "weapon_railgun",
+        "path": "models/weapons2/railgun/railgun.md3"
+      }
+    },
+    {
+      "id": "load_weapon_railgun_parse_anim",
+      "type": "q3.md3.parse_anim",
+      "typeVersion": 1,
+      "position": [
+        760,
+        0
+      ],
+      "parameters": {
+        "prefix": "weapon_railgun",
+        "path": "models/weapons2/railgun/railgun.md3"
+      }
+    },
+    {
+      "id": "load_weapon_railgun_upload_surfaces",
+      "type": "q3.md3.upload_surfaces",
+      "typeVersion": 1,
+      "position": [
+        760,
+        0
+      ],
+      "parameters": {
+        "prefix": "weapon_railgun",
+        "path": "models/weapons2/railgun/railgun.md3"
+      }
+    },
+    {
+      "id": "load_weapon_plasma_read",
+      "type": "q3.md3.read",
+      "typeVersion": 1,
+      "position": [
+        760,
+        0
+      ],
+      "parameters": {
+        "prefix": "weapon_plasma",
+        "path": "models/weapons2/plasma/plasma.md3"
+      }
+    },
+    {
+      "id": "load_weapon_plasma_parse_tags",
+      "type": "q3.md3.parse_tags",
+      "typeVersion": 1,
+      "position": [
+        760,
+        0
+      ],
+      "parameters": {
+        "prefix": "weapon_plasma",
+        "path": "models/weapons2/plasma/plasma.md3"
+      }
+    },
+    {
+      "id": "load_weapon_plasma_parse_anim",
+      "type": "q3.md3.parse_anim",
+      "typeVersion": 1,
+      "position": [
+        760,
+        0
+      ],
+      "parameters": {
+        "prefix": "weapon_plasma",
+        "path": "models/weapons2/plasma/plasma.md3"
+      }
+    },
+    {
+      "id": "load_weapon_plasma_upload_surfaces",
+      "type": "q3.md3.upload_surfaces",
+      "typeVersion": 1,
+      "position": [
+        760,
+        0
+      ],
+      "parameters": {
+        "prefix": "weapon_plasma",
+        "path": "models/weapons2/plasma/plasma.md3"
+      }
+    },
+    {
+      "id": "load_weapon_bfg_read",
+      "type": "q3.md3.read",
+      "typeVersion": 1,
+      "position": [
+        760,
+        0
+      ],
+      "parameters": {
+        "prefix": "weapon_bfg",
+        "path": "models/weapons2/bfg/bfg.md3"
+      }
+    },
+    {
+      "id": "load_weapon_bfg_parse_tags",
+      "type": "q3.md3.parse_tags",
+      "typeVersion": 1,
+      "position": [
+        760,
+        0
+      ],
+      "parameters": {
+        "prefix": "weapon_bfg",
+        "path": "models/weapons2/bfg/bfg.md3"
+      }
+    },
+    {
+      "id": "load_weapon_bfg_parse_anim",
+      "type": "q3.md3.parse_anim",
+      "typeVersion": 1,
+      "position": [
+        760,
+        0
+      ],
+      "parameters": {
+        "prefix": "weapon_bfg",
+        "path": "models/weapons2/bfg/bfg.md3"
+      }
+    },
+    {
+      "id": "load_weapon_bfg_upload_surfaces",
+      "type": "q3.md3.upload_surfaces",
+      "typeVersion": 1,
+      "position": [
+        760,
+        0
+      ],
+      "parameters": {
+        "prefix": "weapon_bfg",
+        "path": "models/weapons2/bfg/bfg.md3"
+      }
+    },
+    {
       "id": "bots_spawn",
       "type": "q3.bots.spawn",
       "typeVersion": 1,

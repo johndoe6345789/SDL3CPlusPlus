@@ -50,6 +50,7 @@
     {
       "id": "draw_weapon_viewmodel",
       "plugin": "q3.md3.draw",
+      "inputs": { "prefix": "q3.weapon_prefix" },
       "parameters": {
         "prefix":   "weapon_mg",
         "viewmodel": true,

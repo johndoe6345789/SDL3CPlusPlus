@@ -3,6 +3,7 @@
 #include "services/interfaces/workflow/quake3/q3_md3_draw_params.hpp"
 #include "services/interfaces/workflow/quake3/q3_md3_draw_surfaces.hpp"
 #include "services/interfaces/workflow/quake3/q3_md3_model_matrix.hpp"
+#include "services/interfaces/workflow/rendering/pk3_bsp_loader.hpp"
 #include "services/interfaces/workflow/rendering/rendering_types.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
@@ -25,7 +26,11 @@ void WorkflowQ3Md3DrawStep::Execute(const WorkflowStepDefinition& step,
                                     WorkflowContext& context) {
     if (context.GetBool("frame_skip", false)) return;
 
-    const Md3DrawParams params = ReadMd3DrawParams(step);
+    Md3DrawParams params = ReadMd3DrawParams(step);
+    // The viewmodel's prefix follows the selected weapon, so allow it to
+    // be bound to a context key as well as fixed in the step.
+    params.prefix =
+        GetStringParamOrInput(step, context, "prefix", params.prefix);
     auto* pass = context.Get<SDL_GPURenderPass*>("gpu_render_pass", nullptr);
     auto* cmd =
         context.Get<SDL_GPUCommandBuffer*>("gpu_command_buffer", nullptr);
