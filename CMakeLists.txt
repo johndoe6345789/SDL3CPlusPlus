@@ -612,7 +612,6 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/input/workflow_input_gamepad_poll_step.cpp
         src/services/impl/workflow/input/workflow_input_keyboard_poll_step.cpp
         src/services/impl/workflow/input/workflow_input_mouse_poll_step.cpp
-        src/services/impl/workflow/input/workflow_input_poll_all_step.cpp
         src/services/impl/workflow/scene/scene_uuid.cpp
         src/services/impl/workflow/scene/workflow_scene_add_geometry_step.cpp
         src/services/impl/workflow/scene/workflow_scene_clear_step.cpp
@@ -756,7 +755,6 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/quake3/workflow_q3_triggers_check_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_weapon_fire_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_weapon_select_step.cpp
-        src/services/impl/workflow/quake3/workflow_q3_weapon_update_step.cpp
         src/services/impl/workflow/workflow_definition_parser_includes.cpp
         src/services/impl/workflow/workflow_definition_parser_include_path.cpp
         src/services/impl/workflow/workflow_definition_parser_expand_include.cpp

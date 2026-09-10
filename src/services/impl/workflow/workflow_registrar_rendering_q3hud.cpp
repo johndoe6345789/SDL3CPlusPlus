@@ -1,7 +1,6 @@
 #include "services/impl/workflow/workflow_registrar_categories.hpp"
 
 #include "services/interfaces/workflow/quake3/workflow_q3_menu_update_step.hpp"
-#include "services/interfaces/workflow/quake3/workflow_q3_weapon_update_step.hpp"
 #include "services/interfaces/workflow/quake3/workflow_q3_hud_step.hpp"
 #include "services/interfaces/workflow/quake3/workflow_q3_hud_head_step.hpp"
 #include "services/interfaces/workflow/quake3/workflow_q3_crosshair_step.hpp"
@@ -28,8 +27,6 @@ int RegisterRenderingQ3HudSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
     int count = 0;
 
     registry->RegisterStep(std::make_shared<WorkflowQ3MenuUpdateStep>(logger));
-    registry->RegisterStep(
-        std::make_shared<WorkflowQ3WeaponUpdateStep>(logger));
     registry->RegisterStep(std::make_shared<WorkflowQ3PickupsDrawStep>(logger));
     registry->RegisterStep(
         std::make_shared<WorkflowOverlaySwBeginStep>(logger));

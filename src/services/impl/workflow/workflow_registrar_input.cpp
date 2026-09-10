@@ -2,7 +2,6 @@
 
 #include "services/interfaces/workflow/workflow_generic_steps/workflow_input_poll_step.hpp"
 #include "services/interfaces/workflow/workflow_generic_steps/workflow_input_mouse_grab_step.hpp"
-#include "services/interfaces/workflow/input/workflow_input_poll_all_step.hpp"
 #include "services/interfaces/workflow/input/workflow_input_keyboard_poll_step.hpp"
 #include "services/interfaces/workflow/input/workflow_input_axis_combine_step.hpp"
 #include "services/interfaces/workflow/input/workflow_input_button_combine_step.hpp"
@@ -27,7 +26,6 @@ int RegisterInputSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
     registry->RegisterStep(std::make_shared<WorkflowInputPollStep>(logger));
     registry->RegisterStep(
         std::make_shared<WorkflowInputMouseGrabStep>(logger));
-    registry->RegisterStep(std::make_shared<WorkflowInputPollAllStep>(logger));
     registry->RegisterStep(
         std::make_shared<WorkflowInputKeyboardPollStep>(logger));
     registry->RegisterStep(
