@@ -86,7 +86,11 @@ re-run; until then placements are written with `model: null`, reported,
 and skipped at load, so a placements-only run still works.
 
 On its first run GTAUtil prompts `GTAV folder :` and waits for you to
-type the path to your install. Answer it once and it remembers. Do not
+type the path to your install. **It has to be a Legacy install.**
+GTAUtil predates the Enhanced edition and identifies a game folder by
+`GTA5.exe`, which Enhanced does not ship -- it has `GTA5_Enhanced.exe`
+instead -- so an Enhanced path is rejected and it simply asks again.
+Answer it once with a Legacy folder and it remembers. Do not
 pipe anything into the script, or that prompt cannot be answered -- this
 is also why `GTAUtil.exe --help` appears to hang, since it is sitting at
 the same prompt.

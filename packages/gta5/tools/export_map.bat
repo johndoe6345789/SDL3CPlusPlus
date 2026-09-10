@@ -21,6 +21,11 @@ set "GTAUTIL=D:\gtautil-2.2.13\GTAUtil.exe"
 set "YMAP_SRC=D:\gtautil-2.2.13\levels\gta5\_citye\downtown_01"
 set "MODEL_SRC=D:\gta5_export\models"
 set "WORK=D:\gta5_export"
+rem Must be a LEGACY install: GTAUtil predates the Enhanced edition and
+rem checks for GTA5.exe, which Enhanced does not ship (it has
+rem GTA5_Enhanced.exe instead). Point at Enhanced and it rejects the
+rem path and asks again forever.
+set "GTAV_DIR=D:\SteamLibrary\steamapps\common\Grand Theft Auto V"
 rem --------------------------------------------------------------------
 
 set "REPO=%~dp0..\..\.."
@@ -56,6 +61,18 @@ rem
 rem The XML count check below stays regardless: it turns a run that
 rem produced nothing into a loud failure rather than an empty map.
 echo [1/2] Converting ymaps to XML...
+echo.
+echo   If GTAUtil asks "GTAV folder :" it is waiting for input --
+echo   it has already been given -i and -o. Paste this and press enter:
+echo.
+echo       %GTAV_DIR%
+echo.
+echo   Enhanced will NOT be accepted -- GTAUtil wants a Legacy install
+echo   with GTA5.exe in it.
+echo.
+echo   It only asks once, then scans the install, which is slow and
+echo   silent. That is normal.
+echo.
 pushd "%WORK%"
 "%GTAUTIL%" exportmeta -i "%YMAP_SRC%" -o "%XML_OUT%"
 popd
