@@ -2,11 +2,9 @@
 
 #include "services/interfaces/i_logger.hpp"
 
-#include <SDL3/SDL.h>
 #include <SDL3/SDL_gpu.h>
 
 #include <memory>
-#include <nlohmann/json.hpp>
 #include <string>
 
 namespace sdl3cpp::services::impl {
@@ -36,27 +34,5 @@ GpuShaderFormatChoice ResolveGpuShaderFormat(const std::string& renderer);
 SDL_GPUDevice* CreateGpuDeviceWithFallback(
     const std::shared_ptr<ILogger>& logger, const std::string& renderer,
     bool debugMode);
-
-/**
- * @brief Claims `window` for `device`.
- * @throws std::runtime_error (destroying `device` first) if the window
- * is null or the claim fails.
- */
-void ClaimWindowForGpuOrThrow(SDL_GPUDevice* device, SDL_Window* window);
-
-/**
- * @brief Applies an optional `present_mode` override from
- * `viewportConfig` ("vsync" | "mailbox" | "immediate" | "auto", picking
- * mailbox/vsync by display refresh rate). Absent means "leave the
- * default VSYNC claim as-is". Unsupported modes fall back to vsync
- * with a warning; never throws.
- */
-void ApplyPresentModeOverride(SDL_GPUDevice* device, SDL_Window* window,
-                              const nlohmann::json& viewportConfig,
-                              const std::shared_ptr<ILogger>& logger);
-
-/// One-line trace description of a completed GPU init, for the logger.
-std::string DescribeGpuInit(uint32_t width, uint32_t height,
-                            SDL_GPUDevice* device);
 
 }  // namespace sdl3cpp::services::impl

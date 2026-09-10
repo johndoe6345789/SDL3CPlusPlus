@@ -1,5 +1,8 @@
 #include "services/interfaces/workflow/graphics/workflow_gpu_shader_compile_step.hpp"
-#include "services/interfaces/workflow/graphics/shader_compile_helpers.hpp"
+#include "services/interfaces/workflow/graphics/shader_binary_io.hpp"
+#include "services/interfaces/workflow/graphics/shader_compile_params.hpp"
+#include "services/interfaces/workflow/graphics/shader_format_detection.hpp"
+#include "services/interfaces/workflow/graphics/shader_gpu_compile.hpp"
 
 #include <SDL3/SDL_gpu.h>
 #include <nlohmann/json.hpp>

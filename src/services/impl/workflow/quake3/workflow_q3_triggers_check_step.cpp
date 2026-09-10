@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/quake3/workflow_q3_triggers_check_step.hpp"
-#include "services/interfaces/workflow/quake3/q3_triggers_check_helpers.hpp"
+#include "services/interfaces/workflow/quake3/q3_trigger_load.hpp"
+#include "services/interfaces/workflow/quake3/q3_trigger_overlap.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
 #include <nlohmann/json.hpp>

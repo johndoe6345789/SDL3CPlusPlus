@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/workflow_generic_steps/workflow_input_poll_step.hpp"
-#include "services/interfaces/workflow/workflow_generic_steps/input_poll_helpers.hpp"
+#include "services/interfaces/workflow/workflow_generic_steps/input_event_drain.hpp"
+#include "services/interfaces/workflow/workflow_generic_steps/input_keyboard_snapshot.hpp"
 #include "services/interfaces/workflow_context.hpp"
 #include "services/interfaces/workflow_step_definition.hpp"
 
