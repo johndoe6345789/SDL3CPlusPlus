@@ -42,34 +42,34 @@ bool SettleSteppedMove(btDiscreteDynamicsWorld* world, Q3PlayerState& stepped,
     // and a trace that cannot start found nothing knowable: in both
     // cases keeping the raised origin lets the player ratchet up a flat
     // wall a step per frame, which is exactly what happened.
-    // Only step onto something that could be stood on. Without this the
-    // step machinery climbs any slope at all, one step per frame, because
-    // the settle below zeroes the downward velocity that would otherwise
-    // carry the player back off it.
-    //
-    // The settle trace positions the player; ask what is underfoot to
-    // decide whether the step was legitimate.
-    const auto footing = services::impl::GroundProbe(
-        world, settleTrace.endPos, kStepSize, stepped.mins, stepped.maxs, self);
-    const bool settledOnWalkable = settleTrace.fraction < 1.f && footing.hit &&
-                                   footing.normal.y >= kMinWalkNormal;
-    if (settleTrace.startSolid || !settledOnWalkable) {
-        // Could not settle back down, so we have no idea what is under
-        // the player. Keeping the raised origin here is what let the
-        // player ratchet up a flat wall a step per frame; discard the
-        // attempt and use the plain slide instead.
+    if (settleTrace.startSolid || settleTrace.fraction >= 1.f) {
         return false;
     }
     stepped.origin = settleTrace.endPos;
-    if (settleTrace.fraction < 1.f) {
-        // The settle is a straight-down probe onto whatever was stepped
-        // onto, so the only thing to take out of the velocity is its
-        // downward part. Clipping against the reported normal here is
-        // what launched the player: the box overhangs the step's edge,
-        // Bullet reports the edge's diagonal, and horizontal speed came
-        // back as vertical.
-        if (stepped.velocity.y < 0.f) stepped.velocity.y = 0.f;
+
+    // ioq3's PM_StepSlideMove takes the stepped position whenever the
+    // settle lands on anything, and stops steep faces being climbed by
+    // clipping the velocity against them (OVERCLIP) rather than by
+    // throwing the step away. Requiring a walkable landing here instead
+    // is what wedged the player on a stair's corner: the box overhangs
+    // both treads, so Bullet reports the diagonal between them, which is
+    // not walkable, and every frame discarded the step that would have
+    // carried them up.
+    const auto footing = services::impl::GroundProbe(
+        world, settleTrace.endPos, kStepSize, stepped.mins, stepped.maxs, self);
+    const bool walkable = footing.hit && footing.normal.y >= kMinWalkNormal;
+    if (walkable && stepped.velocity.y < 0.f) {
+        // Standing on the step: drop the fall so the player does not sink
+        // straight back off it. Only the downward part comes out --
+        // clipping against the reported normal is what launched the
+        // player, since Bullet hands back the edge's diagonal and
+        // horizontal speed came back as vertical.
+        stepped.velocity.y = 0.f;
     }
+    // Landing somewhere unwalkable keeps the position but leaves gravity
+    // alone, so the player settles off it next frame. That is what keeps
+    // a steep face from being climbed a step per frame without having to
+    // discard the move.
     return true;
 }
 

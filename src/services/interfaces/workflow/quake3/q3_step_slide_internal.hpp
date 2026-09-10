@@ -21,10 +21,13 @@ std::optional<services::impl::Q3Trace> ComputeStepUpTrace(
 
 /// Settles `stepped` (already raised by `stepSize` and slid) back down
 /// onto whatever is underfoot. On success, updates `stepped.origin` to
-/// the settled position and zeroes any remaining downward velocity, and
-/// returns true. Returns false (leaving `stepped` unmodified) if the
-/// settle could not land on walkable ground, in which case the step
-/// attempt must be discarded.
+/// the settled position and returns true, zeroing any remaining downward
+/// velocity only when the landing is walkable — an unwalkable landing
+/// (a stair's corner reads as the diagonal between two treads) keeps the
+/// position but lets gravity settle the player off it. Returns false,
+/// leaving `stepped` unmodified, only when nothing was found to stand on
+/// within a step height, which is what would otherwise let the player
+/// ratchet up a flat wall.
 bool SettleSteppedMove(btDiscreteDynamicsWorld* world,
                        services::impl::Q3PlayerState& stepped, float stepSize,
                        const btCollisionObject* self);
