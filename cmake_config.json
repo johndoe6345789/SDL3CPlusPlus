@@ -327,6 +327,10 @@
         "src/services/impl/workflow/rendering/workflow_bsp_parse_spawn_step.cpp",
         "src/services/impl/workflow/rendering/bsp_entity_lump_parser.cpp",
         "src/services/impl/workflow/rendering/bsp_entity_json_builder.cpp",
+        "src/services/impl/workflow/rendering/bsp_entity_enrich.cpp",
+        "src/services/impl/workflow/rendering/bsp_entity_origin.cpp",
+        "src/services/impl/workflow/rendering/bsp_entity_classification.cpp",
+        "src/services/impl/workflow/rendering/bsp_q3_coordinates.cpp",
         "src/services/impl/workflow/workflow_step_parameter_resolver.cpp"
       ],
       "include_directories": [
