@@ -18,8 +18,8 @@
       "id": "set_screenshot_path",
       "plugin": "value.set_if",
       "inputs":  { "condition": "screenshot_due" },
-      "parameters": { "value": "/tmp/q3_screenshot.bmp" },
-      "outputs": { "value": "screenshot_output_path" }
+      "parameters": { "value": "screenshots/q3_screenshot.bmp" },
+      "outputs": { "value": "gpu_screenshot_output_path" }
     },
     {
       "id": "stop_after_screenshot",

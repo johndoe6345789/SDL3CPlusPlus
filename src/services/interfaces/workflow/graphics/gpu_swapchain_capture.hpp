@@ -22,7 +22,8 @@ namespace sdl3cpp::services::impl {
  */
 bool CaptureGpuSwapchainToBmp(SDL_GPUCommandBuffer* cmd, SDL_GPUDevice* device,
                               SDL_GPUTexture* swapchain, uint32_t width,
-                              uint32_t height, const std::string& path,
+                              uint32_t height, SDL_GPUTextureFormat format,
+                              const std::string& path,
                               const std::shared_ptr<ILogger>& logger);
 
 }  // namespace sdl3cpp::services::impl

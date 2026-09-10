@@ -52,7 +52,8 @@ void WorkflowGraphicsScreenshotRequestStep::Execute(
     SDL_GPUCommandBuffer* dlCmd = SDL_AcquireGPUCommandBuffer(device);
     const bool saved            = CaptureGpuSwapchainToBmp(
         dlCmd, device, capture.texture, capture.width, capture.height,
-        ToBmpPath(resolvedPath), logger_);
+        SDL_GetGPUSwapchainTextureFormat(device, window), ToBmpPath(resolvedPath),
+        logger_);
     SDL_ReleaseGPUTexture(device, capture.texture);
 
     context.Set(outputSuccessKey, saved);

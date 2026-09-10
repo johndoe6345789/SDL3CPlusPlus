@@ -120,7 +120,13 @@
       "position": [
         700,
         0
-      ]
+      ],
+      "parameters": {
+        "spawn_x": "${env:QUAKE3_SPAWN_X}",
+        "spawn_y": "${env:QUAKE3_SPAWN_Y}",
+        "spawn_z": "${env:QUAKE3_SPAWN_Z}",
+        "spawn_angle": "${env:QUAKE3_SPAWN_ANGLE}"
+      }
     },
     {
       "id": "load_lower_read",
