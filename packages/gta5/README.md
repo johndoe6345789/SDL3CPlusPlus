@@ -72,6 +72,21 @@ It also conjugates entity rotations. A `CEntityDef` stores the *inverse* of
 the entity's orientation — place buildings with the quaternion as written and
 every rotated prop on the map comes out mirrored.
 
+## Map data is never committed
+
+`packages/gta5/assets/` is gitignored. Tile files carry archetype names
+and coordinates lifted out of a game install, which is game-derived data
+and has no place in a public repository. Regenerate what you need:
+
+```bash
+python packages/gta5/tools/make_test_tiles.py   # stand-in city, seconds
+packages/gta5/tools/export_map.bat              # the real thing
+```
+
+Both write to `assets/tiles`, so the second replaces the first. If the
+map goes empty after an export, that is why: real placements without
+exported meshes have nothing to draw.
+
 ## Exporting, in one script
 
 `tools/export_map.bat` drives the placement half end to end: GTAUtil

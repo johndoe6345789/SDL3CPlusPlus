@@ -1,45 +1,50 @@
 @echo off
 setlocal enabledelayedexpansion
 rem ===================================================================
-rem  Export GTA V map data into the form the gta5 package loads.
+rem  Export GTA V map placements into the form the gta5 package loads.
 rem
-rem  You run this. It reads your own extracted game files and converts
-rem  them; nothing here decrypts anything.
+rem  You run this against your own extracted game files. Nothing here
+rem  decrypts anything.
 rem
-rem  Two halves, and only the first is automatable:
+rem  Verified against GTAUtil 2.2.12. Three things about exportmeta that
+rem  are not obvious and cost a while to work out:
 rem
-rem    placements  ymap -> XML       GTAUtil exportmeta   (this script)
-rem    meshes      ydr/ydd -> glTF   CodeWalker           (by hand)
+rem    * -i takes real FILES, and accepts a wildcard. An install folder
+rem      or a bare ymap name silently matches nothing.
+rem    * it writes <name>.ymap.xml NEXT TO each input. -o does not
+rem      redirect that, so the XML stays with the ymaps.
+rem    * it needs the cache built first, and asks "GTAV folder :" once.
+rem      That prompt is why GTAUtil.exe --help appears to hang.
 rem
-rem  GTAUtil has no drawable export -- see its command list -- so the
-rem  meshes have to come from CodeWalker. Run this for the placements,
-rem  export the drawables yourself, then let the last step pair them up.
+rem  Placements only. GTAUtil has no drawable export, so meshes still
+rem  come out of CodeWalker.
 rem ===================================================================
 
-rem --- edit these four ------------------------------------------------
+rem --- edit these ------------------------------------------------------
 set "GTAUTIL=D:\gtautil-2.2.13\GTAUtil.exe"
-rem Read the ymaps straight out of the Legacy install. Feeding it the
-rem Enhanced-extracted files instead risks a tool that predates that
-rem edition misreading them, so keep the whole chain on one edition.
-set "YMAP_SRC=D:\SteamLibrary\steamapps\common\Grand Theft Auto V"
+
+rem A folder of extracted .ymap files. Must be real files on disk: this
+rem cannot read them out of the install's archives.
+set "YMAP_SRC=D:\gtautil-2.2.13\levels\gta5\_citye\downtown_01\downtown_01_metadata.rpf"
+
+rem Drawables exported from CodeWalker, named after their archetype.
 set "MODEL_SRC=D:\gta5_export\models"
-set "WORK=D:\gta5_export"
-rem Must be a LEGACY install: GTAUtil predates the Enhanced edition and
-rem checks for GTA5.exe, which Enhanced does not ship (it has
-rem GTA5_Enhanced.exe instead). Point at Enhanced and it rejects the
-rem path and asks again forever.
+
+rem Answer to the "GTAV folder :" prompt. Must be a LEGACY install:
+rem GTAUtil predates the Enhanced edition and identifies a game folder by
+rem GTA5.exe, which Enhanced does not ship (it has GTA5_Enhanced.exe).
 set "GTAV_DIR=D:\SteamLibrary\steamapps\common\Grand Theft Auto V"
 rem --------------------------------------------------------------------
 
 set "REPO=%~dp0..\..\.."
-set "XML_OUT=%WORK%\ymaps"
+for %%D in ("%GTAUTIL%") do set "GTAUTIL_DIR=%%~dpD"
+set "CACHE=%GTAUTIL_DIR%cache.json"
 
 echo.
 echo === GTA V map export ===
 echo   GTAUtil    : %GTAUTIL%
 echo   ymap source: %YMAP_SRC%
 echo   models     : %MODEL_SRC%
-echo   output     : %WORK%
 echo.
 
 if not exist "%GTAUTIL%" (
@@ -48,77 +53,52 @@ if not exist "%GTAUTIL%" (
 )
 if not exist "%YMAP_SRC%" (
     echo ERROR: ymap source "%YMAP_SRC%" does not exist.
-    echo        Point YMAP_SRC at an extracted levels\gta5\... folder.
     exit /b 1
 )
 
-if not exist "%XML_OUT%" mkdir "%XML_OUT%"
-
-rem --- 1. placements: ymap -> XML --------------------------------------
-rem On its first run GTAUtil prompts "GTAV folder :" and waits. Type the
-rem path to your GTA V install and press enter; it remembers afterwards.
-rem Do not pipe anything into this script or that prompt cannot be
-rem answered. It then scans the install and can sit silent for minutes,
-rem which is normal.
-rem
-rem The XML count check below stays regardless: it turns a run that
-rem produced nothing into a loud failure rather than an empty map.
-rem --- 1. build GTAUtil cache (once) ----------------------------------
-rem exportmeta reads through GTAUtil cache of the install, which does not
-rem exist until buildcache has run. It is slow, so a marker file keeps it
-rem to once; delete the marker to force a rebuild after patching GTA V.
-if not exist "%WORK%\.cache_built" (
-    echo [1/3] Building GTAUtil cache. This is slow and only happens once.
+rem --- 1. cache --------------------------------------------------------
+if not exist "%CACHE%" (
+    echo [1/3] Building GTAUtil cache. Slow, and only happens once.
+    echo.
+    echo       At the "GTAV folder :" prompt, paste this and press enter:
+    echo           %GTAV_DIR%
+    echo.
     "%GTAUTIL%" buildcache
-    if errorlevel 1 (
-        echo ERROR: buildcache failed. Nothing downstream will work.
+    if not exist "%CACHE%" (
+        echo ERROR: no cache.json was produced; nothing downstream works.
         exit /b 1
     )
-    echo built > "%WORK%\.cache_built"
 ) else (
-    echo [1/3] GTAUtil cache already built, skipping.
+    echo [1/3] Cache already built, skipping.
 )
 
+rem --- 2. placements: ymap -> XML, written beside each input ------------
 echo [2/3] Converting ymaps to XML...
-echo.
-echo   If GTAUtil asks "GTAV folder :" it is waiting for input --
-echo   it has already been given -i and -o. Paste this and press enter:
-echo.
-echo       %GTAV_DIR%
-echo.
-echo   Enhanced will NOT be accepted -- GTAUtil wants a Legacy install
-echo   with GTA5.exe in it.
-echo.
-echo   It only asks once, then scans the install, which is slow and
-echo   silent. That is normal.
-echo.
-pushd "%WORK%"
-"%GTAUTIL%" exportmeta -i "%YMAP_SRC%" -o "%XML_OUT%"
-popd
+"%GTAUTIL%" exportmeta -i "%YMAP_SRC%\*.ymap"
 
 set /a XMLCOUNT=0
-for %%F in ("%XML_OUT%\*.xml") do set /a XMLCOUNT+=1
-if %XMLCOUNT%==0 (
+for %%F in ("%YMAP_SRC%\*.ymap.xml") do set /a XMLCOUNT+=1
+if !XMLCOUNT!==0 (
     echo.
-    echo ERROR: no .xml files landed in "%XML_OUT%".
-    echo        The exportmeta call above did not do what this script
-    echo        expects -- check its flags before going further.
+    echo ERROR: no .ymap.xml files appeared in "%YMAP_SRC%".
+    echo        exportmeta matched nothing -- check the path and that it
+    echo        contains loose .ymap files.
     exit /b 1
 )
-echo       %XMLCOUNT% ymap XML files written.
+echo       !XMLCOUNT! ymap XML files written.
 
-rem --- 2. pair placements with meshes and tile them --------------------
+rem --- 3. pair with meshes and tile ------------------------------------
 if not exist "%MODEL_SRC%" (
     echo.
-    echo NOTE: "%MODEL_SRC%" does not exist yet, so every placement will
-    echo       be written with model=null and skipped at load. Export the
-    echo       drawables from CodeWalker as glTF/OBJ/FBX into that folder,
-    echo       named after their archetype, then re-run this script.
+    echo NOTE: "%MODEL_SRC%" does not exist, so placements are written
+    echo       with model=null and skipped at load. Export the drawables
+    echo       from CodeWalker into that folder, named after their
+    echo       archetype, then re-run.
 )
 
 echo [3/3] Building tiles...
 python "%REPO%\packages\gta5\tools\import_codewalker_export.py" ^
-    --ymap-dir "%XML_OUT%" ^
+    --ymap-dir "%YMAP_SRC%" ^
     --model-dir "%MODEL_SRC%" ^
     --out "%REPO%\packages\gta5\assets\tiles"
 if errorlevel 1 (

@@ -61,3 +61,10 @@ sdl3_app.*.log
 /.idea/SDL3CPlusPlus.iml
 /.idea/vcs.xml
 _build/
+
+# gta5 map data is generated, never committed.
+# tools/export_map.bat writes real placements extracted from a game
+# install in here; that is game-derived data and does not belong in a
+# public repo. tools/make_test_tiles.py regenerates the stand-in city in
+# seconds, so nothing is lost by keeping all of it out.
+packages/gta5/assets/
