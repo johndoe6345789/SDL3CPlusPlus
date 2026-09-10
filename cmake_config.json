@@ -77,6 +77,8 @@
         "src/services/impl/workflow/workflow_parameter_reader.cpp",
         "src/services/impl/workflow/workflow_step_io_resolver.cpp",
         "src/services/impl/workflow/workflow_step_parameter_resolver.cpp",
+        "src/services/impl/workflow/workflow_step_parameter_resolver_scalars.cpp",
+        "src/services/impl/workflow/workflow_step_parameter_resolver_lists.cpp",
         "src/services/impl/workflow/workflow_registrar.cpp",
         "src/services/impl/workflow/workflow_sdl_init_step.cpp",
         "src/services/impl/workflow/workflow_sdl_window_create_step.cpp",
@@ -303,7 +305,9 @@
         "src/services/impl/workflow/input/input_axis_combine_helpers.cpp",
         "src/services/impl/workflow/input/workflow_input_button_combine_step.cpp",
         "src/services/impl/workflow/input/input_button_combine_helpers.cpp",
-        "src/services/impl/workflow/workflow_step_parameter_resolver.cpp"
+        "src/services/impl/workflow/workflow_step_parameter_resolver.cpp",
+        "src/services/impl/workflow/workflow_step_parameter_resolver_scalars.cpp",
+        "src/services/impl/workflow/workflow_step_parameter_resolver_lists.cpp"
       ],
       "include_directories": [
         "src"
@@ -333,7 +337,9 @@
         "src/services/impl/workflow/rendering/workflow_bsp_parse_spawn_step.cpp",
         "src/services/impl/workflow/rendering/bsp_entity_lump_parser.cpp",
         "src/services/impl/workflow/rendering/bsp_entity_json_builder.cpp",
-        "src/services/impl/workflow/workflow_step_parameter_resolver.cpp"
+        "src/services/impl/workflow/workflow_step_parameter_resolver.cpp",
+        "src/services/impl/workflow/workflow_step_parameter_resolver_scalars.cpp",
+        "src/services/impl/workflow/workflow_step_parameter_resolver_lists.cpp"
       ],
       "include_directories": [
         "src"
@@ -355,7 +361,9 @@
         "src/services/impl/workflow/quake3/workflow_q3_pm_accelerate_step.cpp",
         "src/services/impl/workflow/quake3/q3_slide_planes.cpp",
         "src/services/impl/workflow/quake3/q3_wish_dir.cpp",
-        "src/services/impl/workflow/workflow_step_parameter_resolver.cpp"
+        "src/services/impl/workflow/workflow_step_parameter_resolver.cpp",
+        "src/services/impl/workflow/workflow_step_parameter_resolver_scalars.cpp",
+        "src/services/impl/workflow/workflow_step_parameter_resolver_lists.cpp"
       ],
       "include_directories": [
         "src"
