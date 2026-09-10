@@ -1,7 +1,7 @@
 #include "services/interfaces/workflow_registrar.hpp"
 
 #include "services/impl/workflow/workflow_registrar_categories.hpp"
-#include "services/interfaces/workflow/workflow_control_while_step.hpp"
+#include "services/interfaces/workflow/workflow_generic_steps/workflow_control_while_step.hpp"
 #include "services/interfaces/workflow/workflow_execute_step.hpp"
 
 #include <memory>
