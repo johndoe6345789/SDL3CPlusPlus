@@ -5,25 +5,26 @@
 namespace sdl3cpp::services::impl {
 namespace {
 
-void SaveDownloadedPixels(void* pixels, uint32_t width, uint32_t height,
+bool SaveDownloadedPixels(void* pixels, uint32_t width, uint32_t height,
                           const std::string& path,
                           const std::shared_ptr<ILogger>& logger) {
     SDL_Surface* surface = SDL_CreateSurfaceFrom(
         static_cast<int>(width), static_cast<int>(height),
         SDL_PIXELFORMAT_ABGR8888, pixels, static_cast<int>(width * 4));
     if (!surface) {
-        return;
+        return false;
     }
     SDL_SaveBMP(surface, path.c_str());
     SDL_DestroySurface(surface);
     if (logger) {
         logger->Info("gpu.screenshot_capture: GPU screenshot saved to " + path);
     }
+    return true;
 }
 
 }  // namespace
 
-void CaptureGpuSwapchainToBmp(SDL_GPUCommandBuffer* cmd, SDL_GPUDevice* device,
+bool CaptureGpuSwapchainToBmp(SDL_GPUCommandBuffer* cmd, SDL_GPUDevice* device,
                               SDL_GPUTexture* swapchain, uint32_t width,
                               uint32_t height, const std::string& path,
                               const std::shared_ptr<ILogger>& logger) {
@@ -32,7 +33,7 @@ void CaptureGpuSwapchainToBmp(SDL_GPUCommandBuffer* cmd, SDL_GPUDevice* device,
     tbci.size                            = width * height * 4;
     auto* staging = SDL_CreateGPUTransferBuffer(device, &tbci);
     if (!staging) {
-        return;
+        return false;
     }
 
     if (SDL_GPUCopyPass* copy = SDL_BeginGPUCopyPass(cmd)) {
@@ -54,11 +55,13 @@ void CaptureGpuSwapchainToBmp(SDL_GPUCommandBuffer* cmd, SDL_GPUDevice* device,
     SDL_SubmitGPUCommandBuffer(cmd);
     SDL_WaitForGPUIdle(device);
 
+    bool saved = false;
     if (void* mapped = SDL_MapGPUTransferBuffer(device, staging, false)) {
-        SaveDownloadedPixels(mapped, width, height, path, logger);
+        saved = SaveDownloadedPixels(mapped, width, height, path, logger);
         SDL_UnmapGPUTransferBuffer(device, staging);
     }
     SDL_ReleaseGPUTransferBuffer(device, staging);
+    return saved;
 }
 
 }  // namespace sdl3cpp::services::impl

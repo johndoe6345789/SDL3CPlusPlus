@@ -1,4 +1,5 @@
 #include "services/interfaces/workflow/quake3/workflow_q3_sound_load_step.hpp"
+#include "services/interfaces/workflow/quake3/q3_pk3_reader.hpp"
 #include "services/interfaces/workflow/quake3/q3_sound_bank.hpp"
 #include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
 #include "services/interfaces/workflow_context.hpp"
@@ -10,20 +11,6 @@
 #include <vector>
 
 namespace sdl3cpp::services::impl {
-namespace {
-
-std::vector<uint8_t> ReadEntry(zip_t* archive, const std::string& name) {
-    zip_stat_t stat;
-    if (zip_stat(archive, name.c_str(), 0, &stat) != 0) return {};
-    zip_file_t* file = zip_fopen(archive, name.c_str(), 0);
-    if (!file) return {};
-    std::vector<uint8_t> bytes(stat.size);
-    zip_fread(file, bytes.data(), stat.size);
-    zip_fclose(file);
-    return bytes;
-}
-
-}  // namespace
 
 WorkflowQ3SoundLoadStep::WorkflowQ3SoundLoadStep(
     std::shared_ptr<ILogger> logger)
@@ -66,7 +53,7 @@ void WorkflowQ3SoundLoadStep::Execute(const WorkflowStepDefinition& step,
     auto bank = std::make_shared<q3::SoundBank>();
     for (const auto& entry : config.value("sounds", nlohmann::json::array())) {
         const auto name = entry.get<std::string>();
-        const auto bytes = ReadEntry(archive, name);
+        const auto bytes = q3::ReadPk3EntryFromArchive(archive, name);
         q3::Sound sound;
         if (q3::DecodeWav(bytes.data(), bytes.size(), sound)) {
             (*bank)[name] = std::move(sound);
