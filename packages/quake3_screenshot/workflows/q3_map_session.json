@@ -84,6 +84,27 @@
       ]
     },
     {
+      "id": "sound_init",
+      "type": "q3.sound.init",
+      "typeVersion": 1,
+      "position": [
+        610,
+        0
+      ]
+    },
+    {
+      "id": "sound_load",
+      "type": "q3.sound.load",
+      "typeVersion": 1,
+      "position": [
+        620,
+        0
+      ],
+      "parameters": {
+        "config_path": "packages/quake3/config/sounds.json"
+      }
+    },
+    {
       "id": "bsp_spawn",
       "type": "bsp.parse_spawn",
       "typeVersion": 1,
@@ -118,7 +139,8 @@
       "parameters": {
         "prefix": "lower",
         "path": "models/players/keel/lower.md3",
-        "anim": "models/players/keel/animation.cfg"
+        "anim": "models/players/keel/animation.cfg",
+        "skin": "models/players/keel/lower_default.skin"
       }
     },
     {
@@ -132,7 +154,8 @@
       "parameters": {
         "prefix": "lower",
         "path": "models/players/keel/lower.md3",
-        "anim": "models/players/keel/animation.cfg"
+        "anim": "models/players/keel/animation.cfg",
+        "skin": "models/players/keel/lower_default.skin"
       }
     },
     {
@@ -146,7 +169,8 @@
       "parameters": {
         "prefix": "lower",
         "path": "models/players/keel/lower.md3",
-        "anim": "models/players/keel/animation.cfg"
+        "anim": "models/players/keel/animation.cfg",
+        "skin": "models/players/keel/lower_default.skin"
       }
     },
     {
@@ -160,7 +184,8 @@
       "parameters": {
         "prefix": "lower",
         "path": "models/players/keel/lower.md3",
-        "anim": "models/players/keel/animation.cfg"
+        "anim": "models/players/keel/animation.cfg",
+        "skin": "models/players/keel/lower_default.skin"
       }
     },
     {
@@ -173,7 +198,8 @@
       ],
       "parameters": {
         "prefix": "upper",
-        "path": "models/players/keel/upper.md3"
+        "path": "models/players/keel/upper.md3",
+        "skin": "models/players/keel/upper_default.skin"
       }
     },
     {
@@ -186,7 +212,8 @@
       ],
       "parameters": {
         "prefix": "upper",
-        "path": "models/players/keel/upper.md3"
+        "path": "models/players/keel/upper.md3",
+        "skin": "models/players/keel/upper_default.skin"
       }
     },
     {
@@ -199,7 +226,8 @@
       ],
       "parameters": {
         "prefix": "upper",
-        "path": "models/players/keel/upper.md3"
+        "path": "models/players/keel/upper.md3",
+        "skin": "models/players/keel/upper_default.skin"
       }
     },
     {
@@ -212,7 +240,8 @@
       ],
       "parameters": {
         "prefix": "upper",
-        "path": "models/players/keel/upper.md3"
+        "path": "models/players/keel/upper.md3",
+        "skin": "models/players/keel/upper_default.skin"
       }
     },
     {
@@ -225,7 +254,8 @@
       ],
       "parameters": {
         "prefix": "head",
-        "path": "models/players/keel/head.md3"
+        "path": "models/players/keel/head.md3",
+        "skin": "models/players/keel/head_default.skin"
       }
     },
     {
@@ -238,7 +268,8 @@
       ],
       "parameters": {
         "prefix": "head",
-        "path": "models/players/keel/head.md3"
+        "path": "models/players/keel/head.md3",
+        "skin": "models/players/keel/head_default.skin"
       }
     },
     {
@@ -251,7 +282,8 @@
       ],
       "parameters": {
         "prefix": "head",
-        "path": "models/players/keel/head.md3"
+        "path": "models/players/keel/head.md3",
+        "skin": "models/players/keel/head_default.skin"
       }
     },
     {
@@ -264,7 +296,8 @@
       ],
       "parameters": {
         "prefix": "head",
-        "path": "models/players/keel/head.md3"
+        "path": "models/players/keel/head.md3",
+        "skin": "models/players/keel/head_default.skin"
       }
     },
     {
@@ -330,6 +363,33 @@
       "parameters": {
         "count": 4
       }
+    },
+    {
+      "id": "stats_init",
+      "type": "q3.stats.init",
+      "typeVersion": 1,
+      "position": [
+        765,
+        0
+      ]
+    },
+    {
+      "id": "ammo_init",
+      "type": "q3.ammo.init",
+      "typeVersion": 1,
+      "position": [
+        770,
+        0
+      ]
+    },
+    {
+      "id": "nav_build",
+      "type": "q3.nav.build",
+      "typeVersion": 1,
+      "position": [
+        780,
+        0
+      ]
     },
     {
       "id": "set_running",
@@ -458,7 +518,7 @@
       "main": {
         "0": [
           {
-            "node": "bsp_spawn",
+            "node": "sound_init",
             "type": "main",
             "index": 0
           }
@@ -667,6 +727,28 @@
       "main": {
         "0": [
           {
+            "node": "stats_init",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "ammo_init": {
+      "main": {
+        "0": [
+          {
+            "node": "nav_build",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "nav_build": {
+      "main": {
+        "0": [
+          {
             "node": "set_running",
             "type": "main",
             "index": 0
@@ -690,6 +772,39 @@
         "0": [
           {
             "node": "check_quit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "sound_init": {
+      "main": {
+        "0": [
+          {
+            "node": "sound_load",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "sound_load": {
+      "main": {
+        "0": [
+          {
+            "node": "bsp_spawn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "stats_init": {
+      "main": {
+        "0": [
+          {
+            "node": "ammo_init",
             "type": "main",
             "index": 0
           }
