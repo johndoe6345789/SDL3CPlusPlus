@@ -294,7 +294,10 @@
       "sources": [
         "tests/q3_input_axes_test.cpp",
         "src/services/impl/workflow/input/workflow_input_axis_combine_step.cpp",
-        "src/services/impl/workflow/input/input_axis_combine_helpers.cpp",
+        "src/services/impl/workflow/input/input_aggregation_config.cpp",
+        "src/services/impl/workflow/input/input_axis_combine_write.cpp",
+        "src/services/impl/workflow/input/input_axis_deadzone.cpp",
+        "src/services/impl/workflow/input/input_axis_source_value.cpp",
         "src/services/impl/workflow/input/workflow_input_button_combine_step.cpp",
         "src/services/impl/workflow/input/input_button_combine_helpers.cpp",
         "src/services/impl/workflow/workflow_step_parameter_resolver.cpp"
@@ -350,7 +353,10 @@
       "sources": [
         "tests/q3_input_to_motion_test.cpp",
         "src/services/impl/workflow/input/workflow_input_axis_combine_step.cpp",
-        "src/services/impl/workflow/input/input_axis_combine_helpers.cpp",
+        "src/services/impl/workflow/input/input_aggregation_config.cpp",
+        "src/services/impl/workflow/input/input_axis_combine_write.cpp",
+        "src/services/impl/workflow/input/input_axis_deadzone.cpp",
+        "src/services/impl/workflow/input/input_axis_source_value.cpp",
         "src/services/impl/workflow/quake3/workflow_q3_pm_accelerate_step.cpp",
         "src/services/impl/workflow/quake3/q3_slide_planes.cpp",
         "src/services/impl/workflow/quake3/q3_wish_dir.cpp",
