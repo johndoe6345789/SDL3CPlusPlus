@@ -1,6 +1,7 @@
 #include "services/interfaces/workflow/quake3/q3_bot_update_kinematics.hpp"
 #include "services/interfaces/workflow/quake3/q3_bot_update_animation.hpp"
 #include "services/interfaces/workflow/quake3/q3_bot_update_movement.hpp"
+#include "services/interfaces/workflow/quake3/q3_axes.hpp"
 #include "services/interfaces/workflow/quake3/q3_bot_update_sensing.hpp"
 
 #include <cmath>
@@ -18,7 +19,7 @@ void UpdateOneBot(int botIndex, nlohmann::json& bot, const glm::vec3& playerPos,
     const glm::vec3 toPlayer = playerPos - bpos;
     const float dist         = glm::distance(playerPos, bpos);
 
-    bot["yaw"] = std::atan2(toPlayer.x, toPlayer.z);
+    bot["yaw"] = q3::YawTowards(toPlayer);
 
     const bool canSeePlayer =
         HasLineOfSightToPlayer(world, bpos, playerPos, dist, params.chaseRange);

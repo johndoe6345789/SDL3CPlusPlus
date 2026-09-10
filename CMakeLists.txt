@@ -636,6 +636,8 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/compute/workflow_compute_tessellate_dispatch_step.cpp
         src/services/impl/workflow/compute/workflow_compute_tessellate_step.cpp
         src/services/impl/workflow/quake3/q3_anim_cfg.cpp
+        src/services/impl/workflow/quake3/q3_axes.cpp
+        src/services/impl/workflow/quake3/q3_axes_model.cpp
         src/services/impl/workflow/quake3/q3_bot_model_part_draw.cpp
         src/services/impl/workflow/quake3/q3_bot_model_render.cpp
         src/services/impl/workflow/quake3/q3_bot_model_tag_matrix.cpp
@@ -1167,6 +1169,19 @@ target_link_libraries(q3_pickup_rules_test PRIVATE
     nlohmann_json::nlohmann_json
 )
 add_test(NAME q3_pickup_rules_test COMMAND q3_pickup_rules_test)
+
+add_executable(q3_axes_test)
+target_sources(q3_axes_test PRIVATE tests/q3_axes_test.cpp)
+target_sources(q3_axes_test PRIVATE src/services/impl/workflow/quake3/q3_axes.cpp)
+target_sources(q3_axes_test PRIVATE src/services/impl/workflow/quake3/q3_axes_model.cpp)
+target_include_directories(q3_axes_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(q3_axes_test PRIVATE
+    GTest::gtest_main
+    glm::glm
+)
+add_test(NAME q3_axes_test COMMAND q3_axes_test)
 
 # ============================================================================
 # FILE COPYING

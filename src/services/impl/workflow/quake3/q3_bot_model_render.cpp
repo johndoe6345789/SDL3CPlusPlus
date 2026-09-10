@@ -1,5 +1,7 @@
 #include "services/interfaces/workflow/quake3/q3_bot_model_render_internal.hpp"
 
+#include "services/interfaces/workflow/quake3/q3_axes.hpp"
+
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <cmath>
@@ -31,17 +33,8 @@ void DrawBotModelChain(const nlohmann::json& bot,
                                  context);
     };
 
-    // ── lower.md3: root transform ──────────────────────────────────
-    // MD3 is Quake Z-up (X forward, Y left, Z up); a bare yaw about
-    // world Y would leave the model on its side. Same remap as
-    // q3.md3.draw, matching ioq3's AnglesToAxis().
-    const glm::vec3 bf(-std::sin(yaw), 0.0f, -std::cos(yaw));
-    const glm::vec3 bu(0.0f, 1.0f, 0.0f);
-    glm::mat4 bOrient(1.0f);
-    bOrient[0]               = glm::vec4(bf, 0.0f);
-    bOrient[1]               = glm::vec4(glm::cross(bu, bf), 0.0f);
-    bOrient[2]               = glm::vec4(bu, 0.0f);
-    const glm::mat4 lowerMat = glm::translate(glm::mat4(1.0f), bpos) * bOrient;
+    // lower.md3 is the root; everything else hangs off its tags.
+    const glm::mat4 lowerMat = q3::PlaceModel(bpos, yaw);
     draw(prefixes.lower, legFrame, lowerMat);
     if (!prefixes.hasUpper) return;
 

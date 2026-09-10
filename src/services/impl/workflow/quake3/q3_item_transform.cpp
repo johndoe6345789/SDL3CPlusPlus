@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/quake3/q3_item_transform.hpp"
 
+#include "services/interfaces/workflow/quake3/q3_axes.hpp"
 #include "services/interfaces/workflow/quake3/q3_pm_constants.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -27,14 +28,7 @@ float Q3ItemSpinYaw(float timeSeconds, bool fast) {
 }
 
 glm::mat4 Q3ItemMatrix(const glm::vec3& pos, float yaw) {
-    const glm::vec3 f(-std::sin(yaw), 0.f, -std::cos(yaw));
-    const glm::vec3 u(0.f, 1.f, 0.f);
-    const glm::vec3 r = glm::cross(u, f);
-    glm::mat4 orient(1.0f);
-    orient[0] = glm::vec4(f, 0.0f);
-    orient[1] = glm::vec4(r, 0.0f);
-    orient[2] = glm::vec4(u, 0.0f);
-    return glm::translate(glm::mat4(1.0f), pos) * orient;
+    return q3::PlaceModel(pos, yaw);
 }
 
 }  // namespace sdl3cpp::services::impl

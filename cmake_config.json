@@ -574,6 +574,21 @@
         "glm::glm",
         "nlohmann_json::nlohmann_json"
       ]
+    },
+    {
+      "name": "q3_axes_test",
+      "sources": [
+        "tests/q3_axes_test.cpp",
+        "src/services/impl/workflow/quake3/q3_axes.cpp",
+        "src/services/impl/workflow/quake3/q3_axes_model.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main",
+        "glm::glm"
+      ]
     }
   ],
   "file_copying": [
