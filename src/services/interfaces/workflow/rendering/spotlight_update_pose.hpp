@@ -1,19 +1,13 @@
 #pragma once
 
 #include "services/interfaces/i_logger.hpp"
+#include "services/interfaces/workflow/rendering/spotlight_pose_types.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
-#include <glm/glm.hpp>
 #include <memory>
 #include <nlohmann/json.hpp>
 
 namespace sdl3cpp::services::impl {
-
-/// World-space position and (normalized) direction for a spotlight.
-struct SpotlightPose {
-    glm::vec3 position;
-    glm::vec3 direction;
-};
 
 /**
  * @brief Computes where a spotlight sits and points this frame, per
