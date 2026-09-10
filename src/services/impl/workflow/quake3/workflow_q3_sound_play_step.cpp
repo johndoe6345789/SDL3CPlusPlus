@@ -1,11 +1,10 @@
 #include "services/interfaces/workflow/quake3/workflow_q3_sound_play_step.hpp"
 #include "services/interfaces/workflow/quake3/q3_sound_bank.hpp"
+#include "services/interfaces/workflow/quake3/q3_sound_playback.hpp"
 #include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
 #include <SDL3/SDL_audio.h>
-
-#include <algorithm>
 
 namespace sdl3cpp::services::impl {
 
@@ -17,22 +16,9 @@ std::string WorkflowQ3SoundPlayStep::GetPluginId() const {
     return "q3.sound.play";
 }
 
-void WorkflowQ3SoundPlayStep::ReapFinished() {
-    // A sound that has been fully consumed is done; without this every
-    // shot leaks a stream for the lifetime of the map.
-    auto done = std::remove_if(
-        playing_.begin(), playing_.end(), [](SDL_AudioStream* stream) {
-            if (SDL_GetAudioStreamAvailable(stream) > 0) return false;
-            SDL_UnbindAudioStream(stream);
-            SDL_DestroyAudioStream(stream);
-            return true;
-        });
-    playing_.erase(done, playing_.end());
-}
-
 void WorkflowQ3SoundPlayStep::Execute(const WorkflowStepDefinition& step,
                                       WorkflowContext& context) {
-    ReapFinished();
+    ReapFinishedSoundStreams(playing_);
     WorkflowStepParameterResolver params;
 
     // An optional gate keeps the trigger in the workflow: the step only
@@ -61,33 +47,13 @@ void WorkflowQ3SoundPlayStep::Execute(const WorkflowStepDefinition& step,
     const auto found = bank->find(name);
     if (found == bank->end() || found->second.pcm.empty()) return;
 
-    // One stream per sound played: SDL mixes everything bound to the
-    // device, so overlapping shots need no mixing of our own. The stream
-    // frees itself once drained.
     const auto deviceSpec =
         context.Get<SDL_AudioSpec>("q3.sound.device_spec", SDL_AudioSpec{});
     SDL_AudioStream* stream =
-        SDL_CreateAudioStream(&found->second.spec, &deviceSpec);
-    if (!stream) {
-        if (logger_) {
-            logger_->Warn(std::string("q3.sound.play: stream: ") +
-                          SDL_GetError());
-        }
-        return;
+        PlaySoundOnDevice(found->second, device, deviceSpec, logger_);
+    if (stream) {
+        playing_.push_back(stream);
     }
-    SDL_PutAudioStreamData(stream, found->second.pcm.data(),
-                           static_cast<int>(found->second.pcm.size()));
-    SDL_FlushAudioStream(stream);
-    if (!SDL_BindAudioStream(device, stream)) {
-        if (logger_) {
-            logger_->Warn(std::string("q3.sound.play: bind: ") +
-                          SDL_GetError());
-        }
-        SDL_DestroyAudioStream(stream);
-        return;
-    }
-    SDL_ResumeAudioDevice(device);
-    playing_.push_back(stream);
 }
 
 }  // namespace sdl3cpp::services::impl
