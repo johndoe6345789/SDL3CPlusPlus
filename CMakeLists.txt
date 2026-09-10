@@ -640,7 +640,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/quake3/q3_axes_model.cpp
         src/services/impl/workflow/quake3/q3_bot_model_part_draw.cpp
         src/services/impl/workflow/quake3/q3_bot_model_render.cpp
-        src/services/impl/workflow/quake3/q3_bot_model_tag_matrix.cpp
+        src/services/impl/workflow/quake3/q3_bot_model_tag_lookup.cpp
         src/services/impl/workflow/quake3/q3_bot_mover.cpp
         src/services/impl/workflow/quake3/q3_bot_update_animation.cpp
         src/services/impl/workflow/quake3/q3_bot_update_kinematics.cpp
@@ -674,6 +674,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/quake3/q3_md3_surface_geometry.cpp
         src/services/impl/workflow/quake3/q3_md3_surface_texture.cpp
         src/services/impl/workflow/quake3/q3_md3_surface_uploader.cpp
+        src/services/impl/workflow/quake3/q3_md3_tag_matrix.cpp
         src/services/impl/workflow/quake3/q3_md3_tags.cpp
         src/services/impl/workflow/quake3/q3_md3_texture_candidates.cpp
         src/services/impl/workflow/quake3/q3_md3_texture_upload.cpp

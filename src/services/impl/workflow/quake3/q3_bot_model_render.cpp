@@ -1,6 +1,7 @@
 #include "services/interfaces/workflow/quake3/q3_bot_model_render_internal.hpp"
 
 #include "services/interfaces/workflow/quake3/q3_axes.hpp"
+#include "services/interfaces/workflow/quake3/q3_md3_tags.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 
