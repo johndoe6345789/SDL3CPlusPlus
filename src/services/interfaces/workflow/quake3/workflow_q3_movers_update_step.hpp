@@ -20,7 +20,9 @@ class WorkflowQ3MoversUpdateStep final : public IWorkflowStep {
 public:
     explicit WorkflowQ3MoversUpdateStep(std::shared_ptr<ILogger> logger);
     std::string GetPluginId() const override;
-    void Execute(const WorkflowStepDefinition& step, WorkflowContext& context) override;
+    void Execute(const WorkflowStepDefinition& step,
+                 WorkflowContext& context) override;
+
 private:
     std::shared_ptr<ILogger> logger_;
 };
