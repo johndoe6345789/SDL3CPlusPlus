@@ -47,17 +47,17 @@ if not exist "%YMAP_SRC%" (
 if not exist "%XML_OUT%" mkdir "%XML_OUT%"
 
 rem --- 1. placements: ymap -> XML --------------------------------------
-rem GTAUtil scans the game install on first use and can sit silent for
-rem minutes before it prints anything. That is normal; let it finish.
+rem On its first run GTAUtil prompts "GTAV folder :" and waits. Type the
+rem path to your GTA V install and press enter; it remembers afterwards.
+rem Do not pipe anything into this script or that prompt cannot be
+rem answered. It then scans the install and can sit silent for minutes,
+rem which is normal.
 rem
-rem NOTE: these flags are the documented shape of exportmeta but were not
-rem verified here, because GTAUtil would not return --help until its
-rem cache had been built. If it rejects them, run `GTAUtil.exe exportmeta
-rem --help` once the cache exists and correct this one line. The XML
-rem count check below is what stops a wrong flag passing silently.
+rem The XML count check below stays regardless: it turns a run that
+rem produced nothing into a loud failure rather than an empty map.
 echo [1/2] Converting ymaps to XML...
 pushd "%WORK%"
-"%GTAUTIL%" exportmeta --input "%YMAP_SRC%" --output "%XML_OUT%"
+"%GTAUTIL%" exportmeta -i "%YMAP_SRC%" -o "%XML_OUT%"
 popd
 
 set /a XMLCOUNT=0

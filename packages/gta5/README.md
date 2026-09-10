@@ -85,11 +85,15 @@ DAE or PLY, named after their archetype. Point `MODEL_SRC` at them and
 re-run; until then placements are written with `model: null`, reported,
 and skipped at load, so a placements-only run still works.
 
-The `exportmeta` flags in that script are unverified: GTAUtil scans the
-whole install on startup and would not return `--help` in reasonable
-time here. If it rejects them, fix the one marked line. The script
-counts the XML files afterwards and fails if none appeared, so a wrong
-flag stops the run instead of quietly producing an empty map.
+On its first run GTAUtil prompts `GTAV folder :` and waits for you to
+type the path to your install. Answer it once and it remembers. Do not
+pipe anything into the script, or that prompt cannot be answered -- this
+is also why `GTAUtil.exe --help` appears to hang, since it is sitting at
+the same prompt.
+
+The script still counts the XML files afterwards and fails if none
+appeared, so a run that produces nothing stops loudly rather than
+writing an empty map.
 
 ## Shaders
 
