@@ -43,7 +43,6 @@ void WorkflowGraphicsFrameBeginStep::Execute(const WorkflowStepDefinition& step,
     SDL_GPUCommandBuffer* cmd = AcquireFrameCommandBufferOrThrow(device);
     const SwapchainAcquireResult swap =
         AcquireSwapchainTextureOrThrow(cmd, window);
-
     static uint32_t frame_counter = 0;
 
     if (!swap.texture) {
@@ -54,8 +53,7 @@ void WorkflowGraphicsFrameBeginStep::Execute(const WorkflowStepDefinition& step,
         return;
     }
 
-    // Store command buffer and swapchain texture for render pass and
-    // frame end
+    // Store command buffer and swapchain texture for render pass/frame end.
     context.Set<SDL_GPUCommandBuffer*>("gpu_cmd", cmd);
     context.Set<SDL_GPUTexture*>("gpu_swapchain_texture", swap.texture);
 
