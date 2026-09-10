@@ -1,0 +1,22 @@
+{
+  "id": "gta5_streaming",
+  "description": "Tile residency budget and hysteresis for the map streamer.",
+
+  "residency": {
+    "load_radius_tiles": 3,
+    "evict_radius_tiles": 5,
+    "comment": "Evicting further out than loading is deliberate. A single radius makes tiles thrash in and out every time the player walks back and forth across a tile boundary."
+  },
+
+  "budget": {
+    "max_resident_tiles": 96,
+    "max_spawns_per_frame": 64,
+    "comment": "Spawning is amortised across frames. Committing a whole 512 m tile in one frame is a visible hitch."
+  },
+
+  "prefetch": {
+    "enabled": true,
+    "velocity_lead_seconds": 2.0,
+    "comment": "Bias the load centre along the player's velocity so tiles land before they are looked at."
+  }
+}

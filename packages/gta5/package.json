@@ -1,0 +1,70 @@
+{
+  "name": "GTA V Map",
+  "version": "1.0.0",
+  "id": "gta5",
+  "type": "game",
+  "category": "demo",
+  "description": "Streamed Los Santos / Blaine County map with Quake 3 player kinematics",
+
+  "defaultWorkflow": "workflows/gta5_game.json",
+
+  "workflows": [
+    "workflows/gta5_streaming.json",
+    "workflows/gta5_physics.json"
+  ],
+
+  "config": [
+    "config/gta5_world.json",
+    "config/streaming.json"
+  ],
+
+  "scene": [
+    "scene/gta5_map.json",
+    "scene/camera_gta5_default.json"
+  ],
+
+  "shaders": [],
+
+  "assets": [],
+
+  "world_specifications": {
+    "unit_scale": {
+      "units_per_meter": 1,
+      "explanation": "GTA V authors its world in metres and one engine unit is one metre, so map coordinates are consumed unscaled. Only the axis convention changes."
+    },
+
+    "axis_convention": {
+      "source": "Z-up, right-handed (GTA V / RAGE)",
+      "engine": "Y-up",
+      "mapping": "(x, y, z) -> (x, z, -y)",
+      "critical": "Applied once at import time by tools/import_codewalker_export.py. The runtime never re-maps axes."
+    },
+
+    "world_bounds_metres": {
+      "min": [-4000.0, -500.0, -8000.0],
+      "max": [4500.0, 2500.0, 4000.0],
+      "note": "Expressed in engine (Y-up) space after the axis mapping above."
+    },
+
+    "player": {
+      "kinematics": "quake3",
+      "explanation": "Movement is the ioq3 pmove pipeline already implemented in this engine (q3.pm.*). GTA V and Quake 3 agree once both are expressed in metres, so no retuning is needed."
+    }
+  },
+
+  "asset_pipeline": {
+    "status": "requires_user_supplied_export",
+    "reason": "The shipped map archives are NG-encrypted RPF7 and cannot be read without circumventing their encryption. See README.md.",
+    "expected_input": "tools/import_codewalker_export.py output written to assets/tiles/"
+  },
+
+  "bundled": false,
+
+  "dependencies": [
+    {
+      "name": "asset_loader",
+      "version": ">=1.0.0",
+      "usage": "gltf_model_loading"
+    }
+  ]
+}

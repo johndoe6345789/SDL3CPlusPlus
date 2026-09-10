@@ -1,0 +1,45 @@
+{
+  "id": "gta5_world",
+  "description": "World extent and tile grid for the Los Santos / Blaine County map.",
+
+  "units_per_meter": 1,
+
+  "bounds": {
+    "min": [-4000.0, -500.0, -8000.0],
+    "max": [4500.0, 2500.0, 4000.0]
+  },
+
+  "tile_grid": {
+    "tile_size_metres": 512,
+    "axes": ["x", "z"],
+    "comment": "Tiles are columns through the full Y (vertical) range. GTA V streams the same way: horizontal cells, unbounded vertically, so tunnels and skyscrapers belong to the tile they sit above.",
+    "counts": {
+      "x": 17,
+      "z": 24
+    },
+    "origin": [-4000.0, -8000.0]
+  },
+
+  "lod_rings": [
+    {
+      "name": "hd",
+      "max_distance_metres": 300,
+      "comment": "Full-detail drawables. Matches the lodDist most GTA V HD archetypes ship with."
+    },
+    {
+      "name": "lod",
+      "max_distance_metres": 1000,
+      "comment": "Per-building LOD meshes."
+    },
+    {
+      "name": "slod1",
+      "max_distance_metres": 3000,
+      "comment": "Merged block silhouettes."
+    },
+    {
+      "name": "slod2",
+      "max_distance_metres": -1,
+      "comment": "-1 means no limit: the distant city skyline stays resident for the whole session."
+    }
+  ]
+}

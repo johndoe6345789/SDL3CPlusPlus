@@ -1,0 +1,29 @@
+{
+  "id": "gta5_map",
+  "description": "Spawn metadata for the GTA V map, in engine (Y-up, metres) space.",
+
+  "spawn": {
+    "position": [195.0, 30.7, 934.0],
+    "orientation": [0.0, 0.0, 0.0],
+    "comment": "Legion Square, downtown Los Santos. GTA V coordinates (195.0, -934.0, 30.7) mapped through (x, y, z) -> (x, z, -y)."
+  },
+
+  "alternate_spawns": [
+    {
+      "name": "michaels_house",
+      "position": [-802.0, 73.0, -175.0]
+    },
+    {
+      "name": "sandy_shores",
+      "position": [1960.0, 37.0, -3740.0]
+    },
+    {
+      "name": "mount_chiliad",
+      "position": [450.0, 1100.0, -5700.0]
+    }
+  ],
+
+  "validation": {
+    "checks": ["non_black_ratio", "mean_color", "sample_points"]
+  }
+}

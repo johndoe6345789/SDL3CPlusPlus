@@ -641,11 +641,13 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/quake3/q3_bot_model_part_draw.cpp
         src/services/impl/workflow/quake3/q3_bot_model_render.cpp
         src/services/impl/workflow/quake3/q3_bot_model_tag_matrix.cpp
+        src/services/impl/workflow/quake3/q3_bot_mover.cpp
         src/services/impl/workflow/quake3/q3_bot_update_animation.cpp
         src/services/impl/workflow/quake3/q3_bot_update_kinematics.cpp
         src/services/impl/workflow/quake3/q3_bot_update_movement.cpp
         src/services/impl/workflow/quake3/q3_bot_update_params.cpp
         src/services/impl/workflow/quake3/q3_bot_update_sensing.cpp
+        src/services/impl/workflow/quake3/q3_bot_usercmd.cpp
         src/services/impl/workflow/quake3/q3_brush_collision.cpp
         src/services/impl/workflow/quake3/q3_brush_trace.cpp
         src/services/impl/workflow/quake3/q3_brush_trace_clip.cpp
@@ -700,6 +702,9 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/quake3/q3_pk3_reader.cpp
         src/services/impl/workflow/quake3/q3_player_position.cpp
         src/services/impl/workflow/quake3/q3_pm_slide_move_helpers.cpp
+        src/services/impl/workflow/quake3/q3_pmove.cpp
+        src/services/impl/workflow/quake3/q3_pmove_accel.cpp
+        src/services/impl/workflow/quake3/q3_pmove_ground.cpp
         src/services/impl/workflow/quake3/q3_skin_file.cpp
         src/services/impl/workflow/quake3/q3_sky_cloud_uv.cpp
         src/services/impl/workflow/quake3/q3_sky_dome.cpp
@@ -814,6 +819,28 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/workflow_state_load_step.cpp
         src/services/impl/workflow/workflow_state_save_step.cpp
         src/services/impl/workflow/workflow_template_resolver.cpp
+        src/services/impl/workflow/gta5/gta5_evict_plan.cpp
+        src/services/impl/workflow/gta5/gta5_geometry_cache.cpp
+        src/services/impl/workflow/gta5/gta5_grid.cpp
+        src/services/impl/workflow/gta5/gta5_json_file.cpp
+        src/services/impl/workflow/gta5/gta5_lod.cpp
+        src/services/impl/workflow/gta5/gta5_lod_select_step.cpp
+        src/services/impl/workflow/gta5/gta5_mesh_append.cpp
+        src/services/impl/workflow/gta5/gta5_mesh_import.cpp
+        src/services/impl/workflow/gta5/gta5_model_matrix.cpp
+        src/services/impl/workflow/gta5/gta5_placement_parse.cpp
+        src/services/impl/workflow/gta5/gta5_spawn_tile.cpp
+        src/services/impl/workflow/gta5/gta5_step_params.cpp
+        src/services/impl/workflow/gta5/gta5_streaming_config_load.cpp
+        src/services/impl/workflow/gta5/gta5_tile_coord.cpp
+        src/services/impl/workflow/gta5/gta5_tile_io.cpp
+        src/services/impl/workflow/gta5/gta5_tile_order.cpp
+        src/services/impl/workflow/gta5/gta5_tiles_evict_step.cpp
+        src/services/impl/workflow/gta5/gta5_tiles_load_step.cpp
+        src/services/impl/workflow/gta5/gta5_tiles_resolve_step.cpp
+        src/services/impl/workflow/gta5/gta5_wanted_tiles.cpp
+        src/services/impl/workflow/gta5/gta5_world_config_load.cpp
+        src/services/impl/workflow/workflow_registrar_gta5.cpp
     )
     target_include_directories(sdl3_app PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}/src"
@@ -952,6 +979,8 @@ target_sources(q3_movement_integration_test PRIVATE src/services/impl/workflow/q
 target_sources(q3_movement_integration_test PRIVATE src/services/impl/workflow/quake3/q3_wish_dir.cpp)
 target_sources(q3_movement_integration_test PRIVATE src/services/impl/workflow/quake3/q3_brush_trace.cpp)
 target_sources(q3_movement_integration_test PRIVATE src/services/impl/workflow/quake3/q3_brush_trace_clip.cpp)
+target_sources(q3_movement_integration_test PRIVATE src/services/impl/workflow/quake3/q3_pmove_accel.cpp)
+target_sources(q3_movement_integration_test PRIVATE src/services/impl/workflow/quake3/q3_pmove_ground.cpp)
 target_include_directories(q3_movement_integration_test PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )
@@ -1023,6 +1052,8 @@ target_sources(q3_map_movement_test PRIVATE src/services/impl/workflow/quake3/q3
 target_sources(q3_map_movement_test PRIVATE src/services/impl/workflow/quake3/q3_brush_trace_clip.cpp)
 target_sources(q3_map_movement_test PRIVATE src/services/impl/workflow/quake3/q3_brush_collision.cpp)
 target_sources(q3_map_movement_test PRIVATE src/services/impl/workflow/rendering/bsp_pmove_brush_model.cpp)
+target_sources(q3_map_movement_test PRIVATE src/services/impl/workflow/quake3/q3_pmove_accel.cpp)
+target_sources(q3_map_movement_test PRIVATE src/services/impl/workflow/quake3/q3_pmove_ground.cpp)
 target_include_directories(q3_map_movement_test PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )
@@ -1048,6 +1079,7 @@ target_sources(q3_input_to_motion_test PRIVATE src/services/impl/workflow/quake3
 target_sources(q3_input_to_motion_test PRIVATE src/services/impl/workflow/workflow_step_parameter_resolver.cpp)
 target_sources(q3_input_to_motion_test PRIVATE src/services/impl/workflow/workflow_step_parameter_resolver_scalars.cpp)
 target_sources(q3_input_to_motion_test PRIVATE src/services/impl/workflow/workflow_step_parameter_resolver_lists.cpp)
+target_sources(q3_input_to_motion_test PRIVATE src/services/impl/workflow/quake3/q3_pmove_accel.cpp)
 target_include_directories(q3_input_to_motion_test PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )
@@ -1073,6 +1105,8 @@ target_sources(q3_step_up_test PRIVATE src/services/impl/workflow/quake3/q3_slid
 target_sources(q3_step_up_test PRIVATE src/services/impl/workflow/quake3/q3_wish_dir.cpp)
 target_sources(q3_step_up_test PRIVATE src/services/impl/workflow/quake3/q3_brush_trace.cpp)
 target_sources(q3_step_up_test PRIVATE src/services/impl/workflow/quake3/q3_brush_trace_clip.cpp)
+target_sources(q3_step_up_test PRIVATE src/services/impl/workflow/quake3/q3_pmove_accel.cpp)
+target_sources(q3_step_up_test PRIVATE src/services/impl/workflow/quake3/q3_pmove_ground.cpp)
 target_include_directories(q3_step_up_test PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )
@@ -1096,6 +1130,8 @@ target_sources(q3_ramp_walk_test PRIVATE src/services/impl/workflow/quake3/q3_sl
 target_sources(q3_ramp_walk_test PRIVATE src/services/impl/workflow/quake3/q3_wish_dir.cpp)
 target_sources(q3_ramp_walk_test PRIVATE src/services/impl/workflow/quake3/q3_brush_trace.cpp)
 target_sources(q3_ramp_walk_test PRIVATE src/services/impl/workflow/quake3/q3_brush_trace_clip.cpp)
+target_sources(q3_ramp_walk_test PRIVATE src/services/impl/workflow/quake3/q3_pmove_accel.cpp)
+target_sources(q3_ramp_walk_test PRIVATE src/services/impl/workflow/quake3/q3_pmove_ground.cpp)
 target_include_directories(q3_ramp_walk_test PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )
@@ -1119,6 +1155,8 @@ target_sources(q3_stairs_test PRIVATE src/services/impl/workflow/quake3/q3_slide
 target_sources(q3_stairs_test PRIVATE src/services/impl/workflow/quake3/q3_wish_dir.cpp)
 target_sources(q3_stairs_test PRIVATE src/services/impl/workflow/quake3/q3_brush_trace.cpp)
 target_sources(q3_stairs_test PRIVATE src/services/impl/workflow/quake3/q3_brush_trace_clip.cpp)
+target_sources(q3_stairs_test PRIVATE src/services/impl/workflow/quake3/q3_pmove_accel.cpp)
+target_sources(q3_stairs_test PRIVATE src/services/impl/workflow/quake3/q3_pmove_ground.cpp)
 target_include_directories(q3_stairs_test PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )
@@ -1182,6 +1220,33 @@ target_link_libraries(q3_axes_test PRIVATE
     glm::glm
 )
 add_test(NAME q3_axes_test COMMAND q3_axes_test)
+
+add_executable(q3_bot_move_test)
+target_sources(q3_bot_move_test PRIVATE tests/q3_bot_move_test.cpp)
+target_sources(q3_bot_move_test PRIVATE src/services/impl/workflow/quake3/q3_bot_mover.cpp)
+target_sources(q3_bot_move_test PRIVATE src/services/impl/workflow/quake3/q3_bot_usercmd.cpp)
+target_sources(q3_bot_move_test PRIVATE src/services/impl/workflow/quake3/q3_pmove.cpp)
+target_sources(q3_bot_move_test PRIVATE src/services/impl/workflow/quake3/q3_pmove_ground.cpp)
+target_sources(q3_bot_move_test PRIVATE src/services/impl/workflow/quake3/q3_pmove_accel.cpp)
+target_sources(q3_bot_move_test PRIVATE src/services/impl/workflow/quake3/q3_axes.cpp)
+target_sources(q3_bot_move_test PRIVATE src/services/impl/workflow/quake3/q3_step_slide.cpp)
+target_sources(q3_bot_move_test PRIVATE src/services/impl/workflow/quake3/q3_step_slide_trace.cpp)
+target_sources(q3_bot_move_test PRIVATE src/services/impl/workflow/quake3/q3_slide_move.cpp)
+target_sources(q3_bot_move_test PRIVATE src/services/impl/workflow/quake3/q3_slide_planes.cpp)
+target_sources(q3_bot_move_test PRIVATE src/services/impl/workflow/quake3/q3_wish_dir.cpp)
+target_sources(q3_bot_move_test PRIVATE src/services/impl/workflow/quake3/q3_brush_trace.cpp)
+target_sources(q3_bot_move_test PRIVATE src/services/impl/workflow/quake3/q3_brush_trace_clip.cpp)
+target_include_directories(q3_bot_move_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests"
+)
+target_link_libraries(q3_bot_move_test PRIVATE
+    GTest::gtest_main
+    glm::glm
+    Bullet::Bullet
+    nlohmann_json::nlohmann_json
+)
+add_test(NAME q3_bot_move_test COMMAND q3_bot_move_test)
 
 # ============================================================================
 # FILE COPYING

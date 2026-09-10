@@ -1,0 +1,8 @@
+{
+  "id": "camera_gta5_default",
+  "description": "First-person camera for the GTA V map.",
+  "fov_degrees": 75,
+  "near_plane": 0.1,
+  "far_plane": 6000.0,
+  "comment": "The far plane has to clear the longest sightline on the map (Mount Chiliad to the city, roughly 5 km) or the skyline clips. Quake 3's 90 degree FOV is not used here: it is a Quake authoring constraint, not a movement one."
+}

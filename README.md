@@ -106,6 +106,7 @@ Game content and platform initialization are defined as JSON packages in `packag
 | `seed` | game | FPS demo: room with spinning cube, WASD movement, mouse look, jump. Bullet3 physics |
 | `standalone_cubes` | game | 11x11 grid of spinning colored cubes with per-cube animation offsets |
 | `quake3` | game | Quake 3 BSP map viewer with FPS controls |
+| `gta5` | game | Streamed GTA V map (Los Santos / Blaine County) with Quake 3 player kinematics. Needs a user-supplied map export, see `packages/gta5/README.md` |
 | `soundboard` | game | Audio cues + GUI controls |
 | `engine_tester` | game | Validation tour with teleport checkpoints, captures, and diagnostics |
 | `asset_loader` | library | Universal asset loading with cross-engine unit conversion (JSON-driven) |

@@ -1,0 +1,63 @@
+{
+  "name": "GTA V Physics",
+  "description": "Player movement over the streamed GTA V map. The movement model is Quake 3's: the same q3.pm.* pipeline the quake3 package runs, unchanged.",
+
+  "rationale": "GTA V authors its world in metres and this engine's q3.pm.* constants are already expressed in metres (q3_pm_constants.hpp divides the raw Quake units by 32). Both sides therefore agree on scale and the ioq3 pmove steps drop straight onto Los Santos with no retuning. What changes is only the collision world the trace steps run against: streamed tile meshes instead of a single BSP.",
+
+  "steps": [
+    {
+      "id": "player_sync",
+      "plugin": "q3.player.sync",
+      "comment": "Pull origin/velocity out of the physics body into q3.ps."
+    },
+    {
+      "id": "pm_crouch",
+      "plugin": "q3.pm.crouch"
+    },
+    {
+      "id": "pm_ground",
+      "plugin": "q3.pm.ground",
+      "comment": "Ground trace. Sets groundNormal so walking a Vinewood Hills slope pushes along it rather than into it."
+    },
+    {
+      "id": "pm_friction",
+      "plugin": "q3.pm.friction"
+    },
+    {
+      "id": "pm_accelerate",
+      "plugin": "q3.pm.accelerate"
+    },
+    {
+      "id": "pm_jump",
+      "plugin": "q3.pm.jump"
+    },
+    {
+      "id": "pm_slide",
+      "plugin": "q3.pm.step_slide",
+      "comment": "Quake's step-up is 18 units (0.5625 m). GTA V kerbs are around 0.15 m and its stairs around 0.18 m, so the stock step height clears city geometry without any change."
+    },
+    {
+      "id": "physics_step",
+      "plugin": "physics.step"
+    },
+    {
+      "id": "player_commit",
+      "plugin": "q3.player.commit"
+    },
+    {
+      "id": "sync_transforms",
+      "plugin": "physics.sync_transforms"
+    },
+    {
+      "id": "camera_update",
+      "plugin": "camera.fps.update",
+      "parameters": {
+        "sensitivity": 0.003,
+        "eye_height": 1.4,
+        "fov": 75.0,
+        "near": 0.1,
+        "far": 6000.0
+      }
+    }
+  ]
+}
