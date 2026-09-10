@@ -329,6 +329,8 @@
         "src/services/impl/workflow/rendering/bsp_brush_collision.cpp",
         "src/services/impl/workflow/rendering/workflow_bsp_parse_spawn_step.cpp",
         "src/services/impl/workflow/rendering/bsp_entity_lump_parser.cpp",
+        "src/services/impl/workflow/rendering/bsp_entity_lexer.cpp",
+        "src/services/impl/workflow/rendering/bsp_model_lump.cpp",
         "src/services/impl/workflow/rendering/bsp_entity_json_builder.cpp",
         "src/services/impl/workflow/workflow_step_parameter_resolver.cpp"
       ],
