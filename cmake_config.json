@@ -79,6 +79,7 @@
         "src/services/impl/workflow/workflow_app_init_step.cpp",
         "src/services/impl/workflow/workflow_load_workflow_step.cpp",
         "src/services/impl/workflow/workflow_definition_parser.cpp",
+        "src/services/impl/workflow/workflow_definition_parser_steps.cpp",
         "src/services/impl/workflow/workflow_definition_parser_nodes.cpp",
         "src/services/impl/workflow/workflow_definition_parser_variables.cpp",
         "src/services/impl/workflow/workflow_connection_resolver.cpp",
