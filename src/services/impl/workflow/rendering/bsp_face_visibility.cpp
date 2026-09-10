@@ -4,7 +4,11 @@ namespace sdl3cpp::services::impl {
 namespace {
 
 constexpr const char* kNonRenderingSubstrings[] = {
-    "sky", "trigger", "hint", "caulk", "clip", "nodraw", "areaportal",
+    // "sky" catches textures/sky/...; ioquake3 maps' sky textures more
+    // commonly live under textures/skies/... (q3dm1's tim_hell, etc.),
+    // which "sky" alone doesn't match as a substring.
+    "sky", "skies", "trigger", "hint", "caulk", "clip", "nodraw",
+    "areaportal",
 };
 
 }  // namespace
