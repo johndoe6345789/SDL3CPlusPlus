@@ -33,14 +33,13 @@ class WorkflowPackageShaderLoaderStep : public IWorkflowStep {
         const std::filesystem::path& projectRoot);
 
     std::string GetPluginId() const override;
-    void Execute(const WorkflowStepDefinition& step, WorkflowContext& context) override;
+    void Execute(const WorkflowStepDefinition& step,
+                WorkflowContext& context) override;
 
  private:
     std::shared_ptr<ILogger> logger_;
     std::string gamePackage_;
     std::filesystem::path projectRoot_;
-
-    std::filesystem::path ResolvePackageRoot(const std::filesystem::path& projectRoot);
 };
 
 }  // namespace sdl3cpp::services::impl
