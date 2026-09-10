@@ -1,5 +1,6 @@
 #pragma once
 
+#include "services/interfaces/workflow/quake3/q3_brush_trace.hpp"
 #include "services/interfaces/workflow/quake3/q3_pm_constants.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
@@ -30,18 +31,6 @@ struct Q3PlayerState {
     /// on a slope pushes along the slope instead of into it. Straight
     /// up whenever not grounded.
     glm::vec3 groundNormal{0.f, 1.f, 0.f};
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Q3Trace
-//   Result from a swept-box trace against the Bullet world.
-// ─────────────────────────────────────────────────────────────────────────────
-struct Q3Trace {
-    bool      hit{false};
-    float     fraction{1.f};   // 0 = started solid, 1 = no hit
-    glm::vec3 endPos{0.f};
-    glm::vec3 normal{0.f, 1.f, 0.f};
-    bool      startSolid{false};
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -172,6 +161,17 @@ inline Q3Trace TraceBox(
     result.endPos = to;
 
     if (!world) return result;
+
+    // Prefer the map's brushes when bsp.build_collision has attached
+    // them. Tracing planes is what Quake does, and it answers the two
+    // questions a convex sweep cannot: which surface stopped the move,
+    // and whether the sweep began inside something. The model hangs off
+    // the world because it describes that world, and because every
+    // trace already has the world to hand.
+    if (const auto* brushes = static_cast<const BrushCollisionModel*>(
+            world->getWorldUserInfo())) {
+        return TraceBoxThroughBrushes(*brushes, from, to, mins, maxs);
+    }
 
     // Half-extents of the AABB
     const glm::vec3 half = (maxs - mins) * 0.5f;

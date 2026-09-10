@@ -336,7 +336,9 @@
         "src/services/impl/workflow/quake3/q3_step_slide_trace.cpp",
         "src/services/impl/workflow/quake3/q3_slide_move.cpp",
         "src/services/impl/workflow/quake3/q3_slide_planes.cpp",
-        "src/services/impl/workflow/quake3/q3_wish_dir.cpp"
+        "src/services/impl/workflow/quake3/q3_wish_dir.cpp",
+        "src/services/impl/workflow/quake3/q3_brush_trace.cpp",
+        "src/services/impl/workflow/quake3/q3_brush_trace_clip.cpp"
       ],
       "include_directories": [
         "src"
@@ -407,7 +409,11 @@
         "src/services/impl/workflow/rendering/bsp_q3_coordinates.cpp",
         "src/services/impl/workflow/workflow_step_parameter_resolver.cpp",
         "src/services/impl/workflow/workflow_step_parameter_resolver_scalars.cpp",
-        "src/services/impl/workflow/workflow_step_parameter_resolver_lists.cpp"
+        "src/services/impl/workflow/workflow_step_parameter_resolver_lists.cpp",
+        "src/services/impl/workflow/quake3/q3_brush_trace.cpp",
+        "src/services/impl/workflow/quake3/q3_brush_trace_clip.cpp",
+        "src/services/impl/workflow/quake3/q3_brush_collision.cpp",
+        "src/services/impl/workflow/rendering/bsp_pmove_brush_model.cpp"
       ],
       "include_directories": [
         "src"
@@ -459,7 +465,9 @@
         "src/services/impl/workflow/quake3/q3_step_slide_trace.cpp",
         "src/services/impl/workflow/quake3/q3_slide_move.cpp",
         "src/services/impl/workflow/quake3/q3_slide_planes.cpp",
-        "src/services/impl/workflow/quake3/q3_wish_dir.cpp"
+        "src/services/impl/workflow/quake3/q3_wish_dir.cpp",
+        "src/services/impl/workflow/quake3/q3_brush_trace.cpp",
+        "src/services/impl/workflow/quake3/q3_brush_trace_clip.cpp"
       ],
       "include_directories": [
         "src"
@@ -482,7 +490,9 @@
         "src/services/impl/workflow/quake3/q3_step_slide_trace.cpp",
         "src/services/impl/workflow/quake3/q3_slide_move.cpp",
         "src/services/impl/workflow/quake3/q3_slide_planes.cpp",
-        "src/services/impl/workflow/quake3/q3_wish_dir.cpp"
+        "src/services/impl/workflow/quake3/q3_wish_dir.cpp",
+        "src/services/impl/workflow/quake3/q3_brush_trace.cpp",
+        "src/services/impl/workflow/quake3/q3_brush_trace_clip.cpp"
       ],
       "include_directories": [
         "src"
@@ -505,7 +515,25 @@
         "src/services/impl/workflow/quake3/q3_step_slide_trace.cpp",
         "src/services/impl/workflow/quake3/q3_slide_move.cpp",
         "src/services/impl/workflow/quake3/q3_slide_planes.cpp",
-        "src/services/impl/workflow/quake3/q3_wish_dir.cpp"
+        "src/services/impl/workflow/quake3/q3_wish_dir.cpp",
+        "src/services/impl/workflow/quake3/q3_brush_trace.cpp",
+        "src/services/impl/workflow/quake3/q3_brush_trace_clip.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main",
+        "glm::glm",
+        "Bullet::Bullet"
+      ]
+    },
+    {
+      "name": "q3_brush_trace_test",
+      "sources": [
+        "tests/q3_brush_trace_test.cpp",
+        "src/services/impl/workflow/quake3/q3_brush_trace.cpp",
+        "src/services/impl/workflow/quake3/q3_brush_trace_clip.cpp"
       ],
       "include_directories": [
         "src"

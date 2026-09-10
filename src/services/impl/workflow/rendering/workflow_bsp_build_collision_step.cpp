@@ -2,6 +2,7 @@
 #include "services/interfaces/workflow/rendering/bsp_brush_collision_shapes.hpp"
 #include "services/interfaces/workflow/rendering/bsp_collision_body.hpp"
 #include "services/interfaces/workflow/rendering/bsp_types.hpp"
+#include "services/interfaces/workflow/rendering/bsp_pmove_brush_model.hpp"
 
 #include <btBulletDynamicsCommon.h>
 #include <nlohmann/json.hpp>
@@ -40,10 +41,9 @@ void WorkflowBspBuildCollisionStep::Execute(const WorkflowStepDefinition&,
         return;
     }
 
-    // Remove previous BSP collision body to prevent ghost geometry on map
-    // reload. NOTE: only the solid body is cleaned up here, matching the
-    // original monolith — a stale bsp_playerclip_body is not removed on
-    // reload; preserved as-is rather than silently fixed.
+    // Remove the previous body so a reload leaves no ghost geometry.
+    // Only the solid one is cleaned up, as the original did: a stale
+    // bsp_playerclip_body survives a reload, preserved rather than fixed.
     auto* prevBody = context.Get<btRigidBody*>("bsp_collision_body", nullptr);
     RemoveBspCollisionBody(world, prevBody);
     context.Set<btRigidBody*>("bsp_collision_body", nullptr);
@@ -65,11 +65,15 @@ void WorkflowBspBuildCollisionStep::Execute(const WorkflowStepDefinition&,
         context.Set<btRigidBody*>("bsp_playerclip_body", body);
     }
 
+    const size_t tracedBrushes =
+        AttachPmoveBrushModel(world, *bspDataPtr, scale, context);
+
     if (logger_) {
-        logger_->Info("bsp.build_collision: " +
-                      std::to_string(shapes.solidBrushes) + " solid brushes, " +
-                      std::to_string(shapes.clipBrushes) + " player-clip, " +
-                      std::to_string(shapes.skippedBrushes) + " skipped");
+        logger_->Info("bsp.build_collision: " + std::to_string(tracedBrushes) +
+                      " pmove brushes, " + std::to_string(shapes.solidBrushes) +
+                      " solid, " + std::to_string(shapes.clipBrushes) +
+                      " player-clip, " + std::to_string(shapes.skippedBrushes) +
+                      " skipped");
     }
 }
 
