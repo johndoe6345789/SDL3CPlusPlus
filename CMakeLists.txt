@@ -189,6 +189,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/workflow_connection_resolver.cpp
         src/services/impl/workflow/workflow_execute_step.cpp
         src/stb_image.cpp
+        src/services/impl/workflow/workflow_generic_steps/physics_fps_move_kinematics.cpp
         src/services/impl/workflow/workflow_generic_steps/workflow_array_append_step.cpp
         src/services/impl/workflow/workflow_generic_steps/workflow_array_create_step.cpp
         src/services/impl/workflow/workflow_generic_steps/workflow_audio_pause_step.cpp
@@ -283,6 +284,8 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/geometry/workflow_geometry_create_cube_step.cpp
         src/services/impl/workflow/geometry/workflow_geometry_create_plane_step.cpp
         src/services/impl/workflow/geometry/workflow_geometry_cube_generate_step.cpp
+        src/services/impl/workflow/rendering/bsp_entity_json_builder.cpp
+        src/services/impl/workflow/rendering/bsp_entity_lump_parser.cpp
         src/services/impl/workflow/rendering/bsp_face_visibility.cpp
         src/services/impl/workflow/rendering/bsp_geometry_lumps.cpp
         src/services/impl/workflow/rendering/bsp_patch_face_builder.cpp
@@ -383,6 +386,8 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/scene/workflow_scene_remove_geometry_step.cpp
         src/services/impl/workflow/scene/workflow_scene_set_active_step.cpp
         src/services/impl/workflow/scene/workflow_scene_update_step.cpp
+        src/services/impl/workflow/compute/compute_shader_pipeline.cpp
+        src/services/impl/workflow/compute/compute_tessellate_grid.cpp
         src/services/impl/workflow/compute/workflow_compute_pipeline_create_step.cpp
         src/services/impl/workflow/compute/workflow_compute_tessellate_dispatch_step.cpp
         src/services/impl/workflow/compute/workflow_compute_tessellate_step.cpp
