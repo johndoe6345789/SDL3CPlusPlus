@@ -8,8 +8,7 @@
 namespace sdl3cpp::services::impl {
 
 /// Q3 is Z-up; the engine is Y-up. x'=x, y'=z, z'=-y, all scaled.
-std::array<float, 3> ConvertQ3Point(float qx, float qy, float qz,
-                                    float scale);
+std::array<float, 3> ConvertQ3Point(float qx, float qy, float qz, float scale);
 
 /// [x, y, z] as a JSON array.
 nlohmann::json PointJson(const std::array<float, 3>& p);

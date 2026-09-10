@@ -20,14 +20,13 @@
 namespace sdl3cpp::services::impl::registrar_detail {
 
 int RegisterGraphicsInitSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
-                               std::shared_ptr<ILogger> logger);
+                              std::shared_ptr<ILogger> logger);
 
-int RegisterRenderingCoreSteps(
-    std::shared_ptr<IWorkflowStepRegistry> registry,
-    std::shared_ptr<ILogger> logger);
+int RegisterRenderingCoreSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
+                               std::shared_ptr<ILogger> logger);
 
 int RegisterRenderingBspSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
-                               std::shared_ptr<ILogger> logger);
+                              std::shared_ptr<ILogger> logger);
 
 int RegisterRenderingPostfxSteps(
     std::shared_ptr<IWorkflowStepRegistry> registry,
@@ -37,9 +36,8 @@ int RegisterRenderingOverlaySteps(
     std::shared_ptr<IWorkflowStepRegistry> registry,
     std::shared_ptr<ILogger> logger);
 
-int RegisterRenderingQ3HudSteps(
-    std::shared_ptr<IWorkflowStepRegistry> registry,
-    std::shared_ptr<ILogger> logger);
+int RegisterRenderingQ3HudSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
+                                std::shared_ptr<ILogger> logger);
 
 int RegisterRenderingQ3ModelSteps(
     std::shared_ptr<IWorkflowStepRegistry> registry,
@@ -54,62 +52,60 @@ int RegisterRenderingQ3CombatSteps(
     std::shared_ptr<ILogger> logger);
 
 int RegisterGraphicsMiscSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
-                               std::shared_ptr<ILogger> logger);
-
-int RegisterCameraSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
-                         std::shared_ptr<ILogger> logger);
-
-int RegisterPhysicsSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
-                          std::shared_ptr<ILogger> logger);
-
-int RegisterInputSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
-                        std::shared_ptr<ILogger> logger,
-                        std::shared_ptr<IInputService> inputSvc);
-
-int RegisterAudioSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
-                        std::shared_ptr<ILogger> logger,
-                        std::shared_ptr<IAudioService> audioSvc);
-
-int RegisterControlSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
-                          std::shared_ptr<ILogger> logger);
-
-int RegisterDataOpsCoreSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
                               std::shared_ptr<ILogger> logger);
 
-int RegisterListNumberSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
+int RegisterCameraSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
+                        std::shared_ptr<ILogger> logger);
+
+int RegisterPhysicsSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
+                         std::shared_ptr<ILogger> logger);
+
+int RegisterInputSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
+                       std::shared_ptr<ILogger> logger,
+                       std::shared_ptr<IInputService> inputSvc);
+
+int RegisterAudioSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
+                       std::shared_ptr<ILogger> logger,
+                       std::shared_ptr<IAudioService> audioSvc);
+
+int RegisterControlSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
+                         std::shared_ptr<ILogger> logger);
+
+int RegisterDataOpsCoreSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
                              std::shared_ptr<ILogger> logger);
+
+int RegisterListNumberSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
+                            std::shared_ptr<ILogger> logger);
 
 int RegisterParticleStringValueVfxSteps(
     std::shared_ptr<IWorkflowStepRegistry> registry,
     std::shared_ptr<ILogger> logger);
 
 int RegisterModelSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
-                        std::shared_ptr<ILogger> logger);
+                       std::shared_ptr<ILogger> logger);
 
 int RegisterSceneSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
-                        std::shared_ptr<ILogger> logger,
-                        std::shared_ptr<ISceneService> sceneSvc);
+                       std::shared_ptr<ILogger> logger,
+                       std::shared_ptr<ISceneService> sceneSvc);
 
-int RegisterCameraServiceSteps(
-    std::shared_ptr<IWorkflowStepRegistry> registry,
-    std::shared_ptr<ILogger> logger,
-    std::shared_ptr<IConfigService> configSvc);
+int RegisterCameraServiceSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
+                               std::shared_ptr<ILogger> logger,
+                               std::shared_ptr<IConfigService> configSvc);
 
 int RegisterSystemDataSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
-                             std::shared_ptr<ILogger> logger);
+                            std::shared_ptr<ILogger> logger);
 
 int RegisterMediaSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
-                        std::shared_ptr<ILogger> logger,
-                        std::shared_ptr<IConfigService> configSvc,
-                        std::shared_ptr<IAudioService> audioSvc);
+                       std::shared_ptr<ILogger> logger,
+                       std::shared_ptr<IConfigService> configSvc,
+                       std::shared_ptr<IAudioService> audioSvc);
 
-int RegisterShaderSteps(
-    std::shared_ptr<IWorkflowStepRegistry> registry,
-    std::shared_ptr<ILogger> logger,
-    std::shared_ptr<IGraphicsService> graphicsSvc,
-    std::shared_ptr<IShaderSystemRegistry> shaderRegistry);
+int RegisterShaderSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
+                        std::shared_ptr<ILogger> logger,
+                        std::shared_ptr<IGraphicsService> graphicsSvc,
+                        std::shared_ptr<IShaderSystemRegistry> shaderRegistry);
 
 int RegisterExitStep(std::shared_ptr<IWorkflowStepRegistry> registry,
-                      std::shared_ptr<ILogger> logger);
+                     std::shared_ptr<ILogger> logger);
 
 }  // namespace sdl3cpp::services::impl::registrar_detail

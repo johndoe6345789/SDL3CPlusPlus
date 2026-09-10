@@ -17,8 +17,8 @@ void PopulateContextFromWorkflowVariables(
             } catch (...) {}
         } else if (var.type == "string") {
             std::string val = var.defaultValue;
-            if (rewriteShaders && val.find("/shaders/msl/") !=
-                                       std::string::npos) {
+            if (rewriteShaders &&
+                val.find("/shaders/msl/") != std::string::npos) {
                 // Rewrite msl path to spirv:
                 // shaders/msl/foo.metal → shaders/spirv/foo.spv
                 auto pos = val.find("/shaders/msl/");

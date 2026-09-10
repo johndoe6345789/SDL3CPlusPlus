@@ -13,14 +13,14 @@ namespace sdl3cpp::services::impl {
 /// (each may be null if the pass hasn't produced it, in which case the
 /// caller substitutes the group's own albedo).
 struct BspMapTextures {
-    SDL_GPUTexture* defaultTex  = nullptr;
-    SDL_GPUSampler* defaultSamp = nullptr;
-    SDL_GPUTexture* shadowTex   = nullptr;
-    SDL_GPUSampler* shadowSamp  = nullptr;
+    SDL_GPUTexture* defaultTex   = nullptr;
+    SDL_GPUSampler* defaultSamp  = nullptr;
+    SDL_GPUTexture* shadowTex    = nullptr;
+    SDL_GPUSampler* shadowSamp   = nullptr;
     SDL_GPUTexture* lightmapTex  = nullptr;
     SDL_GPUSampler* lightmapSamp = nullptr;
-    SDL_GPUTexture* portalTex   = nullptr;
-    SDL_GPUSampler* portalSamp  = nullptr;
+    SDL_GPUTexture* portalTex    = nullptr;
+    SDL_GPUSampler* portalSamp   = nullptr;
 };
 
 /// Looks up the fallback albedo plus the shared shadow/lightmap/portal

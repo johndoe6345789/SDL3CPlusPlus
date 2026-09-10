@@ -19,9 +19,8 @@
 
 namespace sdl3cpp::services::impl::registrar_detail {
 
-int RegisterGraphicsInitSteps(
-    std::shared_ptr<IWorkflowStepRegistry> registry,
-    std::shared_ptr<ILogger> logger) {
+int RegisterGraphicsInitSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
+                              std::shared_ptr<ILogger> logger) {
     if (!registry) return 0;
 
     int count = 0;

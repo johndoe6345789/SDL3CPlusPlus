@@ -28,7 +28,7 @@ const char* CreateGpuTextOverlayResources(SDL_GPUDevice* device,
 
     SDL_GPUShader* vertex   = nullptr;
     SDL_GPUShader* fragment = nullptr;
-    const char* err = LoadOverlayShaderPair(device, vertex, fragment);
+    const char* err         = LoadOverlayShaderPair(device, vertex, fragment);
     if (*err) {
         return err;
     }

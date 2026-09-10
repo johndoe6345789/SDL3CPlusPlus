@@ -25,9 +25,8 @@ void TryFpsStepUp(btRigidBody* body, btDiscreteDynamicsWorld* world,
     const btVector3 origin = xform.getOrigin();
     const float feetY      = origin.y() - capsuleHalfH - capsuleRadius;
 
-    const StepProbeResult probe =
-        ProbeFpsStep(world, origin, feetY, dir, stepHeight, capsuleRadius,
-                    capsuleHalfH);
+    const StepProbeResult probe = ProbeFpsStep(
+        world, origin, feetY, dir, stepHeight, capsuleRadius, capsuleHalfH);
     if (!probe.blocked || !probe.pathClear || !probe.hasSurface) {
         return;
     }

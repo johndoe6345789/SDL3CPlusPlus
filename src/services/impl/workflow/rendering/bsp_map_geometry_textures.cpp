@@ -31,7 +31,7 @@ void ResolveBspGroupAlbedo(WorkflowContext& context, int texIdx,
     outSamp = nullptr;
     if (texIdx >= 0) {
         std::string texKey = "bsp_tex_" + std::to_string(texIdx);
-        outTex = context.Get<SDL_GPUTexture*>(texKey + "_gpu", nullptr);
+        outTex  = context.Get<SDL_GPUTexture*>(texKey + "_gpu", nullptr);
         outSamp = context.Get<SDL_GPUSampler*>(texKey + "_sampler", nullptr);
     }
     if (!outTex || !outSamp) {
@@ -46,18 +46,18 @@ void BuildBspSamplerBindings(SDL_GPUTexture* albedoTex,
                              SDL_GPUTextureSamplerBinding outBindings[4]) {
     outBindings[0].texture = albedoTex;
     outBindings[0].sampler = albedoSamp;
-    outBindings[1].texture = textures.shadowTex ? textures.shadowTex
-                                                : albedoTex;
-    outBindings[1].sampler = textures.shadowSamp ? textures.shadowSamp
-                                                 : albedoSamp;
-    outBindings[2].texture = textures.lightmapTex ? textures.lightmapTex
-                                                  : albedoTex;
-    outBindings[2].sampler = textures.lightmapSamp ? textures.lightmapSamp
-                                                   : albedoSamp;
-    outBindings[3].texture = textures.portalTex ? textures.portalTex
-                                                : albedoTex;
-    outBindings[3].sampler = textures.portalSamp ? textures.portalSamp
-                                                 : albedoSamp;
+    outBindings[1].texture =
+        textures.shadowTex ? textures.shadowTex : albedoTex;
+    outBindings[1].sampler =
+        textures.shadowSamp ? textures.shadowSamp : albedoSamp;
+    outBindings[2].texture =
+        textures.lightmapTex ? textures.lightmapTex : albedoTex;
+    outBindings[2].sampler =
+        textures.lightmapSamp ? textures.lightmapSamp : albedoSamp;
+    outBindings[3].texture =
+        textures.portalTex ? textures.portalTex : albedoTex;
+    outBindings[3].sampler =
+        textures.portalSamp ? textures.portalSamp : albedoSamp;
 }
 
 }  // namespace sdl3cpp::services::impl

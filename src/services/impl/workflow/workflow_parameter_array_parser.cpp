@@ -14,14 +14,12 @@ WorkflowParameterValue ParseParameterArrayValue(const rapidjson::Value& value,
     for (rapidjson::SizeType i = 0; i < value.Size(); ++i) {
         const auto& entry = value[i];
         if (entry.IsString()) {
-            stringItems.emplace_back(
-                ExpandEnvPlaceholders(entry.GetString()));
+            stringItems.emplace_back(ExpandEnvPlaceholders(entry.GetString()));
         } else if (entry.IsNumber()) {
             numberItems.emplace_back(entry.GetDouble());
         } else {
-            throw std::runtime_error(
-                "Workflow parameter '" + key +
-                "' array must contain strings or numbers");
+            throw std::runtime_error("Workflow parameter '" + key +
+                                     "' array must contain strings or numbers");
         }
     }
     if (!stringItems.empty() && !numberItems.empty()) {

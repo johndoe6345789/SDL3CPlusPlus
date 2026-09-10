@@ -19,17 +19,17 @@ BspBrushCollisionShapes BuildBspBrushCollisionShapes(
     for (int b = 0; b < view.numBrushes; ++b) {
         const auto& brush    = view.brushes[b];
         const BrushKind kind = ClassifyBrush(view, brush);
-        const bool boundsOk  = brush.firstSide >= 0 &&
-                               brush.firstSide + brush.numSides <=
-                                   view.numBrushSides;
+        const bool boundsOk =
+            brush.firstSide >= 0 &&
+            brush.firstSide + brush.numSides <= view.numBrushSides;
         if (kind == BrushKind::Skip || !boundsOk) {
             ++out.skippedBrushes;
             continue;
         }
 
-        auto hullVerts = ComputeBrushVertices(&view.brushSides[brush.firstSide],
-                                              brush.numSides, view.planes,
-                                              scale);
+        auto hullVerts =
+            ComputeBrushVertices(&view.brushSides[brush.firstSide],
+                                 brush.numSides, view.planes, scale);
         if (hullVerts.size() < 4) {
             ++out.skippedBrushes;
             continue;

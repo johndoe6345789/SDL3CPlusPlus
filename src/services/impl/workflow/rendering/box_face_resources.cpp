@@ -8,10 +8,9 @@ bool ResolveTexturedBoxResources(WorkflowContext& context, ILogger* logger,
                                  const DrawTexturedBoxParams& params,
                                  TexturedBoxDrawContext& out) {
     out.pass = context.Get<SDL_GPURenderPass*>("gpu_render_pass", nullptr);
-    out.cmd =
-        context.Get<SDL_GPUCommandBuffer*>("gpu_command_buffer", nullptr);
-    out.pipeline = context.Get<SDL_GPUGraphicsPipeline*>(
-        "gpu_pipeline_textured", nullptr);
+    out.cmd = context.Get<SDL_GPUCommandBuffer*>("gpu_command_buffer", nullptr);
+    out.pipeline =
+        context.Get<SDL_GPUGraphicsPipeline*>("gpu_pipeline_textured", nullptr);
     if (!out.pass || !out.cmd || !out.pipeline) return false;
 
     // Unit plane buffers (1x1 plane on XZ, normal +Y)

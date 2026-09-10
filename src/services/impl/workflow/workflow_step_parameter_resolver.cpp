@@ -9,14 +9,12 @@ WorkflowStepParameterResolver::WorkflowStepParameterResolver(
     std::shared_ptr<ILogger> logger)
     : logger_(std::move(logger)) {
     if (logger_) {
-        logger_->Trace("WorkflowStepParameterResolver", "Constructor",
-                       "Entry");
+        logger_->Trace("WorkflowStepParameterResolver", "Constructor", "Entry");
     }
 }
 
 const WorkflowParameterValue* WorkflowStepParameterResolver::FindParameter(
-    const WorkflowStepDefinition& step,
-    const std::string& name) const {
+    const WorkflowStepDefinition& step, const std::string& name) const {
     if (logger_) {
         logger_->Trace("WorkflowStepParameterResolver", "FindParameter",
                        "Entry");
@@ -30,11 +28,10 @@ const WorkflowParameterValue* WorkflowStepParameterResolver::FindParameter(
 
 const WorkflowParameterValue&
 WorkflowStepParameterResolver::GetRequiredParameter(
-    const WorkflowStepDefinition& step,
-    const std::string& name) const {
+    const WorkflowStepDefinition& step, const std::string& name) const {
     if (logger_) {
-        logger_->Trace("WorkflowStepParameterResolver",
-                       "GetRequiredParameter", "Entry");
+        logger_->Trace("WorkflowStepParameterResolver", "GetRequiredParameter",
+                       "Entry");
     }
     const auto* param = FindParameter(step, name);
     if (!param) {

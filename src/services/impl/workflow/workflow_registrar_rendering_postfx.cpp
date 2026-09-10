@@ -27,13 +27,11 @@ int RegisterRenderingPostfxSteps(
 
     registry->RegisterStep(std::make_shared<WorkflowShadowSetupStep>(logger));
     registry->RegisterStep(std::make_shared<WorkflowShadowPassStep>(logger));
-    registry->RegisterStep(
-        std::make_shared<WorkflowRenderPrepareStep>(logger));
+    registry->RegisterStep(std::make_shared<WorkflowRenderPrepareStep>(logger));
     registry->RegisterStep(std::make_shared<WorkflowPostfxSetupStep>(logger));
     registry->RegisterStep(
         std::make_shared<WorkflowFrameBeginOffscreenStep>(logger));
-    registry->RegisterStep(
-        std::make_shared<WorkflowFrameEndSceneStep>(logger));
+    registry->RegisterStep(std::make_shared<WorkflowFrameEndSceneStep>(logger));
     // postfx.composite split into atomic steps; chain them in this order.
     registry->RegisterStep(
         std::make_shared<WorkflowPostfxCompositeDrawStep>(logger));

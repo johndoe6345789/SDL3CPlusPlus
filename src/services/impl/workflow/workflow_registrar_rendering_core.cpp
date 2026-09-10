@@ -21,9 +21,8 @@
 
 namespace sdl3cpp::services::impl::registrar_detail {
 
-int RegisterRenderingCoreSteps(
-    std::shared_ptr<IWorkflowStepRegistry> registry,
-    std::shared_ptr<ILogger> logger) {
+int RegisterRenderingCoreSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
+                               std::shared_ptr<ILogger> logger) {
     if (!registry) return 0;
 
     int count = 0;
@@ -33,23 +32,20 @@ int RegisterRenderingCoreSteps(
         std::make_shared<WorkflowRenderGridSetupStep>(logger));
     registry->RegisterStep(
         std::make_shared<WorkflowRenderGridDrawStep>(logger));
-    registry->RegisterStep(
-        std::make_shared<WorkflowFrameBeginGpuStep>(logger));
+    registry->RegisterStep(std::make_shared<WorkflowFrameBeginGpuStep>(logger));
     registry->RegisterStep(
         std::make_shared<WorkflowFrameDrawBodiesStep>(logger));
     registry->RegisterStep(std::make_shared<WorkflowFrameEndGpuStep>(logger));
     registry->RegisterStep(std::make_shared<WorkflowDrawTexturedStep>(logger));
     registry->RegisterStep(
         std::make_shared<WorkflowDrawTexturedBoxStep>(logger));
-    registry->RegisterStep(
-        std::make_shared<WorkflowLightingSetupStep>(logger));
+    registry->RegisterStep(std::make_shared<WorkflowLightingSetupStep>(logger));
     registry->RegisterStep(
         std::make_shared<WorkflowSpotlightSetupStep>(logger));
     registry->RegisterStep(
         std::make_shared<WorkflowSpotlightUpdateStep>(logger));
     registry->RegisterStep(std::make_shared<WorkflowModelLoadStep>(logger));
-    registry->RegisterStep(
-        std::make_shared<WorkflowDrawViewmodelStep>(logger));
+    registry->RegisterStep(std::make_shared<WorkflowDrawViewmodelStep>(logger));
     registry->RegisterStep(
         std::make_shared<WorkflowGeometryCreateFlashlightStep>(logger));
     registry->RegisterStep(std::make_shared<WorkflowMapLoadStep>(logger));

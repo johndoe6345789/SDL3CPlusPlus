@@ -21,9 +21,8 @@
 
 namespace sdl3cpp::services::impl::registrar_detail {
 
-int RegisterRenderingQ3HudSteps(
-    std::shared_ptr<IWorkflowStepRegistry> registry,
-    std::shared_ptr<ILogger> logger) {
+int RegisterRenderingQ3HudSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
+                                std::shared_ptr<ILogger> logger) {
     if (!registry) return 0;
 
     int count = 0;
@@ -31,8 +30,7 @@ int RegisterRenderingQ3HudSteps(
     registry->RegisterStep(std::make_shared<WorkflowQ3MenuUpdateStep>(logger));
     registry->RegisterStep(
         std::make_shared<WorkflowQ3WeaponUpdateStep>(logger));
-    registry->RegisterStep(
-        std::make_shared<WorkflowQ3PickupsDrawStep>(logger));
+    registry->RegisterStep(std::make_shared<WorkflowQ3PickupsDrawStep>(logger));
     registry->RegisterStep(
         std::make_shared<WorkflowOverlaySwBeginStep>(logger));
     registry->RegisterStep(std::make_shared<WorkflowQ3HudStep>(logger));

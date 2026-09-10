@@ -31,9 +31,8 @@ std::optional<Q3Trace> ComputeStepUpTrace(btDiscreteDynamicsWorld* world,
     return upTrace;
 }
 
-bool SettleSteppedMove(btDiscreteDynamicsWorld* world,
-                       Q3PlayerState& stepped, float stepSize,
-                       const btCollisionObject* self) {
+bool SettleSteppedMove(btDiscreteDynamicsWorld* world, Q3PlayerState& stepped,
+                       float stepSize, const btCollisionObject* self) {
     // Settle back down onto whatever was stepped onto.
     const glm::vec3 settle = stepped.origin - glm::vec3(0.f, stepSize, 0.f);
     const auto settleTrace = services::impl::TraceBox(

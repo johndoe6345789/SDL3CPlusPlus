@@ -25,9 +25,8 @@
 
 namespace sdl3cpp::services::impl::registrar_detail {
 
-int RegisterListNumberSteps(
-    std::shared_ptr<IWorkflowStepRegistry> registry,
-    std::shared_ptr<ILogger> logger) {
+int RegisterListNumberSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
+                            std::shared_ptr<ILogger> logger) {
     if (!registry) return 0;
 
     int count = 0;
@@ -42,12 +41,9 @@ int RegisterListNumberSteps(
     registry->RegisterStep(std::make_shared<WorkflowListLiteralStep>(logger));
     registry->RegisterStep(std::make_shared<WorkflowListMapAddStep>(logger));
     registry->RegisterStep(std::make_shared<WorkflowListMapMulStep>(logger));
-    registry->RegisterStep(
-        std::make_shared<WorkflowListReduceMaxStep>(logger));
-    registry->RegisterStep(
-        std::make_shared<WorkflowListReduceMinStep>(logger));
-    registry->RegisterStep(
-        std::make_shared<WorkflowListReduceSumStep>(logger));
+    registry->RegisterStep(std::make_shared<WorkflowListReduceMaxStep>(logger));
+    registry->RegisterStep(std::make_shared<WorkflowListReduceMinStep>(logger));
+    registry->RegisterStep(std::make_shared<WorkflowListReduceSumStep>(logger));
     count += 11;
 
     // ── Number ─────────────────────────────────────────────────

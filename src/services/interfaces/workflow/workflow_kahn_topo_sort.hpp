@@ -20,7 +20,6 @@ std::vector<std::string> KahnTopologicalSort(
     const std::vector<std::string>& nodeIds,
     const std::unordered_map<std::string, size_t>& indexById,
     std::unordered_map<std::string, size_t> indegree,
-    const std::unordered_map<std::string, std::vector<std::string>>&
-        adjacency);
+    const std::unordered_map<std::string, std::vector<std::string>>& adjacency);
 
 }  // namespace sdl3cpp::services::impl

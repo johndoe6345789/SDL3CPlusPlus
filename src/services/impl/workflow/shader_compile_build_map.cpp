@@ -17,17 +17,15 @@ std::unordered_map<std::string, ShaderPaths> BuildShaderMapWithMarkers(
     WriteShaderCompileDebugMarker(
         "test_outputs/about_to_build_shader_map.txt",
         std::string("About to call shaderRegistry_->BuildShaderMap()\n") +
-            "  shaderRegistry_: " + (shaderRegistry ? "VALID" : "NULL") +
-            "\n");
+            "  shaderRegistry_: " + (shaderRegistry ? "VALID" : "NULL") + "\n");
 
     // Build shader map using active shader system.
     const auto shaderMap = shaderRegistry->BuildShaderMap();
 
-    WriteShaderCompileDebugMarker(
-        "test_outputs/after_build_shader_map.txt",
-        "After shaderRegistry_->BuildShaderMap()\n"
-        "  shaderMap.size(): " +
-            std::to_string(shaderMap.size()) + "\n");
+    WriteShaderCompileDebugMarker("test_outputs/after_build_shader_map.txt",
+                                  "After shaderRegistry_->BuildShaderMap()\n"
+                                  "  shaderMap.size(): " +
+                                      std::to_string(shaderMap.size()) + "\n");
 
     if (logger) {
         logger->Info(

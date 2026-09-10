@@ -10,8 +10,7 @@ GeometryPlaneBuffers UploadGeometryPlaneMesh(SDL_GPUDevice* device,
     GeometryPlaneBuffers result =
         geometry_plane_detail::CreateMeshBuffers(device, mesh, transfer);
     const uint32_t vertexSize =
-        static_cast<uint32_t>(mesh.vertices.size()) *
-        sizeof(PlanePosUvVertex);
+        static_cast<uint32_t>(mesh.vertices.size()) * sizeof(PlanePosUvVertex);
     const uint32_t indexSize =
         static_cast<uint32_t>(mesh.indices.size()) * sizeof(uint16_t);
 

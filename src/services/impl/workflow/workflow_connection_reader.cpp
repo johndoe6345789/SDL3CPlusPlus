@@ -17,8 +17,7 @@ std::vector<std::pair<std::string, std::string>>
 WorkflowConnectionReader::ReadConnections(
     const rapidjson::Value& document) const {
     if (logger_) {
-        logger_->Trace("WorkflowConnectionReader", "ReadConnections",
-                       "Entry");
+        logger_->Trace("WorkflowConnectionReader", "ReadConnections", "Entry");
     }
 
     if (!document.HasMember("connections")) {
@@ -31,11 +30,11 @@ WorkflowConnectionReader::ReadConnections(
 
     std::vector<std::pair<std::string, std::string>> edges;
     for (auto it = connectionsValue.MemberBegin();
-        it != connectionsValue.MemberEnd(); ++it) {
+         it != connectionsValue.MemberEnd(); ++it) {
         const std::string fromNode = it->name.GetString();
         if (!it->value.IsObject()) {
-            throw std::runtime_error("Workflow connections for '" +
-                                     fromNode + "' must be an object");
+            throw std::runtime_error("Workflow connections for '" + fromNode +
+                                     "' must be an object");
         }
         if (!it->value.HasMember("main")) {
             continue;

@@ -37,8 +37,7 @@ int RegisterRenderingQ3ModelSteps(
     registry->RegisterStep(std::make_shared<WorkflowQ3BotsDrawStep>(logger));
     // Q3 pmove
     registry->RegisterStep(std::make_shared<WorkflowQ3PlayerSyncStep>(logger));
-    registry->RegisterStep(
-        std::make_shared<WorkflowQ3PmStepSlideStep>(logger));
+    registry->RegisterStep(std::make_shared<WorkflowQ3PmStepSlideStep>(logger));
     registry->RegisterStep(std::make_shared<WorkflowQ3FrameTimeStep>(logger));
 
     return count;

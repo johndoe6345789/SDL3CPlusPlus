@@ -16,8 +16,8 @@ void DrawNavArrows(const Q3MapSelectAssets& a, int idx, int nMaps, float y) {
 }
 
 void DrawMapSelectButtons(const Q3MapSelectAssets& a) {
-    constexpr float kBY = static_cast<float>(q3overlay::kH) - 52.f,
-                    kBW = 128.f, kBH = 46.f;
+    constexpr float kBY = static_cast<float>(q3overlay::kH) - 52.f, kBW = 128.f,
+                    kBH = 46.f;
     auto drawBtn        = [&](SDL_Texture* t, float x) {
         if (!t) return;
         SDL_SetTextureAlphaMod(t, 255);

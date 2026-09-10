@@ -5,8 +5,7 @@
 
 namespace sdl3cpp::services::impl {
 
-std::array<float, 3> ConvertQ3Point(float qx, float qy, float qz,
-                                    float scale) {
+std::array<float, 3> ConvertQ3Point(float qx, float qy, float qz, float scale) {
     return {qx * scale, qz * scale, -qy * scale};
 }
 

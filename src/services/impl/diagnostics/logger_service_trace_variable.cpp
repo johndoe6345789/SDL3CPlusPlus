@@ -28,4 +28,4 @@ void LoggerService::TraceVariable(const std::string& name, double v) {
     log_->trace("  {} = {:.6f}", name, v);
 }
 
-} // namespace sdl3cpp::services::impl
+}  // namespace sdl3cpp::services::impl

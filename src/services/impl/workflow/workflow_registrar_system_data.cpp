@@ -16,9 +16,8 @@
 
 namespace sdl3cpp::services::impl::registrar_detail {
 
-int RegisterSystemDataSteps(
-    std::shared_ptr<IWorkflowStepRegistry> registry,
-    std::shared_ptr<ILogger> logger) {
+int RegisterSystemDataSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
+                            std::shared_ptr<ILogger> logger) {
     if (!registry) return 0;
 
     int count = 0;
@@ -27,8 +26,7 @@ int RegisterSystemDataSteps(
     registry->RegisterStep(std::make_shared<WorkflowCmdlineArgsStep>(logger));
     registry->RegisterStep(
         std::make_shared<WorkflowDataDeserializeStep>(logger));
-    registry->RegisterStep(
-        std::make_shared<WorkflowDataSerializeStep>(logger));
+    registry->RegisterStep(std::make_shared<WorkflowDataSerializeStep>(logger));
     registry->RegisterStep(
         std::make_shared<WorkflowNetworkConnectStep>(logger));
     registry->RegisterStep(

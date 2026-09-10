@@ -9,8 +9,8 @@
 namespace sdl3cpp::services::app {
 
 bool RequirePackage(const std::filesystem::path& projectRoot,
-                     const std::string& kind, const std::string& expectedType,
-                     const std::string& name) {
+                    const std::string& kind, const std::string& expectedType,
+                    const std::string& name) {
     const std::filesystem::path manifest =
         projectRoot / "packages" / name / "package.json";
     if (std::filesystem::exists(manifest)) {
@@ -24,8 +24,7 @@ bool RequirePackage(const std::filesystem::path& projectRoot,
         return false;
     }
     std::vector<std::string> candidates;
-    for (const auto& entry :
-         std::filesystem::directory_iterator(packagesDir)) {
+    for (const auto& entry : std::filesystem::directory_iterator(packagesDir)) {
         const std::filesystem::path candidateManifest =
             entry.path() / "package.json";
         if (!std::filesystem::exists(candidateManifest)) {

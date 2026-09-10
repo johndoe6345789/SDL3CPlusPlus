@@ -13,10 +13,9 @@
 
 namespace sdl3cpp::services::impl::registrar_detail {
 
-int RegisterSceneSteps(
-    std::shared_ptr<IWorkflowStepRegistry> registry,
-    std::shared_ptr<ILogger> logger,
-    std::shared_ptr<ISceneService> sceneSvc) {
+int RegisterSceneSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
+                       std::shared_ptr<ILogger> logger,
+                       std::shared_ptr<ISceneService> sceneSvc) {
     if (!registry) return 0;
 
     int count = 0;

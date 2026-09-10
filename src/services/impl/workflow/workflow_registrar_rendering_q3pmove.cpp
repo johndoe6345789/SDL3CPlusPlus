@@ -37,8 +37,7 @@ int RegisterRenderingQ3PmoveSteps(
     registry->RegisterStep(
         std::make_shared<WorkflowQ3PmAccelerateStep>(logger));
     registry->RegisterStep(std::make_shared<WorkflowQ3PmJumpStep>(logger));
-    registry->RegisterStep(
-        std::make_shared<WorkflowQ3PmSlideMoveStep>(logger));
+    registry->RegisterStep(std::make_shared<WorkflowQ3PmSlideMoveStep>(logger));
 
     return count;
 }

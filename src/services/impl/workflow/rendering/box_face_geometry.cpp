@@ -31,12 +31,11 @@ void DrawTexturedBox(WorkflowContext& context, ILogger* logger,
     SDL_BindGPUIndexBuffer(draw.pass, &ib_binding,
                            SDL_GPU_INDEXELEMENTSIZE_16BIT);
 
-    auto shadowVP =
-        context.Get<glm::mat4>("render.shadow_vp", glm::mat4(1.0f));
+    auto shadowVP = context.Get<glm::mat4>("render.shadow_vp", glm::mat4(1.0f));
 
     DrawBoxFaces(draw.pass, draw.cmd, faces, draw.center, draw.bodyRotation,
-                draw.view, draw.proj, draw.camPos, shadowVP, draw.fu,
-                draw.indexCount);
+                 draw.view, draw.proj, draw.camPos, shadowVP, draw.fu,
+                 draw.indexCount);
 }
 
 }  // namespace sdl3cpp::services::impl

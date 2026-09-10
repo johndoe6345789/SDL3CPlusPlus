@@ -30,8 +30,8 @@ BspTextureUpload TryLoadEntry(zip_t* archive, SDL_GPUDevice* device,
     if (!pixels) {
         return {};
     }
-    BspTextureUpload upload = bsp_texture_detail::UploadRgba8WithMips(
-        device, pixels, width, height);
+    BspTextureUpload upload =
+        bsp_texture_detail::UploadRgba8WithMips(device, pixels, width, height);
     stbi_image_free(pixels);
     return upload;
 }

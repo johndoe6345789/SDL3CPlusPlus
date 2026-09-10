@@ -35,9 +35,9 @@ void WorkflowDefinitionParser::ExpandInclude(
         canonicalKey = includePath.string();
     }
     if (visited.count(canonicalKey)) {
-        throw std::runtime_error(
-            "workflow.include cycle detected: '" + canonicalKey +
-            "' is already on the include stack");
+        throw std::runtime_error("workflow.include cycle detected: '" +
+                                 canonicalKey +
+                                 "' is already on the include stack");
     }
 
     if (logger_) {

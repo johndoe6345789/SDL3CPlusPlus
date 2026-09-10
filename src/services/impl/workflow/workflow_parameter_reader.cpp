@@ -31,8 +31,7 @@ std::unordered_map<std::string, WorkflowParameterValue>
 WorkflowParameterReader::ReadParameterMap(const rapidjson::Value& object,
                                           const char* name) const {
     if (logger_) {
-        logger_->Trace("WorkflowParameterReader", "ReadParameterMap",
-                       "Entry");
+        logger_->Trace("WorkflowParameterReader", "ReadParameterMap", "Entry");
     }
 
     std::unordered_map<std::string, WorkflowParameterValue> result;
@@ -47,7 +46,7 @@ WorkflowParameterReader::ReadParameterMap(const rapidjson::Value& object,
 
     for (auto it = mapValue.MemberBegin(); it != mapValue.MemberEnd(); ++it) {
         const std::string key = it->name.GetString();
-        const auto& value = it->value;
+        const auto& value     = it->value;
 
         // Skip nested 'inputs'/'outputs' objects - extracted separately by
         // the parser.

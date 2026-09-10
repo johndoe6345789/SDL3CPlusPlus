@@ -11,9 +11,8 @@
 
 namespace sdl3cpp::services::impl::registrar_detail {
 
-int RegisterCameraSteps(
-    std::shared_ptr<IWorkflowStepRegistry> registry,
-    std::shared_ptr<ILogger> logger) {
+int RegisterCameraSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
+                        std::shared_ptr<ILogger> logger) {
     if (!registry) return 0;
 
     int count = 0;
@@ -24,8 +23,7 @@ int RegisterCameraSteps(
         std::make_shared<WorkflowCameraFpsUpdateStep>(logger));
     registry->RegisterStep(std::make_shared<WorkflowCameraLookAtStep>(logger));
     registry->RegisterStep(std::make_shared<WorkflowCameraSetFovStep>(logger));
-    registry->RegisterStep(
-        std::make_shared<WorkflowCameraSetPoseStep>(logger));
+    registry->RegisterStep(std::make_shared<WorkflowCameraSetPoseStep>(logger));
     registry->RegisterStep(
         std::make_shared<WorkflowCameraTeleportStep>(logger));
     count += 6;

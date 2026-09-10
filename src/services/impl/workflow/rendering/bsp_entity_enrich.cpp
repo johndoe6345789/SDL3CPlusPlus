@@ -12,8 +12,7 @@ namespace {
 /// Attaches `model_index`/`bounds` when `model` is a `"*N"` brush reference.
 void ApplyEntityModelBounds(nlohmann::json& ent,
                             const std::map<std::string, std::string>& values,
-                            const std::vector<BspModel>& models,
-                            float scale) {
+                            const std::vector<BspModel>& models, float scale) {
     auto modelIt = values.find("model");
     if (modelIt == values.end() || modelIt->second.size() <= 1 ||
         modelIt->second[0] != '*') {
@@ -22,8 +21,8 @@ void ApplyEntityModelBounds(nlohmann::json& ent,
     const int modelIndex = std::atoi(modelIt->second.c_str() + 1);
     if (modelIndex >= 0 && static_cast<size_t>(modelIndex) < models.size()) {
         ent["model_index"] = modelIndex;
-        ent["bounds"]      = ConvertModelBounds(
-            models[static_cast<size_t>(modelIndex)], scale);
+        ent["bounds"] =
+            ConvertModelBounds(models[static_cast<size_t>(modelIndex)], scale);
     }
 }
 
@@ -36,9 +35,9 @@ void EnrichEntity(
     nlohmann::json& spawn, int& pickupCount, int& jumpPadCount,
     int& teleporterCount) {
     const std::string classname = ent.value("classname", std::string{});
-    ent["id"] = classname.empty()
-                    ? ent.value("id", std::string{})
-                    : classname + "_" + std::to_string(classIndex);
+    ent["id"]                   = classname.empty()
+                                      ? ent.value("id", std::string{})
+                                      : classname + "_" + std::to_string(classIndex);
 
     ApplyEntityOrigin(ent, values, classname, scale, targets, spawn);
     ApplyEntityModelBounds(ent, values, models, scale);

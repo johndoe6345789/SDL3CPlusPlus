@@ -4,8 +4,7 @@
 
 namespace sdl3cpp::services::impl {
 
-WorkflowNodeTopoSorter::WorkflowNodeTopoSorter(
-    std::shared_ptr<ILogger> logger)
+WorkflowNodeTopoSorter::WorkflowNodeTopoSorter(std::shared_ptr<ILogger> logger)
     : logger_(std::move(logger)) {
     if (logger_) {
         logger_->Trace("WorkflowNodeTopoSorter", "Constructor", "Entry");

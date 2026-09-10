@@ -27,8 +27,8 @@ void DrawBotModelChain(const nlohmann::json& bot,
     auto draw = [&](const std::string& pfx, int frame,
                     const glm::mat4& modelMat) {
         detail::DrawBotModelPart(pfx, frame, modelMat, view, proj, camPos,
-                                 shadowVP, fu, pass, cmd, shadowTex,
-                                 shadowSamp, context);
+                                 shadowVP, fu, pass, cmd, shadowTex, shadowSamp,
+                                 context);
     };
 
     // ── lower.md3: root transform ──────────────────────────────────

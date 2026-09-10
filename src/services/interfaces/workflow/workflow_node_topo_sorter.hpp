@@ -16,8 +16,7 @@ namespace sdl3cpp::services::impl {
 /// the (from, to) edges, produce a dependency-respecting node order.
 class WorkflowNodeTopoSorter {
 public:
-    explicit WorkflowNodeTopoSorter(
-        std::shared_ptr<ILogger> logger = nullptr);
+    explicit WorkflowNodeTopoSorter(std::shared_ptr<ILogger> logger = nullptr);
 
     /// Sort nodes by connections using topological sort.
     /// Uses name→id mapping to resolve n8n format (connections use names,

@@ -6,9 +6,9 @@
 namespace sdl3cpp::services::impl {
 
 void UploadGpuBufferData(SDL_GPUDevice* device,
-                        const UploadedGpuBuffers& buffers,
-                        const std::vector<uint8_t>& vertexBytes,
-                        const std::vector<uint16_t>& indexValues) {
+                         const UploadedGpuBuffers& buffers,
+                         const std::vector<uint8_t>& vertexBytes,
+                         const std::vector<uint16_t>& indexValues) {
     const auto vertexSize = static_cast<uint32_t>(vertexBytes.size());
     const auto indexSize =
         static_cast<uint32_t>(indexValues.size() * sizeof(uint16_t));

@@ -21,15 +21,14 @@ void DrawLegacyMesh(SDL_GPURenderPass* pass, SDL_GPUCommandBuffer* cmd,
     if (!vb || !ib) return;
 
     std::string texKey = ResolveLegacyMeshTexture(meshName, config);
-    auto* meshTex  = context.Get<SDL_GPUTexture*>(texKey + "_gpu", nullptr);
-    auto* meshSamp = context.Get<SDL_GPUSampler*>(texKey + "_sampler",
-                                                   nullptr);
+    auto* meshTex      = context.Get<SDL_GPUTexture*>(texKey + "_gpu", nullptr);
+    auto* meshSamp = context.Get<SDL_GPUSampler*>(texKey + "_sampler", nullptr);
     if (!meshTex || !meshSamp) return;
 
     SDL_GPUTextureSamplerBinding bindings[2] = {};
-    bindings[0].texture = meshTex;
-    bindings[0].sampler = meshSamp;
-    bindings[1].texture = shadowTex ? shadowTex : meshTex;
+    bindings[0].texture                      = meshTex;
+    bindings[0].sampler                      = meshSamp;
+    bindings[1].texture                      = shadowTex ? shadowTex : meshTex;
     bindings[1].sampler = shadowSamp ? shadowSamp : meshSamp;
     SDL_BindGPUFragmentSamplers(pass, 0, bindings, 2);
 

@@ -12,11 +12,10 @@
 
 namespace sdl3cpp::services::impl::registrar_detail {
 
-int RegisterShaderSteps(
-    std::shared_ptr<IWorkflowStepRegistry> registry,
-    std::shared_ptr<ILogger> logger,
-    std::shared_ptr<IGraphicsService> graphicsSvc,
-    std::shared_ptr<IShaderSystemRegistry> shaderRegistry) {
+int RegisterShaderSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
+                        std::shared_ptr<ILogger> logger,
+                        std::shared_ptr<IGraphicsService> graphicsSvc,
+                        std::shared_ptr<IShaderSystemRegistry> shaderRegistry) {
     if (!registry) return 0;
 
     int count = 0;

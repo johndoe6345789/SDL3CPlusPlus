@@ -22,24 +22,25 @@ int RegisterRenderingOverlaySteps(
     int count = 0;
 
         std::make_shared<WorkflowPostfxCompositeFinishStep>(logger));
-    // overlay.fps split into atomic steps; chain them in this order.
-    registry->RegisterStep(
-        std::make_shared<WorkflowOverlayFpsInitStep>(logger));
-    registry->RegisterStep(
-        std::make_shared<WorkflowOverlayFpsUploadQuadStep>(logger));
-    registry->RegisterStep(
-        std::make_shared<WorkflowOverlayFpsUploadTextStep>(logger));
-    registry->RegisterStep(
-        std::make_shared<WorkflowOverlayFpsDrawStep>(logger));
-    registry->RegisterStep(
-        std::make_shared<WorkflowDebugScreenshotStep>(logger));
-    registry->RegisterStep(std::make_shared<WorkflowPostfxSsaoStep>(logger));
-    registry->RegisterStep(
-        std::make_shared<WorkflowPostfxBloomExtractStep>(logger));
-    registry->RegisterStep(
-        std::make_shared<WorkflowPostfxBloomBlurStep>(logger));
+        // overlay.fps split into atomic steps; chain them in this order.
+        registry->RegisterStep(
+            std::make_shared<WorkflowOverlayFpsInitStep>(logger));
+        registry->RegisterStep(
+            std::make_shared<WorkflowOverlayFpsUploadQuadStep>(logger));
+        registry->RegisterStep(
+            std::make_shared<WorkflowOverlayFpsUploadTextStep>(logger));
+        registry->RegisterStep(
+            std::make_shared<WorkflowOverlayFpsDrawStep>(logger));
+        registry->RegisterStep(
+            std::make_shared<WorkflowDebugScreenshotStep>(logger));
+        registry->RegisterStep(
+            std::make_shared<WorkflowPostfxSsaoStep>(logger));
+        registry->RegisterStep(
+            std::make_shared<WorkflowPostfxBloomExtractStep>(logger));
+        registry->RegisterStep(
+            std::make_shared<WorkflowPostfxBloomBlurStep>(logger));
 
-    return count;
+        return count;
 }
 
 }  // namespace sdl3cpp::services::impl::registrar_detail

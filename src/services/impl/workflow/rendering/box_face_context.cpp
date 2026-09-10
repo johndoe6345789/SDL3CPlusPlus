@@ -22,7 +22,7 @@ void ResolveBodyTransform(WorkflowContext& context,
         context.TryGet<nlohmann::json>("body_sync_" + params.body);
     if (!sync) return;
 
-    auto p = (*sync)["pos"].get<std::vector<float>>();
+    auto p     = (*sync)["pos"].get<std::vector<float>>();
     out.center = glm::vec3(p[0], p[1], p[2]);
 
     auto rot = (*sync)["rotation"].get<std::vector<float>>();
@@ -38,10 +38,9 @@ bool ResolveTexturedBoxDraw(WorkflowContext& context, ILogger* logger,
         return false;
     }
 
-    out.view = context.Get<glm::mat4>("render.view_matrix", glm::mat4(1.0f));
-    out.proj = context.Get<glm::mat4>("render.proj_matrix", glm::mat4(1.0f));
-    out.camPos =
-        context.Get<glm::vec3>("render.camera_pos", glm::vec3(0.0f));
+    out.view   = context.Get<glm::mat4>("render.view_matrix", glm::mat4(1.0f));
+    out.proj   = context.Get<glm::mat4>("render.proj_matrix", glm::mat4(1.0f));
+    out.camPos = context.Get<glm::vec3>("render.camera_pos", glm::vec3(0.0f));
 
     // Pre-computed body transform from physics.sync_transforms step
     out.center = params.pos;

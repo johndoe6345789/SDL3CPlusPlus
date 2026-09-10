@@ -17,7 +17,7 @@ glm::vec3 Tangent(const glm::vec3& dir);
 float JitterComponent(int seed);
 
 bool Raycast(btDiscreteDynamicsWorld* world, const btVector3& from,
-            const btVector3& to, btVector3& hitPoint);
+             const btVector3& to, btVector3& hitPoint);
 
 HitscanFireResult FireSingleRay(btDiscreteDynamicsWorld* world,
                                 const std::string& weapon,

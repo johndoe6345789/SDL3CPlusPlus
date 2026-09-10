@@ -36,7 +36,7 @@ void AddCylinder(std::vector<PosUvVertex>& vertices,
 }
 
 void AddCap(std::vector<PosUvVertex>& vertices, std::vector<uint16_t>& indices,
-           int segments, float radius, float y, float uv_v, bool flip) {
+            int segments, float radius, float y, float uv_v, bool flip) {
     uint16_t center = static_cast<uint16_t>(vertices.size());
     vertices.push_back({0.0f, y, 0.0f, 0.5f, uv_v});
 

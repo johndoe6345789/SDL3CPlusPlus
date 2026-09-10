@@ -21,12 +21,12 @@ int main(int argc, char** argv) {
             return 1;
         }
 
-        if (!app::RequirePackage(options.projectRoot, "bootstrap",
-                                  "bootloader", options.bootstrapPackage)) {
+        if (!app::RequirePackage(options.projectRoot, "bootstrap", "bootloader",
+                                 options.bootstrapPackage)) {
             return 1;
         }
         if (!app::RequirePackage(options.projectRoot, "game", "game",
-                                  options.gamePackage)) {
+                                 options.gamePackage)) {
             return 1;
         }
 
@@ -46,8 +46,8 @@ int main(int argc, char** argv) {
         std::string shaderDir = app::DetermineShaderBackend(
             options.projectRoot, options.bootstrapPackage);
         appContext.Set<std::string>("shader_backend", shaderDir);
-        logger->Info("Shader backend: " + shaderDir + " (bootstrap: " +
-                     options.bootstrapPackage + ")");
+        logger->Info("Shader backend: " + shaderDir +
+                     " (bootstrap: " + options.bootstrapPackage + ")");
 
         // Load and execute the default workflow.
         std::filesystem::path mainWorkflowPath =
@@ -60,10 +60,10 @@ int main(int argc, char** argv) {
 
         logger->Info("Loading workflow: " + mainWorkflowPath.string());
         sdl3cpp::services::impl::WorkflowDefinitionParser parser(logger);
-        auto mainWorkflow = parser.ParseFile(mainWorkflowPath);
+        auto mainWorkflow         = parser.ParseFile(mainWorkflowPath);
         const bool rewriteShaders = (shaderDir != "msl");
-        app::PopulateContextFromWorkflowVariables(
-            mainWorkflow, rewriteShaders, logger, appContext);
+        app::PopulateContextFromWorkflowVariables(mainWorkflow, rewriteShaders,
+                                                  logger, appContext);
 
         logger->Info("Executing main workflow (" +
                      std::to_string(mainWorkflow.steps.size()) + " steps)");

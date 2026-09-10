@@ -16,7 +16,7 @@ float JitterComponent(int seed) {
 }
 
 bool Raycast(btDiscreteDynamicsWorld* world, const btVector3& from,
-            const btVector3& to, btVector3& hitPoint) {
+             const btVector3& to, btVector3& hitPoint) {
     btCollisionWorld::ClosestRayResultCallback cb(from, to);
     world->rayTest(from, to, cb);
     if (cb.hasHit()) {

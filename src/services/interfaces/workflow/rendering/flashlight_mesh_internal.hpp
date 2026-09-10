@@ -19,6 +19,6 @@ void AddCylinder(std::vector<PosUvVertex>& vertices,
 /// Adds a disc cap (a center vertex fanned out to a ring). `flip` reverses
 /// winding order for a cap that faces -Y instead of +Y.
 void AddCap(std::vector<PosUvVertex>& vertices, std::vector<uint16_t>& indices,
-           int segments, float radius, float y, float uv_v, bool flip);
+            int segments, float radius, float y, float uv_v, bool flip);
 
 }  // namespace sdl3cpp::services::impl::flashlight_mesh_detail

@@ -18,11 +18,11 @@ void WorkflowRegistrar::RegisterSteps(
 
     // Services below are wired in later; steps needing them are
     // registered with nullptr and resolved by name once wired.
-    std::shared_ptr<IInputService> inputSvc = nullptr;
-    std::shared_ptr<IAudioService> audioSvc = nullptr;
-    std::shared_ptr<ISceneService> sceneSvc = nullptr;
-    std::shared_ptr<IConfigService> configSvc = nullptr;
-    std::shared_ptr<IGraphicsService> graphicsSvc = nullptr;
+    std::shared_ptr<IInputService> inputSvc               = nullptr;
+    std::shared_ptr<IAudioService> audioSvc               = nullptr;
+    std::shared_ptr<ISceneService> sceneSvc               = nullptr;
+    std::shared_ptr<IConfigService> configSvc             = nullptr;
+    std::shared_ptr<IGraphicsService> graphicsSvc         = nullptr;
     std::shared_ptr<IShaderSystemRegistry> shaderRegistry = nullptr;
 
     // Each call below registers one slice; order must not change.
@@ -51,8 +51,8 @@ void WorkflowRegistrar::RegisterSteps(
     count += RegisterCameraServiceSteps(registry, logger_, configSvc);
     count += RegisterSystemDataSteps(registry, logger_);
     count += RegisterMediaSteps(registry, logger_, configSvc, audioSvc);
-    count += RegisterShaderSteps(registry, logger_, graphicsSvc,
-                                  shaderRegistry);
+    count +=
+        RegisterShaderSteps(registry, logger_, graphicsSvc, shaderRegistry);
     count += RegisterExitStep(registry, logger_);
 
     if (logger_) {

@@ -38,8 +38,7 @@ int RegisterRenderingQ3CombatSteps(
         std::make_shared<WorkflowQ3MissilesImpactStep>(logger));
     // Q3 damage + pickups + ammo
     registry->RegisterStep(std::make_shared<WorkflowQ3AmmoInitStep>(logger));
-    registry->RegisterStep(
-        std::make_shared<WorkflowQ3DamageApplyStep>(logger));
+    registry->RegisterStep(std::make_shared<WorkflowQ3DamageApplyStep>(logger));
     registry->RegisterStep(std::make_shared<WorkflowQ3BotsDamageStep>(logger));
     registry->RegisterStep(
         std::make_shared<WorkflowQ3PlayerDeathCheckStep>(logger));

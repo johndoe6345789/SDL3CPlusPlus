@@ -20,10 +20,10 @@ std::vector<WorkflowStepDefinition> WorkflowDefinitionParser::ParseStepsFormat(
             throw std::runtime_error("Workflow steps must be objects");
         }
         WorkflowStepDefinition step;
-        step.id = paramReader.ReadRequiredString(entry, "id");
-        step.plugin = paramReader.ReadRequiredString(entry, "plugin");
-        step.inputs = paramReader.ReadStringMap(entry, "inputs");
-        step.outputs = paramReader.ReadStringMap(entry, "outputs");
+        step.id         = paramReader.ReadRequiredString(entry, "id");
+        step.plugin     = paramReader.ReadRequiredString(entry, "plugin");
+        step.inputs     = paramReader.ReadStringMap(entry, "inputs");
+        step.outputs    = paramReader.ReadStringMap(entry, "outputs");
         step.parameters = paramReader.ReadParameterMap(entry, "parameters");
         steps.push_back(std::move(step));
     }

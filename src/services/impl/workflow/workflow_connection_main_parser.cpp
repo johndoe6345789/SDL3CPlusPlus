@@ -11,9 +11,8 @@ void ReadBranchConnections(
     for (const auto& connection : branch.GetArray()) {
         if (!connection.IsObject() || !connection.HasMember("node") ||
             !connection["node"].IsString()) {
-            throw std::runtime_error(
-                "Workflow connection entries for '" + fromNode +
-                "' require a node string");
+            throw std::runtime_error("Workflow connection entries for '" +
+                                     fromNode + "' require a node string");
         }
         edges.emplace_back(fromNode, connection["node"].GetString());
     }
@@ -29,7 +28,7 @@ void ParseMainConnections(
     if (mainValue.IsObject()) {
         // n8n format: "main": { "0": [...], "1": [...] }
         for (auto branchIt = mainValue.MemberBegin();
-            branchIt != mainValue.MemberEnd(); ++branchIt) {
+             branchIt != mainValue.MemberEnd(); ++branchIt) {
             if (!branchIt->value.IsArray()) {
                 throw std::runtime_error(
                     "Workflow connections.main[" +
@@ -49,8 +48,8 @@ void ParseMainConnections(
             ReadBranchConnections(branch, fromNode, edges);
         }
     } else {
-        throw std::runtime_error("Workflow connections.main for '" +
-                                 fromNode + "' must be an object or array");
+        throw std::runtime_error("Workflow connections.main for '" + fromNode +
+                                 "' must be an object or array");
     }
 }
 

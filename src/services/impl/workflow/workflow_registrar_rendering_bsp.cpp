@@ -17,9 +17,8 @@
 
 namespace sdl3cpp::services::impl::registrar_detail {
 
-int RegisterRenderingBspSteps(
-    std::shared_ptr<IWorkflowStepRegistry> registry,
-    std::shared_ptr<ILogger> logger) {
+int RegisterRenderingBspSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
+                              std::shared_ptr<ILogger> logger) {
     if (!registry) return 0;
 
     int count = 0;
@@ -27,12 +26,10 @@ int RegisterRenderingBspSteps(
     registry->RegisterStep(std::make_shared<WorkflowBspLoadStep>(logger));
     registry->RegisterStep(
         std::make_shared<WorkflowBspLightmapAtlasStep>(logger));
-    registry->RegisterStep(
-        std::make_shared<WorkflowBspParseSpawnStep>(logger));
+    registry->RegisterStep(std::make_shared<WorkflowBspParseSpawnStep>(logger));
     registry->RegisterStep(
         std::make_shared<WorkflowBspEntityUpdateStep>(logger));
-    registry->RegisterStep(
-        std::make_shared<WorkflowBspPortalViewStep>(logger));
+    registry->RegisterStep(std::make_shared<WorkflowBspPortalViewStep>(logger));
     // bsp.build_geometry split into atomic steps; chain them in this order.
     registry->RegisterStep(
         std::make_shared<WorkflowBspTessellatePatchesStep>(logger));

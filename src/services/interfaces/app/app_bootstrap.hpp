@@ -20,10 +20,10 @@ namespace sdl3cpp::services::app {
 
 /** @brief Parsed command-line configuration for the sdl3_app entry point. */
 struct CliOptions {
-    std::string gamePackage = "standalone_cubes";
-    std::string bootstrapPackage = "bootstrap_mac";
+    std::string gamePackage           = "standalone_cubes";
+    std::string bootstrapPackage      = "bootstrap_mac";
     std::filesystem::path projectRoot = std::filesystem::current_path();
-    bool traceEnabled = false;
+    bool traceEnabled                 = false;
 };
 
 /**
@@ -45,8 +45,8 @@ bool ParseCliArgs(int argc, char** argv, CliOptions& outOptions);
  * class of mistake immediately.
  */
 bool RequirePackage(const std::filesystem::path& projectRoot,
-                     const std::string& kind, const std::string& expectedType,
-                     const std::string& name);
+                    const std::string& kind, const std::string& expectedType,
+                    const std::string& name);
 
 /// @brief Build and configure the application logger (file output, trace
 /// level if requested, console output disabled).
@@ -67,13 +67,13 @@ WorkflowRuntime BuildWorkflowRuntime(std::shared_ptr<ILogger> logger);
 /// @brief Read packages/<gamePackage>/package.json's "defaultWorkflow"
 /// field, falling back to "workflows/main.json" when absent or unreadable.
 std::string LoadDefaultWorkflowPath(const std::filesystem::path& projectRoot,
-                                     const std::string& gamePackage,
-                                     const std::shared_ptr<ILogger>& logger);
+                                    const std::string& gamePackage,
+                                    const std::shared_ptr<ILogger>& logger);
 
 /// @brief Determine the shader source subdirectory ("msl" or "spirv") from
 /// the bootstrap package's configured renderer; "msl" (Mac) is the default.
 std::string DetermineShaderBackend(const std::filesystem::path& projectRoot,
-                                    const std::string& bootstrapPackage);
+                                   const std::string& bootstrapPackage);
 
 /// @brief Populate outContext from the workflow's variable defaults,
 /// rewriting Metal shader paths (shaders/msl/*.metal) to their SPIR-V

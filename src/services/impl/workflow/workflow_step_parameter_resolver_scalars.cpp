@@ -12,9 +12,8 @@ std::string WorkflowStepParameterResolver::GetRequiredString(
     }
     const auto& param = GetRequiredParameter(step, name);
     if (param.type != WorkflowParameterValue::Type::String) {
-        throw std::runtime_error("Workflow step '" + step.id +
-                                 "' parameter '" + name +
-                                 "' must be a string");
+        throw std::runtime_error("Workflow step '" + step.id + "' parameter '" +
+                                 name + "' must be a string");
     }
     return param.stringValue;
 }
@@ -27,9 +26,8 @@ double WorkflowStepParameterResolver::GetRequiredNumber(
     }
     const auto& param = GetRequiredParameter(step, name);
     if (param.type != WorkflowParameterValue::Type::Number) {
-        throw std::runtime_error("Workflow step '" + step.id +
-                                 "' parameter '" + name +
-                                 "' must be a number");
+        throw std::runtime_error("Workflow step '" + step.id + "' parameter '" +
+                                 name + "' must be a number");
     }
     return param.numberValue;
 }
@@ -42,8 +40,8 @@ bool WorkflowStepParameterResolver::GetRequiredBool(
     }
     const auto& param = GetRequiredParameter(step, name);
     if (param.type != WorkflowParameterValue::Type::Bool) {
-        throw std::runtime_error("Workflow step '" + step.id +
-                                 "' parameter '" + name + "' must be a bool");
+        throw std::runtime_error("Workflow step '" + step.id + "' parameter '" +
+                                 name + "' must be a bool");
     }
     return param.boolValue;
 }

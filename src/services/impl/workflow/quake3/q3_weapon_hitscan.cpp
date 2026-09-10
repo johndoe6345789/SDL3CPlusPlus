@@ -6,7 +6,7 @@ HitscanFireResult FireHitscanWeapon(btDiscreteDynamicsWorld* world,
                                     const std::string& weapon,
                                     const glm::vec3& origin,
                                     const glm::vec3& forward) {
-    namespace detail = hitscan_detail;
+    namespace detail         = hitscan_detail;
     const glm::vec3 forwardN = glm::normalize(forward);
 
     if (weapon == "weapon_machinegun") {

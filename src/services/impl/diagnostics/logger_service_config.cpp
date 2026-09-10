@@ -26,4 +26,4 @@ void LoggerService::EnableConsoleOutput(bool enable) {
     RebuildLogger();
 }
 
-} // namespace sdl3cpp::services::impl
+}  // namespace sdl3cpp::services::impl

@@ -22,7 +22,7 @@ std::vector<std::string> KahnTopologicalSort(
     std::vector<std::string> ordered;
     ordered.reserve(nodeIds.size());
     while (!ready.empty()) {
-        auto it = ready.begin();
+        auto it                  = ready.begin();
         const std::string nodeId = it->second;
         ready.erase(it);
         ordered.push_back(nodeId);

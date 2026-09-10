@@ -15,9 +15,10 @@ std::vector<WorkflowStepDefinition> SortWorkflowNodes(
     const auto edges = connReader.ReadConnections(document);
 
     WorkflowNodeTopoSorter nodeSorter;
-    std::vector<std::string> orderedIds = edges.empty()
-        ? nodeOrder
-        : nodeSorter.SortNodesByConnections(nodeOrder, nameToId, edges);
+    std::vector<std::string> orderedIds =
+        edges.empty()
+            ? nodeOrder
+            : nodeSorter.SortNodesByConnections(nodeOrder, nameToId, edges);
 
     std::unordered_map<std::string, WorkflowStepDefinition> nodeMap;
     nodeMap.reserve(nodes.size());

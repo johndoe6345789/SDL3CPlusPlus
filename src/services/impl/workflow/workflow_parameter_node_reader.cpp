@@ -31,7 +31,7 @@ WorkflowParameterReader::ReadStringMap(const rapidjson::Value& object,
 }
 
 std::string WorkflowParameterReader::ReadNodeId(const rapidjson::Value& node,
-                                                 size_t index) const {
+                                                size_t index) const {
     if (logger_) {
         logger_->Trace("WorkflowParameterReader", "ReadNodeId", "Entry");
     }

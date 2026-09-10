@@ -47,8 +47,7 @@ int RegisterParticleStringValueVfxSteps(
     registry->RegisterStep(std::make_shared<WorkflowStringFormatStep>(logger));
     registry->RegisterStep(std::make_shared<WorkflowStringJoinStep>(logger));
     registry->RegisterStep(std::make_shared<WorkflowStringLowerStep>(logger));
-    registry->RegisterStep(
-        std::make_shared<WorkflowStringReplaceStep>(logger));
+    registry->RegisterStep(std::make_shared<WorkflowStringReplaceStep>(logger));
     registry->RegisterStep(std::make_shared<WorkflowStringSplitStep>(logger));
     registry->RegisterStep(std::make_shared<WorkflowStringTrimStep>(logger));
     registry->RegisterStep(std::make_shared<WorkflowStringUpperStep>(logger));

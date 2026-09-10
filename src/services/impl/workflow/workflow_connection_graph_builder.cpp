@@ -29,13 +29,13 @@ void AddEdgesToGraph(
 
         if (indexById.find(fromId) == indexById.end()) {
             throw std::runtime_error(
-                "Workflow connection references unknown node '" +
-                edge.first + "' (id: " + fromId + ")");
+                "Workflow connection references unknown node '" + edge.first +
+                "' (id: " + fromId + ")");
         }
         if (indexById.find(toId) == indexById.end()) {
             throw std::runtime_error(
-                "Workflow connection references unknown node '" +
-                edge.second + "' (id: " + toId + ")");
+                "Workflow connection references unknown node '" + edge.second +
+                "' (id: " + toId + ")");
         }
 
         adjacency[fromId].push_back(toId);

@@ -9,7 +9,7 @@ BspBrushLumpView ParseBspBrushLumps(const std::vector<uint8_t>& bspData) {
     BspBrushLumpView view;
 
     const auto& texLump = lumps[LUMP_TEXTURES];
-    view.numTextures = texLump.length / static_cast<int>(sizeof(BspTexture));
+    view.numTextures    = texLump.length / static_cast<int>(sizeof(BspTexture));
     view.textures =
         reinterpret_cast<const BspTexture*>(bspData.data() + texLump.offset);
 

@@ -16,10 +16,9 @@
 
 namespace sdl3cpp::services::impl::registrar_detail {
 
-int RegisterInputSteps(
-    std::shared_ptr<IWorkflowStepRegistry> registry,
-    std::shared_ptr<ILogger> logger,
-    std::shared_ptr<IInputService> inputSvc) {
+int RegisterInputSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
+                       std::shared_ptr<ILogger> logger,
+                       std::shared_ptr<IInputService> inputSvc) {
     if (!registry) return 0;
 
     int count = 0;

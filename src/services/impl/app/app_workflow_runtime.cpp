@@ -7,7 +7,7 @@ namespace sdl3cpp::services::app {
 
 WorkflowRuntime BuildWorkflowRuntime(std::shared_ptr<ILogger> logger) {
     WorkflowRuntime runtime;
-    runtime.registry = std::make_shared<impl::WorkflowStepRegistry>();
+    runtime.registry  = std::make_shared<impl::WorkflowStepRegistry>();
     runtime.registrar = std::make_unique<impl::WorkflowRegistrar>(logger);
     runtime.registrar->RegisterSteps(runtime.registry);
 
@@ -23,7 +23,7 @@ WorkflowRuntime BuildWorkflowRuntime(std::shared_ptr<ILogger> logger) {
     // Register executor-dependent steps (control.loop.while,
     // workflow.execute).
     runtime.registrar->RegisterExecutorSteps(runtime.registry,
-                                              runtime.executor);
+                                             runtime.executor);
     return runtime;
 }
 

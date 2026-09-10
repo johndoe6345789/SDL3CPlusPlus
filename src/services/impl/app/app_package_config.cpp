@@ -7,8 +7,8 @@
 namespace sdl3cpp::services::app {
 
 std::string LoadDefaultWorkflowPath(const std::filesystem::path& projectRoot,
-                                     const std::string& gamePackage,
-                                     const std::shared_ptr<ILogger>& logger) {
+                                    const std::string& gamePackage,
+                                    const std::shared_ptr<ILogger>& logger) {
     std::filesystem::path packageJsonPath =
         projectRoot / "packages" / gamePackage / "package.json";
     std::string defaultWorkflow = "workflows/main.json";  // fallback
@@ -35,7 +35,7 @@ std::string LoadDefaultWorkflowPath(const std::filesystem::path& projectRoot,
 }
 
 std::string DetermineShaderBackend(const std::filesystem::path& projectRoot,
-                                    const std::string& bootstrapPackage) {
+                                   const std::string& bootstrapPackage) {
     std::string shaderDir = "msl";  // default (Mac)
     std::filesystem::path bootPkgPath =
         projectRoot / "packages" / bootstrapPackage / "package.json";
