@@ -1,5 +1,8 @@
 #include "services/interfaces/workflow/rendering/workflow_draw_textured_step.hpp"
-#include "services/interfaces/workflow/rendering/draw_textured_helpers.hpp"
+#include "services/interfaces/workflow/rendering/draw_textured_params.hpp"
+#include "services/interfaces/workflow/rendering/draw_textured_resources.hpp"
+#include "services/interfaces/workflow/rendering/draw_textured_transform.hpp"
+#include "services/interfaces/workflow/rendering/draw_textured_uniforms.hpp"
 #include "services/interfaces/workflow/rendering/rendering_types.hpp"
 
 #include <SDL3/SDL_gpu.h>
