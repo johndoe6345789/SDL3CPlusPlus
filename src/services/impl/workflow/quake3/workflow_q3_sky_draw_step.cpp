@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/quake3/workflow_q3_sky_draw_step.hpp"
 
+#include "services/interfaces/workflow/quake3/q3_elapsed_time.hpp"
 #include "services/interfaces/workflow/quake3/q3_sky_scroll.hpp"
 #include "services/interfaces/workflow/quake3/q3_sky_uniforms.hpp"
 
@@ -33,12 +34,7 @@ void WorkflowQ3SkyDrawStep::Execute(const WorkflowStepDefinition&,
     }
     if (!resources_.cloudTex || !resources_.vertexBuffer) return;
 
-    // time.frame_delta, first step of the q3 frame, publishes
-    // frame.elapsed_time; frame.elapsed is the seed pipeline's name for
-    // the same thing and is never set here, so reading only that left
-    // the sky frozen at t=0.
-    const auto elapsed = static_cast<float>(context.GetDouble(
-        "frame.elapsed_time", context.GetDouble("frame.elapsed", 0.0)));
+    const auto elapsed = static_cast<float>(Q3ElapsedSeconds(context));
     UpdateSkyScroll(context.Get<SDL_GPUDevice*>("gpu_device", nullptr),
                     resources_, elapsed);
 

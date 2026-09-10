@@ -1,4 +1,5 @@
 #include "services/interfaces/workflow/quake3/q3_md3_anim_frame.hpp"
+#include "services/interfaces/workflow/quake3/q3_elapsed_time.hpp"
 
 #include <algorithm>
 
@@ -10,7 +11,7 @@ int ResolveMd3AnimFrame(const WorkflowContext& context,
     if (!params.frameKey.empty()) {
         frame = context.Get<int>(params.frameKey, 0);
     } else {
-        const double elapsed = context.GetDouble("frame.elapsed", 0.0);
+        const double elapsed = Q3ElapsedSeconds(context);
         const int totalFrame = static_cast<int>(elapsed * params.fps);
 
         if (params.animCount > 0) {

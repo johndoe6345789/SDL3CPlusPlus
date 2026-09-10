@@ -27,15 +27,28 @@ std::string AmmoWeaponKey(const std::string& cls) {
 }
 
 int DefaultWeaponAmmo(const std::string& cls) {
-    if (cls == "weapon_machinegun") return 100;
+    if (cls == "weapon_machinegun") return 40;
     if (cls == "weapon_shotgun") return 10;
-    if (cls == "weapon_grenadelauncher") return 5;
-    if (cls == "weapon_rocketlauncher") return 5;
-    if (cls == "weapon_lightning") return 60;
+    if (cls == "weapon_grenadelauncher") return 10;
+    if (cls == "weapon_rocketlauncher") return 10;
+    if (cls == "weapon_lightning") return 100;
     if (cls == "weapon_railgun") return 10;
     if (cls == "weapon_plasmagun") return 50;
-    if (cls == "weapon_bfg") return 15;
+    if (cls == "weapon_bfg") return 20;
     return 10;
+}
+
+int HealthQuantity(const std::string& cls) {
+    if (cls == "item_health_small") return 5;
+    if (cls == "item_health_large") return 50;
+    if (cls == "item_health_mega") return 100;
+    return 25;  // item_health
+}
+
+int ArmorQuantity(const std::string& cls) {
+    if (cls == "item_armor_shard") return 5;
+    if (cls == "item_armor_body") return 100;
+    return 50;  // item_armor_combat
 }
 
 }  // namespace sdl3cpp::services::impl

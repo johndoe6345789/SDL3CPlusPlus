@@ -1,4 +1,5 @@
 #include "services/interfaces/workflow/quake3/workflow_q3_bots_update_step.hpp"
+#include "services/interfaces/workflow/quake3/q3_elapsed_time.hpp"
 #include "services/interfaces/workflow/quake3/q3_bot_update_kinematics.hpp"
 #include "services/interfaces/workflow/quake3/q3_bot_update_params.hpp"
 #include "services/interfaces/workflow/quake3/q3_bot_update_sensing.hpp"
@@ -33,7 +34,7 @@ void WorkflowQ3BotsUpdateStep::Execute(const WorkflowStepDefinition& step,
         context.Get<btDiscreteDynamicsWorld*>("physics_world", nullptr);
 
     const double dt       = context.GetDouble("frame.delta_time", 0.016);
-    const double elapsed  = context.GetDouble("frame.elapsed", 0.0);
+    const double elapsed  = Q3ElapsedSeconds(context);
     const int globalFrame = static_cast<int>(elapsed * 60.0);  // ~60fps
 
     nlohmann::json bots  = *botsPtr;

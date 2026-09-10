@@ -1,4 +1,5 @@
 #include "services/interfaces/workflow/quake3/workflow_q3_pickups_respawn_step.hpp"
+#include "services/interfaces/workflow/quake3/q3_elapsed_time.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
 #include <nlohmann/json.hpp>
@@ -16,7 +17,7 @@ void WorkflowQ3PickupsRespawnStep::Execute(const WorkflowStepDefinition& /*step*
     const auto* respawnTimesPtr = context.TryGet<nlohmann::json>("q3.pickup_respawn_times");
     if (!respawnTimesPtr || !respawnTimesPtr->is_object() || respawnTimesPtr->empty()) return;
 
-    const double elapsed = context.GetDouble("frame.elapsed", 0.0);
+    const double elapsed = Q3ElapsedSeconds(context);
     auto collected       = context.Get<nlohmann::json>("q3.collected", nlohmann::json::object());
 
     std::vector<std::string> toRespawn;

@@ -557,6 +557,23 @@
         "GTest::gtest_main",
         "nlohmann_json::nlohmann_json"
       ]
+    },
+    {
+      "name": "q3_pickup_rules_test",
+      "sources": [
+        "tests/q3_pickup_rules_test.cpp",
+        "src/services/impl/workflow/quake3/q3_pickup_apply.cpp",
+        "src/services/impl/workflow/quake3/q3_pickup_can_grab.cpp",
+        "src/services/impl/workflow/quake3/q3_pickup_lookup_tables.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main",
+        "glm::glm",
+        "nlohmann_json::nlohmann_json"
+      ]
     }
   ],
   "file_copying": [

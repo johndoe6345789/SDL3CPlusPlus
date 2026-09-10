@@ -1,4 +1,5 @@
 #include "services/interfaces/workflow/quake3/workflow_q3_player_death_check_step.hpp"
+#include "services/interfaces/workflow/quake3/q3_elapsed_time.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
 #include <string>
@@ -17,7 +18,7 @@ void WorkflowQ3PlayerDeathCheckStep::Execute(const WorkflowStepDefinition& /*ste
     // Only trigger on the first frame health drops to/below zero
     if (health > 0 || isDead) return;
 
-    const double elapsed    = context.GetDouble("frame.elapsed", 0.0);
+    const double elapsed    = Q3ElapsedSeconds(context);
     const int    deathCount = context.GetInt("q3.death_count", 0);
 
     context.Set("q3.player_dead",  true);

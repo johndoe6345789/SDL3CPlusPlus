@@ -1,4 +1,5 @@
 #include "services/interfaces/workflow/quake3/workflow_q3_pickups_touch_step.hpp"
+#include "services/interfaces/workflow/quake3/q3_elapsed_time.hpp"
 #include "services/interfaces/workflow/quake3/q3_pickup_effects.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
@@ -25,7 +26,7 @@ void WorkflowQ3PickupsTouchStep::Execute(const WorkflowStepDefinition& /*step*/,
 
     const glm::vec3 playerPos =
         context.Get<glm::vec3>("q3.player_pos", glm::vec3(0.0f));
-    const double elapsed = context.GetDouble("frame.elapsed", 0.0);
+    const double elapsed = Q3ElapsedSeconds(context);
 
     PickupTouchState state;
     state.health    = context.GetInt("q3.player_health", 100);

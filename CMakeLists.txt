@@ -685,6 +685,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/quake3/q3_nav_sample.cpp
         src/services/impl/workflow/quake3/q3_overlay_scale.cpp
         src/services/impl/workflow/quake3/q3_pickup_apply.cpp
+        src/services/impl/workflow/quake3/q3_pickup_can_grab.cpp
         src/services/impl/workflow/quake3/q3_pickup_classify.cpp
         src/services/impl/workflow/quake3/q3_pickup_color_texture.cpp
         src/services/impl/workflow/quake3/q3_pickup_effects.cpp
@@ -1150,6 +1151,21 @@ target_link_libraries(q3_weapon_cycle_test PRIVATE
     nlohmann_json::nlohmann_json
 )
 add_test(NAME q3_weapon_cycle_test COMMAND q3_weapon_cycle_test)
+
+add_executable(q3_pickup_rules_test)
+target_sources(q3_pickup_rules_test PRIVATE tests/q3_pickup_rules_test.cpp)
+target_sources(q3_pickup_rules_test PRIVATE src/services/impl/workflow/quake3/q3_pickup_apply.cpp)
+target_sources(q3_pickup_rules_test PRIVATE src/services/impl/workflow/quake3/q3_pickup_can_grab.cpp)
+target_sources(q3_pickup_rules_test PRIVATE src/services/impl/workflow/quake3/q3_pickup_lookup_tables.cpp)
+target_include_directories(q3_pickup_rules_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(q3_pickup_rules_test PRIVATE
+    GTest::gtest_main
+    glm::glm
+    nlohmann_json::nlohmann_json
+)
+add_test(NAME q3_pickup_rules_test COMMAND q3_pickup_rules_test)
 
 # ============================================================================
 # FILE COPYING

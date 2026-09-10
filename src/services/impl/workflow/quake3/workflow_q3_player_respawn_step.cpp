@@ -1,4 +1,5 @@
 #include "services/interfaces/workflow/quake3/workflow_q3_player_respawn_step.hpp"
+#include "services/interfaces/workflow/quake3/q3_elapsed_time.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
 #include <glm/glm.hpp>
@@ -18,7 +19,7 @@ std::string WorkflowQ3PlayerRespawnStep::GetPluginId() const { return "q3.player
 void WorkflowQ3PlayerRespawnStep::Execute(const WorkflowStepDefinition& /*step*/, WorkflowContext& context) {
     if (!context.GetBool("q3.player_dead", false)) return;
 
-    const double elapsed   = context.GetDouble("frame.elapsed", 0.0);
+    const double elapsed   = Q3ElapsedSeconds(context);
     const double deathTime = context.GetDouble("q3.death_time", 0.0);
     if ((elapsed - deathTime) <= kRespawnDelay) return;
 

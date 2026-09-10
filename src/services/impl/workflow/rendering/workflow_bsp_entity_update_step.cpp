@@ -37,10 +37,6 @@ void WorkflowBspEntityUpdateStep::Execute(const WorkflowStepDefinition&,
     const auto frame =
         static_cast<uint32_t>(context.GetDouble("loop.iteration", 0.0));
 
-    auto collected =
-        context.Get<nlohmann::json>("q3.collected", nlohmann::json::object());
-    auto inventory =
-        context.Get<nlohmann::json>("q3.inventory", nlohmann::json::object());
     auto cooldowns = context.Get<nlohmann::json>("q3.trigger_cooldowns",
                                                  nlohmann::json::object());
 
@@ -48,16 +44,15 @@ void WorkflowBspEntityUpdateStep::Execute(const WorkflowStepDefinition&,
         const std::string classname = ent.value("classname", std::string{});
         const std::string id        = ent.value("id", std::string{});
 
-        if (TryCollectPickup(ent, classname, id, playerPos, collected,
-                             inventory, context, logger_)) {
-            continue;
-        }
+        // Pickups belong to q3.pickups.touch, which applies Quake's
+        // rules and schedules the respawn. This step used to grab them
+        // first on a radius test of its own, marking them collected and
+        // handing out nothing: the item vanished, gave no health, armour
+        // or ammo, and never came back.
         TryActivateTrigger(ent, classname, id, body, playerPos, playerAabbMin,
                            playerAabbMax, frame, cooldowns, logger_);
     }
 
-    context.Set("q3.collected", collected);
-    context.Set("q3.inventory", inventory);
     context.Set("q3.trigger_cooldowns", cooldowns);
 }
 

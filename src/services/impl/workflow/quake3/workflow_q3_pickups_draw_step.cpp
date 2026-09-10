@@ -1,4 +1,5 @@
 #include "services/interfaces/workflow/quake3/workflow_q3_pickups_draw_step.hpp"
+#include "services/interfaces/workflow/quake3/q3_elapsed_time.hpp"
 
 #include <SDL3/SDL_gpu.h>
 #include <glm/glm.hpp>
@@ -49,8 +50,7 @@ void WorkflowQ3PickupsDrawStep::Execute(const WorkflowStepDefinition& step,
     auto proj   = context.Get<glm::mat4>("render.proj_matrix", glm::mat4(1.0f));
     auto camPos = context.Get<glm::vec3>("render.camera_pos", glm::vec3(0.0f));
     auto shadowVP = context.Get<glm::mat4>("render.shadow_vp", glm::mat4(1.0f));
-    const float time =
-        static_cast<float>(context.GetDouble("frame.elapsed", 0.0));
+    const float time = static_cast<float>(Q3ElapsedSeconds(context));
 
     SDL_BindGPUGraphicsPipeline(pass, pipeline);
     DrawPickupEntities(*entities, collected, view, proj, camPos, shadowVP, time,
