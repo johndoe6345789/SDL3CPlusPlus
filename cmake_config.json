@@ -65,7 +65,11 @@
       "type": "executable",
       "sources": [
         "src/main.cpp",
-        "src/services/impl/diagnostics/logger_service.cpp",
+        "src/services/impl/diagnostics/logger_service_levels.cpp",
+        "src/services/impl/diagnostics/logger_service_construct.cpp",
+        "src/services/impl/diagnostics/logger_service_config.cpp",
+        "src/services/impl/diagnostics/logger_service_log.cpp",
+        "src/services/impl/diagnostics/logger_service_trace_variable.cpp",
         "src/services/impl/app/cli_env_override.cpp",
         "src/services/impl/app/app_cli_args.cpp",
         "src/services/impl/app/app_require_package.cpp",
@@ -79,6 +83,8 @@
         "src/services/impl/workflow/workflow_parameter_reader.cpp",
         "src/services/impl/workflow/workflow_step_io_resolver.cpp",
         "src/services/impl/workflow/workflow_step_parameter_resolver.cpp",
+        "src/services/impl/workflow/workflow_step_parameter_resolver_scalars.cpp",
+        "src/services/impl/workflow/workflow_step_parameter_resolver_lists.cpp",
         "src/services/impl/workflow/workflow_registrar.cpp",
         "src/services/impl/workflow/workflow_registrar_graphics_init.cpp",
         "src/services/impl/workflow/workflow_registrar_rendering_core.cpp",
@@ -112,6 +118,8 @@
         "src/services/impl/workflow/workflow_definition_parser.cpp",
         "src/services/impl/workflow/workflow_definition_parser_steps.cpp",
         "src/services/impl/workflow/workflow_definition_parser_nodes.cpp",
+        "src/services/impl/workflow/workflow_definition_parser_node_parse.cpp",
+        "src/services/impl/workflow/workflow_definition_parser_node_sort.cpp",
         "src/services/impl/workflow/workflow_definition_parser_variables.cpp",
         "src/services/impl/workflow/workflow_connection_reader.cpp",
         "src/services/impl/workflow/workflow_connection_main_parser.cpp",
@@ -140,7 +148,9 @@
         "src/services/impl/workflow/graphics_init_device_helpers.cpp",
         "src/services/impl/workflow/workflow_graphics_init_device_step.cpp",
         "src/services/impl/workflow/workflow_graphics_init_swapchain_step.cpp",
+        "src/services/impl/workflow/media_catalog_items.cpp",
         "src/services/impl/workflow/media_catalog_builder.cpp",
+        "src/services/impl/workflow/media_catalog_count.cpp",
         "src/services/impl/workflow/media_item_dispatch.cpp",
         "src/services/impl/workflow/workflow_media_catalog_scan_step.cpp",
         "src/services/impl/workflow/workflow_media_item_select_step.cpp",
@@ -347,7 +357,9 @@
         "src/services/impl/workflow/input/input_button_combine_config.cpp",
         "src/services/impl/workflow/input/input_button_gamepad_source.cpp",
         "src/services/impl/workflow/input/input_button_combine_sources.cpp",
-        "src/services/impl/workflow/workflow_step_parameter_resolver.cpp"
+        "src/services/impl/workflow/workflow_step_parameter_resolver.cpp",
+        "src/services/impl/workflow/workflow_step_parameter_resolver_scalars.cpp",
+        "src/services/impl/workflow/workflow_step_parameter_resolver_lists.cpp"
       ],
       "include_directories": [
         "src"
@@ -388,7 +400,9 @@
         "src/services/impl/workflow/rendering/bsp_entity_origin.cpp",
         "src/services/impl/workflow/rendering/bsp_entity_classification.cpp",
         "src/services/impl/workflow/rendering/bsp_q3_coordinates.cpp",
-        "src/services/impl/workflow/workflow_step_parameter_resolver.cpp"
+        "src/services/impl/workflow/workflow_step_parameter_resolver.cpp",
+        "src/services/impl/workflow/workflow_step_parameter_resolver_scalars.cpp",
+        "src/services/impl/workflow/workflow_step_parameter_resolver_lists.cpp"
       ],
       "include_directories": [
         "src"
@@ -413,7 +427,9 @@
         "src/services/impl/workflow/quake3/workflow_q3_pm_accelerate_step.cpp",
         "src/services/impl/workflow/quake3/q3_slide_planes.cpp",
         "src/services/impl/workflow/quake3/q3_wish_dir.cpp",
-        "src/services/impl/workflow/workflow_step_parameter_resolver.cpp"
+        "src/services/impl/workflow/workflow_step_parameter_resolver.cpp",
+        "src/services/impl/workflow/workflow_step_parameter_resolver_scalars.cpp",
+        "src/services/impl/workflow/workflow_step_parameter_resolver_lists.cpp"
       ],
       "include_directories": [
         "src"
