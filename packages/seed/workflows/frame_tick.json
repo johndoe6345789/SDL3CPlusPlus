@@ -467,11 +467,60 @@
       "position": [1500, 0]
     },
     {
-      "id": "postfx_composite",
+      "id": "postfx_composite_draw",
       "name": "Composite to Swapchain",
-      "type": "postfx.composite",
+      "type": "postfx.composite_draw",
       "typeVersion": 1,
       "position": [1600, 0]
+    },
+    {
+      "id": "postfx_overlay_fps_init",
+      "name": "Init FPS Overlay",
+      "type": "postfx.overlay_fps_init",
+      "typeVersion": 1,
+      "position": [1700, 0]
+    },
+    {
+      "id": "postfx_overlay_fps_upload_quad",
+      "name": "Upload FPS Overlay Quad",
+      "type": "postfx.overlay_fps_upload_quad",
+      "typeVersion": 1,
+      "position": [1800, 0]
+    },
+    {
+      "id": "postfx_overlay_fps_upload_text",
+      "name": "Upload FPS Overlay Text",
+      "type": "postfx.overlay_fps_upload_text",
+      "typeVersion": 1,
+      "position": [1900, 0]
+    },
+    {
+      "id": "postfx_overlay_fps_draw",
+      "name": "Draw FPS Overlay",
+      "type": "postfx.overlay_fps_draw",
+      "typeVersion": 1,
+      "position": [2000, 0]
+    },
+    {
+      "id": "gpu_screenshot_capture",
+      "name": "Capture GPU Screenshot",
+      "type": "gpu.screenshot_capture",
+      "typeVersion": 1,
+      "position": [2100, 0]
+    },
+    {
+      "id": "gpu_command_buffer_submit",
+      "name": "Submit Command Buffer",
+      "type": "gpu.command_buffer_submit",
+      "typeVersion": 1,
+      "position": [2200, 0]
+    },
+    {
+      "id": "postfx_composite_finish",
+      "name": "Finish Composited Frame",
+      "type": "postfx.composite_finish",
+      "typeVersion": 1,
+      "position": [2300, 0]
     }
   ],
   "connections": {
@@ -657,7 +706,42 @@
     },
     "bloom_blur": {
       "main": {
-        "0": [{ "node": "postfx_composite", "type": "main", "index": 0 }]
+        "0": [{ "node": "postfx_composite_draw", "type": "main", "index": 0 }]
+      }
+    },
+    "postfx_composite_draw": {
+      "main": {
+        "0": [{ "node": "postfx_overlay_fps_init", "type": "main", "index": 0 }]
+      }
+    },
+    "postfx_overlay_fps_init": {
+      "main": {
+        "0": [{ "node": "postfx_overlay_fps_upload_quad", "type": "main", "index": 0 }]
+      }
+    },
+    "postfx_overlay_fps_upload_quad": {
+      "main": {
+        "0": [{ "node": "postfx_overlay_fps_upload_text", "type": "main", "index": 0 }]
+      }
+    },
+    "postfx_overlay_fps_upload_text": {
+      "main": {
+        "0": [{ "node": "postfx_overlay_fps_draw", "type": "main", "index": 0 }]
+      }
+    },
+    "postfx_overlay_fps_draw": {
+      "main": {
+        "0": [{ "node": "gpu_screenshot_capture", "type": "main", "index": 0 }]
+      }
+    },
+    "gpu_screenshot_capture": {
+      "main": {
+        "0": [{ "node": "gpu_command_buffer_submit", "type": "main", "index": 0 }]
+      }
+    },
+    "gpu_command_buffer_submit": {
+      "main": {
+        "0": [{ "node": "postfx_composite_finish", "type": "main", "index": 0 }]
       }
     }
   }

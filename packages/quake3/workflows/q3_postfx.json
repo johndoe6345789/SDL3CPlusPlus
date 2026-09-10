@@ -20,8 +20,36 @@
       "plugin": "postfx.bloom_blur"
     },
     {
-      "id": "postfx_composite",
-      "plugin": "postfx.composite"
+      "id": "postfx_composite_draw",
+      "plugin": "postfx.composite_draw"
+    },
+    {
+      "id": "postfx_overlay_fps_init",
+      "plugin": "postfx.overlay_fps_init"
+    },
+    {
+      "id": "postfx_overlay_fps_upload_quad",
+      "plugin": "postfx.overlay_fps_upload_quad"
+    },
+    {
+      "id": "postfx_overlay_fps_upload_text",
+      "plugin": "postfx.overlay_fps_upload_text"
+    },
+    {
+      "id": "postfx_overlay_fps_draw",
+      "plugin": "postfx.overlay_fps_draw"
+    },
+    {
+      "id": "gpu_screenshot_capture",
+      "plugin": "gpu.screenshot_capture"
+    },
+    {
+      "id": "gpu_command_buffer_submit",
+      "plugin": "gpu.command_buffer_submit"
+    },
+    {
+      "id": "postfx_composite_finish",
+      "plugin": "postfx.composite_finish"
     }
   ]
 }

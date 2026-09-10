@@ -283,15 +283,30 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/geometry/workflow_geometry_create_cube_step.cpp
         src/services/impl/workflow/geometry/workflow_geometry_create_plane_step.cpp
         src/services/impl/workflow/geometry/workflow_geometry_cube_generate_step.cpp
+        src/services/impl/workflow/rendering/bsp_face_visibility.cpp
+        src/services/impl/workflow/rendering/bsp_geometry_lumps.cpp
+        src/services/impl/workflow/rendering/bsp_patch_face_builder.cpp
+        src/services/impl/workflow/rendering/bsp_patch_tessellator.cpp
+        src/services/impl/workflow/rendering/bsp_polygon_face_builder.cpp
+        src/services/impl/workflow/rendering/bsp_texture_group_flattener.cpp
+        src/services/impl/workflow/rendering/bsp_texture_groups_context.cpp
+        src/services/impl/workflow/rendering/fps_meter.cpp
+        src/services/impl/workflow/rendering/gpu_overlay_quad.cpp
+        src/services/impl/workflow/rendering/gpu_text_overlay_resources.cpp
+        src/services/impl/workflow/rendering/overlay_head_portrait.cpp
+        src/services/impl/workflow/rendering/overlay_sw_end_resources.cpp
+        src/services/impl/workflow/rendering/postfx_composite_pass.cpp
         src/services/impl/workflow/rendering/viewmodel_transform.cpp
         src/services/impl/workflow/rendering/workflow_bsp_build_collision_step.cpp
-        src/services/impl/workflow/rendering/workflow_bsp_build_geometry_step.cpp
+        src/services/impl/workflow/rendering/workflow_bsp_build_polygons_step.cpp
         src/services/impl/workflow/rendering/workflow_bsp_entity_update_step.cpp
         src/services/impl/workflow/rendering/workflow_bsp_extract_textures_step.cpp
+        src/services/impl/workflow/rendering/workflow_bsp_flatten_geometry_step.cpp
         src/services/impl/workflow/rendering/workflow_bsp_lightmap_atlas_step.cpp
         src/services/impl/workflow/rendering/workflow_bsp_load_step.cpp
         src/services/impl/workflow/rendering/workflow_bsp_parse_spawn_step.cpp
         src/services/impl/workflow/rendering/workflow_bsp_portal_view_step.cpp
+        src/services/impl/workflow/rendering/workflow_bsp_tessellate_patches_step.cpp
         src/services/impl/workflow/rendering/workflow_bsp_upload_geometry_step.cpp
         src/services/impl/workflow/rendering/workflow_debug_screenshot_step.cpp
         src/services/impl/workflow/rendering/workflow_draw_map_step.cpp
@@ -307,12 +322,25 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/rendering/workflow_lighting_setup_step.cpp
         src/services/impl/workflow/rendering/workflow_map_load_step.cpp
         src/services/impl/workflow/rendering/workflow_model_load_step.cpp
-        src/services/impl/workflow/rendering/workflow_overlay_fps_step.cpp
+        src/services/impl/workflow/rendering/workflow_overlay_fps_draw_step.cpp
+        src/services/impl/workflow/rendering/workflow_overlay_fps_init_step.cpp
+        src/services/impl/workflow/rendering/workflow_overlay_fps_upload_quad_step.cpp
+        src/services/impl/workflow/rendering/workflow_overlay_fps_upload_text_step.cpp
         src/services/impl/workflow/rendering/workflow_overlay_sw_begin_step.cpp
-        src/services/impl/workflow/rendering/workflow_overlay_sw_end_step.cpp
+        src/services/impl/workflow/rendering/workflow_overlay_sw_end_blit_head_step.cpp
+        src/services/impl/workflow/rendering/workflow_overlay_sw_end_draw_step.cpp
+        src/services/impl/workflow/rendering/workflow_overlay_sw_end_init_step.cpp
+        src/services/impl/workflow/rendering/workflow_overlay_sw_end_screenshot_step.cpp
+        src/services/impl/workflow/rendering/workflow_overlay_sw_end_upload_quad_step.cpp
+        src/services/impl/workflow/rendering/workflow_overlay_sw_end_upload_surface_step.cpp
         src/services/impl/workflow/rendering/workflow_postfx_bloom_blur_step.cpp
         src/services/impl/workflow/rendering/workflow_postfx_bloom_extract_step.cpp
-        src/services/impl/workflow/rendering/workflow_postfx_composite_step.cpp
+        src/services/impl/workflow/rendering/workflow_postfx_composite_draw_step.cpp
+        src/services/impl/workflow/rendering/workflow_postfx_composite_finish_step.cpp
+        src/services/impl/workflow/rendering/workflow_postfx_overlay_fps_draw_step.cpp
+        src/services/impl/workflow/rendering/workflow_postfx_overlay_fps_init_step.cpp
+        src/services/impl/workflow/rendering/workflow_postfx_overlay_fps_upload_quad_step.cpp
+        src/services/impl/workflow/rendering/workflow_postfx_overlay_fps_upload_text_step.cpp
         src/services/impl/workflow/rendering/workflow_postfx_setup_step.cpp
         src/services/impl/workflow/rendering/workflow_postfx_ssao_step.cpp
         src/services/impl/workflow/rendering/workflow_postfx_taa_step.cpp
@@ -324,7 +352,10 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/rendering/workflow_spawn_apply_step.cpp
         src/services/impl/workflow/rendering/workflow_spotlight_setup_step.cpp
         src/services/impl/workflow/rendering/workflow_spotlight_update_step.cpp
+        src/services/impl/workflow/graphics/gpu_swapchain_capture.cpp
+        src/services/impl/workflow/graphics/workflow_gpu_command_buffer_submit_step.cpp
         src/services/impl/workflow/graphics/workflow_gpu_pipeline_create_step.cpp
+        src/services/impl/workflow/graphics/workflow_gpu_screenshot_capture_step.cpp
         src/services/impl/workflow/graphics/workflow_gpu_shader_compile_step.cpp
         src/services/impl/workflow/graphics/workflow_graphics_buffer_create_index_step.cpp
         src/services/impl/workflow/graphics/workflow_graphics_buffer_create_vertex_step.cpp
@@ -356,6 +387,11 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/compute/workflow_compute_tessellate_dispatch_step.cpp
         src/services/impl/workflow/compute/workflow_compute_tessellate_step.cpp
         src/services/impl/workflow/quake3/q3_anim_cfg.cpp
+        src/services/impl/workflow/quake3/q3_md3_gpu_upload.cpp
+        src/services/impl/workflow/quake3/q3_md3_source.cpp
+        src/services/impl/workflow/quake3/q3_md3_surface_uploader.cpp
+        src/services/impl/workflow/quake3/q3_md3_tags.cpp
+        src/services/impl/workflow/quake3/q3_md3_texture_candidates.cpp
         src/services/impl/workflow/quake3/q3_overlay_scale.cpp
         src/services/impl/workflow/quake3/q3_pk3_reader.cpp
         src/services/impl/workflow/quake3/q3_skin_file.cpp
@@ -376,7 +412,10 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/quake3/workflow_q3_hud_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_mapselect_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_md3_draw_step.cpp
-        src/services/impl/workflow/quake3/workflow_q3_md3_load_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_md3_parse_anim_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_md3_parse_tags_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_md3_read_step.cpp
+        src/services/impl/workflow/quake3/workflow_q3_md3_upload_surfaces_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_menu_frame_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_menu_update_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_missiles_impact_step.cpp

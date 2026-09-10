@@ -49,7 +49,9 @@
 #include "services/interfaces/workflow/rendering/workflow_bsp_parse_spawn_step.hpp"
 #include "services/interfaces/workflow/rendering/workflow_bsp_entity_update_step.hpp"
 #include "services/interfaces/workflow/rendering/workflow_bsp_portal_view_step.hpp"
-#include "services/interfaces/workflow/rendering/workflow_bsp_build_geometry_step.hpp"
+#include "services/interfaces/workflow/rendering/workflow_bsp_tessellate_patches_step.hpp"
+#include "services/interfaces/workflow/rendering/workflow_bsp_build_polygons_step.hpp"
+#include "services/interfaces/workflow/rendering/workflow_bsp_flatten_geometry_step.hpp"
 #include "services/interfaces/workflow/rendering/workflow_bsp_extract_textures_step.hpp"
 #include "services/interfaces/workflow/rendering/workflow_bsp_upload_geometry_step.hpp"
 #include "services/interfaces/workflow/rendering/workflow_bsp_build_collision_step.hpp"
@@ -61,8 +63,18 @@
 #include "services/interfaces/workflow/rendering/workflow_postfx_setup_step.hpp"
 #include "services/interfaces/workflow/rendering/workflow_frame_begin_offscreen_step.hpp"
 #include "services/interfaces/workflow/rendering/workflow_frame_end_scene_step.hpp"
-#include "services/interfaces/workflow/rendering/workflow_postfx_composite_step.hpp"
-#include "services/interfaces/workflow/rendering/workflow_overlay_fps_step.hpp"
+#include "services/interfaces/workflow/rendering/workflow_postfx_composite_draw_step.hpp"
+#include "services/interfaces/workflow/rendering/workflow_postfx_composite_finish_step.hpp"
+#include "services/interfaces/workflow/rendering/workflow_postfx_overlay_fps_init_step.hpp"
+#include "services/interfaces/workflow/rendering/workflow_postfx_overlay_fps_upload_quad_step.hpp"
+#include "services/interfaces/workflow/rendering/workflow_postfx_overlay_fps_upload_text_step.hpp"
+#include "services/interfaces/workflow/rendering/workflow_postfx_overlay_fps_draw_step.hpp"
+#include "services/interfaces/workflow/graphics/workflow_gpu_screenshot_capture_step.hpp"
+#include "services/interfaces/workflow/graphics/workflow_gpu_command_buffer_submit_step.hpp"
+#include "services/interfaces/workflow/rendering/workflow_overlay_fps_init_step.hpp"
+#include "services/interfaces/workflow/rendering/workflow_overlay_fps_upload_quad_step.hpp"
+#include "services/interfaces/workflow/rendering/workflow_overlay_fps_upload_text_step.hpp"
+#include "services/interfaces/workflow/rendering/workflow_overlay_fps_draw_step.hpp"
 #include "services/interfaces/workflow/rendering/workflow_debug_screenshot_step.hpp"
 #include "services/interfaces/workflow/rendering/workflow_postfx_ssao_step.hpp"
 #include "services/interfaces/workflow/rendering/workflow_postfx_bloom_extract_step.hpp"
@@ -126,9 +138,17 @@
 #include "services/interfaces/workflow/quake3/workflow_q3_menu_frame_step.hpp"
 #include "services/interfaces/workflow/quake3/workflow_q3_mapselect_step.hpp"
 #include "services/interfaces/workflow/rendering/workflow_overlay_sw_begin_step.hpp"
-#include "services/interfaces/workflow/rendering/workflow_overlay_sw_end_step.hpp"
+#include "services/interfaces/workflow/rendering/workflow_overlay_sw_end_init_step.hpp"
+#include "services/interfaces/workflow/rendering/workflow_overlay_sw_end_upload_surface_step.hpp"
+#include "services/interfaces/workflow/rendering/workflow_overlay_sw_end_upload_quad_step.hpp"
+#include "services/interfaces/workflow/rendering/workflow_overlay_sw_end_draw_step.hpp"
+#include "services/interfaces/workflow/rendering/workflow_overlay_sw_end_blit_head_step.hpp"
+#include "services/interfaces/workflow/rendering/workflow_overlay_sw_end_screenshot_step.hpp"
 #include "services/interfaces/workflow/quake3/workflow_q3_pickups_draw_step.hpp"
-#include "services/interfaces/workflow/quake3/workflow_q3_md3_load_step.hpp"
+#include "services/interfaces/workflow/quake3/workflow_q3_md3_read_step.hpp"
+#include "services/interfaces/workflow/quake3/workflow_q3_md3_parse_tags_step.hpp"
+#include "services/interfaces/workflow/quake3/workflow_q3_md3_parse_anim_step.hpp"
+#include "services/interfaces/workflow/quake3/workflow_q3_md3_upload_surfaces_step.hpp"
 #include "services/interfaces/workflow/quake3/workflow_q3_md3_draw_step.hpp"
 #include "services/interfaces/workflow/quake3/workflow_q3_bots_spawn_step.hpp"
 #include "services/interfaces/workflow/quake3/workflow_q3_bots_update_step.hpp"
@@ -356,7 +376,10 @@ void WorkflowRegistrar::RegisterSteps(std::shared_ptr<IWorkflowStepRegistry> reg
     registry->RegisterStep(std::make_shared<WorkflowBspParseSpawnStep>(logger_));
     registry->RegisterStep(std::make_shared<WorkflowBspEntityUpdateStep>(logger_));
     registry->RegisterStep(std::make_shared<WorkflowBspPortalViewStep>(logger_));
-    registry->RegisterStep(std::make_shared<WorkflowBspBuildGeometryStep>(logger_));
+    // bsp.build_geometry split into atomic steps; chain them in this order.
+    registry->RegisterStep(std::make_shared<WorkflowBspTessellatePatchesStep>(logger_));
+    registry->RegisterStep(std::make_shared<WorkflowBspBuildPolygonsStep>(logger_));
+    registry->RegisterStep(std::make_shared<WorkflowBspFlattenGeometryStep>(logger_));
     registry->RegisterStep(std::make_shared<WorkflowBspExtractTexturesStep>(logger_));
     registry->RegisterStep(std::make_shared<WorkflowBspUploadGeometryStep>(logger_));
     registry->RegisterStep(std::make_shared<WorkflowBspBuildCollisionStep>(logger_));
@@ -367,8 +390,20 @@ void WorkflowRegistrar::RegisterSteps(std::shared_ptr<IWorkflowStepRegistry> reg
     registry->RegisterStep(std::make_shared<WorkflowPostfxSetupStep>(logger_));
     registry->RegisterStep(std::make_shared<WorkflowFrameBeginOffscreenStep>(logger_));
     registry->RegisterStep(std::make_shared<WorkflowFrameEndSceneStep>(logger_));
-    registry->RegisterStep(std::make_shared<WorkflowPostfxCompositeStep>(logger_));
-    registry->RegisterStep(std::make_shared<WorkflowOverlayFpsStep>(logger_));
+    // postfx.composite split into atomic steps; chain them in this order.
+    registry->RegisterStep(std::make_shared<WorkflowPostfxCompositeDrawStep>(logger_));
+    registry->RegisterStep(std::make_shared<WorkflowPostfxOverlayFpsInitStep>(logger_));
+    registry->RegisterStep(std::make_shared<WorkflowPostfxOverlayFpsUploadQuadStep>(logger_));
+    registry->RegisterStep(std::make_shared<WorkflowPostfxOverlayFpsUploadTextStep>(logger_));
+    registry->RegisterStep(std::make_shared<WorkflowPostfxOverlayFpsDrawStep>(logger_));
+    registry->RegisterStep(std::make_shared<WorkflowGpuScreenshotCaptureStep>(logger_));
+    registry->RegisterStep(std::make_shared<WorkflowGpuCommandBufferSubmitStep>(logger_));
+    registry->RegisterStep(std::make_shared<WorkflowPostfxCompositeFinishStep>(logger_));
+    // overlay.fps split into atomic steps; chain them in this order.
+    registry->RegisterStep(std::make_shared<WorkflowOverlayFpsInitStep>(logger_));
+    registry->RegisterStep(std::make_shared<WorkflowOverlayFpsUploadQuadStep>(logger_));
+    registry->RegisterStep(std::make_shared<WorkflowOverlayFpsUploadTextStep>(logger_));
+    registry->RegisterStep(std::make_shared<WorkflowOverlayFpsDrawStep>(logger_));
     registry->RegisterStep(std::make_shared<WorkflowDebugScreenshotStep>(logger_));
     registry->RegisterStep(std::make_shared<WorkflowPostfxSsaoStep>(logger_));
     registry->RegisterStep(std::make_shared<WorkflowPostfxBloomExtractStep>(logger_));
@@ -383,8 +418,18 @@ void WorkflowRegistrar::RegisterSteps(std::shared_ptr<IWorkflowStepRegistry> reg
     registry->RegisterStep(std::make_shared<WorkflowQ3HitmarkerStep>(logger_));
     registry->RegisterStep(std::make_shared<WorkflowQ3MenuFrameStep>(logger_));
     registry->RegisterStep(std::make_shared<WorkflowQ3MapSelectStep>(logger_));
-    registry->RegisterStep(std::make_shared<WorkflowOverlaySwEndStep>(logger_));
-    registry->RegisterStep(std::make_shared<WorkflowQ3Md3LoadStep>(logger_));
+    // overlay.sw.end split into atomic steps; chain them in this order.
+    registry->RegisterStep(std::make_shared<WorkflowOverlaySwEndInitStep>(logger_));
+    registry->RegisterStep(std::make_shared<WorkflowOverlaySwEndUploadSurfaceStep>(logger_));
+    registry->RegisterStep(std::make_shared<WorkflowOverlaySwEndUploadQuadStep>(logger_));
+    registry->RegisterStep(std::make_shared<WorkflowOverlaySwEndDrawStep>(logger_));
+    registry->RegisterStep(std::make_shared<WorkflowOverlaySwEndBlitHeadStep>(logger_));
+    registry->RegisterStep(std::make_shared<WorkflowOverlaySwEndScreenshotStep>(logger_));
+    // q3.md3.load split into atomic steps; chain them in this order.
+    registry->RegisterStep(std::make_shared<WorkflowQ3Md3ReadStep>(logger_));
+    registry->RegisterStep(std::make_shared<WorkflowQ3Md3ParseTagsStep>(logger_));
+    registry->RegisterStep(std::make_shared<WorkflowQ3Md3ParseAnimStep>(logger_));
+    registry->RegisterStep(std::make_shared<WorkflowQ3Md3UploadSurfacesStep>(logger_));
     registry->RegisterStep(std::make_shared<WorkflowQ3Md3DrawStep>(logger_));
     registry->RegisterStep(std::make_shared<WorkflowQ3BotsSpawnStep>(logger_));
     registry->RegisterStep(std::make_shared<WorkflowQ3BotsUpdateStep>(logger_));

@@ -27,8 +27,8 @@
       ]
     },
     {
-      "id": "bsp_geometry",
-      "type": "bsp.build_geometry",
+      "id": "bsp_geometry_tessellate_patches",
+      "type": "bsp.tessellate_patches",
       "typeVersion": 1,
       "position": [
         200,
@@ -37,6 +37,24 @@
       "parameters": {
         "patch_tess_level": 4
       }
+    },
+    {
+      "id": "bsp_geometry_build_polygons",
+      "type": "bsp.build_polygons",
+      "typeVersion": 1,
+      "position": [
+        200,
+        0
+      ]
+    },
+    {
+      "id": "bsp_geometry_flatten_geometry",
+      "type": "bsp.flatten_geometry",
+      "typeVersion": 1,
+      "position": [
+        200,
+        0
+      ]
     },
     {
       "id": "bsp_textures",
@@ -105,8 +123,8 @@
       ]
     },
     {
-      "id": "load_lower",
-      "type": "q3.md3.load",
+      "id": "load_lower_read",
+      "type": "q3.md3.read",
       "typeVersion": 1,
       "position": [
         720,
@@ -120,8 +138,53 @@
       }
     },
     {
-      "id": "load_upper",
-      "type": "q3.md3.load",
+      "id": "load_lower_parse_tags",
+      "type": "q3.md3.parse_tags",
+      "typeVersion": 1,
+      "position": [
+        720,
+        0
+      ],
+      "parameters": {
+        "prefix": "lower",
+        "path": "models/players/keel/lower.md3",
+        "anim": "models/players/keel/animation.cfg",
+        "skin": "models/players/keel/lower_default.skin"
+      }
+    },
+    {
+      "id": "load_lower_parse_anim",
+      "type": "q3.md3.parse_anim",
+      "typeVersion": 1,
+      "position": [
+        720,
+        0
+      ],
+      "parameters": {
+        "prefix": "lower",
+        "path": "models/players/keel/lower.md3",
+        "anim": "models/players/keel/animation.cfg",
+        "skin": "models/players/keel/lower_default.skin"
+      }
+    },
+    {
+      "id": "load_lower_upload_surfaces",
+      "type": "q3.md3.upload_surfaces",
+      "typeVersion": 1,
+      "position": [
+        720,
+        0
+      ],
+      "parameters": {
+        "prefix": "lower",
+        "path": "models/players/keel/lower.md3",
+        "anim": "models/players/keel/animation.cfg",
+        "skin": "models/players/keel/lower_default.skin"
+      }
+    },
+    {
+      "id": "load_upper_read",
+      "type": "q3.md3.read",
       "typeVersion": 1,
       "position": [
         730,
@@ -134,8 +197,50 @@
       }
     },
     {
-      "id": "load_head",
-      "type": "q3.md3.load",
+      "id": "load_upper_parse_tags",
+      "type": "q3.md3.parse_tags",
+      "typeVersion": 1,
+      "position": [
+        730,
+        0
+      ],
+      "parameters": {
+        "prefix": "upper",
+        "path": "models/players/keel/upper.md3",
+        "skin": "models/players/keel/upper_default.skin"
+      }
+    },
+    {
+      "id": "load_upper_parse_anim",
+      "type": "q3.md3.parse_anim",
+      "typeVersion": 1,
+      "position": [
+        730,
+        0
+      ],
+      "parameters": {
+        "prefix": "upper",
+        "path": "models/players/keel/upper.md3",
+        "skin": "models/players/keel/upper_default.skin"
+      }
+    },
+    {
+      "id": "load_upper_upload_surfaces",
+      "type": "q3.md3.upload_surfaces",
+      "typeVersion": 1,
+      "position": [
+        730,
+        0
+      ],
+      "parameters": {
+        "prefix": "upper",
+        "path": "models/players/keel/upper.md3",
+        "skin": "models/players/keel/upper_default.skin"
+      }
+    },
+    {
+      "id": "load_head_read",
+      "type": "q3.md3.read",
       "typeVersion": 1,
       "position": [
         740,
@@ -148,8 +253,89 @@
       }
     },
     {
-      "id": "load_weapon_mg",
-      "type": "q3.md3.load",
+      "id": "load_head_parse_tags",
+      "type": "q3.md3.parse_tags",
+      "typeVersion": 1,
+      "position": [
+        740,
+        0
+      ],
+      "parameters": {
+        "prefix": "head",
+        "path": "models/players/keel/head.md3",
+        "skin": "models/players/keel/head_default.skin"
+      }
+    },
+    {
+      "id": "load_head_parse_anim",
+      "type": "q3.md3.parse_anim",
+      "typeVersion": 1,
+      "position": [
+        740,
+        0
+      ],
+      "parameters": {
+        "prefix": "head",
+        "path": "models/players/keel/head.md3",
+        "skin": "models/players/keel/head_default.skin"
+      }
+    },
+    {
+      "id": "load_head_upload_surfaces",
+      "type": "q3.md3.upload_surfaces",
+      "typeVersion": 1,
+      "position": [
+        740,
+        0
+      ],
+      "parameters": {
+        "prefix": "head",
+        "path": "models/players/keel/head.md3",
+        "skin": "models/players/keel/head_default.skin"
+      }
+    },
+    {
+      "id": "load_weapon_mg_read",
+      "type": "q3.md3.read",
+      "typeVersion": 1,
+      "position": [
+        750,
+        0
+      ],
+      "parameters": {
+        "prefix": "weapon_mg",
+        "path": "models/weapons2/machinegun/machinegun.md3"
+      }
+    },
+    {
+      "id": "load_weapon_mg_parse_tags",
+      "type": "q3.md3.parse_tags",
+      "typeVersion": 1,
+      "position": [
+        750,
+        0
+      ],
+      "parameters": {
+        "prefix": "weapon_mg",
+        "path": "models/weapons2/machinegun/machinegun.md3"
+      }
+    },
+    {
+      "id": "load_weapon_mg_parse_anim",
+      "type": "q3.md3.parse_anim",
+      "typeVersion": 1,
+      "position": [
+        750,
+        0
+      ],
+      "parameters": {
+        "prefix": "weapon_mg",
+        "path": "models/weapons2/machinegun/machinegun.md3"
+      }
+    },
+    {
+      "id": "load_weapon_mg_upload_surfaces",
+      "type": "q3.md3.upload_surfaces",
       "typeVersion": 1,
       "position": [
         750,
@@ -260,14 +446,36 @@
       "main": {
         "0": [
           {
-            "node": "bsp_geometry",
+            "node": "bsp_geometry_tessellate_patches",
             "type": "main",
             "index": 0
           }
         ]
       }
     },
-    "bsp_geometry": {
+    "bsp_geometry_tessellate_patches": {
+      "main": {
+        "0": [
+          {
+            "node": "bsp_geometry_build_polygons",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "bsp_geometry_build_polygons": {
+      "main": {
+        "0": [
+          {
+            "node": "bsp_geometry_flatten_geometry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "bsp_geometry_flatten_geometry": {
       "main": {
         "0": [
           {
@@ -326,47 +534,179 @@
       "main": {
         "0": [
           {
-            "node": "load_lower",
+            "node": "load_lower_read",
             "type": "main",
             "index": 0
           }
         ]
       }
     },
-    "load_lower": {
+    "load_lower_read": {
       "main": {
         "0": [
           {
-            "node": "load_upper",
+            "node": "load_lower_parse_tags",
             "type": "main",
             "index": 0
           }
         ]
       }
     },
-    "load_upper": {
+    "load_lower_parse_tags": {
       "main": {
         "0": [
           {
-            "node": "load_head",
+            "node": "load_lower_parse_anim",
             "type": "main",
             "index": 0
           }
         ]
       }
     },
-    "load_head": {
+    "load_lower_parse_anim": {
       "main": {
         "0": [
           {
-            "node": "load_weapon_mg",
+            "node": "load_lower_upload_surfaces",
             "type": "main",
             "index": 0
           }
         ]
       }
     },
-    "load_weapon_mg": {
+    "load_lower_upload_surfaces": {
+      "main": {
+        "0": [
+          {
+            "node": "load_upper_read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "load_upper_read": {
+      "main": {
+        "0": [
+          {
+            "node": "load_upper_parse_tags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "load_upper_parse_tags": {
+      "main": {
+        "0": [
+          {
+            "node": "load_upper_parse_anim",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "load_upper_parse_anim": {
+      "main": {
+        "0": [
+          {
+            "node": "load_upper_upload_surfaces",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "load_upper_upload_surfaces": {
+      "main": {
+        "0": [
+          {
+            "node": "load_head_read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "load_head_read": {
+      "main": {
+        "0": [
+          {
+            "node": "load_head_parse_tags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "load_head_parse_tags": {
+      "main": {
+        "0": [
+          {
+            "node": "load_head_parse_anim",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "load_head_parse_anim": {
+      "main": {
+        "0": [
+          {
+            "node": "load_head_upload_surfaces",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "load_head_upload_surfaces": {
+      "main": {
+        "0": [
+          {
+            "node": "load_weapon_mg_read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "load_weapon_mg_read": {
+      "main": {
+        "0": [
+          {
+            "node": "load_weapon_mg_parse_tags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "load_weapon_mg_parse_tags": {
+      "main": {
+        "0": [
+          {
+            "node": "load_weapon_mg_parse_anim",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "load_weapon_mg_parse_anim": {
+      "main": {
+        "0": [
+          {
+            "node": "load_weapon_mg_upload_surfaces",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "load_weapon_mg_upload_surfaces": {
       "main": {
         "0": [
           {

@@ -1,0 +1,42 @@
+---
+Language: Cpp
+BasedOnStyle: Google
+
+# Hard 80-column margin.
+ColumnLimit: 80
+
+IndentWidth: 4
+ContinuationIndentWidth: 4
+AccessModifierOffset: -4
+NamespaceIndentation: None
+UseTab: Never
+
+# `SDL_GPUDevice* device`, matching the existing sources.
+PointerAlignment: Left
+DerivePointerAlignment: false
+
+# `Foo::Foo(std::shared_ptr<ILogger> logger)\n    : logger_(std::move(logger)) {}`
+BreakConstructorInitializers: BeforeColon
+ConstructorInitializerIndentWidth: 4
+PackConstructorInitializers: NextLine
+
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: WithoutElse
+AllowShortLoopsOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Empty
+
+# The workflow sources lean on column-aligned member and field initialisers.
+AlignConsecutiveAssignments: Consecutive
+AlignConsecutiveDeclarations: false
+AlignTrailingComments: true
+
+# Include blocks are grouped by hand (project headers, then system headers);
+# leave that grouping alone.
+SortIncludes: false
+IncludeBlocks: Preserve
+
+IndentCaseLabels: true
+SpaceAfterCStyleCast: false
+FixNamespaceComments: true
+ReflowComments: true

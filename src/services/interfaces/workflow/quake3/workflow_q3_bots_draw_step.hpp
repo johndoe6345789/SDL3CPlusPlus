@@ -23,7 +23,7 @@ namespace sdl3cpp::services::impl {
  *   weapon_prefix  (string) – MD3 prefix for weapon    (default "weapon_mg")
  *
  * Reads: q3.bots, gpu_render_pass, gpu_command_buffer, gpu_pipeline_textured,
- *        render.* matrices, q3.md3.{prefix}_* from q3.md3.load
+ *        render.* matrices, q3.md3.{prefix}_* from the q3.md3.* load steps
  */
 class WorkflowQ3BotsDrawStep final : public IWorkflowStep {
 public:

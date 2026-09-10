@@ -15,7 +15,7 @@ namespace sdl3cpp::services::impl {
  * viewmodel (camera-relative) modes.
  *
  * Parameters:
- *   prefix      (string)  – context namespace from q3.md3.load ("lower", "upper", etc.)
+ *   prefix      (string)  – context namespace from the q3.md3.* load steps ("lower", "upper", etc.)
  *   pos_key     (string)  – context key holding position as JSON [x,y,z] (world mode)
  *   yaw_key     (string)  – context key holding yaw float in radians (world mode)
  *   frame_key   (string)  – override frame index from context (optional)

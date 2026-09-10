@@ -3,8 +3,20 @@
   "description": "SDL software overlay: FPS counter, HUD, crosshair, hitmarker, menu, map-select. Composable like a React component.",
   "steps": [
     {
-      "id": "overlay_fps",
-      "plugin": "overlay.fps"
+      "id": "overlay_fps_init",
+      "plugin": "overlay.fps_init"
+    },
+    {
+      "id": "overlay_fps_upload_quad",
+      "plugin": "overlay.fps_upload_quad"
+    },
+    {
+      "id": "overlay_fps_upload_text",
+      "plugin": "overlay.fps_upload_text"
+    },
+    {
+      "id": "overlay_fps_draw",
+      "plugin": "overlay.fps_draw"
     },
     {
       "id": "overlay_begin",
@@ -41,8 +53,28 @@
       "plugin": "q3.mapselect"
     },
     {
-      "id": "overlay_end",
-      "plugin": "overlay.sw.end"
+      "id": "overlay_end_init",
+      "plugin": "overlay.sw.end_init"
+    },
+    {
+      "id": "overlay_end_upload_surface",
+      "plugin": "overlay.sw.end_upload_surface"
+    },
+    {
+      "id": "overlay_end_upload_quad",
+      "plugin": "overlay.sw.end_upload_quad"
+    },
+    {
+      "id": "overlay_end_draw",
+      "plugin": "overlay.sw.end_draw"
+    },
+    {
+      "id": "overlay_end_blit_head",
+      "plugin": "overlay.sw.end_blit_head"
+    },
+    {
+      "id": "overlay_end_screenshot",
+      "plugin": "overlay.sw.end_screenshot"
     }
   ]
 }
