@@ -1,6 +1,7 @@
 #include "services/interfaces/workflow/workflow_definition_parser.hpp"
 #include "services/interfaces/workflow/workflow_parameter_reader.hpp"
-#include "services/interfaces/workflow/workflow_connection_resolver.hpp"
+#include "services/interfaces/workflow/workflow_connection_reader.hpp"
+#include "services/interfaces/workflow/workflow_node_topo_sorter.hpp"
 
 #include <rapidjson/document.h>
 
@@ -24,7 +25,8 @@ std::vector<WorkflowStepDefinition> WorkflowDefinitionParser::ParseNodes(
     WorkflowParameterReader paramReader;
     std::vector<WorkflowStepDefinition> nodes;
     std::vector<std::string> nodeOrder;
-    std::unordered_map<std::string, std::string> nameToId;  // n8n uses names in connections
+    // n8n uses names in connections
+    std::unordered_map<std::string, std::string> nameToId;
 
     // Parse all nodes
     for (rapidjson::SizeType i = 0; i < document["nodes"].Size(); ++i) {
@@ -63,12 +65,13 @@ std::vector<WorkflowStepDefinition> WorkflowDefinitionParser::ParseNodes(
     }
 
     // Resolve connections and sort nodes
-    WorkflowConnectionResolver connResolver;
-    const auto edges = connResolver.ReadConnections(document);
+    WorkflowConnectionReader connReader;
+    const auto edges = connReader.ReadConnections(document);
 
+    WorkflowNodeTopoSorter nodeSorter;
     std::vector<std::string> orderedIds = edges.empty()
         ? nodeOrder
-        : connResolver.SortNodesByConnections(nodeOrder, nameToId, edges);
+        : nodeSorter.SortNodesByConnections(nodeOrder, nameToId, edges);
 
     // Build final workflow with sorted nodes
     std::unordered_map<std::string, WorkflowStepDefinition> nodeMap;
@@ -82,7 +85,8 @@ std::vector<WorkflowStepDefinition> WorkflowDefinitionParser::ParseNodes(
     for (const auto& nodeId : orderedIds) {
         auto it = nodeMap.find(nodeId);
         if (it == nodeMap.end()) {
-            throw std::runtime_error("Workflow nodes missing entry for '" + nodeId + "'");
+            throw std::runtime_error(
+                "Workflow nodes missing entry for '" + nodeId + "'");
         }
         sortedSteps.push_back(it->second);
     }
