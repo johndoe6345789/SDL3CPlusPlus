@@ -291,6 +291,9 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/rendering/bsp_patch_face_builder.cpp
         src/services/impl/workflow/rendering/bsp_patch_tessellator.cpp
         src/services/impl/workflow/rendering/bsp_polygon_face_builder.cpp
+        src/services/impl/workflow/rendering/bsp_shader_script.cpp
+        src/services/impl/workflow/rendering/bsp_texture_batch_loader.cpp
+        src/services/impl/workflow/rendering/bsp_texture_gpu_upload.cpp
         src/services/impl/workflow/rendering/bsp_texture_group_flattener.cpp
         src/services/impl/workflow/rendering/bsp_texture_groups_context.cpp
         src/services/impl/workflow/rendering/fps_meter.cpp
