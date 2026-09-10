@@ -1,6 +1,7 @@
 #include "services/interfaces/workflow/gta5/gta5_tiles_draw_step.hpp"
 
 #include "services/interfaces/workflow/gta5/gta5_draw_instances.hpp"
+#include "services/interfaces/workflow/gta5/gta5_draw_probe.hpp"
 #include "services/interfaces/workflow/gta5/gta5_step_params.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
@@ -38,7 +39,7 @@ void WorkflowGta5TilesDrawStep::Execute(const WorkflowStepDefinition& step,
     draw.fragUniforms = context.Get<rendering::FragmentUniformData>(
         "render.frag_uniforms", rendering::FragmentUniformData{});
     draw.texture = context.Get<SDL_GPUTexture*>(
-        Gta5ParameterOr(step, "texture_key", "walls_texture"), nullptr);
+        Gta5ParameterOr(step, "texture_key", "walls_texture_gpu"), nullptr);
     draw.sampler = context.Get<SDL_GPUSampler*>(
         Gta5ParameterOr(step, "sampler_key", "walls_texture_sampler"), nullptr);
     draw.shadowTexture =
@@ -53,7 +54,7 @@ void WorkflowGta5TilesDrawStep::Execute(const WorkflowStepDefinition& step,
         if (logger_ && state_->lastDrawLogged != -2) {
             state_->lastDrawLogged = -2;
             logger_->Warn("gta5.tiles.draw: no texture/sampler bound; "
-                          "expected keys walls_texture and "
+                          "expected keys walls_texture_gpu and "
                           "walls_texture_sampler");
         }
         return;
@@ -70,9 +71,8 @@ void WorkflowGta5TilesDrawStep::Execute(const WorkflowStepDefinition& step,
             instances += entry.second.instances.size();
         }
         logger_->Info("gta5.tiles.draw: drew " + std::to_string(drawn) +
-                      " of " + std::to_string(instances) +
-                      " instances across " +
-                      std::to_string(state_->resident.size()) + " tiles");
+                      " of " + std::to_string(instances) + " instances; " +
+                      ProbeGta5FirstInstance(*state_, draw));
     }
 }
 

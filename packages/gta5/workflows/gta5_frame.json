@@ -38,13 +38,26 @@
       "plugin": "gta5.tiles.draw",
       "parameters": {
         "pipeline_key": "gpu_pipeline_textured",
-        "texture_key": "walls_texture",
+        "texture_key": "walls_texture_gpu",
         "sampler_key": "walls_texture_sampler"
       }
     },
     {
       "id": "frame_end",
       "plugin": "frame.gpu.end_scene"
+    },
+    {
+      "id": "composite_draw",
+      "plugin": "postfx.composite_draw",
+      "comment": "Blits the scene target to the swapchain. Without this and the submit below, the draws land in a texture nobody presents and the window stays black."
+    },
+    {
+      "id": "command_buffer_submit",
+      "plugin": "gpu.command_buffer_submit"
+    },
+    {
+      "id": "composite_finish",
+      "plugin": "postfx.composite_finish"
     }
   ]
 }

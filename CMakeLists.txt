@@ -779,6 +779,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/quake3/workflow_q3_weapon_fire_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_weapon_select_step.cpp
         src/services/impl/workflow/gta5/gta5_draw_instances.cpp
+        src/services/impl/workflow/gta5/gta5_draw_probe.cpp
         src/services/impl/workflow/gta5/gta5_evict_plan.cpp
         src/services/impl/workflow/gta5/gta5_geometry_cache.cpp
         src/services/impl/workflow/gta5/gta5_geometry_upload.cpp
