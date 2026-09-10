@@ -1,5 +1,7 @@
 #include "services/interfaces/workflow/graphics/workflow_graphics_gpu_init_step.hpp"
-#include "services/interfaces/workflow/graphics/gpu_device_init.hpp"
+#include "services/interfaces/workflow/graphics/gpu_device_create.hpp"
+#include "services/interfaces/workflow/graphics/gpu_device_window.hpp"
+#include "services/interfaces/workflow/graphics/gpu_present_mode.hpp"
 #include "services/interfaces/workflow/workflow_step_io_resolver.hpp"
 
 #include <SDL3/SDL_gpu.h>
