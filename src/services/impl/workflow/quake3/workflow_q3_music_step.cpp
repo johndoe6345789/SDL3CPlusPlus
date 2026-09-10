@@ -1,6 +1,5 @@
 #include "services/interfaces/workflow/quake3/workflow_q3_music_step.hpp"
-#include "services/interfaces/workflow/quake3/q3_sound_bank.hpp"
-#include "services/interfaces/workflow/quake3/q3_pk3_reader.hpp"
+#include "services/interfaces/workflow/quake3/q3_music_helpers.hpp"
 #include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
@@ -8,8 +7,8 @@
 
 namespace sdl3cpp::services::impl {
 namespace {
-// Keep roughly this many bytes queued so the loop never runs dry
-// between frames.
+// Keep roughly this many bytes queued so the loop never runs dry between
+// frames.
 constexpr int kRefillBelowBytes = 1 << 18;
 }  // namespace
 
@@ -43,28 +42,12 @@ bool WorkflowQ3MusicStep::Start(const WorkflowStepDefinition& step,
     const std::string pk3 = bspConfig.value("pk3_path", std::string());
     if (pk3.empty()) return false;
 
-    q3::Sound loop;
-    const auto loopBytes = q3::ReadPk3Entry(pk3, text("loop"));
-    if (!q3::DecodeWav(loopBytes.data(), loopBytes.size(), loop)) {
-        if (logger_) logger_->Warn("q3.music.play: no loop track");
-        return false;
-    }
-
     const auto deviceSpec =
         context.Get<SDL_AudioSpec>("q3.sound.device_spec", SDL_AudioSpec{});
-    stream_ = SDL_CreateAudioStream(&loop.spec, &deviceSpec);
-    if (!stream_) return false;
-
-    // The intro plays once ahead of the loop, as ioq3 does.
-    q3::Sound intro;
-    const auto introBytes = q3::ReadPk3Entry(pk3, text("intro"));
-    if (q3::DecodeWav(introBytes.data(), introBytes.size(), intro)) {
-        SDL_PutAudioStreamData(stream_, intro.pcm.data(),
-                               static_cast<int>(intro.pcm.size()));
+    if (!LoadQ3MusicTracks(pk3, text("intro"), text("loop"), deviceSpec,
+                          logger_, stream_, loopPcm_)) {
+        return false;
     }
-    loopPcm_ = std::move(loop.pcm);
-    SDL_PutAudioStreamData(stream_, loopPcm_.data(),
-                           static_cast<int>(loopPcm_.size()));
 
     if (!SDL_BindAudioStream(device, stream_)) {
         SDL_DestroyAudioStream(stream_);
