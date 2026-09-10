@@ -1,139 +1,54 @@
 #include "services/interfaces/workflow/rendering/workflow_draw_viewmodel_step.hpp"
-#include "services/interfaces/workflow/rendering/viewmodel_transform.hpp"
-#include "services/interfaces/workflow/rendering/rendering_types.hpp"
-#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
+#include "services/interfaces/workflow/rendering/viewmodel_draw.hpp"
 
 #include <SDL3/SDL_gpu.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <nlohmann/json.hpp>
-#include <cstring>
 
 namespace sdl3cpp::services::impl {
 
-WorkflowDrawViewmodelStep::WorkflowDrawViewmodelStep(std::shared_ptr<ILogger> logger)
+WorkflowDrawViewmodelStep::WorkflowDrawViewmodelStep(
+    std::shared_ptr<ILogger> logger)
     : logger_(std::move(logger)) {}
 
 std::string WorkflowDrawViewmodelStep::GetPluginId() const {
     return "draw.viewmodel";
 }
 
-void WorkflowDrawViewmodelStep::Execute(const WorkflowStepDefinition& step, WorkflowContext& context) {
+void WorkflowDrawViewmodelStep::Execute(const WorkflowStepDefinition& step,
+                                        WorkflowContext& context) {
     if (context.GetBool("frame_skip", false)) return;
 
-    WorkflowStepParameterResolver params;
-
-    auto getStr = [&](const char* name, const std::string& def) -> std::string {
-        const auto* p = params.FindParameter(step, name);
-        return (p && p->type == WorkflowParameterValue::Type::String) ? p->stringValue : def;
-    };
-    auto getNum = [&](const char* name, float def) -> float {
-        const auto* p = params.FindParameter(step, name);
-        return (p && p->type == WorkflowParameterValue::Type::Number) ? static_cast<float>(p->numberValue) : def;
-    };
-
-    const std::string mesh_name = getStr("mesh", "model");
-    const std::string tex_name = getStr("texture", "");
-    // Viewmodel offset from camera (right, down, forward)
-    const float offset_x = getNum("offset_x", 0.35f);
-    const float offset_y = getNum("offset_y", -0.3f);
-    const float offset_z = getNum("offset_z", -0.5f);
-    const float model_scale = getNum("scale", 0.15f);
-    const float rot_x = getNum("rot_x", 0.0f);
-    const float rot_y = getNum("rot_y", 0.0f);
-    const float rot_z = getNum("rot_z", 0.0f);
-    const float roughness = getNum("roughness", 0.6f);
-    const float metallic = getNum("metallic", 0.4f);
+    const ViewmodelDrawParams params = ReadViewmodelDrawParams(step);
 
     auto* pass = context.Get<SDL_GPURenderPass*>("gpu_render_pass", nullptr);
-    auto* cmd = context.Get<SDL_GPUCommandBuffer*>("gpu_command_buffer", nullptr);
-    auto* pipeline = context.Get<SDL_GPUGraphicsPipeline*>("gpu_pipeline_textured", nullptr);
+    auto* cmd = context.Get<SDL_GPUCommandBuffer*>("gpu_command_buffer",
+                                                   nullptr);
+    auto* pipeline =
+        context.Get<SDL_GPUGraphicsPipeline*>("gpu_pipeline_textured",
+                                              nullptr);
     if (!pass || !cmd || !pipeline) return;
 
-    // Get mesh buffers
-    auto* vb = context.Get<SDL_GPUBuffer*>("plane_" + mesh_name + "_vb", nullptr);
-    auto* ib = context.Get<SDL_GPUBuffer*>("plane_" + mesh_name + "_ib", nullptr);
-    const auto* mesh_meta = context.TryGet<nlohmann::json>("plane_" + mesh_name);
-    if (!vb || !ib || !mesh_meta) {
-        if (logger_) logger_->Warn("draw.viewmodel: Mesh '" + mesh_name + "' not found");
-        return;
-    }
-    uint32_t index_count = (*mesh_meta)["index_count"];
+    const auto mesh =
+        TryGetViewmodelMesh(context, params.meshName, logger_);
+    if (!mesh) return;
 
-    // Build viewmodel MVP: rendered in camera-local space
-    // The viewmodel uses its own near-field projection to prevent clipping
-    auto viewMatrix = context.Get<glm::mat4>("render.view_matrix", glm::mat4(1.0f));
-    auto projMatrix = context.Get<glm::mat4>("render.proj_matrix", glm::mat4(1.0f));
-    auto camPos = context.Get<glm::vec3>("render.camera_pos", glm::vec3(0.0f));
-
-    // Shared with spotlight.update so a light attached to this model
-    // starts exactly where the model is drawn.
-    const auto basis = rendering::ExtractCameraBasis(viewMatrix);
-    const glm::vec3 camUp = basis.up;
-    const glm::mat4 model = rendering::BuildViewmodelMatrix(
-        viewMatrix, camPos, glm::vec3(offset_x, offset_y, offset_z),
-        glm::vec3(rot_x, rot_y, rot_z), model_scale);
-
-    glm::mat4 mvp = projMatrix * viewMatrix * model;
-
-    // Surface normal pointing up from the viewmodel
-    glm::vec3 surfaceNormal = camUp;
-
-    rendering::VertexUniformData vu = {};
-    std::memcpy(vu.mvp, glm::value_ptr(mvp), sizeof(float) * 16);
-    std::memcpy(vu.model_mat, glm::value_ptr(model), sizeof(float) * 16);
-    vu.normal[0] = surfaceNormal.x; vu.normal[1] = surfaceNormal.y; vu.normal[2] = surfaceNormal.z;
-    vu.uv_scale[0] = 1.0f; vu.uv_scale[1] = 1.0f;
-    vu.camera_pos[0] = camPos.x; vu.camera_pos[1] = camPos.y; vu.camera_pos[2] = camPos.z;
-    auto shadowVP = context.Get<glm::mat4>("render.shadow_vp", glm::mat4(1.0f));
-    std::memcpy(vu.shadow_vp, glm::value_ptr(shadowVP), sizeof(float) * 16);
-
-    auto fu = context.Get<rendering::FragmentUniformData>("render.frag_uniforms", rendering::FragmentUniformData{});
-    fu.material[0] = roughness;
-    fu.material[1] = metallic;
+    const ViewmodelUniforms uniforms = BuildViewmodelUniforms(context,
+                                                               params);
 
     SDL_BindGPUGraphicsPipeline(pass, pipeline);
+    BindViewmodelTexture(context, pass, params.texName);
 
-    // Bind texture if specified, else use a default
-    SDL_GPUTexture* texture = nullptr;
-    SDL_GPUSampler* sampler = nullptr;
-    if (!tex_name.empty()) {
-        texture = context.Get<SDL_GPUTexture*>(tex_name + "_gpu", nullptr);
-        sampler = context.Get<SDL_GPUSampler*>(tex_name + "_sampler", nullptr);
-    }
-    // Fall back to floor texture or any available texture
-    if (!texture) texture = context.Get<SDL_GPUTexture*>("floor_texture_gpu", nullptr);
-    if (!sampler) sampler = context.Get<SDL_GPUSampler*>("floor_texture_sampler", nullptr);
+    SDL_GPUBufferBinding vbBinding = {};
+    vbBinding.buffer = mesh->vertexBuffer;
+    SDL_BindGPUVertexBuffers(pass, 0, &vbBinding, 1);
+    SDL_GPUBufferBinding ibBinding = {};
+    ibBinding.buffer = mesh->indexBuffer;
+    SDL_BindGPUIndexBuffer(pass, &ibBinding, SDL_GPU_INDEXELEMENTSIZE_16BIT);
 
-    if (texture && sampler) {
-        auto* shadow_tex = context.Get<SDL_GPUTexture*>("shadow_depth_texture", nullptr);
-        auto* shadow_samp = context.Get<SDL_GPUSampler*>("shadow_depth_sampler", nullptr);
-        if (shadow_tex && shadow_samp) {
-            SDL_GPUTextureSamplerBinding bindings[2] = {};
-            bindings[0].texture = texture;
-            bindings[0].sampler = sampler;
-            bindings[1].texture = shadow_tex;
-            bindings[1].sampler = shadow_samp;
-            SDL_BindGPUFragmentSamplers(pass, 0, bindings, 2);
-        } else {
-            SDL_GPUTextureSamplerBinding binding = {};
-            binding.texture = texture;
-            binding.sampler = sampler;
-            SDL_BindGPUFragmentSamplers(pass, 0, &binding, 1);
-        }
-    }
-
-    SDL_GPUBufferBinding vb_binding = {};
-    vb_binding.buffer = vb;
-    SDL_BindGPUVertexBuffers(pass, 0, &vb_binding, 1);
-    SDL_GPUBufferBinding ib_binding = {};
-    ib_binding.buffer = ib;
-    SDL_BindGPUIndexBuffer(pass, &ib_binding, SDL_GPU_INDEXELEMENTSIZE_16BIT);
-
-    SDL_PushGPUVertexUniformData(cmd, 0, &vu, sizeof(vu));
-    SDL_PushGPUFragmentUniformData(cmd, 0, &fu, sizeof(fu));
-    SDL_DrawGPUIndexedPrimitives(pass, index_count, 1, 0, 0, 0);
+    SDL_PushGPUVertexUniformData(cmd, 0, &uniforms.vertex,
+                                 sizeof(uniforms.vertex));
+    SDL_PushGPUFragmentUniformData(cmd, 0, &uniforms.fragment,
+                                   sizeof(uniforms.fragment));
+    SDL_DrawGPUIndexedPrimitives(pass, mesh->indexCount, 1, 0, 0, 0);
 }
 
 }  // namespace sdl3cpp::services::impl
