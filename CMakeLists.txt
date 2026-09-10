@@ -159,8 +159,6 @@ list(REMOVE_ITEM WORKFLOW_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/services/impl/workflow/workflow_config_schema_step.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/services/impl/workflow/workflow_config_version_step.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/services/impl/workflow/workflow_config_pipeline.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/services/impl/workflow/graphics/workflow_graphics_shader_load_step.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/services/impl/workflow/rendering/workflow_render_cube_grid_step.cpp"
 )
 
 # Frame-specific workflow steps

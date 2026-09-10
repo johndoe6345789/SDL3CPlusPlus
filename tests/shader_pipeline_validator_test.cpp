@@ -196,7 +196,7 @@ TEST_F(ShaderPipelineValidatorTest, ValidateVertexLayoutMatch_TypeMismatch) {
 TEST_F(ShaderPipelineValidatorTest, ValidateVertexLayoutMatch_ShuffledLocations) {
     std::vector<ShaderPipelineValidator::AttributeInfo> shaderInputs = {
         {0, "vec3", "i_position", 12},
-        {1, "vec2", "i_texcoord_0", 8},  // Wrong location/type for bgfx layout.
+        {1, "vec2", "i_texcoord_0", 8},  // Wrong location/type for the vertex layout.
         {2, "vec3", "i_tangent", 12},
         {3, "vec3", "i_normal", 12},    // Normal moved to location 3.
     };
@@ -515,8 +515,8 @@ void main() {
 }
 )";
 
-    // This is the expected bgfx layout
-    std::vector<ShaderPipelineValidator::AttributeInfo> bgfxLayout = {
+    // This is the expected vertex layout
+    std::vector<ShaderPipelineValidator::AttributeInfo> vertexLayout = {
         {0, "vec3", "Position", 12},
         {1, "vec3", "Normal", 12},
         {2, "vec3", "Tangent", 12},
@@ -525,7 +525,7 @@ void main() {
     };
 
     auto result = validator->ValidatePipeline(
-        vertexShader, fragmentShader, bgfxLayout,
+        vertexShader, fragmentShader, vertexLayout,
         sizeof(sdl3cpp::core::Vertex),
         "materialx_floor"
     );

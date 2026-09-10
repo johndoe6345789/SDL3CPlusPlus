@@ -46,7 +46,7 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 ### Ultra Plan: "Probe Fortress"
 - [~] Probe hooks (config/render graph/graphics reports wired; `OnDraw`/`OnPresent`/`OnFrameEnd`/`OnLoadScene` emit trace-gated runtime probes)
 - [x] Pipeline compatibility checks (mesh layout vs shader inputs) via shader pipeline validator
-- [x] Sampler limits enforced from bgfx caps
+- [x] Sampler limits enforced from GPU device caps
 - [ ] Shader uniform compatibility enforcement
 - [~] Resource budget enforcement (texture memory + max texture dim + GUI caches; no buffer budgets)
 - [x] Crash recovery service (heartbeats, GPU hang detection, memory monitoring)
@@ -144,7 +144,7 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 - Acceptance: injected faults generate probe reports and prevent crashes.
 
 ### Phase 7: Shader Uniform Compatibility Enforcement (3-5 days)
-- Choose uniform reflection sources per shader system (MaterialX vs bgfx shader binary).
+- Choose uniform reflection sources per shader system (MaterialX vs SPIR-V reflection).
 - Validate material uniform mappings at config compile time.
 - Emit JSON-path diagnostics for mismatches.
 - Deliverable: uniform mismatches fail fast before rendering.
@@ -168,8 +168,6 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 ### Target Services (Top Of List)
 - JsonConfigService (~1800 LOC): split into loader/merger/validator/parser modules.
 - ScriptEngineService (~1650 LOC): split Lua binding registry, library setup, and script loading.
-- BgfxGraphicsBackend (~1400 LOC): split pipeline/buffer/texture/screenshot/validation submodules.
-- BgfxGuiService (~1100 LOC): split font cache, SVG cache, command encoding, and layout.
 - MaterialXShaderGenerator (~1100 LOC): split MaterialX graph prep, shader emit, validation.
 
 ### Phase A: Mechanical Extraction (1-3 days)
@@ -183,7 +181,7 @@ Treat JSON config as a declarative control plane that compiles into scene, resou
 
 ### Phase B: Responsibility Split (2-5 days)
 - Create focused classes (e.g., `ConfigSchemaValidator`, `ConfigMergeService`,
-  `LuaBindingRegistry`, `BgfxPipelineCache`, `TextureLoader`, `GuiFontCache`).
+  `LuaBindingRegistry`, `TextureLoader`, `GuiFontCache`).
 - Reduce cross-module knowledge by passing simple data structs.
 - Add trace logging at handoff boundaries to retain diagnostics.
 
@@ -366,7 +364,7 @@ Option B: per-shader only
 
 ## Troubleshooting Guide (Segfaults, Ordering, Shader Quirks)
 ### Common Failure Modes
-- Segfaults after startup: often caused by invalid bgfx handles, resource exhaustion, or pre-frame usage.
+- Segfaults after startup: often caused by invalid GPU resource handles, resource exhaustion, or use before the device is ready.
 - Draw crashes: index/vertex buffer mismatch or using buffers before upload.
 - Shader issues: missing uniforms, incorrect layout qualifiers, or wrong backend profile.
 - Ordering bugs: loading shaders/textures before the first `BeginFrame` + `EndFrame` priming pass.
@@ -376,11 +374,10 @@ Option B: per-shader only
 - Re-run with trace logging enabled (`--trace`) and capture the last 50 lines of the log.
 - Confirm config schema validation passes and print loaded JSON (`--dump-json`).
 - Check that shaders are compiled for the active renderer (Vulkan vs OpenGL).
-- Ensure bgfx is initialized and has seen a frame before loading textures/shaders.
+- Ensure the GPU device is created and the window claimed before loading textures/shaders.
 
 ### Known Hotspots To Inspect
 - Shader pipeline validation: `src/services/impl/shader/shader_pipeline_validator.cpp`
-- Texture load guards + budgets: `src/services/impl/graphics/bgfx_graphics_backend.cpp`
 - Render graph scheduling: `src/services/impl/render/render_graph_service.cpp`
 - Config compiler diagnostics: `src/services/impl/config/config_compiler_service.cpp`
 - Crash recovery timeouts: `src/services/impl/diagnostics/crash_recovery_service.cpp`
@@ -388,7 +385,7 @@ Option B: per-shader only
 ### Ordering Checklist (When Things Crash)
 - `InitializeDevice` → `InitializeSwapchain` → `BeginFrame` → `EndFrame` before loading shaders/textures.
 - Load shaders once, then upload geometry, then render.
-- Avoid calling bgfx APIs after shutdown or on invalid handles.
+- Avoid calling SDL GPU APIs after device destruction or on invalid handles.
 
 ### Shader Debug Checklist
 - Verify `layout(location = N)` on all GLSL inputs/outputs (SPIR-V requirement).
@@ -400,9 +397,6 @@ Option B: per-shader only
 - Note whether `runtime.scene_source` is `config` or `lua`.
 
 ### Known Fixes And Evidence
-- Texture load crashes: see `tests/bgfx_texture_loading_test.cpp` and `FIXES_IMPLEMENTED.md`.
-- Shader uniform mapping failures: see `tests/shaderc_uniform_mapping_test.cpp` and `tests/gui_shader_linking_failure_test.cpp`.
-- Initialization order regressions: see `tests/bgfx_initialization_order_test.cpp` and `tests/bgfx_frame_requirement_test.cpp`.
 - Render graph validation gaps: see `tests/render_graph_service_test.cpp` (cycles/unknown refs/duplicates).
 - Crash recovery timeouts: see `tests/crash_recovery_timeout_test.cpp`.
 
@@ -412,7 +406,7 @@ Option B: per-shader only
 ## Open Questions
 - Preferred merge behavior for array fields (replace vs keyed merge by `id`)
 - Scope of hot-reload (full scene reload vs incremental updates)
-- Target shader reflection source (bgfx, MaterialX, or custom metadata)
+- Target shader reflection source (SPIR-V reflection, MaterialX, or custom metadata)
 - Strategy for moving from Lua-driven scene scripts to config-first IR execution
 
 ## Declarative Package Catalog

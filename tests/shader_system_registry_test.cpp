@@ -22,7 +22,7 @@ public:
     }
     const sdl3cpp::services::InputBindings& GetInputBindings() const override { return inputBindings_; }
     const sdl3cpp::services::MouseGrabConfig& GetMouseGrabConfig() const override { return mouseGrabConfig_; }
-    const sdl3cpp::services::BgfxConfig& GetBgfxConfig() const override { return bgfxConfig_; }
+    const sdl3cpp::services::GpuConfig& GetGpuConfig() const override { return gpuConfig_; }
     const sdl3cpp::services::MaterialXConfig& GetMaterialXConfig() const override { return materialXConfig_; }
     const std::vector<sdl3cpp::services::MaterialXMaterialConfig>& GetMaterialXMaterialConfigs() const override {
         return materialXMaterials_;
@@ -38,7 +38,7 @@ public:
 private:
     sdl3cpp::services::InputBindings inputBindings_{};
     sdl3cpp::services::MouseGrabConfig mouseGrabConfig_{};
-    sdl3cpp::services::BgfxConfig bgfxConfig_{};
+    sdl3cpp::services::GpuConfig gpuConfig_{};
     sdl3cpp::services::MaterialXConfig materialXConfig_{};
     std::vector<sdl3cpp::services::MaterialXMaterialConfig> materialXMaterials_{};
     sdl3cpp::services::GuiFontConfig guiFontConfig_{};

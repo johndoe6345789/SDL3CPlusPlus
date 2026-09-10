@@ -389,16 +389,16 @@ std::string ConvertIndividualOutputsToBlock(const std::string& source,
 
 std::string RemapVertexShaderInputLocations(const std::string& source,
                                              const std::shared_ptr<ILogger>& logger) {
-    // Remap vertex shader input locations to match bgfx vertex layout order
+    // Remap vertex shader input locations to match the engine vertex layout order
     // WITHOUT creating an input block (which is not allowed in vertex shaders)
 
-    std::map<std::string, int> bgfxLocationMap;
-    bgfxLocationMap["i_position"] = 0;
-    bgfxLocationMap["i_normal"] = 1;
-    bgfxLocationMap["i_tangent"] = 2;
-    bgfxLocationMap["i_texcoord_0"] = 3;
-    bgfxLocationMap["i_texcoord_1"] = 4;
-    bgfxLocationMap["i_color0"] = 5;
+    std::map<std::string, int> vertexLocationMap;
+    vertexLocationMap["i_position"] = 0;
+    vertexLocationMap["i_normal"] = 1;
+    vertexLocationMap["i_tangent"] = 2;
+    vertexLocationMap["i_texcoord_0"] = 3;
+    vertexLocationMap["i_texcoord_1"] = 4;
+    vertexLocationMap["i_color0"] = 5;
 
     std::string result = source;
     const std::string layoutToken = "layout (location =";
@@ -446,8 +446,8 @@ std::string RemapVertexShaderInputLocations(const std::string& source,
         std::string name = line.substr(nameStart, nameEnd - nameStart);
 
         // Check if we need to remap this attribute
-        if (bgfxLocationMap.count(name) > 0) {
-            int newLoc = bgfxLocationMap[name];
+        if (vertexLocationMap.count(name) > 0) {
+            int newLoc = vertexLocationMap[name];
 
             // Find the old location number
             size_t locStart = layoutPos + tokenLength;
@@ -570,7 +570,7 @@ std::string ConvertIndividualInputsToBlock(const std::string& source,
         return source;
     }
     
-    // Remap locations to match bgfx VertexLayout order:
+    // Remap locations to match the engine vertex layout order:
     // location=0: position (vec3)
     // location=1: normal (vec3)
     // location=2: texcoord (vec2)
@@ -631,33 +631,33 @@ std::string ConvertIndividualInputsToBlock(const std::string& source,
                   return std::get<0>(left) < std::get<0>(right);
               });
 
-    // Build the VertexData block with locations matching bgfx vertex layout order.
-    // bgfx assigns locations sequentially: Position=0, Normal=1, Tangent=2, TexCoord0=3
-    std::map<std::string, int> bgfxLocationMap;
-    bgfxLocationMap["i_position"] = 0;
-    bgfxLocationMap["i_normal"] = 1;
-    bgfxLocationMap["i_tangent"] = 2;
-    bgfxLocationMap["i_texcoord_0"] = 3;
-    bgfxLocationMap["i_texcoord_1"] = 4;
-    bgfxLocationMap["i_color0"] = 5;
+    // Build the VertexData block with locations matching the engine vertex layout order.
+    // locations are assigned sequentially: Position=0, Normal=1, Tangent=2, TexCoord0=3
+    std::map<std::string, int> vertexLocationMap;
+    vertexLocationMap["i_position"] = 0;
+    vertexLocationMap["i_normal"] = 1;
+    vertexLocationMap["i_tangent"] = 2;
+    vertexLocationMap["i_texcoord_0"] = 3;
+    vertexLocationMap["i_texcoord_1"] = 4;
+    vertexLocationMap["i_color0"] = 5;
 
-    std::vector<std::tuple<int, std::string, std::string>> bgfxRemapped;
+    std::vector<std::tuple<int, std::string, std::string>> remappedAttributes;
     for (const auto& [loc, type, name] : remapped) {
-        int bgfxLoc = loc;  // default to original
-        if (bgfxLocationMap.count(name) > 0) {
-            bgfxLoc = bgfxLocationMap[name];
+        int mappedLocation = loc;  // default to original
+        if (vertexLocationMap.count(name) > 0) {
+            mappedLocation = vertexLocationMap[name];
         }
-        bgfxRemapped.push_back({bgfxLoc, type, name});
+        remappedAttributes.push_back({mappedLocation, type, name});
     }
 
-    // Sort by bgfx location
-    std::sort(bgfxRemapped.begin(), bgfxRemapped.end(),
+    // Sort by mapped location
+    std::sort(remappedAttributes.begin(), remappedAttributes.end(),
               [](const auto& left, const auto& right) {
                   return std::get<0>(left) < std::get<0>(right);
               });
 
     std::string block = "in VertexData\n{\n";
-    for (const auto& [loc, type, name] : bgfxRemapped) {
+    for (const auto& [loc, type, name] : remappedAttributes) {
         block += "    layout (location = " + std::to_string(loc) + ") " +
             type + " " + name + ";\n";
         if (logger) {
@@ -1005,7 +1005,7 @@ ShaderPaths MaterialXShaderGenerator::Generate(const MaterialXConfig& config,
                        paths.vertexSource.substr(0, std::min(size_t(800), paths.vertexSource.size())));
     }
 
-    // Fix vertex shader inputs: remap locations to match bgfx vertex layout order
+    // Fix vertex shader inputs: remap locations to match the engine vertex layout order
     // Note: We DON'T create an input block for vertex shaders (GLSL doesn't allow it)
     paths.vertexSource = RemapVertexShaderInputLocations(paths.vertexSource, logger_);
 
@@ -1063,7 +1063,7 @@ ShaderPaths MaterialXShaderGenerator::Generate(const MaterialXConfig& config,
     // Validate the shader pipeline BEFORE returning to prevent GPU driver crashes
     ShaderPipelineValidator validator(logger_);
 
-    // Define expected vertex layout (must match bgfx_graphics_backend.cpp)
+    // Define expected vertex layout (must match the engine vertex layout)
     std::vector<ShaderPipelineValidator::AttributeInfo> expectedLayout = {
         ShaderPipelineValidator::AttributeInfo(0, "vec3", "Position", 12),
         ShaderPipelineValidator::AttributeInfo(1, "vec3", "Normal", 12),

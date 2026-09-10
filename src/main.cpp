@@ -26,6 +26,7 @@ int main(int argc, char** argv) {
         std::string gamePackage = "standalone_cubes";
         std::string bootstrapPackage = "bootstrap_mac";
         std::filesystem::path projectRoot = std::filesystem::current_path();
+        bool traceEnabled = false;
 
         for (int i = 1; i < argc; ++i) {
             std::string arg = argv[i];
@@ -45,7 +46,46 @@ int main(int argc, char** argv) {
                               << assignment << std::endl;
                     return 1;
                 }
+            } else if (arg == "--trace") {
+                traceEnabled = true;
+            } else {
+                std::cerr << "Unknown argument: " << arg << std::endl
+                          << "Usage: sdl3_app [--bootstrap NAME] [--game NAME] "
+                             "[--project-root PATH] [--env NAME=VALUE] [--trace]"
+                          << std::endl;
+                return 1;
             }
+        }
+
+        // A mistyped package name used to fall through silently: the shader
+        // backend stayed on the macOS default and the run died later with an
+        // opaque vkCreateShaderModule error. Fail here instead, and say what
+        // is actually available.
+        const auto requirePackage = [&](const std::string& kind,
+                                        const std::string& name) -> bool {
+            const std::filesystem::path manifest =
+                projectRoot / "packages" / name / "package.json";
+            if (std::filesystem::exists(manifest)) {
+                return true;
+            }
+            std::cerr << "Unknown " << kind << " package: " << name << std::endl;
+            std::cerr << "Looked for: " << manifest.string() << std::endl;
+            const std::filesystem::path packagesDir = projectRoot / "packages";
+            if (std::filesystem::is_directory(packagesDir)) {
+                std::cerr << "Available packages:" << std::endl;
+                for (const auto& entry : std::filesystem::directory_iterator(packagesDir)) {
+                    if (std::filesystem::exists(entry.path() / "package.json")) {
+                        std::cerr << "  " << entry.path().filename().string() << std::endl;
+                    }
+                }
+            }
+            return false;
+        };
+        if (!requirePackage("bootstrap", bootstrapPackage)) {
+            return 1;
+        }
+        if (!requirePackage("game", gamePackage)) {
+            return 1;
         }
 
         // Create logger
@@ -53,6 +93,9 @@ int main(int argc, char** argv) {
         logger->EnableConsoleOutput(false);
         std::filesystem::path logPath = projectRoot / "sdl3_app.log";
         logger->SetOutputFile(logPath.string());
+        if (traceEnabled) {
+            logger->SetLevel(sdl3cpp::services::LogLevel::TRACE);
+        }
 
         // Create workflow infrastructure
         auto registry = std::make_shared<sdl3cpp::services::impl::WorkflowStepRegistry>();

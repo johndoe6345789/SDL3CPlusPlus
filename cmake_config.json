@@ -64,9 +64,7 @@
     "src/services/impl/workflow/workflow_config_migration_step.cpp",
     "src/services/impl/workflow/workflow_config_schema_step.cpp",
     "src/services/impl/workflow/workflow_config_version_step.cpp",
-    "src/services/impl/workflow/workflow_config_pipeline.cpp",
-    "src/services/impl/workflow/graphics/workflow_graphics_shader_load_step.cpp",
-    "src/services/impl/workflow/rendering/workflow_render_cube_grid_step.cpp"
+    "src/services/impl/workflow/workflow_config_pipeline.cpp"
   ],
   "targets": [
     {

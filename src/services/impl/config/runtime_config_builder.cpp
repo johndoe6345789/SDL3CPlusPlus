@@ -350,27 +350,27 @@ RuntimeConfig RuntimeConfigBuilder::Build(const rapidjson::Document& document,
         readFloat("pbr_metallic", config.atmospherics.pbrMetallic);
     }
 
-    const rapidjson::Value* bgfxValue = nullptr;
-    std::string bgfxPath = "bgfx";
+    const rapidjson::Value* gpuValue = nullptr;
+    std::string gpuPath = "gpu";
     if (renderingValue) {
-        bgfxValue = GetObjectMember(*renderingValue, "bgfx", "rendering.bgfx");
-        if (bgfxValue) {
-            bgfxPath = "rendering.bgfx";
+        gpuValue = GetObjectMember(*renderingValue, "gpu", "rendering.gpu");
+        if (gpuValue) {
+            gpuPath = "rendering.gpu";
         }
     }
-    if (!bgfxValue && document.HasMember("bgfx")) {
-        const auto& value = document["bgfx"];
+    if (!gpuValue && document.HasMember("gpu")) {
+        const auto& value = document["gpu"];
         if (!value.IsObject()) {
-            throw std::runtime_error("JSON member 'bgfx' must be an object");
+            throw std::runtime_error("JSON member 'gpu' must be an object");
         }
-        bgfxValue = &value;
+        gpuValue = &value;
     }
-    if (bgfxValue && bgfxValue->HasMember("renderer")) {
-        const auto& value = (*bgfxValue)["renderer"];
+    if (gpuValue && gpuValue->HasMember("renderer")) {
+        const auto& value = (*gpuValue)["renderer"];
         if (!value.IsString()) {
-            throw std::runtime_error("JSON member '" + bgfxPath + ".renderer' must be a string");
+            throw std::runtime_error("JSON member '" + gpuPath + ".renderer' must be a string");
         }
-        config.bgfx.renderer = value.GetString();
+        config.gpu.renderer = value.GetString();
     }
 
     const rapidjson::Value* materialValue = nullptr;

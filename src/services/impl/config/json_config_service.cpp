@@ -163,9 +163,9 @@ std::string JsonConfigService::BuildConfigJson(const RuntimeConfig& config,
     windowObject.AddMember("mouse_grab", mouseGrabObject, allocator);
     document.AddMember("window", windowObject, allocator);
 
-    rapidjson::Value bgfxObject(rapidjson::kObjectType);
-    bgfxObject.AddMember("renderer",
-                         rapidjson::Value(config.bgfx.renderer.c_str(), allocator),
+    rapidjson::Value gpuObject(rapidjson::kObjectType);
+    gpuObject.AddMember("renderer",
+                         rapidjson::Value(config.gpu.renderer.c_str(), allocator),
                          allocator);
 
     rapidjson::Value materialObject(rapidjson::kObjectType);
@@ -220,7 +220,7 @@ std::string JsonConfigService::BuildConfigJson(const RuntimeConfig& config,
     }
 
     rapidjson::Value renderingObject(rapidjson::kObjectType);
-    renderingObject.AddMember("bgfx", bgfxObject, allocator);
+    renderingObject.AddMember("gpu", gpuObject, allocator);
     renderingObject.AddMember("materialx", materialObject, allocator);
 
     rapidjson::Value atmosphericsObject(rapidjson::kObjectType);

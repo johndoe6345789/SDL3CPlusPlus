@@ -1,5 +1,5 @@
 # Unreal Engine 5 Shadow Rendering Documentation
-## For bgfx Implementation
+## For Engine Implementation
 
 This documentation explains how UE5's shadow rendering system works, from basic shadow mapping to advanced Virtual Shadow Maps.
 
@@ -14,7 +14,6 @@ This documentation explains how UE5's shadow rendering system works, from basic 
 6. [Ray-Traced Shadows](#ray-traced-shadows)
 7. [Shadow Bias and Artifacts](#shadow-bias-and-artifacts)
 8. [Performance Optimization](#performance-optimization)
-9. [bgfx Implementation Guide](#bgfx-implementation-guide)
 10. [Key Files Reference](#key-files-reference)
 
 ---
@@ -1079,177 +1078,6 @@ r.Shadow.Virtual.OnePassProjection.MaxLightsPerPixel = 16
 
 ---
 
-## bgfx Implementation Guide
-
-### Basic Shadow Map Setup
-
-```cpp
-class ShadowMapRenderer
-{
-    bgfx::FrameBufferHandle shadowMapFB;
-    bgfx::TextureHandle shadowMapDepth;
-    bgfx::ProgramHandle shadowDepthProgram;
-
-    void Init(uint16_t resolution)
-    {
-        // Create depth texture
-        shadowMapDepth = bgfx::createTexture2D(
-            resolution, resolution,
-            false, 1,
-            bgfx::TextureFormat::D24S8,
-            BGFX_TEXTURE_RT | BGFX_SAMPLER_COMPARE_LEQUAL
-        );
-
-        // Create framebuffer
-        bgfx::Attachment attachment;
-        attachment.init(shadowMapDepth);
-        shadowMapFB = bgfx::createFrameBuffer(1, &attachment, false);
-
-        // Load shadow depth shader
-        shadowDepthProgram = loadProgram("vs_shadow_depth", "fs_shadow_depth");
-    }
-
-    void RenderShadowMap(const Light& light, const std::vector<Mesh>& objects)
-    {
-        // Calculate light view/projection
-        float viewMtx[16], projMtx[16];
-        CalculateLightMatrices(light, viewMtx, projMtx);
-
-        // Set as render target
-        bgfx::setViewFrameBuffer(VIEW_SHADOW, shadowMapFB);
-        bgfx::setViewRect(VIEW_SHADOW, 0, 0, resolution, resolution);
-        bgfx::setViewTransform(VIEW_SHADOW, viewMtx, projMtx);
-        bgfx::setViewClear(VIEW_SHADOW, BGFX_CLEAR_DEPTH, 0, 1.0f, 0);
-
-        // Render depth only
-        for (const auto& mesh : objects)
-        {
-            bgfx::setTransform(mesh.worldMatrix);
-            bgfx::setVertexBuffer(0, mesh.vb);
-            bgfx::setIndexBuffer(mesh.ib);
-
-            uint64_t state = BGFX_STATE_WRITE_Z
-                           | BGFX_STATE_DEPTH_TEST_LESS
-                           | BGFX_STATE_CULL_CCW;
-
-            bgfx::setState(state);
-            bgfx::submit(VIEW_SHADOW, shadowDepthProgram);
-        }
-    }
-};
-```
-
-### Shadow Sampling in Lighting Pass
-
-```cpp
-// Create sampler with comparison
-bgfx::UniformHandle s_shadowMap = bgfx::createUniform(
-    "s_shadowMap",
-    bgfx::UniformType::Sampler,
-    1
-);
-
-// In lighting pass
-bgfx::setTexture(4, s_shadowMap, shadowMapDepth,
-                BGFX_SAMPLER_COMPARE_LEQUAL);  // Hardware PCF
-```
-
-**GLSL Shader:**
-```glsl
-// fs_lighting.sc
-SAMPLER2DSHADOW(s_shadowMap, 4);  // Comparison sampler
-
-uniform mat4 u_lightViewProj;
-
-void main()
-{
-    // Reconstruct world position
-    vec3 worldPos = ...;
-
-    // Transform to light clip space
-    vec4 shadowPos = mul(u_lightViewProj, vec4(worldPos, 1.0));
-    shadowPos.xyz /= shadowPos.w;
-
-    // Transform to [0,1]
-    vec3 shadowUV;
-    shadowUV.xy = shadowPos.xy * 0.5 + 0.5;
-    shadowUV.y = 1.0 - shadowUV.y;
-    shadowUV.z = shadowPos.z;
-
-    // Sample with hardware PCF
-    float shadow = shadow2D(s_shadowMap, shadowUV);
-
-    // Apply shadow to lighting
-    vec3 lighting = directLighting * shadow;
-
-    gl_FragColor = vec4(lighting, 1.0);
-}
-```
-
-### Cascaded Shadow Maps with bgfx
-
-```cpp
-class CSMRenderer
-{
-    static const int NUM_CASCADES = 4;
-
-    bgfx::FrameBufferHandle cascadeFB[NUM_CASCADES];
-    bgfx::TextureHandle cascadeTextures[NUM_CASCADES];
-
-    struct Cascade
-    {
-        float viewMtx[16];
-        float projMtx[16];
-        float splitDistance;
-    };
-    Cascade cascades[NUM_CASCADES];
-
-    void RenderCSM(const Camera& camera, const Light& light, const Scene& scene)
-    {
-        // Calculate cascade splits
-        CalculateCascadeSplits(camera, cascades);
-
-        for (int i = 0; i < NUM_CASCADES; ++i)
-        {
-            // Calculate light matrices for this cascade
-            CalculateCascadeMatrices(camera, light, cascades[i]);
-
-            // Render to cascade shadow map
-            bgfx::setViewFrameBuffer(VIEW_SHADOW + i, cascadeFB[i]);
-            bgfx::setViewTransform(VIEW_SHADOW + i,
-                                  cascades[i].viewMtx,
-                                  cascades[i].projMtx);
-
-            // Cull and render
-            RenderDepthOnly(scene, cascades[i].frustum);
-        }
-    }
-};
-```
-
-### Contact Shadows with Compute
-
-```cpp
-// bgfx compute shader for contact shadows
-bgfx::ProgramHandle contactShadowCS = bgfx::createProgram(
-    bgfx::createShader(loadMemory("cs_contact_shadow.bin")),
-    true
-);
-
-// Dispatch compute
-bgfx::setImage(0, s_depthBuffer, 0, bgfx::Access::Read);
-bgfx::setImage(1, s_shadowOutput, 0, bgfx::Access::Write);
-bgfx::setUniform(u_lightDirection, &lightDir);
-
-bgfx::dispatch(VIEW_COMPUTE,
-              contactShadowCS,
-              (width + 7) / 8,
-              (height + 7) / 8,
-              1);
-```
-
----
-
 ## Key Files Reference
 
 ### C++ Source Files
@@ -1298,7 +1126,7 @@ bgfx::dispatch(VIEW_COMPUTE,
 
 ## Summary
 
-**For Your bgfx Engine:**
+**For This Engine:**
 
 1. **Start Simple**: Implement basic shadow maps (directional CSM, spot single map)
 2. **Add Filtering**: PCF is essential, PCSS is great for quality

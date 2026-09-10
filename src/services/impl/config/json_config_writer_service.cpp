@@ -135,9 +135,9 @@ void JsonConfigWriterService::WriteConfig(const RuntimeConfig& config, const std
     }
     document.AddMember("paths", pathsObject, allocator);
 
-    rapidjson::Value bgfxObject(rapidjson::kObjectType);
-    bgfxObject.AddMember("renderer",
-                         rapidjson::Value(config.bgfx.renderer.c_str(), allocator),
+    rapidjson::Value gpuObject(rapidjson::kObjectType);
+    gpuObject.AddMember("renderer",
+                         rapidjson::Value(config.gpu.renderer.c_str(), allocator),
                          allocator);
     rapidjson::Value materialObject(rapidjson::kObjectType);
     materialObject.AddMember("enabled", config.materialX.enabled, allocator);
@@ -213,7 +213,7 @@ void JsonConfigWriterService::WriteConfig(const RuntimeConfig& config, const std
     atmosphericsObject.AddMember("pbr_metallic", config.atmospherics.pbrMetallic, allocator);
 
     rapidjson::Value renderingObject(rapidjson::kObjectType);
-    renderingObject.AddMember("bgfx", bgfxObject, allocator);
+    renderingObject.AddMember("gpu", gpuObject, allocator);
     renderingObject.AddMember("materialx", materialObject, allocator);
     renderingObject.AddMember("atmospherics", atmosphericsObject, allocator);
     document.AddMember("rendering", renderingObject, allocator);

@@ -92,11 +92,11 @@ public:
         }
         return config_.mouseGrab;
     }
-    const BgfxConfig& GetBgfxConfig() const override {
+    const GpuConfig& GetGpuConfig() const override {
         if (logger_) {
-            logger_->Trace("JsonConfigService", "GetBgfxConfig");
+            logger_->Trace("JsonConfigService", "GetGpuConfig");
         }
-        return config_.bgfx;
+        return config_.gpu;
     }
     const MaterialXConfig& GetMaterialXConfig() const override {
         if (logger_) {

@@ -60,13 +60,13 @@ TEST_F(MaterialXShaderGeneratorIntegrationTest, ShadersMustPassValidation) {
     // 3. Vertex shader outputs match fragment shader inputs
     // 4. All inputs/outputs have layout(location=N) for SPIR-V
 
-    // Expected bgfx vertex layout (from bgfx_graphics_backend.cpp)
-    std::vector<ShaderPipelineValidator::AttributeInfo> bgfxLayout = {
-        {0, "vec3", "Position", 12},   // bgfx::Attrib::Position
-        {1, "vec3", "Normal", 12},     // bgfx::Attrib::Normal
-        {2, "vec3", "Tangent", 12},    // bgfx::Attrib::Tangent
-        {3, "vec2", "TexCoord0", 8},   // bgfx::Attrib::TexCoord0
-        {4, "vec3", "Color0", 12},     // bgfx::Attrib::Color0
+    // Expected engine vertex layout
+    std::vector<ShaderPipelineValidator::AttributeInfo> vertexLayout = {
+        {0, "vec3", "Position", 12},   // Position
+        {1, "vec3", "Normal", 12},     // Normal
+        {2, "vec3", "Tangent", 12},    // Tangent
+        {3, "vec2", "TexCoord0", 8},   // TexCoord0
+        {4, "vec3", "Color0", 12},     // Color0
     };
 
     size_t vertexSize = sizeof(sdl3cpp::core::Vertex);
@@ -116,7 +116,7 @@ void main() {
     auto result = validator->ValidatePipeline(
         vertexShader,
         fragmentShader,
-        bgfxLayout,
+        vertexLayout,
         vertexSize,
         "test_materialx"
     );
@@ -138,7 +138,7 @@ TEST_F(MaterialXShaderGeneratorIntegrationTest, MalformedShadersMustBeRejected) 
     // This test ensures that malformed shaders that would crash the GPU
     // are caught by validation and rejected BEFORE reaching the GPU
 
-    std::vector<ShaderPipelineValidator::AttributeInfo> bgfxLayout = {
+    std::vector<ShaderPipelineValidator::AttributeInfo> vertexLayout = {
         {0, "vec3", "Position", 12},
         {1, "vec3", "Normal", 12},
         {2, "vec3", "Tangent", 12},
@@ -175,7 +175,7 @@ void main() {
     auto result = validator->ValidatePipeline(
         badVertexShader,
         fragmentShader,
-        bgfxLayout,
+        vertexLayout,
         56,
         "malformed_shader"
     );
@@ -239,7 +239,7 @@ void main() {
 TEST_F(MaterialXShaderGeneratorIntegrationTest, InterfaceMismatchMustBeDetected) {
     // Test that VS output / FS input mismatches are caught
 
-    std::vector<ShaderPipelineValidator::AttributeInfo> bgfxLayout = {
+    std::vector<ShaderPipelineValidator::AttributeInfo> vertexLayout = {
         {0, "vec3", "Position", 12},
         {1, "vec3", "Normal", 12},
         {2, "vec3", "Tangent", 12},
@@ -276,7 +276,7 @@ void main() {
     auto result = validator->ValidatePipeline(
         vertexShader,
         fragmentShader,
-        bgfxLayout,
+        vertexLayout,
         56,
         "interface_mismatch"
     );
@@ -288,7 +288,7 @@ void main() {
 TEST_F(MaterialXShaderGeneratorIntegrationTest, MissingSpirvLocationsMustBeDetected) {
     // Test that SPIR-V violations (missing layout(location=N)) are caught
 
-    std::vector<ShaderPipelineValidator::AttributeInfo> bgfxLayout = {
+    std::vector<ShaderPipelineValidator::AttributeInfo> vertexLayout = {
         {0, "vec3", "Position", 12},
         {1, "vec3", "Normal", 12},
     };
@@ -319,7 +319,7 @@ void main() {
     auto result = validator->ValidatePipeline(
         vertexShader,
         fragmentShader,
-        bgfxLayout,
+        vertexLayout,
         24,
         "missing_spirv_location"
     );

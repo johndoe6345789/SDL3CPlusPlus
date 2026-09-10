@@ -73,7 +73,7 @@ python3 scripts/validate_shaders.py [--verbose]
 
 ### Vertex Attribute Mapping
 
-**bgfx Vertex Layout Order (MUST MATCH):**
+**Engine Vertex Layout Order (MUST MATCH):**
 ```cpp
 location 0: Position  (vec3, 12 bytes)
 location 1: Normal    (vec3, 12 bytes)
@@ -133,7 +133,7 @@ layout (location = 3) in vec2 i_texcoord_0;
 **Before Validation:**
 1. MaterialX generated shaders with locations: `[0, 1, 2, 3]`
 2. But actual order was `[position=0, texcoord=1, normal=2, tangent=3]`
-3. bgfx vertex layout expected: `[position=0, normal=1, tangent=2, texcoord=3]`
+3. Engine vertex layout expected: `[position=0, normal=1, tangent=2, texcoord=3]`
 4. **Mismatch → Vulkan driver received malformed pipeline state**
 5. **AMD Radeon driver bug → System crash (not just app crash!)**
 
@@ -145,12 +145,12 @@ layout (location = 3) in vec2 i_texcoord_0;
 ### Fix Applied
 
 ```cpp
-// MaterialX shader generator now remaps locations to match bgfx:
-std::map<std::string, int> bgfxLocationMap;
-bgfxLocationMap["i_position"] = 0;    // MUST be 0
-bgfxLocationMap["i_normal"] = 1;      // MUST be 1
-bgfxLocationMap["i_tangent"] = 2;     // MUST be 2
-bgfxLocationMap["i_texcoord_0"] = 3;  // MUST be 3
+// MaterialX shader generator now remaps locations to match the engine layout:
+std::map<std::string, int> vertexLocationMap;
+vertexLocationMap["i_position"] = 0;    // MUST be 0
+vertexLocationMap["i_normal"] = 1;      // MUST be 1
+vertexLocationMap["i_tangent"] = 2;     // MUST be 2
+vertexLocationMap["i_texcoord_0"] = 3;  // MUST be 3
 ```
 
 ## Integration Points

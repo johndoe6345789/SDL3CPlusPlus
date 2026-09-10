@@ -40,7 +40,7 @@ bool PipelineCompilerService::Compile(const std::string& inputPath,
     }
     std::string source((std::istreambuf_iterator<char>(inputFile)), std::istreambuf_iterator<char>());
 
-    // For bgfx Vulkan shaders, use the source as-is (it has proper Vulkan syntax)
+    // The source is already valid Vulkan GLSL, so use it as-is.
     std::string processedSource = source;
 
     // Write output
@@ -78,84 +78,10 @@ bool PipelineCompilerService::Compile(const std::string& inputPath,
         const size_t spirvWords = static_cast<size_t>(result.end() - result.begin());
         const size_t spirvSize = spirvWords * sizeof(uint32_t);
 
-        // Write bgfx shader header
-        const uint32_t shaderBinVersion = 11;
-        uint32_t chunkMagic = isVertex 
-            ? (('V' << 0) | ('S' << 8) | ('H' << 16) | (shaderBinVersion << 24))
-            : (('F' << 0) | ('S' << 8) | ('H' << 16) | (shaderBinVersion << 24));
-        
-        // Write chunk magic
-        outputFile.write(reinterpret_cast<const char*>(&chunkMagic), sizeof(chunkMagic));
-        
-        // Write hash (use 0 for now, bgfx might compute this)
-        uint32_t hash = 0;
-        outputFile.write(reinterpret_cast<const char*>(&hash), sizeof(hash));
-        
-        // Write SPIR-V data
-        outputFile.write(reinterpret_cast<const char*>(spirvData), static_cast<std::streamsize>(spirvSize));
-
-        // Write uniform information (bgfx expects this after the SPIR-V)
-        if (isVertex) {
-            // Vertex shader uniforms: UniformBuffer.u_modelViewProj (mat4)
-            uint16_t numUniforms = 1;
-            outputFile.write(reinterpret_cast<const char*>(&numUniforms), sizeof(numUniforms));
-            
-            // Uniform name (null-terminated) - include block name for Vulkan
-            const char* uniformName = "UniformBuffer.u_modelViewProj";
-            outputFile.write(uniformName, static_cast<std::streamsize>(strlen(uniformName) + 1));
-            
-            // Uniform type (Mat4 = 4)
-            uint8_t uniformType = 4;
-            outputFile.write(reinterpret_cast<const char*>(&uniformType), sizeof(uniformType));
-            
-            // num elements
-            uint8_t num = 1;
-            outputFile.write(reinterpret_cast<const char*>(&num), sizeof(num));
-            
-            // regIndex, regCount
-            uint16_t regIndex = 0;
-            uint16_t regCount = 1;
-            outputFile.write(reinterpret_cast<const char*>(&regIndex), sizeof(regIndex));
-            outputFile.write(reinterpret_cast<const char*>(&regCount), sizeof(regCount));
-            
-            // Texture info (not used for mat4)
-            uint8_t texComponent = 0;
-            uint8_t texDimension = 0;
-            uint16_t texFormat = 0;
-            outputFile.write(reinterpret_cast<const char*>(&texComponent), sizeof(texComponent));
-            outputFile.write(reinterpret_cast<const char*>(&texDimension), sizeof(texDimension));
-            outputFile.write(reinterpret_cast<const char*>(&texFormat), sizeof(texFormat));
-        } else {
-            // Fragment shader uniforms: s_tex (sampler2D)
-            uint16_t numUniforms = 1;
-            outputFile.write(reinterpret_cast<const char*>(&numUniforms), sizeof(numUniforms));
-            
-            // Uniform name (null-terminated)
-            const char* uniformName = "s_tex";
-            outputFile.write(uniformName, static_cast<std::streamsize>(strlen(uniformName) + 1));
-            
-            // Uniform type (Sampler = 5)
-            uint8_t uniformType = 5;
-            outputFile.write(reinterpret_cast<const char*>(&uniformType), sizeof(uniformType));
-            
-            // num elements
-            uint8_t num = 1;
-            outputFile.write(reinterpret_cast<const char*>(&num), sizeof(num));
-            
-            // regIndex, regCount
-            uint16_t regIndex = 1; // s_tex is at index 1
-            uint16_t regCount = 1;
-            outputFile.write(reinterpret_cast<const char*>(&regIndex), sizeof(regIndex));
-            outputFile.write(reinterpret_cast<const char*>(&regCount), sizeof(regCount));
-            
-            // Texture info
-            uint8_t texComponent = 0;
-            uint8_t texDimension = 2; // 2D texture
-            uint16_t texFormat = 0;
-            outputFile.write(reinterpret_cast<const char*>(&texComponent), sizeof(texComponent));
-            outputFile.write(reinterpret_cast<const char*>(&texDimension), sizeof(texDimension));
-            outputFile.write(reinterpret_cast<const char*>(&texFormat), sizeof(texFormat));
-        }
+        // The engine loads SPIR-V straight into SDL_CreateGPUShader, so write the
+        // raw module with no container around it.
+        outputFile.write(reinterpret_cast<const char*>(spirvData),
+                         static_cast<std::streamsize>(spirvSize));
     }
 
     logger_->Trace("PipelineCompilerService", "Compile", "Successfully compiled " + inputPath + " to " + outputPath);

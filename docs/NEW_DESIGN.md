@@ -24,7 +24,7 @@ A material references a texture that exceeds max size or blows the VRAM budget.
 A shader expects a TexCoord attribute that the mesh never provides.
 Render pass order uses a depth target before it is produced.
 A draw call submits indices out of bounds for the active vertex buffer.
-If you want, I can outline a concrete probe interface and wire points for your engine (e.g., scene load, pipeline creation, draw submission) or tailor it to this repo’s bgfx pipeline.
+If you want, I can outline a concrete probe interface and wire points for your engine (e.g., scene load, pipeline creation, draw submission) or tailor it to this repo’s render pipeline.
 
 Yes—your JSON config can become a real “declarative control plane” for the engine instead of just startup settings. The easiest wins are around validation, layering, and constraints.
 
@@ -48,7 +48,7 @@ The key is to make compilation explicit:
 
 * **JSON → IR (validated, resolved, typed)**
 * **IR → RenderGraph (passes + resources + edges + lifetimes)**
-* **RenderGraph → Backend submission plan (bgfx encoders/views/frame loop)**
+* **RenderGraph → Backend submission plan (command buffers / render passes / frame loop)**
 
 That gives you deterministic “wire points” for probes and also makes error reporting land on **JSON paths** consistently.
 
@@ -241,7 +241,7 @@ A simple, backend-agnostic set:
 
 A “drawCtx” should include:
 
-* pass id, view id (bgfx)
+* pass id, render pass id
 * pipeline key
 * bound buffers/textures/uniforms
 * index count / vertex count
@@ -280,7 +280,7 @@ Keep the policy table declarative too (configurable by profile).
 
 * VRAM estimate per texture/mesh (rough but useful)
 * Transient render target pool size
-* Descriptor-like limits (in bgfx terms: texture stage count, uniform limits)
+* Descriptor-like limits (texture binding count, uniform buffer limits)
 
 ### 4) Runtime liveness probes
 
@@ -295,45 +295,6 @@ Keep the policy table declarative too (configurable by profile).
 * Vertex buffer bounds / stride correctness
 * Handle validity and lifetime tracking (avoid use-after-free)
 * “Draw without pipeline” / missing bindings
-
----
-
-## Tailoring to bgfx specifically
-
-bgfx already resembles a render-graph-ish system via **views** + **encoder submissions**, but you will want a thin abstraction:
-
-### Mapping render passes → bgfx views
-
-* Each pass becomes a **view id** (stable mapping; e.g., hash(passId) % range, or allocate sequentially)
-* Use `bgfx::setViewFrameBuffer(view, fb)` for attachments
-* Use `bgfx::setViewClear(view, ...)`
-* Use `bgfx::setViewRect(view, ...)`
-* Use `bgfx::touch(view)` to ensure execution even if empty (useful for liveness probes)
-
-### Dependency management
-
-bgfx doesn’t expose explicit barriers; ordering is primarily:
-
-* by view id ordering (and calls to setView... and submit)
-* plus explicit resource usage implied by handles
-
-So your render graph compiler should:
-
-* produce a **topologically sorted pass list**
-* assign monotonically increasing view ids for that schedule (or remap ids per frame deterministically)
-
-### Pipeline creation probe points
-
-* When creating/choosing `bgfx::ProgramHandle`
-* When creating vertex layout: `bgfx::VertexLayout`
-* When binding textures: stage index constraints
-
-### Runtime probes in bgfx loop
-
-* `OnFrameBegin`: before any encoder work
-* `OnDraw`: just before `bgfx::submit(view, program)`
-* `OnPresent`: around `bgfx::frame()` return value / timing
-* `OnFrameEnd`: after `bgfx::frame()`
 
 ---
 
@@ -374,11 +335,11 @@ I can produce a full, implementable spec for:
 * the **exact JSON Schema**
 * the **IR types** (SceneIR, MaterialIR, PassIR, RenderGraph)
 * the **probe API** (interfaces, event bus, policies, report sinks)
-* the **bgfx integration points** (view allocation, pass execution template)
+* the **backend integration points** (render pass allocation, pass execution template)
 
 If you share:
 
-* your current bgfx setup (views, framebuffers, shader pipeline conventions),
+* your current backend setup (render passes, framebuffers, shader pipeline conventions),
 * and whether you want glTF as the primary asset format,
   I will lock the design to your conventions and avoid inventing abstractions you will later delete.
   
