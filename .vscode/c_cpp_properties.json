@@ -1,18 +1,15 @@
 {
     "configurations": [
         {
-            "name": "Linux",
+            "name": "Windows",
             "includePath": [
-                "${workspaceFolder}/**",
-                "/usr/local/vitasdk/arm-vita-eabi/include/psp2",
-                "/usr/local/vitasdk/arm-vita-eabi/include/vitasdk",
-                "/usr/local/vitasdk/arm-vita-eabi/include"
+                "${workspaceFolder}/src",
+                "C:/Users/richa/.conan2/p/**/p/include"
             ],
-            "defines": [],
-            "compilerPath": "/usr/bin/clang",
+            "compilerPath": "cl.exe",
             "cStandard": "c17",
-            "cppStandard": "c++17",
-            "intelliSenseMode": "linux-clang-x64",
+            "cppStandard": "c++20",
+            "intelliSenseMode": "windows-msvc-x64",
             "configurationProvider": "ms-vscode.cmake-tools"
         }
     ],
