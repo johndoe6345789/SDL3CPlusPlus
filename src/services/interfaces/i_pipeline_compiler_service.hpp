@@ -5,16 +5,16 @@
 
 namespace sdl3cpp::services {
 /**
- * @brief Interface for pipeline/shader compilation using bgfx_tools.
+ * @brief Interface for pipeline/shader compilation.
  */
 class IPipelineCompilerService {
 public:
     virtual ~IPipelineCompilerService() = default;
     /**
-     * Compile a shader or pipeline using bgfx_tools.
+     * Compile a shader or pipeline.
      * @param inputPath Path to input shader source file.
      * @param outputPath Path to output compiled binary.
-     * @param args Additional arguments for bgfx_tools (e.g., profile, macros).
+     * @param args Additional arguments for the compiler (e.g., profile, macros).
      * @return true if compilation succeeded, false otherwise.
      */
     virtual bool Compile(const std::string& inputPath,

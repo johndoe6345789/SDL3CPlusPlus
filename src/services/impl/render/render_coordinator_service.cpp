@@ -162,7 +162,7 @@ void RenderCoordinatorService::RenderFrameInternal(float time,
         }
         if (logger_) {
             logger_->Trace("RenderCoordinatorService", "RenderFrame",
-                           "Priming bgfx with a dummy frame before shader load");
+                           "Priming the renderer with a dummy frame before shader load");
         }
         if (!graphicsService_->BeginFrame()) {
             if (logger_) {

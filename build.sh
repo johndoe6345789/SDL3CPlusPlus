@@ -3,7 +3,7 @@
 # GameEngine Build Automation Script
 #
 # This script automates the complete Conan + CMake + Ninja build pipeline
-# for the SDL3/bgfx game engine.
+# for the SDL3 game engine.
 #
 # Usage:
 #   ./build.sh [target]              # Build specific target (default: sdl3_app)

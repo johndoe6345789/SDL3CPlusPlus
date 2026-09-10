@@ -33,6 +33,7 @@ from __future__ import annotations
 import argparse
 import os
 import platform
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -268,6 +269,28 @@ def _as_build_dir(path_str: str | None, fallback: str) -> str:
     return path_str or fallback
 
 
+def _resolved_build_dir(build_type: str = "Release") -> str:
+    """Return the directory the Conan CMake preset actually writes to.
+
+    ``DEFAULT_BUILD_DIR`` is only a guess derived from the generator name.
+    Conan decides the real layout (``build-ninja/build/Release`` for
+    single-config generators, ``build-ninja/build`` for multi-config), so ask
+    the generated presets first and fall back to the guess when they are
+    missing (nothing configured yet).
+    """
+    try:
+        from cmake_presets import resolve_binary_dir, resolve_configure_preset
+
+        preset = resolve_configure_preset(build_type)
+        if preset:
+            binary_dir = resolve_binary_dir(preset)
+            if binary_dir and Path(binary_dir).is_dir():
+                return binary_dir
+    except Exception:
+        pass
+    return DEFAULT_BUILD_DIR
+
+
 def _has_cache_arg(cmake_args: Sequence[str] | None, name: str) -> bool:
     """Return True if the CMake args already define a cache variable."""
     if not cmake_args:
@@ -444,6 +467,7 @@ def full_build(args: argparse.Namespace) -> None:
             build_dir="build-ninja/build/" + args.build_type,
             target=None,
             no_sync=False,
+            env=getattr(args, "env", None),
             args=["--bootstrap", args.bootstrap, "--game", args.game],
         )
         run_demo(run_args)
@@ -486,7 +510,8 @@ def configure(args: argparse.Namespace) -> None:
 
 def build(args: argparse.Namespace) -> None:
     """Run the `cmake --build` command for a given build directory."""
-    cmd: list[str] = ["cmake", "--build", args.build_dir]
+    build_dir = _as_build_dir(args.build_dir, _resolved_build_dir(args.config or "Release"))
+    cmd: list[str] = ["cmake", "--build", build_dir]
     if args.config:
         cmd.extend(["--config", args.config])
     if args.target:
@@ -500,7 +525,7 @@ def build(args: argparse.Namespace) -> None:
 
 def tests(args: argparse.Namespace) -> None:
     """Build (optional) and run ctest for a given build directory."""
-    build_dir = _as_build_dir(args.build_dir, DEFAULT_BUILD_DIR)
+    build_dir = _as_build_dir(args.build_dir, _resolved_build_dir(args.config or "Release"))
     argvs: list[list[str]] = []
 
     if args.build_first:
@@ -566,7 +591,7 @@ def msvc_quick(args: argparse.Namespace) -> None:
     if args.then_command:
         then_cmd = _strip_leading_double_dash(args.then_command)
     else:
-        build_dir = _as_build_dir(args.build_dir, DEFAULT_BUILD_DIR)
+        build_dir = _as_build_dir(args.build_dir, _resolved_build_dir(args.config or "Release"))
         then_cmd = ["cmake", "--build", build_dir]
         if args.config:
             then_cmd.extend(["--config", args.config])
@@ -611,6 +636,131 @@ def _sync_assets(build_dir: str, dry_run: bool) -> None:
     print("=== Assets Synced ===\n")
 
 
+def _resolve_pak0(explicit: str | None = None) -> str | None:
+    """Return a path to Quake 3's pak0.pk3, or None when it cannot be found.
+
+    Preference order: an explicit path, the QUAKE3_PAK0 environment variable,
+    then Steam auto-detection (the same source the runner uses).
+    """
+    if explicit:
+        return explicit
+    from_env = os.environ.get("QUAKE3_PAK0")
+    if from_env:
+        return from_env
+    try:
+        from steam_detector import detect_and_export
+
+        return detect_and_export().get("QUAKE3_PAK0")
+    except Exception:
+        return None
+
+
+def list_pk3_maps(pak_path: str) -> list[str]:
+    """Return the map names inside a .pk3 archive (a zip of maps/<name>.bsp)."""
+    import zipfile
+
+    try:
+        with zipfile.ZipFile(pak_path) as archive:
+            return sorted(
+                entry[len("maps/"):-len(".bsp")]
+                for entry in archive.namelist()
+                if entry.startswith("maps/") and entry.endswith(".bsp")
+            )
+    except (OSError, zipfile.BadZipFile) as exc:
+        raise SystemExit(f"could not read maps from {pak_path}: {exc}")
+
+
+def maps(args: argparse.Namespace) -> None:
+    """List the Quake 3 maps available in pak0.pk3."""
+    pak_path = _resolve_pak0(args.pak)
+    if not pak_path:
+        raise SystemExit(
+            "could not locate pak0.pk3. Pass --pak <path>, or set QUAKE3_PAK0."
+        )
+    if not Path(pak_path).is_file():
+        raise SystemExit(f"pak0.pk3 not found at: {pak_path}")
+
+    found = list_pk3_maps(pak_path)
+    print(f"{len(found)} maps in {pak_path}:")
+    for index in range(0, len(found), 6):
+        print("  " + "  ".join(f"{name:<12}" for name in found[index:index + 6]))
+    print("")
+    print("Run one with:")
+    print("  python python/dev_commands.py run --game quake3 --map q3dm1")
+
+
+def _package_required_env(package_dir: Path) -> list[str]:
+    """Return the ${env:NAME} variables a package's JSON refers to.
+
+    Workflows substitute these at run time, so a package that names one will
+    not start correctly until it is exported (or passed via --env).
+    """
+    pattern = re.compile(r"\$\{env:([A-Za-z_][A-Za-z0-9_]*)\}")
+    found: set[str] = set()
+    for json_file in package_dir.rglob("*.json"):
+        try:
+            found.update(pattern.findall(json_file.read_text(encoding="utf-8")))
+        except OSError:
+            continue
+    return sorted(found)
+
+
+def demos(args: argparse.Namespace) -> None:
+    """List the packages under packages/ so demos are discoverable.
+
+    Names are printed as the directory name because that is what --bootstrap
+    and --game expect; the human-readable title from package.json is only a
+    label. Each package declares its own ``type``, so the listing is generated
+    rather than hardcoded and stays correct as packages come and go.
+    """
+    import json as json_mod
+
+    packages_dir = Path("packages")
+    if not packages_dir.is_dir():
+        raise SystemExit("no packages/ directory found; run from the project root")
+
+    by_type: dict[str, list[tuple[str, str, list[str]]]] = {}
+    for manifest in sorted(packages_dir.glob("*/package.json")):
+        package_dir = manifest.parent
+        try:
+            data = json_mod.loads(manifest.read_text(encoding="utf-8"))
+        except (OSError, json_mod.JSONDecodeError) as exc:
+            print(f"  ! {package_dir.name}: unreadable package.json ({exc})")
+            continue
+        package_type = data.get("type", "other")
+        description = data.get("description", "")
+        by_type.setdefault(package_type, []).append(
+            (package_dir.name, description, _package_required_env(package_dir))
+        )
+
+    headings = {
+        "bootloader": "BOOTLOADERS (--bootstrap)",
+        "game": "GAMES (--game)",
+        "library": "LIBRARIES (not directly runnable)",
+    }
+    ordered = ["bootloader", "game", "library"]
+    remaining = [t for t in sorted(by_type) if t not in ordered]
+    for package_type in ordered + remaining:
+        entries = by_type.get(package_type, [])
+        if not entries:
+            continue
+        print("")
+        print(headings.get(package_type, f"{package_type.upper()} (not directly runnable)"))
+        for name, description, required_env in entries:
+            print(f"  {name:<22} {description}")
+            if required_env:
+                print(f"  {'':<22} needs: {', '.join(required_env)}")
+
+    default_bootstrap = "bootstrap_windows" if IS_WINDOWS else "bootstrap_mac"
+    print("")
+    print("Build and run in one step:")
+    print(f"  python python/dev_commands.py all --run --game seed")
+    print("Run an already-built demo:")
+    print(f"  python python/dev_commands.py run --bootstrap {default_bootstrap} --game seed")
+    print("Supply any 'needs:' variables with --env (repeatable):")
+    print("  python python/dev_commands.py run --game quake3 --env QUAKE3_MAP=q3dm1")
+
+
 def run_demo(args: argparse.Namespace) -> None:
     """
     Run a compiled demo application from the build directory. The default
@@ -620,7 +770,7 @@ def run_demo(args: argparse.Namespace) -> None:
     By default, syncs asset files before running.
     Use --no-sync to skip asset synchronization.
     """
-    build_dir = _as_build_dir(args.build_dir, DEFAULT_BUILD_DIR)
+    build_dir = _as_build_dir(args.build_dir, _resolved_build_dir())
 
     if not args.no_sync:
         _sync_assets(build_dir, args.dry_run)
@@ -641,10 +791,33 @@ def run_demo(args: argparse.Namespace) -> None:
     except Exception as e:
         print(f"[steam_detector] detection skipped: {e}")
 
+    map_name = getattr(args, "map_name", None)
+    if map_name:
+        os.environ["QUAKE3_MAP"] = map_name
+        print(f"  env QUAKE3_MAP={map_name}")
+
+    # Explicit --env assignments are applied last so they win over auto-detection.
+    for assignment in getattr(args, "env", None) or []:
+        key, separator, value = assignment.partition("=")
+        if not separator or not key:
+            raise SystemExit(
+                f"--env expects KEY=VALUE, got: {assignment!r}"
+            )
+        os.environ[key] = value
+        print(f"  env {key}={value}")
+
     exe_name = args.target or ("sdl3_app.exe" if IS_WINDOWS else "sdl3_app")
     binary = str(Path(build_dir).resolve() / exe_name)
     run_args = _strip_leading_double_dash(args.args)
     cmd: list[str] = [binary]
+    # Explicit flags first so the common case needs no `--` passthrough; anything
+    # after `--` is appended verbatim and can still override.
+    bootstrap = getattr(args, "bootstrap", None)
+    if bootstrap and "--bootstrap" not in run_args:
+        cmd.extend(["--bootstrap", bootstrap])
+    game = getattr(args, "game", None)
+    if game and "--game" not in run_args:
+        cmd.extend(["--game", game])
     if run_args:
         cmd.extend(run_args)
     _print_cmd(cmd)
@@ -967,6 +1140,21 @@ def gui(args: argparse.Namespace) -> None:
             self.game_description.setStyleSheet("color: #8f98a0; font-size: 11pt;")
             detail_layout.addWidget(self.game_description)
 
+            # Map picker. Only meaningful for packages that read QUAKE3_MAP, so
+            # it stays hidden until such a package is selected.
+            self.map_row = QWidget()
+            map_row_layout = QHBoxLayout(self.map_row)
+            map_row_layout.setContentsMargins(0, 0, 0, 0)
+            self.map_label = QLabel("MAP")
+            self.map_label.setStyleSheet("color: #8f98a0; font-weight: bold; font-size: 9pt;")
+            map_row_layout.addWidget(self.map_label)
+            self.map_combo = QComboBox()
+            self.map_combo.setMinimumWidth(200)
+            map_row_layout.addWidget(self.map_combo)
+            map_row_layout.addStretch()
+            self.map_row.setVisible(False)
+            detail_layout.addWidget(self.map_row)
+
             # Package selection lists side by side
             packages_row = QHBoxLayout()
 
@@ -1277,6 +1465,7 @@ def gui(args: argparse.Namespace) -> None:
                 self.current_game = game
                 self.game_title.setText(game["name"])
                 self.game_description.setText(game["description"])
+                self._refresh_map_choices(game)
                 self.play_btn.setEnabled(True)
             else:
                 self.current_game = None
@@ -1294,6 +1483,38 @@ def gui(args: argparse.Namespace) -> None:
             else:
                 # If no selection, copy all text
                 clipboard.setText(self.console.toPlainText())
+
+        def _refresh_map_choices(self, game: dict) -> None:
+            """Show a map dropdown when the selected package reads QUAKE3_MAP.
+
+            Map names come from pak0.pk3 itself, so the list always matches the
+            data actually installed rather than a hardcoded set.
+            """
+            package_dir = Path(game.get("package_dir", ""))
+            needs_map = "QUAKE3_MAP" in _package_required_env(package_dir)
+            self.map_combo.clear()
+            if not needs_map:
+                self.map_row.setVisible(False)
+                return
+
+            pak_path = _resolve_pak0()
+            if not pak_path or not Path(pak_path).is_file():
+                self.map_row.setVisible(False)
+                self.log("Map list unavailable: pak0.pk3 not found "
+                         "(set QUAKE3_PAK0 or install via Steam).")
+                return
+            try:
+                names = list_pk3_maps(pak_path)
+            except SystemExit as exc:
+                self.map_row.setVisible(False)
+                self.log(f"Map list unavailable: {exc}")
+                return
+
+            self.map_combo.addItems(names)
+            default_index = self.map_combo.findText("q3dm1")
+            if default_index >= 0:
+                self.map_combo.setCurrentIndex(default_index)
+            self.map_row.setVisible(True)
 
         def play_game(self):
             """Launch the selected game with chosen bootloader and game package"""
@@ -1325,11 +1546,19 @@ def gui(args: argparse.Namespace) -> None:
                 game_data = detect_and_export()
             except Exception as exc:
                 self.log(f"[steam_detector] skipped: {exc}")
+            selected_map = (self.map_combo.currentText()
+                            if self.map_row.isVisible() else "")
+            if selected_map:
+                game_data = dict(game_data)
+                game_data["QUAKE3_MAP"] = selected_map
             for key, value in game_data.items():
                 self.log(f"{key}={value}")
 
-            self.log(f"Bootloader: {self.current_bootloader.get('name', 'default') if self.current_bootloader else 'default'}")
-            self.log(f"Game: {self.current_game_package.get('name', 'default') if self.current_game_package else 'default'}")
+            # Report what was actually passed on the command line. The separate
+            # game-package dropdown (current_game_package) is not what gets
+            # launched, so logging it here reported the wrong package name.
+            self.log(f"Bootloader: {bootstrap}")
+            self.log(f"Game: {self.current_game['id']} ({self.current_game.get('name', '')})")
             self.run_command(cmd, env_overrides=game_data or None)
 
         def stop_process(self):
@@ -1546,6 +1775,12 @@ def main() -> int:
         "--game", default="seed",
         help="game package to run (default: seed)",
     )
+    allp.add_argument(
+        "--env",
+        action="append",
+        metavar="KEY=VALUE",
+        help="environment variable for the app when --run is used, repeatable",
+    )
     allp.set_defaults(func=full_build)
 
     conf = subparsers.add_parser("configure", help="configure CMake project")
@@ -1577,7 +1812,8 @@ def main() -> int:
     conf.set_defaults(func=configure)
     bld = subparsers.add_parser("build", help="run cmake --build")
     bld.add_argument(
-        "--build-dir", default=DEFAULT_BUILD_DIR, help="which directory to build"
+        "--build-dir", default=None,
+        help="which directory to build (default: the Conan preset's output dir)",
     )
     bld.add_argument(
         "--config", default="Release", help="configuration for multi-config generators"
@@ -1598,7 +1834,8 @@ def main() -> int:
     bld.set_defaults(func=build)
     tst = subparsers.add_parser("tests", help="build (optional) and run ctest")
     tst.add_argument(
-        "--build-dir", default=DEFAULT_BUILD_DIR, help="which directory to test"
+        "--build-dir", default=None,
+        help="which directory to test (default: the Conan preset's output dir)",
     )
     tst.add_argument(
         "--config", default="Release", help="configuration for multi-config generators"
@@ -1639,8 +1876,8 @@ def main() -> int:
     )
     msvc.add_argument(
         "--build-dir",
-        default=DEFAULT_BUILD_DIR,
-        help="build directory (used by default follow-on build command)",
+        default=None,
+        help="build directory (default: the Conan preset's output dir)",
     )
     msvc.add_argument(
         "--config", default="Release", help="configuration for multi-config generators"
@@ -1667,6 +1904,18 @@ def main() -> int:
         ),
     )
     msvc.set_defaults(func=msvc_quick)
+    demosp = subparsers.add_parser(
+        "demos", help="list the game/bootloader packages available to run"
+    )
+    demosp.set_defaults(func=demos)
+    mapsp = subparsers.add_parser(
+        "maps", help="list Quake 3 maps found in pak0.pk3"
+    )
+    mapsp.add_argument(
+        "--pak",
+        help="path to pak0.pk3 (default: $QUAKE3_PAK0, else Steam auto-detection)",
+    )
+    mapsp.set_defaults(func=maps)
     runp = subparsers.add_parser(
         "run", help="execute a built binary from the build folder"
     )
@@ -1676,9 +1925,33 @@ def main() -> int:
         help="executable name to run (defaults to `sdl3_app[.exe]`)",
     )
     runp.add_argument(
+        "--bootstrap",
+        default="bootstrap_windows" if IS_WINDOWS else "bootstrap_mac",
+        help="bootstrap package (auto-detected from platform)",
+    )
+    runp.add_argument(
+        "--game",
+        default="seed",
+        help="game package to run (default: seed); see `demos` for the list",
+    )
+    runp.add_argument(
         "--no-sync",
         action="store_true",
         help="skip asset syncing before running",
+    )
+    runp.add_argument(
+        "--map",
+        dest="map_name",
+        help="Quake 3 map to load, shorthand for --env QUAKE3_MAP=<name> (see `maps`)",
+    )
+    runp.add_argument(
+        "--env",
+        action="append",
+        metavar="KEY=VALUE",
+        help=(
+            "set an environment variable for the app, repeatable. Workflow JSON "
+            "reads these via ${env:KEY} (e.g. --env QUAKE3_MAP=q3dm1)"
+        ),
     )
     runp.add_argument(
         "args",
