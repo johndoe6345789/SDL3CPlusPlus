@@ -164,6 +164,9 @@ void WorkflowBspBuildCollisionStep::Execute(const WorkflowStepDefinition& step, 
         }
         convex->recalcLocalAabb();
         convex->setMargin(0.01f);
+        // Keep the brush's own face planes so pmove traces can report a
+        // face normal rather than Bullet's edge separation direction.
+        convex->initializePolyhedralFeatures();
 
         btTransform childTransform;
         childTransform.setIdentity();

@@ -6,6 +6,7 @@
 #include <glm/glm.hpp>
 #include <btBulletDynamicsCommon.h>
 #include <BulletCollision/CollisionDispatch/btCollisionWorld.h>
+#include <BulletCollision/CollisionShapes/btConvexPolyhedron.h>
 
 namespace sdl3cpp::services::impl {
 
@@ -49,6 +50,7 @@ struct Q3Trace {
 // ─────────────────────────────────────────────────────────────────────────────
 struct Q3NotMeCallback final : public btCollisionWorld::ClosestConvexResultCallback {
     const btCollisionObject* me{nullptr};
+    int hitChild{-1};  // compound child index, -1 if none
 
     Q3NotMeCallback()
         : btCollisionWorld::ClosestConvexResultCallback(
@@ -59,7 +61,13 @@ struct Q3NotMeCallback final : public btCollisionWorld::ClosestConvexResultCallb
         bool normalInWorldSpace) override
     {
         if (result.m_hitCollisionObject == me) return 1.f;
-        return ClosestConvexResultCallback::addSingleResult(result, normalInWorldSpace);
+        const btScalar fraction =
+            ClosestConvexResultCallback::addSingleResult(result,
+                                                         normalInWorldSpace);
+        if (result.m_localShapeInfo) {
+            hitChild = result.m_localShapeInfo->m_triangleIndex;
+        }
+        return fraction;
     }
 };
 
@@ -72,6 +80,68 @@ inline const btCollisionObject* PlayerBody(const WorkflowContext& context) {
     const auto name = context.GetString("physics_player_body", "");
     if (name.empty()) return nullptr;
     return context.Get<btRigidBody*>("physics_body_" + name, nullptr);
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// FaceNormalAt
+//   The plane of the face a sweep actually touched.
+//
+//   Quake traces brush planes, so a trace always reports a face. Bullet
+//   reports the minimum separation direction, which at the seam between
+//   two faces is a diagonal belonging to neither: at the foot of a ramp
+//   it is shallower than the slope and steeper than the floor, so every
+//   walkable-or-not decision taken from it is wrong. Everything we
+//   collide with is a polyhedron built from planes, so recover the face
+//   whose plane the contact point lies on and report that instead.
+// ─────────────────────────────────────────────────────────────────────
+inline glm::vec3 FaceNormalAt(const btCollisionObject* object, int child,
+                              const btVector3& contact,
+                              const glm::vec3& swept) {
+    if (!object) return swept;
+    const btCollisionShape* shape = object->getCollisionShape();
+    btTransform to = object->getWorldTransform();
+    if (shape && shape->isCompound() && child >= 0) {
+        const auto* compound =
+            static_cast<const btCompoundShape*>(shape);
+        if (child >= compound->getNumChildShapes()) return swept;
+        to = to * compound->getChildTransform(child);
+        shape = compound->getChildShape(child);
+    }
+    if (!shape || !shape->isPolyhedral()) return swept;
+    const auto* poly =
+        static_cast<const btPolyhedralConvexShape*>(shape);
+
+    const btVector3 local = to.inverse() * contact;
+    const btVector3 towards(swept.x, swept.y, swept.z);
+    btVector3 best(0.f, 0.f, 0.f);
+    btScalar nearest = SIMD_INFINITY;
+
+    // Of the faces pointing back along the sweep, the one whose plane
+    // the contact sits on is the one that stopped it.
+    const auto consider = [&](const btVector3& n, btScalar d) {
+        if (n.dot(towards) <= 0.f) return;
+        const btScalar offset = btFabs(local.dot(n) + d);
+        if (offset < nearest) {
+            nearest = offset;
+            best = n;
+        }
+    };
+
+    if (const btConvexPolyhedron* hull = poly->getConvexPolyhedron()) {
+        for (int i = 0; i < hull->m_faces.size(); ++i) {
+            const btScalar* plane = hull->m_faces[i].m_plane;
+            consider(btVector3(plane[0], plane[1], plane[2]), plane[3]);
+        }
+    } else {
+        for (int i = 0; i < poly->getNumPlanes(); ++i) {
+            btVector3 n, support;
+            poly->getPlane(n, support, i);
+            consider(n, -support.dot(n));
+        }
+    }
+    if (nearest == SIMD_INFINITY) return swept;
+    const btVector3 world = to.getBasis() * best;
+    return glm::vec3(world.x(), world.y(), world.z());
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -120,7 +190,9 @@ inline Q3Trace TraceBox(
         result.hit      = true;
         result.fraction = cb.m_closestHitFraction;
         const btVector3& n = cb.m_hitNormalWorld;
-        result.normal   = glm::vec3(n.x(), n.y(), n.z());
+        result.normal   = FaceNormalAt(cb.m_hitCollisionObject, cb.hitChild,
+                                       cb.m_hitPointWorld,
+                                       glm::vec3(n.x(), n.y(), n.z()));
 
         // Interpolate end position along the sweep, then back off along
         // the normal by Quake's SURFACE_CLIP_EPSILON (cm_local.h, 0.125
@@ -137,35 +209,16 @@ inline Q3Trace TraceBox(
     return result;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────
 // GroundProbe
-//   "What am I standing on?" answered with a box inset from the player's
-//   own width.
-//
-//   Quake traces brush planes, so a trace always reports the plane of a
-//   face. Bullet's sweep reports the minimum separation direction, which
-//   where a floor meets a ramp is a diagonal edge normal shallower than
-//   either face — read as ground it says "too steep to stand on" at the
-//   foot of every slope. Insetting the box clears that seam so the sweep
-//   lands on the face actually beneath the player.
-//
-//   Positioning still uses the player's real box; only the walkable/not
-//   decision uses this.
-// ─────────────────────────────────────────────────────────────────────────────
-inline constexpr float kGroundProbeInset = 0.8f;
-
-inline Q3Trace GroundProbe(
-    btDiscreteDynamicsWorld* world,
-    glm::vec3 origin,
-    float distance,
-    glm::vec3 mins,
-    glm::vec3 maxs,
-    const btCollisionObject* ignore = nullptr)
-{
-    mins.x *= kGroundProbeInset;
-    maxs.x *= kGroundProbeInset;
-    mins.z *= kGroundProbeInset;
-    maxs.z *= kGroundProbeInset;
+//   "What am I standing on?" — a short downward sweep of the player's
+//   box. Named because three steps ask exactly this question and must
+//   agree: the ground trace, the never-step-while-rising guard, and the
+//   check that a step settled onto something walkable.
+// ─────────────────────────────────────────────────────────────────────
+inline Q3Trace GroundProbe(btDiscreteDynamicsWorld* world, glm::vec3 origin,
+                           float distance, glm::vec3 mins, glm::vec3 maxs,
+                           const btCollisionObject* ignore = nullptr) {
     return TraceBox(world, origin, origin - glm::vec3(0.f, distance, 0.f),
                     mins, maxs, ignore);
 }

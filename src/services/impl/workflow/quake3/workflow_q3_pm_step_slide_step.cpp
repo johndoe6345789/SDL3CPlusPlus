@@ -50,8 +50,7 @@ void WorkflowQ3PmStepSlideStep::Execute(const WorkflowStepDefinition&,
     // airborne. Every airborne step attempt here has ended up letting
     // the player ratchet up a flat wall, and stepping exists to get up
     // stairs and ledges while walking, so it is gated on standing on
-    // something. q3.pm.ground has to keep reporting ground at the foot
-    // of a slope for this to hold, which is why its probe is inset.
+    // something.
     const bool canStep = ps.onGround && movingHorizontally;
 
     const bool blocked = q3::SlideMove(ps, world, dt, self);
@@ -62,11 +61,7 @@ void WorkflowQ3PmStepSlideStep::Execute(const WorkflowStepDefinition&,
         return;  // reached the target first try, nothing to step over
     }
 
-    // Never step while still rising, unless there is ground below. This
-    // asks the same "what is underfoot" question as q3.pm.ground, so it
-    // uses the same inset probe: the full box's normal at a slope's foot
-    // is an edge artefact that reads as no ground, which refused the
-    // step exactly when walking up a slope needed it.
+    // Never step while still rising, unless there is ground below.
     const auto downTrace = GroundProbe(world, startOrigin, q3::kStepSize,
                                        ps.mins, ps.maxs, self);
     if (startVelocity.y > 0.f &&
@@ -110,10 +105,8 @@ void WorkflowQ3PmStepSlideStep::Execute(const WorkflowStepDefinition&,
     // the settle below zeroes the downward velocity that would otherwise
     // carry the player back off it.
     //
-    // The settle trace positions the player, but its normal is the whole
-    // box's separation direction and reads as a wall wherever the box
-    // overhangs an edge. Ask the same inset probe q3.pm.ground uses what
-    // is actually underfoot before deciding the step was legitimate.
+    // The settle trace positions the player; ask what is underfoot to
+    // decide whether the step was legitimate.
     const auto footing = GroundProbe(world, settleTrace.endPos,
                                      q3::kStepSize, stepped.mins,
                                      stepped.maxs, self);

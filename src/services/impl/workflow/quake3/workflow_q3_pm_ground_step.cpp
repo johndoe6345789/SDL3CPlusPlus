@@ -30,7 +30,7 @@ void WorkflowQ3PmGroundStep::Execute(
     const float dt = static_cast<float>(context.GetDouble("frame.delta_time", 0.016));
     auto* world    = context.Get<btDiscreteDynamicsWorld*>("physics_world", nullptr);
 
-    // ── Ground detection: trace down kGroundProbe units ──────────────────────
+    // ── Ground detection: trace down kGroundProbe units ──────────────
     bool grounded = false;
     if (world) {
         Q3Trace tr = GroundProbe(world, ps.origin, kGroundProbe,
