@@ -112,6 +112,7 @@
         "src/services/impl/workflow/workflow_network_connect_step.cpp",
         "src/services/impl/workflow/workflow_network_receive_step.cpp",
         "src/services/impl/workflow/workflow_network_send_step.cpp",
+        "src/services/impl/workflow/package_root_resolver.cpp",
         "src/services/impl/workflow/package_shader_load.cpp",
         "src/services/impl/workflow/workflow_package_shader_loader_step.cpp",
         "src/services/impl/workflow/workflow_shader_builtin_constant_color_step.cpp",
