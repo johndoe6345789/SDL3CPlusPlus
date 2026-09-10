@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/rendering/workflow_render_grid_setup_step.hpp"
-#include "services/interfaces/workflow/rendering/render_grid_setup_helpers.hpp"
+#include "services/interfaces/workflow/rendering/grid_setup_gpu_resources.hpp"
+#include "services/interfaces/workflow/rendering/grid_setup_params.hpp"
 #include "services/interfaces/workflow/workflow_step_io_resolver.hpp"
 
 #include <SDL3/SDL.h>
