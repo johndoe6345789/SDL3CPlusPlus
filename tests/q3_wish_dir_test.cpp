@@ -6,6 +6,7 @@
 
 #include <gtest/gtest.h>
 #include <cmath>
+#include <numbers>
 
 namespace q3 = sdl3cpp::q3;
 
@@ -77,7 +78,7 @@ TEST(ComputeWish, NoInputGivesNoWish) {
 TEST(ComputeWish, DirectionRotatesWithYaw) {
     const auto atZero = q3::ComputeWish(1.0f, 0.0f, 0.0f, kSpeed);
     const auto atQuarter =
-        q3::ComputeWish(1.0f, 0.0f, static_cast<float>(M_PI_2), kSpeed);
+        q3::ComputeWish(1.0f, 0.0f, std::numbers::pi_v<float> / 2.0f, kSpeed);
     EXPECT_NEAR(atQuarter.direction.x, -1.0f, kTol);
     EXPECT_NEAR(atZero.direction.z, -1.0f, kTol);
 }
