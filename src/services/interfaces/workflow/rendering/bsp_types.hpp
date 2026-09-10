@@ -101,6 +101,12 @@ enum {
 
 // Content flags
 static constexpr int32_t CONTENTS_SOLID = 0x1;
+/// Invisible brushes that stop players but not shots. Quake's
+/// MASK_PLAYERSOLID includes them; MASK_SHOT does not. Mappers lay them
+/// over curved patches to give a smooth surface to walk on.
+static constexpr int32_t CONTENTS_PLAYERCLIP = 0x10000;
+/// Surface is not rendered. A collision property of none.
+static constexpr int32_t SURF_NODRAW = 0x4000;
 // Lightmap block dimensions in Q3 BSP
 static constexpr int LM_BLOCK_SIZE = 128;
 

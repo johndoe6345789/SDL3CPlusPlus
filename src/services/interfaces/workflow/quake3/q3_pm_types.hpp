@@ -182,7 +182,12 @@ inline Q3Trace TraceBox(
     // point, so every move is blocked at fraction 0.
     cb.me = ignore;
     cb.m_collisionFilterGroup = btBroadphaseProxy::DefaultFilter;
-    cb.m_collisionFilterMask  = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::DefaultFilter;
+    // CharacterFilter carries the map's player-clip brushes. Only pmove
+    // traces with this helper, so including it here is Quake's
+    // MASK_PLAYERSOLID: players are stopped by clip, shots are not.
+    cb.m_collisionFilterMask  = btBroadphaseProxy::StaticFilter |
+                                btBroadphaseProxy::DefaultFilter |
+                                btBroadphaseProxy::CharacterFilter;
 
     world->convexSweepTest(&boxShape, fromTr, toTr, cb, 0.001f);
 

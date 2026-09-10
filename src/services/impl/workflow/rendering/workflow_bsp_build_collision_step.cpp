@@ -123,19 +123,28 @@ void WorkflowBspBuildCollisionStep::Execute(const WorkflowStepDefinition& step, 
     auto* bspPlanes = reinterpret_cast<const BspPlane*>(bspData.data() + planeLump.offset);
 
     auto* compound = new btCompoundShape();
+    // Player-clip brushes go in their own body so that only pmove sees
+    // them, matching Quake's MASK_PLAYERSOLID / MASK_SHOT split.
+    auto* clipCompound = new btCompoundShape();
     int solidBrushes = 0;
+    int clipBrushes = 0;
     int skippedBrushes = 0;
 
     for (int b = 0; b < numBrushes; ++b) {
         const auto& brush = bspBrushes[b];
 
+        bool playerClip = false;
         if (brush.shaderIndex >= 0 && brush.shaderIndex < numTextures) {
             const auto& tex = bspTextures[brush.shaderIndex];
-            if (!(tex.contents & CONTENTS_SOLID)) {
+            playerClip = (tex.contents & CONTENTS_PLAYERCLIP) != 0;
+            if (!(tex.contents & CONTENTS_SOLID) && !playerClip) {
                 ++skippedBrushes;
                 continue;
             }
-            if (tex.flags & 0x4000) {
+            // SURF_NODRAW is a rendering property. Player-clip brushes
+            // are always nodraw, so skipping on it dropped exactly the
+            // geometry that makes curved surfaces walkable.
+            if ((tex.flags & SURF_NODRAW) && !playerClip) {
                 ++skippedBrushes;
                 continue;
             }
@@ -170,8 +179,13 @@ void WorkflowBspBuildCollisionStep::Execute(const WorkflowStepDefinition& step, 
 
         btTransform childTransform;
         childTransform.setIdentity();
-        compound->addChildShape(childTransform, convex);
-        ++solidBrushes;
+        if (playerClip) {
+            clipCompound->addChildShape(childTransform, convex);
+            ++clipBrushes;
+        } else {
+            compound->addChildShape(childTransform, convex);
+            ++solidBrushes;
+        }
     }
 
     if (solidBrushes > 0) {
@@ -186,9 +200,27 @@ void WorkflowBspBuildCollisionStep::Execute(const WorkflowStepDefinition& step, 
         context.Set<btRigidBody*>("bsp_collision_body", body);
     }
 
+    if (clipBrushes > 0) {
+        btTransform startTransform;
+        startTransform.setIdentity();
+        auto* motionState = new btDefaultMotionState(startTransform);
+        btRigidBody::btRigidBodyConstructionInfo rbInfo(0.0f, motionState,
+                                                        clipCompound);
+        auto* body = new btRigidBody(rbInfo);
+        body->setCollisionFlags(body->getCollisionFlags() |
+                                btCollisionObject::CF_STATIC_OBJECT);
+        world->addRigidBody(body, btBroadphaseProxy::CharacterFilter,
+                            btBroadphaseProxy::AllFilter);
+        context.Set<btRigidBody*>("bsp_playerclip_body", body);
+    } else {
+        delete clipCompound;
+    }
+
     if (logger_) {
-        logger_->Info("bsp.build_collision: " + std::to_string(solidBrushes) + " solid brushes, " +
-                     std::to_string(skippedBrushes) + " skipped");
+        logger_->Info("bsp.build_collision: " + std::to_string(solidBrushes) +
+                     " solid brushes, " + std::to_string(clipBrushes) +
+                     " player-clip, " + std::to_string(skippedBrushes) +
+                     " skipped");
     }
 }
 
