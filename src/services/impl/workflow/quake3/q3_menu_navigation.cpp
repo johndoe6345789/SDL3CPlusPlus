@@ -1,62 +1,6 @@
 #include "services/interfaces/workflow/quake3/q3_menu_navigation.hpp"
 
-#include <fstream>
-
 namespace sdl3cpp::services::impl {
-
-nlohmann::json LoadQ3MenuConfig() {
-    std::ifstream f("packages/quake3/config/menu.json");
-    if (!f.is_open()) return nlohmann::json{};
-    try {
-        return nlohmann::json::parse(f);
-    } catch (...) {
-        return nlohmann::json{};
-    }
-}
-
-nlohmann::json BuildQ3MenuItems(const nlohmann::json& screen,
-                                const nlohmann::json& maps) {
-    auto itemsField = screen.find("items");
-    if (itemsField == screen.end()) return nlohmann::json::array();
-
-    if (itemsField->is_string() && itemsField->get<std::string>() == "maps") {
-        nlohmann::json out = nlohmann::json::array();
-        for (const auto& m : maps) {
-            std::string name = m.get<std::string>();
-            out.push_back({{"label", name}, {"action", "map:" + name}});
-        }
-        return out;
-    }
-    return *itemsField;
-}
-
-bool UpdateQ3MenuToggle(WorkflowContext& context, const nlohmann::json& screens,
-                        const std::string& defaultScreen) {
-    bool open             = context.GetBool("q3.menu_open", false);
-    const bool escPressed = context.GetBool("input_key_escape_pressed", false);
-    if (escPressed) {
-        if (open) {
-            // If we're on a sub-screen and it has a back, go back rather
-            // than close
-            const std::string curScreen =
-                context.Get<std::string>("q3.menu_screen", defaultScreen);
-            auto screenIt = screens.find(curScreen);
-            if (screenIt != screens.end() && screenIt->contains("back")) {
-                const std::string back = (*screenIt)["back"].get<std::string>();
-                context.Set<std::string>("q3.menu_screen", back);
-                context.Set<int>("q3.menu_selected_item", 0);
-            } else {
-                open = false;
-            }
-        } else {
-            open = true;
-            context.Set<std::string>("q3.menu_screen", defaultScreen);
-            context.Set<int>("q3.menu_selected_item", 0);
-        }
-    }
-    context.Set<bool>("q3.menu_open", open);
-    return open;
-}
 
 Q3MenuActionResult HandleQ3MenuInput(WorkflowContext& context,
                                      const nlohmann::json& screens,
