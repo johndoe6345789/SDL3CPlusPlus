@@ -1,5 +1,9 @@
 #include "services/interfaces/workflow/graphics/workflow_graphics_frame_begin_step.hpp"
-#include "services/interfaces/workflow/graphics/frame_begin_render.hpp"
+#include "services/interfaces/workflow/graphics/frame_begin_describe.hpp"
+#include "services/interfaces/workflow/graphics/frame_clear_color.hpp"
+#include "services/interfaces/workflow/graphics/frame_depth_texture.hpp"
+#include "services/interfaces/workflow/graphics/frame_render_pass.hpp"
+#include "services/interfaces/workflow/graphics/frame_swapchain.hpp"
 #include "services/interfaces/workflow/workflow_step_io_resolver.hpp"
 
 #include <SDL3/SDL_gpu.h>
