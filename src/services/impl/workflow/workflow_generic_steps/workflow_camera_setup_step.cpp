@@ -1,127 +1,69 @@
 #include "services/interfaces/workflow/workflow_generic_steps/workflow_camera_setup_step.hpp"
-
+#include "services/interfaces/workflow/workflow_generic_steps/camera_matrix_builder.hpp"
 #include "services/interfaces/workflow/workflow_step_io_resolver.hpp"
-#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
 
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE  // Vulkan/Metal clip space [0,1]
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 #include <nlohmann/json.hpp>
-#include <stdexcept>
-#include <utility>
 
-using json = nlohmann::json;
+#include <stdexcept>
+#include <string>
+#include <utility>
 
 namespace sdl3cpp::services::impl {
 
-WorkflowCameraSetupStep::WorkflowCameraSetupStep(std::shared_ptr<ILogger> logger)
+WorkflowCameraSetupStep::WorkflowCameraSetupStep(
+    std::shared_ptr<ILogger> logger)
     : logger_(std::move(logger)) {}
 
 std::string WorkflowCameraSetupStep::GetPluginId() const {
     return "camera.setup";
 }
 
-void WorkflowCameraSetupStep::Execute(const WorkflowStepDefinition& step, WorkflowContext& context) {
+namespace {
+
+void ReadDoubleInput(const WorkflowStepDefinition& step,
+                     WorkflowContext& context, const char* inputName,
+                     float& out) {
+    auto it = step.inputs.find(inputName);
+    if (it != step.inputs.end()) {
+        if (const auto* v = context.TryGet<double>(it->second)) {
+            out = static_cast<float>(*v);
+        }
+    }
+}
+
+}  // namespace
+
+void WorkflowCameraSetupStep::Execute(const WorkflowStepDefinition& step,
+                                      WorkflowContext& context) {
     try {
         WorkflowStepIoResolver ioResolver;
-        WorkflowStepParameterResolver paramResolver;
+        const std::string outputKey =
+            ioResolver.GetRequiredOutputKey(step, "camera_state");
 
-        const std::string outputKey = ioResolver.GetRequiredOutputKey(step, "camera_state");
+        CameraSetupParams params;
+        ReadDoubleInput(step, context, "camera_distance", params.distance);
+        ReadDoubleInput(step, context, "camera_fov", params.fov);
+        ReadDoubleInput(step, context, "aspect_ratio", params.aspectRatio);
+        ReadDoubleInput(step, context, "near_plane", params.nearPlane);
+        ReadDoubleInput(step, context, "far_plane", params.farPlane);
 
-        // Extract parameters with defaults
-        float distance = 35.0f;
-        float fov = 60.0f;
-        float aspectRatio = 1.777f;
-        float nearPlane = 0.1f;
-        float farPlane = 100.0f;
-
-        auto distIt = step.inputs.find("camera_distance");
-        if (distIt != step.inputs.end()) {
-            const auto* distValue = context.TryGet<double>(distIt->second);
-            if (distValue) distance = static_cast<float>(*distValue);
-        }
-
-        auto fovIt = step.inputs.find("camera_fov");
-        if (fovIt != step.inputs.end()) {
-            const auto* fovValue = context.TryGet<double>(fovIt->second);
-            if (fovValue) fov = static_cast<float>(*fovValue);
-        }
-
-        auto aspectIt = step.inputs.find("aspect_ratio");
-        if (aspectIt != step.inputs.end()) {
-            const auto* aspectValue = context.TryGet<double>(aspectIt->second);
-            if (aspectValue) aspectRatio = static_cast<float>(*aspectValue);
-        }
-
-        auto nearIt = step.inputs.find("near_plane");
-        if (nearIt != step.inputs.end()) {
-            const auto* nearValue = context.TryGet<double>(nearIt->second);
-            if (nearValue) nearPlane = static_cast<float>(*nearValue);
-        }
-
-        auto farIt = step.inputs.find("far_plane");
-        if (farIt != step.inputs.end()) {
-            const auto* farValue = context.TryGet<double>(farIt->second);
-            if (farValue) farPlane = static_cast<float>(*farValue);
-        }
-
-        // Compute view matrix using GLM
-        glm::mat4 viewMatrix = glm::lookAt(
-            glm::vec3(0.0f, 0.0f, -distance),  // Eye
-            glm::vec3(0.0f, 0.0f, 0.0f),        // Center
-            glm::vec3(0.0f, 1.0f, 0.0f)          // Up
-        );
-
-        // Compute projection matrix (GLM_FORCE_DEPTH_ZERO_TO_ONE for Vulkan/Metal clip space)
-        glm::mat4 projMatrix = glm::perspective(
-            glm::radians(fov),
-            aspectRatio,
-            nearPlane,
-            farPlane
-        );
-
-        // Build JSON output
-        json cameraState = json::object();
-
-        // Store view matrix as 16 floats (column-major, GLM default)
-        json viewArray = json::array();
-        const float* viewPtr = glm::value_ptr(viewMatrix);
-        for (int i = 0; i < 16; ++i) {
-            viewArray.push_back(viewPtr[i]);
-        }
-        cameraState["view"] = viewArray;
-
-        // Store projection matrix as 16 floats
-        json projArray = json::array();
-        const float* projPtr = glm::value_ptr(projMatrix);
-        for (int i = 0; i < 16; ++i) {
-            projArray.push_back(projPtr[i]);
-        }
-        cameraState["projection"] = projArray;
-
-        cameraState["distance"] = distance;
-        cameraState["fov"] = fov;
-        cameraState["aspect_ratio"] = aspectRatio;
-        cameraState["near_plane"] = nearPlane;
-        cameraState["far_plane"] = farPlane;
-        cameraState["camera_setup_success"] = true;
-
+        const nlohmann::json cameraState = BuildCameraStateJson(params);
         context.Set(outputKey, cameraState);
 
         if (logger_) {
-            logger_->Info(std::string("WorkflowCameraSetupStep: Camera matrices computed ") +
-                          "(distance=" + std::to_string(distance) +
-                          ", fov=" + std::to_string(fov) +
-                          ", aspect=" + std::to_string(aspectRatio) + ")");
+            logger_->Info(
+                "WorkflowCameraSetupStep: Camera matrices computed "
+                "(distance=" + std::to_string(params.distance) +
+                ", fov=" + std::to_string(params.fov) +
+                ", aspect=" + std::to_string(params.aspectRatio) + ")");
         }
-
     } catch (const std::exception& e) {
         if (logger_) {
-            logger_->Error("WorkflowCameraSetupStep::Execute: " + std::string(e.what()));
+            logger_->Error(
+                "WorkflowCameraSetupStep::Execute: " + std::string(e.what()));
         }
 
-        json errorState = json::object();
+        nlohmann::json errorState = nlohmann::json::object();
         errorState["camera_setup_success"] = false;
         errorState["error"] = e.what();
         context.Set("camera_state", errorState);

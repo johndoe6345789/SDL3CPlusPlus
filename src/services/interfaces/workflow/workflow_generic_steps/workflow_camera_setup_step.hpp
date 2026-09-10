@@ -34,7 +34,8 @@ public:
     explicit WorkflowCameraSetupStep(std::shared_ptr<ILogger> logger);
 
     std::string GetPluginId() const override;
-    void Execute(const WorkflowStepDefinition& step, WorkflowContext& context) override;
+    void Execute(const WorkflowStepDefinition& step,
+                 WorkflowContext& context) override;
 
 private:
     std::shared_ptr<ILogger> logger_;
