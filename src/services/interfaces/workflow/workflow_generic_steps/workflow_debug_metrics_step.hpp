@@ -27,7 +27,8 @@ namespace sdl3cpp::services::impl {
  * Outputs:
  *   - result: Aggregated result (number) - only on aggregate operation
  *
- * See debug_metrics_store.hpp for the parsing/aggregation/storage helpers.
+ * See metric_parse.hpp and metric_store.hpp for the parsing/aggregation/
+ * storage helpers.
  */
 class WorkflowDebugMetricsStep final : public IWorkflowStep {
 public:

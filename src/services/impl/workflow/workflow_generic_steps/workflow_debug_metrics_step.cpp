@@ -1,5 +1,5 @@
 #include "services/interfaces/workflow/workflow_generic_steps/workflow_debug_metrics_step.hpp"
-#include "services/interfaces/workflow/workflow_generic_steps/debug_metrics_store.hpp"
+#include "services/interfaces/workflow/workflow_generic_steps/metric_store.hpp"
 #include "services/interfaces/workflow/workflow_step_io_resolver.hpp"
 
 #include <stdexcept>
