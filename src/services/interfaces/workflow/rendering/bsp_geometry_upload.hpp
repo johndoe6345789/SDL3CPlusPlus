@@ -12,7 +12,7 @@ namespace sdl3cpp::services::impl {
 /// The GPU vertex/index buffers produced by uploading BSP geometry.
 struct BspGeometryBuffers {
     SDL_GPUBuffer* vertex_buffer = nullptr;
-    SDL_GPUBuffer* index_buffer = nullptr;
+    SDL_GPUBuffer* index_buffer  = nullptr;
 };
 
 /**
@@ -25,8 +25,7 @@ struct BspGeometryBuffers {
  * previously performed inline.
  */
 BspGeometryBuffers UploadBspGeometryBuffers(
-    SDL_GPUDevice* device,
-    const std::vector<BspRenderVertex>& vertices,
+    SDL_GPUDevice* device, const std::vector<BspRenderVertex>& vertices,
     const std::vector<uint32_t>& indices);
 
 }  // namespace sdl3cpp::services::impl

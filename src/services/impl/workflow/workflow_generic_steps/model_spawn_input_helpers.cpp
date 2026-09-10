@@ -20,8 +20,7 @@ std::vector<std::string> ReadShaderKeys(
     const WorkflowStepParameterResolver& parameterResolver) {
     auto it = step.inputs.find("shader_keys");
     if (it != step.inputs.end()) {
-        const auto* list =
-            context.TryGet<std::vector<std::string>>(it->second);
+        const auto* list = context.TryGet<std::vector<std::string>>(it->second);
         if (!list) {
             throw std::runtime_error(
                 "model.spawn requires shader_keys list input");
@@ -60,8 +59,8 @@ std::string ReadObjectType(
     const WorkflowStepDefinition& step, const WorkflowContext& context,
     const WorkflowStepParameterResolver& parameterResolver) {
     static const std::string kEmpty;
-    return ReadObjectTypeInput(step, context, parameterResolver,
-                               "model.spawn", &kEmpty);
+    return ReadObjectTypeInput(step, context, parameterResolver, "model.spawn",
+                               &kEmpty);
 }
 
 }  // namespace sdl3cpp::services::impl

@@ -6,11 +6,11 @@ namespace sdl3cpp::services::impl {
 
 /// Parameters for one `camera.setup` call.
 struct CameraSetupParams {
-    float distance = 35.0f;
-    float fov = 60.0f;
+    float distance    = 35.0f;
+    float fov         = 60.0f;
     float aspectRatio = 1.777f;
-    float nearPlane = 0.1f;
-    float farPlane = 100.0f;
+    float nearPlane   = 0.1f;
+    float farPlane    = 100.0f;
 };
 
 /**

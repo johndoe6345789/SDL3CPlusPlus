@@ -37,25 +37,25 @@ void WorkflowMapLoadStep::Execute(const WorkflowStepDefinition& step,
                              aiProcess_JoinIdenticalVertices);
     if (!scene || !scene->mRootNode) {
         throw std::runtime_error("map.load: Failed to load '" +
-                                 params.filePath + "': " +
-                                 importer.GetErrorString());
+                                 params.filePath +
+                                 "': " + importer.GetErrorString());
     }
 
     auto* world =
         context.Get<btDiscreteDynamicsWorld*>("physics_world", nullptr);
 
     nlohmann::json mapNodes = nlohmann::json::array();
-    int meshCount = 0;
+    int meshCount           = 0;
     aiMatrix4x4 identity;
     ProcessMapSceneNode(scene, scene->mRootNode, identity, device, world,
-                       params, context, mapNodes, meshCount);
+                        params, context, mapNodes, meshCount);
 
     context.Set("map.nodes", mapNodes);
 
     if (logger_) {
         logger_->Info("map.load: Loaded '" + params.filePath + "' (" +
-                     std::to_string(meshCount) + " meshes, " +
-                     std::to_string(scene->mNumMeshes) + " total in file)");
+                      std::to_string(meshCount) + " meshes, " +
+                      std::to_string(scene->mNumMeshes) + " total in file)");
     }
 }
 

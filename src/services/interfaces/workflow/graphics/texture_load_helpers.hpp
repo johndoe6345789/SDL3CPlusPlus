@@ -13,8 +13,8 @@ std::string ResolveTextureImagePath(const std::string& raw);
 /// One image decoded by stb_image, forced to 4 (RGBA) channels.
 struct LoadedTextureImage {
     unsigned char* pixels = nullptr;
-    int width  = 0;
-    int height = 0;
+    int width             = 0;
+    int height            = 0;
 };
 
 /// Decodes `path` with stb_image; throws std::runtime_error (prefixed
@@ -28,7 +28,7 @@ void FreeTextureImagePixels(LoadedTextureImage& image);
 /// computed for it (floor(log2(max(w,h))) + 1).
 struct UploadedTexture {
     SDL_GPUTexture* texture = nullptr;
-    Uint32 numLevels = 1;
+    Uint32 numLevels        = 1;
 };
 
 /**

@@ -19,18 +19,18 @@ void WorkflowExecuteStep::Execute(const WorkflowStepDefinition& step,
         logger_->Trace("WorkflowExecuteStep", "Execute", "Entry");
     }
 
-    auto package = step.parameters.find("package");
+    auto package  = step.parameters.find("package");
     auto workflow = step.parameters.find("workflow");
-    if (package == step.parameters.end() ||
-        workflow == step.parameters.end()) {
+    if (package == step.parameters.end() || workflow == step.parameters.end()) {
         if (logger_) {
-            logger_->Warn("WorkflowExecuteStep::Execute: Missing 'package' "
-                         "or 'workflow' parameter");
+            logger_->Warn(
+                "WorkflowExecuteStep::Execute: Missing 'package' "
+                "or 'workflow' parameter");
         }
         return;
     }
 
-    std::string packageName = package->second.stringValue;
+    std::string packageName  = package->second.stringValue;
     std::string workflowName = workflow->second.stringValue;
     if (packageName.empty() || workflowName.empty()) {
         if (logger_) {

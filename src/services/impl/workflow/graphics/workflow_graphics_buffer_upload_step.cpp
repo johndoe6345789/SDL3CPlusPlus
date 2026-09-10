@@ -30,8 +30,7 @@ void WorkflowGraphicsBufferUploadStep::Execute(
     const BufferUploadParams params = ReadBufferUploadParams(step);
 
     try {
-        auto* device =
-            context.Get<SDL_GPUDevice*>("gpu_device", nullptr);
+        auto* device = context.Get<SDL_GPUDevice*>("gpu_device", nullptr);
         if (!device) {
             throw std::runtime_error(
                 "graphics.buffer.upload: GPU device not found in context");
@@ -47,16 +46,15 @@ void WorkflowGraphicsBufferUploadStep::Execute(
 
         context.Set<SDL_GPUBuffer*>(params.vertexBufferKey,
                                     buffers.vertexBuffer);
-        context.Set<SDL_GPUBuffer*>(params.indexBufferKey,
-                                    buffers.indexBuffer);
+        context.Set<SDL_GPUBuffer*>(params.indexBufferKey, buffers.indexBuffer);
 
         const int vertexCount =
             static_cast<int>(vertexBytes.size()) / params.vertexStride;
         const int indexCount = static_cast<int>(indexValues.size());
 
-        context.Set("cube_mesh", BuildUploadedMeshMetadata(
-                                      vertexCount, indexCount,
-                                      params.vertexStride));
+        context.Set("cube_mesh",
+                    BuildUploadedMeshMetadata(vertexCount, indexCount,
+                                              params.vertexStride));
         context.Set("geometry_created", true);
 
         if (logger_) {
@@ -68,9 +66,8 @@ void WorkflowGraphicsBufferUploadStep::Execute(
         }
     } catch (const std::exception& e) {
         if (logger_) {
-            logger_->Error(
-                "WorkflowGraphicsBufferUploadStep::Execute: " +
-                std::string(e.what()));
+            logger_->Error("WorkflowGraphicsBufferUploadStep::Execute: " +
+                           std::string(e.what()));
         }
         context.Set("geometry_created", false);
     }

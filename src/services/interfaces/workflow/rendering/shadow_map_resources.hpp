@@ -20,8 +20,7 @@ struct ShadowDepthTarget {
  *
  * @throws std::runtime_error if either GPU resource fails to create.
  */
-ShadowDepthTarget CreateShadowDepthTarget(SDL_GPUDevice* device,
-                                          int map_size);
+ShadowDepthTarget CreateShadowDepthTarget(SDL_GPUDevice* device, int map_size);
 
 /**
  * @brief Computes the light view-projection matrix for the map's
@@ -29,8 +28,7 @@ ShadowDepthTarget CreateShadowDepthTarget(SDL_GPUDevice* device,
  *        straight-down light when absent).
  */
 glm::mat4 ComputeShadowLightViewProjection(const WorkflowContext& context,
-                                           float scene_extent,
-                                           float near_plane,
+                                           float scene_extent, float near_plane,
                                            float far_plane);
 
 }  // namespace sdl3cpp::services::impl

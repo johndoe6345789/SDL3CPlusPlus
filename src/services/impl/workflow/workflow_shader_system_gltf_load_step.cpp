@@ -17,8 +17,8 @@ void WorkflowShaderSystemGltfLoadStep::Execute(
     const WorkflowStepDefinition& step, WorkflowContext& context) {
     if (logger_) {
         logger_->Trace("WorkflowShaderSystemGltfLoadStep", "Execute",
-                      "Phase 2: Loading glTF models",
-                      "Loading model and asset configuration");
+                       "Phase 2: Loading glTF models",
+                       "Loading model and asset configuration");
     }
 
     WorkflowStepParameterResolver paramResolver;
@@ -36,8 +36,7 @@ void WorkflowShaderSystemGltfLoadStep::Execute(
 
     if (logger_) {
         logger_->Trace("WorkflowShaderSystemGltfLoadStep", "Execute",
-                      "Model path: " + modelPath,
-                      "Phase 2 complete");
+                       "Model path: " + modelPath, "Phase 2 complete");
     }
 
     context.Set("gltf.load_status", "loaded");

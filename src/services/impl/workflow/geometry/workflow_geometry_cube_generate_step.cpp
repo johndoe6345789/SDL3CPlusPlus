@@ -23,7 +23,7 @@ void WorkflowGeometryCubeGenerateStep::Execute(
     }
 
     const CubeColorParams color = ReadCubeColorParams(step);
-    const auto vertices = BuildSolidColorCubeVertices(color);
+    const auto vertices         = BuildSolidColorCubeVertices(color);
     constexpr int kVertexCount  = 8;
     constexpr int kIndexCount   = 36;
     constexpr int kVertexStride = static_cast<int>(sizeof(PosColorVertex));
@@ -38,10 +38,10 @@ void WorkflowGeometryCubeGenerateStep::Execute(
         logger_->Info(
             "WorkflowGeometryCubeGenerateStep: Generated cube mesh (" +
             std::to_string(kVertexCount) + " vertices, " +
-            std::to_string(kIndexCount) + " indices, stride=" +
-            std::to_string(kVertexStride) + " bytes, color=(" +
-            std::to_string(color.r) + "," + std::to_string(color.g) + "," +
-            std::to_string(color.b) + "))");
+            std::to_string(kIndexCount) +
+            " indices, stride=" + std::to_string(kVertexStride) +
+            " bytes, color=(" + std::to_string(color.r) + "," +
+            std::to_string(color.g) + "," + std::to_string(color.b) + "))");
     }
 }
 

@@ -27,4 +27,7 @@ std::vector<MediaItem> LoadMediaItems(const std::filesystem::path& directory);
 MediaCatalog BuildMediaCatalog(const rapidjson::Document& document,
                                const std::filesystem::path& packageRoot);
 
+/// Total items across every category, for a one-line scan summary.
+std::size_t CountMediaCatalogItems(const MediaCatalog& catalog);
+
 }  // namespace sdl3cpp::services::impl

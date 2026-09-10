@@ -27,20 +27,20 @@ struct FaceRot {
 ShadowFaceRotations BuildShadowFaceRotations() {
     ShadowFaceRotations r;
     r.none = glm::mat4(1.0f);
-    r.down = glm::rotate(glm::mat4(1.0f), glm::radians(180.0f),
-                         glm::vec3(1, 0, 0));
-    r.north = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f),
-                          glm::vec3(1, 0, 0));
-    r.south = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f),
-                          glm::vec3(1, 0, 0));
+    r.down =
+        glm::rotate(glm::mat4(1.0f), glm::radians(180.0f), glm::vec3(1, 0, 0));
+    r.north =
+        glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1, 0, 0));
+    r.south =
+        glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1, 0, 0));
 
-    r.east = glm::mat4(1.0f);
+    r.east    = glm::mat4(1.0f);
     r.east[0] = glm::vec4(0, 0, 1, 0);
     r.east[1] = glm::vec4(1, 0, 0, 0);
     r.east[2] = glm::vec4(0, 1, 0, 0);
     r.east[3] = glm::vec4(0, 0, 0, 1);
 
-    r.west = glm::mat4(1.0f);
+    r.west    = glm::mat4(1.0f);
     r.west[0] = glm::vec4(0, 0, -1, 0);
     r.west[1] = glm::vec4(-1, 0, 0, 0);
     r.west[2] = glm::vec4(0, 1, 0, 0);
@@ -56,9 +56,9 @@ void DrawShadowCasterBody(SDL_GPURenderPass* pass, SDL_GPUCommandBuffer* cmd,
     const auto* sync = context.TryGet<nlohmann::json>("body_sync_" + name);
     if (!sync) return;
 
-    auto pos_arr = (*sync)["pos"].get<std::vector<float>>();
+    auto pos_arr  = (*sync)["pos"].get<std::vector<float>>();
     auto size_arr = (*sync)["size"].get<std::vector<float>>();
-    auto rot_arr = (*sync)["rotation"].get<std::vector<float>>();
+    auto rot_arr  = (*sync)["rotation"].get<std::vector<float>>();
 
     const float sx = size_arr[0], sy = size_arr[1], sz = size_arr[2];
 
@@ -84,7 +84,7 @@ void DrawShadowCasterBody(SDL_GPURenderPass* pass, SDL_GPUCommandBuffer* cmd,
             glm::translate(glm::mat4(1.0f), center) * bodyRot *
             glm::translate(glm::mat4(1.0f), faces[f].offset) * faces[f].rot *
             glm::scale(glm::mat4(1.0f),
-                      glm::vec3(faces[f].sw, 1.0f, faces[f].sd));
+                       glm::vec3(faces[f].sw, 1.0f, faces[f].sd));
 
         ShadowUniform su = {};
         std::memcpy(su.light_vp, glm::value_ptr(lightVP), 64);

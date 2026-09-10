@@ -66,9 +66,8 @@ void WriteKeyboardSnapshot(WorkflowContext& context) {
     context.Set<bool>("input_key_space", keyState[SDL_SCANCODE_SPACE]);
     context.Set<bool>("input_key_shift", keyState[SDL_SCANCODE_LSHIFT]);
     context.Set<bool>("input_key_ctrl", keyState[SDL_SCANCODE_LCTRL]);
-    context.Set<bool>(
-        "input_mouse_left",
-        (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_LMASK) != 0);
+    context.Set<bool>("input_mouse_left", (SDL_GetMouseState(nullptr, nullptr) &
+                                           SDL_BUTTON_LMASK) != 0);
     context.Set<bool>("input_key_1", keyState[SDL_SCANCODE_1]);
     context.Set<bool>("input_key_2", keyState[SDL_SCANCODE_2]);
     context.Set<bool>("input_key_3", keyState[SDL_SCANCODE_3]);

@@ -11,8 +11,7 @@ void WriteShaderCompileDebugMarker(const std::string& path,
         std::ofstream f(path);
         f << content;
         f.close();
-    } catch (...) {
-    }
+    } catch (...) {}
 }
 
 void CompileShadersToContext(
@@ -29,8 +28,8 @@ void CompileShadersToContext(
         WriteShaderCompileDebugMarker(
             "test_outputs/about_to_build_shader_map.txt",
             std::string("About to call shaderRegistry_->BuildShaderMap()\n") +
-                "  shaderRegistry_: " +
-                (shaderRegistry ? "VALID" : "NULL") + "\n");
+                "  shaderRegistry_: " + (shaderRegistry ? "VALID" : "NULL") +
+                "\n");
 
         // Build shader map using active shader system.
         const auto shaderMap = shaderRegistry->BuildShaderMap();
@@ -54,7 +53,7 @@ void CompileShadersToContext(
             shaderKeys.push_back(pair.first);
             if (logger) {
                 logger->Trace("WorkflowShaderCompileStep", "Execute",
-                             "shaderKey=" + pair.first);
+                              "shaderKey=" + pair.first);
             }
         }
 
@@ -91,9 +90,9 @@ void CompileShadersToContext(
 
         if (logger) {
             logger->Trace("WorkflowShaderCompileStep", "Execute",
-                         "Status: shader compilation successful, " +
-                             std::to_string(shaderKeys.size()) +
-                             " shaders available");
+                          "Status: shader compilation successful, " +
+                              std::to_string(shaderKeys.size()) +
+                              " shaders available");
         }
     } catch (const std::exception& e) {
         WriteShaderCompileDebugMarker(
@@ -112,8 +111,7 @@ void CompileShadersToContext(
         context.Set<std::vector<std::string>>("shader.keys",
                                               std::vector<std::string>());
         context.Set<std::string>("shader.compile_status", "failed");
-        context.Set<std::string>("shader.error_message",
-                                 std::string(e.what()));
+        context.Set<std::string>("shader.error_message", std::string(e.what()));
     }
 }
 

@@ -13,17 +13,17 @@ namespace sdl3cpp::services::impl {
 
 /// Q3A-style idle head sway state (mirrors cg.headStart/EndYaw/Pitch/Time).
 struct HeadSwayState {
-    float swayStartYaw = glm::radians(180.f);
+    float swayStartYaw   = glm::radians(180.f);
     float swayStartPitch = 0.f;
-    float swayEndYaw = glm::radians(180.f);
-    float swayEndPitch = 0.f;
+    float swayEndYaw     = glm::radians(180.f);
+    float swayEndPitch   = 0.f;
     uint64_t swayStartMs = 0;
-    uint64_t swayEndMs = 0;
+    uint64_t swayEndMs   = 0;
 };
 
 /// One yaw/pitch pair, in radians.
 struct HeadAngles {
-    float yaw = 0.f;
+    float yaw   = 0.f;
     float pitch = 0.f;
 };
 
@@ -52,7 +52,7 @@ rendering::FragmentUniformData DefaultHeadPortraitLighting();
 struct HeadRenderTargets {
     SDL_GPUTexture* color = nullptr;
     SDL_GPUTexture* depth = nullptr;
-    bool ready = false;
+    bool ready            = false;
 };
 
 /**

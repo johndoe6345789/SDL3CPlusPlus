@@ -13,15 +13,15 @@ namespace sdl3cpp::services::impl {
 struct Md3DrawParams {
     std::string prefix   = "model";
     std::string posKey   = "";
-    std::string yawKey    = "";
+    std::string yawKey   = "";
     std::string frameKey = "";
     float fps            = 15.0f;
-    int animFirst         = 0;
-    int animCount         = 0;
-    bool viewmodel        = false;
+    int animFirst        = 0;
+    int animCount        = 0;
+    bool viewmodel       = false;
     float vmRight        = 0.35f;
     float vmDown         = -0.3f;
-    float vmFwd           = 0.5f;
+    float vmFwd          = 0.5f;
 };
 
 Md3DrawParams ReadMd3DrawParams(const WorkflowStepDefinition& step);
@@ -45,7 +45,6 @@ int ResolveMd3AnimFrame(const WorkflowContext& context,
  */
 glm::mat4 BuildMd3ModelMatrix(const WorkflowContext& context,
                               const Md3DrawParams& params,
-                              const glm::mat4& view,
-                              const glm::vec3& camPos);
+                              const glm::mat4& view, const glm::vec3& camPos);
 
 }  // namespace sdl3cpp::services::impl

@@ -14,18 +14,16 @@ std::string WorkflowPostfxSsaoStep::GetPluginId() const {
     return "postfx.ssao";
 }
 
-void WorkflowPostfxSsaoStep::Execute(
-    const WorkflowStepDefinition& step, WorkflowContext& context) {
-
+void WorkflowPostfxSsaoStep::Execute(const WorkflowStepDefinition& step,
+                                     WorkflowContext& context) {
     if (context.GetBool("frame_skip", false)) return;
 
     auto* cmd =
         context.Get<SDL_GPUCommandBuffer*>("gpu_command_buffer", nullptr);
     auto* device = context.Get<SDL_GPUDevice*>("gpu_device", nullptr);
-    auto* pipeline = context.Get<SDL_GPUGraphicsPipeline*>(
-        "postfx_ssao_pipeline", nullptr);
-    auto* depthTex =
-        context.Get<SDL_GPUTexture*>("gpu_depth_texture", nullptr);
+    auto* pipeline =
+        context.Get<SDL_GPUGraphicsPipeline*>("postfx_ssao_pipeline", nullptr);
+    auto* depthTex = context.Get<SDL_GPUTexture*>("gpu_depth_texture", nullptr);
     auto* nearestSampler =
         context.Get<SDL_GPUSampler*>("postfx_nearest_sampler", nullptr);
 
@@ -44,20 +42,18 @@ void WorkflowPostfxSsaoStep::Execute(
 
     const auto proj =
         context.Get<glm::mat4>("render.proj_matrix", glm::mat4(1.0f));
-    const auto* kernelPtr =
-        context.TryGet<std::vector<float>>("ssao_kernel");
+    const auto* kernelPtr = context.TryGet<std::vector<float>>("ssao_kernel");
 
     SSAOUniformData uniforms = {};
-    if (!kernelPtr ||
-        !BuildSsaoUniforms(proj, fw, fh, *kernelPtr, uniforms)) {
+    if (!kernelPtr || !BuildSsaoUniforms(proj, fw, fh, *kernelPtr, uniforms)) {
         return;
     }
 
     // Begin SSAO render pass
     SDL_GPUColorTargetInfo colorTarget = {};
-    colorTarget.texture = ssaoTex;
-    colorTarget.load_op = SDL_GPU_LOADOP_DONT_CARE;
-    colorTarget.store_op = SDL_GPU_STOREOP_STORE;
+    colorTarget.texture                = ssaoTex;
+    colorTarget.load_op                = SDL_GPU_LOADOP_DONT_CARE;
+    colorTarget.store_op               = SDL_GPU_STOREOP_STORE;
 
     SDL_GPURenderPass* pass =
         SDL_BeginGPURenderPass(cmd, &colorTarget, 1, nullptr);
@@ -67,8 +63,8 @@ void WorkflowPostfxSsaoStep::Execute(
 
     // Bind depth texture with nearest sampler
     SDL_GPUTextureSamplerBinding depthBinding = {};
-    depthBinding.texture = depthTex;
-    depthBinding.sampler = nearestSampler;
+    depthBinding.texture                      = depthTex;
+    depthBinding.sampler                      = nearestSampler;
     SDL_BindGPUFragmentSamplers(pass, 0, &depthBinding, 1);
 
     SDL_PushGPUFragmentUniformData(cmd, 0, &uniforms, sizeof(uniforms));

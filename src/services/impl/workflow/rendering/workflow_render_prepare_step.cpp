@@ -22,8 +22,8 @@ void WorkflowRenderPrepareStep::Execute(const WorkflowStepDefinition& step,
     if (logger_) {
         logger_->Trace("WorkflowRenderPrepareStep", "Execute",
                        "cam=(" + std::to_string(cameraPos.x) + "," +
-                       std::to_string(cameraPos.y) + "," +
-                       std::to_string(cameraPos.z) + ")",
+                           std::to_string(cameraPos.y) + "," +
+                           std::to_string(cameraPos.z) + ")",
                        "Render state prepared");
     }
 }

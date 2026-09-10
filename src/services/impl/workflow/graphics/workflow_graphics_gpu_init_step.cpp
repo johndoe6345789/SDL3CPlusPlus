@@ -20,8 +20,8 @@ std::string WorkflowGraphicsGpuInitStep::GetPluginId() const {
     return "graphics.gpu.init";
 }
 
-void WorkflowGraphicsGpuInitStep::Execute(
-    const WorkflowStepDefinition& step, WorkflowContext& context) {
+void WorkflowGraphicsGpuInitStep::Execute(const WorkflowStepDefinition& step,
+                                          WorkflowContext& context) {
     WorkflowStepIoResolver resolver;
     const std::string viewportKey =
         resolver.GetRequiredInputKey(step, "viewport_config");
@@ -31,15 +31,16 @@ void WorkflowGraphicsGpuInitStep::Execute(
         resolver.GetRequiredOutputKey(step, "gpu_handle");
 
     const auto* viewport_config = context.TryGet<nlohmann::json>(viewportKey);
-    const auto* renderer_str = context.TryGet<std::string>(rendererKey);
+    const auto* renderer_str    = context.TryGet<std::string>(rendererKey);
 
     if (!viewport_config || !renderer_str) {
-        throw std::runtime_error("graphics.gpu.init requires "
+        throw std::runtime_error(
+            "graphics.gpu.init requires "
             "viewport_config and selected_renderer inputs");
     }
 
-    uint32_t width = (*viewport_config)["width"];
-    uint32_t height = (*viewport_config)["height"];
+    uint32_t width       = (*viewport_config)["width"];
+    uint32_t height      = (*viewport_config)["height"];
     std::string renderer = *renderer_str;
 
     // Debug mode default off (SDL_GPU_DEBUG=1 opts in); see
@@ -59,10 +60,8 @@ void WorkflowGraphicsGpuInitStep::Execute(
     const char* device_driver = SDL_GetGPUDeviceDriver(device);
     if (logger_) {
         logger_->Trace("WorkflowGraphicsGpuInitStep", "Execute",
-            "width=" + std::to_string(width) +
-            ", height=" + std::to_string(height) + ", driver=" +
-            std::string(device_driver ? device_driver : "unknown"),
-            "GPU device initialized successfully");
+                       DescribeGpuInit(width, height, device),
+                       "GPU device initialized successfully");
     }
 
     // Store GPU device pointer in context for all downstream steps,
@@ -72,8 +71,7 @@ void WorkflowGraphicsGpuInitStep::Execute(
         {"initialized", true},
         {"width", width},
         {"height", height},
-        {"renderer", device_driver ? device_driver : renderer}
-    };
+        {"renderer", device_driver ? device_driver : renderer}};
     context.Set(outputHandleKey, gpu_state);
 }
 

@@ -14,9 +14,8 @@ std::string WorkflowRenderGridDrawStep::GetPluginId() const {
     return "render.grid.draw";
 }
 
-void WorkflowRenderGridDrawStep::Execute(
-    const WorkflowStepDefinition& step, WorkflowContext& context) {
-
+void WorkflowRenderGridDrawStep::Execute(const WorkflowStepDefinition& step,
+                                         WorkflowContext& context) {
     // Read grid config (populated by render.grid.setup)
     const auto* configPtr = context.TryGet<nlohmann::json>("grid.config");
     if (!configPtr || !configPtr->is_object()) {
@@ -63,7 +62,7 @@ void WorkflowRenderGridDrawStep::Execute(
         if (frameNum % 100 == 0) {
             logger_->Trace("WorkflowRenderGridDrawStep", "Execute",
                            "frame=" + std::to_string(frameNum) +
-                           ", draw_calls=" + std::to_string(drawCalls));
+                               ", draw_calls=" + std::to_string(drawCalls));
         }
     }
 }

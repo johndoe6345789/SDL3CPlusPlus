@@ -36,9 +36,8 @@ namespace sdl3cpp::services::impl {
  */
 class WorkflowMediaCatalogScanStep final : public IWorkflowStep {
 public:
-    WorkflowMediaCatalogScanStep(
-        std::shared_ptr<IConfigService> configService,
-        std::shared_ptr<ILogger> logger);
+    WorkflowMediaCatalogScanStep(std::shared_ptr<IConfigService> configService,
+                                 std::shared_ptr<ILogger> logger);
 
     std::string GetPluginId() const override;
     void Execute(const WorkflowStepDefinition& step,

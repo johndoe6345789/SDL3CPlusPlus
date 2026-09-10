@@ -4,8 +4,7 @@
 
 namespace sdl3cpp::services::impl {
 
-NetworkSendRequest ReadNetworkSendRequest(
-    const WorkflowStepDefinition& step) {
+NetworkSendRequest ReadNetworkSendRequest(const WorkflowStepDefinition& step) {
     NetworkSendRequest request;
 
     if (auto p = step.parameters.find("connection_id");
@@ -35,9 +34,8 @@ NetworkSendRequest ReadNetworkSendRequest(
     return request;
 }
 
-NetworkSendOutcome SimulateNetworkSend(
-    const NetworkSendRequest& request,
-    const std::shared_ptr<ILogger>& logger) {
+NetworkSendOutcome SimulateNetworkSend(const NetworkSendRequest& request,
+                                       const std::shared_ptr<ILogger>& logger) {
     bool sent = true;
 
     if (request.priority < 0 || request.priority > 10) {
@@ -57,7 +55,7 @@ NetworkSendOutcome SimulateNetworkSend(
     }
 
     NetworkSendOutcome outcome;
-    outcome.sent = sent;
+    outcome.sent      = sent;
     outcome.bytesSent = sent ? request.payload.size() : 0;
     return outcome;
 }

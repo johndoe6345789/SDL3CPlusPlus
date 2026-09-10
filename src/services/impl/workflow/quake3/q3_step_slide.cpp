@@ -12,7 +12,7 @@ std::optional<float> ApplyQ3StepSlideMove(Q3PlayerState& ps,
                                           btDiscreteDynamicsWorld* world,
                                           float dt,
                                           const btCollisionObject* self) {
-    const glm::vec3 startOrigin = ps.origin;
+    const glm::vec3 startOrigin   = ps.origin;
     const glm::vec3 startVelocity = ps.velocity;
 
     // Stepping is for walking into something. Falling onto the floor
@@ -38,14 +38,13 @@ std::optional<float> ApplyQ3StepSlideMove(Q3PlayerState& ps,
     const auto downTrace = services::impl::GroundProbe(
         world, startOrigin, kStepSize, ps.mins, ps.maxs, self);
     if (startVelocity.y > 0.f &&
-        (downTrace.fraction == 1.f ||
-         downTrace.normal.y < kMinWalkNormal)) {
+        (downTrace.fraction == 1.f || downTrace.normal.y < kMinWalkNormal)) {
         return std::nullopt;
     }
 
     const glm::vec3 up = startOrigin + glm::vec3(0.f, kStepSize, 0.f);
-    const auto upTrace = services::impl::TraceBox(
-        world, startOrigin, up, ps.mins, ps.maxs, self);
+    const auto upTrace = services::impl::TraceBox(world, startOrigin, up,
+                                                  ps.mins, ps.maxs, self);
     if (upTrace.startSolid) {
         return std::nullopt;  // no headroom to step into
     }
@@ -53,8 +52,8 @@ std::optional<float> ApplyQ3StepSlideMove(Q3PlayerState& ps,
     const float stepSize = upTrace.endPos.y - startOrigin.y;
 
     Q3PlayerState stepped = ps;
-    stepped.origin = upTrace.endPos;
-    stepped.velocity = startVelocity;
+    stepped.origin        = upTrace.endPos;
+    stepped.velocity      = startVelocity;
     SlideMove(stepped, world, dt, self);
 
     // Settle back down onto whatever was stepped onto.
@@ -74,11 +73,9 @@ std::optional<float> ApplyQ3StepSlideMove(Q3PlayerState& ps,
     // The settle trace positions the player; ask what is underfoot to
     // decide whether the step was legitimate.
     const auto footing = services::impl::GroundProbe(
-        world, settleTrace.endPos, kStepSize, stepped.mins, stepped.maxs,
-        self);
-    const bool settledOnWalkable =
-        settleTrace.fraction < 1.f && footing.hit &&
-        footing.normal.y >= kMinWalkNormal;
+        world, settleTrace.endPos, kStepSize, stepped.mins, stepped.maxs, self);
+    const bool settledOnWalkable = settleTrace.fraction < 1.f && footing.hit &&
+                                   footing.normal.y >= kMinWalkNormal;
     if (settleTrace.startSolid || !settledOnWalkable) {
         // Could not settle back down, so we have no idea what is under
         // the player. Keeping the raised origin here is what let the

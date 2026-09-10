@@ -18,19 +18,18 @@ struct ViewmodelDrawParams {
     std::string meshName = "model";
     std::string texName;
     // Viewmodel offset from camera (right, down, forward)
-    float offsetX  = 0.35f;
-    float offsetY  = -0.3f;
-    float offsetZ  = -0.5f;
-    float scale    = 0.15f;
-    float rotX     = 0.0f;
-    float rotY     = 0.0f;
-    float rotZ     = 0.0f;
+    float offsetX   = 0.35f;
+    float offsetY   = -0.3f;
+    float offsetZ   = -0.5f;
+    float scale     = 0.15f;
+    float rotX      = 0.0f;
+    float rotY      = 0.0f;
+    float rotZ      = 0.0f;
     float roughness = 0.6f;
     float metallic  = 0.4f;
 };
 
-ViewmodelDrawParams ReadViewmodelDrawParams(
-    const WorkflowStepDefinition& step);
+ViewmodelDrawParams ReadViewmodelDrawParams(const WorkflowStepDefinition& step);
 
 /// The GPU buffers and index count for one named plane mesh.
 struct ViewmodelMesh {
@@ -68,7 +67,6 @@ ViewmodelUniforms BuildViewmodelUniforms(const WorkflowContext& context,
  * the shadow depth texture/sampler if both are present.
  */
 void BindViewmodelTexture(const WorkflowContext& context,
-                          SDL_GPURenderPass* pass,
-                          const std::string& texName);
+                          SDL_GPURenderPass* pass, const std::string& texName);
 
 }  // namespace sdl3cpp::services::impl

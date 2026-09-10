@@ -12,7 +12,7 @@ namespace sdl3cpp::services::impl {
 /// caller can report it without re-deriving it from the source data.
 struct IndexBufferUploadResult {
     SDL_GPUBuffer* buffer = nullptr;
-    uint32_t size_bytes = 0;
+    uint32_t size_bytes   = 0;
 };
 
 /**

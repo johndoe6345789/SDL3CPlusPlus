@@ -18,8 +18,7 @@ float EntFloat(const nlohmann::json& ent, const char* key, float def) {
     if (v.is_string()) {
         try {
             return std::stof(v.get<std::string>());
-        } catch (...) {
-        }
+        } catch (...) {}
     }
     return def;
 }
@@ -55,22 +54,21 @@ sdl3cpp::q3::MoverList BuildQ3MoversFromEntities(
         const glm::vec3 moveDir(std::cos(angleRad), 0.f, -std::sin(angleRad));
 
         // Speed and distance — all stored as strings in BSP entity lump
-        const float speed = EntFloat(ent, "speed", 100.f);
-        const float distRaw = EntFloat(ent, "distance", 128.f);
+        const float speed      = EntFloat(ent, "speed", 100.f);
+        const float distRaw    = EntFloat(ent, "distance", 128.f);
         constexpr float kScale = 0.03125f;
-        const float dist = distRaw * kScale;
+        const float dist       = distRaw * kScale;
 
-        const float wait = EntFloat(ent, "wait", 2.f);
-        const float travelTime =
-            (speed > 0.f) ? dist / (speed * kScale) : 1.f;
+        const float wait       = EntFloat(ent, "wait", 2.f);
+        const float travelTime = (speed > 0.f) ? dist / (speed * kScale) : 1.f;
 
         sdl3cpp::q3::Q3Mover m;
-        m.id = cls + "_" + std::to_string(idx++);
-        m.classname = cls;
-        m.pos1 = origin;
-        m.pos2 = origin + moveDir * dist;
+        m.id         = cls + "_" + std::to_string(idx++);
+        m.classname  = cls;
+        m.pos1       = origin;
+        m.pos2       = origin + moveDir * dist;
         m.travelTime = travelTime;
-        m.waitTime = wait;
+        m.waitTime   = wait;
         m.currentPos = origin;
         movers->push_back(m);
     }

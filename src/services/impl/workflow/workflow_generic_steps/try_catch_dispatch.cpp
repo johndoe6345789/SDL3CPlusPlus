@@ -17,7 +17,7 @@ void ExecuteRegisteredStep(IWorkflowStepRegistry& registry,
 
     WorkflowStepDefinition stepDef;
     stepDef.plugin = stepId;
-    stepDef.id = stepId;
+    stepDef.id     = stepId;
     handler->Execute(stepDef, context);
 }
 

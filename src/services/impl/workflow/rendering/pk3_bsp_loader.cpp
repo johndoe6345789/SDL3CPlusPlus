@@ -16,8 +16,7 @@ std::string GetStringParamOrInput(const WorkflowStepDefinition& step,
     }
     auto inputIt = step.inputs.find(name);
     if (inputIt != step.inputs.end()) {
-        if (const auto* ctx =
-                context.TryGet<std::string>(inputIt->second)) {
+        if (const auto* ctx = context.TryGet<std::string>(inputIt->second)) {
             return *ctx;
         }
     }
@@ -25,7 +24,7 @@ std::string GetStringParamOrInput(const WorkflowStepDefinition& step,
 }
 
 nlohmann::json ListPk3Maps(zip_t* archive) {
-    nlohmann::json maps = nlohmann::json::array();
+    nlohmann::json maps       = nlohmann::json::array();
     const zip_int64_t entries = zip_get_num_entries(archive, 0);
     for (zip_uint64_t i = 0; i < static_cast<zip_uint64_t>(entries); ++i) {
         const char* name = zip_get_name(archive, i, 0);
@@ -48,7 +47,7 @@ std::shared_ptr<std::vector<uint8_t>> ReadBspFromPk3(
                                  "' not found in " + pk3Path);
     }
 
-    auto bspData = std::make_shared<std::vector<uint8_t>>(st.size);
+    auto bspData   = std::make_shared<std::vector<uint8_t>>(st.size);
     zip_file_t* zf = zip_fopen(archive, bsp_entry.c_str(), 0);
     if (!zf) {
         zip_close(archive);
@@ -66,8 +65,7 @@ void ValidateBspHeader(const std::vector<uint8_t>& bspData) {
     }
 
     auto* header = reinterpret_cast<const BspHeader*>(bspData.data());
-    if (std::memcmp(header->magic, "IBSP", 4) != 0 ||
-        header->version != 46) {
+    if (std::memcmp(header->magic, "IBSP", 4) != 0 || header->version != 46) {
         throw std::runtime_error(
             "bsp.load: Not a valid Q3 BSP (magic/version mismatch)");
     }

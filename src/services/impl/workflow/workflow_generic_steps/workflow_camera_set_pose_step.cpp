@@ -22,16 +22,16 @@ void WorkflowCameraSetPoseStep::Execute(const WorkflowStepDefinition& step,
     CameraPose pose;
     pose.position = ReadCameraPoseVec3(step, context, parameterResolver,
                                        "position", pose.position);
-    pose.lookAt = ReadCameraPoseVec3(step, context, parameterResolver,
-                                     "look_at", pose.lookAt);
-    pose.up = ReadCameraPoseVec3(step, context, parameterResolver, "up",
-                                 pose.up);
+    pose.lookAt   = ReadCameraPoseVec3(step, context, parameterResolver,
+                                       "look_at", pose.lookAt);
+    pose.up =
+        ReadCameraPoseVec3(step, context, parameterResolver, "up", pose.up);
     pose.fovDegrees = ReadCameraPoseNumber(step, context, parameterResolver,
                                            "fov_degrees", pose.fovDegrees);
-    pose.nearPlane = ReadCameraPoseNumber(step, context, parameterResolver,
-                                          "near", pose.nearPlane);
-    pose.farPlane = ReadCameraPoseNumber(step, context, parameterResolver,
-                                         "far", pose.farPlane);
+    pose.nearPlane  = ReadCameraPoseNumber(step, context, parameterResolver,
+                                           "near", pose.nearPlane);
+    pose.farPlane   = ReadCameraPoseNumber(step, context, parameterResolver,
+                                           "far", pose.farPlane);
 
     context.Set(outputKey, pose);
 

@@ -35,12 +35,11 @@ CameraFpsUpdateParams ReadCameraFpsUpdateParams(
     return params;
 }
 
-YawPitch UpdateCameraFpsYawPitch(WorkflowContext& context,
-                                 float sensitivity) {
+YawPitch UpdateCameraFpsYawPitch(WorkflowContext& context, float sensitivity) {
     const float mouseRelX = context.Get<float>("input_mouse_rel_x", 0.0f);
     const float mouseRelY = context.Get<float>("input_mouse_rel_y", 0.0f);
 
-    float yaw = context.Get<float>("camera_yaw", 0.0f);
+    float yaw   = context.Get<float>("camera_yaw", 0.0f);
     float pitch = context.Get<float>("camera_pitch", 0.0f);
 
     yaw -= mouseRelX * sensitivity;
@@ -48,7 +47,7 @@ YawPitch UpdateCameraFpsYawPitch(WorkflowContext& context,
 
     // Clamp pitch to prevent flipping.
     constexpr float maxPitch = 1.5f;  // ~86 degrees.
-    pitch = std::clamp(pitch, -maxPitch, maxPitch);
+    pitch                    = std::clamp(pitch, -maxPitch, maxPitch);
 
     context.Set<float>("camera_yaw", yaw);
     context.Set<float>("camera_pitch", pitch);
@@ -85,7 +84,7 @@ nlohmann::json BuildCameraFpsState(const WorkflowContext& context,
     front.x = std::cos(yawPitch.pitch) * (-std::sin(yawPitch.yaw));
     front.y = std::sin(yawPitch.pitch);
     front.z = std::cos(yawPitch.pitch) * (-std::cos(yawPitch.yaw));
-    front = glm::normalize(front);
+    front   = glm::normalize(front);
 
     const glm::mat4 view =
         glm::lookAt(eyePos, eyePos + front, glm::vec3(0.0f, 1.0f, 0.0f));
@@ -94,9 +93,8 @@ nlohmann::json BuildCameraFpsState(const WorkflowContext& context,
     auto fh = context.Get<uint32_t>("frame_height", 768u);
     const float aspect =
         static_cast<float>(fw) / static_cast<float>(fh > 0 ? fh : 1);
-    const glm::mat4 proj = glm::perspective(glm::radians(params.fovDeg),
-                                            aspect, params.nearPlane,
-                                            params.farPlane);
+    const glm::mat4 proj = glm::perspective(glm::radians(params.fovDeg), aspect,
+                                            params.nearPlane, params.farPlane);
 
     // Store as camera.state JSON (same format render.cube_grid expects).
     std::vector<float> viewVec(16), projVec(16);

@@ -48,16 +48,16 @@ void WorkflowBspPortalViewStep::Execute(const WorkflowStepDefinition& step,
     if (!cmd) return;
 
     SDL_GPUColorTargetInfo colorTarget = {};
-    colorTarget.texture = targets.colorTex;
-    colorTarget.clear_color = {0.02f, 0.03f, 0.05f, 1.0f};
-    colorTarget.load_op = SDL_GPU_LOADOP_CLEAR;
-    colorTarget.store_op = SDL_GPU_STOREOP_STORE;
+    colorTarget.texture                = targets.colorTex;
+    colorTarget.clear_color            = {0.02f, 0.03f, 0.05f, 1.0f};
+    colorTarget.load_op                = SDL_GPU_LOADOP_CLEAR;
+    colorTarget.store_op               = SDL_GPU_STOREOP_STORE;
 
     SDL_GPUDepthStencilTargetInfo depthTarget = {};
-    depthTarget.texture = targets.depthTex;
-    depthTarget.clear_depth = 1.0f;
-    depthTarget.load_op = SDL_GPU_LOADOP_CLEAR;
-    depthTarget.store_op = SDL_GPU_STOREOP_DONT_CARE;
+    depthTarget.texture                       = targets.depthTex;
+    depthTarget.clear_depth                   = 1.0f;
+    depthTarget.load_op                       = SDL_GPU_LOADOP_CLEAR;
+    depthTarget.store_op                      = SDL_GPU_STOREOP_DONT_CARE;
 
     SDL_GPURenderPass* pass =
         SDL_BeginGPURenderPass(cmd, &colorTarget, 1, &depthTarget);

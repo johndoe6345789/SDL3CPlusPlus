@@ -15,7 +15,9 @@ namespace sdl3cpp::services::impl {
 WorkflowModelLoadStep::WorkflowModelLoadStep(std::shared_ptr<ILogger> logger)
     : logger_(std::move(logger)) {}
 
-std::string WorkflowModelLoadStep::GetPluginId() const { return "model.load"; }
+std::string WorkflowModelLoadStep::GetPluginId() const {
+    return "model.load";
+}
 
 void WorkflowModelLoadStep::Execute(const WorkflowStepDefinition& step,
                                     WorkflowContext& context) {
@@ -27,8 +29,7 @@ void WorkflowModelLoadStep::Execute(const WorkflowStepDefinition& step,
 
     auto* device = context.Get<SDL_GPUDevice*>("gpu_device", nullptr);
     if (!device) {
-        throw std::runtime_error(
-            "model.load: GPU device not found in context");
+        throw std::runtime_error("model.load: GPU device not found in context");
     }
 
     constexpr unsigned int kFlags =
@@ -38,15 +39,15 @@ void WorkflowModelLoadStep::Execute(const WorkflowStepDefinition& step,
     const aiScene* scene = importer.ReadFile(params.filePath, kFlags);
     if (!scene || !scene->mRootNode ||
         (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE)) {
-        throw std::runtime_error(
-            "model.load: Failed to load '" + params.filePath + "': " +
-            importer.GetErrorString());
+        throw std::runtime_error("model.load: Failed to load '" +
+                                 params.filePath +
+                                 "': " + importer.GetErrorString());
     }
 
     const AssimpMeshData mesh = ExtractAssimpMeshData(*scene, params.scale);
     if (mesh.vertices.empty()) {
-        throw std::runtime_error(
-            "model.load: No vertices found in '" + params.filePath + "'");
+        throw std::runtime_error("model.load: No vertices found in '" +
+                                 params.filePath + "'");
     }
 
     std::vector<uint8_t> vertexBytes(mesh.vertices.size() *
@@ -65,14 +66,13 @@ void WorkflowModelLoadStep::Execute(const WorkflowStepDefinition& step,
     const auto indexCount  = static_cast<uint32_t>(mesh.indices.size());
     const auto meshCount   = scene->mNumMeshes;
     context.Set("plane_" + params.name,
-               BuildModelLoadMetadata(vertexCount, indexCount, meshCount,
-                                      params.filePath));
+                BuildModelLoadMetadata(vertexCount, indexCount, meshCount,
+                                       params.filePath));
     if (logger_) {
-        logger_->Info(
-            "model.load: '" + params.name + "' loaded from " +
-            params.filePath + " (" + std::to_string(vertexCount) +
-            " verts, " + std::to_string(indexCount) + " indices, " +
-            std::to_string(meshCount) + " meshes)");
+        logger_->Info("model.load: '" + params.name + "' loaded from " +
+                      params.filePath + " (" + std::to_string(vertexCount) +
+                      " verts, " + std::to_string(indexCount) + " indices, " +
+                      std::to_string(meshCount) + " meshes)");
     }
 }
 

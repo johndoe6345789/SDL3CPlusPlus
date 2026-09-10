@@ -28,7 +28,7 @@ public:
 
     std::string GetPluginId() const override;
     void Execute(const WorkflowStepDefinition& step,
-                WorkflowContext& context) override;
+                 WorkflowContext& context) override;
 
 private:
     std::shared_ptr<ILogger> logger_;

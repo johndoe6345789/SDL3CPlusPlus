@@ -16,7 +16,8 @@ std::string GetStrParam(const WorkflowStepParameterResolver& params,
                         const std::string& def) {
     const auto* p = params.FindParameter(step, name);
     return (p && p->type == WorkflowParameterValue::Type::String)
-               ? p->stringValue : def;
+               ? p->stringValue
+               : def;
 }
 
 float GetNumParam(const WorkflowStepParameterResolver& params,
@@ -24,7 +25,8 @@ float GetNumParam(const WorkflowStepParameterResolver& params,
                   float def) {
     const auto* p = params.FindParameter(step, name);
     return (p && p->type == WorkflowParameterValue::Type::Number)
-               ? static_cast<float>(p->numberValue) : def;
+               ? static_cast<float>(p->numberValue)
+               : def;
 }
 
 }  // namespace
@@ -55,13 +57,11 @@ std::optional<ViewmodelMesh> TryGetViewmodelMesh(
         context.Get<SDL_GPUBuffer*>("plane_" + meshName + "_vb", nullptr);
     mesh.indexBuffer =
         context.Get<SDL_GPUBuffer*>("plane_" + meshName + "_ib", nullptr);
-    const auto* meta =
-        context.TryGet<nlohmann::json>("plane_" + meshName);
+    const auto* meta = context.TryGet<nlohmann::json>("plane_" + meshName);
 
     if (!mesh.vertexBuffer || !mesh.indexBuffer || !meta) {
         if (logger) {
-            logger->Warn("draw.viewmodel: Mesh '" + meshName +
-                        "' not found");
+            logger->Warn("draw.viewmodel: Mesh '" + meshName + "' not found");
         }
         return std::nullopt;
     }
@@ -81,7 +81,7 @@ ViewmodelUniforms BuildViewmodelUniforms(const WorkflowContext& context,
 
     // Shared with spotlight.update so a light attached to this model
     // starts exactly where the model is drawn.
-    const auto basis = rendering::ExtractCameraBasis(viewMatrix);
+    const auto basis      = rendering::ExtractCameraBasis(viewMatrix);
     const glm::vec3 camUp = basis.up;
     const glm::mat4 model = rendering::BuildViewmodelMatrix(
         viewMatrix, camPos,
@@ -95,14 +95,14 @@ ViewmodelUniforms BuildViewmodelUniforms(const WorkflowContext& context,
 
     ViewmodelUniforms out;
     rendering::VertexUniformData& vu = out.vertex;
-    vu = {};
+    vu                               = {};
     std::memcpy(vu.mvp, glm::value_ptr(mvp), sizeof(float) * 16);
     std::memcpy(vu.model_mat, glm::value_ptr(model), sizeof(float) * 16);
-    vu.normal[0] = surfaceNormal.x;
-    vu.normal[1] = surfaceNormal.y;
-    vu.normal[2] = surfaceNormal.z;
-    vu.uv_scale[0] = 1.0f;
-    vu.uv_scale[1] = 1.0f;
+    vu.normal[0]     = surfaceNormal.x;
+    vu.normal[1]     = surfaceNormal.y;
+    vu.normal[2]     = surfaceNormal.z;
+    vu.uv_scale[0]   = 1.0f;
+    vu.uv_scale[1]   = 1.0f;
     vu.camera_pos[0] = camPos.x;
     vu.camera_pos[1] = camPos.y;
     vu.camera_pos[2] = camPos.z;
@@ -117,8 +117,7 @@ ViewmodelUniforms BuildViewmodelUniforms(const WorkflowContext& context,
 }
 
 void BindViewmodelTexture(const WorkflowContext& context,
-                          SDL_GPURenderPass* pass,
-                          const std::string& texName) {
+                          SDL_GPURenderPass* pass, const std::string& texName) {
     // Bind texture if specified, else use a default
     SDL_GPUTexture* texture = nullptr;
     SDL_GPUSampler* sampler = nullptr;
@@ -143,15 +142,15 @@ void BindViewmodelTexture(const WorkflowContext& context,
         context.Get<SDL_GPUSampler*>("shadow_depth_sampler", nullptr);
     if (shadowTex && shadowSamp) {
         SDL_GPUTextureSamplerBinding bindings[2] = {};
-        bindings[0].texture = texture;
-        bindings[0].sampler = sampler;
-        bindings[1].texture = shadowTex;
-        bindings[1].sampler = shadowSamp;
+        bindings[0].texture                      = texture;
+        bindings[0].sampler                      = sampler;
+        bindings[1].texture                      = shadowTex;
+        bindings[1].sampler                      = shadowSamp;
         SDL_BindGPUFragmentSamplers(pass, 0, bindings, 2);
     } else {
         SDL_GPUTextureSamplerBinding binding = {};
-        binding.texture = texture;
-        binding.sampler = sampler;
+        binding.texture                      = texture;
+        binding.sampler                      = sampler;
         SDL_BindGPUFragmentSamplers(pass, 0, &binding, 1);
     }
 }

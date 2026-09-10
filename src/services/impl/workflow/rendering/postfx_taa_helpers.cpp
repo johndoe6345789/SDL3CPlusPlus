@@ -30,8 +30,8 @@ void ApplyTaaProjectionJitter(WorkflowContext& context, int frameIdx,
 
 SDL_GPUGraphicsPipeline* GetOrCreateTaaPipeline(SDL_GPUDevice* device,
                                                 WorkflowContext& context) {
-    auto* pipeline = context.Get<SDL_GPUGraphicsPipeline*>(
-        "postfx_taa_pipeline", nullptr);
+    auto* pipeline =
+        context.Get<SDL_GPUGraphicsPipeline*>("postfx_taa_pipeline", nullptr);
     if (pipeline) return pipeline;
 
     auto* taaShader =
@@ -44,19 +44,18 @@ SDL_GPUGraphicsPipeline* GetOrCreateTaaPipeline(SDL_GPUDevice* device,
     }
 
     SDL_GPUGraphicsPipelineCreateInfo pipelineInfo = {};
-    pipelineInfo.vertex_shader   = fullscreenVert;
-    pipelineInfo.fragment_shader = taaShader;
-    pipelineInfo.primitive_type  = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST;
+    pipelineInfo.vertex_shader                     = fullscreenVert;
+    pipelineInfo.fragment_shader                   = taaShader;
+    pipelineInfo.primitive_type = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST;
 
     SDL_GPUColorTargetDescription colorDesc = {};
     colorDesc.format = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
-    pipelineInfo.target_info.num_color_targets        = 1;
+    pipelineInfo.target_info.num_color_targets         = 1;
     pipelineInfo.target_info.color_target_descriptions = &colorDesc;
 
     pipeline = SDL_CreateGPUGraphicsPipeline(device, &pipelineInfo);
     if (pipeline) {
-        context.Set<SDL_GPUGraphicsPipeline*>("postfx_taa_pipeline",
-                                              pipeline);
+        context.Set<SDL_GPUGraphicsPipeline*>("postfx_taa_pipeline", pipeline);
     }
     return pipeline;
 }
@@ -65,8 +64,8 @@ TaaHistoryTextures GetOrCreateTaaHistoryTextures(SDL_GPUDevice* device,
                                                  WorkflowContext& context,
                                                  uint32_t width,
                                                  uint32_t height) {
-    auto* historyA = context.Get<SDL_GPUTexture*>("taa_history_a", nullptr);
-    auto* historyB = context.Get<SDL_GPUTexture*>("taa_history_b", nullptr);
+    auto* historyA  = context.Get<SDL_GPUTexture*>("taa_history_a", nullptr);
+    auto* historyB  = context.Get<SDL_GPUTexture*>("taa_history_b", nullptr);
     const auto taaW = context.Get<uint32_t>("taa_width", 0u);
     const auto taaH = context.Get<uint32_t>("taa_height", 0u);
 
@@ -75,14 +74,14 @@ TaaHistoryTextures GetOrCreateTaaHistoryTextures(SDL_GPUDevice* device,
         if (historyB) SDL_ReleaseGPUTexture(device, historyB);
 
         SDL_GPUTextureCreateInfo texInfo = {};
-        texInfo.type                 = SDL_GPU_TEXTURETYPE_2D;
+        texInfo.type                     = SDL_GPU_TEXTURETYPE_2D;
         texInfo.format               = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
         texInfo.width                = width;
         texInfo.height               = height;
         texInfo.layer_count_or_depth = 1;
         texInfo.num_levels           = 1;
-        texInfo.usage = SDL_GPU_TEXTUREUSAGE_COLOR_TARGET |
-                        SDL_GPU_TEXTUREUSAGE_SAMPLER;
+        texInfo.usage =
+            SDL_GPU_TEXTUREUSAGE_COLOR_TARGET | SDL_GPU_TEXTUREUSAGE_SAMPLER;
 
         historyA = SDL_CreateGPUTexture(device, &texInfo);
         historyB = SDL_CreateGPUTexture(device, &texInfo);
@@ -105,12 +104,11 @@ void DrawTaaResolvePass(SDL_GPUCommandBuffer* cmd,
                         SDL_GPUTexture* hdrTex,
                         const TaaHistoryTextures& history,
                         SDL_GPUSampler* sampler, float blendFactor,
-                        uint32_t width, uint32_t height,
-                        double frameCount) {
+                        uint32_t width, uint32_t height, double frameCount) {
     SDL_GPUColorTargetInfo colorTarget = {};
-    colorTarget.texture  = history.write;
-    colorTarget.load_op  = SDL_GPU_LOADOP_DONT_CARE;
-    colorTarget.store_op = SDL_GPU_STOREOP_STORE;
+    colorTarget.texture                = history.write;
+    colorTarget.load_op                = SDL_GPU_LOADOP_DONT_CARE;
+    colorTarget.store_op               = SDL_GPU_STOREOP_STORE;
 
     SDL_GPURenderPass* pass =
         SDL_BeginGPURenderPass(cmd, &colorTarget, 1, nullptr);
@@ -119,10 +117,10 @@ void DrawTaaResolvePass(SDL_GPUCommandBuffer* cmd,
     SDL_BindGPUGraphicsPipeline(pass, pipeline);
 
     SDL_GPUTextureSamplerBinding bindings[2] = {};
-    bindings[0].texture = hdrTex;
-    bindings[0].sampler = sampler;
-    bindings[1].texture = history.read;
-    bindings[1].sampler = sampler;
+    bindings[0].texture                      = hdrTex;
+    bindings[0].sampler                      = sampler;
+    bindings[1].texture                      = history.read;
+    bindings[1].sampler                      = sampler;
     SDL_BindGPUFragmentSamplers(pass, 0, bindings, 2);
 
     struct {

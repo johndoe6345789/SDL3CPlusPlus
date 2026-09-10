@@ -37,13 +37,15 @@ ShaderPackageLoadResult LoadShaderPackageMetadata(
 
         if (logger) {
             logger->Trace("LoadShaderPackageMetadata", "Execute",
-                "packageJsonPath=" + result.packageJsonPath);
+                          "packageJsonPath=" + result.packageJsonPath);
         }
 
         if (!std::filesystem::exists(packageJsonPath)) {
             if (logger) {
-                logger->Warn("LoadShaderPackageMetadata: package.json "
-                    "not found at " + result.packageJsonPath);
+                logger->Warn(
+                    "LoadShaderPackageMetadata: package.json "
+                    "not found at " +
+                    result.packageJsonPath);
             }
             result.status = "not_found";
             return result;
@@ -55,21 +57,25 @@ ShaderPackageLoadResult LoadShaderPackageMetadata(
             throw std::runtime_error("Failed to open package.json");
         }
         std::string jsonContent((std::istreambuf_iterator<char>(jsonFile)),
-            std::istreambuf_iterator<char>());
+                                std::istreambuf_iterator<char>());
 
         if (logger) {
-            logger->Info("LoadShaderPackageMetadata: Using shader "
-                "backend: " + shaderBackend);
-            logger->Info("LoadShaderPackageMetadata: Loaded "
-                "package.json with backend=" + shaderBackend);
+            logger->Info(
+                "LoadShaderPackageMetadata: Using shader "
+                "backend: " +
+                shaderBackend);
+            logger->Info(
+                "LoadShaderPackageMetadata: Loaded "
+                "package.json with backend=" +
+                shaderBackend);
         }
         result.status = "success";
     } catch (const std::exception& e) {
         if (logger) {
-            logger->Error(
-                "LoadShaderPackageMetadata: Error: " + std::string(e.what()));
+            logger->Error("LoadShaderPackageMetadata: Error: " +
+                          std::string(e.what()));
         }
-        result.status = "error";
+        result.status       = "error";
         result.errorMessage = e.what();
     }
     return result;

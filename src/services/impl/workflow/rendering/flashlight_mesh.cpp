@@ -20,7 +20,7 @@ void AddCylinder(std::vector<PosUvVertex>& vertices,
         float angle = (static_cast<float>(i) / segments) * 2.0f * kPi;
         float cos_a = std::cos(angle);
         float sin_a = std::sin(angle);
-        float u = static_cast<float>(i) / segments;
+        float u     = static_cast<float>(i) / segments;
 
         vertices.push_back({cos_a * r1, y_start, sin_a * r1, u, uv_start});
         vertices.push_back({cos_a * r2, y_end, sin_a * r2, u, uv_end});
@@ -39,9 +39,8 @@ void AddCylinder(std::vector<PosUvVertex>& vertices,
 
 /// Adds a disc cap (a center vertex fanned out to a ring). `flip` reverses
 /// winding order for a cap that faces -Y instead of +Y.
-void AddCap(std::vector<PosUvVertex>& vertices,
-           std::vector<uint16_t>& indices, int segments, float radius,
-           float y, float uv_v, bool flip) {
+void AddCap(std::vector<PosUvVertex>& vertices, std::vector<uint16_t>& indices,
+            int segments, float radius, float y, float uv_v, bool flip) {
     uint16_t center = static_cast<uint16_t>(vertices.size());
     vertices.push_back({0.0f, y, 0.0f, 0.5f, uv_v});
 
@@ -73,19 +72,19 @@ FlashlightMesh BuildFlashlightMesh(int segments, float bodyRadius,
                                    float bodyLength, float headRadius,
                                    float headLength, float lensRadius) {
     FlashlightMesh mesh;
-    auto& v = mesh.vertices;
+    auto& v   = mesh.vertices;
     auto& idx = mesh.indices;
 
     // Body: long cylinder (handle/grip)
     AddCap(v, idx, segments, bodyRadius, 0.0f, 0.0f, true);  // bottom cap
     AddCylinder(v, idx, segments, bodyRadius, bodyRadius, 0.0f, bodyLength,
-               0.0f, 0.6f);
+                0.0f, 0.6f);
 
     // Head: slightly wider cylinder (where the bulb sits)
     AddCylinder(v, idx, segments, bodyRadius, headRadius, bodyLength,
-               bodyLength + 0.02f, 0.6f, 0.7f);
-    AddCylinder(v, idx, segments, headRadius, headRadius,
-               bodyLength + 0.02f, bodyLength + headLength, 0.7f, 0.9f);
+                bodyLength + 0.02f, 0.6f, 0.7f);
+    AddCylinder(v, idx, segments, headRadius, headRadius, bodyLength + 0.02f,
+                bodyLength + headLength, 0.7f, 0.9f);
 
     // Lens: flat disc at the front (the light-emitting surface)
     mesh.lensY = bodyLength + headLength;
@@ -102,18 +101,18 @@ FlashlightMeshBuffers UploadFlashlightMesh(SDL_GPUDevice* device,
         static_cast<uint32_t>(mesh.indices.size() * sizeof(uint16_t));
 
     SDL_GPUBufferCreateInfo vbuf_info = {};
-    vbuf_info.usage = SDL_GPU_BUFFERUSAGE_VERTEX;
-    vbuf_info.size = vertex_size;
-    SDL_GPUBuffer* vertex_buffer = SDL_CreateGPUBuffer(device, &vbuf_info);
+    vbuf_info.usage                   = SDL_GPU_BUFFERUSAGE_VERTEX;
+    vbuf_info.size                    = vertex_size;
+    SDL_GPUBuffer* vertex_buffer      = SDL_CreateGPUBuffer(device, &vbuf_info);
 
     SDL_GPUBufferCreateInfo ibuf_info = {};
-    ibuf_info.usage = SDL_GPU_BUFFERUSAGE_INDEX;
-    ibuf_info.size = index_size;
-    SDL_GPUBuffer* index_buffer = SDL_CreateGPUBuffer(device, &ibuf_info);
+    ibuf_info.usage                   = SDL_GPU_BUFFERUSAGE_INDEX;
+    ibuf_info.size                    = index_size;
+    SDL_GPUBuffer* index_buffer       = SDL_CreateGPUBuffer(device, &ibuf_info);
 
     SDL_GPUTransferBufferCreateInfo tbuf_info = {};
     tbuf_info.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD;
-    tbuf_info.size = vertex_size + index_size;
+    tbuf_info.size  = vertex_size + index_size;
     SDL_GPUTransferBuffer* transfer =
         SDL_CreateGPUTransferBuffer(device, &tbuf_info);
 
@@ -123,22 +122,22 @@ FlashlightMeshBuffers UploadFlashlightMesh(SDL_GPUDevice* device,
     std::memcpy(mapped + vertex_size, mesh.indices.data(), index_size);
     SDL_UnmapGPUTransferBuffer(device, transfer);
 
-    SDL_GPUCommandBuffer* cmd = SDL_AcquireGPUCommandBuffer(device);
+    SDL_GPUCommandBuffer* cmd  = SDL_AcquireGPUCommandBuffer(device);
     SDL_GPUCopyPass* copy_pass = SDL_BeginGPUCopyPass(cmd);
 
     SDL_GPUTransferBufferLocation src_vert = {};
-    src_vert.transfer_buffer = transfer;
-    SDL_GPUBufferRegion dst_vert = {};
-    dst_vert.buffer = vertex_buffer;
-    dst_vert.size = vertex_size;
+    src_vert.transfer_buffer               = transfer;
+    SDL_GPUBufferRegion dst_vert           = {};
+    dst_vert.buffer                        = vertex_buffer;
+    dst_vert.size                          = vertex_size;
     SDL_UploadToGPUBuffer(copy_pass, &src_vert, &dst_vert, false);
 
     SDL_GPUTransferBufferLocation src_idx = {};
-    src_idx.transfer_buffer = transfer;
-    src_idx.offset = vertex_size;
-    SDL_GPUBufferRegion dst_idx = {};
-    dst_idx.buffer = index_buffer;
-    dst_idx.size = index_size;
+    src_idx.transfer_buffer               = transfer;
+    src_idx.offset                        = vertex_size;
+    SDL_GPUBufferRegion dst_idx           = {};
+    dst_idx.buffer                        = index_buffer;
+    dst_idx.size                          = index_size;
     SDL_UploadToGPUBuffer(copy_pass, &src_idx, &dst_idx, false);
 
     SDL_EndGPUCopyPass(copy_pass);

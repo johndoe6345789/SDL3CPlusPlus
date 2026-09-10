@@ -18,7 +18,7 @@ using q3overlay::LoadTextureFromPk3;
 // map name -> {longname, first bot} table for the map-select menu.
 ArenaMap ParseArenasTxt(const std::string& pk3) {
     ArenaMap arenaData;
-    int ze = 0;
+    int ze     = 0;
     zip_t* arc = zip_open(pk3.c_str(), ZIP_RDONLY, &ze);
     if (!arc) return arenaData;
 
@@ -36,7 +36,7 @@ ArenaMap ParseArenasTxt(const std::string& pk3) {
             size_t end = text.find('}', pos);
             if (end == std::string::npos) break;
             std::string block = text.substr(pos + 1, end - pos - 1);
-            pos = end + 1;
+            pos               = end + 1;
             std::string mapName, longName, bots;
             std::istringstream ss(block);
             std::string tok;
@@ -52,16 +52,18 @@ ArenaMap ParseArenasTxt(const std::string& pk3) {
                     }
                     return v;
                 };
-                if (tok == "map") mapName = readVal();
-                else if (tok == "longname") longName = readVal();
-                else if (tok == "bots") bots = readVal();
+                if (tok == "map")
+                    mapName = readVal();
+                else if (tok == "longname")
+                    longName = readVal();
+                else if (tok == "bots")
+                    bots = readVal();
             }
             if (!mapName.empty()) {
                 std::string key = mapName;
-                std::transform(key.begin(), key.end(), key.begin(),
-                               ::tolower);
+                std::transform(key.begin(), key.end(), key.begin(), ::tolower);
                 std::string firstBot = bots.substr(0, bots.find(' '));
-                arenaData[key] = {longName, firstBot};
+                arenaData[key]       = {longName, firstBot};
             }
         }
     }
@@ -90,16 +92,16 @@ void LoadOverlaySwBeginTextures(SDL_Renderer* renderer,
         "gfx/2d/numbers/four_32b.tga",  "gfx/2d/numbers/five_32b.tga",
         "gfx/2d/numbers/six_32b.tga",   "gfx/2d/numbers/seven_32b.tga",
         "gfx/2d/numbers/eight_32b.tga", "gfx/2d/numbers/nine_32b.tga",
-        "gfx/2d/numbers/minus_32b.tga"
-    };
-    for (int i = 0; i < 11; ++i) textures.digits[i] = load(kDigits[i]);
+        "gfx/2d/numbers/minus_32b.tga"};
+    for (int i = 0; i < 11; ++i)
+        textures.digits[i] = load(kDigits[i]);
 
     // weapon icon (right HUD), not ammo pickup.
-    textures.iconArmor  = load("icons/iconr_yellow.tga");
-    textures.iconHealth = load("icons/iconh_red.tga");
-    textures.iconFace   = load("models/players/keel/icon_default.tga");
-    textures.iconWeapon = load("icons/iconw_machinegun.tga");
-    textures.crosshair  = load("gfx/2d/crosshaira.tga");
+    textures.iconArmor   = load("icons/iconr_yellow.tga");
+    textures.iconHealth  = load("icons/iconh_red.tga");
+    textures.iconFace    = load("models/players/keel/icon_default.tga");
+    textures.iconWeapon  = load("icons/iconw_machinegun.tga");
+    textures.crosshair   = load("gfx/2d/crosshaira.tga");
     textures.btnBack     = load("menu/art/back_0.tga");
     textures.btnFight    = load("menu/art/fight_0.tga");
     textures.btnSkirmish = load("menu/art/skirmish_0.tga");
@@ -122,7 +124,8 @@ void DestroyOverlaySwBeginTextures(OverlaySwBeginTextures& textures) {
     destroy(textures.propGlo);
     destroy(textures.frameL);
     destroy(textures.frameR);
-    for (auto& d : textures.digits) destroy(d);
+    for (auto& d : textures.digits)
+        destroy(d);
     destroy(textures.iconArmor);
     destroy(textures.iconHealth);
     destroy(textures.iconFace);
@@ -154,22 +157,19 @@ void PublishOverlaySwBeginTextures(const OverlaySwBeginTextures& textures,
     }
 
     context.Set<SDL_Texture*>("overlay.tex.icon_armor", textures.iconArmor);
-    context.Set<SDL_Texture*>("overlay.tex.icon_health",
-                              textures.iconHealth);
+    context.Set<SDL_Texture*>("overlay.tex.icon_health", textures.iconHealth);
     context.Set<SDL_Texture*>("overlay.tex.icon_face", textures.iconFace);
-    context.Set<SDL_Texture*>("overlay.tex.icon_weapon",
-                              textures.iconWeapon);
+    context.Set<SDL_Texture*>("overlay.tex.icon_weapon", textures.iconWeapon);
     context.Set<SDL_Texture*>("overlay.tex.crosshair", textures.crosshair);
 
     context.Set<SDL_Texture*>("overlay.tex.btn_back", textures.btnBack);
     context.Set<SDL_Texture*>("overlay.tex.btn_fight", textures.btnFight);
-    context.Set<SDL_Texture*>("overlay.tex.btn_skirmish",
-                              textures.btnSkirmish);
+    context.Set<SDL_Texture*>("overlay.tex.btn_skirmish", textures.btnSkirmish);
     context.Set<SDL_Texture*>("overlay.tex.arrow_l", textures.arrowL);
     context.Set<SDL_Texture*>("overlay.tex.arrow_r", textures.arrowR);
 
-    context.Set<std::shared_ptr<q3overlay::ArenaMap>>(
-        "overlay.arena_data", textures.arenaData);
+    context.Set<std::shared_ptr<q3overlay::ArenaMap>>("overlay.arena_data",
+                                                      textures.arenaData);
     context.Set<std::shared_ptr<q3overlay::LevelshotCache>>(
         "overlay.levelshot_cache", textures.levelshotCache);
 }

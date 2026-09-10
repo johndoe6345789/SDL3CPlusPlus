@@ -34,8 +34,7 @@ void WorkflowSceneCreateStep::Execute(const WorkflowStepDefinition& step,
 
     if (logger_) {
         logger_->Trace("WorkflowSceneCreateStep", "Execute",
-                       "scene_id=" + sceneId,
-                       "Created new scene");
+                       "scene_id=" + sceneId, "Created new scene");
     }
 }
 

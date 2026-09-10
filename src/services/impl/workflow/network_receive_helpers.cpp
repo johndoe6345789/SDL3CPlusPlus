@@ -61,14 +61,14 @@ NetworkReceiveResult TryDequeueMessage(
     if (params.connectionId.empty()) {
         if (logger) {
             logger->Trace("WorkflowNetworkReceiveStep", "Execute", "Error",
-                         "Empty connection_id");
+                          "Empty connection_id");
         }
         return out;
     }
     if (params.timeout < 0) {
         if (logger) {
             logger->Trace("WorkflowNetworkReceiveStep", "Execute", "Error",
-                         "Negative timeout");
+                          "Negative timeout");
         }
         return out;
     }
@@ -81,7 +81,7 @@ NetworkReceiveResult TryDequeueMessage(
         out.bytesReceived = out.payload.size();
         if (logger) {
             logger->Trace("WorkflowNetworkReceiveStep", "Execute",
-                         "Dequeued message", out.payload);
+                          "Dequeued message", out.payload);
         }
     }
     return out;

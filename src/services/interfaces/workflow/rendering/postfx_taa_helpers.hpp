@@ -50,7 +50,6 @@ void DrawTaaResolvePass(SDL_GPUCommandBuffer* cmd,
                         SDL_GPUTexture* hdrTex,
                         const TaaHistoryTextures& history,
                         SDL_GPUSampler* sampler, float blendFactor,
-                        uint32_t width, uint32_t height,
-                        double frameCount);
+                        uint32_t width, uint32_t height, double frameCount);
 
 }  // namespace sdl3cpp::services::impl

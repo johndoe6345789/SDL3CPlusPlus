@@ -30,7 +30,7 @@ void WorkflowQ3MoversInitStep::Execute(const WorkflowStepDefinition&,
 
     if (logger_) {
         logger_->Info("q3.movers.init: created " +
-                     std::to_string(movers->size()) + " movers");
+                      std::to_string(movers->size()) + " movers");
     }
 }
 

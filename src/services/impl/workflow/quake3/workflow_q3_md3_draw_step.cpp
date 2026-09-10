@@ -28,8 +28,8 @@ void WorkflowQ3Md3DrawStep::Execute(const WorkflowStepDefinition& step,
     auto* pass = context.Get<SDL_GPURenderPass*>("gpu_render_pass", nullptr);
     auto* cmd =
         context.Get<SDL_GPUCommandBuffer*>("gpu_command_buffer", nullptr);
-    auto* pipeline = context.Get<SDL_GPUGraphicsPipeline*>(
-        "gpu_pipeline_textured", nullptr);
+    auto* pipeline =
+        context.Get<SDL_GPUGraphicsPipeline*>("gpu_pipeline_textured", nullptr);
     if (!pass || !cmd || !pipeline) return;
 
     const int nFrames =
@@ -37,20 +37,18 @@ void WorkflowQ3Md3DrawStep::Execute(const WorkflowStepDefinition& step,
     if (nFrames <= 0) return;
 
     const int frame = ResolveMd3AnimFrame(context, params, nFrames);
-    auto view = context.Get<glm::mat4>("render.view_matrix", glm::mat4(1.0f));
-    auto proj = context.Get<glm::mat4>("render.proj_matrix", glm::mat4(1.0f));
+    auto view   = context.Get<glm::mat4>("render.view_matrix", glm::mat4(1.0f));
+    auto proj   = context.Get<glm::mat4>("render.proj_matrix", glm::mat4(1.0f));
     auto camPos = context.Get<glm::vec3>("render.camera_pos", glm::vec3(0.0f));
-    auto shadowVP =
-        context.Get<glm::mat4>("render.shadow_vp", glm::mat4(1.0f));
-    auto fu = context.Get<rendering::FragmentUniformData>(
+    auto shadowVP = context.Get<glm::mat4>("render.shadow_vp", glm::mat4(1.0f));
+    auto fu       = context.Get<rendering::FragmentUniformData>(
         "render.frag_uniforms", rendering::FragmentUniformData{});
-    const glm::mat4 model =
-        BuildMd3ModelMatrix(context, params, view, camPos);
+    const glm::mat4 model = BuildMd3ModelMatrix(context, params, view, camPos);
 
-    auto* shadowTex = context.Get<SDL_GPUTexture*>(
-        "shadow_depth_texture", nullptr);
-    auto* shadowSamp = context.Get<SDL_GPUSampler*>(
-        "shadow_depth_sampler", nullptr);
+    auto* shadowTex =
+        context.Get<SDL_GPUTexture*>("shadow_depth_texture", nullptr);
+    auto* shadowSamp =
+        context.Get<SDL_GPUSampler*>("shadow_depth_sampler", nullptr);
 
     SDL_BindGPUGraphicsPipeline(pass, pipeline);
 
@@ -62,17 +60,19 @@ void WorkflowQ3Md3DrawStep::Execute(const WorkflowStepDefinition& step,
     const auto viewW = context.Get<uint32_t>("frame_width", 1280u);
     const auto viewH = context.Get<uint32_t>("frame_height", 960u);
     if (params.viewmodel) {
-        SDL_GPUViewport vp{0.0f, 0.0f, static_cast<float>(viewW),
-                           static_cast<float>(viewH), 0.0f, 0.3f};
+        SDL_GPUViewport vp{
+            0.0f, 0.0f, static_cast<float>(viewW), static_cast<float>(viewH),
+            0.0f, 0.3f};
         SDL_SetGPUViewport(pass, &vp);
     }
 
-    DrawMd3Surfaces(params.prefix, frame, model, view, proj, camPos,
-                    shadowVP, fu, pass, cmd, shadowTex, shadowSamp, context);
+    DrawMd3Surfaces(params.prefix, frame, model, view, proj, camPos, shadowVP,
+                    fu, pass, cmd, shadowTex, shadowSamp, context);
 
     if (params.viewmodel) {
-        SDL_GPUViewport full{0.0f, 0.0f, static_cast<float>(viewW),
-                             static_cast<float>(viewH), 0.0f, 1.0f};
+        SDL_GPUViewport full{
+            0.0f, 0.0f, static_cast<float>(viewW), static_cast<float>(viewH),
+            0.0f, 1.0f};
         SDL_SetGPUViewport(pass, &full);
     }
 }

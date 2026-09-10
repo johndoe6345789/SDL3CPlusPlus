@@ -7,21 +7,21 @@ namespace sdl3cpp::services::impl {
 /// A single poll's worth of gamepad axis/button values, normalized the
 /// same way the workflow context stores them.
 struct GamepadPollState {
-    float left_stick_x = 0.0f;
-    float left_stick_y = 0.0f;
+    float left_stick_x  = 0.0f;
+    float left_stick_y  = 0.0f;
     float right_stick_x = 0.0f;
     float right_stick_y = 0.0f;
-    float trigger_left = 0.0f;
+    float trigger_left  = 0.0f;
     float trigger_right = 0.0f;
 
-    bool button_south = false;
-    bool button_east = false;
-    bool button_west = false;
-    bool button_north = false;
-    bool button_left_shoulder = false;
+    bool button_south          = false;
+    bool button_east           = false;
+    bool button_west           = false;
+    bool button_north          = false;
+    bool button_left_shoulder  = false;
     bool button_right_shoulder = false;
-    bool button_back = false;
-    bool button_start = false;
+    bool button_back           = false;
+    bool button_start          = false;
 };
 
 /**

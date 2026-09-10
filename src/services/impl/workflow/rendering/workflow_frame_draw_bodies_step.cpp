@@ -39,13 +39,13 @@ void WorkflowFrameDrawBodiesStep::Execute(const WorkflowStepDefinition& step,
     SDL_BindGPUGraphicsPipeline(pass, pipeline);
 
     SDL_GPUBufferBinding vbufBinding = {};
-    vbufBinding.buffer = vbuf;
-    vbufBinding.offset = 0;
+    vbufBinding.buffer               = vbuf;
+    vbufBinding.offset               = 0;
     SDL_BindGPUVertexBuffers(pass, 0, &vbufBinding, 1);
 
     SDL_GPUBufferBinding ibufBinding = {};
-    ibufBinding.buffer = ibuf;
-    ibufBinding.offset = 0;
+    ibufBinding.buffer               = ibuf;
+    ibufBinding.offset               = 0;
     SDL_BindGPUIndexBuffer(pass, &ibufBinding, SDL_GPU_INDEXELEMENTSIZE_16BIT);
 
     auto bodies =
@@ -56,7 +56,7 @@ void WorkflowFrameDrawBodiesStep::Execute(const WorkflowStepDefinition& step,
 
     for (const auto& nameVal : bodies) {
         if (DrawOnePhysicsBody(pass, cmd, context, nameVal.get<std::string>(),
-                              viewProj, time)) {
+                               viewProj, time)) {
             drawCalls++;
         }
     }

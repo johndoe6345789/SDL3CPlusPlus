@@ -55,4 +55,8 @@ void ApplyPresentModeOverride(SDL_GPUDevice* device, SDL_Window* window,
                               const nlohmann::json& viewportConfig,
                               const std::shared_ptr<ILogger>& logger);
 
+/// One-line trace description of a completed GPU init, for the logger.
+std::string DescribeGpuInit(uint32_t width, uint32_t height,
+                            SDL_GPUDevice* device);
+
 }  // namespace sdl3cpp::services::impl

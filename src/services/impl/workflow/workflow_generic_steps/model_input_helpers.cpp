@@ -46,16 +46,16 @@ std::string ReadObjectTypeInput(
     if (it != step.inputs.end()) {
         const auto* value = context.TryGet<std::string>(it->second);
         if (!value) {
-            throw std::runtime_error(
-                stepName + " requires object_type string input");
+            throw std::runtime_error(stepName +
+                                     " requires object_type string input");
         }
         return *value;
     }
     if (const auto* param =
             parameterResolver.FindParameter(step, "object_type")) {
         if (param->type != WorkflowParameterValue::Type::String) {
-            throw std::runtime_error(
-                stepName + " parameter 'object_type' must be string");
+            throw std::runtime_error(stepName +
+                                     " parameter 'object_type' must be string");
         }
         return param->stringValue;
     }

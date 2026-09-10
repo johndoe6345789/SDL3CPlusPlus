@@ -15,8 +15,8 @@ std::string WorkflowGraphicsDrawSubmitStep::GetPluginId() const {
     return "graphics.draw.submit";
 }
 
-void WorkflowGraphicsDrawSubmitStep::Execute(
-    const WorkflowStepDefinition& step, WorkflowContext& context) {
+void WorkflowGraphicsDrawSubmitStep::Execute(const WorkflowStepDefinition& step,
+                                             WorkflowContext& context) {
     WorkflowStepIoResolver resolver;
     // program/vertex_handle inputs are declared but unused below -- see
     // note near the buffer lookups.
@@ -44,7 +44,7 @@ void WorkflowGraphicsDrawSubmitStep::Execute(
     }
 
     const auto* indexJson = context.TryGet<nlohmann::json>(indexHandleKey);
-    uint32_t indexCount = context.GetInt(indexCountKey, 0);
+    uint32_t indexCount   = context.GetInt(indexCountKey, 0);
     if (indexCount == 0 && indexJson && indexJson->contains("index_count")) {
         indexCount = (*indexJson)["index_count"].get<uint32_t>();
     }
@@ -71,10 +71,9 @@ void WorkflowGraphicsDrawSubmitStep::Execute(
     }
 
     static uint32_t drawCallCounter = 0;
-    const uint32_t drawCallId = drawCallCounter++;
-    context.Set(outputDrawCallKey,
-               nlohmann::json{{"draw_call_id", drawCallId},
-                              {"index_count", indexCount}});
+    const uint32_t drawCallId       = drawCallCounter++;
+    context.Set(outputDrawCallKey, nlohmann::json{{"draw_call_id", drawCallId},
+                                                  {"index_count", indexCount}});
 }
 
 }  // namespace sdl3cpp::services::impl

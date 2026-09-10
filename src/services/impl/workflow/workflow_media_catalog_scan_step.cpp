@@ -21,7 +21,7 @@ std::string WorkflowMediaCatalogScanStep::GetPluginId() const {
 }
 
 void WorkflowMediaCatalogScanStep::Execute(const WorkflowStepDefinition& step,
-                                            WorkflowContext& context) {
+                                           WorkflowContext& context) {
     WorkflowStepIoResolver resolver;
     const std::string outputKey =
         resolver.GetRequiredOutputKey(step, "catalog");
@@ -37,7 +37,7 @@ void WorkflowMediaCatalogScanStep::Execute(const WorkflowStepDefinition& step,
 
     // Get package root key parameter (optional, default "package.root")
     std::string packageRootKey = "package.root";
-    auto packageRootKeyIt = step.parameters.find("package_root_key");
+    auto packageRootKeyIt      = step.parameters.find("package_root_key");
     if (packageRootKeyIt != step.parameters.end()) {
         packageRootKey = packageRootKeyIt->second.stringValue;
     }
@@ -47,22 +47,20 @@ void WorkflowMediaCatalogScanStep::Execute(const WorkflowStepDefinition& step,
     if (!packageRoot || packageRoot->empty()) {
         throw std::runtime_error(
             "media.catalog.scan: package root not found in context at "
-            "key '" + packageRootKey + "'");
+            "key '" +
+            packageRootKey + "'");
     }
 
     if (!cachedCatalog_) {
         std::filesystem::path catalogPath = *packageRoot / catalogPathParam;
         cachedCatalog_ = LoadCatalog(catalogPath, *packageRoot);
         if (logger_) {
-            std::size_t itemCount = 0;
-            for (const auto& category : cachedCatalog_->categories) {
-                itemCount += category.items.size();
-            }
             logger_->Trace(
                 "WorkflowMediaCatalogScanStep", "Execute",
                 "categories=" +
                     std::to_string(cachedCatalog_->categories.size()) +
-                    ", items=" + std::to_string(itemCount),
+                    ", items=" +
+                    std::to_string(CountMediaCatalogItems(*cachedCatalog_)),
                 "Catalog scanned");
         }
     }

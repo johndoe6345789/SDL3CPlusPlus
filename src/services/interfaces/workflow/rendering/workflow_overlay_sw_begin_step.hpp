@@ -17,12 +17,13 @@ public:
     std::string GetPluginId() const override;
     void Execute(const WorkflowStepDefinition& step,
                  WorkflowContext& context) override;
+
 private:
     std::shared_ptr<ILogger> logger_;
-    SDL_Surface*  surface_  = nullptr;
+    SDL_Surface* surface_   = nullptr;
     SDL_Renderer* renderer_ = nullptr;
-    bool ready_       = false;
-    bool tex_loaded_  = false;
+    bool ready_             = false;
+    bool tex_loaded_        = false;
     OverlaySwBeginTextures textures_;
 };
-} // namespace sdl3cpp::services::impl
+}  // namespace sdl3cpp::services::impl

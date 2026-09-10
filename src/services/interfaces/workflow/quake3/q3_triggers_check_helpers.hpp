@@ -43,8 +43,8 @@ glm::vec3 ReadQ3TriggerPlayerPos(const WorkflowContext& context);
  * trigger_hurt accumulates `q3.pending_damage`.
  */
 void ApplyQ3TriggerOverlaps(WorkflowContext& context,
-                           const nlohmann::json& triggerList,
-                           const nlohmann::json* destIndex,
-                           const glm::vec3& playerPos);
+                            const nlohmann::json& triggerList,
+                            const nlohmann::json* destIndex,
+                            const glm::vec3& playerPos);
 
 }  // namespace sdl3cpp::services::impl

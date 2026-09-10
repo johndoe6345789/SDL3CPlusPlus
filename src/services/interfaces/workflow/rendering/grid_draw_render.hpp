@@ -31,12 +31,12 @@ struct GridDrawConfig {
 
 /// GPU handles the draw call needs, all borrowed from the context.
 struct GridGpuResources {
-    SDL_GPUDevice* device                  = nullptr;
-    SDL_Window* window                     = nullptr;
-    SDL_GPUGraphicsPipeline* pipeline      = nullptr;
-    SDL_GPUBuffer* vertexBuffer            = nullptr;
-    SDL_GPUBuffer* indexBuffer             = nullptr;
-    SDL_GPUTexture* depthTexture           = nullptr;
+    SDL_GPUDevice* device             = nullptr;
+    SDL_Window* window                = nullptr;
+    SDL_GPUGraphicsPipeline* pipeline = nullptr;
+    SDL_GPUBuffer* vertexBuffer       = nullptr;
+    SDL_GPUBuffer* indexBuffer        = nullptr;
+    SDL_GPUTexture* depthTexture      = nullptr;
 
     /// True only if every handle above was populated.
     bool IsComplete() const;
@@ -57,8 +57,8 @@ GridGpuResources ReadGridGpuResources(const WorkflowContext& context);
 /// indexed draw call per cube with its own MVP uniform. Returns the
 /// number of draw calls actually submitted (0 if the swapchain/pass
 /// could not be acquired).
-uint32_t DrawGridCubes(const GridGpuResources& gpu,
-                       const GridDrawConfig& cfg, const glm::mat4& view,
-                       const glm::mat4& proj, float time);
+uint32_t DrawGridCubes(const GridGpuResources& gpu, const GridDrawConfig& cfg,
+                       const glm::mat4& view, const glm::mat4& proj,
+                       float time);
 
 }  // namespace sdl3cpp::services::impl

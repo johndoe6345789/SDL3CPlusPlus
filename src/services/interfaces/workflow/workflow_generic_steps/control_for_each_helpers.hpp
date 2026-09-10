@@ -20,8 +20,8 @@ namespace sdl3cpp::services::impl {
  * vector<double> item-type branches, which are otherwise identical.
  */
 template <typename T>
-void RunForEachLoop(const std::vector<T>& items,
-                    const std::string& itemVarName, const std::string& stepId,
+void RunForEachLoop(const std::vector<T>& items, const std::string& itemVarName,
+                    const std::string& stepId,
                     const std::shared_ptr<IWorkflowStep>& stepHandler,
                     WorkflowContext& context) {
     int index = 0;
@@ -31,7 +31,7 @@ void RunForEachLoop(const std::vector<T>& items,
 
         WorkflowStepDefinition loopStep;
         loopStep.plugin = stepId;
-        loopStep.id      = stepId;
+        loopStep.id     = stepId;
         stepHandler->Execute(loopStep, context);
 
         ++index;

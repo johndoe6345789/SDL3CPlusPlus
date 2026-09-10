@@ -16,8 +16,8 @@ std::string WorkflowQ3PickupsTouchStep::GetPluginId() const {
     return "q3.pickups.touch";
 }
 
-void WorkflowQ3PickupsTouchStep::Execute(
-    const WorkflowStepDefinition& /*step*/, WorkflowContext& context) {
+void WorkflowQ3PickupsTouchStep::Execute(const WorkflowStepDefinition& /*step*/,
+                                         WorkflowContext& context) {
     if (context.GetBool("q3.player_dead", false)) return;
 
     const auto* entitiesPtr = context.TryGet<nlohmann::json>("bsp.entities");
@@ -31,14 +31,14 @@ void WorkflowQ3PickupsTouchStep::Execute(
     state.health    = context.GetInt("q3.player_health", 100);
     state.armor     = context.GetInt("q3.player_armor", 0);
     state.armorType = context.GetString("q3.armor_type", "none");
-    state.ammo = context.Get<nlohmann::json>("q3.player_ammo",
-                                              nlohmann::json::object());
-    state.inventory = context.Get<nlohmann::json>("q3.inventory",
-                                                   nlohmann::json::object());
-    state.collected = context.Get<nlohmann::json>("q3.collected",
-                                                   nlohmann::json::object());
-    state.respawnTimes = context.Get<nlohmann::json>(
-        "q3.pickup_respawn_times", nlohmann::json::object());
+    state.ammo =
+        context.Get<nlohmann::json>("q3.player_ammo", nlohmann::json::object());
+    state.inventory =
+        context.Get<nlohmann::json>("q3.inventory", nlohmann::json::object());
+    state.collected =
+        context.Get<nlohmann::json>("q3.collected", nlohmann::json::object());
+    state.respawnTimes = context.Get<nlohmann::json>("q3.pickup_respawn_times",
+                                                     nlohmann::json::object());
 
     ApplyPickupTouches(*entitiesPtr, playerPos, elapsed, state, logger_);
 

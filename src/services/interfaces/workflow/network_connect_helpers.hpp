@@ -10,8 +10,8 @@ namespace sdl3cpp::services::impl {
 /// defaults.
 struct NetworkConnectParams {
     std::string host = "localhost";
-    int port          = 8080;
-    int timeout       = 5000;
+    int port         = 8080;
+    int timeout      = 5000;
 };
 
 NetworkConnectParams ReadNetworkConnectParams(

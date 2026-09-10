@@ -19,8 +19,8 @@ std::string WorkflowModelSetTransformStep::GetPluginId() const {
     return "model.set_transform";
 }
 
-void WorkflowModelSetTransformStep::Execute(
-    const WorkflowStepDefinition& step, WorkflowContext& context) {
+void WorkflowModelSetTransformStep::Execute(const WorkflowStepDefinition& step,
+                                            WorkflowContext& context) {
     WorkflowStepIoResolver resolver;
     WorkflowStepParameterResolver parameterResolver;
     const std::string objectsKey =
@@ -28,8 +28,7 @@ void WorkflowModelSetTransformStep::Execute(
     const std::string outputKey =
         resolver.GetRequiredOutputKey(step, "objects");
 
-    const auto* objects =
-        context.TryGet<std::vector<SceneObject>>(objectsKey);
+    const auto* objects = context.TryGet<std::vector<SceneObject>>(objectsKey);
     if (!objects) {
         throw std::runtime_error(
             "model.set_transform requires objects list input");

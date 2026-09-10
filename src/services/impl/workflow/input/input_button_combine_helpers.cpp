@@ -24,12 +24,10 @@ bool IsGamepadButtonPressed(const std::string& btnStr,
         return context.Get<bool>("input.gamepad.button_north", false);
     }
     if (btnStr == "lb") {
-        return context.Get<bool>("input.gamepad.button_left_shoulder",
-                                 false);
+        return context.Get<bool>("input.gamepad.button_left_shoulder", false);
     }
     if (btnStr == "rb") {
-        return context.Get<bool>("input.gamepad.button_right_shoulder",
-                                 false);
+        return context.Get<bool>("input.gamepad.button_right_shoulder", false);
     }
     if (btnStr == "back") {
         return context.Get<bool>("input.gamepad.button_back", false);

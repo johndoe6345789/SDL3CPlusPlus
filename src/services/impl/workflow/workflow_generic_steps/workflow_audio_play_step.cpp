@@ -16,7 +16,9 @@ WorkflowAudioPlayStep::WorkflowAudioPlayStep(
     std::shared_ptr<ILogger> logger)
     : audioService_(std::move(audioService)), logger_(std::move(logger)) {}
 
-std::string WorkflowAudioPlayStep::GetPluginId() const { return "audio.play"; }
+std::string WorkflowAudioPlayStep::GetPluginId() const {
+    return "audio.play";
+}
 
 void WorkflowAudioPlayStep::Execute(const WorkflowStepDefinition& step,
                                     WorkflowContext& context) {
@@ -31,12 +33,11 @@ void WorkflowAudioPlayStep::Execute(const WorkflowStepDefinition& step,
     std::filesystem::path pathValue;
     if (const auto* path = context.TryGet<std::filesystem::path>(pathKey)) {
         pathValue = *path;
-    } else if (const auto* pathString =
-                   context.TryGet<std::string>(pathKey)) {
+    } else if (const auto* pathString = context.TryGet<std::string>(pathKey)) {
         pathValue = *pathString;
     } else {
-        throw std::runtime_error("audio.play missing path input '" +
-                                 pathKey + "'");
+        throw std::runtime_error("audio.play missing path input '" + pathKey +
+                                 "'");
     }
 
     const std::string mode = NormalizeAudioPlayMode(

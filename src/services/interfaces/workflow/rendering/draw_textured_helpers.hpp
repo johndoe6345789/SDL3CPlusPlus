@@ -63,11 +63,11 @@ void BindDrawTexturedSamplers(SDL_GPURenderPass* pass,
 /// The mesh buffers, index count, and texture/sampler resolved for one
 /// draw.textured call.
 struct DrawTexturedResources {
-    SDL_GPUBuffer* vb   = nullptr;
-    SDL_GPUBuffer* ib   = nullptr;
-    uint32_t indexCount = 0;
-    SDL_GPUTexture* texture  = nullptr;
-    SDL_GPUSampler* sampler  = nullptr;
+    SDL_GPUBuffer* vb       = nullptr;
+    SDL_GPUBuffer* ib       = nullptr;
+    uint32_t indexCount     = 0;
+    SDL_GPUTexture* texture = nullptr;
+    SDL_GPUSampler* sampler = nullptr;
 };
 
 /// Looks up `params.meshName`'s buffers/metadata and `params.textureName`'s

@@ -30,15 +30,14 @@ glm::mat4 TagMatrix(const nlohmann::json& tag) {
     const auto& ax = tag["axis"];  // 3 rows in engine space
     const auto& o  = tag["origin"];
     // Transpose: row i of the tag's axis -> column i of the glm matrix.
-    return glm::mat4(
-        glm::vec4(ax[0][0].get<float>(), ax[1][0].get<float>(),
-                  ax[2][0].get<float>(), 0.0f),
-        glm::vec4(ax[0][1].get<float>(), ax[1][1].get<float>(),
-                  ax[2][1].get<float>(), 0.0f),
-        glm::vec4(ax[0][2].get<float>(), ax[1][2].get<float>(),
-                  ax[2][2].get<float>(), 0.0f),
-        glm::vec4(o[0].get<float>(), o[1].get<float>(), o[2].get<float>(),
-                  1.0f));
+    return glm::mat4(glm::vec4(ax[0][0].get<float>(), ax[1][0].get<float>(),
+                               ax[2][0].get<float>(), 0.0f),
+                     glm::vec4(ax[0][1].get<float>(), ax[1][1].get<float>(),
+                               ax[2][1].get<float>(), 0.0f),
+                     glm::vec4(ax[0][2].get<float>(), ax[1][2].get<float>(),
+                               ax[2][2].get<float>(), 0.0f),
+                     glm::vec4(o[0].get<float>(), o[1].get<float>(),
+                               o[2].get<float>(), 1.0f));
 }
 
 nlohmann::json BuildMd3TagsJson(const std::vector<uint8_t>& md3Bytes) {

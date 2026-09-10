@@ -18,9 +18,8 @@ struct UniformData {
 }  // namespace
 
 bool DrawOnePhysicsBody(SDL_GPURenderPass* pass, SDL_GPUCommandBuffer* cmd,
-                        const WorkflowContext& context,
-                        const std::string& name, const glm::mat4& viewProj,
-                        float time) {
+                        const WorkflowContext& context, const std::string& name,
+                        const glm::mat4& viewProj, float time) {
     auto visual = context.Get<nlohmann::json>("physics_visual_" + name,
                                               nlohmann::json::object());
     if (!visual.value("visible", true)) return false;
@@ -30,7 +29,7 @@ bool DrawOnePhysicsBody(SDL_GPURenderPass* pass, SDL_GPUCommandBuffer* cmd,
 
     btTransform transform;
     body->getMotionState()->getWorldTransform(transform);
-    btVector3 pos = transform.getOrigin();
+    btVector3 pos    = transform.getOrigin();
     btQuaternion rot = transform.getRotation();
 
     // Build model matrix from physics transform.
@@ -42,9 +41,9 @@ bool DrawOnePhysicsBody(SDL_GPURenderPass* pass, SDL_GPUCommandBuffer* cmd,
     glm::mat4 rotGlm(1.0f);
     for (int r = 0; r < 3; ++r) {
         btVector3 row = rotMat.getRow(r);
-        rotGlm[0][r] = row.x();
-        rotGlm[1][r] = row.y();
-        rotGlm[2][r] = row.z();
+        rotGlm[0][r]  = row.x();
+        rotGlm[1][r]  = row.y();
+        rotGlm[2][r]  = row.z();
     }
     model = model * rotGlm;
 
@@ -52,15 +51,15 @@ bool DrawOnePhysicsBody(SDL_GPURenderPass* pass, SDL_GPUCommandBuffer* cmd,
     if (visual.value("spinning", false)) {
         float spinX = visual.value("spin_speed_x", 1.0f);
         float spinY = visual.value("spin_speed_y", 0.7f);
-        model = glm::rotate(model, time * spinX, glm::vec3(1, 0, 0));
-        model = glm::rotate(model, time * spinY, glm::vec3(0, 1, 0));
+        model       = glm::rotate(model, time * spinX, glm::vec3(1, 0, 0));
+        model       = glm::rotate(model, time * spinY, glm::vec3(0, 1, 0));
     }
 
     // Apply scale from visual info.
     auto scaleArr = visual.value("scale", std::vector<float>{0.5f, 0.5f, 0.5f});
     if (scaleArr.size() >= 3) {
-        model = glm::scale(model, glm::vec3(scaleArr[0], scaleArr[1],
-                                            scaleArr[2]));
+        model =
+            glm::scale(model, glm::vec3(scaleArr[0], scaleArr[1], scaleArr[2]));
     }
 
     const glm::mat4 mvp = viewProj * model;

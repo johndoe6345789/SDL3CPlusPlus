@@ -31,10 +31,9 @@ MapLoadParams ReadMapLoadParams(const WorkflowStepDefinition& step,
     };
 
     MapLoadParams result;
-    result.filePath = getStr("file_path", "");
-    result.scale = getNum("scale", 1.0f);
-    result.createPhysics =
-        static_cast<int>(getNum("create_physics", 1)) != 0;
+    result.filePath      = getStr("file_path", "");
+    result.scale         = getNum("scale", 1.0f);
+    result.createPhysics = static_cast<int>(getNum("create_physics", 1)) != 0;
     return result;
 }
 
@@ -72,8 +71,7 @@ ExtractedMapMesh ExtractMapMeshGeometry(const aiMesh* mesh,
     for (unsigned int f = 0; f < mesh->mNumFaces; ++f) {
         const aiFace& face = mesh->mFaces[f];
         for (unsigned int j = 0; j < face.mNumIndices; ++j) {
-            result.indices.push_back(
-                static_cast<uint16_t>(face.mIndices[j]));
+            result.indices.push_back(static_cast<uint16_t>(face.mIndices[j]));
         }
     }
     return result;
@@ -88,19 +86,19 @@ MapMeshBuffers UploadMapMeshBuffers(SDL_GPUDevice* device,
         static_cast<uint32_t>(indices.size() * sizeof(uint16_t));
 
     SDL_GPUBufferCreateInfo vbInfo = {};
-    vbInfo.usage = SDL_GPU_BUFFERUSAGE_VERTEX;
-    vbInfo.size = vtxSize;
+    vbInfo.usage                   = SDL_GPU_BUFFERUSAGE_VERTEX;
+    vbInfo.size                    = vtxSize;
     MapMeshBuffers result;
     result.vb = SDL_CreateGPUBuffer(device, &vbInfo);
 
     SDL_GPUBufferCreateInfo ibInfo = {};
-    ibInfo.usage = SDL_GPU_BUFFERUSAGE_INDEX;
-    ibInfo.size = idxSize;
-    result.ib = SDL_CreateGPUBuffer(device, &ibInfo);
+    ibInfo.usage                   = SDL_GPU_BUFFERUSAGE_INDEX;
+    ibInfo.size                    = idxSize;
+    result.ib                      = SDL_CreateGPUBuffer(device, &ibInfo);
 
     SDL_GPUTransferBufferCreateInfo tbInfo = {};
-    tbInfo.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD;
-    tbInfo.size = vtxSize + idxSize;
+    tbInfo.usage                           = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD;
+    tbInfo.size                            = vtxSize + idxSize;
     SDL_GPUTransferBuffer* tb = SDL_CreateGPUTransferBuffer(device, &tbInfo);
 
     auto* mapped =
@@ -110,21 +108,21 @@ MapMeshBuffers UploadMapMeshBuffers(SDL_GPUDevice* device,
     SDL_UnmapGPUTransferBuffer(device, tb);
 
     SDL_GPUCommandBuffer* cmd = SDL_AcquireGPUCommandBuffer(device);
-    SDL_GPUCopyPass* cp = SDL_BeginGPUCopyPass(cmd);
+    SDL_GPUCopyPass* cp       = SDL_BeginGPUCopyPass(cmd);
 
     SDL_GPUTransferBufferLocation srcV = {};
-    srcV.transfer_buffer = tb;
-    SDL_GPUBufferRegion dstV = {};
-    dstV.buffer = result.vb;
-    dstV.size = vtxSize;
+    srcV.transfer_buffer               = tb;
+    SDL_GPUBufferRegion dstV           = {};
+    dstV.buffer                        = result.vb;
+    dstV.size                          = vtxSize;
     SDL_UploadToGPUBuffer(cp, &srcV, &dstV, false);
 
     SDL_GPUTransferBufferLocation srcI = {};
-    srcI.transfer_buffer = tb;
-    srcI.offset = vtxSize;
-    SDL_GPUBufferRegion dstI = {};
-    dstI.buffer = result.ib;
-    dstI.size = idxSize;
+    srcI.transfer_buffer               = tb;
+    srcI.offset                        = vtxSize;
+    SDL_GPUBufferRegion dstI           = {};
+    dstI.buffer                        = result.ib;
+    dstI.size                          = idxSize;
     SDL_UploadToGPUBuffer(cp, &srcI, &dstI, false);
 
     SDL_EndGPUCopyPass(cp);
@@ -166,7 +164,7 @@ void ProcessMapSceneNode(const aiScene* scene, const aiNode* node,
     const aiMatrix4x4 transform = parentTransform * node->mTransformation;
 
     for (unsigned int m = 0; m < node->mNumMeshes; ++m) {
-        const aiMesh* mesh = scene->mMeshes[node->mMeshes[m]];
+        const aiMesh* mesh   = scene->mMeshes[node->mMeshes[m]];
         std::string meshName = node->mName.C_Str();
         if (meshName.empty()) {
             meshName = "map_mesh_" + std::to_string(meshCount);
@@ -183,10 +181,9 @@ void ProcessMapSceneNode(const aiScene* scene, const aiNode* node,
         context.Set<SDL_GPUBuffer*>("plane_" + meshName + "_vb", buffers.vb);
         context.Set<SDL_GPUBuffer*>("plane_" + meshName + "_ib", buffers.ib);
         context.Set("plane_" + meshName,
-                    nlohmann::json{
-                        {"vertex_count", extracted.vertices.size()},
-                        {"index_count", extracted.indices.size()},
-                        {"stride", 20}});
+                    nlohmann::json{{"vertex_count", extracted.vertices.size()},
+                                   {"index_count", extracted.indices.size()},
+                                   {"stride", 20}});
 
         if (params.createPhysics) {
             auto* body = CreateMapMeshPhysicsBody(world, extracted.bbMin,
@@ -209,8 +206,8 @@ void ProcessMapSceneNode(const aiScene* scene, const aiNode* node,
     }
 
     for (unsigned int c = 0; c < node->mNumChildren; ++c) {
-        ProcessMapSceneNode(scene, node->mChildren[c], transform, device,
-                           world, params, context, mapNodes, meshCount);
+        ProcessMapSceneNode(scene, node->mChildren[c], transform, device, world,
+                            params, context, mapNodes, meshCount);
     }
 }
 

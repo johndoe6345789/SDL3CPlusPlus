@@ -1,18 +1,39 @@
 #pragma once
 
+#include "services/interfaces/workflow_step_definition.hpp"
+
 #include <SDL3/SDL_gpu.h>
+#include <SDL3/SDL_video.h>
 
 #include <cstdint>
+#include <string>
 #include <vector>
 
 namespace sdl3cpp::services::impl {
+
+class WorkflowStepIoResolver;
+
+/// False for a minimized/zero-size window, which can't be blitted from.
+bool HasValidWindowSize(SDL_Window* window);
+
+/// graphics.framebuffer.readback's input/output context key names.
+struct FramebufferReadbackKeys {
+    std::string sourceTextureKeyKey;
+    std::string outputDataKey;
+    std::string outputWidthKey;
+    std::string outputHeightKey;
+    std::string outputSuccessKey;
+};
+
+FramebufferReadbackKeys ResolveFramebufferReadbackKeys(
+    WorkflowStepIoResolver& resolver, const WorkflowStepDefinition& step);
 
 /// A staging texture holding a blitted copy of the swapchain, sized to
 /// match the swapchain's actual (not the window's requested) dimensions.
 struct BlittedSwapchainStaging {
     SDL_GPUTexture* texture = nullptr;
-    uint32_t width = 0;
-    uint32_t height = 0;
+    uint32_t width          = 0;
+    uint32_t height         = 0;
 };
 
 /**

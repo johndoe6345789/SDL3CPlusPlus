@@ -31,11 +31,9 @@ void WorkflowGraphicsBufferCreateIndexStep::Execute(
             "(array of integers)");
     }
 
-    const std::vector<uint16_t> index_data =
-        ExtractIndexData(*indices_json);
+    const std::vector<uint16_t> index_data = ExtractIndexData(*indices_json);
 
-    SDL_GPUDevice* device =
-        context.Get<SDL_GPUDevice*>("gpu_device", nullptr);
+    SDL_GPUDevice* device = context.Get<SDL_GPUDevice*>("gpu_device", nullptr);
     if (!device) {
         throw std::runtime_error(
             "graphics.buffer.create_index: GPU device not found in "
@@ -54,11 +52,9 @@ void WorkflowGraphicsBufferCreateIndexStep::Execute(
     // Store buffer pointer in context
     context.Set<SDL_GPUBuffer*>("gpu_index_buffer", result.buffer);
 
-    nlohmann::json buffer_data = {
-        {"valid", true},
-        {"index_count", index_data.size()},
-        {"size_bytes", result.size_bytes}
-    };
+    nlohmann::json buffer_data = {{"valid", true},
+                                  {"index_count", index_data.size()},
+                                  {"size_bytes", result.size_bytes}};
     context.Set(outputHandleKey, buffer_data);
 }
 

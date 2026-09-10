@@ -45,13 +45,12 @@ void WorkflowGeometryCreateCubeStep::Execute(const WorkflowStepDefinition&,
         const UploadedGpuBuffers buffers =
             CreateAndUploadGpuBuffers(device, vertexBytes, indexValues);
 
-        context.Set<SDL_GPUBuffer*>("gpu_vertex_buffer",
-                                    buffers.vertexBuffer);
+        context.Set<SDL_GPUBuffer*>("gpu_vertex_buffer", buffers.vertexBuffer);
         context.Set<SDL_GPUBuffer*>("gpu_index_buffer", buffers.indexBuffer);
 
         context.Set("cube_mesh",
-                   BuildUploadedMeshMetadata(
-                       8, 36, static_cast<int>(sizeof(PosColorVertex))));
+                    BuildUploadedMeshMetadata(
+                        8, 36, static_cast<int>(sizeof(PosColorVertex))));
         context.Set("geometry_created", true);
 
         if (logger_) {

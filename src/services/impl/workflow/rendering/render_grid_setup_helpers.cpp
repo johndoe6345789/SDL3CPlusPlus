@@ -56,12 +56,12 @@ void ValidateGridSetupGpuResources(const WorkflowContext& context) {
 SDL_GPUTexture* CreateGridDepthTexture(SDL_GPUDevice* device, int width,
                                        int height) {
     SDL_GPUTextureCreateInfo depthInfo = {};
-    depthInfo.type                 = SDL_GPU_TEXTURETYPE_2D;
-    depthInfo.format               = SDL_GPU_TEXTUREFORMAT_D32_FLOAT;
-    depthInfo.width                = static_cast<uint32_t>(width);
-    depthInfo.height               = static_cast<uint32_t>(height);
-    depthInfo.layer_count_or_depth = 1;
-    depthInfo.num_levels           = 1;
+    depthInfo.type                     = SDL_GPU_TEXTURETYPE_2D;
+    depthInfo.format                   = SDL_GPU_TEXTUREFORMAT_D32_FLOAT;
+    depthInfo.width                    = static_cast<uint32_t>(width);
+    depthInfo.height                   = static_cast<uint32_t>(height);
+    depthInfo.layer_count_or_depth     = 1;
+    depthInfo.num_levels               = 1;
     depthInfo.usage = SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET;
 
     SDL_GPUTexture* depthTexture = SDL_CreateGPUTexture(device, &depthInfo);

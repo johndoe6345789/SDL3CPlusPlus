@@ -19,23 +19,23 @@ namespace sdl3cpp::services::impl {
  * it into the context every frame for the `overlay.sw.*` draw steps.
  */
 struct OverlaySwBeginTextures {
-    SDL_Texture* bigchars = nullptr;
-    SDL_Texture* prop     = nullptr;
-    SDL_Texture* propGlo  = nullptr;
-    SDL_Texture* frameL   = nullptr;
-    SDL_Texture* frameR   = nullptr;
+    SDL_Texture* bigchars   = nullptr;
+    SDL_Texture* prop       = nullptr;
+    SDL_Texture* propGlo    = nullptr;
+    SDL_Texture* frameL     = nullptr;
+    SDL_Texture* frameR     = nullptr;
     SDL_Texture* digits[11] = {};
-    SDL_Texture* iconArmor   = nullptr;
-    SDL_Texture* iconHealth  = nullptr;
-    SDL_Texture* iconFace    = nullptr;
+    SDL_Texture* iconArmor  = nullptr;
+    SDL_Texture* iconHealth = nullptr;
+    SDL_Texture* iconFace   = nullptr;
     // iconw_machinegun — weapon icon on HUD right side.
-    SDL_Texture* iconWeapon    = nullptr;
-    SDL_Texture* crosshair    = nullptr;
-    SDL_Texture* btnBack      = nullptr;
-    SDL_Texture* btnFight     = nullptr;
-    SDL_Texture* btnSkirmish  = nullptr;
-    SDL_Texture* arrowL       = nullptr;
-    SDL_Texture* arrowR       = nullptr;
+    SDL_Texture* iconWeapon  = nullptr;
+    SDL_Texture* crosshair   = nullptr;
+    SDL_Texture* btnBack     = nullptr;
+    SDL_Texture* btnFight    = nullptr;
+    SDL_Texture* btnSkirmish = nullptr;
+    SDL_Texture* arrowL      = nullptr;
+    SDL_Texture* arrowR      = nullptr;
     std::shared_ptr<q3overlay::ArenaMap> arenaData;
     std::shared_ptr<q3overlay::LevelshotCache> levelshotCache;
 };

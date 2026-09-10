@@ -21,8 +21,7 @@ void WorkflowBspEntityUpdateStep::Execute(const WorkflowStepDefinition&,
     const auto* entities = context.TryGet<nlohmann::json>("bsp.entities");
     if (!entities || !entities->is_array()) return;
 
-    const std::string playerName =
-        context.GetString("physics_player_body", "");
+    const std::string playerName = context.GetString("physics_player_body", "");
     if (playerName.empty()) return;
 
     auto* body =
@@ -42,8 +41,8 @@ void WorkflowBspEntityUpdateStep::Execute(const WorkflowStepDefinition&,
         context.Get<nlohmann::json>("q3.collected", nlohmann::json::object());
     auto inventory =
         context.Get<nlohmann::json>("q3.inventory", nlohmann::json::object());
-    auto cooldowns = context.Get<nlohmann::json>(
-        "q3.trigger_cooldowns", nlohmann::json::object());
+    auto cooldowns = context.Get<nlohmann::json>("q3.trigger_cooldowns",
+                                                 nlohmann::json::object());
 
     for (const auto& ent : *entities) {
         const std::string classname = ent.value("classname", std::string{});
@@ -53,9 +52,8 @@ void WorkflowBspEntityUpdateStep::Execute(const WorkflowStepDefinition&,
                              inventory, context, logger_)) {
             continue;
         }
-        TryActivateTrigger(ent, classname, id, body, playerPos,
-                           playerAabbMin, playerAabbMax, frame, cooldowns,
-                           logger_);
+        TryActivateTrigger(ent, classname, id, body, playerPos, playerAabbMin,
+                           playerAabbMax, frame, cooldowns, logger_);
     }
 
     context.Set("q3.collected", collected);

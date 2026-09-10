@@ -16,17 +16,16 @@ std::string WorkflowInputGamepadPollStep::GetPluginId() const {
     return "input.gamepad.poll";
 }
 
-void WorkflowInputGamepadPollStep::Execute(
-    const WorkflowStepDefinition& step, WorkflowContext& context) {
-
+void WorkflowInputGamepadPollStep::Execute(const WorkflowStepDefinition& step,
+                                           WorkflowContext& context) {
     if (logger_) {
         logger_->Trace("WorkflowInputGamepadPollStep", "Execute", "Entry");
     }
 
     // Discover first available joystick
-    int numJoysticks = 0;
+    int numJoysticks            = 0;
     SDL_JoystickID* joystickIds = SDL_GetJoysticks(&numJoysticks);
-    SDL_Joystick* joystick = nullptr;
+    SDL_Joystick* joystick      = nullptr;
 
     if (joystickIds && numJoysticks > 0) {
         joystick = SDL_OpenJoystick(joystickIds[0]);

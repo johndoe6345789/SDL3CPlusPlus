@@ -25,13 +25,13 @@ BufferUploadParams ReadBufferUploadParams(const WorkflowStepDefinition& step);
 
 /// Converts a JSON array of numbers into a flat byte array. Throws
 /// std::runtime_error if the array is missing, empty, or non-numeric.
-std::vector<uint8_t> ReadVertexBytesFromContext(
-    const WorkflowContext& context, const std::string& key);
+std::vector<uint8_t> ReadVertexBytesFromContext(const WorkflowContext& context,
+                                                const std::string& key);
 
 /// Converts a JSON array of numbers into a uint16 index array. Throws
 /// std::runtime_error if the array is missing, empty, or non-numeric.
-std::vector<uint16_t> ReadIndexValuesFromContext(
-    const WorkflowContext& context, const std::string& key);
+std::vector<uint16_t> ReadIndexValuesFromContext(const WorkflowContext& context,
+                                                 const std::string& key);
 
 /// The pair of GPU buffers created and populated by
 /// CreateAndUploadGpuBuffers.

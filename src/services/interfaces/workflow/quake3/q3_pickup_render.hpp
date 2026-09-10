@@ -13,16 +13,15 @@ namespace sdl3cpp::services::impl {
 /// pickup billboard is drawn from. Owned by the step instance so it is
 /// created once and released once, across many frames.
 struct PickupQuadBuffers {
-    SDL_GPUDevice* device            = nullptr;
-    SDL_GPUBuffer* quadVb            = nullptr;
-    SDL_GPUBuffer* quadIb            = nullptr;
-    SDL_GPUTransferBuffer* transfer  = nullptr;
+    SDL_GPUDevice* device           = nullptr;
+    SDL_GPUBuffer* quadVb           = nullptr;
+    SDL_GPUBuffer* quadIb           = nullptr;
+    SDL_GPUTransferBuffer* transfer = nullptr;
 };
 
 /// Creates `buffers`' vertex/index buffers on first call; a no-op once
 /// both are already created.
-void EnsurePickupQuadBuffers(SDL_GPUDevice* device,
-                             PickupQuadBuffers& buffers);
+void EnsurePickupQuadBuffers(SDL_GPUDevice* device, PickupQuadBuffers& buffers);
 
 /// Releases any GPU resources `buffers` owns. Safe to call unconditionally
 /// (e.g. from a destructor) even if buffers were never created.
@@ -50,11 +49,10 @@ SDL_GPUTexture* EnsurePickupColorTexture(SDL_GPUDevice* device,
  * draws per call. `time` drives the vertical bob animation.
  */
 void DrawPickupEntities(const nlohmann::json& entities,
-                        const nlohmann::json& collected,
-                        const glm::mat4& view, const glm::mat4& proj,
-                        const glm::vec3& camPos, const glm::mat4& shadowVP,
-                        float time, SDL_GPURenderPass* pass,
-                        SDL_GPUCommandBuffer* cmd,
+                        const nlohmann::json& collected, const glm::mat4& view,
+                        const glm::mat4& proj, const glm::vec3& camPos,
+                        const glm::mat4& shadowVP, float time,
+                        SDL_GPURenderPass* pass, SDL_GPUCommandBuffer* cmd,
                         const PickupQuadBuffers& buffers,
                         WorkflowContext& context);
 

@@ -42,9 +42,9 @@ void DetectQ3MissileImpacts(
             world->rayTest(btFrom, btTo, cb);
             if (cb.hasHit()) {
                 // Snap origin to hit point for splash calculation.
-                m.origin = glm::vec3(cb.m_hitPointWorld.x(),
-                                    cb.m_hitPointWorld.y(),
-                                    cb.m_hitPointWorld.z());
+                m.origin =
+                    glm::vec3(cb.m_hitPointWorld.x(), cb.m_hitPointWorld.y(),
+                              cb.m_hitPointWorld.z());
                 m.exploded = true;
             }
         }
@@ -68,7 +68,7 @@ void ApplyQ3MissileSplashDamage(
         // Bot splash.
         for (auto& [key, bot] : bots.items()) {
             const glm::vec3 botPos = Q3BotPosition(bot);
-            const int botSplash = Q3SplashDamage(m, botPos);
+            const int botSplash    = Q3SplashDamage(m, botPos);
             if (botSplash > 0) {
                 const std::string botKey = key;
                 botDamage[botKey] = botDamage.value(botKey, 0) + botSplash;

@@ -46,14 +46,13 @@ void WorkflowNetworkConnectStep::Execute(const WorkflowStepDefinition& step,
         }
     }
 
-    const NetworkConnectOutputKeys keys =
-        ResolveNetworkConnectOutputKeys(step);
+    const NetworkConnectOutputKeys keys = ResolveNetworkConnectOutputKeys(step);
     context.Set(keys.connectionIdKey, connectionId);
     context.Set(keys.connectedKey, connected);
 
     if (logger_) {
-        logger_->Trace("WorkflowNetworkConnectStep", "Execute",
-                       "connection_id", connectionId);
+        logger_->Trace("WorkflowNetworkConnectStep", "Execute", "connection_id",
+                       connectionId);
         logger_->Trace("WorkflowNetworkConnectStep", "Execute", "connected",
                        connected ? "true" : "false");
     }

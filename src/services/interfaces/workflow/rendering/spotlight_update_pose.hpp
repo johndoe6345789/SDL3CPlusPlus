@@ -26,7 +26,8 @@ struct SpotlightPose {
  * - anything else: raw world-space "position"/"direction" plus offset.
  */
 SpotlightPose ComputeSpotlightPose(const nlohmann::json& spot,
-    const glm::vec3& offset, WorkflowContext& context,
-    const std::shared_ptr<ILogger>& logger);
+                                   const glm::vec3& offset,
+                                   WorkflowContext& context,
+                                   const std::shared_ptr<ILogger>& logger);
 
 }  // namespace sdl3cpp::services::impl

@@ -44,14 +44,11 @@ AcquiredSwapchain AcquireSwapchainForFrame(SDL_GPUDevice* device,
  * Reads/writes `textureKey`, `widthKey` and `heightKey` in context.
  * Releases the old texture (if any) before replacing it.
  */
-SDL_GPUTexture* GetOrResizeTexture(SDL_GPUDevice* device,
-                                   WorkflowContext& context,
-                                   const std::string& textureKey,
-                                   const std::string& widthKey,
-                                   const std::string& heightKey,
-                                   SDL_GPUTextureFormat format,
-                                   SDL_GPUTextureUsageFlags usage,
-                                   uint32_t width, uint32_t height);
+SDL_GPUTexture* GetOrResizeTexture(
+    SDL_GPUDevice* device, WorkflowContext& context,
+    const std::string& textureKey, const std::string& widthKey,
+    const std::string& heightKey, SDL_GPUTextureFormat format,
+    SDL_GPUTextureUsageFlags usage, uint32_t width, uint32_t height);
 
 /// Begins a render pass with one color target (cleared to `clear`) and
 /// one depth target (cleared to 1.0, not stored).

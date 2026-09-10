@@ -17,8 +17,8 @@ void WorkflowShaderSystemInitializeStep::Execute(
     const WorkflowStepDefinition& step, WorkflowContext& context) {
     if (logger_) {
         logger_->Trace("WorkflowShaderSystemInitializeStep", "Execute",
-                      "Phase 1: Setting shader system",
-                      "Configuring active shader system");
+                       "Phase 1: Setting shader system",
+                       "Configuring active shader system");
     }
 
     WorkflowStepParameterResolver paramResolver;
@@ -36,8 +36,7 @@ void WorkflowShaderSystemInitializeStep::Execute(
 
     if (logger_) {
         logger_->Trace("WorkflowShaderSystemInitializeStep", "Execute",
-                      "Shader system set to: " + systemId,
-                      "Phase 1 complete");
+                       "Shader system set to: " + systemId, "Phase 1 complete");
     }
 }
 

@@ -37,14 +37,13 @@ DebugLogParams ReadDebugLogParams(const WorkflowStepDefinition& step) {
 }
 
 void EmitDebugLog(const std::shared_ptr<ILogger>& logger, DebugLogLevel level,
-                  const std::string& contextLabel,
-                  const std::string& message) {
+                  const std::string& contextLabel, const std::string& message) {
     if (!logger) return;
 
     switch (level) {
         case DebugLogLevel::TRACE:
             logger->Trace(contextLabel, "Debug Log", "message=" + message,
-                         "Logged trace message");
+                          "Logged trace message");
             break;
         case DebugLogLevel::DEBUG:
             logger->Debug("debug.log: " + message);

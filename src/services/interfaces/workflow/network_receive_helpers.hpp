@@ -26,9 +26,9 @@ NetworkReceiveParams ReadNetworkReceiveParams(
 /// network.receive's output context keys, each defaulting to
 /// "network.<name>" if the step doesn't declare an explicit output.
 struct NetworkReceiveOutputKeys {
-    std::string receivedKey       = "network.received";
-    std::string payloadKey        = "network.payload";
-    std::string bytesReceivedKey  = "network.bytes_received";
+    std::string receivedKey      = "network.received";
+    std::string payloadKey       = "network.payload";
+    std::string bytesReceivedKey = "network.bytes_received";
 };
 
 NetworkReceiveOutputKeys ResolveNetworkReceiveOutputKeys(
@@ -36,9 +36,9 @@ NetworkReceiveOutputKeys ResolveNetworkReceiveOutputKeys(
 
 /// The outcome of attempting to dequeue a message for one connection.
 struct NetworkReceiveResult {
-    bool received            = false;
+    bool received = false;
     std::string payload;
-    uint64_t bytesReceived   = 0;
+    uint64_t bytesReceived = 0;
 };
 
 /**
@@ -51,7 +51,6 @@ struct NetworkReceiveResult {
  */
 NetworkReceiveResult TryDequeueMessage(
     std::map<std::string, std::queue<std::string>>& messageQueues,
-    const NetworkReceiveParams& params,
-    const std::shared_ptr<ILogger>& logger);
+    const NetworkReceiveParams& params, const std::shared_ptr<ILogger>& logger);
 
 }  // namespace sdl3cpp::services::impl

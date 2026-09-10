@@ -36,10 +36,10 @@ GpuPipelineCreateParams ReadGpuPipelineCreateParams(
 /// Vertex buffer/attribute storage for one vertex layout, owned by the
 /// caller so pointers into it stay valid until pipeline creation.
 struct GpuVertexAttributeLayout {
-    SDL_GPUVertexBufferDescription vbufDesc = {};
+    SDL_GPUVertexBufferDescription vbufDesc     = {};
     std::array<SDL_GPUVertexAttribute, 4> attrs = {};
-    Uint32 numBuffers    = 0;
-    Uint32 numAttributes = 0;
+    Uint32 numBuffers                           = 0;
+    Uint32 numAttributes                        = 0;
 };
 
 /**
@@ -67,8 +67,8 @@ SDL_GPUTextureFormat ResolveDepthFormat(const std::string& depthFormat);
  * to B8G8R8A8_UNORM if no window is available.
  */
 SDL_GPUTextureFormat ResolveColorTargetFormat(const std::string& colorFormat,
-                                               SDL_GPUDevice* device,
-                                               SDL_Window* window);
+                                              SDL_GPUDevice* device,
+                                              SDL_Window* window);
 
 /// Enables standard src-alpha/one-minus-src-alpha blending on `target`.
 void ApplyAlphaBlendState(SDL_GPUColorTargetDescription& target);
@@ -83,8 +83,8 @@ void ApplyAlphaBlendState(SDL_GPUColorTargetDescription& target);
  */
 SDL_GPUGraphicsPipelineCreateInfo BuildGraphicsPipelineCreateInfo(
     const GpuPipelineCreateParams& p, SDL_GPUShader* vertexShader,
-    SDL_GPUShader* fragmentShader, SDL_GPUDevice* device,
-    SDL_Window* window, GpuVertexAttributeLayout& layoutOut,
+    SDL_GPUShader* fragmentShader, SDL_GPUDevice* device, SDL_Window* window,
+    GpuVertexAttributeLayout& layoutOut,
     SDL_GPUColorTargetDescription& colorTargetOut);
 
 /// The precompiled vertex/fragment shaders a graphics pipeline is built
@@ -98,7 +98,7 @@ struct GpuPipelineShaders {
  * @brief Looks up the vertex/fragment shaders `p` names in `context`.
  * @throws std::runtime_error (naming the missing key) if either is absent.
  */
-GpuPipelineShaders RequireGpuPipelineShaders(
-    WorkflowContext& context, const GpuPipelineCreateParams& p);
+GpuPipelineShaders RequireGpuPipelineShaders(WorkflowContext& context,
+                                             const GpuPipelineCreateParams& p);
 
 }  // namespace sdl3cpp::services::impl

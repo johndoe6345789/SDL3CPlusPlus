@@ -25,8 +25,8 @@ void WorkflowNetworkReceiveStep::Execute(const WorkflowStepDefinition& step,
 
     const NetworkReceiveParams params = ReadNetworkReceiveParams(step);
     if (logger_) {
-        logger_->Trace("WorkflowNetworkReceiveStep", "Execute",
-                       "connection_id", params.connectionId);
+        logger_->Trace("WorkflowNetworkReceiveStep", "Execute", "connection_id",
+                       params.connectionId);
         logger_->Trace("WorkflowNetworkReceiveStep", "Execute", "timeout",
                        std::to_string(params.timeout));
     }
@@ -34,19 +34,17 @@ void WorkflowNetworkReceiveStep::Execute(const WorkflowStepDefinition& step,
     const NetworkReceiveResult result =
         TryDequeueMessage(messageQueues_, params, logger_);
 
-    const NetworkReceiveOutputKeys keys =
-        ResolveNetworkReceiveOutputKeys(step);
+    const NetworkReceiveOutputKeys keys = ResolveNetworkReceiveOutputKeys(step);
     context.Set(keys.receivedKey, result.received);
     context.Set(keys.payloadKey, result.payload);
     context.Set(keys.bytesReceivedKey,
-               static_cast<double>(result.bytesReceived));
+                static_cast<double>(result.bytesReceived));
 
     if (logger_) {
         logger_->Trace("WorkflowNetworkReceiveStep", "Execute", "received",
                        result.received ? "true" : "false");
         logger_->Trace("WorkflowNetworkReceiveStep", "Execute",
-                       "bytes_received",
-                       std::to_string(result.bytesReceived));
+                       "bytes_received", std::to_string(result.bytesReceived));
     }
 }
 

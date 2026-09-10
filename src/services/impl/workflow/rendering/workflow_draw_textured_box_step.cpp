@@ -33,15 +33,15 @@ void WorkflowDrawTexturedBoxStep::Execute(const WorkflowStepDefinition& step,
     };
 
     DrawTexturedBoxParams box;
-    box.pos = glm::vec3(getNum("pos_x", 0.0f), getNum("pos_y", 0.0f),
-                        getNum("pos_z", 0.0f));
-    box.size = glm::vec3(getNum("size_x", 1.0f), getNum("size_y", 1.0f),
-                         getNum("size_z", 1.0f));
+    box.pos       = glm::vec3(getNum("pos_x", 0.0f), getNum("pos_y", 0.0f),
+                              getNum("pos_z", 0.0f));
+    box.size      = glm::vec3(getNum("size_x", 1.0f), getNum("size_y", 1.0f),
+                              getNum("size_z", 1.0f));
     box.uvDensity = getNum("uv_density", 1.0f);
     box.roughness = getNum("roughness", 0.8f);
-    box.metallic = getNum("metallic", 0.0f);
-    box.texture = getStr("texture", "walls_texture");
-    box.body = getStr("body", "");
+    box.metallic  = getNum("metallic", 0.0f);
+    box.texture   = getStr("texture", "walls_texture");
+    box.body      = getStr("body", "");
 
     DrawTexturedBox(context, logger_.get(), box);
 }

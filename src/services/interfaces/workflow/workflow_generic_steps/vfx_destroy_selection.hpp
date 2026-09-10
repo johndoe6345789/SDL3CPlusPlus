@@ -16,7 +16,7 @@ namespace sdl3cpp::services::impl {
  * @return true if any effect (or all of them) was destroyed.
  */
 bool ApplyVfxDestroySelection(const WorkflowStepDefinition& step,
-    const WorkflowStepParameterResolver& resolver,
-    std::vector<std::string>& effects);
+                              const WorkflowStepParameterResolver& resolver,
+                              std::vector<std::string>& effects);
 
 }  // namespace sdl3cpp::services::impl

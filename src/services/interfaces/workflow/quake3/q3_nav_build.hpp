@@ -23,14 +23,14 @@ NavBuildAabb ComputeNavBuildAabb(const nlohmann::json* spawnPts);
  * each point against `world`; a hit whose normal is walkable
  * (normal.y >= 0.7) becomes a nav node lifted 0.5 units above it.
  */
-sdl3cpp::q3::NavGraphPtr SampleNavGraph(
-    btDiscreteDynamicsWorld* world, const NavBuildAabb& aabb);
+sdl3cpp::q3::NavGraphPtr SampleNavGraph(btDiscreteDynamicsWorld* world,
+                                        const NavBuildAabb& aabb);
 
 /**
  * @brief Connects every pair of nodes within 3.0 units that has a clear
  * line-of-sight ray between them.
  */
-void ConnectNavNeighbors(
-    btDiscreteDynamicsWorld* world, sdl3cpp::q3::NavGraph& graph);
+void ConnectNavNeighbors(btDiscreteDynamicsWorld* world,
+                         sdl3cpp::q3::NavGraph& graph);
 
 }  // namespace sdl3cpp::services::impl

@@ -27,7 +27,7 @@ NetworkSendRequest ReadNetworkSendRequest(const WorkflowStepDefinition& step);
 /// Outcome of a simulated send: whether it went through, and how many
 /// bytes were "sent" (0 when validation failed).
 struct NetworkSendOutcome {
-    bool sent = false;
+    bool sent          = false;
     uint64_t bytesSent = 0;
 };
 

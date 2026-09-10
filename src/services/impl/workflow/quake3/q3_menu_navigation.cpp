@@ -30,12 +30,10 @@ nlohmann::json BuildQ3MenuItems(const nlohmann::json& screen,
     return *itemsField;
 }
 
-bool UpdateQ3MenuToggle(WorkflowContext& context,
-                        const nlohmann::json& screens,
+bool UpdateQ3MenuToggle(WorkflowContext& context, const nlohmann::json& screens,
                         const std::string& defaultScreen) {
-    bool open = context.GetBool("q3.menu_open", false);
-    const bool escPressed =
-        context.GetBool("input_key_escape_pressed", false);
+    bool open             = context.GetBool("q3.menu_open", false);
+    const bool escPressed = context.GetBool("input_key_escape_pressed", false);
     if (escPressed) {
         if (open) {
             // If we're on a sub-screen and it has a back, go back rather
@@ -44,8 +42,7 @@ bool UpdateQ3MenuToggle(WorkflowContext& context,
                 context.Get<std::string>("q3.menu_screen", defaultScreen);
             auto screenIt = screens.find(curScreen);
             if (screenIt != screens.end() && screenIt->contains("back")) {
-                const std::string back =
-                    (*screenIt)["back"].get<std::string>();
+                const std::string back = (*screenIt)["back"].get<std::string>();
                 context.Set<std::string>("q3.menu_screen", back);
                 context.Set<int>("q3.menu_selected_item", 0);
             } else {
@@ -97,8 +94,7 @@ Q3MenuActionResult HandleQ3MenuInput(WorkflowContext& context,
                 context.Set<std::string>("q3.menu_screen", back);
                 context.Set<int>("q3.menu_selected_item", 0);
             } else if (action.rfind("screen:", 0) == 0) {
-                context.Set<std::string>("q3.menu_screen",
-                                         action.substr(7));
+                context.Set<std::string>("q3.menu_screen", action.substr(7));
                 context.Set<int>("q3.menu_selected_item", 0);
             } else if (action.rfind("map:", 0) == 0) {
                 const std::string map = action.substr(4);

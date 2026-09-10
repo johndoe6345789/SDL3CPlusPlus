@@ -31,9 +31,8 @@ void WorkflowControlSwitchStep::Execute(const WorkflowStepDefinition& step,
 
     const auto* valueAny = context.TryGetAny(valueKey);
     if (!valueAny) {
-        throw std::runtime_error(
-            "control.condition.switch: value key '" + valueKey +
-            "' not found");
+        throw std::runtime_error("control.condition.switch: value key '" +
+                                 valueKey + "' not found");
     }
 
     const std::string valueStr = SwitchValueToString(valueAny);
@@ -52,14 +51,13 @@ void WorkflowControlSwitchStep::Execute(const WorkflowStepDefinition& step,
 
     auto stepHandler = registry_->GetStep(selectedStepId);
     if (!stepHandler) {
-        throw std::runtime_error(
-            "control.condition.switch: case step '" + selectedStepId +
-            "' not found");
+        throw std::runtime_error("control.condition.switch: case step '" +
+                                 selectedStepId + "' not found");
     }
 
     WorkflowStepDefinition caseStep;
     caseStep.plugin = selectedStepId;
-    caseStep.id = selectedStepId;
+    caseStep.id     = selectedStepId;
     stepHandler->Execute(caseStep, context);
 
     if (logger_) {

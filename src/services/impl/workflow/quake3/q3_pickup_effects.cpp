@@ -29,40 +29,40 @@ bool ParseOrigin(const std::string& origin, glm::vec3& out) {
 
 // ioq3 default ammo per ammo_* classname.
 int DefaultAmmoAmount(const std::string& cls) {
-    if (cls == "ammo_bullets")   return 50;
-    if (cls == "ammo_shells")    return 10;
-    if (cls == "ammo_grenades")  return  5;
-    if (cls == "ammo_rockets")   return  5;
-    if (cls == "ammo_cells")     return 30;
+    if (cls == "ammo_bullets") return 50;
+    if (cls == "ammo_shells") return 10;
+    if (cls == "ammo_grenades") return 5;
+    if (cls == "ammo_rockets") return 5;
+    if (cls == "ammo_cells") return 30;
     if (cls == "ammo_lightning") return 60;
-    if (cls == "ammo_slugs")     return 10;
-    if (cls == "ammo_bfg")       return 15;
+    if (cls == "ammo_slugs") return 10;
+    if (cls == "ammo_bfg") return 15;
     return 10;
 }
 
 // Map ammo_* classname to the weapon key used in q3.player_ammo.
 std::string AmmoWeaponKey(const std::string& cls) {
-    if (cls == "ammo_bullets")   return "weapon_machinegun";
-    if (cls == "ammo_shells")    return "weapon_shotgun";
-    if (cls == "ammo_grenades")  return "weapon_grenadelauncher";
-    if (cls == "ammo_rockets")   return "weapon_rocketlauncher";
-    if (cls == "ammo_cells")     return "weapon_plasmagun";
+    if (cls == "ammo_bullets") return "weapon_machinegun";
+    if (cls == "ammo_shells") return "weapon_shotgun";
+    if (cls == "ammo_grenades") return "weapon_grenadelauncher";
+    if (cls == "ammo_rockets") return "weapon_rocketlauncher";
+    if (cls == "ammo_cells") return "weapon_plasmagun";
     if (cls == "ammo_lightning") return "weapon_lightning";
-    if (cls == "ammo_slugs")     return "weapon_railgun";
-    if (cls == "ammo_bfg")       return "weapon_bfg";
+    if (cls == "ammo_slugs") return "weapon_railgun";
+    if (cls == "ammo_bfg") return "weapon_bfg";
     return cls;  // fallback: use classname as key
 }
 
 // Default ammo granted when picking up a weapon_* entity.
 int DefaultWeaponAmmo(const std::string& cls) {
-    if (cls == "weapon_machinegun")      return 100;
-    if (cls == "weapon_shotgun")         return  10;
-    if (cls == "weapon_grenadelauncher") return   5;
-    if (cls == "weapon_rocketlauncher")  return   5;
-    if (cls == "weapon_lightning")       return  60;
-    if (cls == "weapon_railgun")         return  10;
-    if (cls == "weapon_plasmagun")       return  50;
-    if (cls == "weapon_bfg")             return  15;
+    if (cls == "weapon_machinegun") return 100;
+    if (cls == "weapon_shotgun") return 10;
+    if (cls == "weapon_grenadelauncher") return 5;
+    if (cls == "weapon_rocketlauncher") return 5;
+    if (cls == "weapon_lightning") return 60;
+    if (cls == "weapon_railgun") return 10;
+    if (cls == "weapon_plasmagun") return 50;
+    if (cls == "weapon_bfg") return 15;
     return 10;
 }
 
@@ -101,24 +101,24 @@ double ApplyOnePickup(const std::string& cls, PickupTouchState& state) {
         if (cls == "item_armor_shard") {
             state.armor = std::min(state.armor + 5, 200);
         } else if (cls == "item_armor_combat") {
-            state.armor = std::min(state.armor + 50, 200);
+            state.armor     = std::min(state.armor + 50, 200);
             state.armorType = "green";
         } else if (cls == "item_armor_body") {
-            state.armor = std::min(state.armor + 100, 200);
+            state.armor     = std::min(state.armor + 100, 200);
             state.armorType = "yellow";
         }
         return kRespawnArmor;
     }
     if (HasPrefix(cls, "ammo_")) {
         const std::string weaponKey = AmmoWeaponKey(cls);
-        const int current = state.ammo.value(weaponKey, 0);
-        state.ammo[weaponKey] = current + DefaultAmmoAmount(cls);
+        const int current           = state.ammo.value(weaponKey, 0);
+        state.ammo[weaponKey]       = current + DefaultAmmoAmount(cls);
         return kRespawnAmmo;
     }
     if (HasPrefix(cls, "weapon_")) {
         state.inventory[cls] = true;
-        const int current = state.ammo.value(cls, 0);
-        state.ammo[cls] = current + DefaultWeaponAmmo(cls);
+        const int current    = state.ammo.value(cls, 0);
+        state.ammo[cls]      = current + DefaultWeaponAmmo(cls);
         return kRespawnWeapon;
     }
     return kRespawnHealth;
@@ -149,12 +149,12 @@ void ApplyPickupTouches(const nlohmann::json& entities,
         if (glm::distance(playerPos, entPos) >= kTouchRadius) continue;
 
         const double respawnDelay = ApplyOnePickup(cls, state);
-        state.collected[id]    = true;
-        state.respawnTimes[id] = elapsed + respawnDelay;
+        state.collected[id]       = true;
+        state.respawnTimes[id]    = elapsed + respawnDelay;
 
         if (logger) {
-            logger->Info("q3.pickups.touch: collected " + cls + " (id=" +
-                        id + ")");
+            logger->Info("q3.pickups.touch: collected " + cls + " (id=" + id +
+                         ")");
         }
     }
 }

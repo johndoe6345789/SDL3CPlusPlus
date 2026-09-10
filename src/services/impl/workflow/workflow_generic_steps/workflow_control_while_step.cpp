@@ -29,7 +29,7 @@ void WorkflowControlWhileStep::Execute(const WorkflowStepDefinition& step,
         step, "workflow",
         "control.loop.while: Missing 'package' or 'workflow' parameter");
     uint32_t maxIterations = 0;  // 0 = unlimited
-    auto maxIt = step.parameters.find("max_iterations");
+    auto maxIt             = step.parameters.find("max_iterations");
     if (maxIt != step.parameters.end() &&
         maxIt->second.type == WorkflowParameterValue::Type::Number) {
         maxIterations = static_cast<uint32_t>(maxIt->second.numberValue);
@@ -42,19 +42,19 @@ void WorkflowControlWhileStep::Execute(const WorkflowStepDefinition& step,
             "' from package '" + packageName + "'");
     }
     if (logger_) {
-        logger_->Info(
-            "control.loop.while: Looping on '" + conditionKey +
-            "', workflow=" + workflowName +
-            (maxIterations > 0 ? ", max=" + std::to_string(maxIterations)
-                               : ""));
+        logger_->Info("control.loop.while: Looping on '" + conditionKey +
+                      "', workflow=" + workflowName +
+                      (maxIterations > 0
+                           ? ", max=" + std::to_string(maxIterations)
+                           : ""));
     }
     // A key that was never set reads as false, so the loop would exit
     // after zero iterations; warn so that is distinguishable from a
     // deliberate false.
     if (logger_ && !context.Contains(conditionKey)) {
         logger_->Warn("control.loop.while: condition '" + conditionKey +
-                     "' is not set in the context; set it with a "
-                     "value.literal step beforehand.");
+                      "' is not set in the context; set it with a "
+                      "value.literal step beforehand.");
     }
     // Suppress per-step logging inside the frame loop for performance
     context.Set<bool>("_in_frame_loop", true);
@@ -63,7 +63,7 @@ void WorkflowControlWhileStep::Execute(const WorkflowStepDefinition& step,
         if (maxIterations > 0 && iteration >= maxIterations) {
             if (logger_) {
                 logger_->Warn("control.loop.while: Hit max iterations (" +
-                             std::to_string(maxIterations) + ")");
+                              std::to_string(maxIterations) + ")");
             }
             break;
         }
@@ -73,7 +73,7 @@ void WorkflowControlWhileStep::Execute(const WorkflowStepDefinition& step,
     }
     if (logger_) {
         logger_->Info("control.loop.while: Completed after " +
-                     std::to_string(iteration) + " iterations");
+                      std::to_string(iteration) + " iterations");
     }
 }
 

@@ -13,10 +13,9 @@ namespace sdl3cpp::services::impl {
 namespace {
 
 std::string ToLower(std::string value) {
-    std::transform(value.begin(), value.end(), value.begin(),
-                   [](unsigned char c) {
-                       return static_cast<char>(std::tolower(c));
-                   });
+    std::transform(
+        value.begin(), value.end(), value.begin(),
+        [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
     return value;
 }
 
@@ -97,10 +96,10 @@ void DrawBspMapGeometry(SDL_GPURenderPass* pass, SDL_GPUCommandBuffer* cmd,
 
     // Bind VB + IB once; shared by every BSP texture group.
     SDL_GPUBufferBinding vbBind = {};
-    vbBind.buffer = vb;
+    vbBind.buffer               = vb;
     SDL_BindGPUVertexBuffers(pass, 0, &vbBind, 1);
     SDL_GPUBufferBinding ibBind = {};
-    ibBind.buffer = ib;
+    ibBind.buffer               = ib;
     SDL_BindGPUIndexBuffer(pass, &ibBind, SDL_GPU_INDEXELEMENTSIZE_32BIT);
     SDL_PushGPUVertexUniformData(cmd, 0, &vu, sizeof(vu));
 
@@ -124,17 +123,16 @@ void DrawBspMapGeometry(SDL_GPURenderPass* pass, SDL_GPUCommandBuffer* cmd,
         static_cast<float>(context.GetDouble("frame.elapsed", 0.0));
 
     for (const auto& node : mapNodes) {
-        uint32_t indexCount  = node["index_count"];
-        uint32_t indexOffset = node.value("index_offset", 0u);
-        int texIdx = node.value("texture_index", -1);
+        uint32_t indexCount     = node["index_count"];
+        uint32_t indexOffset    = node.value("index_offset", 0u);
+        int texIdx              = node.value("texture_index", -1);
         std::string textureName = node.value("texture_name", std::string{});
 
-        SDL_GPUTexture* albedoTex   = nullptr;
-        SDL_GPUSampler* albedoSamp  = nullptr;
+        SDL_GPUTexture* albedoTex  = nullptr;
+        SDL_GPUSampler* albedoSamp = nullptr;
         if (texIdx >= 0) {
             std::string texKey = "bsp_tex_" + std::to_string(texIdx);
-            albedoTex =
-                context.Get<SDL_GPUTexture*>(texKey + "_gpu", nullptr);
+            albedoTex = context.Get<SDL_GPUTexture*>(texKey + "_gpu", nullptr);
             albedoSamp =
                 context.Get<SDL_GPUSampler*>(texKey + "_sampler", nullptr);
         }
@@ -146,8 +144,8 @@ void DrawBspMapGeometry(SDL_GPURenderPass* pass, SDL_GPUCommandBuffer* cmd,
 
         // Bind 4 samplers: albedo, shadow, lightmap, portal destination.
         SDL_GPUTextureSamplerBinding bindings[4] = {};
-        bindings[0].texture = albedoTex;
-        bindings[0].sampler = albedoSamp;
+        bindings[0].texture                      = albedoTex;
+        bindings[0].sampler                      = albedoSamp;
         bindings[1].texture = shadow_tex ? shadow_tex : albedoTex;
         bindings[1].sampler = shadow_samp ? shadow_samp : albedoSamp;
         bindings[2].texture = lm_tex ? lm_tex : albedoTex;
@@ -156,7 +154,7 @@ void DrawBspMapGeometry(SDL_GPURenderPass* pass, SDL_GPUCommandBuffer* cmd,
         bindings[3].sampler = portal_samp ? portal_samp : albedoSamp;
         SDL_BindGPUFragmentSamplers(pass, 0, bindings, 4);
 
-        auto groupFu = fu;
+        auto groupFu        = fu;
         groupFu.material[1] = elapsed;
         groupFu.material[3] = IsPortalTexture(textureName) ? 1.0f : 0.0f;
         SDL_PushGPUFragmentUniformData(cmd, 0, &groupFu, sizeof(groupFu));
@@ -201,33 +199,39 @@ void DrawLegacyMapGeometry(SDL_GPURenderPass* pass, SDL_GPUCommandBuffer* cmd,
 
         {
             SDL_GPUTextureSamplerBinding bindings[2] = {};
-            bindings[0].texture = meshTex;
-            bindings[0].sampler = meshSamp;
+            bindings[0].texture                      = meshTex;
+            bindings[0].sampler                      = meshSamp;
             bindings[1].texture = shadow_tex ? shadow_tex : meshTex;
             bindings[1].sampler = shadow_samp ? shadow_samp : meshSamp;
             SDL_BindGPUFragmentSamplers(pass, 0, bindings, 2);
         }
 
         SDL_GPUBufferBinding vbBind = {};
-        vbBind.buffer = vb;
+        vbBind.buffer               = vb;
         SDL_BindGPUVertexBuffers(pass, 0, &vbBind, 1);
         SDL_GPUBufferBinding ibBind = {};
-        ibBind.buffer = ib;
+        ibBind.buffer               = ib;
         SDL_BindGPUIndexBuffer(pass, &ibBind, SDL_GPU_INDEXELEMENTSIZE_16BIT);
 
         // Normal from bounding box thinnest axis.
         if (node.contains("bb_min") && node.contains("bb_max")) {
             auto bbMin = node["bb_min"];
             auto bbMax = node["bb_max"];
-            float dx = bbMax[0].get<float>() - bbMin[0].get<float>();
-            float dy = bbMax[1].get<float>() - bbMin[1].get<float>();
-            float dz = bbMax[2].get<float>() - bbMin[2].get<float>();
+            float dx   = bbMax[0].get<float>() - bbMin[0].get<float>();
+            float dy   = bbMax[1].get<float>() - bbMin[1].get<float>();
+            float dz   = bbMax[2].get<float>() - bbMin[2].get<float>();
             if (dy < dx && dy < dz) {
-                vu.normal[0] = 0; vu.normal[1] = 1; vu.normal[2] = 0;
+                vu.normal[0] = 0;
+                vu.normal[1] = 1;
+                vu.normal[2] = 0;
             } else if (dx < dz) {
-                vu.normal[0] = 1; vu.normal[1] = 0; vu.normal[2] = 0;
+                vu.normal[0] = 1;
+                vu.normal[1] = 0;
+                vu.normal[2] = 0;
             } else {
-                vu.normal[0] = 0; vu.normal[1] = 0; vu.normal[2] = 1;
+                vu.normal[0] = 0;
+                vu.normal[1] = 0;
+                vu.normal[2] = 1;
             }
         }
 

@@ -13,10 +13,10 @@ namespace sdl3cpp::services::impl {
 /// geometry.create_plane's resolved parameters, each with the original
 /// defaults.
 struct GeometryPlaneParams {
-    float width      = 10.0f;
-    float depth      = 10.0f;
-    float uvScaleX   = 1.0f;
-    float uvScaleY   = 1.0f;
+    float width       = 10.0f;
+    float depth       = 10.0f;
+    float uvScaleX    = 1.0f;
+    float uvScaleY    = 1.0f;
     int subdivisionsX = 1;
     int subdivisionsY = 1;
     std::string name  = "plane";

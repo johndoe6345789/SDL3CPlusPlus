@@ -45,7 +45,7 @@ bool WorkflowQ3MusicStep::Start(const WorkflowStepDefinition& step,
     const auto deviceSpec =
         context.Get<SDL_AudioSpec>("q3.sound.device_spec", SDL_AudioSpec{});
     if (!LoadQ3MusicTracks(pk3, text("intro"), text("loop"), deviceSpec,
-                          logger_, stream_, loopPcm_)) {
+                           logger_, stream_, loopPcm_)) {
         return false;
     }
 

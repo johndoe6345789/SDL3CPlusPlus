@@ -13,8 +13,7 @@ float EntFloat(const nlohmann::json& ent, const char* key, float def) {
     if (v.is_string()) {
         try {
             return std::stof(v.get<std::string>());
-        } catch (...) {
-        }
+        } catch (...) {}
     }
     return def;
 }
@@ -76,7 +75,7 @@ void LoadQ3TriggersIfNeeded(WorkflowContext& context,
 
     if (logger) {
         logger->Info("q3.triggers.check: parsed " +
-                    std::to_string(triggerList.size()) + " triggers");
+                     std::to_string(triggerList.size()) + " triggers");
     }
 }
 
@@ -91,16 +90,16 @@ glm::vec3 ReadQ3TriggerPlayerPos(const WorkflowContext& context) {
         const auto& cp = camState["position"];
         if (cp.size() >= 3) {
             playerPos = {cp[0].get<float>(), cp[1].get<float>(),
-                        cp[2].get<float>()};
+                         cp[2].get<float>()};
         }
     }
     return playerPos;
 }
 
 void ApplyQ3TriggerOverlaps(WorkflowContext& context,
-                           const nlohmann::json& triggerList,
-                           const nlohmann::json* destIndex,
-                           const glm::vec3& playerPos) {
+                            const nlohmann::json& triggerList,
+                            const nlohmann::json* destIndex,
+                            const glm::vec3& playerPos) {
     constexpr float kOverlapDist = 1.5f;
 
     for (const auto& t : triggerList) {
@@ -118,15 +117,14 @@ void ApplyQ3TriggerOverlaps(WorkflowContext& context,
             const std::string tgtName = t.value("target", std::string{});
             if (!tgtName.empty() && destIndex && destIndex->contains(tgtName)) {
                 const auto& dj = (*destIndex)[tgtName];
-                const glm::vec3 targetPos(dj[0].get<float>(),
-                                          dj[1].get<float>(),
-                                          dj[2].get<float>());
+                const glm::vec3 targetPos(
+                    dj[0].get<float>(), dj[1].get<float>(), dj[2].get<float>());
 
                 const glm::vec3 toTarget = targetPos - playerPos;
-                const float height = std::max(toTarget.y, 1.0f);
+                const float height       = std::max(toTarget.y, 1.0f);
                 constexpr float kGravity = 20.f;
-                const float vy   = std::sqrt(2.f * kGravity * height);
-                const float time = vy / kGravity;
+                const float vy           = std::sqrt(2.f * kGravity * height);
+                const float time         = vy / kGravity;
 
                 const glm::vec3 launchVel(toTarget.x / time, vy,
                                           toTarget.z / time);
@@ -143,7 +141,7 @@ void ApplyQ3TriggerOverlaps(WorkflowContext& context,
                 context.Set("q3.player_teleport_dest", destPos);
             }
         } else if (cls == "trigger_hurt") {
-            const float dmg = t.value("dmg", 5.f);
+            const float dmg      = t.value("dmg", 5.f);
             const float existing = context.Get<float>("q3.pending_damage", 0.f);
             context.Set("q3.pending_damage", existing + dmg);
         }

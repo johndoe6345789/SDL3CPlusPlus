@@ -17,7 +17,7 @@ DebugLogLevel ParseDebugLogLevel(const std::string& levelStr);
 /// debug.log's `level` (default "info") and `context` (default
 /// "debug.log") parameters.
 struct DebugLogParams {
-    std::string level = "info";
+    std::string level        = "info";
     std::string contextLabel = "debug.log";
 };
 DebugLogParams ReadDebugLogParams(const WorkflowStepDefinition& step);

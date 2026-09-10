@@ -27,8 +27,8 @@ void WorkflowNetworkSendStep::Execute(const WorkflowStepDefinition& step,
     const NetworkSendRequest request = ReadNetworkSendRequest(step);
 
     if (logger_) {
-        logger_->Trace("WorkflowNetworkSendStep", "Execute",
-                       "connection_id", request.connectionId);
+        logger_->Trace("WorkflowNetworkSendStep", "Execute", "connection_id",
+                       request.connectionId);
         logger_->Trace("WorkflowNetworkSendStep", "Execute", "payload_size",
                        std::to_string(request.payload.size()));
         logger_->Trace("WorkflowNetworkSendStep", "Execute", "priority",
@@ -40,7 +40,7 @@ void WorkflowNetworkSendStep::Execute(const WorkflowStepDefinition& step,
 
     // Get output keys from step definition or use defaults
     WorkflowStepIoResolver resolver;
-    std::string sentKey = "network.sent";
+    std::string sentKey      = "network.sent";
     std::string bytesSentKey = "network.bytes_sent";
 
     try {

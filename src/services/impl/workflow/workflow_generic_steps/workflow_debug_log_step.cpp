@@ -25,7 +25,7 @@ void WorkflowDebugLogStep::Execute(const WorkflowStepDefinition& step,
                                  "'");
     }
 
-    const DebugLogParams params = ReadDebugLogParams(step);
+    const DebugLogParams params  = ReadDebugLogParams(step);
     const DebugLogLevel logLevel = ParseDebugLogLevel(params.level);
     EmitDebugLog(logger_, logLevel, params.contextLabel, *message);
 }

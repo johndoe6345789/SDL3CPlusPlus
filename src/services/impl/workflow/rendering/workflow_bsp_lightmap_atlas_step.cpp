@@ -32,7 +32,7 @@ void WorkflowBspLightmapAtlasStep::Execute(const WorkflowStepDefinition&,
         throw std::runtime_error("bsp.lightmap_atlas: GPU device not found");
     }
 
-    const LightmapAtlas atlas = BuildLightmapAtlas(*bspDataPtr);
+    const LightmapAtlas atlas  = BuildLightmapAtlas(*bspDataPtr);
     const LightmapAtlasGpu gpu = UploadLightmapAtlas(device, atlas);
 
     context.Set<SDL_GPUTexture*>("bsp_lightmap_atlas_gpu", gpu.texture);
@@ -44,10 +44,10 @@ void WorkflowBspLightmapAtlasStep::Execute(const WorkflowStepDefinition&,
 
     if (logger_) {
         logger_->Info("bsp.lightmap_atlas: " + std::to_string(atlas.width) +
-                     "x" + std::to_string(atlas.height) + " (" +
-                     std::to_string(atlas.numLightmaps) +
-                     " lightmaps, grid " + std::to_string(atlas.gridSize) +
-                     "x" + std::to_string(atlas.gridSize) + ")");
+                      "x" + std::to_string(atlas.height) + " (" +
+                      std::to_string(atlas.numLightmaps) + " lightmaps, grid " +
+                      std::to_string(atlas.gridSize) + "x" +
+                      std::to_string(atlas.gridSize) + ")");
     }
 }
 

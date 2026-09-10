@@ -18,16 +18,14 @@ std::string WorkflowParticleUpdateStep::GetPluginId() const {
 
 void WorkflowParticleUpdateStep::Execute(const WorkflowStepDefinition& step,
                                          WorkflowContext& context) {
-    const ParticleUpdateParams params =
-        ReadParticleUpdateParams(step, context);
+    const ParticleUpdateParams params = ReadParticleUpdateParams(step, context);
 
     const auto* particlesPtr =
         context.TryGet<std::vector<std::string>>("particles.active");
     if (!particlesPtr || particlesPtr->empty()) {
         if (logger_) {
             logger_->Trace("WorkflowParticleUpdateStep", "Execute",
-                           "No active particles",
-                           "Particle update complete");
+                           "No active particles", "Particle update complete");
         }
         return;
     }
@@ -52,8 +50,7 @@ void WorkflowParticleUpdateStep::Execute(const WorkflowStepDefinition& step,
     if (ages.size() == particles.size() &&
         lifetimes.size() == particles.size()) {
         const PrunedParticles pruned = AgeAndPruneParticles(
-            particles, std::move(ages), std::move(lifetimes),
-            params.deltaTime);
+            particles, std::move(ages), std::move(lifetimes), params.deltaTime);
         context.Set("particles.active", pruned.particles);
         context.Set("particles.ages", pruned.ages);
         context.Set("particles.lifetimes", pruned.lifetimes);

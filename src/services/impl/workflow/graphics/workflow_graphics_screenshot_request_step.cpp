@@ -33,8 +33,7 @@ void WorkflowGraphicsScreenshotRequestStep::Execute(
         return;
     }
 
-    const std::string resolvedPath =
-        ResolveScreenshotOutputPath(*outputPath);
+    const std::string resolvedPath = ResolveScreenshotOutputPath(*outputPath);
 
     auto* device = context.Get<SDL_GPUDevice*>("gpu_device", nullptr);
     auto* window = context.Get<SDL_Window*>("sdl_window", nullptr);
@@ -51,7 +50,7 @@ void WorkflowGraphicsScreenshotRequestStep::Execute(
     }
 
     SDL_GPUCommandBuffer* dlCmd = SDL_AcquireGPUCommandBuffer(device);
-    const bool saved = CaptureGpuSwapchainToBmp(
+    const bool saved            = CaptureGpuSwapchainToBmp(
         dlCmd, device, capture.texture, capture.width, capture.height,
         ToBmpPath(resolvedPath), logger_);
     SDL_ReleaseGPUTexture(device, capture.texture);

@@ -20,10 +20,9 @@ std::string WorkflowBspUploadGeometryStep::GetPluginId() const {
     return "bsp.upload_geometry";
 }
 
-void WorkflowBspUploadGeometryStep::Execute(
-    const WorkflowStepDefinition& step, WorkflowContext& context) {
-    SDL_GPUDevice* device =
-        context.Get<SDL_GPUDevice*>("gpu_device", nullptr);
+void WorkflowBspUploadGeometryStep::Execute(const WorkflowStepDefinition& step,
+                                            WorkflowContext& context) {
+    SDL_GPUDevice* device = context.Get<SDL_GPUDevice*>("gpu_device", nullptr);
     if (!device)
         throw std::runtime_error("bsp.upload_geometry: GPU device not found");
 
@@ -44,20 +43,19 @@ void WorkflowBspUploadGeometryStep::Execute(
     const BspGeometryBuffers buffers =
         UploadBspGeometryBuffers(device, *allVertices, *allIndices);
 
-    context.Set<SDL_GPUBuffer*>(
-        "plane_" + meshName + "_vb", buffers.vertex_buffer);
-    context.Set<SDL_GPUBuffer*>(
-        "plane_" + meshName + "_ib", buffers.index_buffer);
-    context.Set("plane_" + meshName, nlohmann::json{
-        {"vertex_count", allVertices->size()},
-        {"index_count", allIndices->size()},
-        {"stride", 40}
-    });
+    context.Set<SDL_GPUBuffer*>("plane_" + meshName + "_vb",
+                                buffers.vertex_buffer);
+    context.Set<SDL_GPUBuffer*>("plane_" + meshName + "_ib",
+                                buffers.index_buffer);
+    context.Set("plane_" + meshName,
+                nlohmann::json{{"vertex_count", allVertices->size()},
+                               {"index_count", allIndices->size()},
+                               {"stride", 40}});
 
     if (logger_) {
         logger_->Info("bsp.upload_geometry: '" + meshName + "' uploaded (" +
-                     std::to_string(allVertices->size()) + " verts, " +
-                     std::to_string(allIndices->size() / 3) + " triangles)");
+                      std::to_string(allVertices->size()) + " verts, " +
+                      std::to_string(allIndices->size() / 3) + " triangles)");
     }
 }
 

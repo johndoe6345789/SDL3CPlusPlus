@@ -35,11 +35,11 @@ bool TryCollectPickup(const nlohmann::json& ent, const std::string& classname,
  * On teleport, `playerAabbMin`/`playerAabbMax` are updated in place so
  * a later trigger this same frame sees the post-teleport position.
  */
-bool TryActivateTrigger(const nlohmann::json& ent,
-                        const std::string& classname, const std::string& id,
-                        btRigidBody* body, const btVector3& playerPos,
-                        btVector3& playerAabbMin, btVector3& playerAabbMax,
-                        uint32_t frame, nlohmann::json& cooldowns,
+bool TryActivateTrigger(const nlohmann::json& ent, const std::string& classname,
+                        const std::string& id, btRigidBody* body,
+                        const btVector3& playerPos, btVector3& playerAabbMin,
+                        btVector3& playerAabbMax, uint32_t frame,
+                        nlohmann::json& cooldowns,
                         const std::shared_ptr<ILogger>& logger);
 
 }  // namespace sdl3cpp::services::impl

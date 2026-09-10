@@ -34,8 +34,7 @@ void WorkflowSceneAddGeometryStep::Execute(const WorkflowStepDefinition& step,
         resolver.GetRequiredOutputKey(step, "object_id");
 
     const auto* geometryId = context.TryGet<std::string>(geometryIdKey);
-    const auto* transform =
-        context.TryGet<std::array<float, 16>>(transformKey);
+    const auto* transform = context.TryGet<std::array<float, 16>>(transformKey);
 
     if (!geometryId) {
         throw std::runtime_error(
@@ -52,17 +51,16 @@ void WorkflowSceneAddGeometryStep::Execute(const WorkflowStepDefinition& step,
     // as-is; a reviewer should confirm whether that omission is
     // intentional.
     SceneObject obj;
-    obj.modelMatrix = *transform;
+    obj.modelMatrix          = *transform;
     obj.hasCustomModelMatrix = true;
-    obj.objectType = "geometry_object";
+    obj.objectType           = "geometry_object";
 
     const std::string objectId = GenerateSceneObjectUuid();
     context.Set(outputKey, objectId);
 
     if (logger_) {
         logger_->Trace("WorkflowSceneAddGeometryStep", "Execute",
-                       "geometry_id=" + *geometryId +
-                           ", object_id=" + objectId,
+                       "geometry_id=" + *geometryId + ", object_id=" + objectId,
                        "Added geometry to scene");
     }
 }

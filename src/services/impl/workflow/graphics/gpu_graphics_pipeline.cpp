@@ -7,9 +7,9 @@ namespace sdl3cpp::services::impl {
 namespace {
 
 std::string StrParam(const WorkflowStepParameterResolver& params,
-                      const WorkflowStepDefinition& step, const char* key,
-                      const std::string& fallback) {
-    const auto* p = params.FindParameter(step, key);
+                     const WorkflowStepDefinition& step, const char* key,
+                     const std::string& fallback) {
+    const auto* p       = params.FindParameter(step, key);
     const bool isString = p && p->type == WorkflowParameterValue::Type::String;
     return isString ? p->stringValue : fallback;
 }
@@ -17,7 +17,7 @@ std::string StrParam(const WorkflowStepParameterResolver& params,
 float NumParam(const WorkflowStepParameterResolver& params,
                const WorkflowStepDefinition& step, const char* key,
                float fallback) {
-    const auto* p = params.FindParameter(step, key);
+    const auto* p       = params.FindParameter(step, key);
     const bool isNumber = p && p->type == WorkflowParameterValue::Type::Number;
     return isNumber ? static_cast<float>(p->numberValue) : fallback;
 }
@@ -61,15 +61,15 @@ GpuPipelineCreateParams ReadGpuPipelineCreateParams(
 GpuVertexAttributeLayout BuildVertexAttributeLayout(
     const std::string& vertexFormat) {
     GpuVertexAttributeLayout layout;
-    auto& vbuf  = layout.vbufDesc;
-    auto& attrs = layout.attrs;
-    vbuf.slot                = 0;
-    vbuf.input_rate          = SDL_GPU_VERTEXINPUTRATE_VERTEX;
-    vbuf.instance_step_rate  = 0;
-    attrs[0].location    = 0;
-    attrs[0].buffer_slot = 0;
-    attrs[0].format      = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3;
-    attrs[0].offset      = 0;
+    auto& vbuf              = layout.vbufDesc;
+    auto& attrs             = layout.attrs;
+    vbuf.slot               = 0;
+    vbuf.input_rate         = SDL_GPU_VERTEXINPUTRATE_VERTEX;
+    vbuf.instance_step_rate = 0;
+    attrs[0].location       = 0;
+    attrs[0].buffer_slot    = 0;
+    attrs[0].format         = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3;
+    attrs[0].offset         = 0;
 
     if (vertexFormat == "none") {
         // Fullscreen triangle: no vertex buffers, vertex_id only.
@@ -77,26 +77,26 @@ GpuVertexAttributeLayout BuildVertexAttributeLayout(
         layout.numAttributes = 0;
     } else if (vertexFormat == "position_uv_lmuv_normal") {
         // BSP: float3 pos + float2 uv + float2 lmuv + float3 normal = 40B.
-        vbuf.pitch            = sizeof(float) * 10;
-        attrs[1].location     = 1;
-        attrs[1].buffer_slot  = 0;
-        attrs[1].format       = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT2;
-        attrs[1].offset       = sizeof(float) * 3;   // 12
-        attrs[2].location     = 2;
-        attrs[2].buffer_slot  = 0;
-        attrs[2].format       = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT2;
-        attrs[2].offset       = sizeof(float) * 5;   // 20
-        attrs[3].location     = 3;
-        attrs[3].buffer_slot  = 0;
-        attrs[3].format       = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3;
-        attrs[3].offset       = sizeof(float) * 7;   // 28
-        layout.numBuffers     = 1;
-        layout.numAttributes  = 4;
+        vbuf.pitch           = sizeof(float) * 10;
+        attrs[1].location    = 1;
+        attrs[1].buffer_slot = 0;
+        attrs[1].format      = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT2;
+        attrs[1].offset      = sizeof(float) * 3;  // 12
+        attrs[2].location    = 2;
+        attrs[2].buffer_slot = 0;
+        attrs[2].format      = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT2;
+        attrs[2].offset      = sizeof(float) * 5;  // 20
+        attrs[3].location    = 3;
+        attrs[3].buffer_slot = 0;
+        attrs[3].format      = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT3;
+        attrs[3].offset      = sizeof(float) * 7;  // 28
+        layout.numBuffers    = 1;
+        layout.numAttributes = 4;
     } else if (vertexFormat == "position_uv") {
         // Textured: float3 position + float2 uv = 20 bytes.
         vbuf.pitch           = sizeof(float) * 5;
         attrs[1].location    = 1;
-        attrs[1].buffer_slot  = 0;
+        attrs[1].buffer_slot = 0;
         attrs[1].format      = SDL_GPU_VERTEXELEMENTFORMAT_FLOAT2;
         attrs[1].offset      = sizeof(float) * 3;
         layout.numBuffers    = 1;
@@ -105,7 +105,7 @@ GpuVertexAttributeLayout BuildVertexAttributeLayout(
         // Default position_color: float3 position + ubyte4 color = 16B.
         vbuf.pitch           = sizeof(float) * 3 + sizeof(uint8_t) * 4;
         attrs[1].location    = 1;
-        attrs[1].buffer_slot  = 0;
+        attrs[1].buffer_slot = 0;
         attrs[1].format      = SDL_GPU_VERTEXELEMENTFORMAT_UBYTE4_NORM;
         attrs[1].offset      = sizeof(float) * 3;
         layout.numBuffers    = 1;
@@ -132,8 +132,8 @@ SDL_GPUTextureFormat ResolveDepthFormat(const std::string& depthFormat) {
 }
 
 SDL_GPUTextureFormat ResolveColorTargetFormat(const std::string& colorFormat,
-                                               SDL_GPUDevice* device,
-                                               SDL_Window* window) {
+                                              SDL_GPUDevice* device,
+                                              SDL_Window* window) {
     if (colorFormat == "rgba16_float") {
         return SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
     }
@@ -151,29 +151,28 @@ SDL_GPUTextureFormat ResolveColorTargetFormat(const std::string& colorFormat,
 }
 
 void ApplyAlphaBlendState(SDL_GPUColorTargetDescription& target) {
-    target.blend_state.enable_blend = true;
-    target.blend_state.src_color_blendfactor =
-        SDL_GPU_BLENDFACTOR_SRC_ALPHA;
+    target.blend_state.enable_blend          = true;
+    target.blend_state.src_color_blendfactor = SDL_GPU_BLENDFACTOR_SRC_ALPHA;
     target.blend_state.dst_color_blendfactor =
         SDL_GPU_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
-    target.blend_state.color_blend_op = SDL_GPU_BLENDOP_ADD;
+    target.blend_state.color_blend_op        = SDL_GPU_BLENDOP_ADD;
     target.blend_state.src_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ONE;
     target.blend_state.dst_alpha_blendfactor = SDL_GPU_BLENDFACTOR_ZERO;
-    target.blend_state.alpha_blend_op = SDL_GPU_BLENDOP_ADD;
+    target.blend_state.alpha_blend_op        = SDL_GPU_BLENDOP_ADD;
 }
 
 SDL_GPUGraphicsPipelineCreateInfo BuildGraphicsPipelineCreateInfo(
     const GpuPipelineCreateParams& p, SDL_GPUShader* vertexShader,
-    SDL_GPUShader* fragmentShader, SDL_GPUDevice* device,
-    SDL_Window* window, GpuVertexAttributeLayout& layoutOut,
+    SDL_GPUShader* fragmentShader, SDL_GPUDevice* device, SDL_Window* window,
+    GpuVertexAttributeLayout& layoutOut,
     SDL_GPUColorTargetDescription& colorTargetOut) {
     layoutOut = BuildVertexAttributeLayout(p.vertexFormat);
     SDL_GPUVertexInputState vertexInput = {};
-    vertexInput.num_vertex_buffers    = layoutOut.numBuffers;
-    vertexInput.num_vertex_attributes = layoutOut.numAttributes;
+    vertexInput.num_vertex_buffers      = layoutOut.numBuffers;
+    vertexInput.num_vertex_attributes   = layoutOut.numAttributes;
     if (layoutOut.numBuffers > 0) {
         vertexInput.vertex_buffer_descriptions = &layoutOut.vbufDesc;
-        vertexInput.vertex_attributes = layoutOut.attrs.data();
+        vertexInput.vertex_attributes          = layoutOut.attrs.data();
     }
 
     colorTargetOut = {};
@@ -186,20 +185,18 @@ SDL_GPUGraphicsPipelineCreateInfo BuildGraphicsPipelineCreateInfo(
     }
 
     SDL_GPUGraphicsPipelineCreateInfo info = {};
-    info.vertex_shader      = vertexShader;
-    info.fragment_shader    = fragmentShader;
-    info.vertex_input_state = vertexInput;
-    info.primitive_type     = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST;
+    info.vertex_shader                     = vertexShader;
+    info.fragment_shader                   = fragmentShader;
+    info.vertex_input_state                = vertexInput;
+    info.primitive_type                    = SDL_GPU_PRIMITIVETYPE_TRIANGLELIST;
 
     info.rasterizer_state.fill_mode  = SDL_GPU_FILLMODE_FILL;
     info.rasterizer_state.cull_mode  = ResolveCullMode(p.cullMode);
-    info.rasterizer_state.front_face =
-        SDL_GPU_FRONTFACE_COUNTER_CLOCKWISE;
+    info.rasterizer_state.front_face = SDL_GPU_FRONTFACE_COUNTER_CLOCKWISE;
     if (p.depthBias != 0.0f || p.depthBiasSlope != 0.0f) {
-        info.rasterizer_state.enable_depth_bias = true;
+        info.rasterizer_state.enable_depth_bias          = true;
         info.rasterizer_state.depth_bias_constant_factor = p.depthBias;
-        info.rasterizer_state.depth_bias_slope_factor =
-            p.depthBiasSlope;
+        info.rasterizer_state.depth_bias_slope_factor    = p.depthBiasSlope;
     }
 
     info.depth_stencil_state.enable_depth_test  = p.depthTest;
@@ -208,7 +205,7 @@ SDL_GPUGraphicsPipelineCreateInfo BuildGraphicsPipelineCreateInfo(
 
     if (p.numColorTargets > 0) {
         info.target_info.color_target_descriptions = &colorTargetOut;
-        info.target_info.num_color_targets = p.numColorTargets;
+        info.target_info.num_color_targets         = p.numColorTargets;
     }
     if (p.hasDepth) {
         info.target_info.depth_stencil_format =
@@ -218,22 +215,23 @@ SDL_GPUGraphicsPipelineCreateInfo BuildGraphicsPipelineCreateInfo(
     return info;
 }
 
-GpuPipelineShaders RequireGpuPipelineShaders(
-    WorkflowContext& context, const GpuPipelineCreateParams& p) {
+GpuPipelineShaders RequireGpuPipelineShaders(WorkflowContext& context,
+                                             const GpuPipelineCreateParams& p) {
     GpuPipelineShaders shaders;
-    shaders.vertex =
-        context.Get<SDL_GPUShader*>(p.vertexShaderKey, nullptr);
+    shaders.vertex = context.Get<SDL_GPUShader*>(p.vertexShaderKey, nullptr);
     shaders.fragment =
         context.Get<SDL_GPUShader*>(p.fragmentShaderKey, nullptr);
     if (!shaders.vertex) {
         throw std::runtime_error(
             "graphics.gpu.pipeline.create: Vertex shader not found at "
-            "key '" + p.vertexShaderKey + "'");
+            "key '" +
+            p.vertexShaderKey + "'");
     }
     if (!shaders.fragment) {
         throw std::runtime_error(
             "graphics.gpu.pipeline.create: Fragment shader not found at "
-            "key '" + p.fragmentShaderKey + "'");
+            "key '" +
+            p.fragmentShaderKey + "'");
     }
     return shaders;
 }

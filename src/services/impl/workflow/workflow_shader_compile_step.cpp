@@ -44,7 +44,7 @@ void WorkflowShaderCompileStep::Execute(const WorkflowStepDefinition& step,
     }
 
     CompileShadersToContext(shaderRegistry_, graphicsService_, logger_,
-                           context);
+                            context);
 
     if (logger_) {
         logger_->Trace("WorkflowShaderCompileStep", "Execute", "Exit");

@@ -12,10 +12,10 @@ namespace sdl3cpp::services::impl {
 /// particle.update's tunable parameters. gravity and enableFade are
 /// parsed but currently unused by Execute -- preserved as-is.
 struct ParticleUpdateParams {
-    float deltaTime  = 0.016f;
-    float gravity    = 9.81f;
-    float damping    = 1.0f;
-    bool enableFade  = false;
+    float deltaTime = 0.016f;
+    float gravity   = 9.81f;
+    float damping   = 1.0f;
+    bool enableFade = false;
 };
 
 ParticleUpdateParams ReadParticleUpdateParams(

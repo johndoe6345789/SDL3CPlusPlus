@@ -23,15 +23,13 @@ namespace {
 glm::mat4 TagMatrix(const nlohmann::json& tag) {
     const auto& ax = tag["axis"];
     const auto& o  = tag["origin"];
-    auto axis = [&](int i) {
+    auto axis      = [&](int i) {
         return glm::vec4(ax[i][0].get<float>(), ax[i][1].get<float>(),
-                         ax[i][2].get<float>(), 0.0f);
+                              ax[i][2].get<float>(), 0.0f);
     };
-    return glm::mat4(
-        axis(0), axis(1), axis(2),
-        glm::vec4(o[0].get<float>(), o[1].get<float>(),
-                  o[2].get<float>(), 1.0f)
-    );
+    return glm::mat4(axis(0), axis(1), axis(2),
+                     glm::vec4(o[0].get<float>(), o[1].get<float>(),
+                               o[2].get<float>(), 1.0f));
 }
 
 // Draws all surfaces of one MD3 model part at world transform `modelMat`.
@@ -48,12 +46,13 @@ void DrawBotModelPart(const std::string& prefix, int frame,
     const int nFrames = context.Get<int>("q3.md3." + prefix + "_num_frames", 1);
     const int clampedFrame = std::max(0, std::min(frame, nFrames - 1));
 
-    const glm::mat4 mvp = proj * view * modelMat;
+    const glm::mat4 mvp             = proj * view * modelMat;
     rendering::VertexUniformData vu = {};
-    std::memcpy(vu.mvp,       glm::value_ptr(mvp),      sizeof(float) * 16);
+    std::memcpy(vu.mvp, glm::value_ptr(mvp), sizeof(float) * 16);
     std::memcpy(vu.model_mat, glm::value_ptr(modelMat), sizeof(float) * 16);
-    vu.normal[1] = 1.0f;
-    vu.uv_scale[0] = 1.0f; vu.uv_scale[1] = 1.0f;
+    vu.normal[1]     = 1.0f;
+    vu.uv_scale[0]   = 1.0f;
+    vu.uv_scale[1]   = 1.0f;
     vu.camera_pos[0] = camPos.x;
     vu.camera_pos[1] = camPos.y;
     vu.camera_pos[2] = camPos.z;
@@ -61,12 +60,12 @@ void DrawBotModelPart(const std::string& prefix, int frame,
 
     for (int s = 0; s < nSurfs; ++s) {
         const std::string sk = "q3.md3." + prefix + "_surf" + std::to_string(s);
-        auto* vb = context.Get<SDL_GPUBuffer*>(
+        auto* vb             = context.Get<SDL_GPUBuffer*>(
             sk + "_f" + std::to_string(clampedFrame) + "_vb", nullptr);
-        auto* ib = context.Get<SDL_GPUBuffer*>(sk + "_ib", nullptr);
+        auto* ib         = context.Get<SDL_GPUBuffer*>(sk + "_ib", nullptr);
         const int numIdx = context.Get<int>(sk + "_num_idx", 0);
         if (!vb || !ib || numIdx <= 0) continue;
-        auto* tex  = context.Get<SDL_GPUTexture*>(sk + "_tex",  nullptr);
+        auto* tex  = context.Get<SDL_GPUTexture*>(sk + "_tex", nullptr);
         auto* samp = context.Get<SDL_GPUSampler*>(sk + "_samp", nullptr);
         if (!tex || !samp) continue;
 
@@ -74,8 +73,8 @@ void DrawBotModelPart(const std::string& prefix, int frame,
         // Reuse albedo when no shadow texture to avoid Metal null-slot
         // validation errors.
         {
-            auto* stex  = shadowTex  ? shadowTex  : tex;
-            auto* ssamp = shadowSamp ? shadowSamp : samp;
+            auto* stex                        = shadowTex ? shadowTex : tex;
+            auto* ssamp                       = shadowSamp ? shadowSamp : samp;
             SDL_GPUTextureSamplerBinding b[2] = {{tex, samp}, {stex, ssamp}};
             SDL_BindGPUFragmentSamplers(pass, 0, b, 2);
         }
@@ -96,8 +95,7 @@ glm::mat4 GetBotModelTagMatrix(const std::string& prefix, int frame,
                                WorkflowContext& context) {
     const auto* tagsJson =
         context.TryGet<nlohmann::json>("q3.md3." + prefix + "_tags");
-    if (!tagsJson || !tagsJson->is_array() ||
-        (int)tagsJson->size() <= frame) {
+    if (!tagsJson || !tagsJson->is_array() || (int)tagsJson->size() <= frame) {
         return glm::mat4(1.0f);
     }
     const auto& frameObj = (*tagsJson)[(size_t)frame];
@@ -108,9 +106,9 @@ glm::mat4 GetBotModelTagMatrix(const std::string& prefix, int frame,
 }  // namespace
 
 void DrawBotModelChain(const nlohmann::json& bot,
-                       const BotModelPrefixes& prefixes,
-                       const glm::mat4& view, const glm::mat4& proj,
-                       const glm::vec3& camPos, const glm::mat4& shadowVP,
+                       const BotModelPrefixes& prefixes, const glm::mat4& view,
+                       const glm::mat4& proj, const glm::vec3& camPos,
+                       const glm::mat4& shadowVP,
                        const rendering::FragmentUniformData& fu,
                        SDL_GPURenderPass* pass, SDL_GPUCommandBuffer* cmd,
                        SDL_GPUTexture* shadowTex, SDL_GPUSampler* shadowSamp,
@@ -119,15 +117,15 @@ void DrawBotModelChain(const nlohmann::json& bot,
 
     const auto& posJ = bot["pos"];
     const glm::vec3 bpos(posJ[0].get<float>(), posJ[1].get<float>(),
-                          posJ[2].get<float>());
-    const float yaw       = bot.value("yaw", 0.0f);
-    const int legFrame    = bot.value("leg_frame", 0);
-    const int torsoFrame  = bot.value("torso_frame", 0);
+                         posJ[2].get<float>());
+    const float yaw      = bot.value("yaw", 0.0f);
+    const int legFrame   = bot.value("leg_frame", 0);
+    const int torsoFrame = bot.value("torso_frame", 0);
 
     auto draw = [&](const std::string& pfx, int frame,
                     const glm::mat4& modelMat) {
-        DrawBotModelPart(pfx, frame, modelMat, view, proj, camPos, shadowVP,
-                         fu, pass, cmd, shadowTex, shadowSamp, context);
+        DrawBotModelPart(pfx, frame, modelMat, view, proj, camPos, shadowVP, fu,
+                         pass, cmd, shadowTex, shadowSamp, context);
     };
 
     // ── lower.md3: root transform ──────────────────────────────────
@@ -137,11 +135,10 @@ void DrawBotModelChain(const nlohmann::json& bot,
     const glm::vec3 bf(-std::sin(yaw), 0.0f, -std::cos(yaw));
     const glm::vec3 bu(0.0f, 1.0f, 0.0f);
     glm::mat4 bOrient(1.0f);
-    bOrient[0] = glm::vec4(bf, 0.0f);
-    bOrient[1] = glm::vec4(glm::cross(bu, bf), 0.0f);
-    bOrient[2] = glm::vec4(bu, 0.0f);
-    const glm::mat4 lowerMat =
-        glm::translate(glm::mat4(1.0f), bpos) * bOrient;
+    bOrient[0]               = glm::vec4(bf, 0.0f);
+    bOrient[1]               = glm::vec4(glm::cross(bu, bf), 0.0f);
+    bOrient[2]               = glm::vec4(bu, 0.0f);
+    const glm::mat4 lowerMat = glm::translate(glm::mat4(1.0f), bpos) * bOrient;
     draw(prefixes.lower, legFrame, lowerMat);
     if (!prefixes.hasUpper) return;
 
@@ -154,14 +151,14 @@ void DrawBotModelChain(const nlohmann::json& bot,
 
     // head.md3: attached at tag_head from upper.
     draw(prefixes.head, 0,
-         upperMat * GetBotModelTagMatrix(prefixes.upper, torsoFrame,
-                                          "tag_head", context));
+         upperMat * GetBotModelTagMatrix(prefixes.upper, torsoFrame, "tag_head",
+                                         context));
     if (!prefixes.hasWeapon) return;
 
     // weapon.md3: attached at tag_weapon from upper.
     draw(prefixes.weapon, 0,
          upperMat * GetBotModelTagMatrix(prefixes.upper, torsoFrame,
-                                          "tag_weapon", context));
+                                         "tag_weapon", context));
 }
 
 }  // namespace sdl3cpp::services::impl

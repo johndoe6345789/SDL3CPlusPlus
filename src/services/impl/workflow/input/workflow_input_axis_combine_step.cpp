@@ -40,7 +40,7 @@ void WorkflowInputAxisCombineStep::Execute(const WorkflowStepDefinition& step,
     const auto& axesConfig = aggregationConfig["inputBindings"]["axes"];
     for (auto it = axesConfig.begin(); it != axesConfig.end(); ++it) {
         const std::string& axisName = it.key();
-        const auto& axisBinding = it.value();
+        const auto& axisBinding     = it.value();
 
         if (!axisBinding.is_object() || !axisBinding.contains("sources") ||
             !axisBinding["sources"].is_array()) {
@@ -48,7 +48,7 @@ void WorkflowInputAxisCombineStep::Execute(const WorkflowStepDefinition& step,
         }
 
         CombineAndWriteAxis(axisName, axisBinding, context, keyState,
-                           gamepadConnected, logger_);
+                            gamepadConnected, logger_);
     }
 }
 

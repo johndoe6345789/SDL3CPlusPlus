@@ -17,9 +17,9 @@ namespace sdl3cpp::services::impl {
 struct DrawTexturedBoxParams {
     glm::vec3 pos{0.0f};
     glm::vec3 size{1.0f};
-    float uvDensity = 1.0f;
-    float roughness = 0.8f;
-    float metallic = 0.0f;
+    float uvDensity     = 1.0f;
+    float roughness     = 0.8f;
+    float metallic      = 0.0f;
     std::string texture = "walls_texture";
     std::string body;
 };
@@ -54,10 +54,10 @@ void BindBoxTextures(SDL_GPURenderPass* pass, SDL_GPUTexture* texture,
  * buffers (already bound by the caller).
  */
 void DrawBoxFaces(SDL_GPURenderPass* pass, SDL_GPUCommandBuffer* cmd,
-                  const std::array<BoxFace, 6>& faces,
-                  const glm::vec3& center, const glm::mat4& bodyRotation,
-                  const glm::mat4& view, const glm::mat4& proj,
-                  const glm::vec3& camPos, const glm::mat4& shadowVP,
+                  const std::array<BoxFace, 6>& faces, const glm::vec3& center,
+                  const glm::mat4& bodyRotation, const glm::mat4& view,
+                  const glm::mat4& proj, const glm::vec3& camPos,
+                  const glm::mat4& shadowVP,
                   const rendering::FragmentUniformData& fu,
                   uint32_t indexCount);
 
@@ -72,6 +72,6 @@ void DrawBoxFaces(SDL_GPURenderPass* pass, SDL_GPUCommandBuffer* cmd,
  * is missing from `context`.
  */
 void DrawTexturedBox(WorkflowContext& context, ILogger* logger,
-                    const DrawTexturedBoxParams& params);
+                     const DrawTexturedBoxParams& params);
 
 }  // namespace sdl3cpp::services::impl

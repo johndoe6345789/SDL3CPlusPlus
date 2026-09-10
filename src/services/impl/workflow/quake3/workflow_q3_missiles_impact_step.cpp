@@ -41,15 +41,14 @@ void WorkflowQ3MissilesImpactStep::Execute(
 
     // Phase 2: splash damage for every exploded missile.
     ApplyQ3MissileSplashDamage(*missiles, playerPos, bots, botDamage,
-                              pendingDamage, prevPositions_);
+                               pendingDamage, prevPositions_);
 
     // Phase 3: remove all exploded missiles.
-    missiles->erase(
-        std::remove_if(missiles->begin(), missiles->end(),
-                       [](const sdl3cpp::q3::Q3Missile& m) {
-                           return m.exploded;
-                       }),
-        missiles->end());
+    missiles->erase(std::remove_if(missiles->begin(), missiles->end(),
+                                   [](const sdl3cpp::q3::Q3Missile& m) {
+                                       return m.exploded;
+                                   }),
+                    missiles->end());
 
     context.Set("q3.missiles", missiles);
     context.Set<int>("q3.pending_damage", pendingDamage);

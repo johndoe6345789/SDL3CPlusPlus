@@ -21,8 +21,8 @@ void WorkflowQ3PmStepSlideStep::Execute(const WorkflowStepDefinition&,
     if (!psPtr) return;
 
     Q3PlayerState ps = *psPtr;
-    auto* world = context.Get<btDiscreteDynamicsWorld*>("physics_world",
-                                                        nullptr);
+    auto* world =
+        context.Get<btDiscreteDynamicsWorld*>("physics_world", nullptr);
     const float dt =
         static_cast<float>(context.GetDouble("frame.delta_time", 0.016));
 

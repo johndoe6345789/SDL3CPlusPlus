@@ -29,7 +29,7 @@ struct PosUvVertex {
 struct MapLoadParams {
     std::string filePath;
     float scale        = 1.0f;
-    bool createPhysics  = true;
+    bool createPhysics = true;
 };
 
 /// Reads `file_path`/`scale`/`create_physics`, falling back from a step

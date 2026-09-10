@@ -45,13 +45,13 @@ void WorkflowPostfxBloomBlurStep::Execute(const WorkflowStepDefinition& step,
 
     // Pass 1: Horizontal blur — ping -> pong.
     if (!DrawBloomBlurPass(cmd, pipeline, pingTex, pongTex, sampler, texelW,
-                          0.0f)) {
+                           0.0f)) {
         return;
     }
 
     // Pass 2: Vertical blur — pong -> ping.
     if (!DrawBloomBlurPass(cmd, pipeline, pongTex, pingTex, sampler, 0.0f,
-                          texelH)) {
+                           texelH)) {
         return;
     }
 

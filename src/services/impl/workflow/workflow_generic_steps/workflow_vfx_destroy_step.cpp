@@ -15,8 +15,8 @@ std::string WorkflowVfxDestroyStep::GetPluginId() const {
     return "vfx.destroy";
 }
 
-void WorkflowVfxDestroyStep::Execute(
-    const WorkflowStepDefinition& step, WorkflowContext& context) {
+void WorkflowVfxDestroyStep::Execute(const WorkflowStepDefinition& step,
+                                     WorkflowContext& context) {
     WorkflowStepParameterResolver parameterResolver;
 
     std::vector<std::string> effects;
@@ -37,14 +37,14 @@ void WorkflowVfxDestroyStep::Execute(
 
     const auto countOutputIt = step.outputs.find("remaining_count");
     if (countOutputIt != step.outputs.end()) {
-        context.Set(countOutputIt->second,
-            static_cast<double>(effects.size()));
+        context.Set(countOutputIt->second, static_cast<double>(effects.size()));
     }
 
     if (logger_) {
-        logger_->Trace("WorkflowVfxDestroyStep", "Execute",
+        logger_->Trace(
+            "WorkflowVfxDestroyStep", "Execute",
             "destroyed=" + std::string(destroyed ? "true" : "false") +
-            ", remaining=" + std::to_string(effects.size()),
+                ", remaining=" + std::to_string(effects.size()),
             "VFX destruction complete");
     }
 }

@@ -13,9 +13,9 @@ GpuShaderFormatChoice ResolveGpuShaderFormat(const std::string& renderer) {
         return {SDL_GPU_SHADERFORMAT_SPIRV, "vulkan"};
     }
     // auto: accept every shipped format so SDL picks best available backend
-    return {static_cast<SDL_GPUShaderFormat>(
-                SDL_GPU_SHADERFORMAT_SPIRV | SDL_GPU_SHADERFORMAT_MSL),
-           nullptr};
+    return {static_cast<SDL_GPUShaderFormat>(SDL_GPU_SHADERFORMAT_SPIRV |
+                                             SDL_GPU_SHADERFORMAT_MSL),
+            nullptr};
 }
 
 SDL_GPUDevice* CreateGpuDeviceWithFallback(
@@ -29,7 +29,7 @@ SDL_GPUDevice* CreateGpuDeviceWithFallback(
 
     if (logger) {
         logger->Warn("graphics.gpu.init: Failed with " + renderer + ": " +
-                    std::string(SDL_GetError()));
+                     std::string(SDL_GetError()));
     }
 
     // Fallback: let SDL auto-select
@@ -39,7 +39,8 @@ SDL_GPUDevice* CreateGpuDeviceWithFallback(
     if (!device) {
         throw std::runtime_error(
             "graphics.gpu.init: SDL_CreateGPUDevice failed even with "
-            "fallback: " + std::string(SDL_GetError()));
+            "fallback: " +
+            std::string(SDL_GetError()));
     }
     return device;
 }
@@ -73,7 +74,7 @@ void ApplyPresentModeOverride(SDL_GPUDevice* device, SDL_Window* window,
         // GPU-efficient. Low-refresh displays (<120 Hz) get MAILBOX so
         // we aren't capped at 60 fps and can stay responsive with a
         // shallow frame queue.
-        int refreshHz = 60;
+        int refreshHz      = 60;
         SDL_DisplayID disp = SDL_GetDisplayForWindow(window);
         if (disp) {
             const SDL_DisplayMode* dm = SDL_GetCurrentDisplayMode(disp);
@@ -84,22 +85,32 @@ void ApplyPresentModeOverride(SDL_GPUDevice* device, SDL_Window* window,
         mode = (refreshHz >= 120) ? "vsync" : "mailbox";
         if (logger) {
             logger->Info("graphics.gpu.init: auto present_mode -> " + mode +
-                        " (display " + std::to_string(refreshHz) + " Hz)");
+                         " (display " + std::to_string(refreshHz) + " Hz)");
         }
     }
 
     SDL_GPUPresentMode pm = SDL_GPU_PRESENTMODE_VSYNC;
-    if (mode == "mailbox") pm = SDL_GPU_PRESENTMODE_MAILBOX;
-    else if (mode == "immediate") pm = SDL_GPU_PRESENTMODE_IMMEDIATE;
+    if (mode == "mailbox")
+        pm = SDL_GPU_PRESENTMODE_MAILBOX;
+    else if (mode == "immediate")
+        pm = SDL_GPU_PRESENTMODE_IMMEDIATE;
 
     if (SDL_WindowSupportsGPUPresentMode(device, window, pm)) {
-        SDL_SetGPUSwapchainParameters(
-            device, window, SDL_GPU_SWAPCHAINCOMPOSITION_SDR, pm);
+        SDL_SetGPUSwapchainParameters(device, window,
+                                      SDL_GPU_SWAPCHAINCOMPOSITION_SDR, pm);
         if (logger) logger->Info("graphics.gpu.init: present_mode=" + mode);
     } else if (logger) {
         logger->Warn("graphics.gpu.init: present_mode '" + mode +
-                    "' unsupported, falling back to vsync");
+                     "' unsupported, falling back to vsync");
     }
+}
+
+std::string DescribeGpuInit(uint32_t width, uint32_t height,
+                            SDL_GPUDevice* device) {
+    const char* driver = SDL_GetGPUDeviceDriver(device);
+    return "width=" + std::to_string(width) +
+           ", height=" + std::to_string(height) +
+           ", driver=" + std::string(driver ? driver : "unknown");
 }
 
 }  // namespace sdl3cpp::services::impl

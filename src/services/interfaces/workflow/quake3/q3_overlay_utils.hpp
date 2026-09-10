@@ -124,7 +124,7 @@ inline void DrawQ3Text(SDL_Renderer* r, SDL_Texture* bigchars,
     }
 }
 
-inline float DrawHudNumber(SDL_Renderer* r, SDL_Texture* digits[11],
+inline float DrawHudNumber(SDL_Renderer* r, SDL_Texture* const digits[11],
         float x, float y, int value, float scale) {
     if (!r) return x;
     std::string s = (value < 0) ? ("-" + std::to_string(-value)) : std::to_string(value);

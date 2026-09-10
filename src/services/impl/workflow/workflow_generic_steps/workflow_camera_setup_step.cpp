@@ -53,19 +53,20 @@ void WorkflowCameraSetupStep::Execute(const WorkflowStepDefinition& step,
         if (logger_) {
             logger_->Info(
                 "WorkflowCameraSetupStep: Camera matrices computed "
-                "(distance=" + std::to_string(params.distance) +
+                "(distance=" +
+                std::to_string(params.distance) +
                 ", fov=" + std::to_string(params.fov) +
                 ", aspect=" + std::to_string(params.aspectRatio) + ")");
         }
     } catch (const std::exception& e) {
         if (logger_) {
-            logger_->Error(
-                "WorkflowCameraSetupStep::Execute: " + std::string(e.what()));
+            logger_->Error("WorkflowCameraSetupStep::Execute: " +
+                           std::string(e.what()));
         }
 
-        nlohmann::json errorState = nlohmann::json::object();
+        nlohmann::json errorState          = nlohmann::json::object();
         errorState["camera_setup_success"] = false;
-        errorState["error"] = e.what();
+        errorState["error"]                = e.what();
         context.Set("camera_state", errorState);
 
         throw;

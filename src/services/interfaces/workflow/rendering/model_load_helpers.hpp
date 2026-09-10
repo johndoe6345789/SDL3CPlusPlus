@@ -16,7 +16,7 @@ namespace sdl3cpp::services::impl {
 struct ModelLoadParams {
     std::string filePath;
     std::string name = "model";
-    float scale       = 1.0f;
+    float scale      = 1.0f;
 };
 
 /// Reads `file_path`/`name`/`scale`, falling back from a step parameter
@@ -44,8 +44,7 @@ struct AssimpMeshData {
 AssimpMeshData ExtractAssimpMeshData(const aiScene& scene, float scale);
 
 /// Builds the "plane_<name>" metadata blob describing a loaded model.
-nlohmann::json BuildModelLoadMetadata(uint32_t vertexCount,
-                                      uint32_t indexCount,
+nlohmann::json BuildModelLoadMetadata(uint32_t vertexCount, uint32_t indexCount,
                                       unsigned int meshCount,
                                       const std::string& filePath);
 

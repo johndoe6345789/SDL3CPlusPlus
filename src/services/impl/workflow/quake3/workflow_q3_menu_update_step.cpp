@@ -18,7 +18,7 @@ void WorkflowQ3MenuUpdateStep::Execute(const WorkflowStepDefinition&,
                                        WorkflowContext& context) {
     // Lazy-load menu config once per engine lifetime
     if (!config_loaded_) {
-        config_ = LoadQ3MenuConfig();
+        config_        = LoadQ3MenuConfig();
         config_loaded_ = true;
         if (logger_) logger_->Info("q3.menu.update: loaded menu config");
     }
@@ -47,13 +47,13 @@ void WorkflowQ3MenuUpdateStep::Execute(const WorkflowStepDefinition&,
     context.Set<std::string>("q3.menu_title", title);
 
     // --- navigate ---
-    int selected = context.Get<int>("q3.menu_selected_item", 0);
+    int selected       = context.Get<int>("q3.menu_selected_item", 0);
     const int numItems = static_cast<int>(items.size());
     if (numItems > 0) selected = std::clamp(selected, 0, numItems - 1);
 
-    const Q3MenuActionResult result = HandleQ3MenuInput(
-        context, screens, defaultScreen, screen, items, open, selected,
-        logger_.get());
+    const Q3MenuActionResult result =
+        HandleQ3MenuInput(context, screens, defaultScreen, screen, items, open,
+                          selected, logger_.get());
 
     context.Set<int>("q3.menu_selected_item", selected);
     context.Set<bool>("q3.menu_map_selected", result.mapSelected);

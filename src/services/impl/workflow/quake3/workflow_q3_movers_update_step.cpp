@@ -23,8 +23,8 @@ void WorkflowQ3MoversUpdateStep::Execute(const WorkflowStepDefinition&,
     auto& movers = **moversPtr;
     if (movers.empty()) return;
 
-    const float dt = static_cast<float>(context.GetDouble("frame.delta_time",
-                                                           0.016));
+    const float dt =
+        static_cast<float>(context.GetDouble("frame.delta_time", 0.016));
     if (dt <= 0.f) return;
 
     const glm::vec3 playerPos = ResolveQ3PlayerPosition(context);

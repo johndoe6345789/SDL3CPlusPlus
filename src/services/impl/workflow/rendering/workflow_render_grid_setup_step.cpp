@@ -31,8 +31,7 @@ void WorkflowRenderGridSetupStep::Execute(const WorkflowStepDefinition& step,
         std::string cameraKey = "camera.state";
         try {
             cameraKey = ioResolver.GetRequiredInputKey(step, "camera");
-        } catch (...) {
-        }
+        } catch (...) {}
 
         ValidateGridSetupGpuResources(context);
         auto* device = context.Get<SDL_GPUDevice*>("gpu_device", nullptr);
@@ -45,18 +44,17 @@ void WorkflowRenderGridSetupStep::Execute(const WorkflowStepDefinition& step,
         auto* depthTexture = CreateGridDepthTexture(device, winW, winH);
         context.Set<SDL_GPUTexture*>("gpu_depth_texture", depthTexture);
 
-        context.Set<nlohmann::json>("grid.config",
-                                    BuildGridConfigJson(params));
+        context.Set<nlohmann::json>("grid.config", BuildGridConfigJson(params));
         context.Set<std::string>("grid.camera_key", cameraKey);
 
         if (logger_) {
-            logger_->Info(
-                "WorkflowRenderGridSetupStep: grid=" +
-                std::to_string(params.gridWidth) + "x" +
-                std::to_string(params.gridHeight) + ", spacing=" +
-                std::to_string(params.gridSpacing) + ", frames=" +
-                std::to_string(params.numFrames) + ", depth=" +
-                std::to_string(winW) + "x" + std::to_string(winH));
+            logger_->Info("WorkflowRenderGridSetupStep: grid=" +
+                          std::to_string(params.gridWidth) + "x" +
+                          std::to_string(params.gridHeight) +
+                          ", spacing=" + std::to_string(params.gridSpacing) +
+                          ", frames=" + std::to_string(params.numFrames) +
+                          ", depth=" + std::to_string(winW) + "x" +
+                          std::to_string(winH));
         }
     } catch (const std::exception& e) {
         if (logger_) {

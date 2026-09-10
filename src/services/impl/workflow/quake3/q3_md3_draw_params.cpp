@@ -53,17 +53,19 @@ int ResolveMd3AnimFrame(const WorkflowContext& context,
     } else {
         const double elapsed = context.GetDouble("frame.elapsed", 0.0);
         const int totalFrame = static_cast<int>(elapsed * params.fps);
-        frame = (params.animCount > 0)
-                    ? params.animFirst + (totalFrame % params.animCount)
-                    : (totalFrame % numFrames);
+
+        if (params.animCount > 0) {
+            frame = params.animFirst + (totalFrame % params.animCount);
+        } else {
+            frame = totalFrame % numFrames;
+        }
     }
     return std::max(0, std::min(frame, numFrames - 1));
 }
 
 glm::mat4 BuildMd3ModelMatrix(const WorkflowContext& context,
                               const Md3DrawParams& params,
-                              const glm::mat4& view,
-                              const glm::vec3& camPos) {
+                              const glm::mat4& view, const glm::vec3& camPos) {
     if (params.viewmodel) {
         const glm::vec3 right(view[0][0], view[1][0], view[2][0]);
         const glm::vec3 up(view[0][1], view[1][1], view[2][1]);

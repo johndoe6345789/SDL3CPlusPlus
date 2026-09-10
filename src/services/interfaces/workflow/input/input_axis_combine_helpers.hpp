@@ -40,8 +40,7 @@ float ReadAxisSourceValue(const nlohmann::json& source,
 void CombineAndWriteAxis(const std::string& axisName,
                          const nlohmann::json& axisBinding,
                          WorkflowContext& context,
-                         const nlohmann::json* keyState,
-                         bool gamepadConnected,
+                         const nlohmann::json* keyState, bool gamepadConnected,
                          const std::shared_ptr<ILogger>& logger);
 
 }  // namespace sdl3cpp::services::impl

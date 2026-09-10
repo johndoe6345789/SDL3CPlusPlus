@@ -48,10 +48,9 @@ void WorkflowGraphicsBufferCreateVertexStep::Execute(
     SDL_GPUBuffer* vbuf = UploadVertexBuffer(device, vertex_data);
 
     if (logger_) {
-        logger_->Trace(
-            "WorkflowGraphicsBufferCreateVertexStep", "Execute",
-            "vertex_count=" + std::to_string(vertex_data.size() / 3),
-            "Vertex buffer created successfully");
+        logger_->Trace("WorkflowGraphicsBufferCreateVertexStep", "Execute",
+                       "vertex_count=" + std::to_string(vertex_data.size() / 3),
+                       "Vertex buffer created successfully");
     }
 
     context.Set<SDL_GPUBuffer*>("gpu_vertex_buffer", vbuf);

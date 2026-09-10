@@ -32,7 +32,7 @@ void WorkflowGpuShaderCompileStep::Execute(const WorkflowStepDefinition& step,
     }
 
     const ShaderFormatInfo formatInfo = DetectShaderFormat(device);
-    auto shader_data = LoadShaderBinary(params.shaderPath);
+    auto shader_data                  = LoadShaderBinary(params.shaderPath);
     PrepareShaderBinaryForFormat(formatInfo, shader_data);
 
     if (logger_) {
@@ -48,18 +48,17 @@ void WorkflowGpuShaderCompileStep::Execute(const WorkflowStepDefinition& step,
     context.Set<SDL_GPUShader*>(params.outputKey, shader);
 
     nlohmann::json info;
-    info["format"] = formatInfo.formatName;
-    info["stage"] = params.stage;
-    info["code_size"] = shader_data.size();
+    info["format"]     = formatInfo.formatName;
+    info["stage"]      = params.stage;
+    info["code_size"]  = shader_data.size();
     info["entrypoint"] = formatInfo.entrypoint;
     context.Set(params.outputKey + "_info", info);
 
     if (logger_) {
-        logger_->Trace(
-            "WorkflowGpuShaderCompileStep", "Execute",
-            "output_key=" + params.outputKey +
-                ", size=" + std::to_string(shader_data.size()),
-            "Shader compiled and stored in context");
+        logger_->Trace("WorkflowGpuShaderCompileStep", "Execute",
+                       "output_key=" + params.outputKey +
+                           ", size=" + std::to_string(shader_data.size()),
+                       "Shader compiled and stored in context");
     }
 }
 

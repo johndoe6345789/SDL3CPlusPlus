@@ -24,8 +24,8 @@ struct SSAOUniformData {
  *        no longer matches `width`/`height`.
  */
 SDL_GPUTexture* GetOrCreateSsaoTexture(WorkflowContext& context,
-                                       SDL_GPUDevice* device,
-                                       uint32_t width, uint32_t height);
+                                       SDL_GPUDevice* device, uint32_t width,
+                                       uint32_t height);
 
 /**
  * @brief Builds the SSAO fragment uniform block from the current
@@ -34,8 +34,7 @@ SDL_GPUTexture* GetOrCreateSsaoTexture(WorkflowContext& context,
  * @return false if `kernel` holds fewer than the 64 floats (16 float4
  *         samples) the shader expects, leaving `out` untouched.
  */
-bool BuildSsaoUniforms(const glm::mat4& proj, uint32_t width,
-                       uint32_t height, const std::vector<float>& kernel,
-                       SSAOUniformData& out);
+bool BuildSsaoUniforms(const glm::mat4& proj, uint32_t width, uint32_t height,
+                       const std::vector<float>& kernel, SSAOUniformData& out);
 
 }  // namespace sdl3cpp::services::impl

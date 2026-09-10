@@ -24,8 +24,13 @@ std::array<PosColorVertex, 8> BuildSolidColorCubeVertices(
     const CubeColorParams& color) {
     std::array<PosColorVertex, 8> out{};
     for (int i = 0; i < 8; ++i) {
-        out[i] = {kCubeCorners[i].x, kCubeCorners[i].y, kCubeCorners[i].z,
-                  color.r, color.g, color.b, 255};
+        out[i] = {kCubeCorners[i].x,
+                  kCubeCorners[i].y,
+                  kCubeCorners[i].z,
+                  color.r,
+                  color.g,
+                  color.b,
+                  255};
     }
     return out;
 }

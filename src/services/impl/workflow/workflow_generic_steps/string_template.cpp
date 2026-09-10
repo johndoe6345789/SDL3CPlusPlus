@@ -49,17 +49,17 @@ std::string InterpolateTemplate(WorkflowContext& context,
                 if (mapIt != valuesMap->end()) {
                     replacement = mapIt->second;
                 } else {
-                    throw std::runtime_error(
-                        "string.format: placeholder '{" + placeholder_name +
-                        "}' not found in values map");
+                    throw std::runtime_error("string.format: placeholder '{" +
+                                             placeholder_name +
+                                             "}' not found in values map");
                 }
             } else {
                 throw std::runtime_error("string.format: placeholder '{" +
-                                        placeholder_name + "}' not found");
+                                         placeholder_name + "}' not found");
             }
         } else {
             throw std::runtime_error("string.format: placeholder '{" +
-                                    placeholder_name + "}' not found");
+                                     placeholder_name + "}' not found");
         }
 
         formatted.append(replacement);

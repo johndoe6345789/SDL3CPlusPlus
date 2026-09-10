@@ -13,7 +13,7 @@ bool ReadIfElseCondition(const WorkflowStepDefinition& step,
     }
 
     const std::string& conditionKey = conditionIt->second;
-    const auto* conditionValue = context.TryGet<bool>(conditionKey);
+    const auto* conditionValue      = context.TryGet<bool>(conditionKey);
     if (!conditionValue) {
         throw std::runtime_error(
             "control.condition.if_else: condition input '" + conditionKey +

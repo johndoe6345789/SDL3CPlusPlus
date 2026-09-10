@@ -5,8 +5,7 @@
 
 namespace sdl3cpp::services::impl {
 
-PhysicsBodyParams ResolvePhysicsBodyParams(
-    const WorkflowStepDefinition& step) {
+PhysicsBodyParams ResolvePhysicsBodyParams(const WorkflowStepDefinition& step) {
     WorkflowStepParameterResolver resolver;
     PhysicsBodyParams params;
 
@@ -52,23 +51,23 @@ PhysicsBody BuildPhysicsBody(btDiscreteDynamicsWorld* world,
     PhysicsBody out;
 
     if (p.shape == "capsule") {
-        out.shape = new btCapsuleShape(p.radius, p.height);
-        out.visual = {
-            {"scale", {p.radius * 2.0f, (p.height + p.radius * 2.0f) / 2.0f,
-                      p.radius * 2.0f}},
-            {"visible", p.is_player < 0.5f},
-            {"spinning", false}};
+        out.shape  = new btCapsuleShape(p.radius, p.height);
+        out.visual = {{"scale",
+                       {p.radius * 2.0f, (p.height + p.radius * 2.0f) / 2.0f,
+                        p.radius * 2.0f}},
+                      {"visible", p.is_player < 0.5f},
+                      {"spinning", false}};
     } else {
         // Default: box
         btVector3 halfExtents(p.size_x / 2.0f, p.size_y / 2.0f,
                               p.size_z / 2.0f);
-        out.shape = new btBoxShape(halfExtents);
-        out.visual = {{"scale", {p.size_x / 2.0f, p.size_y / 2.0f,
-                                 p.size_z / 2.0f}},
-                      {"visible", p.visible > 0.5f},
-                      {"spinning", p.spinning > 0.5f},
-                      {"spin_speed_x", p.spin_speed_x},
-                      {"spin_speed_y", p.spin_speed_y}};
+        out.shape  = new btBoxShape(halfExtents);
+        out.visual = {
+            {"scale", {p.size_x / 2.0f, p.size_y / 2.0f, p.size_z / 2.0f}},
+            {"visible", p.visible > 0.5f},
+            {"spinning", p.spinning > 0.5f},
+            {"spin_speed_x", p.spin_speed_x},
+            {"spin_speed_y", p.spin_speed_y}};
     }
 
     btTransform startTransform;

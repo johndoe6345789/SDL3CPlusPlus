@@ -13,11 +13,11 @@ glm::vec3 ClipVelocity(const glm::vec3& v, const glm::vec3& normal,
 
 void RunQ3SlideMove(Q3PlayerState& ps, btDiscreteDynamicsWorld* world,
                     const WorkflowContext& context, float dt) {
-    static constexpr int kMaxBumps = 4;
+    static constexpr int kMaxBumps      = 4;
     static constexpr float kMinFraction = 0.001f;
 
     float timeLeft = dt;
-    int bumpCount = 0;
+    int bumpCount  = 0;
 
     // Accumulate hit normals to handle crease collisions.
     std::array<glm::vec3, kMaxBumps> planes{};
@@ -60,8 +60,8 @@ void RunQ3SlideMove(Q3PlayerState& ps, btDiscreteDynamicsWorld* world,
 
         // Make the velocity parallel to every plane it is entering.
         // Only a genuine three-plane corner stops the player dead.
-        ps.velocity = q3::ResolveAgainstPlanes(ps.velocity, planes.data(),
-                                               numPlanes);
+        ps.velocity =
+            q3::ResolveAgainstPlanes(ps.velocity, planes.data(), numPlanes);
         if (glm::dot(ps.velocity, ps.velocity) <= 0.f) break;
     }
 }

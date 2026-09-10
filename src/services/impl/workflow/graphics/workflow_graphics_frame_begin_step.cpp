@@ -16,8 +16,8 @@ std::string WorkflowGraphicsFrameBeginStep::GetPluginId() const {
     return "graphics.frame.begin";
 }
 
-void WorkflowGraphicsFrameBeginStep::Execute(
-    const WorkflowStepDefinition& step, WorkflowContext& context) {
+void WorkflowGraphicsFrameBeginStep::Execute(const WorkflowStepDefinition& step,
+                                             WorkflowContext& context) {
     WorkflowStepIoResolver resolver;
     const std::string clearColorKey =
         resolver.GetRequiredInputKey(step, "clear_color");
@@ -29,9 +29,10 @@ void WorkflowGraphicsFrameBeginStep::Execute(
     const FrameClearColor cc = ParseFrameClearColorOrThrow(clear_color_json);
 
     SDL_GPUDevice* device = context.Get<SDL_GPUDevice*>("gpu_device", nullptr);
-    SDL_Window* window = context.Get<SDL_Window*>("sdl_window", nullptr);
+    SDL_Window* window    = context.Get<SDL_Window*>("sdl_window", nullptr);
     if (!device || !window) {
-        throw std::runtime_error("graphics.frame.begin: GPU device or "
+        throw std::runtime_error(
+            "graphics.frame.begin: GPU device or "
             "SDL window not found in context");
     }
 
@@ -44,8 +45,8 @@ void WorkflowGraphicsFrameBeginStep::Execute(
     if (!swap.texture) {
         // Window minimized or not visible - submit empty command buffer
         SDL_SubmitGPUCommandBuffer(cmd);
-        context.Set(outputFrameKey, BuildFrameBeginOutput(
-            frame_counter++, true, *clear_color_json));
+        context.Set(outputFrameKey, BuildFrameBeginOutput(frame_counter++, true,
+                                                          *clear_color_json));
         return;
     }
 
@@ -56,8 +57,8 @@ void WorkflowGraphicsFrameBeginStep::Execute(
 
     SDL_GPUTexture* depth_texture =
         context.Get<SDL_GPUTexture*>("gpu_depth_texture", nullptr);
-    depth_texture = GetOrCreateFrameDepthTexture(
-        device, depth_texture, swap.width, swap.height);
+    depth_texture = GetOrCreateFrameDepthTexture(device, depth_texture,
+                                                 swap.width, swap.height);
     context.Set<SDL_GPUTexture*>("gpu_depth_texture", depth_texture);
 
     SDL_GPURenderPass* render_pass = BeginFrameRenderPassOrThrow(
@@ -66,15 +67,12 @@ void WorkflowGraphicsFrameBeginStep::Execute(
 
     if (logger_) {
         logger_->Trace("WorkflowGraphicsFrameBeginStep", "Execute",
-            "clear_color=(" + std::to_string(cc.r) + "," +
-            std::to_string(cc.g) + "," + std::to_string(cc.b) + "," +
-            std::to_string(cc.a) + "), swapchain=" +
-            std::to_string(swap.width) + "x" + std::to_string(swap.height),
-            "Frame begin: render pass started");
+                       DescribeFrameBegin(cc, swap),
+                       "Frame begin: render pass started");
     }
 
-    context.Set(outputFrameKey, BuildFrameBeginOutput(
-        frame_counter++, false, *clear_color_json));
+    context.Set(outputFrameKey, BuildFrameBeginOutput(frame_counter++, false,
+                                                      *clear_color_json));
 }
 
 }  // namespace sdl3cpp::services::impl

@@ -43,8 +43,7 @@ void WorkflowBspBuildCollisionStep::Execute(const WorkflowStepDefinition&,
     // reload. NOTE: only the solid body is cleaned up here, matching the
     // original monolith — a stale bsp_playerclip_body is not removed on
     // reload; preserved as-is rather than silently fixed.
-    auto* prevBody = context.Get<btRigidBody*>("bsp_collision_body",
-                                                nullptr);
+    auto* prevBody = context.Get<btRigidBody*>("bsp_collision_body", nullptr);
     RemoveBspCollisionBody(world, prevBody);
     context.Set<btRigidBody*>("bsp_collision_body", nullptr);
 
@@ -67,10 +66,8 @@ void WorkflowBspBuildCollisionStep::Execute(const WorkflowStepDefinition&,
 
     if (logger_) {
         logger_->Info("bsp.build_collision: " +
-                      std::to_string(shapes.solidBrushes) +
-                      " solid brushes, " +
-                      std::to_string(shapes.clipBrushes) +
-                      " player-clip, " +
+                      std::to_string(shapes.solidBrushes) + " solid brushes, " +
+                      std::to_string(shapes.clipBrushes) + " player-clip, " +
                       std::to_string(shapes.skippedBrushes) + " skipped");
     }
 }

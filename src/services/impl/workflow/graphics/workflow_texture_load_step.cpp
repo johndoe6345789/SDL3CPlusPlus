@@ -34,8 +34,8 @@ void WorkflowTextureLoadStep::Execute(const WorkflowStepDefinition& step,
 
     const std::string resolved = ResolveTextureImagePath(*image_path);
     if (logger_) {
-        logger_->Trace("WorkflowTextureLoadStep", "Execute",
-                       "path=" + resolved, "Loading texture");
+        logger_->Trace("WorkflowTextureLoadStep", "Execute", "path=" + resolved,
+                       "Loading texture");
     }
 
     LoadedTextureImage image = LoadTextureImagePixels(resolved);
@@ -57,17 +57,17 @@ void WorkflowTextureLoadStep::Execute(const WorkflowStepDefinition& step,
     const Uint32 data_size =
         static_cast<Uint32>(image.width * image.height * 4);
     nlohmann::json meta = {{"valid", true},
-                            {"width", image.width},
-                            {"height", image.height},
-                            {"channels", 4},
-                            {"path", resolved}};
+                           {"width", image.width},
+                           {"height", image.height},
+                           {"channels", 4},
+                           {"path", resolved}};
     context.Set(outputKey, meta);
 
     if (logger_) {
         logger_->Info("texture.load: Loaded " + resolved + " (" +
-                     std::to_string(image.width) + "x" +
-                     std::to_string(image.height) + ", " +
-                     std::to_string(data_size) + " bytes)");
+                      std::to_string(image.width) + "x" +
+                      std::to_string(image.height) + ", " +
+                      std::to_string(data_size) + " bytes)");
     }
 }
 

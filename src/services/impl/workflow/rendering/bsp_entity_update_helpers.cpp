@@ -48,8 +48,7 @@ btVector3 JumpPadVelocity(const btVector3& from, const btVector3& target) {
     const float horiz =
         std::sqrt(delta.x() * delta.x() + delta.z() * delta.z());
     const float t = std::clamp(horiz / 18.0f, 0.55f, 1.20f);
-    return btVector3(delta.x() / t,
-                     (delta.y() + 0.5f * kGravity * t * t) / t,
+    return btVector3(delta.x() / t, (delta.y() + 0.5f * kGravity * t * t) / t,
                      delta.z() / t);
 }
 
@@ -60,10 +59,8 @@ bool HasPrefix(const std::string& value, const std::string& prefix) {
 }
 
 bool IsPickupClass(const std::string& classname) {
-    return HasPrefix(classname, "weapon_") ||
-           HasPrefix(classname, "ammo_") ||
-           HasPrefix(classname, "item_") ||
-           HasPrefix(classname, "holdable_");
+    return HasPrefix(classname, "weapon_") || HasPrefix(classname, "ammo_") ||
+           HasPrefix(classname, "item_") || HasPrefix(classname, "holdable_");
 }
 
 bool ReadVec3(const nlohmann::json& value, btVector3& out) {
@@ -87,7 +84,7 @@ bool TryCollectPickup(const nlohmann::json& ent, const std::string& classname,
     }
     if ((itemPos - playerPos).length2() > 1.2f * 1.2f) return true;
 
-    collected[id]     = true;
+    collected[id]        = true;
     inventory[classname] = true;
     if (HasPrefix(classname, "weapon_")) {
         context.Set<std::string>("q3.current_weapon", classname);
@@ -96,11 +93,11 @@ bool TryCollectPickup(const nlohmann::json& ent, const std::string& classname,
     return true;
 }
 
-bool TryActivateTrigger(const nlohmann::json& ent,
-                        const std::string& classname, const std::string& id,
-                        btRigidBody* body, const btVector3& playerPos,
-                        btVector3& playerAabbMin, btVector3& playerAabbMax,
-                        uint32_t frame, nlohmann::json& cooldowns,
+bool TryActivateTrigger(const nlohmann::json& ent, const std::string& classname,
+                        const std::string& id, btRigidBody* body,
+                        const btVector3& playerPos, btVector3& playerAabbMin,
+                        btVector3& playerAabbMax, uint32_t frame,
+                        nlohmann::json& cooldowns,
                         const std::shared_ptr<ILogger>& logger) {
     if (classname != "trigger_push" && classname != "trigger_teleport") {
         return false;
@@ -111,9 +108,8 @@ bool TryActivateTrigger(const nlohmann::json& ent,
         return true;
     }
 
-    const uint32_t lastFrame = cooldowns.value(id, 0u);
-    const uint32_t cooldownFrames =
-        classname == "trigger_teleport" ? 45u : 15u;
+    const uint32_t lastFrame      = cooldowns.value(id, 0u);
+    const uint32_t cooldownFrames = classname == "trigger_teleport" ? 45u : 15u;
     if (lastFrame != 0u && frame < lastFrame + cooldownFrames) return true;
     cooldowns[id] = frame == 0u ? 1u : frame;
 

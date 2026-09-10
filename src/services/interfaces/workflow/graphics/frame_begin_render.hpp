@@ -4,6 +4,8 @@
 #include <SDL3/SDL_gpu.h>
 #include <nlohmann/json.hpp>
 
+#include <string>
+
 namespace sdl3cpp::services::impl {
 
 /// The four clear-color channels read from the `clear_color` input.
@@ -26,7 +28,7 @@ FrameClearColor ParseFrameClearColorOrThrow(
  * skipped, else `{frame_id, clear_color, skipped, timestamp}`.
  */
 nlohmann::json BuildFrameBeginOutput(uint32_t frameId, bool skipped,
-    const nlohmann::json& clearColorJson);
+                                     const nlohmann::json& clearColorJson);
 
 /**
  * @brief Acquires the GPU command buffer for a new frame.
@@ -47,25 +49,32 @@ struct SwapchainAcquireResult {
  * @throws std::runtime_error (naming SDL_GetError(), cancelling `cmd`
  * first) if the underlying SDL call fails outright.
  */
-SwapchainAcquireResult AcquireSwapchainTextureOrThrow(
-    SDL_GPUCommandBuffer* cmd, SDL_Window* window);
+SwapchainAcquireResult AcquireSwapchainTextureOrThrow(SDL_GPUCommandBuffer* cmd,
+                                                      SDL_Window* window);
 
 /**
  * @brief Returns `existing` if non-null, otherwise creates a
  * D32_FLOAT depth texture sized `width`x`height`.
  * @throws std::runtime_error (naming SDL_GetError()) on create failure.
  */
-SDL_GPUTexture* GetOrCreateFrameDepthTexture(
-    SDL_GPUDevice* device, SDL_GPUTexture* existing, Uint32 width,
-    Uint32 height);
+SDL_GPUTexture* GetOrCreateFrameDepthTexture(SDL_GPUDevice* device,
+                                             SDL_GPUTexture* existing,
+                                             Uint32 width, Uint32 height);
 
 /**
  * @brief Begins the frame's render pass, clearing `colorTarget` to
  * (r,g,b,a) and `depthTarget` to 1.0.
  * @throws std::runtime_error (naming SDL_GetError()) on failure.
  */
-SDL_GPURenderPass* BeginFrameRenderPassOrThrow(
-    SDL_GPUCommandBuffer* cmd, SDL_GPUTexture* colorTarget,
-    SDL_GPUTexture* depthTarget, float r, float g, float b, float a);
+SDL_GPURenderPass* BeginFrameRenderPassOrThrow(SDL_GPUCommandBuffer* cmd,
+                                               SDL_GPUTexture* colorTarget,
+                                               SDL_GPUTexture* depthTarget,
+                                               float r, float g, float b,
+                                               float a);
+
+/// One-line trace description of a started frame, for graphics.frame.begin's
+/// logger.
+std::string DescribeFrameBegin(const FrameClearColor& cc,
+                               const SwapchainAcquireResult& swap);
 
 }  // namespace sdl3cpp::services::impl

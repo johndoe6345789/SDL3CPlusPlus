@@ -8,10 +8,12 @@ namespace sdl3cpp::services::impl {
 WorkflowQ3HudStep::WorkflowQ3HudStep(std::shared_ptr<ILogger> l)
     : logger_(std::move(l)) {}
 
-std::string WorkflowQ3HudStep::GetPluginId() const { return "q3.hud"; }
+std::string WorkflowQ3HudStep::GetPluginId() const {
+    return "q3.hud";
+}
 
 void WorkflowQ3HudStep::Execute(const WorkflowStepDefinition&,
-                               WorkflowContext& context) {
+                                WorkflowContext& context) {
     if (!context.GetBool("overlay.ready", false)) return;
     if (context.GetBool("q3.menu_open", false)) return;
 
@@ -33,8 +35,8 @@ void WorkflowQ3HudStep::Execute(const WorkflowStepDefinition&,
         context.Get<SDL_GPUTexture*>("overlay.head_gpu_tex", nullptr);
 
     assets.health = context.Get<int>("q3.player_health", 100);
-    assets.armor = context.Get<int>("q3.player_armor", 0);
-    assets.ammo = context.Get<int>("q3.player_ammo", 50);
+    assets.armor  = context.Get<int>("q3.player_armor", 0);
+    assets.ammo   = context.Get<int>("q3.player_ammo", 50);
 
     const Q3HudFaceRect faceRect = DrawQ3Hud(assets);
 

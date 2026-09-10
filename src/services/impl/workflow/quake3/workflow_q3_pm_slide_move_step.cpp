@@ -16,8 +16,8 @@ std::string WorkflowQ3PmSlideMoveStep::GetPluginId() const {
     return "q3.pm.slide_move";
 }
 
-void WorkflowQ3PmSlideMoveStep::Execute(
-    const WorkflowStepDefinition& /*step*/, WorkflowContext& context) {
+void WorkflowQ3PmSlideMoveStep::Execute(const WorkflowStepDefinition& /*step*/,
+                                        WorkflowContext& context) {
     auto* psPtr = context.TryGet<Q3PlayerState>("q3.ps");
     if (!psPtr) return;
 

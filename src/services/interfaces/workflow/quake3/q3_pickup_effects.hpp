@@ -13,9 +13,9 @@ namespace sdl3cpp::services::impl {
 /// through WorkflowContext keys of the same shape in
 /// WorkflowQ3PickupsTouchStep::Execute.
 struct PickupTouchState {
-    int health = 100;
-    int armor  = 0;
-    std::string armorType = "none";
+    int health                  = 100;
+    int armor                   = 0;
+    std::string armorType       = "none";
     nlohmann::json ammo         = nlohmann::json::object();
     nlohmann::json inventory    = nlohmann::json::object();
     nlohmann::json collected    = nlohmann::json::object();

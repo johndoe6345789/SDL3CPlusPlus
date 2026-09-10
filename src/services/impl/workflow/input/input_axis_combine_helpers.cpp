@@ -23,8 +23,7 @@ nlohmann::json LoadInputAggregationConfig(const WorkflowStepDefinition& step,
                                           const WorkflowContext& context) {
     WorkflowStepParameterResolver paramResolver;
     std::string configPath = "packages/seed/workflows/input_aggregation.json";
-    if (const auto* param =
-            paramResolver.FindParameter(step, "config_path")) {
+    if (const auto* param = paramResolver.FindParameter(step, "config_path")) {
         if (param->type == WorkflowParameterValue::Type::String) {
             configPath = param->stringValue;
         }
@@ -38,8 +37,8 @@ nlohmann::json LoadInputAggregationConfig(const WorkflowStepDefinition& step,
 
     std::ifstream configFile(configPath);
     if (!configFile.is_open()) {
-        throw std::runtime_error(
-            "input.axis.combine: Failed to open config: " + configPath);
+        throw std::runtime_error("input.axis.combine: Failed to open config: " +
+                                 configPath);
     }
     nlohmann::json aggregationConfig;
     configFile >> aggregationConfig;
@@ -51,7 +50,7 @@ float ReadAxisSourceValue(const nlohmann::json& source,
                           const nlohmann::json* keyState,
                           bool gamepadConnected) {
     const std::string sourceType = source["type"].get<std::string>();
-    float value = 0.0f;
+    float value                  = 0.0f;
 
     if (sourceType == "key") {
         std::string keyName = source.value("key", "");
@@ -68,9 +67,9 @@ float ReadAxisSourceValue(const nlohmann::json& source,
         }
     } else if (sourceType == "gamepad_axis") {
         if (gamepadConnected) {
-            std::string axisStr = source.value("axis", "");
+            std::string axisStr    = source.value("axis", "");
             std::string contextKey = "input.gamepad." + axisStr;
-            value = context.Get<float>(contextKey, 0.0f);
+            value                  = context.Get<float>(contextKey, 0.0f);
         }
     }
     return value;
@@ -79,16 +78,15 @@ float ReadAxisSourceValue(const nlohmann::json& source,
 void CombineAndWriteAxis(const std::string& axisName,
                          const nlohmann::json& axisBinding,
                          WorkflowContext& context,
-                         const nlohmann::json* keyState,
-                         bool gamepadConnected,
+                         const nlohmann::json* keyState, bool gamepadConnected,
                          const std::shared_ptr<ILogger>& logger) {
     float accumulatedValue = 0.0f;
 
     for (const auto& source : axisBinding["sources"]) {
         if (!source.is_object() || !source.contains("type")) continue;
 
-        float scale = source.value("scale", 1.0f);
-        bool invert = source.value("invert", false);
+        float scale    = source.value("scale", 1.0f);
+        bool invert    = source.value("invert", false);
         float deadzone = source.value("deadzone", 0.0f);
 
         float value =
@@ -109,8 +107,8 @@ void CombineAndWriteAxis(const std::string& axisName,
     }
 
     if (logger) {
-        logger->Debug("input.axis.combine: '" + axisName + "' = " +
-                     std::to_string(accumulatedValue));
+        logger->Debug("input.axis.combine: '" + axisName +
+                      "' = " + std::to_string(accumulatedValue));
     }
 }
 

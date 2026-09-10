@@ -12,7 +12,8 @@ NavBuildAabb ComputeNavBuildAabb(const nlohmann::json* spawnPts) {
     for (const auto& sp : *spawnPts) {
         // Accept either {pos:[x,y,z]} or direct [x,y,z] arrays
         const nlohmann::json* posJ = nullptr;
-        if (sp.is_array() && sp.size() >= 3) posJ = &sp;
+        if (sp.is_array() && sp.size() >= 3)
+            posJ = &sp;
         else if (sp.contains("position") && sp["position"].is_array())
             posJ = &sp["position"];
         else if (sp.contains("pos") && sp["pos"].is_array())
@@ -21,25 +22,25 @@ NavBuildAabb ComputeNavBuildAabb(const nlohmann::json* spawnPts) {
 
         glm::vec3 p((*posJ)[0].get<float>(), (*posJ)[1].get<float>(),
                     (*posJ)[2].get<float>());
-        mn = glm::min(mn, p);
-        mx = glm::max(mx, p);
+        mn  = glm::min(mn, p);
+        mx  = glm::max(mx, p);
         any = true;
     }
     if (any) {
         // Expand by 20 units to cover the full playable area around spawns
         constexpr float kPad = 20.f;
-        aabb.min = mn - glm::vec3(kPad, 5.f, kPad);
-        aabb.max = mx + glm::vec3(kPad, 5.f, kPad);
+        aabb.min             = mn - glm::vec3(kPad, 5.f, kPad);
+        aabb.max             = mx + glm::vec3(kPad, 5.f, kPad);
     }
     return aabb;
 }
 
-sdl3cpp::q3::NavGraphPtr SampleNavGraph(
-    btDiscreteDynamicsWorld* world, const NavBuildAabb& aabb) {
-    constexpr float kStep = 2.0f;         // grid spacing in XZ
-    constexpr float kRayUp = 50.f;        // start ray this far above point
-    constexpr float kRayDown = 50.f;      // ray extends this far below it
-    constexpr float kMinNormalY = 0.7f;   // walkable surface normal min
+sdl3cpp::q3::NavGraphPtr SampleNavGraph(btDiscreteDynamicsWorld* world,
+                                        const NavBuildAabb& aabb) {
+    constexpr float kStep        = 2.0f;  // grid spacing in XZ
+    constexpr float kRayUp       = 50.f;  // start ray this far above point
+    constexpr float kRayDown     = 50.f;  // ray extends this far below it
+    constexpr float kMinNormalY  = 0.7f;  // walkable surface normal min
     constexpr float kAgentHeight = 0.5f;  // lift node above hit point
 
     auto graph = std::make_shared<sdl3cpp::q3::NavGraph>();
@@ -58,17 +59,17 @@ sdl3cpp::q3::NavGraphPtr SampleNavGraph(
 
             sdl3cpp::q3::NavNode node;
             node.pos = glm::vec3(cb.m_hitPointWorld.x(),
-                cb.m_hitPointWorld.y() + kAgentHeight,
-                cb.m_hitPointWorld.z());
+                                 cb.m_hitPointWorld.y() + kAgentHeight,
+                                 cb.m_hitPointWorld.z());
             graph->nodes.push_back(node);
         }
     }
     return graph;
 }
 
-void ConnectNavNeighbors(
-    btDiscreteDynamicsWorld* world, sdl3cpp::q3::NavGraph& graph) {
-    constexpr float kNeighborDist = 3.0f;
+void ConnectNavNeighbors(btDiscreteDynamicsWorld* world,
+                         sdl3cpp::q3::NavGraph& graph) {
+    constexpr float kNeighborDist  = 3.0f;
     constexpr float kNeighborDist2 = kNeighborDist * kNeighborDist;
 
     const int n = static_cast<int>(graph.nodes.size());
@@ -76,8 +77,8 @@ void ConnectNavNeighbors(
         const glm::vec3& pi = graph.nodes[i].pos;
         for (int j = i + 1; j < n; ++j) {
             const glm::vec3& pj = graph.nodes[j].pos;
-            const glm::vec3 d = pj - pi;
-            const float dist2 = d.x * d.x + d.y * d.y + d.z * d.z;
+            const glm::vec3 d   = pj - pi;
+            const float dist2   = d.x * d.x + d.y * d.y + d.z * d.z;
             if (dist2 > kNeighborDist2) continue;
 
             // LOS check

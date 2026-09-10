@@ -8,12 +8,12 @@ namespace sdl3cpp::services::impl {
 /// SDL event queue.
 struct PolledInputEvents {
     float mouseRelX = 0.0f, mouseRelY = 0.0f;
-    bool keyEscapePressed  = false;
-    bool keyEnterPressed   = false;
-    bool keyUpPressed      = false;
-    bool keyDownPressed    = false;
-    bool keyQPressed       = false;
-    bool mouseLeftPressed  = false;
+    bool keyEscapePressed = false;
+    bool keyEnterPressed  = false;
+    bool keyUpPressed     = false;
+    bool keyDownPressed   = false;
+    bool keyQPressed      = false;
+    bool mouseLeftPressed = false;
 };
 
 /**

@@ -19,7 +19,7 @@ void WorkflowPostfxBloomExtractStep::Execute(const WorkflowStepDefinition&,
 
     auto* cmd =
         context.Get<SDL_GPUCommandBuffer*>("gpu_command_buffer", nullptr);
-    auto* device = context.Get<SDL_GPUDevice*>("gpu_device", nullptr);
+    auto* device   = context.Get<SDL_GPUDevice*>("gpu_device", nullptr);
     auto* pipeline = context.Get<SDL_GPUGraphicsPipeline*>(
         "postfx_bloom_extract_pipeline", nullptr);
     auto* hdrTex = context.Get<SDL_GPUTexture*>("postfx_hdr_texture", nullptr);

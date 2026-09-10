@@ -16,16 +16,15 @@ std::string WorkflowInputButtonCombineStep::GetPluginId() const {
     return "input.button.combine";
 }
 
-void WorkflowInputButtonCombineStep::Execute(
-    const WorkflowStepDefinition& step, WorkflowContext& context) {
+void WorkflowInputButtonCombineStep::Execute(const WorkflowStepDefinition& step,
+                                             WorkflowContext& context) {
     if (logger_) {
         logger_->Trace("WorkflowInputButtonCombineStep", "Execute", "Entry");
     }
 
     WorkflowStepParameterResolver paramResolver;
     std::string configPath = "packages/seed/workflows/input_aggregation.json";
-    if (const auto* param =
-            paramResolver.FindParameter(step, "config_path")) {
+    if (const auto* param = paramResolver.FindParameter(step, "config_path")) {
         if (param->type == WorkflowParameterValue::Type::String) {
             configPath = param->stringValue;
         }
@@ -58,8 +57,7 @@ void WorkflowInputButtonCombineStep::Execute(
 
         bool pressed = false;
         for (const auto& source : buttonBinding["sources"]) {
-            if (IsSourcePressed(source, keyState, gamepadConnected,
-                               context)) {
+            if (IsSourcePressed(source, keyState, gamepadConnected, context)) {
                 pressed = true;
                 break;  // Any source pressed = button pressed (OR logic)
             }

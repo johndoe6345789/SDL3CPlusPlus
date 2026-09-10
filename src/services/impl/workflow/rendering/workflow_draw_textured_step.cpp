@@ -23,12 +23,13 @@ void WorkflowDrawTexturedStep::Execute(const WorkflowStepDefinition& step,
     auto* pass = context.Get<SDL_GPURenderPass*>("gpu_render_pass", nullptr);
     auto* cmd =
         context.Get<SDL_GPUCommandBuffer*>("gpu_command_buffer", nullptr);
-    auto* pipeline = context.Get<SDL_GPUGraphicsPipeline*>(
-        "gpu_pipeline_textured", nullptr);
+    auto* pipeline =
+        context.Get<SDL_GPUGraphicsPipeline*>("gpu_pipeline_textured", nullptr);
     if (!pass || !cmd || !pipeline) {
         if (logger_) {
-            logger_->Warn("draw.textured: Missing render pass, command "
-                          "buffer, or textured pipeline");
+            logger_->Warn(
+                "draw.textured: Missing render pass, command "
+                "buffer, or textured pipeline");
         }
         return;
     }
@@ -43,17 +44,17 @@ void WorkflowDrawTexturedStep::Execute(const WorkflowStepDefinition& step,
     rendering::VertexUniformData vu;
     rendering::FragmentUniformData fu;
     BuildDrawTexturedUniforms(context, transform, params.roughness,
-                             params.metallic, vu, fu);
+                              params.metallic, vu, fu);
 
     SDL_BindGPUGraphicsPipeline(pass, pipeline);
     BindDrawTexturedSamplers(pass, context, resources.texture,
                              resources.sampler);
 
     SDL_GPUBufferBinding vb_binding = {};
-    vb_binding.buffer = resources.vb;
+    vb_binding.buffer               = resources.vb;
     SDL_BindGPUVertexBuffers(pass, 0, &vb_binding, 1);
     SDL_GPUBufferBinding ib_binding = {};
-    ib_binding.buffer = resources.ib;
+    ib_binding.buffer               = resources.ib;
     SDL_BindGPUIndexBuffer(pass, &ib_binding, SDL_GPU_INDEXELEMENTSIZE_16BIT);
 
     SDL_PushGPUVertexUniformData(cmd, 0, &vu, sizeof(vu));

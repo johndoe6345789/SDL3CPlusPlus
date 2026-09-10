@@ -38,13 +38,11 @@ namespace sdl3cpp::services::impl {
  */
 class WorkflowInputAxisCombineStep final : public IWorkflowStep {
 public:
-    explicit WorkflowInputAxisCombineStep(
-        std::shared_ptr<ILogger> logger
-    );
+    explicit WorkflowInputAxisCombineStep(std::shared_ptr<ILogger> logger);
 
     std::string GetPluginId() const override;
     void Execute(const WorkflowStepDefinition& step,
-                WorkflowContext& context) override;
+                 WorkflowContext& context) override;
 
 private:
     std::shared_ptr<ILogger> logger_;

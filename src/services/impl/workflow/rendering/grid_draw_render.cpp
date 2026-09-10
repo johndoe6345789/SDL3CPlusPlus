@@ -34,12 +34,10 @@ void ReadGridCameraMatrices(const WorkflowContext& context, glm::mat4& view,
                             glm::mat4& proj) {
     const std::string cameraKey =
         context.GetString("grid.camera_key", "camera.state");
-    const auto* cameraJson =
-        context.TryGet<nlohmann::json>(cameraKey);
+    const auto* cameraJson = context.TryGet<nlohmann::json>(cameraKey);
     if (!cameraJson || !cameraJson->is_object()) {
-        throw std::runtime_error(
-            "render.grid.draw: camera '" + cameraKey +
-            "' not found in context");
+        throw std::runtime_error("render.grid.draw: camera '" + cameraKey +
+                                 "' not found in context");
     }
 
     auto viewVec = (*cameraJson)["view"].get<std::vector<float>>();
@@ -63,39 +61,38 @@ GridGpuResources ReadGridGpuResources(const WorkflowContext& context) {
         context.Get<SDL_GPUGraphicsPipeline*>("gpu_pipeline", nullptr);
     gpu.vertexBuffer =
         context.Get<SDL_GPUBuffer*>("gpu_vertex_buffer", nullptr);
-    gpu.indexBuffer =
-        context.Get<SDL_GPUBuffer*>("gpu_index_buffer", nullptr);
+    gpu.indexBuffer = context.Get<SDL_GPUBuffer*>("gpu_index_buffer", nullptr);
     gpu.depthTexture =
         context.Get<SDL_GPUTexture*>("gpu_depth_texture", nullptr);
     return gpu;
 }
 
-uint32_t DrawGridCubes(const GridGpuResources& gpu,
-                       const GridDrawConfig& cfg, const glm::mat4& view,
-                       const glm::mat4& proj, float time) {
+uint32_t DrawGridCubes(const GridGpuResources& gpu, const GridDrawConfig& cfg,
+                       const glm::mat4& view, const glm::mat4& proj,
+                       float time) {
     SDL_GPUCommandBuffer* cmd = SDL_AcquireGPUCommandBuffer(gpu.device);
     if (!cmd) return 0;
 
     SDL_GPUTexture* swapchainTex = nullptr;
     Uint32 sw = 0, sh = 0;
-    if (!SDL_WaitAndAcquireGPUSwapchainTexture(cmd, gpu.window,
-                                               &swapchainTex, &sw, &sh) ||
+    if (!SDL_WaitAndAcquireGPUSwapchainTexture(cmd, gpu.window, &swapchainTex,
+                                               &sw, &sh) ||
         !swapchainTex) {
         SDL_SubmitGPUCommandBuffer(cmd);
         return 0;
     }
 
     SDL_GPUColorTargetInfo colorTarget = {};
-    colorTarget.texture     = swapchainTex;
-    colorTarget.clear_color = {cfg.bgR, cfg.bgG, cfg.bgB, 1.0f};
-    colorTarget.load_op     = SDL_GPU_LOADOP_CLEAR;
-    colorTarget.store_op    = SDL_GPU_STOREOP_STORE;
+    colorTarget.texture                = swapchainTex;
+    colorTarget.clear_color            = {cfg.bgR, cfg.bgG, cfg.bgB, 1.0f};
+    colorTarget.load_op                = SDL_GPU_LOADOP_CLEAR;
+    colorTarget.store_op               = SDL_GPU_STOREOP_STORE;
 
     SDL_GPUDepthStencilTargetInfo dsTarget = {};
-    dsTarget.texture     = gpu.depthTexture;
-    dsTarget.clear_depth = 1.0f;
-    dsTarget.load_op     = SDL_GPU_LOADOP_CLEAR;
-    dsTarget.store_op    = SDL_GPU_STOREOP_DONT_CARE;
+    dsTarget.texture                       = gpu.depthTexture;
+    dsTarget.clear_depth                   = 1.0f;
+    dsTarget.load_op                       = SDL_GPU_LOADOP_CLEAR;
+    dsTarget.store_op                      = SDL_GPU_STOREOP_DONT_CARE;
 
     SDL_GPURenderPass* pass =
         SDL_BeginGPURenderPass(cmd, &colorTarget, 1, &dsTarget);
@@ -106,35 +103,35 @@ uint32_t DrawGridCubes(const GridGpuResources& gpu,
 
     SDL_BindGPUGraphicsPipeline(pass, gpu.pipeline);
     SDL_GPUBufferBinding vb = {};
-    vb.buffer = gpu.vertexBuffer;
+    vb.buffer               = gpu.vertexBuffer;
     SDL_BindGPUVertexBuffers(pass, 0, &vb, 1);
     SDL_GPUBufferBinding ib = {};
-    ib.buffer = gpu.indexBuffer;
+    ib.buffer               = gpu.indexBuffer;
     SDL_BindGPUIndexBuffer(pass, &ib, SDL_GPU_INDEXELEMENTSIZE_16BIT);
 
     const glm::mat4 viewProj = proj * view;
-    struct UniformData { float mvp[16]; };
+    struct UniformData {
+        float mvp[16];
+    };
     uint32_t drawCalls = 0;
 
     for (uint32_t yy = 0; yy < cfg.gridHeight; ++yy) {
         for (uint32_t xx = 0; xx < cfg.gridWidth; ++xx) {
-            const float rotX = time + (static_cast<float>(xx) *
-                                       cfg.rotOffsetX);
-            const float rotY = time + (static_cast<float>(yy) *
-                                       cfg.rotOffsetY);
+            const float rotX = time + (static_cast<float>(xx) * cfg.rotOffsetX);
+            const float rotY = time + (static_cast<float>(yy) * cfg.rotOffsetY);
 
-            glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(
-                cfg.startX + (static_cast<float>(xx) * cfg.spacing),
-                cfg.startY + (static_cast<float>(yy) * cfg.spacing),
-                0.0f));
+            glm::mat4 model = glm::translate(
+                glm::mat4(1.0f),
+                glm::vec3(cfg.startX + (static_cast<float>(xx) * cfg.spacing),
+                          cfg.startY + (static_cast<float>(yy) * cfg.spacing),
+                          0.0f));
             model = glm::rotate(model, rotX, glm::vec3(1.0f, 0.0f, 0.0f));
             model = glm::rotate(model, rotY, glm::vec3(0.0f, 1.0f, 0.0f));
 
             UniformData uniforms;
             memcpy(uniforms.mvp, glm::value_ptr(viewProj * model),
-                  sizeof(uniforms.mvp));
-            SDL_PushGPUVertexUniformData(cmd, 0, &uniforms,
-                                         sizeof(uniforms));
+                   sizeof(uniforms.mvp));
+            SDL_PushGPUVertexUniformData(cmd, 0, &uniforms, sizeof(uniforms));
 
             SDL_DrawGPUIndexedPrimitives(pass, 36, 1, 0, 0, 0);
             ++drawCalls;

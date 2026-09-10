@@ -40,8 +40,8 @@ StagingCapture BlitSwapchainToStagingTexture(SDL_GPUDevice* device,
 
     SDL_GPUTexture* swapchainTex = nullptr;
     Uint32 sw = 0, sh = 0;
-    if (!SDL_WaitAndAcquireGPUSwapchainTexture(cmd, window, &swapchainTex,
-                                               &sw, &sh) ||
+    if (!SDL_WaitAndAcquireGPUSwapchainTexture(cmd, window, &swapchainTex, &sw,
+                                               &sh) ||
         !swapchainTex) {
         SDL_CancelGPUCommandBuffer(cmd);
         return {};
@@ -50,14 +50,14 @@ StagingCapture BlitSwapchainToStagingTexture(SDL_GPUDevice* device,
     const SDL_GPUTextureFormat format =
         SDL_GetGPUSwapchainTextureFormat(device, window);
     SDL_GPUTextureCreateInfo texInfo = {};
-    texInfo.type                  = SDL_GPU_TEXTURETYPE_2D;
-    texInfo.format                = format;
-    texInfo.width                 = sw;
-    texInfo.height                = sh;
-    texInfo.layer_count_or_depth  = 1;
-    texInfo.num_levels            = 1;
-    texInfo.usage = SDL_GPU_TEXTUREUSAGE_SAMPLER |
-                    SDL_GPU_TEXTUREUSAGE_COLOR_TARGET;
+    texInfo.type                     = SDL_GPU_TEXTURETYPE_2D;
+    texInfo.format                   = format;
+    texInfo.width                    = sw;
+    texInfo.height                   = sh;
+    texInfo.layer_count_or_depth     = 1;
+    texInfo.num_levels               = 1;
+    texInfo.usage =
+        SDL_GPU_TEXTUREUSAGE_SAMPLER | SDL_GPU_TEXTUREUSAGE_COLOR_TARGET;
 
     SDL_GPUTexture* stagingTex = SDL_CreateGPUTexture(device, &texInfo);
     if (!stagingTex) {
@@ -65,7 +65,7 @@ StagingCapture BlitSwapchainToStagingTexture(SDL_GPUDevice* device,
         return {};
     }
 
-    SDL_GPUBlitInfo blit = {};
+    SDL_GPUBlitInfo blit     = {};
     blit.source.texture      = swapchainTex;
     blit.source.w            = sw;
     blit.source.h            = sh;

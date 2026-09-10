@@ -38,21 +38,20 @@ void WorkflowModelSpawnStep::Execute(const WorkflowStepDefinition& step,
         const auto* existing =
             context.TryGet<std::vector<SceneObject>>(objectsIt->second);
         if (!existing) {
-            throw std::runtime_error(
-                "model.spawn requires objects list input");
+            throw std::runtime_error("model.spawn requires objects list input");
         }
         objects = *existing;
     }
 
     MeshPayloadConversionResult conversion = ConvertMeshPayload(*mesh);
     SceneObject object;
-    object.vertices     = std::move(conversion.vertices);
-    object.indices       = std::move(conversion.indices);
-    object.shaderKeys    = ReadShaderKeys(step, context, parameterResolver);
-    object.objectType    = ReadObjectType(step, context, parameterResolver);
+    object.vertices   = std::move(conversion.vertices);
+    object.indices    = std::move(conversion.indices);
+    object.shaderKeys = ReadShaderKeys(step, context, parameterResolver);
+    object.objectType = ReadObjectType(step, context, parameterResolver);
     object.computeModelMatrixRef = -1;
-    object.modelMatrix    = ReadMatrix(step, context, parameterResolver);
-    object.hasCustomModelMatrix = true;
+    object.modelMatrix           = ReadMatrix(step, context, parameterResolver);
+    object.hasCustomModelMatrix  = true;
     objects.push_back(std::move(object));
 
     context.Set(outputKey, std::move(objects));

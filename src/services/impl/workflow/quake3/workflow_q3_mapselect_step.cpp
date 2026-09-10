@@ -32,8 +32,7 @@ void WorkflowQ3MapSelectStep::Execute(const WorkflowStepDefinition&,
         context.Get<SDL_Texture*>("overlay.tex.arrow_l", nullptr);
     assets.arrowRight =
         context.Get<SDL_Texture*>("overlay.tex.arrow_r", nullptr);
-    assets.btnBack =
-        context.Get<SDL_Texture*>("overlay.tex.btn_back", nullptr);
+    assets.btnBack = context.Get<SDL_Texture*>("overlay.tex.btn_back", nullptr);
     assets.btnFight =
         context.Get<SDL_Texture*>("overlay.tex.btn_fight", nullptr);
     assets.btnSkirmish =
@@ -47,8 +46,9 @@ void WorkflowQ3MapSelectStep::Execute(const WorkflowStepDefinition&,
     const auto bspCfg =
         context.Get<nlohmann::json>("bsp_config", nlohmann::json{});
     assets.pk3Path = bspCfg.value("pk3_path", std::string(""));
-    assets.maps = context.Get<nlohmann::json>(
-        "q3.maps", nlohmann::json::array({"q3dm7"}));
+
+    const nlohmann::json defaultMaps = nlohmann::json::array({"q3dm7"});
+    assets.maps         = context.Get<nlohmann::json>("q3.maps", defaultMaps);
     assets.selectedItem = context.Get<int>("q3.menu_selected_item", 0);
 
     DrawQ3MapSelectScreen(assets);

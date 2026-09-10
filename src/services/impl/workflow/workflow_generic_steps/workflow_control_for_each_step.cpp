@@ -27,9 +27,8 @@ void WorkflowControlForEachStep::Execute(const WorkflowStepDefinition& step,
     auto requireInput = [&](const char* name) -> const std::string& {
         const auto it = step.inputs.find(name);
         if (it == step.inputs.end()) {
-            throw std::runtime_error(
-                "control.loop.for_each requires '" + std::string(name) +
-                "' input");
+            throw std::runtime_error("control.loop.for_each requires '" +
+                                     std::string(name) + "' input");
         }
         return it->second;
     };
@@ -43,8 +42,7 @@ void WorkflowControlForEachStep::Execute(const WorkflowStepDefinition& step,
                                  itemsKey + "' not found");
     }
 
-    const auto* stringVec =
-        std::any_cast<std::vector<std::string>>(itemsAny);
+    const auto* stringVec = std::any_cast<std::vector<std::string>>(itemsAny);
     const auto* numberVec = std::any_cast<std::vector<double>>(itemsAny);
     if (!stringVec && !numberVec) {
         throw std::runtime_error(
@@ -66,11 +64,10 @@ void WorkflowControlForEachStep::Execute(const WorkflowStepDefinition& step,
     }
 
     if (logger_) {
-        logger_->Trace(
-            "WorkflowControlForEachStep", "Execute",
-            "items=" + itemsKey + ", count=" + std::to_string(count) +
-                ", step=" + stepId,
-            "Completed for_each loop");
+        logger_->Trace("WorkflowControlForEachStep", "Execute",
+                       "items=" + itemsKey + ", count=" +
+                           std::to_string(count) + ", step=" + stepId,
+                       "Completed for_each loop");
     }
 }
 

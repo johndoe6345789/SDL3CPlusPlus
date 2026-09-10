@@ -31,8 +31,8 @@ void WorkflowPhysicsBodyAddStep::Execute(const WorkflowStepDefinition& step,
     }
 
     const PhysicsBodyParams params = ResolvePhysicsBodyParams(step);
-    const PhysicsBody built = BuildPhysicsBody(world, params);
-    const std::string& name = params.name;
+    const PhysicsBody built        = BuildPhysicsBody(world, params);
+    const std::string& name        = params.name;
 
     context.Set<btRigidBody*>("physics_body_" + name, built.body);
     context.Set<btCollisionShape*>("physics_shape_" + name, built.shape);
@@ -48,12 +48,11 @@ void WorkflowPhysicsBodyAddStep::Execute(const WorkflowStepDefinition& step,
     }
 
     if (logger_) {
-        logger_->Info(
-            "physics.body.add: '" + name + "' shape=" + params.shape +
-            " mass=" + std::to_string(params.mass) + " pos=(" +
-            std::to_string(params.pos_x) + "," +
-            std::to_string(params.pos_y) + "," +
-            std::to_string(params.pos_z) + ")");
+        logger_->Info("physics.body.add: '" + name + "' shape=" + params.shape +
+                      " mass=" + std::to_string(params.mass) + " pos=(" +
+                      std::to_string(params.pos_x) + "," +
+                      std::to_string(params.pos_y) + "," +
+                      std::to_string(params.pos_z) + ")");
     }
 }
 

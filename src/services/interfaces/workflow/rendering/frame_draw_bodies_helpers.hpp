@@ -24,8 +24,7 @@ namespace sdl3cpp::services::impl {
  * @return true if a draw call was issued.
  */
 bool DrawOnePhysicsBody(SDL_GPURenderPass* pass, SDL_GPUCommandBuffer* cmd,
-                        const WorkflowContext& context,
-                        const std::string& name, const glm::mat4& viewProj,
-                        float time);
+                        const WorkflowContext& context, const std::string& name,
+                        const glm::mat4& viewProj, float time);
 
 }  // namespace sdl3cpp::services::impl

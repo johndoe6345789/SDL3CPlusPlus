@@ -49,10 +49,9 @@ bool ResolveAudioPlayLoop(
 }
 
 std::string NormalizeAudioPlayMode(std::string mode) {
-    std::transform(mode.begin(), mode.end(), mode.begin(),
-                   [](unsigned char ch) {
-                       return static_cast<char>(std::tolower(ch));
-                   });
+    std::transform(
+        mode.begin(), mode.end(), mode.begin(),
+        [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
     return mode;
 }
 

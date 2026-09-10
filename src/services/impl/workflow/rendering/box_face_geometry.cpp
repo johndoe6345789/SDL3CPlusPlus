@@ -17,12 +17,12 @@ std::array<BoxFace, 6> BuildBoxFaces(float sizeX, float sizeY, float sizeZ,
     const float hz = sizeZ * 0.5f;
 
     const glm::mat4 rotNone(1.0f);
-    const glm::mat4 rotDown = glm::rotate(
-        glm::mat4(1.0f), glm::radians(180.0f), glm::vec3(1, 0, 0));
-    const glm::mat4 rotNorth = glm::rotate(
-        glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1, 0, 0));
-    const glm::mat4 rotSouth = glm::rotate(
-        glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1, 0, 0));
+    const glm::mat4 rotDown =
+        glm::rotate(glm::mat4(1.0f), glm::radians(180.0f), glm::vec3(1, 0, 0));
+    const glm::mat4 rotNorth =
+        glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1, 0, 0));
+    const glm::mat4 rotSouth =
+        glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1, 0, 0));
 
     glm::mat4 rotEast(1.0f);
     rotEast[0] = glm::vec4(0, 0, 1, 0);
@@ -57,33 +57,31 @@ void BindBoxTextures(SDL_GPURenderPass* pass, SDL_GPUTexture* texture,
                      SDL_GPUSampler* shadowSamp) {
     if (shadowTex && shadowSamp) {
         SDL_GPUTextureSamplerBinding bindings[2] = {};
-        bindings[0].texture = texture;
-        bindings[0].sampler = sampler;
-        bindings[1].texture = shadowTex;
-        bindings[1].sampler = shadowSamp;
+        bindings[0].texture                      = texture;
+        bindings[0].sampler                      = sampler;
+        bindings[1].texture                      = shadowTex;
+        bindings[1].sampler                      = shadowSamp;
         SDL_BindGPUFragmentSamplers(pass, 0, bindings, 2);
     } else {
         SDL_GPUTextureSamplerBinding tex_binding = {};
-        tex_binding.texture = texture;
-        tex_binding.sampler = sampler;
+        tex_binding.texture                      = texture;
+        tex_binding.sampler                      = sampler;
         SDL_BindGPUFragmentSamplers(pass, 0, &tex_binding, 1);
     }
 }
 
 void DrawBoxFaces(SDL_GPURenderPass* pass, SDL_GPUCommandBuffer* cmd,
-                  const std::array<BoxFace, 6>& faces,
-                  const glm::vec3& center, const glm::mat4& bodyRotation,
-                  const glm::mat4& view, const glm::mat4& proj,
-                  const glm::vec3& camPos, const glm::mat4& shadowVP,
+                  const std::array<BoxFace, 6>& faces, const glm::vec3& center,
+                  const glm::mat4& bodyRotation, const glm::mat4& view,
+                  const glm::mat4& proj, const glm::vec3& camPos,
+                  const glm::mat4& shadowVP,
                   const rendering::FragmentUniformData& fu,
                   uint32_t indexCount) {
     for (const auto& f : faces) {
-        glm::mat4 model_mat = glm::translate(glm::mat4(1.0f), center) *
-                             bodyRotation *
-                             glm::translate(glm::mat4(1.0f), f.offset) *
-                             f.rotation *
-                             glm::scale(glm::mat4(1.0f),
-                                       glm::vec3(f.scaleW, 1.0f, f.scaleD));
+        glm::mat4 model_mat =
+            glm::translate(glm::mat4(1.0f), center) * bodyRotation *
+            glm::translate(glm::mat4(1.0f), f.offset) * f.rotation *
+            glm::scale(glm::mat4(1.0f), glm::vec3(f.scaleW, 1.0f, f.scaleD));
 
         glm::mat4 mvp = proj * view * model_mat;
         glm::vec3 worldNormal =
@@ -92,17 +90,16 @@ void DrawBoxFaces(SDL_GPURenderPass* pass, SDL_GPUCommandBuffer* cmd,
         rendering::VertexUniformData vu = {};
         std::memcpy(vu.mvp, glm::value_ptr(mvp), sizeof(float) * 16);
         std::memcpy(vu.model_mat, glm::value_ptr(model_mat),
-                   sizeof(float) * 16);
-        vu.normal[0] = worldNormal.x;
-        vu.normal[1] = worldNormal.y;
-        vu.normal[2] = worldNormal.z;
-        vu.uv_scale[0] = f.uvW;
-        vu.uv_scale[1] = f.uvH;
+                    sizeof(float) * 16);
+        vu.normal[0]     = worldNormal.x;
+        vu.normal[1]     = worldNormal.y;
+        vu.normal[2]     = worldNormal.z;
+        vu.uv_scale[0]   = f.uvW;
+        vu.uv_scale[1]   = f.uvH;
         vu.camera_pos[0] = camPos.x;
         vu.camera_pos[1] = camPos.y;
         vu.camera_pos[2] = camPos.z;
-        std::memcpy(vu.shadow_vp, glm::value_ptr(shadowVP),
-                   sizeof(float) * 16);
+        std::memcpy(vu.shadow_vp, glm::value_ptr(shadowVP), sizeof(float) * 16);
 
         SDL_PushGPUVertexUniformData(cmd, 0, &vu, sizeof(vu));
         SDL_PushGPUFragmentUniformData(cmd, 0, &fu, sizeof(fu));
@@ -111,12 +108,12 @@ void DrawBoxFaces(SDL_GPURenderPass* pass, SDL_GPUCommandBuffer* cmd,
 }
 
 void DrawTexturedBox(WorkflowContext& context, ILogger* logger,
-                    const DrawTexturedBoxParams& params) {
+                     const DrawTexturedBoxParams& params) {
     auto* pass = context.Get<SDL_GPURenderPass*>("gpu_render_pass", nullptr);
     auto* cmd =
         context.Get<SDL_GPUCommandBuffer*>("gpu_command_buffer", nullptr);
-    auto* pipeline = context.Get<SDL_GPUGraphicsPipeline*>(
-        "gpu_pipeline_textured", nullptr);
+    auto* pipeline =
+        context.Get<SDL_GPUGraphicsPipeline*>("gpu_pipeline_textured", nullptr);
     if (!pass || !cmd || !pipeline) return;
 
     // Unit plane buffers (1x1 plane on XZ, normal +Y)
@@ -125,8 +122,9 @@ void DrawTexturedBox(WorkflowContext& context, ILogger* logger,
     const auto* mesh_meta = context.TryGet<nlohmann::json>("plane_unit");
     if (!vb || !ib || !mesh_meta) {
         if (logger) {
-            logger->Warn("draw.textured_box: unit plane not found in "
-                        "context");
+            logger->Warn(
+                "draw.textured_box: unit plane not found in "
+                "context");
         }
         return;
     }
@@ -139,15 +137,14 @@ void DrawTexturedBox(WorkflowContext& context, ILogger* logger,
     if (!texture || !sampler) {
         if (logger) {
             logger->Warn("draw.textured_box: texture '" + params.texture +
-                        "' not found");
+                         "' not found");
         }
         return;
     }
 
-    auto view = context.Get<glm::mat4>("render.view_matrix", glm::mat4(1.0f));
-    auto proj = context.Get<glm::mat4>("render.proj_matrix", glm::mat4(1.0f));
-    auto camPos =
-        context.Get<glm::vec3>("render.camera_pos", glm::vec3(0.0f));
+    auto view   = context.Get<glm::mat4>("render.view_matrix", glm::mat4(1.0f));
+    auto proj   = context.Get<glm::mat4>("render.proj_matrix", glm::mat4(1.0f));
+    auto camPos = context.Get<glm::vec3>("render.camera_pos", glm::vec3(0.0f));
 
     // Pre-computed body transform from physics.sync_transforms step
     glm::vec3 center = params.pos;
@@ -182,17 +179,16 @@ void DrawTexturedBox(WorkflowContext& context, ILogger* logger,
     BindBoxTextures(pass, texture, sampler, shadow_tex, shadow_samp);
 
     SDL_GPUBufferBinding vb_binding = {};
-    vb_binding.buffer = vb;
+    vb_binding.buffer               = vb;
     SDL_BindGPUVertexBuffers(pass, 0, &vb_binding, 1);
     SDL_GPUBufferBinding ib_binding = {};
-    ib_binding.buffer = ib;
+    ib_binding.buffer               = ib;
     SDL_BindGPUIndexBuffer(pass, &ib_binding, SDL_GPU_INDEXELEMENTSIZE_16BIT);
 
-    auto shadowVP =
-        context.Get<glm::mat4>("render.shadow_vp", glm::mat4(1.0f));
+    auto shadowVP = context.Get<glm::mat4>("render.shadow_vp", glm::mat4(1.0f));
 
     DrawBoxFaces(pass, cmd, faces, center, bodyRotation, view, proj, camPos,
-                shadowVP, fu, index_count);
+                 shadowVP, fu, index_count);
 }
 
 }  // namespace sdl3cpp::services::impl

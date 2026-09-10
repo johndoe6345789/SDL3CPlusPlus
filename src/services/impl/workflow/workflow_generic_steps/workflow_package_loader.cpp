@@ -8,8 +8,7 @@
 namespace sdl3cpp::services::impl {
 
 const std::string& RequireStringParam(const WorkflowStepDefinition& step,
-                                      const char* name,
-                                      const char* errorMsg) {
+                                      const char* name, const char* errorMsg) {
     auto it = step.parameters.find(name);
     if (it == step.parameters.end()) throw std::runtime_error(errorMsg);
     return it->second.stringValue;
@@ -24,7 +23,7 @@ WorkflowDefinition LoadPackageWorkflow(const std::shared_ptr<ILogger>& logger,
     baseDirs.push_back(std::filesystem::current_path() / "packages");
 
     std::filesystem::path current = std::filesystem::current_path();
-    int maxDepth = 5;
+    int maxDepth                  = 5;
     while (current.has_parent_path() && maxDepth-- > 0) {
         auto gp = current / "gameengine" / "packages";
         if (std::filesystem::exists(gp)) baseDirs.push_back(gp);

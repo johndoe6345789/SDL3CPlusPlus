@@ -10,7 +10,7 @@ namespace sdl3cpp::services {
 class IShaderSystemRegistry;
 class IGraphicsService;
 class IWorkflowExecutor;
-}
+}  // namespace sdl3cpp::services
 
 namespace sdl3cpp::services::impl {
 
@@ -39,7 +39,7 @@ public:
 
     std::string GetPluginId() const override;
     void Execute(const WorkflowStepDefinition& step,
-                WorkflowContext& context) override;
+                 WorkflowContext& context) override;
 
 private:
     std::shared_ptr<ILogger> logger_;

@@ -46,16 +46,16 @@ void PrepareRenderShadowState(WorkflowContext& context) {
 void PrepareRenderLightingState(WorkflowContext& context) {
     rendering::FragmentUniformData fu = {};
 
-    fu.light_dir[1] = -1.0f;
+    fu.light_dir[1]   = -1.0f;
     fu.light_color[0] = 1.0f;
     fu.light_color[1] = 1.0f;
     fu.light_color[2] = 1.0f;
     fu.light_color[3] = 1.0f;
-    fu.ambient[0] = 0.2f;
-    fu.ambient[1] = 0.2f;
-    fu.ambient[2] = 0.2f;
-    fu.material[0] = 0.8f;
-    fu.material[1] = 0.0f;
+    fu.ambient[0]     = 0.2f;
+    fu.ambient[1]     = 0.2f;
+    fu.ambient[2]     = 0.2f;
+    fu.material[0]    = 0.8f;
+    fu.material[1]    = 0.0f;
 
     const auto* lighting =
         context.TryGet<nlohmann::json>("lighting.directional");

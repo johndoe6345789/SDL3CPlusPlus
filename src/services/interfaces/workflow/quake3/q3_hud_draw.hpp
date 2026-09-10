@@ -9,17 +9,17 @@ namespace sdl3cpp::services::impl {
 
 /// Everything the status-bar HUD needs from context, gathered up front.
 struct Q3HudAssets {
-    SDL_Renderer* renderer = nullptr;
+    SDL_Renderer* renderer  = nullptr;
     SDL_Texture* digits[11] = {};
-    SDL_Texture* iconArmor = nullptr;
+    SDL_Texture* iconArmor  = nullptr;
     SDL_Texture* iconWeapon = nullptr;
-    SDL_Texture* iconFace = nullptr;
+    SDL_Texture* iconFace   = nullptr;
     /// Non-null when q3.hud_head_render already produced a GPU head
     /// portrait — the flat iconFace fallback is skipped in that case.
     SDL_GPUTexture* headGpuTex = nullptr;
-    int health = 100;
-    int armor = 0;
-    int ammo = 50;
+    int health                 = 100;
+    int armor                  = 0;
+    int ammo                   = 50;
 };
 
 /// The face-rect position/size q3.hud_head_render's GPU blit step reads

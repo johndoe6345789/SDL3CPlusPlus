@@ -26,7 +26,7 @@ std::string WorkflowQ3HudHeadStep::GetPluginId() const {
 
 bool WorkflowQ3HudHeadStep::TryInitRT(SDL_GPUDevice* device,
                                       SDL_Window* window) {
-    device_ = device;
+    device_  = device;
     targets_ = CreateHeadRenderTargets(device, window, kHeadSz);
     if (logger_) {
         logger_->Info("q3.hud_head_render: render target " +
@@ -36,7 +36,7 @@ bool WorkflowQ3HudHeadStep::TryInitRT(SDL_GPUDevice* device,
 }
 
 void WorkflowQ3HudHeadStep::Execute(const WorkflowStepDefinition&,
-                                   WorkflowContext& context) {
+                                    WorkflowContext& context) {
     // Always clear the tex from last frame so overlay.sw.end never blits a
     // stale portrait (e.g. when the menu is open or the head model isn't
     // loaded).
@@ -53,20 +53,20 @@ void WorkflowQ3HudHeadStep::Execute(const WorkflowStepDefinition&,
     // Head model must be loaded
     if (context.Get<int>("q3.md3.head_num_surfs", 0) <= 0) return;
 
-    auto* pipeline = context.Get<SDL_GPUGraphicsPipeline*>(
-        "gpu_pipeline_textured", nullptr);
+    auto* pipeline =
+        context.Get<SDL_GPUGraphicsPipeline*>("gpu_pipeline_textured", nullptr);
     if (!pipeline) return;
 
     auto* window = context.Get<SDL_Window*>("sdl_window", nullptr);
     if (!targets_.ready && !TryInitRT(device, window)) return;
 
     const HeadAngles angles = UpdateHeadSway(sway_, SDL_GetTicks());
-    const glm::mat4 mvp = BuildHeadPortraitMvp(angles, /*camDist=*/0.45f);
+    const glm::mat4 mvp     = BuildHeadPortraitMvp(angles, /*camDist=*/0.45f);
     const glm::mat4 model(1.0f);  // head at world origin
     const rendering::FragmentUniformData fu = DefaultHeadPortraitLighting();
 
     if (!RenderHeadPortraitPass(cmd, targets_, pipeline, mvp, model, fu,
-                               context, kHeadSz)) {
+                                context, kHeadSz)) {
         return;
     }
 

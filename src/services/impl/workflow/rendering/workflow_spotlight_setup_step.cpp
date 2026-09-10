@@ -19,7 +19,7 @@ void WorkflowSpotlightSetupStep::Execute(const WorkflowStepDefinition& step,
 
     CombineSpotlightVec3(spotlight, "color_r", "color_g", "color_b", "color");
     CombineSpotlightVec3(spotlight, "offset_x", "offset_y", "offset_z",
-                        "offset");
+                         "offset");
     // Rotation is for spotlights attached to a viewmodel, so it can be
     // handed to the same transform the model is drawn with.
     CombineSpotlightVec3(spotlight, "rot_x", "rot_y", "rot_z", "rotation");

@@ -26,7 +26,7 @@ std::vector<uint8_t> ReadPk3Entry(const std::string& pk3Path,
         return {};
     }
 
-    int err = 0;
+    int err        = 0;
     zip_t* archive = zip_open(pk3Path.c_str(), ZIP_RDONLY, &err);
     if (!archive) {
         return {};

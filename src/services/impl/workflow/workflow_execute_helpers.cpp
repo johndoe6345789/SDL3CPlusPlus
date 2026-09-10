@@ -11,8 +11,8 @@ WorkflowDefinition LoadChildWorkflow(const std::shared_ptr<ILogger>& logger,
                                      const std::string& workflowName) {
     if (logger) {
         logger->Trace("WorkflowExecuteStep", "LoadWorkflow",
-                     "package=" + package + ", workflow=" + workflowName,
-                     "Loading");
+                      "package=" + package + ", workflow=" + workflowName,
+                      "Loading");
     }
 
     // Try to find the workflow in the package.
@@ -23,7 +23,7 @@ WorkflowDefinition LoadChildWorkflow(const std::shared_ptr<ILogger>& logger,
 
     // Also try walking up from current path.
     std::filesystem::path current = std::filesystem::current_path();
-    int maxDepth = 5;
+    int maxDepth                  = 5;
     while (current.has_parent_path() && maxDepth-- > 0) {
         std::filesystem::path gameenginePackages =
             current / "gameengine" / "packages";
@@ -43,17 +43,17 @@ WorkflowDefinition LoadChildWorkflow(const std::shared_ptr<ILogger>& logger,
         if (std::filesystem::exists(candidate)) {
             if (logger) {
                 logger->Trace("WorkflowExecuteStep", "LoadWorkflow",
-                             "Found workflow at: " + candidate.string());
+                              "Found workflow at: " + candidate.string());
             }
 
             WorkflowDefinitionParser parser(logger);
             try {
                 auto definition = parser.ParseFile(candidate.string());
                 if (logger) {
-                    logger->Trace(
-                        "WorkflowExecuteStep", "LoadWorkflow",
-                        "Loaded " + std::to_string(definition.steps.size()) +
-                            " steps");
+                    logger->Trace("WorkflowExecuteStep", "LoadWorkflow",
+                                  "Loaded " +
+                                      std::to_string(definition.steps.size()) +
+                                      " steps");
                 }
                 return definition;
             } catch (const std::exception& e) {

@@ -30,9 +30,11 @@ public:
                         std::shared_ptr<IWorkflowExecutor> executor);
     ~WorkflowExecuteStep() override = default;
 
-    std::string GetPluginId() const override { return "workflow.execute"; }
+    std::string GetPluginId() const override {
+        return "workflow.execute";
+    }
     void Execute(const WorkflowStepDefinition& step,
-                WorkflowContext& context) override;
+                 WorkflowContext& context) override;
 
 private:
     std::shared_ptr<ILogger> logger_;

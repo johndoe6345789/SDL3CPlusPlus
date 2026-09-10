@@ -6,8 +6,7 @@ namespace sdl3cpp::services::impl {
 ModelLoadParams ReadModelLoadParams(const WorkflowStepDefinition& step,
                                     const WorkflowContext& context) {
     WorkflowStepParameterResolver params;
-    auto getStr = [&](const char* name,
-                      const std::string& def) -> std::string {
+    auto getStr = [&](const char* name, const std::string& def) -> std::string {
         const auto* p = params.FindParameter(step, name);
         if (p && p->type == WorkflowParameterValue::Type::String) {
             return p->stringValue;
@@ -28,8 +27,8 @@ ModelLoadParams ReadModelLoadParams(const WorkflowStepDefinition& step,
 
     ModelLoadParams out;
     out.filePath = getStr("file_path", "");
-    out.name      = getStr("name", out.name);
-    out.scale     = getNum("scale", out.scale);
+    out.name     = getStr("name", out.name);
+    out.scale    = getNum("scale", out.scale);
     return out;
 }
 
@@ -68,8 +67,7 @@ AssimpMeshData ExtractAssimpMeshData(const aiScene& scene, float scale) {
     return out;
 }
 
-nlohmann::json BuildModelLoadMetadata(uint32_t vertexCount,
-                                      uint32_t indexCount,
+nlohmann::json BuildModelLoadMetadata(uint32_t vertexCount, uint32_t indexCount,
                                       unsigned int meshCount,
                                       const std::string& filePath) {
     return nlohmann::json{

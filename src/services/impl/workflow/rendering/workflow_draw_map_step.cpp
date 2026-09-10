@@ -20,8 +20,8 @@ void WorkflowDrawMapStep::Execute(const WorkflowStepDefinition& step,
     if (context.GetBool("frame_skip", false)) return;
 
     auto* pass = context.Get<SDL_GPURenderPass*>("gpu_render_pass", nullptr);
-    auto* cmd = context.Get<SDL_GPUCommandBuffer*>("gpu_command_buffer",
-                                                    nullptr);
+    auto* cmd =
+        context.Get<SDL_GPUCommandBuffer*>("gpu_command_buffer", nullptr);
     if (!pass || !cmd) return;
 
     const auto* mapNodes = context.TryGet<nlohmann::json>("map.nodes");
@@ -30,20 +30,18 @@ void WorkflowDrawMapStep::Execute(const WorkflowStepDefinition& step,
     // Detect BSP mode: prefer gpu_pipeline_bsp if available.
     auto* bspPipeline =
         context.Get<SDL_GPUGraphicsPipeline*>("gpu_pipeline_bsp", nullptr);
-    auto* texPipeline = context.Get<SDL_GPUGraphicsPipeline*>(
-        "gpu_pipeline_textured", nullptr);
+    auto* texPipeline =
+        context.Get<SDL_GPUGraphicsPipeline*>("gpu_pipeline_textured", nullptr);
     const bool isBsp = (bspPipeline != nullptr);
-    auto* pipeline = isBsp ? bspPipeline : texPipeline;
+    auto* pipeline   = isBsp ? bspPipeline : texPipeline;
     if (!pipeline) return;
 
     const DrawMapTextureConfig config = ReadDrawMapTextureConfig(step);
 
-    auto view = context.Get<glm::mat4>("render.view_matrix", glm::mat4(1.0f));
-    auto proj = context.Get<glm::mat4>("render.proj_matrix", glm::mat4(1.0f));
-    auto camPos =
-        context.Get<glm::vec3>("render.camera_pos", glm::vec3(0.0f));
-    auto shadowVP =
-        context.Get<glm::mat4>("render.shadow_vp", glm::mat4(1.0f));
+    auto view   = context.Get<glm::mat4>("render.view_matrix", glm::mat4(1.0f));
+    auto proj   = context.Get<glm::mat4>("render.proj_matrix", glm::mat4(1.0f));
+    auto camPos = context.Get<glm::vec3>("render.camera_pos", glm::vec3(0.0f));
+    auto shadowVP = context.Get<glm::mat4>("render.shadow_vp", glm::mat4(1.0f));
 
     auto fu = context.Get<rendering::FragmentUniformData>(
         "render.frag_uniforms", rendering::FragmentUniformData{});

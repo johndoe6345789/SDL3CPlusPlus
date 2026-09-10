@@ -22,8 +22,8 @@ void WorkflowShadowPassStep::Execute(const WorkflowStepDefinition& step,
     auto* device = context.Get<SDL_GPUDevice*>("gpu_device", nullptr);
     auto* shadow_tex =
         context.Get<SDL_GPUTexture*>("shadow_depth_texture", nullptr);
-    auto* shadow_pipeline = context.Get<SDL_GPUGraphicsPipeline*>(
-        "shadow_pipeline", nullptr);
+    auto* shadow_pipeline =
+        context.Get<SDL_GPUGraphicsPipeline*>("shadow_pipeline", nullptr);
     if (!device || !shadow_tex || !shadow_pipeline) return;
 
     const auto* shadow_state = context.TryGet<nlohmann::json>("shadow.state");
@@ -46,12 +46,12 @@ void WorkflowShadowPassStep::Execute(const WorkflowStepDefinition& step,
     if (!cmd) return;
 
     SDL_GPUDepthStencilTargetInfo ds_target = {};
-    ds_target.texture = shadow_tex;
-    ds_target.clear_depth = 1.0f;
-    ds_target.load_op = SDL_GPU_LOADOP_CLEAR;
-    ds_target.store_op = SDL_GPU_STOREOP_STORE;
-    SDL_GPURenderPass* pass = SDL_BeginGPURenderPass(cmd, nullptr, 0,
-                                                     &ds_target);
+    ds_target.texture                       = shadow_tex;
+    ds_target.clear_depth                   = 1.0f;
+    ds_target.load_op                       = SDL_GPU_LOADOP_CLEAR;
+    ds_target.store_op                      = SDL_GPU_STOREOP_STORE;
+    SDL_GPURenderPass* pass =
+        SDL_BeginGPURenderPass(cmd, nullptr, 0, &ds_target);
     if (!pass) {
         SDL_SubmitGPUCommandBuffer(cmd);
         return;
@@ -60,17 +60,17 @@ void WorkflowShadowPassStep::Execute(const WorkflowStepDefinition& step,
     SDL_BindGPUGraphicsPipeline(pass, shadow_pipeline);
 
     SDL_GPUBufferBinding vb_bind = {};
-    vb_bind.buffer = vb;
+    vb_bind.buffer               = vb;
     SDL_BindGPUVertexBuffers(pass, 0, &vb_bind, 1);
     SDL_GPUBufferBinding ib_bind = {};
-    ib_bind.buffer = ib;
+    ib_bind.buffer               = ib;
     SDL_BindGPUIndexBuffer(pass, &ib_bind, SDL_GPU_INDEXELEMENTSIZE_16BIT);
 
     // Render each body as a shadow-casting box using pre-computed transforms.
     const ShadowFaceRotations rotations = BuildShadowFaceRotations();
     for (const auto& nameVal : bodies) {
         DrawShadowCasterBody(pass, cmd, context, nameVal.get<std::string>(),
-                            lightVP, rotations, index_count);
+                             lightVP, rotations, index_count);
     }
 
     SDL_EndGPURenderPass(pass);

@@ -12,9 +12,9 @@ namespace sdl3cpp::services::impl {
 /// solid white, for faces with lm_index == -1.
 struct LightmapAtlas {
     std::vector<uint8_t> pixels;
-    int width = 0;
-    int height = 0;
-    int gridSize = 0;
+    int width        = 0;
+    int height       = 0;
+    int gridSize     = 0;
     int numLightmaps = 0;
 };
 

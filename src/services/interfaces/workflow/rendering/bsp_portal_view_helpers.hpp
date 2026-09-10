@@ -18,9 +18,9 @@ bool FindPortalDestination(const nlohmann::json& entities, glm::vec3& out);
 /// buffer, and clamp/linear sampler, cached in the context under the
 /// `bsp_portal_view_*` keys so later frames reuse them.
 struct PortalViewTargets {
-    SDL_GPUTexture* colorTex   = nullptr;
-    SDL_GPUTexture* depthTex   = nullptr;
-    SDL_GPUSampler* sampler    = nullptr;
+    SDL_GPUTexture* colorTex = nullptr;
+    SDL_GPUTexture* depthTex = nullptr;
+    SDL_GPUSampler* sampler  = nullptr;
 };
 
 /// Returns the cached targets, creating and caching any that are missing.

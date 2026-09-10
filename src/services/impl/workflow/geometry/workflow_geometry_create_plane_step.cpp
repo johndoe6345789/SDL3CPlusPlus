@@ -19,7 +19,7 @@ std::string WorkflowGeometryCreatePlaneStep::GetPluginId() const {
 void WorkflowGeometryCreatePlaneStep::Execute(
     const WorkflowStepDefinition& step, WorkflowContext& context) {
     const GeometryPlaneParams params = ReadGeometryPlaneParams(step);
-    const GeometryPlaneMesh mesh = BuildGeometryPlaneMesh(params);
+    const GeometryPlaneMesh mesh     = BuildGeometryPlaneMesh(params);
 
     auto* device = context.Get<SDL_GPUDevice*>("gpu_device", nullptr);
     if (!device) {
@@ -30,28 +30,27 @@ void WorkflowGeometryCreatePlaneStep::Execute(
     const GeometryPlaneBuffers buffers = UploadGeometryPlaneMesh(device, mesh);
 
     context.Set<SDL_GPUBuffer*>("plane_" + params.name + "_vb",
-                               buffers.vertexBuffer);
+                                buffers.vertexBuffer);
     context.Set<SDL_GPUBuffer*>("plane_" + params.name + "_ib",
-                               buffers.indexBuffer);
+                                buffers.indexBuffer);
 
     const auto vertexCount = static_cast<uint32_t>(mesh.vertices.size());
-    const auto indexCount = static_cast<uint32_t>(mesh.indices.size());
-    nlohmann::json meta = {{"vertex_count", vertexCount},
-                            {"index_count", indexCount},
-                            {"stride", 20},
-                            {"width", params.width},
-                            {"depth", params.depth},
-                            {"subdivisions_x", params.subdivisionsX},
-                            {"subdivisions_y", params.subdivisionsY}};
+    const auto indexCount  = static_cast<uint32_t>(mesh.indices.size());
+    nlohmann::json meta    = {{"vertex_count", vertexCount},
+                              {"index_count", indexCount},
+                              {"stride", 20},
+                              {"width", params.width},
+                              {"depth", params.depth},
+                              {"subdivisions_x", params.subdivisionsX},
+                              {"subdivisions_y", params.subdivisionsY}};
     context.Set("plane_" + params.name, meta);
 
     if (logger_) {
-        logger_->Info(
-            "geometry.create_plane: '" + params.name + "' created (" +
-            std::to_string(vertexCount) + " verts, " +
-            std::to_string(indexCount) + " indices, " +
-            std::to_string(params.subdivisionsX) + "x" +
-            std::to_string(params.subdivisionsY) + " subdivisions)");
+        logger_->Info("geometry.create_plane: '" + params.name + "' created (" +
+                      std::to_string(vertexCount) + " verts, " +
+                      std::to_string(indexCount) + " indices, " +
+                      std::to_string(params.subdivisionsX) + "x" +
+                      std::to_string(params.subdivisionsY) + " subdivisions)");
     }
 }
 

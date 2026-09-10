@@ -25,10 +25,10 @@ void WorkflowQ3SoundLoadStep::Execute(const WorkflowStepDefinition& step,
     if (context.Contains("q3.sound.bank")) return;
 
     WorkflowStepParameterResolver params;
-    const auto* pathParam = params.FindParameter(step, "config_path");
-    const std::string configPath =
-        pathParam ? pathParam->stringValue
-                  : "packages/quake3/config/sounds.json";
+    const auto* pathParam        = params.FindParameter(step, "config_path");
+    const std::string configPath = pathParam
+                                       ? pathParam->stringValue
+                                       : "packages/quake3/config/sounds.json";
 
     std::ifstream configFile(configPath);
     if (!configFile.is_open()) {
@@ -41,10 +41,9 @@ void WorkflowQ3SoundLoadStep::Execute(const WorkflowStepDefinition& step,
     const auto bspConfig =
         context.Get<nlohmann::json>("bsp_config", nlohmann::json{});
     const std::string pk3 = bspConfig.value("pk3_path", std::string());
-    int err = 0;
-    zip_t* archive = pk3.empty()
-                         ? nullptr
-                         : zip_open(pk3.c_str(), ZIP_RDONLY, &err);
+    int err               = 0;
+    zip_t* archive =
+        pk3.empty() ? nullptr : zip_open(pk3.c_str(), ZIP_RDONLY, &err);
     if (!archive) {
         if (logger_) logger_->Warn("q3.sound.load: cannot open " + pk3);
         return;
@@ -52,7 +51,7 @@ void WorkflowQ3SoundLoadStep::Execute(const WorkflowStepDefinition& step,
 
     auto bank = std::make_shared<q3::SoundBank>();
     for (const auto& entry : config.value("sounds", nlohmann::json::array())) {
-        const auto name = entry.get<std::string>();
+        const auto name  = entry.get<std::string>();
         const auto bytes = q3::ReadPk3EntryFromArchive(archive, name);
         q3::Sound sound;
         if (q3::DecodeWav(bytes.data(), bytes.size(), sound)) {
@@ -65,9 +64,9 @@ void WorkflowQ3SoundLoadStep::Execute(const WorkflowStepDefinition& step,
 
     context.Set("q3.sound.bank", bank);
     if (logger_) {
-        logger_->Info("q3.sound.load: " +
-                      std::to_string(q3::CountPlayable(*bank)) +
-                      " sounds loaded from pk3");
+        logger_->Info(
+            "q3.sound.load: " + std::to_string(q3::CountPlayable(*bank)) +
+            " sounds loaded from pk3");
     }
 }
 

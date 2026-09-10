@@ -32,9 +32,9 @@ struct BotModelPrefixes {
  * skipped when their `prefixes` flag says the MD3 has no frames loaded.
  */
 void DrawBotModelChain(const nlohmann::json& bot,
-                       const BotModelPrefixes& prefixes,
-                       const glm::mat4& view, const glm::mat4& proj,
-                       const glm::vec3& camPos, const glm::mat4& shadowVP,
+                       const BotModelPrefixes& prefixes, const glm::mat4& view,
+                       const glm::mat4& proj, const glm::vec3& camPos,
+                       const glm::mat4& shadowVP,
                        const rendering::FragmentUniformData& fu,
                        SDL_GPURenderPass* pass, SDL_GPUCommandBuffer* cmd,
                        SDL_GPUTexture* shadowTex, SDL_GPUSampler* shadowSamp,

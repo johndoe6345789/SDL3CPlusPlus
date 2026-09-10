@@ -15,8 +15,8 @@ std::string WorkflowGpuPipelineCreateStep::GetPluginId() const {
     return "graphics.gpu.pipeline.create";
 }
 
-void WorkflowGpuPipelineCreateStep::Execute(
-    const WorkflowStepDefinition& step, WorkflowContext& context) {
+void WorkflowGpuPipelineCreateStep::Execute(const WorkflowStepDefinition& step,
+                                            WorkflowContext& context) {
     const GpuPipelineCreateParams p = ReadGpuPipelineCreateParams(step);
 
     auto* device = context.Get<SDL_GPUDevice*>("gpu_device", nullptr);
@@ -30,9 +30,9 @@ void WorkflowGpuPipelineCreateStep::Execute(
     auto* window = context.Get<SDL_Window*>("sdl_window", nullptr);
     GpuVertexAttributeLayout layout;
     SDL_GPUColorTargetDescription colorTarget;
-    SDL_GPUGraphicsPipelineCreateInfo info = BuildGraphicsPipelineCreateInfo(
-        p, shaders.vertex, shaders.fragment, device, window, layout,
-        colorTarget);
+    SDL_GPUGraphicsPipelineCreateInfo info =
+        BuildGraphicsPipelineCreateInfo(p, shaders.vertex, shaders.fragment,
+                                        device, window, layout, colorTarget);
 
     SDL_GPUGraphicsPipeline* pipeline =
         SDL_CreateGPUGraphicsPipeline(device, &info);
@@ -49,7 +49,8 @@ void WorkflowGpuPipelineCreateStep::Execute(
     if (!pipeline) {
         throw std::runtime_error(
             "graphics.gpu.pipeline.create: Failed to create graphics "
-            "pipeline: " + std::string(SDL_GetError()));
+            "pipeline: " +
+            std::string(SDL_GetError()));
     }
 
     context.Set<SDL_GPUGraphicsPipeline*>(p.pipelineKey, pipeline);
@@ -57,10 +58,9 @@ void WorkflowGpuPipelineCreateStep::Execute(
     if (logger_) {
         logger_->Trace(
             "WorkflowGpuPipelineCreateStep", "Execute",
-            "pipeline_key=" + p.pipelineKey +
-                ", format=" + p.vertexFormat + ", cull=" + p.cullMode +
-                ", color_targets=" +
-                std::to_string(p.numColorTargets) +
+            "pipeline_key=" + p.pipelineKey + ", format=" + p.vertexFormat +
+                ", cull=" + p.cullMode +
+                ", color_targets=" + std::to_string(p.numColorTargets) +
                 ", depth_bias=" + std::to_string(p.depthBias),
             "Graphics pipeline created");
     }

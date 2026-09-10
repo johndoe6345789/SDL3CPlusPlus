@@ -40,8 +40,8 @@ float ReadCameraPoseNumber(
     if (it != step.inputs.end()) {
         const auto* value = context.TryGet<double>(it->second);
         if (!value) {
-            throw std::runtime_error(
-                "camera.set_pose requires number input '" + name + "'");
+            throw std::runtime_error("camera.set_pose requires number input '" +
+                                     name + "'");
         }
         return static_cast<float>(*value);
     }

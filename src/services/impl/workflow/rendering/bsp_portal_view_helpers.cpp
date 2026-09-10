@@ -49,14 +49,14 @@ PortalViewTargets EnsurePortalViewTargets(SDL_GPUDevice* device,
 
     if (!targets.colorTex) {
         SDL_GPUTextureCreateInfo ti = {};
-        ti.type   = SDL_GPU_TEXTURETYPE_2D;
+        ti.type                     = SDL_GPU_TEXTURETYPE_2D;
         ti.format = SDL_GetGPUSwapchainTextureFormat(device, window);
         ti.width  = kPortalSize;
         ti.height = kPortalSize;
         ti.layer_count_or_depth = 1;
-        ti.num_levels = 1;
-        ti.usage = SDL_GPU_TEXTUREUSAGE_COLOR_TARGET |
-                   SDL_GPU_TEXTUREUSAGE_SAMPLER;
+        ti.num_levels           = 1;
+        ti.usage =
+            SDL_GPU_TEXTUREUSAGE_COLOR_TARGET | SDL_GPU_TEXTUREUSAGE_SAMPLER;
         targets.colorTex = SDL_CreateGPUTexture(device, &ti);
         if (targets.colorTex) {
             context.Set<SDL_GPUTexture*>("bsp_portal_view_texture",
@@ -66,14 +66,14 @@ PortalViewTargets EnsurePortalViewTargets(SDL_GPUDevice* device,
 
     if (!targets.depthTex) {
         SDL_GPUTextureCreateInfo di = {};
-        di.type   = SDL_GPU_TEXTURETYPE_2D;
-        di.format = SDL_GPU_TEXTUREFORMAT_D32_FLOAT;
-        di.width  = kPortalSize;
-        di.height = kPortalSize;
-        di.layer_count_or_depth = 1;
-        di.num_levels = 1;
-        di.usage = SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET;
-        targets.depthTex = SDL_CreateGPUTexture(device, &di);
+        di.type                     = SDL_GPU_TEXTURETYPE_2D;
+        di.format                   = SDL_GPU_TEXTUREFORMAT_D32_FLOAT;
+        di.width                    = kPortalSize;
+        di.height                   = kPortalSize;
+        di.layer_count_or_depth     = 1;
+        di.num_levels               = 1;
+        di.usage                    = SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET;
+        targets.depthTex            = SDL_CreateGPUTexture(device, &di);
         if (targets.depthTex) {
             context.Set<SDL_GPUTexture*>("bsp_portal_view_depth",
                                          targets.depthTex);
@@ -82,13 +82,13 @@ PortalViewTargets EnsurePortalViewTargets(SDL_GPUDevice* device,
 
     if (!targets.sampler) {
         SDL_GPUSamplerCreateInfo si = {};
-        si.min_filter = SDL_GPU_FILTER_LINEAR;
-        si.mag_filter = SDL_GPU_FILTER_LINEAR;
-        si.mipmap_mode = SDL_GPU_SAMPLERMIPMAPMODE_LINEAR;
-        si.address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
-        si.address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
-        si.address_mode_w = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
-        targets.sampler = SDL_CreateGPUSampler(device, &si);
+        si.min_filter               = SDL_GPU_FILTER_LINEAR;
+        si.mag_filter               = SDL_GPU_FILTER_LINEAR;
+        si.mipmap_mode              = SDL_GPU_SAMPLERMIPMAPMODE_LINEAR;
+        si.address_mode_u           = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+        si.address_mode_v           = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+        si.address_mode_w           = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+        targets.sampler             = SDL_CreateGPUSampler(device, &si);
         if (targets.sampler) {
             context.Set<SDL_GPUSampler*>("bsp_portal_view_sampler",
                                          targets.sampler);
@@ -107,7 +107,7 @@ void BuildPortalViewUniforms(const WorkflowContext& context,
     front.x = std::cos(pitch) * (-std::sin(yaw));
     front.y = std::sin(pitch);
     front.z = std::cos(pitch) * (-std::cos(yaw));
-    front = glm::normalize(front);
+    front   = glm::normalize(front);
 
     const glm::mat4 view =
         glm::lookAt(dest, dest + front, glm::vec3(0.0f, 1.0f, 0.0f));
@@ -125,8 +125,7 @@ void BuildPortalViewUniforms(const WorkflowContext& context,
     vu.camera_pos[0] = dest.x;
     vu.camera_pos[1] = dest.y;
     vu.camera_pos[2] = dest.z;
-    auto shadowVP =
-        context.Get<glm::mat4>("render.shadow_vp", glm::mat4(1.0f));
+    auto shadowVP = context.Get<glm::mat4>("render.shadow_vp", glm::mat4(1.0f));
     std::memcpy(vu.shadow_vp, glm::value_ptr(shadowVP), sizeof(float) * 16);
 
     fu = context.Get<rendering::FragmentUniformData>(
@@ -155,36 +154,35 @@ bool DrawPortalViewGeometry(SDL_GPURenderPass* pass, SDL_GPUCommandBuffer* cmd,
 
     SDL_BindGPUGraphicsPipeline(pass, pipeline);
     SDL_GPUBufferBinding vbBind = {};
-    vbBind.buffer = vb;
+    vbBind.buffer               = vb;
     SDL_BindGPUVertexBuffers(pass, 0, &vbBind, 1);
     SDL_GPUBufferBinding ibBind = {};
-    ibBind.buffer = ib;
+    ibBind.buffer               = ib;
     SDL_BindGPUIndexBuffer(pass, &ibBind, SDL_GPU_INDEXELEMENTSIZE_32BIT);
     SDL_PushGPUVertexUniformData(cmd, 0, &vu, sizeof(vu));
     SDL_PushGPUFragmentUniformData(cmd, 0, &fu, sizeof(fu));
 
     for (const auto& node : mapNodes) {
-        const int texIdx = node.value("texture_index", -1);
+        const int texIdx           = node.value("texture_index", -1);
         SDL_GPUTexture* albedoTex  = nullptr;
         SDL_GPUSampler* albedoSamp = nullptr;
         if (texIdx >= 0) {
             const std::string texKey = "bsp_tex_" + std::to_string(texIdx);
-            albedoTex =
-                context.Get<SDL_GPUTexture*>(texKey + "_gpu", nullptr);
+            albedoTex = context.Get<SDL_GPUTexture*>(texKey + "_gpu", nullptr);
             albedoSamp =
                 context.Get<SDL_GPUSampler*>(texKey + "_sampler", nullptr);
         }
         if (!albedoTex || !albedoSamp) continue;
 
         SDL_GPUTextureSamplerBinding bindings[4] = {};
-        bindings[0].texture = albedoTex;
-        bindings[0].sampler = albedoSamp;
-        bindings[1].texture = albedoTex;
-        bindings[1].sampler = albedoSamp;
-        bindings[2].texture = lmTex;
-        bindings[2].sampler = lmSamp;
-        bindings[3].texture = albedoTex;
-        bindings[3].sampler = albedoSamp;
+        bindings[0].texture                      = albedoTex;
+        bindings[0].sampler                      = albedoSamp;
+        bindings[1].texture                      = albedoTex;
+        bindings[1].sampler                      = albedoSamp;
+        bindings[2].texture                      = lmTex;
+        bindings[2].sampler                      = lmSamp;
+        bindings[3].texture                      = albedoTex;
+        bindings[3].sampler                      = albedoSamp;
         SDL_BindGPUFragmentSamplers(pass, 0, bindings, 4);
 
         SDL_DrawGPUIndexedPrimitives(pass, node["index_count"].get<uint32_t>(),

@@ -13,7 +13,9 @@ namespace sdl3cpp::services::impl {
 WorkflowBspLoadStep::WorkflowBspLoadStep(std::shared_ptr<ILogger> logger)
     : logger_(std::move(logger)) {}
 
-std::string WorkflowBspLoadStep::GetPluginId() const { return "bsp.load"; }
+std::string WorkflowBspLoadStep::GetPluginId() const {
+    return "bsp.load";
+}
 
 void WorkflowBspLoadStep::Execute(const WorkflowStepDefinition& step,
                                   WorkflowContext& context) {
@@ -43,7 +45,7 @@ void WorkflowBspLoadStep::Execute(const WorkflowStepDefinition& step,
     if (pk3_path.empty()) {
         throw std::runtime_error("bsp.load: 'pk3_path' parameter required");
     }
-    int zip_err = 0;
+    int zip_err    = 0;
     zip_t* archive = zip_open(pk3_path.c_str(), ZIP_RDONLY, &zip_err);
     if (!archive) {
         throw std::runtime_error("bsp.load: Failed to open pk3: " + pk3_path);
@@ -53,17 +55,17 @@ void WorkflowBspLoadStep::Execute(const WorkflowStepDefinition& step,
     auto bspData = ReadBspFromPk3(archive, map_name, pk3_path);
     if (logger_) {
         logger_->Info("bsp.load: Read maps/" + map_name + ".bsp (" +
-                     std::to_string(bspData->size()) + " bytes)");
+                      std::to_string(bspData->size()) + " bytes)");
     }
     ValidateBspHeader(*bspData);
     context.Set("bsp_raw_data", bspData);
     context.Set("bsp_config", nlohmann::json{{"pk3_path", pk3_path},
-                                            {"map_name", map_name},
-                                            {"scale", scale}});
+                                             {"map_name", map_name},
+                                             {"scale", scale}});
     if (logger_) {
         logger_->Info("bsp.load: '" + map_name + "' validated, " +
-                     std::to_string(bspData->size()) +
-                     " bytes stored in context");
+                      std::to_string(bspData->size()) +
+                      " bytes stored in context");
     }
 }
 

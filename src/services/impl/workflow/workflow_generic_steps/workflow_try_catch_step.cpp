@@ -25,8 +25,7 @@ void WorkflowTryCatchStep::Execute(const WorkflowStepDefinition& step,
                                    WorkflowContext& context) {
     const auto tryStepIt = step.inputs.find("try_step");
     if (tryStepIt == step.inputs.end()) {
-        throw std::runtime_error(
-            "control.try.catch requires 'try_step' input");
+        throw std::runtime_error("control.try.catch requires 'try_step' input");
     }
     const std::string& tryStepId = tryStepIt->second;
 
@@ -34,16 +33,16 @@ void WorkflowTryCatchStep::Execute(const WorkflowStepDefinition& step,
     const std::string catchStepId =
         catchStepIt != step.inputs.end() ? catchStepIt->second : "";
 
-    const auto errorOutputIt = step.inputs.find("error_output");
+    const auto errorOutputIt         = step.inputs.find("error_output");
     const std::string errorOutputKey = errorOutputIt != step.inputs.end()
-                                          ? errorOutputIt->second
-                                          : "error.message";
+                                           ? errorOutputIt->second
+                                           : "error.message";
     try {
         ExecuteRegisteredStep(*registry_, tryStepId, context, "try");
         if (logger_) {
             logger_->Trace("WorkflowTryCatchStep", "Execute",
-                          "try_step=" + tryStepId,
-                          "Try step executed successfully");
+                           "try_step=" + tryStepId,
+                           "Try step executed successfully");
         }
     } catch (const std::exception& e) {
         const std::string error_message = e.what();
@@ -51,9 +50,8 @@ void WorkflowTryCatchStep::Execute(const WorkflowStepDefinition& step,
 
         if (logger_) {
             logger_->Trace("WorkflowTryCatchStep", "Execute",
-                          "try_step=" + tryStepId +
-                              ", error=" + error_message,
-                          "Exception caught");
+                           "try_step=" + tryStepId + ", error=" + error_message,
+                           "Exception caught");
         }
 
         if (catchStepId.empty()) return;
@@ -61,16 +59,15 @@ void WorkflowTryCatchStep::Execute(const WorkflowStepDefinition& step,
             ExecuteRegisteredStep(*registry_, catchStepId, context, "catch");
             if (logger_) {
                 logger_->Trace("WorkflowTryCatchStep", "Execute",
-                              "catch_step=" + catchStepId,
-                              "Catch step executed");
+                               "catch_step=" + catchStepId,
+                               "Catch step executed");
             }
         } catch (const std::exception& catchError) {
             if (logger_) {
-                logger_->Trace(
-                    "WorkflowTryCatchStep", "Execute",
-                    "catch_step=" + catchStepId +
-                        ", error=" + std::string(catchError.what()),
-                    "Catch step threw exception");
+                logger_->Trace("WorkflowTryCatchStep", "Execute",
+                               "catch_step=" + catchStepId +
+                                   ", error=" + std::string(catchError.what()),
+                               "Catch step threw exception");
             }
             throw;
         }

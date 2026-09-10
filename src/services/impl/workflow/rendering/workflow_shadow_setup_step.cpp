@@ -31,16 +31,16 @@ void WorkflowShadowSetupStep::Execute(const WorkflowStepDefinition& step,
                    : def;
     };
 
-    const int map_size = static_cast<int>(getNum("map_size", 2048));
+    const int map_size       = static_cast<int>(getNum("map_size", 2048));
     const float scene_extent = getNum("scene_extent", 15.0f);
-    const float near_plane = getNum("near_plane", 0.1f);
-    const float far_plane = getNum("far_plane", 50.0f);
+    const float near_plane   = getNum("near_plane", 0.1f);
+    const float far_plane    = getNum("far_plane", 50.0f);
 
     SDL_GPUDevice* device = context.Get<SDL_GPUDevice*>("gpu_device", nullptr);
     if (!device) throw std::runtime_error("shadow.setup: GPU device not found");
 
     const ShadowDepthTarget target = CreateShadowDepthTarget(device, map_size);
-    const glm::mat4 lightVP = ComputeShadowLightViewProjection(
+    const glm::mat4 lightVP        = ComputeShadowLightViewProjection(
         context, scene_extent, near_plane, far_plane);
 
     // Store depth resources and light matrix in context
@@ -60,10 +60,9 @@ void WorkflowShadowSetupStep::Execute(const WorkflowStepDefinition& step,
     context.Set("shadow.state", shadow_state);
 
     if (logger_) {
-        logger_->Info(
-            "shadow.setup: Created " + std::to_string(map_size) + "x" +
-            std::to_string(map_size) +
-            " shadow map + sampler (pipeline deferred to JSON)");
+        logger_->Info("shadow.setup: Created " + std::to_string(map_size) +
+                      "x" + std::to_string(map_size) +
+                      " shadow map + sampler (pipeline deferred to JSON)");
     }
 }
 

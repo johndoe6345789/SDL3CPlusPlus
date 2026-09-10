@@ -24,8 +24,7 @@ void WorkflowQ3SoundPlayStep::Execute(const WorkflowStepDefinition& step,
     // An optional gate keeps the trigger in the workflow: the step only
     // fires when the named bool is true this frame.
     const auto gate = step.inputs.find("when");
-    if (gate != step.inputs.end() &&
-        !context.GetBool(gate->second, false)) {
+    if (gate != step.inputs.end() && !context.GetBool(gate->second, false)) {
         return;
     }
 
@@ -39,9 +38,8 @@ void WorkflowQ3SoundPlayStep::Execute(const WorkflowStepDefinition& step,
     }
     if (name.empty()) return;
 
-    auto bank = context.Get<q3::SoundBankPtr>("q3.sound.bank", nullptr);
-    const auto device =
-        context.Get<SDL_AudioDeviceID>("q3.sound.device", 0);
+    auto bank         = context.Get<q3::SoundBankPtr>("q3.sound.bank", nullptr);
+    const auto device = context.Get<SDL_AudioDeviceID>("q3.sound.device", 0);
     if (!bank || device == 0) return;
 
     const auto found = bank->find(name);

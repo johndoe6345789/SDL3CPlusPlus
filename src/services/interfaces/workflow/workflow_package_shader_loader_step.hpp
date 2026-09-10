@@ -26,17 +26,16 @@ namespace sdl3cpp::services::impl {
  * - shader.constantColor: RGBA color values
  */
 class WorkflowPackageShaderLoaderStep : public IWorkflowStep {
- public:
-    WorkflowPackageShaderLoaderStep(
-        std::shared_ptr<ILogger> logger,
-        const std::string& gamePackage,
-        const std::filesystem::path& projectRoot);
+public:
+    WorkflowPackageShaderLoaderStep(std::shared_ptr<ILogger> logger,
+                                    const std::string& gamePackage,
+                                    const std::filesystem::path& projectRoot);
 
     std::string GetPluginId() const override;
     void Execute(const WorkflowStepDefinition& step,
-                WorkflowContext& context) override;
+                 WorkflowContext& context) override;
 
- private:
+private:
     std::shared_ptr<ILogger> logger_;
     std::string gamePackage_;
     std::filesystem::path projectRoot_;

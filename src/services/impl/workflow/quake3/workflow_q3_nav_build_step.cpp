@@ -16,12 +16,12 @@ std::string WorkflowQ3NavBuildStep::GetPluginId() const {
     return "q3.nav.build";
 }
 
-void WorkflowQ3NavBuildStep::Execute(
-    const WorkflowStepDefinition& /*step*/, WorkflowContext& context) {
+void WorkflowQ3NavBuildStep::Execute(const WorkflowStepDefinition& /*step*/,
+                                     WorkflowContext& context) {
     if (context.GetBool("q3.nav_built", false)) return;
 
-    auto* world = context.Get<btDiscreteDynamicsWorld*>(
-        "physics_world", nullptr);
+    auto* world =
+        context.Get<btDiscreteDynamicsWorld*>("physics_world", nullptr);
     if (!world) {
         if (logger_) {
             logger_->Warn(
@@ -31,12 +31,11 @@ void WorkflowQ3NavBuildStep::Execute(
         return;
     }
 
-    const auto* spawnPts = context.TryGet<nlohmann::json>(
-        "bsp.spawn_points");
+    const auto* spawnPts = context.TryGet<nlohmann::json>("bsp.spawn_points");
     if (!spawnPts) spawnPts = context.TryGet<nlohmann::json>("bsp.entities");
 
     const NavBuildAabb aabb = ComputeNavBuildAabb(spawnPts);
-    auto graph = SampleNavGraph(world, aabb);
+    auto graph              = SampleNavGraph(world, aabb);
     ConnectNavNeighbors(world, *graph);
 
     context.Set("q3.nav_graph", graph);
@@ -44,7 +43,7 @@ void WorkflowQ3NavBuildStep::Execute(
 
     if (logger_) {
         logger_->Info("q3.nav.build: built " +
-            std::to_string(graph->nodes.size()) + " nav nodes");
+                      std::to_string(graph->nodes.size()) + " nav nodes");
     }
 }
 

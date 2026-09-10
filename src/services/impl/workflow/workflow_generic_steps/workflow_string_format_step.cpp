@@ -25,8 +25,7 @@ void WorkflowStringFormatStep::Execute(const WorkflowStepDefinition& step,
 
     // Get template content from context if it's a key
     std::string template_content;
-    if (const auto* templateValue =
-            context.TryGet<std::string>(templateStr)) {
+    if (const auto* templateValue = context.TryGet<std::string>(templateStr)) {
         template_content = *templateValue;
     } else {
         template_content = templateStr;
@@ -50,8 +49,7 @@ void WorkflowStringFormatStep::Execute(const WorkflowStepDefinition& step,
     if (logger_) {
         logger_->Trace(
             "WorkflowStringFormatStep", "Execute",
-            "template_length=" +
-                std::to_string(template_content.length()) +
+            "template_length=" + std::to_string(template_content.length()) +
                 ", result=" + formatted,
             "String formatted successfully");
     }

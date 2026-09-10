@@ -18,11 +18,10 @@ void WorkflowPostfxTaaStep::Execute(const WorkflowStepDefinition& step,
                                     WorkflowContext& context) {
     if (context.GetBool("frame_skip", false)) return;
 
-    auto* cmd = context.Get<SDL_GPUCommandBuffer*>("gpu_command_buffer",
-                                                    nullptr);
+    auto* cmd =
+        context.Get<SDL_GPUCommandBuffer*>("gpu_command_buffer", nullptr);
     auto* device = context.Get<SDL_GPUDevice*>("gpu_device", nullptr);
-    auto* hdrTex =
-        context.Get<SDL_GPUTexture*>("postfx_hdr_texture", nullptr);
+    auto* hdrTex = context.Get<SDL_GPUTexture*>("postfx_hdr_texture", nullptr);
     if (!cmd || !device || !hdrTex) return;
 
     WorkflowStepParameterResolver params;
@@ -56,8 +55,8 @@ void WorkflowPostfxTaaStep::Execute(const WorkflowStepDefinition& step,
         context.Get<SDL_GPUSampler*>("postfx_linear_sampler", nullptr);
     if (!sampler) return;
 
-    DrawTaaResolvePass(cmd, taaPipeline, hdrTex, history, sampler,
-                       blendFactor, w, h, frameCount);
+    DrawTaaResolvePass(cmd, taaPipeline, hdrTex, history, sampler, blendFactor,
+                       w, h, frameCount);
 
     // Replace the HDR texture with the TAA result for downstream post-FX.
     context.Set<SDL_GPUTexture*>("postfx_hdr_texture", history.write);

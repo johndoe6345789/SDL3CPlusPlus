@@ -35,7 +35,7 @@ FlashlightMesh BuildFlashlightMesh(int segments, float bodyRadius,
 /// Uploaded GPU vertex/index buffers for a FlashlightMesh.
 struct FlashlightMeshBuffers {
     SDL_GPUBuffer* vertexBuffer = nullptr;
-    SDL_GPUBuffer* indexBuffer = nullptr;
+    SDL_GPUBuffer* indexBuffer  = nullptr;
 };
 
 /// Creates GPU vertex/index buffers and uploads `mesh` into them via a

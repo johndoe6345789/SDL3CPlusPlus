@@ -34,8 +34,8 @@ BufferUploadParams ReadBufferUploadParams(const WorkflowStepDefinition& step) {
     return params;
 }
 
-std::vector<uint8_t> ReadVertexBytesFromContext(
-    const WorkflowContext& context, const std::string& key) {
+std::vector<uint8_t> ReadVertexBytesFromContext(const WorkflowContext& context,
+                                                const std::string& key) {
     const auto* vertexJson = context.TryGet<json>(key);
     if (!vertexJson || !vertexJson->is_array() || vertexJson->empty()) {
         throw std::runtime_error(
@@ -56,8 +56,8 @@ std::vector<uint8_t> ReadVertexBytesFromContext(
     return vertexBytes;
 }
 
-std::vector<uint16_t> ReadIndexValuesFromContext(
-    const WorkflowContext& context, const std::string& key) {
+std::vector<uint16_t> ReadIndexValuesFromContext(const WorkflowContext& context,
+                                                 const std::string& key) {
     const auto* indexJson = context.TryGet<json>(key);
     if (!indexJson || !indexJson->is_array() || indexJson->empty()) {
         throw std::runtime_error(
@@ -86,9 +86,9 @@ UploadedGpuBuffers CreateAndUploadGpuBuffers(
         static_cast<uint32_t>(indexValues.size() * sizeof(uint16_t));
 
     SDL_GPUBufferCreateInfo vbufInfo = {};
-    vbufInfo.usage = SDL_GPU_BUFFERUSAGE_VERTEX;
-    vbufInfo.size  = vertexSize;
-    SDL_GPUBuffer* vbuf = SDL_CreateGPUBuffer(device, &vbufInfo);
+    vbufInfo.usage                   = SDL_GPU_BUFFERUSAGE_VERTEX;
+    vbufInfo.size                    = vertexSize;
+    SDL_GPUBuffer* vbuf              = SDL_CreateGPUBuffer(device, &vbufInfo);
     if (!vbuf) {
         throw std::runtime_error(
             "graphics.buffer.upload: Failed to create vertex buffer: " +
@@ -96,9 +96,9 @@ UploadedGpuBuffers CreateAndUploadGpuBuffers(
     }
 
     SDL_GPUBufferCreateInfo ibufInfo = {};
-    ibufInfo.usage = SDL_GPU_BUFFERUSAGE_INDEX;
-    ibufInfo.size  = indexSize;
-    SDL_GPUBuffer* ibuf = SDL_CreateGPUBuffer(device, &ibufInfo);
+    ibufInfo.usage                   = SDL_GPU_BUFFERUSAGE_INDEX;
+    ibufInfo.size                    = indexSize;
+    SDL_GPUBuffer* ibuf              = SDL_CreateGPUBuffer(device, &ibufInfo);
     if (!ibuf) {
         SDL_ReleaseGPUBuffer(device, vbuf);
         throw std::runtime_error(
@@ -106,7 +106,7 @@ UploadedGpuBuffers CreateAndUploadGpuBuffers(
             std::string(SDL_GetError()));
     }
 
-    const uint32_t transferSize = vertexSize + indexSize;
+    const uint32_t transferSize                  = vertexSize + indexSize;
     SDL_GPUTransferBufferCreateInfo transferInfo = {};
     transferInfo.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD;
     transferInfo.size  = transferSize;
@@ -121,29 +121,29 @@ UploadedGpuBuffers CreateAndUploadGpuBuffers(
 
     void* mapped = SDL_MapGPUTransferBuffer(device, transfer, false);
     std::memcpy(mapped, vertexBytes.data(), vertexSize);
-    std::memcpy(static_cast<uint8_t*>(mapped) + vertexSize,
-                indexValues.data(), indexSize);
+    std::memcpy(static_cast<uint8_t*>(mapped) + vertexSize, indexValues.data(),
+                indexSize);
     SDL_UnmapGPUTransferBuffer(device, transfer);
 
     SDL_GPUCommandBuffer* cmd = SDL_AcquireGPUCommandBuffer(device);
     SDL_GPUCopyPass* copyPass = SDL_BeginGPUCopyPass(cmd);
 
     SDL_GPUTransferBufferLocation vSrc = {};
-    vSrc.transfer_buffer = transfer;
-    vSrc.offset          = 0;
-    SDL_GPUBufferRegion vDst = {};
-    vDst.buffer = vbuf;
-    vDst.offset = 0;
-    vDst.size   = vertexSize;
+    vSrc.transfer_buffer               = transfer;
+    vSrc.offset                        = 0;
+    SDL_GPUBufferRegion vDst           = {};
+    vDst.buffer                        = vbuf;
+    vDst.offset                        = 0;
+    vDst.size                          = vertexSize;
     SDL_UploadToGPUBuffer(copyPass, &vSrc, &vDst, false);
 
     SDL_GPUTransferBufferLocation iSrc = {};
-    iSrc.transfer_buffer = transfer;
-    iSrc.offset          = vertexSize;
-    SDL_GPUBufferRegion iDst = {};
-    iDst.buffer = ibuf;
-    iDst.offset = 0;
-    iDst.size   = indexSize;
+    iSrc.transfer_buffer               = transfer;
+    iSrc.offset                        = vertexSize;
+    SDL_GPUBufferRegion iDst           = {};
+    iDst.buffer                        = ibuf;
+    iDst.offset                        = 0;
+    iDst.size                          = indexSize;
     SDL_UploadToGPUBuffer(copyPass, &iSrc, &iDst, false);
 
     SDL_EndGPUCopyPass(copyPass);
@@ -158,8 +158,7 @@ nlohmann::json BuildUploadedMeshMetadata(int vertexCount, int indexCount,
     return json{
         {"vertex_buffer_handle",
          {{"valid", true}, {"vertex_count", vertexCount}}},
-        {"index_buffer_handle",
-         {{"valid", true}, {"index_count", indexCount}}},
+        {"index_buffer_handle", {{"valid", true}, {"index_count", indexCount}}},
         {"vertex_layout", {{"stride", vertexStride}}},
     };
 }

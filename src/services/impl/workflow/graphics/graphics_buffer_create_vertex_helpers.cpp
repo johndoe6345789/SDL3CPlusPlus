@@ -26,9 +26,9 @@ SDL_GPUBuffer* UploadVertexBuffer(SDL_GPUDevice* device,
         static_cast<uint32_t>(data.size() * sizeof(float));
 
     SDL_GPUBufferCreateInfo buf_info = {};
-    buf_info.usage = SDL_GPU_BUFFERUSAGE_VERTEX;
-    buf_info.size = data_size;
-    SDL_GPUBuffer* vbuf = SDL_CreateGPUBuffer(device, &buf_info);
+    buf_info.usage                   = SDL_GPU_BUFFERUSAGE_VERTEX;
+    buf_info.size                    = data_size;
+    SDL_GPUBuffer* vbuf              = SDL_CreateGPUBuffer(device, &buf_info);
     if (!vbuf) {
         throw std::runtime_error(
             "graphics.buffer.create_vertex: SDL_CreateGPUBuffer failed: " +
@@ -37,7 +37,7 @@ SDL_GPUBuffer* UploadVertexBuffer(SDL_GPUDevice* device,
 
     SDL_GPUTransferBufferCreateInfo transfer_info = {};
     transfer_info.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD;
-    transfer_info.size = data_size;
+    transfer_info.size  = data_size;
     SDL_GPUTransferBuffer* transfer =
         SDL_CreateGPUTransferBuffer(device, &transfer_info);
     if (!transfer) {
@@ -51,17 +51,17 @@ SDL_GPUBuffer* UploadVertexBuffer(SDL_GPUDevice* device,
     memcpy(mapped, data.data(), data_size);
     SDL_UnmapGPUTransferBuffer(device, transfer);
 
-    SDL_GPUCommandBuffer* cmd = SDL_AcquireGPUCommandBuffer(device);
+    SDL_GPUCommandBuffer* cmd  = SDL_AcquireGPUCommandBuffer(device);
     SDL_GPUCopyPass* copy_pass = SDL_BeginGPUCopyPass(cmd);
 
     SDL_GPUTransferBufferLocation src = {};
-    src.transfer_buffer = transfer;
-    src.offset = 0;
+    src.transfer_buffer               = transfer;
+    src.offset                        = 0;
 
     SDL_GPUBufferRegion dst = {};
-    dst.buffer = vbuf;
-    dst.offset = 0;
-    dst.size = data_size;
+    dst.buffer              = vbuf;
+    dst.offset              = 0;
+    dst.size                = data_size;
 
     SDL_UploadToGPUBuffer(copy_pass, &src, &dst, false);
     SDL_EndGPUCopyPass(copy_pass);

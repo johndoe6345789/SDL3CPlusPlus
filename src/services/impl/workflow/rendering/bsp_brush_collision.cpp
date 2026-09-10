@@ -11,12 +11,15 @@ std::vector<btVector3> ComputeBrushVertices(const BspBrushSide* sides,
     std::vector<btVector3> verts;
     if (numSides < 3) return verts;
 
-    struct Plane { btVector3 n; float d; };
+    struct Plane {
+        btVector3 n;
+        float d;
+    };
     std::vector<Plane> planes(numSides);
     for (int i = 0; i < numSides; ++i) {
         const auto& p = allPlanes[sides[i].planeIndex];
-        planes[i].n = btVector3(p.normal[0], p.normal[2], -p.normal[1]);
-        planes[i].d = p.dist * scale;
+        planes[i].n   = btVector3(p.normal[0], p.normal[2], -p.normal[1]);
+        planes[i].d   = p.dist * scale;
     }
 
     for (int i = 0; i < numSides - 2; ++i) {
@@ -27,12 +30,12 @@ std::vector<btVector3> ComputeBrushVertices(const BspBrushSide* sides,
                 const auto& p3 = planes[k];
 
                 btVector3 cross23 = p2.n.cross(p3.n);
-                float denom = p1.n.dot(cross23);
+                float denom       = p1.n.dot(cross23);
                 if (std::fabs(denom) < 1e-6f) continue;
 
-                btVector3 point = (cross23 * p1.d +
-                                   p3.n.cross(p1.n) * p2.d +
-                                   p1.n.cross(p2.n) * p3.d) / denom;
+                btVector3 point = (cross23 * p1.d + p3.n.cross(p1.n) * p2.d +
+                                   p1.n.cross(p2.n) * p3.d) /
+                                  denom;
 
                 bool inside = true;
                 for (int m = 0; m < numSides; ++m) {
@@ -62,7 +65,7 @@ BspBrushCollisionShapes BuildBspBrushCollisionShapes(
         reinterpret_cast<const BspLump*>(bspData.data() + sizeof(BspHeader));
 
     const auto& texLump = lumps[LUMP_TEXTURES];
-    int numTextures = texLump.length / static_cast<int>(sizeof(BspTexture));
+    int numTextures     = texLump.length / static_cast<int>(sizeof(BspTexture));
     auto* bspTextures =
         reinterpret_cast<const BspTexture*>(bspData.data() + texLump.offset);
 
@@ -92,7 +95,7 @@ BspBrushCollisionShapes BuildBspBrushCollisionShapes(
         bool playerClip = false;
         if (brush.shaderIndex >= 0 && brush.shaderIndex < numTextures) {
             const auto& tex = bspTextures[brush.shaderIndex];
-            playerClip = (tex.contents & CONTENTS_PLAYERCLIP) != 0;
+            playerClip      = (tex.contents & CONTENTS_PLAYERCLIP) != 0;
             if (!(tex.contents & CONTENTS_SOLID) && !playerClip) {
                 ++out.skippedBrushes;
                 continue;
@@ -115,9 +118,8 @@ BspBrushCollisionShapes BuildBspBrushCollisionShapes(
             continue;
         }
 
-        auto hullVerts = ComputeBrushVertices(
-            &bspBrushSides[brush.firstSide], brush.numSides, bspPlanes,
-            scale);
+        auto hullVerts = ComputeBrushVertices(&bspBrushSides[brush.firstSide],
+                                              brush.numSides, bspPlanes, scale);
 
         if (hullVerts.size() < 4) {
             ++out.skippedBrushes;
@@ -160,7 +162,7 @@ void RemoveBspCollisionBody(btDiscreteDynamicsWorld* world,
 
     world->removeRigidBody(body);
     auto* shape = body->getCollisionShape();
-    auto* ms = body->getMotionState();
+    auto* ms    = body->getMotionState();
     delete body;
     delete ms;
     if (shape) {
@@ -179,10 +181,9 @@ btRigidBody* AddStaticCollisionBody(btDiscreteDynamicsWorld* world,
     btTransform startTransform;
     startTransform.setIdentity();
     auto* motionState = new btDefaultMotionState(startTransform);
-    btRigidBody::btRigidBodyConstructionInfo rbInfo(0.0f, motionState,
-                                                    shape);
+    btRigidBody::btRigidBodyConstructionInfo rbInfo(0.0f, motionState, shape);
     rbInfo.m_friction = friction;
-    auto* body = new btRigidBody(rbInfo);
+    auto* body        = new btRigidBody(rbInfo);
     body->setCollisionFlags(body->getCollisionFlags() |
                             btCollisionObject::CF_STATIC_OBJECT);
     world->addRigidBody(body);
@@ -190,13 +191,12 @@ btRigidBody* AddStaticCollisionBody(btDiscreteDynamicsWorld* world,
 }
 
 btRigidBody* AddFilteredStaticCollisionBody(btDiscreteDynamicsWorld* world,
-                                            btCollisionShape* shape,
-                                            int group, int mask) {
+                                            btCollisionShape* shape, int group,
+                                            int mask) {
     btTransform startTransform;
     startTransform.setIdentity();
     auto* motionState = new btDefaultMotionState(startTransform);
-    btRigidBody::btRigidBodyConstructionInfo rbInfo(0.0f, motionState,
-                                                    shape);
+    btRigidBody::btRigidBodyConstructionInfo rbInfo(0.0f, motionState, shape);
     auto* body = new btRigidBody(rbInfo);
     body->setCollisionFlags(body->getCollisionFlags() |
                             btCollisionObject::CF_STATIC_OBJECT);

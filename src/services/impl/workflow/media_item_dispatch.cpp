@@ -4,10 +4,9 @@
 
 namespace sdl3cpp::services::impl {
 
-std::string DispatchMediaSelection(IAudioService& audioService,
-                                    ILogger* logger,
-                                    const std::string& action,
-                                    const MediaSelection& selection) {
+std::string DispatchMediaSelection(IAudioService& audioService, ILogger* logger,
+                                   const std::string& action,
+                                   const MediaSelection& selection) {
     const std::filesystem::path path = selection.path;
 
     if (path.empty()) {
@@ -23,7 +22,8 @@ std::string DispatchMediaSelection(IAudioService& audioService,
         if (logger) {
             logger->Error(
                 "WorkflowMediaItemSelectStep::Execute: media file not "
-                "found " + path.string());
+                "found " +
+                path.string());
         }
         return "Media file not found: " + path.string();
     }

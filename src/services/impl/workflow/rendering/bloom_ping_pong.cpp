@@ -13,8 +13,7 @@ BloomPingPongTextures EnsureBloomPingPongTextures(SDL_GPUDevice* device,
 
     if (pingTex && pingW == halfW && pingH == halfH) {
         auto* pongTex =
-            context.Get<SDL_GPUTexture*>("postfx_bloom_pong_texture",
-                                        nullptr);
+            context.Get<SDL_GPUTexture*>("postfx_bloom_pong_texture", nullptr);
         return {pingTex, pongTex};
     }
 
@@ -24,16 +23,16 @@ BloomPingPongTextures EnsureBloomPingPongTextures(SDL_GPUDevice* device,
     if (oldPong) SDL_ReleaseGPUTexture(device, oldPong);
 
     SDL_GPUTextureCreateInfo texInfo = {};
-    texInfo.type = SDL_GPU_TEXTURETYPE_2D;
-    texInfo.format = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
-    texInfo.width = halfW;
-    texInfo.height = halfH;
-    texInfo.layer_count_or_depth = 1;
-    texInfo.num_levels = 1;
+    texInfo.type                     = SDL_GPU_TEXTURETYPE_2D;
+    texInfo.format                   = SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT;
+    texInfo.width                    = halfW;
+    texInfo.height                   = halfH;
+    texInfo.layer_count_or_depth     = 1;
+    texInfo.num_levels               = 1;
     texInfo.usage =
         SDL_GPU_TEXTUREUSAGE_COLOR_TARGET | SDL_GPU_TEXTUREUSAGE_SAMPLER;
 
-    pingTex = SDL_CreateGPUTexture(device, &texInfo);
+    pingTex       = SDL_CreateGPUTexture(device, &texInfo);
     auto* pongTex = SDL_CreateGPUTexture(device, &texInfo);
 
     context.Set<SDL_GPUTexture*>("postfx_bloom_ping_texture", pingTex);
@@ -49,9 +48,9 @@ bool DrawBloomExtractPass(SDL_GPUCommandBuffer* cmd,
                           SDL_GPUTexture* hdrTex, SDL_GPUSampler* sampler,
                           SDL_GPUTexture* target) {
     SDL_GPUColorTargetInfo colorTarget = {};
-    colorTarget.texture = target;
-    colorTarget.load_op = SDL_GPU_LOADOP_DONT_CARE;
-    colorTarget.store_op = SDL_GPU_STOREOP_STORE;
+    colorTarget.texture                = target;
+    colorTarget.load_op                = SDL_GPU_LOADOP_DONT_CARE;
+    colorTarget.store_op               = SDL_GPU_STOREOP_STORE;
 
     SDL_GPURenderPass* pass =
         SDL_BeginGPURenderPass(cmd, &colorTarget, 1, nullptr);
@@ -60,8 +59,8 @@ bool DrawBloomExtractPass(SDL_GPUCommandBuffer* cmd,
     SDL_BindGPUGraphicsPipeline(pass, pipeline);
 
     SDL_GPUTextureSamplerBinding hdrBinding = {};
-    hdrBinding.texture = hdrTex;
-    hdrBinding.sampler = sampler;
+    hdrBinding.texture                      = hdrTex;
+    hdrBinding.sampler                      = sampler;
     SDL_BindGPUFragmentSamplers(pass, 0, &hdrBinding, 1);
 
     // Push bloom params: threshold=1.0, soft_knee=0.5

@@ -7,8 +7,8 @@ namespace sdl3cpp::services::impl {
 namespace {
 
 bool DestroyAll(const WorkflowStepDefinition& step,
-    const WorkflowStepParameterResolver& resolver,
-    std::vector<std::string>& effects) {
+                const WorkflowStepParameterResolver& resolver,
+                std::vector<std::string>& effects) {
     const auto* param = resolver.FindParameter(step, "destroy_all");
     if (!param || param->type != WorkflowParameterValue::Type::Bool ||
         !param->boolValue) {
@@ -19,8 +19,8 @@ bool DestroyAll(const WorkflowStepDefinition& step,
 }
 
 bool DestroyById(const WorkflowStepDefinition& step,
-    const WorkflowStepParameterResolver& resolver,
-    std::vector<std::string>& effects) {
+                 const WorkflowStepParameterResolver& resolver,
+                 std::vector<std::string>& effects) {
     const auto* param = resolver.FindParameter(step, "vfx_id");
     if (!param || param->type != WorkflowParameterValue::Type::String ||
         param->stringValue.empty()) {
@@ -33,21 +33,22 @@ bool DestroyById(const WorkflowStepDefinition& step,
 }
 
 bool DestroyByCommaSeparatedIds(const WorkflowStepDefinition& step,
-    const WorkflowStepParameterResolver& resolver,
-    std::vector<std::string>& effects) {
+                                const WorkflowStepParameterResolver& resolver,
+                                std::vector<std::string>& effects) {
     const auto* param = resolver.FindParameter(step, "vfx_ids");
     if (!param || param->type != WorkflowParameterValue::Type::String ||
         param->stringValue.empty()) {
         return false;
     }
 
-    bool destroyed = false;
+    bool destroyed           = false;
     const std::string& idStr = param->stringValue;
-    size_t pos = 0;
+    size_t pos               = 0;
     while (pos < idStr.length()) {
         size_t commaPos = idStr.find(',', pos);
-        std::string id = idStr.substr(pos, commaPos == std::string::npos
-            ? std::string::npos : commaPos - pos);
+        std::string id =
+            idStr.substr(pos, commaPos == std::string::npos ? std::string::npos
+                                                            : commaPos - pos);
 
         // Trim leading whitespace only
         size_t start = id.find_first_not_of(" \t");
@@ -68,8 +69,8 @@ bool DestroyByCommaSeparatedIds(const WorkflowStepDefinition& step,
 }
 
 bool DestroyByTarget(const WorkflowStepDefinition& step,
-    const WorkflowStepParameterResolver& resolver,
-    std::vector<std::string>& effects) {
+                     const WorkflowStepParameterResolver& resolver,
+                     std::vector<std::string>& effects) {
     if (effects.empty()) return false;
     const auto* param = resolver.FindParameter(step, "target");
     if (!param || param->type != WorkflowParameterValue::Type::String) {
@@ -89,8 +90,8 @@ bool DestroyByTarget(const WorkflowStepDefinition& step,
 }  // namespace
 
 bool ApplyVfxDestroySelection(const WorkflowStepDefinition& step,
-    const WorkflowStepParameterResolver& resolver,
-    std::vector<std::string>& effects) {
+                              const WorkflowStepParameterResolver& resolver,
+                              std::vector<std::string>& effects) {
     if (DestroyAll(step, resolver, effects)) return true;
     if (DestroyById(step, resolver, effects)) return true;
     if (DestroyByCommaSeparatedIds(step, resolver, effects)) return true;

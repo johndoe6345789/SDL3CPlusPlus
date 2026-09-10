@@ -21,7 +21,7 @@ std::string WorkflowControlIfElseStep::GetPluginId() const {
 
 void WorkflowControlIfElseStep::Execute(const WorkflowStepDefinition& step,
                                         WorkflowContext& context) {
-    const bool condition = ReadIfElseCondition(step, context);
+    const bool condition           = ReadIfElseCondition(step, context);
     const IfElseBranchIds branches = ReadIfElseBranchIds(step);
     const std::string& selectedBranchId =
         condition ? branches.trueBranchId : branches.falseBranchId;
@@ -38,15 +38,14 @@ void WorkflowControlIfElseStep::Execute(const WorkflowStepDefinition& step,
 
     auto branchHandler = registry_->GetStep(selectedBranchId);
     if (!branchHandler) {
-        throw std::runtime_error(
-            "control.condition.if_else: branch step '" + selectedBranchId +
-            "' not found");
+        throw std::runtime_error("control.condition.if_else: branch step '" +
+                                 selectedBranchId + "' not found");
     }
 
     // Create minimal step definition for the branch.
     WorkflowStepDefinition branchStep;
     branchStep.plugin = selectedBranchId;
-    branchStep.id = selectedBranchId;
+    branchStep.id     = selectedBranchId;
     branchHandler->Execute(branchStep, context);
 
     if (logger_) {

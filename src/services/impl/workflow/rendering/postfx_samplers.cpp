@@ -7,7 +7,7 @@ namespace {
 
 float HashFloat(int i, int seed) {
     int h = i * 374761393 + seed * 668265263;
-    h = (h ^ (h >> 13)) * 1274126177;
+    h     = (h ^ (h >> 13)) * 1274126177;
     return static_cast<float>(h & 0x7FFFFFFF) / static_cast<float>(0x7FFFFFFF);
 }
 
@@ -15,21 +15,21 @@ float HashFloat(int i, int seed) {
 
 SDL_GPUSampler* CreatePostfxLinearSampler(SDL_GPUDevice* device) {
     SDL_GPUSamplerCreateInfo info = {};
-    info.min_filter = SDL_GPU_FILTER_LINEAR;
-    info.mag_filter = SDL_GPU_FILTER_LINEAR;
-    info.address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
-    info.address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
-    info.address_mode_w = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+    info.min_filter               = SDL_GPU_FILTER_LINEAR;
+    info.mag_filter               = SDL_GPU_FILTER_LINEAR;
+    info.address_mode_u           = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+    info.address_mode_v           = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+    info.address_mode_w           = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
     return SDL_CreateGPUSampler(device, &info);
 }
 
 SDL_GPUSampler* CreatePostfxNearestSampler(SDL_GPUDevice* device) {
     SDL_GPUSamplerCreateInfo info = {};
-    info.min_filter = SDL_GPU_FILTER_NEAREST;
-    info.mag_filter = SDL_GPU_FILTER_NEAREST;
-    info.address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
-    info.address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
-    info.address_mode_w = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+    info.min_filter               = SDL_GPU_FILTER_NEAREST;
+    info.mag_filter               = SDL_GPU_FILTER_NEAREST;
+    info.address_mode_u           = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+    info.address_mode_v           = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+    info.address_mode_w           = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
     return SDL_CreateGPUSampler(device, &info);
 }
 
@@ -43,9 +43,9 @@ std::vector<float> GenerateSsaoKernel(int sampleCount) {
 
         float len = std::sqrt(x * x + y * y + z * z);
         if (len < 0.001f) {
-            x = 0;
-            y = 0;
-            z = 1;
+            x   = 0;
+            y   = 0;
+            z   = 1;
             len = 1;
         }
         x /= len;
@@ -54,7 +54,7 @@ std::vector<float> GenerateSsaoKernel(int sampleCount) {
 
         // Quadratic scale: more samples near the surface
         float scale = static_cast<float>(i) / static_cast<float>(sampleCount);
-        scale = 0.1f + scale * scale * 0.9f;
+        scale       = 0.1f + scale * scale * 0.9f;
 
         kernel.push_back(x * scale);
         kernel.push_back(y * scale);

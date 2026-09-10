@@ -28,13 +28,12 @@ nlohmann::json BuildQ3MenuItems(const nlohmann::json& screen,
  *
  * @return The menu's open state after handling the toggle.
  */
-bool UpdateQ3MenuToggle(WorkflowContext& context,
-                        const nlohmann::json& screens,
+bool UpdateQ3MenuToggle(WorkflowContext& context, const nlohmann::json& screens,
                         const std::string& defaultScreen);
 
 /// Outcome of one frame's Enter/Q handling.
 struct Q3MenuActionResult {
-    bool open = true;
+    bool open        = true;
     bool mapSelected = false;
     bool quitPressed = false;
 };

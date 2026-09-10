@@ -22,22 +22,14 @@ std::string WorkflowGraphicsFramebufferReadbackStep::GetPluginId() const {
 void WorkflowGraphicsFramebufferReadbackStep::Execute(
     const WorkflowStepDefinition& step, WorkflowContext& context) {
     WorkflowStepIoResolver resolver;
-    const std::string srcTexKeyKey =
-        resolver.GetRequiredInputKey(step, "source_texture_key");
-    const std::string outputDataKey =
-        resolver.GetRequiredOutputKey(step, "output_key");
-    const std::string outputWidthKey =
-        resolver.GetRequiredOutputKey(step, "output_width");
-    const std::string outputHeightKey =
-        resolver.GetRequiredOutputKey(step, "output_height");
-    const std::string outputSuccessKey =
-        resolver.GetRequiredOutputKey(step, "success");
+    const FramebufferReadbackKeys keys =
+        ResolveFramebufferReadbackKeys(resolver, step);
     // Context key name that holds the source texture.
-    const auto* srcTexKeyPtr = context.TryGet<std::string>(srcTexKeyKey);
+    const auto* srcTexKeyPtr =
+        context.TryGet<std::string>(keys.sourceTextureKeyKey);
     const std::string srcTexKey = (srcTexKeyPtr && !srcTexKeyPtr->empty())
                                       ? *srcTexKeyPtr
-                                      : std::string("gpu_swapchain_texture");
-
+                                      : "gpu_swapchain_texture";
     auto* device = context.Get<SDL_GPUDevice*>("gpu_device", nullptr);
     auto* window = context.Get<SDL_Window*>("sdl_window", nullptr);
     if (!device || !window) {
@@ -51,28 +43,34 @@ void WorkflowGraphicsFramebufferReadbackStep::Execute(
             "graphics.framebuffer.readback: source texture '" + srcTexKey +
             "' not found in context");
     }
-    int win_w = 0, win_h = 0;
-    SDL_GetWindowSize(window, &win_w, &win_h);
-    const auto fail = [&] { context.Set(outputSuccessKey, false); };
-    if (win_w <= 0 || win_h <= 0) { fail(); return; }
+    const auto fail = [&] { context.Set(keys.outputSuccessKey, false); };
+    if (!HasValidWindowSize(window)) {
+        fail();
+        return;
+    }
 
     const BlittedSwapchainStaging staging =
         BlitSwapchainToStaging(device, window);
-    if (!staging.texture) { fail(); return; }
+    if (!staging.texture) {
+        fail();
+        return;
+    }
 
-    std::vector<uint8_t> pixel_data =
-        DownloadStagingTexture(device, staging);
-    if (pixel_data.empty()) { fail(); return; }
+    std::vector<uint8_t> pixel_data = DownloadStagingTexture(device, staging);
+    if (pixel_data.empty()) {
+        fail();
+        return;
+    }
 
-    context.Set(outputDataKey, std::move(pixel_data));
-    context.Set(outputWidthKey, staging.width);
-    context.Set(outputHeightKey, staging.height);
-    context.Set(outputSuccessKey, true);
+    context.Set(keys.outputDataKey, std::move(pixel_data));
+    context.Set(keys.outputWidthKey, staging.width);
+    context.Set(keys.outputHeightKey, staging.height);
+    context.Set(keys.outputSuccessKey, true);
     if (logger_) {
         logger_->Info("graphics.framebuffer.readback: Read back " +
                       std::to_string(staging.width) + "x" +
                       std::to_string(staging.height) + " into '" +
-                      outputDataKey + "'");
+                      keys.outputDataKey + "'");
     }
 }
 

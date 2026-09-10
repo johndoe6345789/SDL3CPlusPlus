@@ -19,9 +19,8 @@ namespace sdl3cpp::services::impl {
  * string rather than thrown, and each case is also logged when a
  * logger is present.
  */
-std::string DispatchMediaSelection(IAudioService& audioService,
-                                    ILogger* logger,
-                                    const std::string& action,
-                                    const MediaSelection& selection);
+std::string DispatchMediaSelection(IAudioService& audioService, ILogger* logger,
+                                   const std::string& action,
+                                   const MediaSelection& selection);
 
 }  // namespace sdl3cpp::services::impl

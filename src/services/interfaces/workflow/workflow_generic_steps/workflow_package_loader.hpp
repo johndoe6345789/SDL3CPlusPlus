@@ -12,8 +12,7 @@ namespace sdl3cpp::services::impl {
 /// Returns step's required `name` string parameter, or throws
 /// std::runtime_error(errorMsg) if it is not present.
 const std::string& RequireStringParam(const WorkflowStepDefinition& step,
-                                      const char* name,
-                                      const char* errorMsg);
+                                      const char* name, const char* errorMsg);
 
 /**
  * @brief Loads `<package>/workflows/<workflowName>.json` and parses it.

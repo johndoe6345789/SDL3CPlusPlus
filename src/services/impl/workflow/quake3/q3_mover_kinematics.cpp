@@ -16,8 +16,7 @@ glm::vec3 ResolveQ3PlayerPosition(WorkflowContext& context) {
     if (camState.contains("position") && camState["position"].is_array()) {
         const auto& cp = camState["position"];
         if (cp.size() >= 3) {
-            return {cp[0].get<float>(), cp[1].get<float>(),
-                   cp[2].get<float>()};
+            return {cp[0].get<float>(), cp[1].get<float>(), cp[2].get<float>()};
         }
     }
     return glm::vec3(0.f);
@@ -36,7 +35,7 @@ glm::vec3 UpdateQ3Mover(sdl3cpp::q3::Q3Mover& m, const glm::vec3& playerPos,
             const float d2 =
                 diff.x * diff.x + diff.y * diff.y + diff.z * diff.z;
             if (d2 < 2.5f * 2.5f) {
-                m.state = State::MovingTo2;
+                m.state         = State::MovingTo2;
                 m.stateProgress = 0.f;
             }
             m.currentPos = m.pos1;
@@ -45,9 +44,9 @@ glm::vec3 UpdateQ3Mover(sdl3cpp::q3::Q3Mover& m, const glm::vec3& playerPos,
         case State::MovingTo2: {
             m.stateProgress += dt / std::max(m.travelTime, 0.001f);
             m.stateProgress = std::min(m.stateProgress, 1.f);
-            m.currentPos = glm::mix(m.pos1, m.pos2, m.stateProgress);
+            m.currentPos    = glm::mix(m.pos1, m.pos2, m.stateProgress);
             if (m.stateProgress >= 1.f) {
-                m.state = State::AtPos2;
+                m.state      = State::AtPos2;
                 m.stateTimer = m.waitTime;
             }
             break;
@@ -56,7 +55,7 @@ glm::vec3 UpdateQ3Mover(sdl3cpp::q3::Q3Mover& m, const glm::vec3& playerPos,
             m.stateTimer -= dt;
             m.currentPos = m.pos2;
             if (m.stateTimer <= 0.f) {
-                m.state = State::MovingTo1;
+                m.state         = State::MovingTo1;
                 m.stateProgress = 1.f;
             }
             break;
@@ -64,9 +63,9 @@ glm::vec3 UpdateQ3Mover(sdl3cpp::q3::Q3Mover& m, const glm::vec3& playerPos,
         case State::MovingTo1: {
             m.stateProgress -= dt / std::max(m.travelTime, 0.001f);
             m.stateProgress = std::max(m.stateProgress, 0.f);
-            m.currentPos = glm::mix(m.pos1, m.pos2, m.stateProgress);
+            m.currentPos    = glm::mix(m.pos1, m.pos2, m.stateProgress);
             if (m.stateProgress <= 0.f) {
-                m.state = State::AtPos1;
+                m.state      = State::AtPos1;
                 m.currentPos = m.pos1;
             }
             break;

@@ -20,9 +20,9 @@ enum class DebugMetricAggregation { MIN, MAX, AVG, SUM, COUNT };
 struct DebugMetricData {
     std::vector<double> values;
     size_t recordCount = 0;
-    double minValue = 0.0;
-    double maxValue = 0.0;
-    double sumValue = 0.0;
+    double minValue    = 0.0;
+    double maxValue    = 0.0;
+    double sumValue    = 0.0;
 };
 
 /// Parses "record"/"aggregate"/"reset" case-insensitively.

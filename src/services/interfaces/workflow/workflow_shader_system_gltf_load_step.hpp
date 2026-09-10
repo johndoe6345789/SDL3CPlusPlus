@@ -22,12 +22,11 @@ namespace sdl3cpp::services::impl {
  */
 class WorkflowShaderSystemGltfLoadStep : public IWorkflowStep {
 public:
-    explicit WorkflowShaderSystemGltfLoadStep(
-        std::shared_ptr<ILogger> logger);
+    explicit WorkflowShaderSystemGltfLoadStep(std::shared_ptr<ILogger> logger);
 
     std::string GetPluginId() const override;
     void Execute(const WorkflowStepDefinition& step,
-                WorkflowContext& context) override;
+                 WorkflowContext& context) override;
 
 private:
     std::shared_ptr<ILogger> logger_;

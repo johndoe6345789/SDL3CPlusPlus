@@ -7,9 +7,9 @@ bool DrawBloomBlurPass(SDL_GPUCommandBuffer* cmd,
                        SDL_GPUTexture* srcTex, SDL_GPUTexture* dstTex,
                        SDL_GPUSampler* sampler, float dirX, float dirY) {
     SDL_GPUColorTargetInfo colorTarget = {};
-    colorTarget.texture = dstTex;
-    colorTarget.load_op = SDL_GPU_LOADOP_DONT_CARE;
-    colorTarget.store_op = SDL_GPU_STOREOP_STORE;
+    colorTarget.texture                = dstTex;
+    colorTarget.load_op                = SDL_GPU_LOADOP_DONT_CARE;
+    colorTarget.store_op               = SDL_GPU_STOREOP_STORE;
 
     SDL_GPURenderPass* pass =
         SDL_BeginGPURenderPass(cmd, &colorTarget, 1, nullptr);
@@ -18,8 +18,8 @@ bool DrawBloomBlurPass(SDL_GPUCommandBuffer* cmd,
     SDL_BindGPUGraphicsPipeline(pass, pipeline);
 
     SDL_GPUTextureSamplerBinding binding = {};
-    binding.texture = srcTex;
-    binding.sampler = sampler;
+    binding.texture                      = srcTex;
+    binding.sampler                      = sampler;
     SDL_BindGPUFragmentSamplers(pass, 0, &binding, 1);
 
     struct {

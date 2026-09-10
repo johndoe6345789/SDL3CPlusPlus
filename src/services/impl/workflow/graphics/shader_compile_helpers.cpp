@@ -56,11 +56,11 @@ ShaderCompileParams ReadShaderCompileParams(const WorkflowStepDefinition& step,
     };
 
     ShaderCompileParams result;
-    result.shaderPath = getStr("shader_path", "");
-    result.stage = getStr("stage", "vertex");
+    result.shaderPath        = getStr("shader_path", "");
+    result.stage             = getStr("stage", "vertex");
     result.numUniformBuffers = getInt("num_uniform_buffers", 0);
-    result.numSamplers = getInt("num_samplers", 0);
-    result.outputKey = getStr("output_key", "compiled_shader");
+    result.numSamplers       = getInt("num_samplers", 0);
+    result.outputKey         = getStr("output_key", "compiled_shader");
 
     // Fallback: resolve shader_path from inputs (for JSON workflow usage).
     if (result.shaderPath.empty()) {
@@ -75,10 +75,10 @@ ShaderCompileParams ReadShaderCompileParams(const WorkflowStepDefinition& step,
 
 ShaderFormatInfo DetectShaderFormat(SDL_GPUDevice* device) {
     ShaderFormatInfo info;
-    const char* driver = SDL_GetGPUDeviceDriver(device);
+    const char* driver            = SDL_GetGPUDeviceDriver(device);
     const std::string driver_name = driver ? driver : "";
     if (driver_name == "metal") {
-        info.format = SDL_GPU_SHADERFORMAT_MSL;
+        info.format     = SDL_GPU_SHADERFORMAT_MSL;
         info.formatName = "msl";
         info.entrypoint = "main0";
     }
@@ -105,17 +105,17 @@ SDL_GPUShader* CreateCompiledShader(SDL_GPUDevice* device,
     }
 
     SDL_GPUShaderCreateInfo shader_info = {};
-    shader_info.code = shaderData.data();
+    shader_info.code                    = shaderData.data();
     // Pass size WITHOUT the null terminator for SPIRV/METALLIB; for MSL the
     // extra null is harmless.
-    shader_info.code_size = (formatInfo.format == SDL_GPU_SHADERFORMAT_MSL)
-                                ? shaderData.size() - 1
-                                : shaderData.size();
+    shader_info.code_size  = (formatInfo.format == SDL_GPU_SHADERFORMAT_MSL)
+                                 ? shaderData.size() - 1
+                                 : shaderData.size();
     shader_info.entrypoint = formatInfo.entrypoint;
-    shader_info.format = formatInfo.format;
-    shader_info.stage = stage;
+    shader_info.format     = formatInfo.format;
+    shader_info.stage      = stage;
     shader_info.num_uniform_buffers = params.numUniformBuffers;
-    shader_info.num_samplers = params.numSamplers;
+    shader_info.num_samplers        = params.numSamplers;
 
     SDL_GPUShader* shader = SDL_CreateGPUShader(device, &shader_info);
     if (!shader) {

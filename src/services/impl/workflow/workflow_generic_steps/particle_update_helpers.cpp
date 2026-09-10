@@ -16,15 +16,13 @@ ParticleUpdateParams ReadParticleUpdateParams(
         out.deltaTime = *elapsed;
     }
 
-    if (const auto* param =
-            parameterResolver.FindParameter(step, "gravity")) {
+    if (const auto* param = parameterResolver.FindParameter(step, "gravity")) {
         if (param->type == WorkflowParameterValue::Type::Number) {
             out.gravity = static_cast<float>(param->numberValue);
         }
     }
 
-    if (const auto* param =
-            parameterResolver.FindParameter(step, "damping")) {
+    if (const auto* param = parameterResolver.FindParameter(step, "damping")) {
         if (param->type == WorkflowParameterValue::Type::Number) {
             out.damping = static_cast<float>(param->numberValue);
             if (out.damping < 0.0f) out.damping = 0.0f;
@@ -49,7 +47,8 @@ PrunedParticles AgeAndPruneParticles(const std::vector<std::string>& particles,
     // Precondition: ages.size() == lifetimes.size() == particles.size().
     // The caller is responsible for checking this first and skipping
     // the update entirely otherwise (matching the original step).
-    for (auto& age : ages) age += deltaTime;
+    for (auto& age : ages)
+        age += deltaTime;
 
     PrunedParticles out;
     for (size_t i = 0; i < particles.size(); ++i) {
