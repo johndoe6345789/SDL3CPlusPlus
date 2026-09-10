@@ -1,79 +1,14 @@
 #include "services/interfaces/workflow/workflow_generic_steps/camera_fps_update_helpers.hpp"
-#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
-
-#include <btBulletDynamicsCommon.h>
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <vector>
 
 namespace sdl3cpp::services::impl {
-
-CameraFpsUpdateParams ReadCameraFpsUpdateParams(
-    const WorkflowStepDefinition& step) {
-    WorkflowStepParameterResolver paramResolver;
-    CameraFpsUpdateParams params;
-
-    auto readParam = [&](const char* name, auto& out) {
-        if (const auto* p = paramResolver.FindParameter(step, name)) {
-            if (p->type == WorkflowParameterValue::Type::Number) {
-                out = static_cast<std::remove_reference_t<decltype(out)>>(
-                    p->numberValue);
-            }
-        }
-    };
-    readParam("sensitivity", params.sensitivity);
-    readParam("eye_height", params.eyeHeight);
-    readParam("fov", params.fovDeg);
-    readParam("near", params.nearPlane);
-    readParam("far", params.farPlane);
-    return params;
-}
-
-YawPitch UpdateCameraFpsYawPitch(WorkflowContext& context, float sensitivity) {
-    const float mouseRelX = context.Get<float>("input_mouse_rel_x", 0.0f);
-    const float mouseRelY = context.Get<float>("input_mouse_rel_y", 0.0f);
-
-    float yaw   = context.Get<float>("camera_yaw", 0.0f);
-    float pitch = context.Get<float>("camera_pitch", 0.0f);
-
-    yaw -= mouseRelX * sensitivity;
-    pitch -= mouseRelY * sensitivity;  // Inverted Y.
-
-    // Clamp pitch to prevent flipping.
-    constexpr float maxPitch = 1.5f;  // ~86 degrees.
-    pitch                    = std::clamp(pitch, -maxPitch, maxPitch);
-
-    context.Set<float>("camera_yaw", yaw);
-    context.Set<float>("camera_pitch", pitch);
-    return YawPitch{yaw, pitch};
-}
-
-glm::vec3 ComputeCameraFpsEyePosition(const WorkflowContext& context,
-                                      float eyeHeight) {
-    const float actualEyeHeight =
-        context.Get<float>("camera_eye_height", eyeHeight);
-
-    auto playerName = context.GetString("physics_player_body", "");
-    glm::vec3 eyePos(0.0f, actualEyeHeight, 0.0f);
-
-    if (!playerName.empty()) {
-        auto* body =
-            context.Get<btRigidBody*>("physics_body_" + playerName, nullptr);
-        if (body) {
-            btTransform transform;
-            body->getMotionState()->getWorldTransform(transform);
-            btVector3 pos = transform.getOrigin();
-            eyePos = glm::vec3(pos.x(), pos.y() + actualEyeHeight, pos.z());
-        }
-    }
-    return eyePos;
-}
 
 nlohmann::json BuildCameraFpsState(const WorkflowContext& context,
                                    const glm::vec3& eyePos,
