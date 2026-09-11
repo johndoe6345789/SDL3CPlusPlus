@@ -24,7 +24,9 @@ void WorkflowGta5VehiclesSyncStep::Execute(
     if (!state_ || state_->vehicles.empty()) return;
     // Before the matrices are copied, so a frozen car draws where it is
     // held rather than where the physics step just dropped it.
-    HoldGta5VehiclesOverMissingGround(*state_);
+    HoldGta5VehiclesOverMissingGround(
+        *state_,
+        context.Get<btDiscreteDynamicsWorld*>("physics_world", nullptr));
     // Before UpdateGta5Vehicles, which clears each wheel's contact flag.
     // While seated, on getting in and then twice a second: what the car is
     // doing, since a car that will not move looks the same whatever the

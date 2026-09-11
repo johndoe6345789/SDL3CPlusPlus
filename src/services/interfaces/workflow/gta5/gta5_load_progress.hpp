@@ -15,10 +15,11 @@ struct Gta5LoadProgress {
     std::string text;
 };
 
-/// Done once the tile under `at` has been read and every placement in it
-/// spawned. Before that: the asset index is still building, then the
-/// tile is being read, then its placements are streaming in -- each
-/// reported as such, with a percentage for the last.
+/// Done once the tile under `at` and its wanted neighbours have been read
+/// and every placement in them spawned -- neighbours too, because a
+/// terrain piece tiled by its origin can cover a point in the next tile.
+/// Before that: the index is building, then tiles are being read, then
+/// placements are streaming in, with a percentage over all nine.
 Gta5LoadProgress MeasureGta5LoadProgress(const Gta5StreamState& state,
                                          const glm::vec3& at);
 

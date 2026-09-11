@@ -41,13 +41,14 @@
         "paint_b": 0.05,
         "wheel_radius": 0.36,
         "wheel_width": 0.25,
-        "x": 190,
-        "y": 34,
-        "z": 940,
+        "x": 1124,
+        "y": 45,
+        "z": -3540,
         "mass": 1600,
-        "drop_height": 1.5
+        "drop_height": 1.5,
+        "heading": 0
       },
-      "comment": "Read from the map on the fly: the body from taxi_hi.yft, its axles from that fragment's wheel bones, and the wheel from vehiclemods/wheels_mods.rpf. Paint and wheel size stand in for carcols.ymt and vehicles.meta, which are not in the extract. Spawns once the ground under it has streamed in."
+      "comment": "Read from the map on the fly: the body from taxi_hi.yft, its axles from that fragment's wheel bones, and the wheel from vehiclemods/wheels_mods.rpf. Paint and wheel size stand in for carcols.ymt and vehicles.meta, which are not in the extract. On the Grand Senora Desert road, in-game (1119, 3490); y is only where the drop starts looking, since nothing out there is overhead. Downtown kept putting it on kerbs and in underpasses. Spawns once the ground under it has streamed in."
     },
     {
       "id": "vehicle_control",

@@ -7,17 +7,21 @@
 
 namespace sdl3cpp::services::impl {
 
-/// Freeze every car whose ground has not streamed in: pinned where it
-/// was when its tile went missing, at rest, until the tile is complete.
+/// Freeze every car with nothing under it: pinned where it was, at rest,
+/// until a downward ray finds ground again.
 ///
-/// Read on demand, a district takes seconds to arrive. Without this a car
-/// waiting at spawn, or driven faster than the map streams, falls through
-/// the empty world. Runs after the physics step, so a car moves at most
+/// Read on demand, a district takes seconds to arrive, and a car driven
+/// faster than the map streams would fall through the empty world. It
+/// asks about the ground itself, not whether nearby tiles are complete:
+/// a neighbour rebuilt for a LOD change froze the car on a road that was
+/// there all along. Runs after the physics step, so a car moves at most
 /// one frame before it is put back.
-void HoldGta5VehiclesOverMissingGround(Gta5StreamState& state);
+void HoldGta5VehiclesOverMissingGround(Gta5StreamState& state,
+                                       btDiscreteDynamicsWorld* world);
 
-/// The first surface straight below `from`, searched from 100 m above
-/// it to 500 m below. False when there is nothing there.
+/// The first surface straight below `from`, searched from 5 m above it
+/// to 500 m below -- so the given height picks which level of a stacked
+/// road is meant. False when there is nothing there.
 bool Gta5GroundBelow(btDiscreteDynamicsWorld* world, const glm::vec3& from,
                      float& groundY);
 

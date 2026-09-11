@@ -1,4 +1,5 @@
 #include "services/interfaces/workflow/gta5/gta5_vehicle_spawn_step.hpp"
+#include "services/interfaces/workflow/gta5/gta5_ground_probe.hpp"
 #include "services/interfaces/workflow/gta5/gta5_vehicle_hold.hpp"
 #include "services/interfaces/workflow/gta5/gta5_load_progress.hpp"
 
@@ -40,8 +41,14 @@ void WorkflowGta5VehicleSpawnStep::Execute(const WorkflowStepDefinition& step,
     // a fixed y: it lands on the road and settles on its springs, instead
     // of starting inside a kerb or floating above one.
     float ground = 0.f;
-    if (Gta5GroundBelow(world, position, ground)) {
-        position.y = ground + Gta5NumberOr(step, "drop_height", 1.5f);
+    const bool found = Gta5GroundBelow(world, position, ground);
+    if (found) position.y = ground + Gta5NumberOr(step, "drop_height", 1.5f);
+    if (logger_) {
+        logger_->Info("gta5.vehicle.spawn: " +
+                      (found ? "ground at y=" + std::to_string(ground)
+                             : "no ground below the spawn; " +
+                                   DescribeGta5Column(world, position.x,
+                                                      position.z)));
     }
 
     Gta5VehicleSpec spec;

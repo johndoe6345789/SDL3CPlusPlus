@@ -7,6 +7,10 @@ bool BuildGta5CollisionShape(const Gta5MeshData& mesh,
     // Every submesh merged: the player collides with the whole building,
     // not with whichever material happened to come first.
     for (const Gta5SubMeshData& part : mesh.parts) {
+        // Cutouts do not collide: a leaf card is a rectangle whose shape
+        // is only in its alpha, and as collision a canopy held up a car
+        // dropped into the desert. Trunks and branches are solid parts.
+        if (part.alphaCutoff > 0.f) continue;
         const auto base =
             static_cast<int>(geometry.collisionVertices.size() / 3);
         for (const BspRenderVertex& vertex : part.vertices) {

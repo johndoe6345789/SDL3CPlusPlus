@@ -1,15 +1,18 @@
 #include "services/interfaces/workflow/gta5/gta5_vehicle_hold.hpp"
 
-#include "services/interfaces/workflow/gta5/gta5_load_progress.hpp"
 
 namespace sdl3cpp::services::impl {
 
-void HoldGta5VehiclesOverMissingGround(Gta5StreamState& state) {
+void HoldGta5VehiclesOverMissingGround(Gta5StreamState& state,
+                                       btDiscreteDynamicsWorld* world) {
     for (Gta5Vehicle& car : state.vehicles) {
         if (!car.chassis) continue;
         const btVector3 at = car.chassis->getWorldTransform().getOrigin();
-        if (MeasureGta5LoadProgress(state, glm::vec3(at.x(), at.y(), at.z()))
-                .done) {
+        // Asked from 6 m down, the search starts a metre under the car,
+        // below the chassis box, whose floor is at axle height.
+        float ground = 0.f;
+        if (Gta5GroundBelow(world, glm::vec3(at.x(), at.y() - 6.f, at.z()),
+                            ground)) {
             car.held = false;
             continue;
         }
@@ -29,7 +32,10 @@ void HoldGta5VehiclesOverMissingGround(Gta5StreamState& state) {
 bool Gta5GroundBelow(btDiscreteDynamicsWorld* world, const glm::vec3& from,
                      float& groundY) {
     if (!world) return false;
-    const btVector3 top(from.x, from.y + 100.f, from.z);
+    // Just above the given height, not high above it: a spawn on a lane
+    // under an overpass met the overpass first and landed on top of it,
+    // 17 m above the player.
+    const btVector3 top(from.x, from.y + 5.f, from.z);
     const btVector3 bottom(from.x, from.y - 500.f, from.z);
     btCollisionWorld::ClosestRayResultCallback hit(top, bottom);
     world->rayTest(top, bottom, hit);

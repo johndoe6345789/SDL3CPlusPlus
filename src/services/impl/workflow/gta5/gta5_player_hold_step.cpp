@@ -1,8 +1,8 @@
 #include "services/interfaces/workflow/gta5/gta5_player_hold_step.hpp"
 
 #include "services/interfaces/workflow/gta5/gta5_load_progress.hpp"
+#include "services/interfaces/workflow/gta5/gta5_player_pin.hpp"
 #include "services/interfaces/workflow/gta5/gta5_vehicle_input.hpp"
-#include "services/interfaces/workflow/quake3/q3_pm_types.hpp"
 
 #include <SDL3/SDL_timer.h>
 
@@ -12,23 +12,6 @@ namespace sdl3cpp::services::impl {
 namespace {
 
 constexpr std::uint64_t kGiveUpMs = 120000;
-
-/// Put the player back at `at`, at rest, in both the body and q3.ps.
-void Pin(WorkflowContext& context, btRigidBody* body, const glm::vec3& at) {
-    btTransform transform = body->getWorldTransform();
-    transform.setOrigin(btVector3(at.x, at.y, at.z));
-    body->setWorldTransform(transform);
-    if (body->getMotionState()) {
-        body->getMotionState()->setWorldTransform(transform);
-    }
-    body->setLinearVelocity(btVector3(0.f, 0.f, 0.f));
-    if (!context.Contains("q3.ps")) return;
-    auto ps = context.Get<Q3PlayerState>("q3.ps", Q3PlayerState{});
-    ps.origin = at;
-    ps.velocity = glm::vec3(0.f);
-    context.Set("q3.ps", ps);
-    context.Set("q3.player_pos", at);
-}
 
 }  // namespace
 
@@ -56,6 +39,9 @@ void WorkflowGta5PlayerHoldStep::Execute(const WorkflowStepDefinition&,
     const std::uint64_t waited = SDL_GetTicks() - startMs_;
     if (progress.done || waited > kGiveUpMs) {
         released_ = true;
+        // Let go on the ground, not at the spawn height, which may be set
+        // high to clear terrain of unknown height.
+        if (progress.done) DropGta5PlayerToGround(context, player, hold_);
         context.Set<std::string>("gta5.loading.text", "");
         if (logger_) {
             const std::string after = std::to_string(waited / 1000) + " s";
@@ -68,7 +54,7 @@ void WorkflowGta5PlayerHoldStep::Execute(const WorkflowStepDefinition&,
         return;
     }
     context.Set<std::string>("gta5.loading.text", progress.text);
-    Pin(context, player, hold_);
+    PinGta5Player(context, player, hold_);
 }
 
 }  // namespace sdl3cpp::services::impl
