@@ -84,7 +84,10 @@
     {
       "id": "frame_begin",
       "plugin": "frame.gpu.begin_offscreen",
-      "comment": "Renders into an HDR target rather than straight to the swapchain, so the composite has something to antialias and tone map."
+      "comment": "Renders into an HDR target rather than straight to the swapchain, at twice the window's size: the composite resolves it down with a light sharpen, which keeps distant detail sharp and still.",
+      "parameters": {
+        "render_scale": 2.0
+      }
     },
     {
       "id": "sky_draw",

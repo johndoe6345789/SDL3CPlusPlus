@@ -1,9 +1,11 @@
 #include "services/interfaces/workflow/rendering/workflow_frame_begin_offscreen_step.hpp"
 #include "services/interfaces/workflow/rendering/frame_begin_shared_helpers.hpp"
+#include "services/interfaces/workflow/rendering/frame_render_scale.hpp"
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_gpu.h>
 
+#include <algorithm>
 #include <stdexcept>
 
 namespace sdl3cpp::services::impl {
@@ -37,18 +39,27 @@ void WorkflowFrameBeginOffscreenStep::Execute(
     // Store swapchain texture for the composite step.
     context.Set<SDL_GPUTexture*>("postfx_swapchain_texture", swap.texture);
 
+    // render_scale above 1 supersamples. frame_width/height stay the
+    // window's, for passes drawn at its size; render_width/height are
+    // the scene target's.
+    const float scale = ReadFrameRenderScale(step);
+    const uint32_t renderWidth =
+        std::max(1u, static_cast<uint32_t>(swap.width * scale));
+    const uint32_t renderHeight =
+        std::max(1u, static_cast<uint32_t>(swap.height * scale));
+
     auto* hdrTex = GetOrResizeTexture(
         device, context, "postfx_hdr_texture", "postfx_hdr_width",
         "postfx_hdr_height", SDL_GPU_TEXTUREFORMAT_R16G16B16A16_FLOAT,
         SDL_GPU_TEXTUREUSAGE_COLOR_TARGET | SDL_GPU_TEXTUREUSAGE_SAMPLER,
-        swap.width, swap.height);
+        renderWidth, renderHeight);
 
     auto* depthTex = GetOrResizeTexture(
         device, context, "gpu_depth_texture", "gpu_depth_width",
         "gpu_depth_height", SDL_GPU_TEXTUREFORMAT_D32_FLOAT,
         SDL_GPU_TEXTUREUSAGE_DEPTH_STENCIL_TARGET |
             SDL_GPU_TEXTUREUSAGE_SAMPLER,
-        swap.width, swap.height);
+        renderWidth, renderHeight);
 
     SDL_GPURenderPass* pass =
         BeginColorDepthRenderPass(swap.cmd, hdrTex, clear, depthTex);
@@ -64,6 +75,8 @@ void WorkflowFrameBeginOffscreenStep::Execute(
     context.Set<bool>("frame_skip", false);
     context.Set<uint32_t>("frame_width", swap.width);
     context.Set<uint32_t>("frame_height", swap.height);
+    context.Set<uint32_t>("render_width", renderWidth);
+    context.Set<uint32_t>("render_height", renderHeight);
 }
 
 }  // namespace sdl3cpp::services::impl

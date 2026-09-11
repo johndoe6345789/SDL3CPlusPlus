@@ -64,6 +64,13 @@ which at 6,000 buffers a frame cost more than everything else together.
 `gta5.frame.stats` logs the frame rate and per-step CPU time every 2 s,
 and `SDL3CPP_PRESENT_MODE=immediate` lifts vsync to measure headroom.
 
+The scene renders at twice the window's size (`render_scale` on
+`frame.gpu.begin_offscreen`), and the composite resolves each pixel from
+the texels under it, then applies a light contrast-adaptive sharpen, in
+place of FXAA's edge blur. Textures use 16x anisotropic filtering with no
+mip bias, and entities switch LOD at their own `lodDist` and
+`childLodDist`, so each place is drawn by one level of detail at a time.
+
 Skipped on purpose: grass ymaps (315 files of instance data, and GTAUtil
 turned each into ~40 MB of XML), LOD lights, occlusion, and placed
 interiors (`CMloInstanceDef`).

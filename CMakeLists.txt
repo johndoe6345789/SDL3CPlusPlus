@@ -436,6 +436,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/rendering/frame_begin_shared_helpers.cpp
         src/services/impl/workflow/rendering/frame_clear_params.cpp
         src/services/impl/workflow/rendering/frame_draw_bodies_helpers.cpp
+        src/services/impl/workflow/rendering/frame_render_scale.cpp
         src/services/impl/workflow/rendering/frame_swapchain_acquire.cpp
         src/services/impl/workflow/rendering/gpu_overlay_quad.cpp
         src/services/impl/workflow/rendering/gpu_text_overlay_buffer_factory.cpp
