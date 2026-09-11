@@ -2,6 +2,7 @@
 
 #include "services/interfaces/i_logger.hpp"
 #include "services/interfaces/i_workflow_step.hpp"
+#include "services/interfaces/workflow/gta5/gta5_engine_bank.hpp"
 #include "services/interfaces/workflow/gta5/gta5_sound.hpp"
 #include "services/interfaces/workflow/gta5/gta5_stream_state.hpp"
 #include "services/interfaces/workflow/gta5/gta5_water.hpp"
@@ -21,8 +22,9 @@ namespace sdl3cpp::services::impl {
  * last driven runs its engine at its revs -- five gears, climbing
  * through each -- fading with distance once left. The shore laps within
  * 8 m of water_file's water, and under it the wash deepens and muffles.
- * Sounds are the WAVs under `dir` (see LoadGta5Sounds); `volume` scales
- * them all. Opens its own audio device.
+ * Sounds are the WAVs under `dir` (see LoadGta5Sounds), the engine
+ * dir/engine/<engine_bank> (LoadGta5EngineBank); `volume` scales them
+ * all. Opens its own audio device.
  */
 class WorkflowGta5SoundStep final : public IWorkflowStep {
 public:
@@ -46,6 +48,8 @@ private:
     SDL_AudioDeviceID device_{0};
     SDL_AudioSpec spec_{};
     Gta5Loop engineLoop_, waterLoop_;
+    Gta5EngineBank engineBank_;  // GTA's granular engine, when exported
+    Gta5EngineVoice engineVoice_;
     std::vector<SDL_AudioStream*> playing_;
     std::mt19937 rng_{20260911u};
     float volume_{1.f};

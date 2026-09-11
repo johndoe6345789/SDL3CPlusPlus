@@ -20,4 +20,10 @@ glm::vec3 Gta5TileCentre(const Gta5WorldConfig& world,
 Gta5Lod Gta5BandForDistance(const Gta5WorldConfig& world,
                             float distanceMetres);
 
+/// How far a tile is from `origin` across the map, ignoring height:
+/// tiles are columns. Everything that bands or evicts tiles must agree
+/// on it, or a player high up rebuilds every tile every frame.
+float Gta5TileDistance(const Gta5WorldConfig& world,
+                       const Gta5TileCoord& tile, const glm::vec3& origin);
+
 }  // namespace sdl3cpp::services::impl

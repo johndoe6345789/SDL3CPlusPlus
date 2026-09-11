@@ -38,10 +38,10 @@ void WorkflowGta5SoundStep::Engine(WorkflowContext& context, float dt) {
     const auto* keys = context.TryGet<nlohmann::json>("input.keyboard.state");
     const bool throttle = seated >= 0 && (Gta5KeyDown(keys, "W") ||
                                           Gta5KeyDown(keys, "S"));
-    // Idling a fifth of the way up; the throttle pulls the revs ahead of
-    // the speed, and they ease rather than jump.
+    // Idle at rest; the throttle pulls the revs ahead of the speed, and
+    // they ease rather than jump.
     const float wanted =
-        std::min(1.f, 0.2f + 0.8f * Revs(speed) + (throttle ? 0.15f : 0.f));
+        std::min(1.f, 0.85f * Revs(speed) + (throttle ? 0.15f : 0.f));
     revs_ += (wanted - revs_) * std::min(1.f, dt * 6.f);
     // Heard from the player: full in the seat, fading 10 m out of it.
     const auto ps = context.Get<Q3PlayerState>("q3.ps", Q3PlayerState{});
@@ -49,8 +49,13 @@ void WorkflowGta5SoundStep::Engine(WorkflowContext& context, float dt) {
     const float away =
         (at - btVector3(ps.origin.x, ps.origin.y, ps.origin.z)).length();
     const float heard = seated >= 0 ? 1.f : 1.f / (1.f + away / 10.f);
-    FeedGta5Loop(engineLoop_, sounds_.engine.front(), device_, spec_,
-                 (throttle ? 0.5f : 0.3f) * heard * volume_,
+    const float gain = (throttle ? 0.5f : 0.3f) * heard * volume_;
+    if (engineBank_.loaded) {
+        FeedGta5Engine(engineVoice_, engineBank_, device_, spec_, revs_,
+                       throttle, gain);
+        return;
+    }
+    FeedGta5Loop(engineLoop_, sounds_.engine.front(), device_, spec_, gain,
                  0.7f + 1.6f * revs_);
 }
 

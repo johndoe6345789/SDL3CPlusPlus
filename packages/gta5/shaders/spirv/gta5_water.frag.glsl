@@ -35,6 +35,17 @@ vec3 WaveNormal(vec2 p, float t) {
     return normalize(vec3(-g.x, 1.0, -g.y));
 }
 
+// Haze is thick low down and thins with height (e-folding 600 m), taken
+// along the ray: from a hilltop the valleys show through half of it,
+// and a view across at that height through a quarter.
+float Haze(vec3 eye, vec3 p) {
+    float k = 1.0 / 600.0;
+    float a = max(eye.y, 0.0), b = max(p.y, 0.0);
+    float mean = exp(-a * k);
+    if (abs(b - a) > 1.0) mean = (mean - exp(-b * k)) / ((b - a) * k);
+    return 1.0 - exp(-length(p - eye) * 0.0004 * mean);
+}
+
 void main() {
     // From below, the surface is mostly its own underside: a bright murk.
     if (u_cameraPos.y < v_worldPos.y - 0.05) {
@@ -62,7 +73,7 @@ void main() {
     float glint = pow(max(dot(R, L), 0.0), 500.0) * 6.0;
     vec3 color = mix(deep, mirrored, fresnel) +
                  u_lightColor.rgb * glint * exposure;
-    float fog = 1.0 - exp(-length(toEye) * 0.00035);
+    float fog = Haze(u_cameraPos.xyz, v_worldPos);
     color = mix(color, u_horizon.rgb, fog);
     // Seen straight down it is mostly see-through; at a slant, and far
     // off, the mirrored sky takes over and it reads as a surface.

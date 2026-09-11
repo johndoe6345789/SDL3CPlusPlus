@@ -31,6 +31,9 @@ struct Gta5Sounds {
 Gta5Sounds LoadGta5Sounds(const std::filesystem::path& dir,
                           const std::shared_ptr<ILogger>& logger);
 
+/// A .wav, whatever the case of its extension.
+bool IsGta5Wav(const std::filesystem::path& path);
+
 /// A stand-in: mono float at 44.1 kHz. kind is steps, strokes, splash,
 /// engine or water; variant seeds its noise. SynthGta5Wave is its raw
 /// samples, SynthGta5Sound those levelled into a clip.

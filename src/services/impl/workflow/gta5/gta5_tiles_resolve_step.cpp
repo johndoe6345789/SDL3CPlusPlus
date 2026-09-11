@@ -48,9 +48,15 @@ void WorkflowGta5TilesResolveStep::Execute(
     const glm::vec3 origin = Gta5StreamOrigin(*state_, playerState->origin);
     state_->centreOrigin = origin;
     state_->centre = Gta5TileForPosition(state_->world, origin);
+    const int vantage = state_->vantageTiles;
     ResolveGta5WantedTiles(
         *state_, origin,
         origin + Gta5StreamLead(*state_, playerState->velocity));
+    if (logger_ && state_->vantageTiles != vantage) {
+        logger_->Info("gta5.tiles: vantage +" +
+                      std::to_string(state_->vantageTiles) + " tiles, " +
+                      std::to_string(state_->wanted.size()) + " wanted");
+    }
 
     context.Set("gta5.tiles.wanted_count",
                 static_cast<int>(state_->wanted.size()));

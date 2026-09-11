@@ -7,7 +7,7 @@
 namespace sdl3cpp::services::impl {
 
 /// Pixel size of the FPS overlay texture.
-inline constexpr int kGpuTextOverlayWidth  = 160;
+inline constexpr int kGpuTextOverlayWidth  = 288;
 inline constexpr int kGpuTextOverlayHeight = 12;
 
 /**

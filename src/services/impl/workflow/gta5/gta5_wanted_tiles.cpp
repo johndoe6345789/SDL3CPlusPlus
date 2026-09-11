@@ -42,7 +42,9 @@ void AddDisc(const Gta5StreamState& state, const glm::vec3& centre,
 
 void ResolveGta5WantedTiles(Gta5StreamState& state, const glm::vec3& origin,
                             const glm::vec3& lead) {
-    const int radius = std::max(0, state.streaming.loadRadiusTiles);
+    state.vantageTiles = Gta5VantageTiles(state, origin.y);
+    const int radius =
+        std::max(0, state.streaming.loadRadiusTiles) + state.vantageTiles;
     const float tileSize =
         state.world.tileSize > 0.f ? state.world.tileSize : 512.f;
     const float loadDistance =

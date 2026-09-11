@@ -1,22 +1,25 @@
 {
   "id": "gta5_streaming",
   "description": "Tile residency budget and hysteresis for the map streamer.",
-
   "residency": {
     "load_radius_tiles": 3,
     "evict_radius_tiles": 5,
     "comment": "Evicting further out than loading is deliberate. A single radius makes tiles thrash in and out every time the player walks back and forth across a tile boundary."
   },
-
   "budget": {
-    "max_resident_tiles": 96,
+    "max_resident_tiles": 420,
     "max_spawns_per_frame": 64,
-    "comment": "Spawning is amortised across frames. Committing a whole 512 m tile in one frame is a visible hitch."
+    "comment": "Spawning is amortised across frames. Committing a whole 512 m tile in one frame is a visible hitch. 420 covers the whole 17 x 24 grid, which a vantage point can want: tiles out there bring only their long-range LODs."
   },
-
   "prefetch": {
     "enabled": true,
     "velocity_lead_seconds": 6.0,
     "comment": "Also want the tiles around where the player will be in velocity_lead_seconds -- the car's velocity when seated -- so tiles ahead are read before they are reached. Capped inside the evict radius."
+  },
+  "vantage": {
+    "base_metres": 60.0,
+    "metres_per_tile": 60.0,
+    "max_extra_tiles": 10,
+    "comment": "Up high, stream further: a tile more for every metres_per_tile the player stands above base_metres, up to max_extra_tiles (10 more is about 7 km). Far tiles spawn at SLOD bands, so this costs reading, not drawing every railing. The evict radius grows by the same, and shrinks half a step late on the way down."
   }
 }

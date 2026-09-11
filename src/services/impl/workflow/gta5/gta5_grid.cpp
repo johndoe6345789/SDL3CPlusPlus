@@ -45,4 +45,11 @@ Gta5Lod Gta5BandForDistance(const Gta5WorldConfig& world,
     return Gta5Lod::Slod2;
 }
 
+float Gta5TileDistance(const Gta5WorldConfig& world,
+                       const Gta5TileCoord& tile, const glm::vec3& origin) {
+    const glm::vec3 centre = Gta5TileCentre(world, tile);
+    return glm::distance(glm::vec2(centre.x, centre.z),
+                         glm::vec2(origin.x, origin.z));
+}
+
 }  // namespace sdl3cpp::services::impl

@@ -799,6 +799,9 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_drawable_geometry.cpp
         src/services/impl/workflow/gta5/gta5_drawable_locate.cpp
         src/services/impl/workflow/gta5/gta5_drawable_mesh.cpp
+        src/services/impl/workflow/gta5/gta5_engine_bank_load.cpp
+        src/services/impl/workflow/gta5/gta5_engine_grain.cpp
+        src/services/impl/workflow/gta5/gta5_engine_voice.cpp
         src/services/impl/workflow/gta5/gta5_evict_plan.cpp
         src/services/impl/workflow/gta5/gta5_fall_guard.cpp
         src/services/impl/workflow/gta5/gta5_finite_guard.cpp
@@ -862,6 +865,11 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_prepared_finish.cpp
         src/services/impl/workflow/gta5/gta5_prepared_geometry.cpp
         src/services/impl/workflow/gta5/gta5_proxy.cpp
+        src/services/impl/workflow/gta5/gta5_radio_list.cpp
+        src/services/impl/workflow/gta5/gta5_radio_open.cpp
+        src/services/impl/workflow/gta5/gta5_radio_play.cpp
+        src/services/impl/workflow/gta5/gta5_radio_step.cpp
+        src/services/impl/workflow/gta5/gta5_radio_synth.cpp
         src/services/impl/workflow/gta5/gta5_range_allocator.cpp
         src/services/impl/workflow/gta5/gta5_reflection_pass.cpp
         src/services/impl/workflow/gta5/gta5_reflection_plane.cpp
@@ -908,6 +916,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_time_step.cpp
         src/services/impl/workflow/gta5/gta5_upload_batch.cpp
         src/services/impl/workflow/gta5/gta5_upload_batch_flush.cpp
+        src/services/impl/workflow/gta5/gta5_vantage.cpp
         src/services/impl/workflow/gta5/gta5_vehicle.cpp
         src/services/impl/workflow/gta5/gta5_vehicle_body.cpp
         src/services/impl/workflow/gta5/gta5_vehicle_camera_step.cpp

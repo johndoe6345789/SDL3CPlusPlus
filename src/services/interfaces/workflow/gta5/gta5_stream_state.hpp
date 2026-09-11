@@ -41,14 +41,14 @@ struct Gta5StreamState {
     std::unordered_set<Gta5TileCoord, Gta5TileCoordHash> wanted;
     Gta5TileCoord centre{0, 0};
     glm::vec3 centreOrigin{0.f};
+    int vantageTiles{0};  // added to both radii while up high
 
     /// Cars. Not part of any tile: they belong to the physics world and
     /// must never be streamed out from under it.
     std::vector<Gta5Vehicle> vehicles;
     /// Index into `vehicles` the player is sitting in, or -1 on foot.
     int seated{-1};
-    /// The player's body in third person: drawn like the cars, never culled.
-    std::vector<Gta5Instance> character;
+    std::vector<Gta5Instance> character;  // third person: drawn like cars
 
     /// Tiles whose band changed; evict tears them down, load rebuilds.
     std::unordered_set<Gta5TileCoord, Gta5TileCoordHash> rebuild;

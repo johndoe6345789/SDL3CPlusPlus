@@ -37,7 +37,13 @@ void WorkflowGta5SoundStep::Open(const WorkflowStepDefinition& step) {
     if (!SDL_GetAudioDeviceFormat(device_, &spec_, &frames)) {
         spec_ = {SDL_AUDIO_F32, 2, 48000};
     }
-    sounds_ = LoadGta5Sounds(Gta5ParameterOr(step, "dir", ""), logger_);
+    const std::filesystem::path dir = Gta5ParameterOr(step, "dir", "");
+    sounds_ = LoadGta5Sounds(dir, logger_);
+    const std::string bank =
+        Gta5ParameterOr(step, "engine_bank", "saloon_6_us_v8");
+    if (LoadGta5EngineBank(dir / "engine" / bank, engineBank_) && logger_) {
+        logger_->Info("gta5.sound: engine " + bank + ", granular");
+    }
     SDL_ResumeAudioDevice(device_);
 }
 

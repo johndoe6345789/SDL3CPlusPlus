@@ -28,8 +28,7 @@ void WorkflowGta5LodSelectStep::Execute(
         if (resident.spawnedCount < resident.placements.size()) continue;
 
         const float distance =
-            glm::distance(Gta5TileCentre(state_->world, entry.first),
-                          state_->centreOrigin);
+            Gta5TileDistance(state_->world, entry.first, state_->centreOrigin);
         if (Gta5BandForDistance(state_->world, distance) !=
             resident.bandAtSpawn) {
             state_->rebuild.insert(entry.first);

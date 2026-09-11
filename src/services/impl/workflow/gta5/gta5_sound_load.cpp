@@ -8,21 +8,22 @@
 #include <utility>
 
 namespace sdl3cpp::services::impl {
-namespace {
 
-bool IsWav(const std::filesystem::path& path) {
+bool IsGta5Wav(const std::filesystem::path& path) {
     std::string ext = path.extension().string();
     std::transform(ext.begin(), ext.end(), ext.begin(),
                    [](unsigned char c) { return char(std::tolower(c)); });
     return ext == ".wav";
 }
 
+namespace {
+
 std::vector<Gta5Clip> LoadSet(const std::filesystem::path& folder) {
     std::vector<Gta5Clip> set;
     std::error_code error;
     std::filesystem::directory_iterator it(folder, error), end;
     for (; !error && it != end; it.increment(error)) {
-        if (!IsWav(it->path())) continue;
+        if (!IsGta5Wav(it->path())) continue;
         std::ifstream file(it->path(), std::ios::binary);
         const std::vector<char> bytes((std::istreambuf_iterator<char>(file)),
                                       std::istreambuf_iterator<char>());

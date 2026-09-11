@@ -30,6 +30,16 @@ void ReadSections(const nlohmann::json& root,
         streaming.velocityLeadSeconds = prefetch->value(
             "velocity_lead_seconds", streaming.velocityLeadSeconds);
     }
+    const auto vantage = root.find("vantage");
+    if (vantage != root.end() && vantage->is_object()) {
+        auto& s = streaming;
+        s.vantageBaseMetres =
+            vantage->value("base_metres", s.vantageBaseMetres);
+        s.vantageMetresPerTile =
+            vantage->value("metres_per_tile", s.vantageMetresPerTile);
+        s.vantageMaxTiles =
+            vantage->value("max_extra_tiles", s.vantageMaxTiles);
+    }
 }
 
 /// An evict radius inside the load radius makes tiles load and unload on

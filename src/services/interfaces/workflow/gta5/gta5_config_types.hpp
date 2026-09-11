@@ -23,6 +23,11 @@ struct Gta5StreamingConfig {
     int maxSpawnsPerFrame{64};
     bool prefetchEnabled{true};
     float velocityLeadSeconds{2.f};
+    /// Higher up, further out: a tile more per vantageMetresPerTile the
+    /// player is above vantageBaseMetres, up to vantageMaxTiles.
+    float vantageBaseMetres{60.f};
+    float vantageMetresPerTile{60.f};
+    int vantageMaxTiles{10};
     bool loaded{false};
 };
 

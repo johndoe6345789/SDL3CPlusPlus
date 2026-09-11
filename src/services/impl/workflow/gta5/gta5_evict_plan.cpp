@@ -31,7 +31,8 @@ Gta5EvictResult ApplyGta5EvictPlan(Gta5StreamState& state,
     const float tileSize =
         state.world.tileSize > 0.f ? state.world.tileSize : 512.f;
     const float evictDistance =
-        (static_cast<float>(state.streaming.evictRadiusTiles) + 0.5f) *
+        (static_cast<float>(state.streaming.evictRadiusTiles +
+                            state.vantageTiles) + 0.5f) *
         tileSize;
 
     std::vector<Gta5TileCoord> dropped;
@@ -40,11 +41,8 @@ Gta5EvictResult ApplyGta5EvictPlan(Gta5StreamState& state,
         // Horizontal only: tiles are columns, and resolve picks them by x
         // and z. Measured in 3D, a player who fell below the map evicted
         // the tile under them every frame while resolve asked for it back.
-        const glm::vec3 centre = Gta5TileCentre(state.world, entry.first);
         const float distance =
-            glm::distance(glm::vec2(centre.x, centre.z),
-                          glm::vec2(state.centreOrigin.x,
-                                    state.centreOrigin.z));
+            Gta5TileDistance(state.world, entry.first, state.centreOrigin);
 
         if (distance > evictDistance) {
             result.instancesReleased += ReleaseInstances(resident, world);

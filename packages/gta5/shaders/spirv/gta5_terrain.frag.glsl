@@ -75,6 +75,17 @@ vec3 Submerge(vec3 color, float dist, vec3 light) {
     return color;
 }
 
+// Haze is thick low down and thins with height (e-folding 600 m), taken
+// along the ray: from a hilltop the valleys show through half of it,
+// and a view across at that height through a quarter.
+float Haze(vec3 eye, vec3 p) {
+    float k = 1.0 / 600.0;
+    float a = max(eye.y, 0.0), b = max(p.y, 0.0);
+    float mean = exp(-a * k);
+    if (abs(b - a) > 1.0) mean = (mean - exp(-b * k)) / ((b - a) * k);
+    return 1.0 - exp(-length(p - eye) * 0.0004 * mean);
+}
+
 void main() {
     vec2 w = v_blend.xy;  // (blue, green)
     if (u_surface.a > 0.5) {
@@ -95,6 +106,6 @@ void main() {
     float dist = length(v_worldPos - v_cameraPos);
     color = Submerge(color, dist,
                      (u_ambient.rgb + u_lightColor.rgb * 0.6) * exposure);
-    float fog = 1.0 - exp(-dist * 0.00035);
+    float fog = Haze(v_cameraPos, v_worldPos);
     o_color = vec4(mix(color, u_fogColor.rgb, fog), 1.0);
 }

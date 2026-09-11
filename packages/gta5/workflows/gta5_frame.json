@@ -138,6 +138,16 @@
       }
     },
     {
+      "id": "radio",
+      "plugin": "gta5.radio",
+      "comment": "Into a car, a random station, tuned in mid-song. dir holds a folder of WAVs per station, exported from GTA's RADIO_* banks (x64/audio/sfx); names maps folder names to station names. With nothing exported, stand-in stations play.",
+      "parameters": {
+        "dir": "D:/gtautil-2.2.13/extract_audio/wav/radio",
+        "names": "packages/gta5/data/radio_stations.json",
+        "volume": 0.5
+      }
+    },
+    {
       "id": "tiles_cull",
       "plugin": "gta5.tiles.cull",
       "parameters": {

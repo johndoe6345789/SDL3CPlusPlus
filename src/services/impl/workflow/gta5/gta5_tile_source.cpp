@@ -67,8 +67,8 @@ bool TakeGta5TileRead(Gta5StreamState& state, const Gta5TileCoord& tile,
     }
     // Marked read even when empty, so an empty tile is not searched again.
     resident.placementsRead = true;
-    const float distance = glm::distance(Gta5TileCentre(state.world, tile),
-                                         state.centreOrigin);
+    const float distance =
+        Gta5TileDistance(state.world, tile, state.centreOrigin);
     resident.bandAtSpawn = Gta5BandForDistance(state.world, distance);
     PrefetchGta5Tile(state, resident);
     if (logger && !resident.placements.empty()) {
