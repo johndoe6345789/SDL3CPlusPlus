@@ -27,6 +27,10 @@ struct Gta5Vehicle {
     btCollisionShape* chassisShape{nullptr};
     btVehicleRaycaster* raycaster{nullptr};
     btRaycastVehicle* vehicle{nullptr};
+    /// Frozen while the ground under it streams in; see
+    /// HoldGta5VehiclesOverMissingGround.
+    btTransform heldAt{btTransform::getIdentity()};
+    bool held{false};
 };
 
 /// Wheel layout in metres.

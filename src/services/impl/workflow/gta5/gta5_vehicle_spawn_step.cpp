@@ -1,4 +1,6 @@
 #include "services/interfaces/workflow/gta5/gta5_vehicle_spawn_step.hpp"
+#include "services/interfaces/workflow/gta5/gta5_vehicle_hold.hpp"
+#include "services/interfaces/workflow/gta5/gta5_load_progress.hpp"
 
 #include "services/interfaces/workflow/gta5/gta5_step_params.hpp"
 #include "services/interfaces/workflow/gta5/gta5_vehicle.hpp"
@@ -21,29 +23,41 @@ std::string WorkflowGta5VehicleSpawnStep::GetPluginId() const {
 
 void WorkflowGta5VehicleSpawnStep::Execute(const WorkflowStepDefinition& step,
                                            WorkflowContext& context) {
-    if (!state_ || spawned_) return;
-
+    // Needs the map index; gta5.tiles.load publishes it once it is built.
+    if (!state_ || spawned_ || !state_->assets) return;
     auto* device = context.Get<SDL_GPUDevice*>("gpu_device", nullptr);
     auto* world =
         context.Get<btDiscreteDynamicsWorld*>("physics_world", nullptr);
     if (!device || !world) return;
 
-    // Wait for the tile under the spawn point, or the car drops through
-    // a world that has not streamed in yet.
-    if (state_->resident.empty()) return;
+    glm::vec3 position(Gta5NumberOr(step, "x", 0.f),
+                             Gta5NumberOr(step, "y", 0.f),
+                             Gta5NumberOr(step, "z", 0.f));
+    // Wait for the ground under the car, or it drops through a world that
+    // has not streamed in yet.
+    if (!MeasureGta5LoadProgress(*state_, position).done) return;
+    // Dropped from drop_height onto whatever is below, rather than put at
+    // a fixed y: it lands on the road and settles on its springs, instead
+    // of starting inside a kerb or floating above one.
+    float ground = 0.f;
+    if (Gta5GroundBelow(world, position, ground)) {
+        position.y = ground + Gta5NumberOr(step, "drop_height", 1.5f);
+    }
 
-    const std::string model = Gta5ResolvePath(step, context, "model", "");
-    if (model.empty()) return;
+    Gta5VehicleSpec spec;
+    spec.model = Gta5ParameterOr(step, "model", "");
+    spec.wheel = Gta5ParameterOr(step, "wheel_model", "");
+    spec.paint = glm::vec3(Gta5NumberOr(step, "paint_r", 1.f),
+                           Gta5NumberOr(step, "paint_g", 1.f),
+                           Gta5NumberOr(step, "paint_b", 1.f));
+    spec.wheelRadius = Gta5NumberOr(step, "wheel_radius", spec.wheelRadius);
+    spec.wheelWidth = Gta5NumberOr(step, "wheel_width", spec.wheelWidth);
 
-    const glm::vec3 position(
-        static_cast<float>(Gta5ParameterOrInt(step, "x", 0)),
-        static_cast<float>(Gta5ParameterOrInt(step, "y", 0)),
-        static_cast<float>(Gta5ParameterOrInt(step, "z", 0)));
-    const auto mass =
-        static_cast<float>(Gta5ParameterOrInt(step, "mass", 1600));
-
-    spawned_ = SpawnGta5Vehicle(*state_, model, position, mass, device, world,
-                                logger_);
+    // One attempt: reading from the map either works or it never will.
+    spawned_ = true;
+    SpawnGta5Vehicle(*state_, spec, position,
+                     Gta5NumberOr(step, "mass", 1600.f), device, world,
+                     logger_);
 }
 
 }  // namespace sdl3cpp::services::impl

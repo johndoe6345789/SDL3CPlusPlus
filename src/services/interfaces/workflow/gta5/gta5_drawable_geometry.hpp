@@ -1,6 +1,7 @@
 #pragma once
 
 #include "services/interfaces/i_logger.hpp"
+#include "services/interfaces/workflow/gta5/gta5_mesh_extract.hpp"
 #include "services/interfaces/workflow/gta5/gta5_stream_state.hpp"
 
 #include <SDL3/SDL_gpu.h>

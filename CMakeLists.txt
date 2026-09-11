@@ -796,6 +796,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_drawable_locate.cpp
         src/services/impl/workflow/gta5/gta5_drawable_mesh.cpp
         src/services/impl/workflow/gta5/gta5_evict_plan.cpp
+        src/services/impl/workflow/gta5/gta5_fragment_axles.cpp
         src/services/impl/workflow/gta5/gta5_geometry_cache.cpp
         src/services/impl/workflow/gta5/gta5_geometry_upload.cpp
         src/services/impl/workflow/gta5/gta5_grid.cpp
@@ -807,6 +808,8 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_lod_select_step.cpp
         src/services/impl/workflow/gta5/gta5_material_surface.cpp
         src/services/impl/workflow/gta5/gta5_mesh_extract.cpp
+        src/services/impl/workflow/gta5/gta5_mesh_geometry_upload.cpp
+        src/services/impl/workflow/gta5/gta5_mesh_transform.cpp
         src/services/impl/workflow/gta5/gta5_mesh_vertex.cpp
         src/services/impl/workflow/gta5/gta5_model_matrix.cpp
         src/services/impl/workflow/gta5/gta5_placement_parse.cpp
@@ -839,14 +842,17 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_vehicle_camera_step.cpp
         src/services/impl/workflow/gta5/gta5_vehicle_control_step.cpp
         src/services/impl/workflow/gta5/gta5_vehicle_drive.cpp
+        src/services/impl/workflow/gta5/gta5_vehicle_hold.cpp
         src/services/impl/workflow/gta5/gta5_vehicle_input.cpp
+        src/services/impl/workflow/gta5/gta5_vehicle_load.cpp
+        src/services/impl/workflow/gta5/gta5_vehicle_report.cpp
         src/services/impl/workflow/gta5/gta5_vehicle_seat.cpp
         src/services/impl/workflow/gta5/gta5_vehicle_spawn_step.cpp
+        src/services/impl/workflow/gta5/gta5_vehicle_wheel_load.cpp
         src/services/impl/workflow/gta5/gta5_vehicle_wheels.cpp
         src/services/impl/workflow/gta5/gta5_vehicles_sync_step.cpp
         src/services/impl/workflow/gta5/gta5_vertex_layout.cpp
         src/services/impl/workflow/gta5/gta5_wanted_tiles.cpp
-        src/services/impl/workflow/gta5/gta5_wheel_meshes.cpp
         src/services/impl/workflow/gta5/gta5_world_config_load.cpp
         src/services/impl/workflow/gta5/gta5_ymap.cpp
         src/services/impl/workflow/gta5/gta5_ymap_placement.cpp

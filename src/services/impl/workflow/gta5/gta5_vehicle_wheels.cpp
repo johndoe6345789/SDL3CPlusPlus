@@ -51,6 +51,10 @@ void AttachGta5Wheels(Gta5Vehicle& out, btDiscreteDynamicsWorld* world,
         wheel.m_frictionSlip = tuning.m_frictionSlip;
         wheel.m_rollInfluence = 0.05f;  // resists tipping in corners
     }
+    // A new wheel has no raycast result until the first physics step, and
+    // its transform is built from that result: read before then, it gave
+    // a wheel height of 8.5e17. This sets each wheel at its rest length.
+    out.vehicle->resetSuspension();
 }
 
 }  // namespace sdl3cpp::services::impl

@@ -1,6 +1,8 @@
 #include "services/interfaces/workflow/gta5/gta5_vehicles_sync_step.hpp"
 
 #include "services/interfaces/workflow/gta5/gta5_vehicle.hpp"
+#include "services/interfaces/workflow/gta5/gta5_vehicle_hold.hpp"
+#include "services/interfaces/workflow/gta5/gta5_vehicle_report.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
 #include <utility>
@@ -18,6 +20,9 @@ std::string WorkflowGta5VehiclesSyncStep::GetPluginId() const {
 void WorkflowGta5VehiclesSyncStep::Execute(
     const WorkflowStepDefinition& /*step*/, WorkflowContext& context) {
     if (!state_ || state_->vehicles.empty()) return;
+    // Before the matrices are copied, so a frozen car draws where it is
+    // held rather than where the physics step just dropped it.
+    HoldGta5VehiclesOverMissingGround(*state_);
     UpdateGta5Vehicles(*state_);
 
     // Report once: a wheel drawn at the wrong place looks identical to
@@ -37,6 +42,13 @@ void WorkflowGta5VehiclesSyncStep::Execute(
                     std::to_string(w.y()) + "," + std::to_string(w.z()) + "]";
         }
         logger_->Info(line + (car.hasWheels ? "" : " (no wheel meshes)"));
+    }
+    // While seated, twice a second: what the car is doing, since a car
+    // that will not move looks the same whatever the reason.
+    if (logger_ && state_->seated >= 0 &&
+        state_->seated < static_cast<int>(state_->vehicles.size()) &&
+        ++frames_ % 120 == 0) {
+        logger_->Info(DescribeGta5Vehicle(state_->vehicles[state_->seated]));
     }
     context.Set("gta5.vehicles.count",
                 static_cast<int>(state_->vehicles.size()));

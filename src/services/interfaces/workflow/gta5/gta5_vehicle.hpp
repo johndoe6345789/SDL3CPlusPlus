@@ -2,6 +2,7 @@
 
 #include "services/interfaces/i_logger.hpp"
 #include "services/interfaces/workflow/gta5/gta5_stream_state.hpp"
+#include "services/interfaces/workflow/gta5/gta5_vehicle_spec.hpp"
 
 #include <SDL3/SDL_gpu.h>
 #include <glm/glm.hpp>
@@ -11,11 +12,10 @@
 
 namespace sdl3cpp::services::impl {
 
-/// Load a vehicle model and put it on the road as a raycast vehicle.
-///
-/// It gets a chassis body plus four sprung wheels, so it rides on
+/// Read a vehicle from the map and put it on the road as a raycast
+/// vehicle: a chassis body plus four sprung wheels, so it rides on
 /// suspension and grips through corners rather than sliding as a box.
-bool SpawnGta5Vehicle(Gta5StreamState& state, const std::string& modelPath,
+bool SpawnGta5Vehicle(Gta5StreamState& state, const Gta5VehicleSpec& spec,
                       const glm::vec3& position, float mass,
                       SDL_GPUDevice* device, btDiscreteDynamicsWorld* world,
                       const std::shared_ptr<ILogger>& logger);

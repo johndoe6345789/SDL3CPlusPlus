@@ -412,7 +412,8 @@
       ],
       "parameters": {
         "map_dir": "D:/gtautil-2.2.13/levels/gta5",
-        "config": "packages/gta5/config/gta5_world.json"
+        "config": "packages/gta5/config/gta5_world.json",
+        "resource_cache_mb": 4096
       }
     },
     {

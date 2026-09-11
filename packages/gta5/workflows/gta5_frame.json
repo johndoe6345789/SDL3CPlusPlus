@@ -34,13 +34,20 @@
       "id": "vehicle_spawn",
       "plugin": "gta5.vehicle.spawn",
       "parameters": {
-        "model": "D:/gta5_export/models/taxi.gltf",
+        "model": "taxi_hi",
+        "wheel_model": "wheel_spt_01",
+        "paint_r": 1.0,
+        "paint_g": 0.72,
+        "paint_b": 0.05,
+        "wheel_radius": 0.36,
+        "wheel_width": 0.25,
         "x": 190,
         "y": 34,
         "z": 940,
-        "mass": 1600
+        "mass": 1600,
+        "drop_height": 1.5
       },
-      "comment": "Spawns once, and only after a tile has streamed in: a car dropped into an empty world falls straight through."
+      "comment": "Read from the map on the fly: the body from taxi_hi.yft, its axles from that fragment's wheel bones, and the wheel from vehiclemods/wheels_mods.rpf. Paint and wheel size stand in for carcols.ymt and vehicles.meta, which are not in the extract. Spawns once the ground under it has streamed in."
     },
     {
       "id": "vehicle_control",

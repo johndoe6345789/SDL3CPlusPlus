@@ -1,41 +1,28 @@
 #include "services/interfaces/workflow/gta5/gta5_vehicle.hpp"
 
-#include "services/interfaces/workflow/gta5/gta5_geometry_upload.hpp"
 #include "services/interfaces/workflow/gta5/gta5_vehicle_body.hpp"
 #include "services/interfaces/workflow/gta5/gta5_vehicle_wheels.hpp"
-#include "services/interfaces/workflow/gta5/gta5_wheel_meshes.hpp"
+#include "services/interfaces/workflow/gta5/gta5_vehicle_load.hpp"
 
 namespace sdl3cpp::services::impl {
-bool SpawnGta5Vehicle(Gta5StreamState& state, const std::string& modelPath,
+bool SpawnGta5Vehicle(Gta5StreamState& state, const Gta5VehicleSpec& spec,
                       const glm::vec3& position, float mass,
                       SDL_GPUDevice* device, btDiscreteDynamicsWorld* world,
                       const std::shared_ptr<ILogger>& logger) {
-    if (!device || !world || modelPath.empty()) return false;
-
-    Gta5Placement placement;
-    placement.archetype = "vehicle:" + modelPath;
-    placement.modelPath = modelPath;
-
-    Gta5Geometry& geometry = state.geometryCache[placement.archetype];
-    if (!geometry.usable &&
-        !BuildGta5Geometry(placement, device, state.textureCache, geometry,
-                           logger)) {
-        if (logger) {
-            logger->Warn("gta5.vehicle.spawn: could not load " + modelPath);
-        }
-        return false;
-    }
+    if (!device || !world) return false;
 
     Gta5Vehicle car;
-    car.instance.geometry = &geometry;
+    Gta5WheelSetup setup;
+    if (!LoadGta5VehicleChassis(state, spec, device, car, setup, logger)) {
+        return false;
+    }
+    Gta5Geometry& geometry = *car.instance.geometry;
     car.chassis = MakeGta5VehicleBody(geometry, position, mass,
                                       car.chassisShape);
     world->addRigidBody(car.chassis);
     car.instance.body = car.chassis;
 
-    Gta5WheelSetup setup;
-    LoadGta5VehicleWheels(state, car, modelPath, device, setup,
-                          logger);
+    LoadGta5VehicleWheelMeshes(state, spec, device, car, setup, logger);
 
     // The chassis shape is a compound wrapping the box, so reach
     // through it for the extents the fallback wheel layout needs.
@@ -51,8 +38,10 @@ bool SpawnGta5Vehicle(Gta5StreamState& state, const std::string& modelPath,
     state.vehicles.push_back(car);
 
     if (logger) {
-        logger->Info("gta5.vehicle.spawn: " + modelPath + " with " +
-                     std::to_string(car.vehicle->getNumWheels()) + " wheels");
+        logger->Info("gta5.vehicle.spawn: " + spec.model + " with " +
+                     std::to_string(car.vehicle->getNumWheels()) +
+                     " wheels, " + (car.hasWheels ? spec.wheel : "none") +
+                     " drawn");
     }
     return true;
 }

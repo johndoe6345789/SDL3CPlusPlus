@@ -20,6 +20,9 @@ std::string WorkflowGta5AssetsIndexStep::GetPluginId() const {
 void WorkflowGta5AssetsIndexStep::Execute(const WorkflowStepDefinition& step,
                                           WorkflowContext& context) {
     if (!state_ || state_->assets || state_->assetsPending.valid()) return;
+    // Inflated dictionaries and drawables kept for reuse; 4 GB by default.
+    state_->resources.budget = static_cast<std::uint64_t>(
+        Gta5NumberOr(step, "resource_cache_mb", 4096.f)) << 20;
 
     const std::string root = Gta5ParameterOr(step, "map_dir", "");
     std::error_code ec;
