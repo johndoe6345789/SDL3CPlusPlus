@@ -858,6 +858,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_player_fly_step.cpp
         src/services/impl/workflow/gta5/gta5_player_hold_step.cpp
         src/services/impl/workflow/gta5/gta5_player_pin.cpp
+        src/services/impl/workflow/gta5/gta5_player_swim_step.cpp
         src/services/impl/workflow/gta5/gta5_prepared_finish.cpp
         src/services/impl/workflow/gta5/gta5_prepared_geometry.cpp
         src/services/impl/workflow/gta5/gta5_proxy.cpp
@@ -918,8 +919,11 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_vertex_layout.cpp
         src/services/impl/workflow/gta5/gta5_vertex_terrain.cpp
         src/services/impl/workflow/gta5/gta5_wanted_tiles.cpp
+        src/services/impl/workflow/gta5/gta5_wasd.cpp
         src/services/impl/workflow/gta5/gta5_water_load.cpp
+        src/services/impl/workflow/gta5/gta5_water_map_step.cpp
         src/services/impl/workflow/gta5/gta5_water_mesh.cpp
+        src/services/impl/workflow/gta5/gta5_water_query.cpp
         src/services/impl/workflow/gta5/gta5_water_step.cpp
         src/services/impl/workflow/gta5/gta5_water_uniforms.cpp
         src/services/impl/workflow/gta5/gta5_water_upload.cpp

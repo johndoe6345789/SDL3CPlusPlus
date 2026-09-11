@@ -220,7 +220,7 @@
         "stage": "fragment",
         "output_key": "gta5_fragment_shader",
         "num_uniform_buffers": 1,
-        "num_samplers": 2
+        "num_samplers": 3
       },
       "inputs": {
         "shader_path": "shader_gta5_frag_path"
@@ -273,7 +273,7 @@
         "stage": "fragment",
         "output_key": "gta5_terrain_fragment_shader",
         "num_uniform_buffers": 1,
-        "num_samplers": 6
+        "num_samplers": 7
       },
       "inputs": {
         "shader_path": "shader_gta5_terrain_frag_path"
@@ -443,7 +443,7 @@
         "stage": "fragment",
         "output_key": "gta5_emissive_fragment_shader",
         "num_uniform_buffers": 1,
-        "num_samplers": 2
+        "num_samplers": 3
       },
       "inputs": {
         "shader_path": "shader_gta5_emissive_frag_path"

@@ -16,6 +16,7 @@
 
 layout(set = 2, binding = 0) uniform sampler2D albedoTex;
 layout(set = 2, binding = 1) uniform sampler2DShadow shadowMap;
+layout(set = 2, binding = 2) uniform sampler2D waterMap;
 
 // Same 112 bytes the engine pushes as FragmentUniformData. The last
 // three vec4s are a spotlight this shader has no use for, so the draw
@@ -59,6 +60,23 @@ float SunShadow() {
     return mix(lit / 9.0, 1.0, smoothstep(0.85, 1.0, edge));
 }
 
+// Water fills what lies under its surface (gta5.water.map: the heights of
+// water.xml over the map; GTA's y is engine -z), the deeper the more of
+// its own colour. u_material.z is how deep the camera is: under, all of
+// it goes murky.
+vec3 Submerge(vec3 color, float dist, vec3 light) {
+    vec2 uv = vec2((v_worldPos.x + 4140.0) / 9000.0,
+                   (8400.0 + v_worldPos.z) / 13500.0);
+    float depth = texture(waterMap, uv).r - v_worldPos.y;
+    vec3 murk = vec3(0.02, 0.09, 0.10) * light;
+    if (depth > 0.0) {
+        color = mix(color * vec3(0.75, 0.9, 0.95), murk,
+                    1.0 - exp(-depth * 0.12));
+    }
+    if (u_material.z > 0.0) color = mix(color, murk, 1.0 - exp(-dist * 0.07));
+    return color;
+}
+
 void main() {
     vec4 texel = texture(albedoTex, v_uv);
     // Discard rather than blend: a cutout's alpha says "not here", and
@@ -94,6 +112,8 @@ void main() {
     // step, so the two cannot drift apart and leave a band on the
     // horizon.
     float dist = length(v_worldPos - v_cameraPos);
+    color = Submerge(color, dist,
+                     (u_ambient.rgb + u_lightColor.rgb * 0.6) * exposure);
     float fog = 1.0 - exp(-dist * 0.00035);
     color = mix(color, u_fogColor.rgb, fog);
 

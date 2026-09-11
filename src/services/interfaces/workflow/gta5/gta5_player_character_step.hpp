@@ -40,7 +40,7 @@ private:
     std::vector<BspRenderVertex> skinned_;
     bool tried_{false};
     int frame_{0};
-    float yaw_{0.f};
+    float yaw_{3.14159265f};  // away from the camera at its first yaw
 };
 
 }  // namespace sdl3cpp::services::impl

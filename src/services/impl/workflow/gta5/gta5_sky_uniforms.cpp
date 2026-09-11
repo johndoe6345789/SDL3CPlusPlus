@@ -46,6 +46,9 @@ Gta5SkyUniforms BuildGta5SkyUniforms(const WorkflowStepDefinition& step,
     // The clock's sky when there is a clock (gta5.time): dusk and night.
     sky.horizon = context.Get<glm::vec4>("gta5.time.horizon", sky.horizon);
     sky.zenith = context.Get<glm::vec4>("gta5.time.zenith", sky.zenith);
+    // Under water, the sky is murk: the flag rides in the sun's w.
+    sky.sunDir.w =
+        context.Get<float>("gta5.camera.underwater", -1.f) > 0.f ? 1.f : 0.f;
     return sky;
 }
 

@@ -53,11 +53,11 @@ void WorkflowGta5PlayerCharacterStep::Execute(
         std::clamp(context.Get<float>("physics_dt", 1.f / 60.f), 0.f, 0.1f);
     const glm::vec2 run(ps.velocity.x, ps.velocity.z);
     const float speed = glm::length(run);
-    // Faces the way it walks, turning rather than snapping; standing, it
-    // keeps facing wherever it last went.
+    // Faces the way it walks (the ped model looks along its +z), turning
+    // rather than snapping; standing, it keeps facing wherever it last went.
     if (speed > 0.5f) {
         const float turn = std::remainder(
-            std::atan2(-run.x, -run.y) - yaw_, 2.f * 3.14159265f);
+            std::atan2(run.x, run.y) - yaw_, 2.f * 3.14159265f);
         yaw_ += turn * std::min(1.f, dt * 10.f);
     }
     PoseGta5Ped(ped_.skeleton, walk_, speed, dt, skin_);

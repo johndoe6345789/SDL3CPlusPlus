@@ -22,6 +22,26 @@ struct Gta5WaterQuad {
 /// quads aside. Empty when the file is missing.
 std::vector<Gta5WaterQuad> LoadGta5WaterQuads(const std::string& path);
 
+/// The surface's height at GTA (x, y), the highest water there, if any.
+bool Gta5WaterHeightAt(const std::vector<Gta5WaterQuad>& water, float x,
+                       float y, float& height);
+
+/// Height in a water grid cell with no water over it.
+inline constexpr float kGta5NoWater = -10000.f;
+
+/// A grid over the map in GTA metres: `columns` square cells from minX
+/// east across `width`, `rows` south from maxY.
+struct Gta5WaterGrid {
+    float minX{-4140.f}, maxY{8400.f}, width{9000.f};
+    int columns{1024}, rows{1536};
+};
+
+/// The water's height over each cell's centre, row by row from the north,
+/// kGta5NoWater where there is none: what the shaders fill water with.
+void RasterGta5WaterHeights(const std::vector<Gta5WaterQuad>& water,
+                            const Gta5WaterGrid& grid,
+                            std::vector<float>& heights);
+
 /// Triangles in engine space -- GTA's (x, z, -y) -- facing up.
 std::vector<BspRenderVertex> BuildGta5WaterMesh(
     const std::vector<Gta5WaterQuad>& quads);

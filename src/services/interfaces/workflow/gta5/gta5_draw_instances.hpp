@@ -30,6 +30,8 @@ struct Gta5DrawContext {
     SDL_GPUGraphicsPipeline* emissivePipeline{nullptr};
     SDL_GPUTexture* shadowTexture{nullptr};
     SDL_GPUSampler* shadowSampler{nullptr};
+    SDL_GPUTexture* waterMap{nullptr};  // gta5.water.map: what water fills
+    SDL_GPUSampler* waterSampler{nullptr};
 };
 
 /// Draw a batch instanced, one call per archetype material: `only`, or

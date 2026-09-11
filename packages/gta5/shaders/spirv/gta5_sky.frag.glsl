@@ -24,6 +24,12 @@ void main() {
     // direction this pixel looks in, which is all a sky needs.
     vec4 far = u_invViewProj * vec4(v_ndc, 1.0, 1.0);
     vec3 dir = normalize(far.xyz / far.w - u_cameraPos.xyz);
+    // Under water (the clock puts the flag in the sun's w): murk, in the
+    // day's own light.
+    if (u_sunDir.w > 0.0) {
+        o_color = vec4(u_horizon.rgb * vec3(0.15, 0.45, 0.5), 1.0);
+        return;
+    }
     vec3 sun = normalize(-u_sunDir.xyz);
 
     // Sky darkens with height off the horizon. The 0.35 power keeps the

@@ -36,6 +36,11 @@ vec3 WaveNormal(vec2 p, float t) {
 }
 
 void main() {
+    // From below, the surface is mostly its own underside: a bright murk.
+    if (u_cameraPos.y < v_worldPos.y - 0.05) {
+        o_color = vec4(u_horizon.rgb * vec3(0.3, 0.6, 0.65), 0.85);
+        return;
+    }
     vec3 N = WaveNormal(v_worldPos.xz, u_params.x);
     vec3 toEye = u_cameraPos.xyz - v_worldPos;
     vec3 V = normalize(toEye);
@@ -51,12 +56,16 @@ void main() {
     }
     vec3 L = normalize(-u_lightDir.xyz);
     float exposure = u_params.y;
-    vec3 deep = vec3(0.02, 0.07, 0.09) *
+    // Clear water, green-blue: in the shallows the bottom shows through.
+    vec3 deep = vec3(0.03, 0.12, 0.13) *
                 (u_ambient.rgb + u_lightColor.rgb * max(L.y, 0.0)) * exposure;
     float glint = pow(max(dot(R, L), 0.0), 500.0) * 6.0;
     vec3 color = mix(deep, mirrored, fresnel) +
                  u_lightColor.rgb * glint * exposure;
     float fog = 1.0 - exp(-length(toEye) * 0.00035);
     color = mix(color, u_horizon.rgb, fog);
-    o_color = vec4(color, mix(0.82, 0.97, fresnel));
+    // Seen straight down it is mostly see-through; at a slant, and far
+    // off, the mirrored sky takes over and it reads as a surface.
+    float far = smoothstep(15.0, 150.0, length(toEye));
+    o_color = vec4(color, mix(0.35, 0.96, max(fresnel, far)));
 }

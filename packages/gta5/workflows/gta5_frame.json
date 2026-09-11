@@ -120,6 +120,14 @@
       "plugin": "render.prepare"
     },
     {
+      "id": "water_map",
+      "plugin": "gta5.water.map",
+      "comment": "What fills the water: water.xml's surface heights as a grid the shaders read, and how deep the camera is.",
+      "parameters": {
+        "water_file": "D:/gtautil-2.2.13/extract_common/data/levels/gta5/water.xml"
+      }
+    },
+    {
       "id": "tiles_cull",
       "plugin": "gta5.tiles.cull",
       "parameters": {

@@ -57,6 +57,12 @@ Gta5DrawContext BuildGta5DrawContext(const WorkflowStepDefinition& step,
     // slot this package has no other use for.
     draw.fragUniforms.flash_dir[0] =
         context.Get<float>("gta5.time.night", 0.f);
+    draw.waterMap = context.Get<SDL_GPUTexture*>("gta5.water.map", nullptr);
+    draw.waterSampler =
+        context.Get<SDL_GPUSampler*>("gta5.water.map_sampler", nullptr);
+    // How deep the camera is under water, in the material's spare z.
+    draw.fragUniforms.material[2] =
+        context.Get<float>("gta5.camera.underwater", -1.f);
     draw.shadowTexture =
         context.Get<SDL_GPUTexture*>("shadow_depth_texture", nullptr);
     draw.shadowSampler =
