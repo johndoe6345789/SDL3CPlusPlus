@@ -43,6 +43,10 @@ Gta5DrawContext BuildGta5DrawContext(const WorkflowStepDefinition& step,
     draw.blendPipeline = context.Get<SDL_GPUGraphicsPipeline*>(
         Gta5ParameterOr(step, "blend_pipeline_key", "gpu_pipeline_gta5_blend"),
         nullptr);
+    draw.cutoutPipeline = context.Get<SDL_GPUGraphicsPipeline*>(
+        Gta5ParameterOr(step, "cutout_pipeline_key",
+                        "gpu_pipeline_gta5_cutout"),
+        nullptr);
     draw.terrainPipeline = context.Get<SDL_GPUGraphicsPipeline*>(
         Gta5ParameterOr(step, "terrain_pipeline_key",
                         "gpu_pipeline_gta5_terrain"),

@@ -30,7 +30,7 @@ struct Gta5SubMesh {
     bool terrain{false};  // four layers; see gta5_terrain.frag
     std::array<SDL_GPUTexture*, 5> layers{};  // 4 layers, then the mask
     std::array<SDL_GPUSampler*, 5> layerSamplers{};
-    int DrawKind() const { return blend ? 2 : (terrain ? 1 : 0); }  // order
+    int DrawKind() const { return blend ? 3 : terrain ? 2 : surface[3] > 0.f; }
 };
 
 /// An archetype's mesh, uploaded once and drawn many times.

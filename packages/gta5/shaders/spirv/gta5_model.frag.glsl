@@ -46,6 +46,9 @@ void main() {
 
     vec3 albedo = texel.rgb * u_surface.rgb;
     vec3 N = normalize(v_worldNormal);
+    // Foliage draws with culling off: a card's far side is lit as its
+    // own front, or every leaf turned dark as the view went round it.
+    if (!gl_FrontFacing) N = -N;
     vec3 L = normalize(-u_lightDir.xyz);
 
     // Wrapped diffuse: keeps faces turned away from the sun readable
