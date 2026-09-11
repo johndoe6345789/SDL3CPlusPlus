@@ -32,11 +32,10 @@ enum class Gta5ShopPage { Closed, Root, Cars, Colours, Weapons };
  *
  * Walk up to a Los Santos Customs or an Ammu-Nation (poi_file) and E --
  * the pad's D-pad right -- opens its menu, which the HUD draws
- * (gta5.menu): Up and Down choose, Enter takes, Backspace goes back.
- * The garage swaps the car for any in garage_file, parked on the
- * nearest road (roads_dir), or resprays it; Ammu-Nation hands over
- * weapons_file's guns, ammunition and armour, all kept for next time
- * (Gta5SettingsPath). The player stands still while a menu is open.
+ * (gta5.menu): Up and Down choose, Enter takes, Backspace goes back,
+ * and the player stands still meanwhile. The garage swaps the car for
+ * any in garage_file, parked on the nearest road (roads_dir), or
+ * resprays it; Ammu-Nation hands over guns, ammunition and armour.
  */
 class WorkflowGta5ShopStep final : public IWorkflowStep {
 public:
