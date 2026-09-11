@@ -17,8 +17,7 @@ namespace sdl3cpp::services::impl {
 inline constexpr std::size_t kGta5MaxVerticesPerMesh = 65536u;
 
 /// One material's worth of an archetype: its range of the geometry arena
-/// and its texture -- borrowed from the texture cache, not owned. A GTA V
-/// drawable is several geometries with different textures: several draws.
+/// and its texture, borrowed from the texture cache. Several a drawable.
 struct Gta5SubMesh {
     Gta5ArenaSlot slot;
     std::uint32_t indexCount{0};
@@ -29,13 +28,15 @@ struct Gta5SubMesh {
     std::array<float, 4> surface{1.f, 1.f, 1.f, 0.f};
     bool blend{false};  // alpha-blended, drawn after the opaque scene
     bool terrain{false};  // four layers; see gta5_terrain.frag
+    bool emissive{false};  // windows, signs: see gta5_emissive.frag
     std::array<SDL_GPUTexture*, 5> layers{};  // 4 layers, then the mask
     std::array<SDL_GPUSampler*, 5> layerSamplers{};
-    int DrawKind() const { return blend ? 3 : terrain ? 2 : surface[3] > 0.f; }
+    int DrawKind() const {
+        return blend ? 4 : emissive ? 3 : terrain ? 2 : surface[3] > 0.f;
+    }
 };
 
 /// An archetype's mesh, uploaded once and drawn many times.
-///
 /// references counts the live instances pointing at it. The buffers and
 /// the collision shape are released when that reaches zero, so walking
 /// out of a district frees its memory rather than holding every
@@ -51,9 +52,8 @@ struct Gta5Geometry {
     bool pending{false};
     /// Tried, and found to have nothing to draw; not asked for again.
     bool failed{false};
-    /// Collision mesh, every submesh merged, shared by each instance at
-    /// unit scale. Bullet does not copy these arrays, so they have to
-    /// outlive the shape indexing them: they live here, beside it.
+    /// Collision mesh, every submesh merged, shared at unit scale. Bullet
+    /// keeps pointers into these arrays, so they live here, beside it.
     std::vector<btScalar> collisionVertices;
     std::vector<int> collisionIndices;
     btTriangleIndexVertexArray* collisionMesh{nullptr};

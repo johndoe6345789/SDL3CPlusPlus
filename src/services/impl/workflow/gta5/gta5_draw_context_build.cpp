@@ -51,6 +51,12 @@ Gta5DrawContext BuildGta5DrawContext(const WorkflowStepDefinition& step,
         Gta5ParameterOr(step, "terrain_pipeline_key",
                         "gpu_pipeline_gta5_terrain"),
         nullptr);
+    draw.emissivePipeline = context.Get<SDL_GPUGraphicsPipeline*>(
+        "gpu_pipeline_gta5_emissive", nullptr);
+    // How dark it is, for the night lights, in the spotlight direction
+    // slot this package has no other use for.
+    draw.fragUniforms.flash_dir[0] =
+        context.Get<float>("gta5.time.night", 0.f);
     draw.shadowTexture =
         context.Get<SDL_GPUTexture*>("shadow_depth_texture", nullptr);
     draw.shadowSampler =

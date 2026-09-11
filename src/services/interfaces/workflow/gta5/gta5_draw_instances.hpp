@@ -26,6 +26,8 @@ struct Gta5DrawContext {
     SDL_GPUGraphicsPipeline* terrainPipeline{nullptr};
     /// No culling: foliage cards are single faces seen from both sides.
     SDL_GPUGraphicsPipeline* cutoutPipeline{nullptr};
+    /// Lit like the rest, plus its own glow after dark: windows, signs.
+    SDL_GPUGraphicsPipeline* emissivePipeline{nullptr};
     SDL_GPUTexture* shadowTexture{nullptr};
     SDL_GPUSampler* shadowSampler{nullptr};
 };

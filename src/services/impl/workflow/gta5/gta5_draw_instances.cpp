@@ -23,11 +23,12 @@ int DrawGta5Instances(const Gta5StreamState& state,
         if (sub.slot.block < 0) continue;
         const int kind = sub.DrawKind();
         if (kind != boundKind) {
-            // Opaque, cutout, terrain, then blended, as sorted: each
+            // Opaque, cutout, terrain, emissive, blended, as sorted: each
             // pipeline is bound once, and what a switch drops is bound again.
             SDL_GPUGraphicsPipeline* next =
                 kind == 1   ? draw.cutoutPipeline
                 : kind == 2 ? draw.terrainPipeline
+                : kind == 3 ? draw.emissivePipeline
                             : draw.blendPipeline;
             if (!next) continue;
             SDL_BindGPUGraphicsPipeline(draw.pass, next);

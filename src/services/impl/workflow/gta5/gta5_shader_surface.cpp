@@ -32,6 +32,23 @@ const std::unordered_set<std::uint32_t>& PaintHashes() {
     return hashes;
 }
 
+/// GTA's emissive shaders, by name and by file name.
+const std::unordered_set<std::uint32_t>& EmissiveHashes() {
+    static const std::unordered_set<std::uint32_t> hashes = [] {
+        std::unordered_set<std::uint32_t> out;
+        for (const char* name :
+             {"emissive", "emissive_alpha", "emissive_clip", "emissive_speclum",
+              "emissive_tnt", "emissive_alpha_tnt", "emissivenight",
+              "emissivenight_alpha", "emissivenight_geomnightonly",
+              "emissivestrong", "emissivestrong_alpha"}) {
+            out.insert(Gta5Hash(name));
+            out.insert(Gta5Hash(std::string(name) + ".sps"));
+        }
+        return out;
+    }();
+    return hashes;
+}
+
 }  // namespace
 
 std::vector<Gta5ShaderSurface> ReadGta5ShaderSurfaces(
@@ -52,6 +69,8 @@ std::vector<Gta5ShaderSurface> ReadGta5ShaderSurfaces(
             s.blend = checked && !s.paint &&
                       (bucket == kAlphaBucket || bucket == kDecalBucket);
             s.terrain = ReadGta5TerrainLayers(res, shader, s.layers);
+            s.emissive =
+                checked && EmissiveHashes().count(res.U32(shader)) > 0;
         }
         out.push_back(s);
     }

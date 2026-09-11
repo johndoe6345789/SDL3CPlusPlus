@@ -25,7 +25,6 @@ int SpawnGta5TilePlacements(Gta5StreamState& state,
                             btDiscreteDynamicsWorld* world,
                             const std::shared_ptr<ILogger>& logger) {
     int consumed = 0;
-
     while (resident.spawnedCount < resident.placements.size() &&
            consumed < budget) {
         const Gta5Placement& placement =
@@ -34,15 +33,17 @@ int SpawnGta5TilePlacements(Gta5StreamState& state,
 
         // Placements authored for a finer band than the tile is drawn at
         // are skipped: at SLOD range we want the merged shells, not every
-        // railing. Weather proxies have no pass to feed yet.
+        // railing; nor proxies no pass reads (light: marker triangles).
+        const bool unread = proxy == Gta5ProxyKind::Light ||
+                            proxy == Gta5ProxyKind::Rain ||
+                            proxy == Gta5ProxyKind::Smoke;
         if (static_cast<int>(placement.lod) <
                 static_cast<int>(resident.bandAtSpawn) ||
-            proxy == Gta5ProxyKind::Rain || proxy == Gta5ProxyKind::Smoke) {
+            unread) {
             ++resident.spawnedCount;
             ++consumed;
             continue;
         }
-
         bool pending = false;
         Gta5Geometry* geometry =
             GetOrLoadGta5Geometry(state, placement, device, logger, &pending);

@@ -27,6 +27,7 @@ bool UploadGta5SubMesh(const Gta5SubMeshData& part, SDL_GPUDevice* device,
                    part.alphaCutoff};
     out.blend = part.blend;
     out.terrain = part.terrain;
+    out.emissive = part.emissive && !part.blend;  // glass stays glass
     // Terrain reads its surface alpha as "has a lookup mask" -- it has no
     // cutout to use it for.
     if (part.terrain) out.surface[3] = part.layerHashes[4] ? 1.f : 0.f;

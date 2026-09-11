@@ -99,6 +99,11 @@
       "name": "shader_gta5_water_frag_path",
       "type": "string",
       "defaultValue": "packages/gta5/shaders/msl/gta5_water.frag.metal"
+    },
+    "shader_gta5_emissive_frag_path": {
+      "name": "shader_gta5_emissive_frag_path",
+      "type": "string",
+      "defaultValue": "packages/gta5/shaders/msl/gta5_emissive.frag.metal"
     }
   },
   "nodes": [
@@ -298,7 +303,8 @@
         "alpha_blend": 1,
         "depth_write": 0,
         "depth_bias": -1.0,
-        "depth_bias_slope": -1.5
+        "depth_bias_slope": -1.5,
+        "release_shaders": 0
       }
     },
     {
@@ -413,6 +419,41 @@
         "alpha_blend": 1,
         "depth_write": 0,
         "cull_mode": "none"
+      }
+    },
+    {
+      "id": "compile_gta5_emissive_frag",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        200
+      ],
+      "parameters": {
+        "stage": "fragment",
+        "output_key": "gta5_emissive_fragment_shader",
+        "num_uniform_buffers": 1,
+        "num_samplers": 2
+      },
+      "inputs": {
+        "shader_path": "shader_gta5_emissive_frag_path"
+      }
+    },
+    {
+      "id": "create_gta5_emissive_pipeline",
+      "type": "graphics.gpu.pipeline.create",
+      "typeVersion": 1,
+      "position": [
+        1370,
+        200
+      ],
+      "parameters": {
+        "vertex_shader_key": "gta5_vertex_shader",
+        "fragment_shader_key": "gta5_emissive_fragment_shader",
+        "vertex_format": "position_uv_lmuv_normal",
+        "pipeline_key": "gpu_pipeline_gta5_emissive",
+        "color_format": "rgba16_float",
+        "release_shaders": 1
       }
     },
     {

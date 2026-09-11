@@ -26,6 +26,8 @@ struct Gta5ShaderSurface {
     /// Four layers weighted by the vertex colour, and a lookup mask that
     /// can stand in for it; see gta5_terrain.frag.
     bool terrain{false};
+    /// Lit windows and signs (the emissive shaders): they glow at night.
+    bool emissive{false};
     std::array<std::uint32_t, 5> layers{};
 };
 
