@@ -184,7 +184,8 @@
         "src/services/impl/workflow/workflow_state_load_step.cpp",
         "src/services/impl/workflow/workflow_state_save_step.cpp",
         "src/services/impl/workflow/workflow_template_resolver.cpp",
-        "src/services/impl/workflow/workflow_registrar_gta5.cpp"
+        "src/services/impl/workflow/workflow_registrar_gta5.cpp",
+        "src/services/impl/workflow/workflow_registrar_gta5_player.cpp"
       ],
       "include_directories": [
         "src"

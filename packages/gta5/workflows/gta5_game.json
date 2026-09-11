@@ -79,6 +79,16 @@
       "name": "shader_gta5_terrain_frag_path",
       "type": "string",
       "defaultValue": "packages/gta5/shaders/msl/gta5_terrain.frag.metal"
+    },
+    "shader_gta5_shadow_vert_path": {
+      "name": "shader_gta5_shadow_vert_path",
+      "type": "string",
+      "defaultValue": "packages/gta5/shaders/msl/gta5_shadow.vert.metal"
+    },
+    "shader_gta5_shadow_frag_path": {
+      "name": "shader_gta5_shadow_frag_path",
+      "type": "string",
+      "defaultValue": "packages/gta5/shaders/msl/gta5_shadow.frag.metal"
     }
   },
   "nodes": [
@@ -185,7 +195,7 @@
         "stage": "fragment",
         "output_key": "gta5_fragment_shader",
         "num_uniform_buffers": 1,
-        "num_samplers": 1
+        "num_samplers": 2
       },
       "inputs": {
         "shader_path": "shader_gta5_frag_path"
@@ -238,7 +248,7 @@
         "stage": "fragment",
         "output_key": "gta5_terrain_fragment_shader",
         "num_uniform_buffers": 1,
-        "num_samplers": 5
+        "num_samplers": 6
       },
       "inputs": {
         "shader_path": "shader_gta5_terrain_frag_path"
@@ -279,6 +289,65 @@
         "depth_write": 0,
         "depth_bias": -1.0,
         "depth_bias_slope": -1.5
+      }
+    },
+    {
+      "id": "compile_gta5_shadow_vert",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [
+        1300,
+        200
+      ],
+      "parameters": {
+        "stage": "vertex",
+        "output_key": "gta5_shadow_vertex_shader",
+        "num_uniform_buffers": 1,
+        "num_samplers": 0,
+        "num_storage_buffers": 1
+      },
+      "inputs": {
+        "shader_path": "shader_gta5_shadow_vert_path"
+      }
+    },
+    {
+      "id": "compile_gta5_shadow_frag",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [
+        1310,
+        200
+      ],
+      "parameters": {
+        "stage": "fragment",
+        "output_key": "gta5_shadow_fragment_shader",
+        "num_uniform_buffers": 1,
+        "num_samplers": 1
+      },
+      "inputs": {
+        "shader_path": "shader_gta5_shadow_frag_path"
+      }
+    },
+    {
+      "id": "create_gta5_shadow_pipeline",
+      "type": "graphics.gpu.pipeline.create",
+      "typeVersion": 1,
+      "position": [
+        1320,
+        200
+      ],
+      "parameters": {
+        "vertex_shader_key": "gta5_shadow_vertex_shader",
+        "fragment_shader_key": "gta5_shadow_fragment_shader",
+        "vertex_format": "position_uv_lmuv_normal",
+        "pipeline_key": "gpu_pipeline_gta5_shadow",
+        "num_color_targets": 0,
+        "has_depth": 1,
+        "depth_test": 1,
+        "depth_write": 1,
+        "cull_mode": "none",
+        "depth_bias": 2.0,
+        "depth_bias_slope": 2.5
       }
     },
     {

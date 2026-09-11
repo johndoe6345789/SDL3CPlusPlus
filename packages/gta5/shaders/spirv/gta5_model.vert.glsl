@@ -46,7 +46,9 @@ void main() {
     // Good for the rotations and uniform scales most placements use.
     v_worldNormal = normalize(mat3(model) * a_normal);
     v_cameraPos = u_cameraPos.xyz;
-    v_shadowPos = u_shadowVP * wp;
+    // Looked up a little off the surface, along its normal: a face
+    // compared against its own depth in the map shadows itself in bands.
+    v_shadowPos = u_shadowVP * (wp + vec4(v_worldNormal * 0.08, 0.0));
     // Terrain's data comes packed in the lightmap uv as whole numbers
     // (see gta5_vertex_layout): three bytes in x, two 12-bit coordinates
     // in y. Unused by every other surface.

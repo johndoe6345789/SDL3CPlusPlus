@@ -865,6 +865,10 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_resource_text.cpp
         src/services/impl/workflow/gta5/gta5_shader_surface.cpp
         src/services/impl/workflow/gta5/gta5_shader_textures.cpp
+        src/services/impl/workflow/gta5/gta5_shadow_draw.cpp
+        src/services/impl/workflow/gta5/gta5_shadow_resources.cpp
+        src/services/impl/workflow/gta5/gta5_shadow_step.cpp
+        src/services/impl/workflow/gta5/gta5_shadow_view.cpp
         src/services/impl/workflow/gta5/gta5_shown_transform.cpp
         src/services/impl/workflow/gta5/gta5_skeleton.cpp
         src/services/impl/workflow/gta5/gta5_sky_draw_step.cpp
@@ -954,6 +958,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/workflow_state_save_step.cpp
         src/services/impl/workflow/workflow_template_resolver.cpp
         src/services/impl/workflow/workflow_registrar_gta5.cpp
+        src/services/impl/workflow/workflow_registrar_gta5_player.cpp
     )
     target_include_directories(sdl3_app PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}/src"

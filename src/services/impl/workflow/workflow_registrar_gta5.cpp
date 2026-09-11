@@ -1,4 +1,5 @@
 #include "services/impl/workflow/workflow_registrar_categories.hpp"
+#include "services/impl/workflow/workflow_registrar_gta5_player.hpp"
 
 #include "services/interfaces/workflow/gta5/gta5_stream_state.hpp"
 #include "services/interfaces/workflow/gta5/gta5_assets_index_step.hpp"
@@ -8,9 +9,6 @@
 #include "services/interfaces/workflow/gta5/gta5_player_hold_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_lod_select_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_map_step.hpp"
-#include "services/interfaces/workflow/gta5/gta5_player_camera_step.hpp"
-#include "services/interfaces/workflow/gta5/gta5_player_character_step.hpp"
-#include "services/interfaces/workflow/gta5/gta5_player_fly_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_sky_draw_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_time_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_tiles_cull_step.hpp"
@@ -64,17 +62,12 @@ int RegisterGta5StreamingSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
         std::make_shared<WorkflowGta5FrameMarkStep>(logger, state));
     registry->RegisterStep(
         std::make_shared<WorkflowGta5MapDrawStep>(logger, state));
-    registry->RegisterStep(
-        std::make_shared<WorkflowGta5PlayerFlyStep>(logger, state));
-    registry->RegisterStep(
-        std::make_shared<WorkflowGta5PlayerCameraStep>(logger, state));
-    registry->RegisterStep(
-        std::make_shared<WorkflowGta5PlayerCharacterStep>(logger, state));
+    const int player = RegisterGta5PlayerSteps(registry, logger, state);
     // The sky and the clock need no streaming state.
     registry->RegisterStep(std::make_shared<WorkflowGta5SkyDrawStep>(logger));
     registry->RegisterStep(std::make_shared<WorkflowGta5TimeStep>(logger));
 
-    return 21;
+    return 18 + player;
 }
 
 }  // namespace sdl3cpp::services::impl::registrar_detail

@@ -25,22 +25,29 @@ int BindGta5SubMeshTextures(const Gta5DrawContext& draw,
                             const Gta5SubMesh& sub, SDL_GPUTexture*& bound) {
     SDL_GPUTexture* texture = sub.texture ? sub.texture : draw.texture;
     SDL_GPUSampler* sampler = sub.texture ? sub.sampler : draw.sampler;
-    if (!texture || !sampler) return -1;
+    // The shaders read the sun's shadow map after their own textures.
+    if (!texture || !sampler || !draw.shadowTexture || !draw.shadowSampler) {
+        return -1;
+    }
+    const SDL_GPUTextureSamplerBinding shadow = {draw.shadowTexture,
+                                                 draw.shadowSampler};
     if (sub.terrain) {
-        SDL_GPUTextureSamplerBinding layers[5];  // 4 layers, then the mask
+        SDL_GPUTextureSamplerBinding layers[6];  // 4 layers, mask, shadow
+        layers[5] = shadow;
         for (int i = 0; i < 5; ++i) {
             layers[i] = sub.layers[i]
                             ? SDL_GPUTextureSamplerBinding{sub.layers[i],
                                                            sub.layerSamplers[i]}
                             : SDL_GPUTextureSamplerBinding{texture, sampler};
         }
-        SDL_BindGPUFragmentSamplers(draw.pass, 0, layers, 5);
+        SDL_BindGPUFragmentSamplers(draw.pass, 0, layers, 6);
         bound = nullptr;
         return 1;
     }
     if (texture == bound) return 0;
-    SDL_GPUTextureSamplerBinding binding = {texture, sampler};
-    SDL_BindGPUFragmentSamplers(draw.pass, 0, &binding, 1);
+    const SDL_GPUTextureSamplerBinding bindings[2] = {{texture, sampler},
+                                                     shadow};
+    SDL_BindGPUFragmentSamplers(draw.pass, 0, bindings, 2);
     bound = texture;
     return 1;
 }

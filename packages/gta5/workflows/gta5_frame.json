@@ -128,6 +128,16 @@
       }
     },
     {
+      "id": "shadow_draw",
+      "plugin": "gta5.shadow.draw",
+      "comment": "The sun's shadow map: casters within radius metres of the camera, from the sun, into a size x size depth map.",
+      "parameters": {
+        "radius": 150.0,
+        "size": 4096,
+        "cull_size_ratio": 0.01
+      }
+    },
+    {
       "id": "mark_cull",
       "plugin": "gta5.frame.mark",
       "parameters": {

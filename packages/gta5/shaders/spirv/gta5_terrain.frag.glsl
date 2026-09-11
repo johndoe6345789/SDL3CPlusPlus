@@ -17,6 +17,7 @@ layout(set = 2, binding = 1) uniform sampler2D layer1;
 layout(set = 2, binding = 2) uniform sampler2D layer2;
 layout(set = 2, binding = 3) uniform sampler2D layer3;
 layout(set = 2, binding = 4) uniform sampler2D lookupMask;
+layout(set = 2, binding = 5) uniform sampler2DShadow shadowMap;
 
 layout(set = 3, binding = 0) uniform PBRUniforms {
     vec4 u_lightDir;      // xyz = direction the light travels
@@ -38,6 +39,24 @@ layout(location = 6) in vec2 v_uv1;     // where the mask is read
 
 layout(location = 0) out vec4 o_color;
 
+// The sun's shadow map (gta5.shadow.draw), sampled nine times for a soft
+// edge and faded out towards the map's rim, where it ends.
+float SunShadow() {
+    vec3 p = v_shadowPos.xyz / v_shadowPos.w;
+    float edge = max(abs(p.x), abs(p.y));
+    if (edge >= 1.0 || p.z <= 0.0 || p.z >= 1.0) return 1.0;
+    vec2 uv = vec2(p.x * 0.5 + 0.5, 0.5 - p.y * 0.5);
+    vec2 texel = 1.0 / vec2(textureSize(shadowMap, 0));
+    float lit = 0.0;
+    for (int y = -1; y <= 1; ++y) {
+        for (int x = -1; x <= 1; ++x) {
+            lit += texture(shadowMap,
+                           vec3(uv + vec2(x, y) * texel, p.z - 0.00005));
+        }
+    }
+    return mix(lit / 9.0, 1.0, smoothstep(0.85, 1.0, edge));
+}
+
 void main() {
     vec2 w = v_blend.xy;  // (blue, green)
     if (u_surface.a > 0.5) {
@@ -50,7 +69,8 @@ void main() {
     vec3 N = normalize(v_worldNormal);
     vec3 L = normalize(-u_lightDir.xyz);
     float wrap = max(dot(N, L) * 0.5 + 0.5, 0.0);
-    vec3 lit = albedo * (u_lightColor.rgb * wrap + u_ambient.rgb);
+    vec3 lit = albedo * (u_lightColor.rgb * wrap * SunShadow() +
+                         u_ambient.rgb);
     float exposure = (u_lightColor.a > 0.0) ? u_lightColor.a : 1.0;
     vec3 color = lit * exposure;
 

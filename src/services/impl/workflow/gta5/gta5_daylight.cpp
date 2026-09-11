@@ -40,7 +40,8 @@ Gta5Daylight ComputeGta5Daylight(float hours) {
     glm::vec3 z = glm::mix(nightZ, dayZ, day);
     h = glm::mix(h, duskH, low * 0.85f);
     z = glm::mix(z, duskZ, low * 0.6f);
-    d.horizon = glm::vec4(h, d.night);
+    // Stars only once dusk has gone: they read wrong in a bright sky.
+    d.horizon = glm::vec4(h, glm::smoothstep(0.85f, 1.f, d.night));
     d.zenith = glm::vec4(z, up > -0.03f ? 8.f : 3.f);
     return d;
 }
