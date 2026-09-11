@@ -19,6 +19,25 @@ void WorkflowGta5VehiclesSyncStep::Execute(
     const WorkflowStepDefinition& /*step*/, WorkflowContext& context) {
     if (!state_ || state_->vehicles.empty()) return;
     UpdateGta5Vehicles(*state_);
+
+    // Report once: a wheel drawn at the wrong place looks identical to
+    // one that is not drawn at all.
+    if (!reported_ && logger_) {
+        reported_ = true;
+        const Gta5Vehicle& car = state_->vehicles.front();
+        const btVector3 body = car.chassis->getWorldTransform().getOrigin();
+        std::string line = "gta5.vehicles.sync: chassis (" +
+                           std::to_string(body.x()) + "," +
+                           std::to_string(body.y()) + "," +
+                           std::to_string(body.z()) + ") wheels";
+        for (int i = 0; i < 4 && car.hasWheels; ++i) {
+            const btVector3 w =
+                car.vehicle->getWheelTransformWS(i).getOrigin();
+            line += " [" + std::to_string(w.x()) + "," +
+                    std::to_string(w.y()) + "," + std::to_string(w.z()) + "]";
+        }
+        logger_->Info(line + (car.hasWheels ? "" : " (no wheel meshes)"));
+    }
     context.Set("gta5.vehicles.count",
                 static_cast<int>(state_->vehicles.size()));
 }

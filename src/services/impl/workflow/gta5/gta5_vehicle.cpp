@@ -37,8 +37,12 @@ bool SpawnGta5Vehicle(Gta5StreamState& state, const std::string& modelPath,
     LoadGta5VehicleWheels(state, car, modelPath, device, setup,
                           logger);
 
+    // The chassis shape is a compound wrapping the box, so reach
+    // through it for the extents the fallback wheel layout needs.
+    const auto* compound = static_cast<btCompoundShape*>(car.chassisShape);
     const btVector3 half =
-        static_cast<btBoxShape*>(car.chassisShape)->getHalfExtentsWithMargin();
+        static_cast<const btBoxShape*>(compound->getChildShape(0))
+            ->getHalfExtentsWithMargin();
     AttachGta5Wheels(car, world, half, setup);
 
     // Held by the vehicle list, so the geometry sweep cannot free the

@@ -272,7 +272,21 @@ Two details that each cost a wrong-looking render:
   visibly detached from the car.
 
 Placement is then just `getWheelTransformWS`, which already carries both
-the steer angle and the rolling rotation Bullet integrated.
+the steer angle and the rolling rotation Bullet integrated. The
+positions are exact -- the logged wheel transforms sit at the axle
+offsets to the millimetre.
+
+**The extracted wheel meshes are wrong, though, and the approach is the
+reason.** The tyre geometry in the body is 80 triangles for all four
+wheels -- 20 each. A real GTA V tyre is a few hundred. It is a stub,
+because the actual wheels are separate drawables the fragment names
+`wheelmesh_lf`, `wheelmesh_lf_ng`, `wheelmesh_lf_l1`, `wheelmesh_lf_l2`.
+Carving a sphere out of the body around each axle therefore recovers a
+stub plus whatever wheel-arch geometry falls inside the radius, which
+renders hollow and spoke-like no matter how the radius is tuned.
+
+The real fix is to read those wheel drawables out of the fragment. The
+name table sits at fragment `+0x58`, with a pointer at its `+0x28`.
 
 ## Shaders
 

@@ -211,7 +211,7 @@ def read_drawable_at(res, base):
     return parts
 
 
-def split_wheels(parts, capture=0.38):
+def split_wheels(parts, capture=0.46):
     """Separate a vehicle's four wheels from its chassis.
 
     GTA V bakes the wheels into the body mesh -- one merged tyre

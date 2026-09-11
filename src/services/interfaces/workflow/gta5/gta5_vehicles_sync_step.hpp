@@ -27,7 +27,7 @@ public:
 private:
     std::shared_ptr<ILogger> logger_;
     std::shared_ptr<Gta5StreamState> state_;
-    bool spawned_{false};
+    bool reported_{false};
 };
 
 }  // namespace sdl3cpp::services::impl
