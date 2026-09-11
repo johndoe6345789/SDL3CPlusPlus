@@ -9,16 +9,18 @@ namespace sdl3cpp::services::impl {
 namespace {
 
 void Collect(const Gta5StreamState& state, const Gta5Frustum& frustum,
-             const glm::vec3& camera, float sizeRatio, float lodScale,
+             const glm::vec3& camera, const Gta5CullOptions& options,
              std::vector<const Gta5Instance*>& visible) {
     visible.clear();
     for (const auto& entry : state.resident) {
         for (const Gta5Instance& instance : entry.second.instances) {
             if (!instance.geometry || !instance.geometry->usable) continue;
-            if (Gta5InstanceVisible(frustum, instance, camera, sizeRatio,
-                                    lodScale)) {
-                visible.push_back(&instance);
-            }
+            const bool shown =
+                Gta5InstanceVisible(frustum, instance, camera,
+                                    options.sizeRatio, options.lodScale) ||
+                (options.collision && instance.body &&
+                 Gta5InstanceVisible(frustum, instance, camera, 0.f, 1e6f));
+            if (shown) visible.push_back(&instance);
         }
     }
     for (const Gta5Vehicle& car : state.vehicles) {
@@ -33,14 +35,12 @@ void Collect(const Gta5StreamState& state, const Gta5Frustum& frustum,
 
 void BuildGta5InstanceBatch(const Gta5StreamState& state,
                             const glm::mat4& viewProj,
-                            const glm::vec3& camera, float sizeRatio,
-                            float lodScale, Gta5InstanceBatch& batch) {
-    Collect(state, MakeGta5Frustum(viewProj), camera, sizeRatio, lodScale,
-            batch.visible);
+                            const glm::vec3& camera,
+                            const Gta5CullOptions& options,
+                            Gta5InstanceBatch& batch) {
+    Collect(state, MakeGta5Frustum(viewProj), camera, options, batch.visible);
     std::sort(batch.visible.begin(), batch.visible.end(),
-              [](const Gta5Instance* a, const Gta5Instance* b) {
-                  return a->geometry < b->geometry;
-              });
+              [](auto* a, auto* b) { return a->geometry < b->geometry; });
     batch.matrices.clear();
     batch.groups.clear();
     for (const Gta5Instance* instance : batch.visible) {
@@ -54,7 +54,7 @@ void BuildGta5InstanceBatch(const Gta5StreamState& state,
         ++batch.groups.back().count;
     }
     // Draws, not groups, are sorted -- an archetype's materials differ --
-    // by arena block, bound once each, then texture, then tint.
+    // by pipeline, arena block, texture, then tint.
     batch.items.clear();
     for (const Gta5DrawGroup& group : batch.groups) {
         for (const Gta5SubMesh& sub : group.geometry->subMeshes) {

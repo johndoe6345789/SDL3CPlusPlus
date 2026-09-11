@@ -1,5 +1,7 @@
 #include "services/interfaces/workflow/gta5/gta5_vehicle_seat.hpp"
 
+#include "services/interfaces/workflow/gta5/gta5_player_pin.hpp"
+
 namespace sdl3cpp::services::impl {
 namespace {
 
@@ -38,7 +40,8 @@ int FindGta5VehicleNear(const Gta5StreamState& state, const btVector3& point,
     return best;
 }
 
-void RideGta5Vehicle(const Gta5Vehicle& car, btRigidBody* player) {
+void RideGta5Vehicle(const Gta5Vehicle& car, btRigidBody* player,
+                     WorkflowContext& context) {
     if (!car.chassis || !player) return;
     // Pinned every frame rather than constrained: the player body is
     // kinematic as far as the car is concerned, and a constraint would
@@ -48,8 +51,12 @@ void RideGta5Vehicle(const Gta5Vehicle& car, btRigidBody* player) {
     // seated the player touches nothing.
     player->setCollisionFlags(player->getCollisionFlags() |
                               btCollisionObject::CF_NO_CONTACT_RESPONSE);
-    Place(player, car.chassis->getWorldTransform().getOrigin() +
-                      btVector3(0.f, kSeatHeight, 0.f));
+    const btVector3 seat = car.chassis->getWorldTransform().getOrigin() +
+                           btVector3(0.f, kSeatHeight, 0.f);
+    Place(player, seat);
+    // The on-foot movement state too: left to run from where the player
+    // got in, with the body inside the car, it went to NaN.
+    PinGta5Player(context, player, glm::vec3(seat.x(), seat.y(), seat.z()));
 }
 
 void LeaveGta5Vehicle(const Gta5Vehicle& car, btRigidBody* player) {

@@ -797,6 +797,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_drawable_locate.cpp
         src/services/impl/workflow/gta5/gta5_drawable_mesh.cpp
         src/services/impl/workflow/gta5/gta5_evict_plan.cpp
+        src/services/impl/workflow/gta5/gta5_finite_guard.cpp
         src/services/impl/workflow/gta5/gta5_fragment_axles.cpp
         src/services/impl/workflow/gta5/gta5_frame_mark_step.cpp
         src/services/impl/workflow/gta5/gta5_frame_stats_step.cpp
@@ -819,6 +820,11 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_loading_text_step.cpp
         src/services/impl/workflow/gta5/gta5_lod.cpp
         src/services/impl/workflow/gta5/gta5_lod_select_step.cpp
+        src/services/impl/workflow/gta5/gta5_map_markers.cpp
+        src/services/impl/workflow/gta5/gta5_map_overlay_draw.cpp
+        src/services/impl/workflow/gta5/gta5_map_overlay_load.cpp
+        src/services/impl/workflow/gta5/gta5_map_quads.cpp
+        src/services/impl/workflow/gta5/gta5_map_step.cpp
         src/services/impl/workflow/gta5/gta5_material_surface.cpp
         src/services/impl/workflow/gta5/gta5_mesh_extract.cpp
         src/services/impl/workflow/gta5/gta5_mesh_geometry_upload.cpp

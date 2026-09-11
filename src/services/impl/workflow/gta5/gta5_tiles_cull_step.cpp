@@ -1,6 +1,7 @@
 #include "services/interfaces/workflow/gta5/gta5_tiles_cull_step.hpp"
 
 #include "services/interfaces/workflow/gta5/gta5_step_params.hpp"
+#include "services/interfaces/workflow/gta5/gta5_vehicle_input.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
 #include <SDL3/SDL_timer.h>
@@ -34,9 +35,22 @@ void WorkflowGta5TilesCullStep::Execute(const WorkflowStepDefinition& step,
         context.Get<glm::mat4>("render.proj_matrix", glm::mat4(1.f));
     const auto camera =
         context.Get<glm::vec3>("render.camera_pos", glm::vec3(0.f));
-    BuildGta5InstanceBatch(*state_, proj * view, camera,
-                           Gta5NumberOr(step, "cull_size_ratio", 0.003f),
-                           Gta5NumberOr(step, "lod_scale", 1.f),
+    // F2 toggles the collision view: what is solid, not what LOD shows.
+    const bool toggle = Gta5KeyDown(
+        context.TryGet<nlohmann::json>("input.keyboard.state"), "F2");
+    if (toggle && !toggleHeld_) {
+        collisionView_ = !collisionView_;
+        if (logger_) {
+            logger_->Info(collisionView_ ? "gta5.tiles.cull: collision view"
+                                         : "gta5.tiles.cull: normal view");
+        }
+    }
+    toggleHeld_ = toggle;
+    Gta5CullOptions options;
+    options.sizeRatio = Gta5NumberOr(step, "cull_size_ratio", 0.003f);
+    options.lodScale = Gta5NumberOr(step, "lod_scale", 1.f);
+    options.collision = collisionView_;
+    BuildGta5InstanceBatch(*state_, proj * view, camera, options,
                            state_->batch);
     if (!UploadGta5InstanceBatch(device, state_->batch)) {
         // Nothing is drawn from a batch that did not upload.

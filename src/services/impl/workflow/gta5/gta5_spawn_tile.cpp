@@ -42,12 +42,15 @@ int SpawnGta5TilePlacements(Gta5StreamState& state,
         instance.geometry = geometry;
         instance.modelMatrix = BuildGta5ModelMatrix(placement);
         instance.lodDist = placement.lodDist;
-        // The finest band this tile spawned has no children here to hand
-        // over to up close, so it stays drawn.
-        instance.childLodDist = placement.lod == resident.bandAtSpawn
-                                    ? 0.f
-                                    : placement.childLodDist;
-        AddGta5InstanceBody(world, placement, *geometry, instance);
+        // Always handed over up close. Waiving it for a tile's finest band
+        // kept every parent whose lodDist fell in the HD band -- and many
+        // do -- drawn over its own children: blurry lumps on the road.
+        instance.childLodDist = placement.childLodDist;
+        // Only the finest level collides: a parent's coarse mesh, hidden
+        // up close, still stood in the road as an invisible lump.
+        if (placement.childLodDist <= 0.f) {
+            AddGta5InstanceBody(world, placement, *geometry, instance);
+        }
         resident.instances.push_back(instance);
         ++geometry->references;
     }

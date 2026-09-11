@@ -182,6 +182,18 @@
       "plugin": "postfx.overlay_fps_draw"
     },
     {
+      "id": "map_draw",
+      "plugin": "gta5.map.draw",
+      "comment": "Tab: GTA's pause-map art full screen, with an arrow where the player is. The rectangle is the world the six minimap tiles cover, in metres, GTA's y north.",
+      "parameters": {
+        "minimap_dir": "D:/gtautil-2.2.13/data/cdimages/scaleform_generic.rpf",
+        "map_min_x": -4000,
+        "map_max_y": 8000,
+        "map_width": 8000,
+        "map_height": 12000
+      }
+    },
+    {
       "id": "command_buffer_submit",
       "plugin": "gpu.command_buffer_submit"
     },

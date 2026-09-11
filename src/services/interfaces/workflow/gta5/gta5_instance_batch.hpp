@@ -47,14 +47,24 @@ struct Gta5InstancedUniforms {
     float cameraPos[4];
 };
 
+/// How gta5.tiles.cull picks what to draw.
+struct Gta5CullOptions {
+    float sizeRatio{0.003f};  // cull what is smaller than this of its range
+    float lodScale{1.f};      // above 1, finer models are kept further out
+    /// Also draw every instance in view with a physics body, whatever LOD
+    /// would show: F2. A collider nothing visible accounts for -- a lump
+    /// in the road -- then appears on top of what is normally drawn.
+    bool collision{false};
+};
+
 /// Cull resident instances to the view, group the rest by archetype and
 /// list their draws. Vehicles are always in: few, and the camera follows
-/// one. `lodScale` stretches every LOD distance: above 1, finer models
-/// are kept further out.
+/// one.
 void BuildGta5InstanceBatch(const Gta5StreamState& state,
                             const glm::mat4& viewProj,
-                            const glm::vec3& camera, float sizeRatio,
-                            float lodScale, Gta5InstanceBatch& batch);
+                            const glm::vec3& camera,
+                            const Gta5CullOptions& options,
+                            Gta5InstanceBatch& batch);
 
 /// Upload the batch's matrices on a command buffer of its own, submitted
 /// before the frame's, growing the buffers as needed.

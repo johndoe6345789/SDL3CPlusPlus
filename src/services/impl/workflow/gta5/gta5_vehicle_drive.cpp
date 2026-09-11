@@ -17,11 +17,17 @@ constexpr float kDragPerSpeed2 = 0.40f;
 constexpr float kRollingShare = 0.015f;
 constexpr float kBrakeForce = 220.f;
 constexpr float kMaxSteer = 0.45f;
+// Full lock is for low speeds: it halves by 15 m/s and is a quarter by
+// 45, or a tap at speed flicks the car round.
+constexpr float kSteerFadeSpeed = 15.f;
+// Keys are all or nothing; the wheels ease toward them at this rate, in
+// radians a second: a quarter of a second from centre to lock.
+constexpr float kSteerRate = 1.8f;
 
 }  // namespace
 
 void DriveGta5Vehicle(Gta5Vehicle& car, float throttle, float steer,
-                      float brake) {
+                      float brake, float dt) {
     if (!car.vehicle || !car.chassis) return;
     const btVector3 velocity = car.chassis->getLinearVelocity();
     const float speed = velocity.length();
@@ -32,12 +38,15 @@ void DriveGta5Vehicle(Gta5Vehicle& car, float throttle, float steer,
     // power over speed runs away to infinity.
     const float perWheel = std::min(
         kMaxWheelForce, kPowerWatts / (2.f * std::max(speed, 1.f)));
+    const float wanted = steer * kMaxSteer / (1.f + speed / kSteerFadeSpeed);
+    const float step = kSteerRate * dt;
+    car.steer += std::clamp(wanted - car.steer, -step, step);
     for (int i = 0; i < car.vehicle->getNumWheels(); ++i) {
         const bool front = car.vehicle->getWheelInfo(i).m_bIsFrontWheel;
         // Rear-wheel drive, front-wheel steering.
         car.vehicle->applyEngineForce(front ? 0.f : throttle * perWheel, i);
         car.vehicle->setBrake(brake * kBrakeForce, i);
-        if (front) car.vehicle->setSteeringValue(steer * kMaxSteer, i);
+        if (front) car.vehicle->setSteeringValue(car.steer, i);
     }
 
     // Drag and rolling resistance oppose the motion. They set the top

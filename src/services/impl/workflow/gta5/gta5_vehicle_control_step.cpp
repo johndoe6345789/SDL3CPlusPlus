@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/gta5/gta5_vehicle_control_step.hpp"
 
+#include "services/interfaces/workflow/gta5/gta5_finite_guard.hpp"
 #include "services/interfaces/workflow/gta5/gta5_player_pin.hpp"
 #include "services/interfaces/workflow/gta5/gta5_vehicle.hpp"
 #include "services/interfaces/workflow/gta5/gta5_vehicle_input.hpp"
@@ -7,7 +8,6 @@
 #include "services/interfaces/workflow_context.hpp"
 
 #include <nlohmann/json.hpp>
-
 #include <utility>
 
 namespace sdl3cpp::services::impl {
@@ -43,8 +43,7 @@ void WorkflowGta5VehicleControlStep::Execute(
             const int found = FindGta5VehicleNear(
                 *state_, player->getWorldTransform().getOrigin(), 6.f);
             state_->seated = found;
-            // Said either way: a silent miss cannot be told apart from
-            // a key that never arrived.
+            // Said either way: a miss must not look like a lost key.
             if (logger_) {
                 logger_->Info(found >= 0 ? "gta5.vehicle.control: in"
                                          : "gta5.vehicle.control: no car "
@@ -54,10 +53,12 @@ void WorkflowGta5VehicleControlStep::Execute(
     }
 
     // Every car nobody is in: engine off, brakes on, or it rolls away.
+    const float dt = context.Get<float>("physics_dt", 1.f / 60.f);
     for (std::size_t i = 0; i < state_->vehicles.size(); ++i) {
         if (static_cast<int>(i) == state_->seated) continue;
-        DriveGta5Vehicle(state_->vehicles[i], 0.f, 0.f, 1.f);
+        DriveGta5Vehicle(state_->vehicles[i], 0.f, 0.f, 1.f, dt);
     }
+    GuardGta5PlayerFinite(*state_, context, player, logger_);
     if (state_->seated < 0 ||
         state_->seated >= static_cast<int>(state_->vehicles.size())) {
         return;
@@ -66,14 +67,13 @@ void WorkflowGta5VehicleControlStep::Execute(
     Gta5Vehicle& car = state_->vehicles[state_->seated];
     const float throttle = (Gta5KeyDown(keys, "W") ? 1.f : 0.f) -
                            (Gta5KeyDown(keys, "S") ? 1.f : 0.f);
-    // Bullet steers anticlockwise about up for a positive value. The car
-    // faces +z, so its right-hand side is -x and a positive value turns
-    // it left: A is the positive key.
+    // Bullet steers anticlockwise about up for a positive value, and the
+    // car faces +z: a positive value turns it left, so A is positive.
     const float steer = (Gta5KeyDown(keys, "A") ? 1.f : 0.f) -
                         (Gta5KeyDown(keys, "D") ? 1.f : 0.f);
     const float brake = Gta5KeyDown(keys, "Space") ? 1.f : 0.f;
-    DriveGta5Vehicle(car, throttle, steer, brake);
-    RideGta5Vehicle(car, player);
+    DriveGta5Vehicle(car, throttle, steer, brake, dt);
+    RideGta5Vehicle(car, player, context);
     context.Set("gta5.vehicle.seated", state_->seated);
 }
 

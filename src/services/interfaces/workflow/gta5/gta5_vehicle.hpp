@@ -25,8 +25,9 @@ void UpdateGta5Vehicles(Gta5StreamState& state);
 
 /// Apply engine, steering and brake to the seated car.
 ///
-/// throttle and steer are -1..1; brake is 0..1.
+/// throttle and steer are -1..1; brake is 0..1. Steering eases toward
+/// `steer` over `dt` seconds, and its lock narrows with speed.
 void DriveGta5Vehicle(Gta5Vehicle& car, float throttle, float steer,
-                      float brake);
+                      float brake, float dt);
 
 }  // namespace sdl3cpp::services::impl

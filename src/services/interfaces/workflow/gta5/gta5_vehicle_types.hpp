@@ -31,6 +31,8 @@ struct Gta5Vehicle {
     /// HoldGta5VehiclesOverMissingGround.
     btTransform heldAt{btTransform::getIdentity()};
     bool held{false};
+    /// The front wheels' angle now, eased toward the keys.
+    float steer{0.f};
 };
 
 /// Wheel layout in metres.
