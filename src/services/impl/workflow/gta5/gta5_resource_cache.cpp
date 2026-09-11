@@ -15,9 +15,13 @@ std::shared_ptr<const Gta5Resource> AcquireGta5Resource(
 
     auto resource = std::make_shared<Gta5Resource>();
     if (!LoadGta5Resource(index.files[file], *resource)) return nullptr;
+    cache.bytes += resource->data.size();
     cache.recent.emplace_front(file, std::move(resource));
     // Callers hold a shared_ptr, so evicting one still in use is safe.
-    while (cache.recent.size() > cache.capacity) cache.recent.pop_back();
+    while (cache.bytes > cache.budget && cache.recent.size() > 1) {
+        cache.bytes -= cache.recent.back().second->data.size();
+        cache.recent.pop_back();
+    }
     return cache.recent.front().second;
 }
 
