@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/gta5/gta5_frame_stats_step.hpp"
 
+#include "services/interfaces/workflow/gta5/gta5_hitch_report.hpp"
 #include "services/interfaces/workflow/gta5/gta5_step_params.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
@@ -26,10 +27,17 @@ void WorkflowGta5FrameStatsStep::Execute(const WorkflowStepDefinition& step,
     if (last_ == 0) {
         windowStart_ = now;
     } else {
-        worstMs_ = std::max(worstMs_, static_cast<double>(now - last_) / 1e6);
+        const double ms = static_cast<double>(now - last_) / 1e6;
+        worstMs_ = std::max(worstMs_, ms);
         ++frames_;
+        if (ms > Gta5NumberOr(step, "hitch_ms", 12.f) &&
+            context.GetString("gta5.loading.text", "").empty()) {
+            ReportGta5Hitch(logger_, state_->cost, ms);
+        }
     }
     last_ = now;
+    window_.Add(state_->cost);
+    state_->cost = {};
     const double seconds = static_cast<double>(now - windowStart_) / 1e9;
     if (seconds < Gta5NumberOr(step, "interval_s", 2.f) || frames_ == 0) {
         return;
@@ -41,8 +49,8 @@ void WorkflowGta5FrameStatsStep::Execute(const WorkflowStepDefinition& step,
                   "gta5.frame: %.0f fps, worst %.1f ms, load %.2f ms, "
                   "cull %.2f ms, draw %.2f ms, %d draws, %zu groups, "
                   "%d texture binds, eye (%.0f, %.0f, %.0f)",
-                  frames_ / seconds, worstMs_, state_->loadMs / frames_,
-                  state_->cullMs / frames_, state_->drawMs / frames_,
+                  frames_ / seconds, worstMs_, window_.load / frames_,
+                  window_.cull / frames_, window_.draw / frames_,
                   context.Get<int>("gta5.tiles.drawn_last_frame", 0),
                   state_->batch.groups.size(), state_->textureBinds, eye.x,
                   eye.y, eye.z);
@@ -50,9 +58,7 @@ void WorkflowGta5FrameStatsStep::Execute(const WorkflowStepDefinition& step,
     windowStart_ = now;
     frames_ = 0;
     worstMs_ = 0.0;
-    state_->loadMs = 0.0;
-    state_->cullMs = 0.0;
-    state_->drawMs = 0.0;
+    window_ = {};
 }
 
 }  // namespace sdl3cpp::services::impl

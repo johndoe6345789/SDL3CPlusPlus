@@ -14,9 +14,11 @@ namespace sdl3cpp::services::impl {
  * Plugin ID: gta5.frame.stats
  *
  * Every interval_s (default 2), logs the frame rate, the worst frame,
- * and the CPU time gta5.tiles.load and gta5.tiles.draw took on average:
+ * and the CPU time gta5.tiles.load, cull and draw took on average:
  * enough to see where a frame goes without --trace, whose own logging
- * costs more than the frame. Runs last in the frame.
+ * costs more than the frame. Once the player is free to move, any frame
+ * over hitch_ms (default 12) is broken down step by step as it happens.
+ * Runs last in the frame.
  */
 class WorkflowGta5FrameStatsStep final : public IWorkflowStep {
 public:
@@ -34,6 +36,7 @@ private:
     std::uint64_t last_{0};
     int frames_{0};
     double worstMs_{0.0};
+    Gta5FrameCost window_;
 };
 
 }  // namespace sdl3cpp::services::impl

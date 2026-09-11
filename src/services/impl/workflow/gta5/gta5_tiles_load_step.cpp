@@ -11,7 +11,6 @@
 #include "services/interfaces/workflow_context.hpp"
 
 #include <SDL3/SDL_gpu.h>
-#include <SDL3/SDL_timer.h>
 #include <btBulletDynamicsCommon.h>
 
 #include <utility>
@@ -39,11 +38,13 @@ void WorkflowGta5TilesLoadStep::Execute(const WorkflowStepDefinition& step,
     const bool indexed = state_->assets || state_->assetsPending.valid();
     if (indexed && !Gta5AssetsReady(*state_, logger_)) return;
 
-    const std::uint64_t start = SDL_GetTicksNS();
+    const Gta5CostTimer whole(state_->cost.load);
     const Gta5LoadBudget limits =
         ReadGta5LoadBudget(step, context, state_->streaming);
-    // First, upload what the workers have finished, within a budget.
-    FinishGta5PreparedGeometry(*state_, device, limits.uploadMs, logger_);
+    {  // First, upload what the workers have finished, within a budget.
+        const Gta5CostTimer finishing(state_->cost.finish);
+        FinishGta5PreparedGeometry(*state_, device, limits.uploadMs, logger_);
+    }
 
     const std::string tilesDir = Gta5ResolvePath(
         step, context, "tiles_dir", "packages/gta5/assets/tiles");
@@ -62,10 +63,12 @@ void WorkflowGta5TilesLoadStep::Execute(const WorkflowStepDefinition& step,
                 }
                 continue;
             }
+            const Gta5CostTimer adopting(state_->cost.adopt);
             if (!TakeGta5TileRead(*state_, tile, resident, logger_)) continue;
         } else if (!resident.prefetched) {
             PrefetchGta5Tile(*state_, resident);  // rebuilt at a new band
         }
+        const Gta5CostTimer spawning(state_->cost.spawn);
         spawned += SpawnGta5TilePlacements(
             *state_, resident, budget - spawned, device, world, logger_);
     }
@@ -73,7 +76,7 @@ void WorkflowGta5TilesLoadStep::Execute(const WorkflowStepDefinition& step,
     if (spawned > 0) {
         context.Set("gta5.tiles.spawned_last_frame", spawned);
     }
-    state_->loadMs += static_cast<double>(SDL_GetTicksNS() - start) / 1e6;
+    state_->cost.spawned += spawned;
 }
 
 }  // namespace sdl3cpp::services::impl

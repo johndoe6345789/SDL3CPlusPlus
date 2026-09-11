@@ -22,7 +22,7 @@ void WorkflowGta5TilesCullStep::Execute(const WorkflowStepDefinition& step,
     if (!state_ || context.GetBool("frame_skip", false)) return;
     auto* device = context.Get<SDL_GPUDevice*>("gpu_device", nullptr);
     if (!device) return;
-    const std::uint64_t start = SDL_GetTicksNS();
+    const Gta5CostTimer timed(state_->cost.cull);
 
     const auto view =
         context.Get<glm::mat4>("render.view_matrix", glm::mat4(1.f));
@@ -43,7 +43,6 @@ void WorkflowGta5TilesCullStep::Execute(const WorkflowStepDefinition& step,
                                       "failed: ") + SDL_GetError());
         }
     }
-    state_->cullMs += static_cast<double>(SDL_GetTicksNS() - start) / 1e6;
 }
 
 }  // namespace sdl3cpp::services::impl

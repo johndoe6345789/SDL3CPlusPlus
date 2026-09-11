@@ -38,6 +38,7 @@ void WorkflowGta5TilesEvictStep::Execute(
     SweepGta5GeometryCache(
         *state_, context.Get<SDL_GPUDevice*>("gpu_device", nullptr), logger_);
     const auto ms = (SDL_GetTicksNS() - start) / 1000000u;
+    state_->cost.evict += static_cast<double>(SDL_GetTicksNS() - start) / 1e6;
     if (logger_ && ms >= 3) {
         logger_->Info("gta5.tiles.evict: " + std::to_string(ms) +
                       " ms to release " +

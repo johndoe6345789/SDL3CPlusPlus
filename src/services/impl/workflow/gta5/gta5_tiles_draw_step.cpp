@@ -42,11 +42,10 @@ void WorkflowGta5TilesDrawStep::Execute(const WorkflowStepDefinition& step,
         return;
     }
 
-    const std::uint64_t start = SDL_GetTicksNS();
+    Gta5CostTimer timed(state_->cost.draw);
     SDL_BindGPUGraphicsPipeline(draw.pass, pipeline);
     const int drawn =
         DrawGta5Instances(*state_, draw, &state_->textureBinds);
-    state_->drawMs += static_cast<double>(SDL_GetTicksNS() - start) / 1e6;
     context.Set("gta5.tiles.drawn_last_frame", drawn);
 
     std::size_t instances = 0;

@@ -2,6 +2,7 @@
 
 #include "services/interfaces/workflow/gta5/gta5_asset_index.hpp"
 #include "services/interfaces/workflow/gta5/gta5_config_types.hpp"
+#include "services/interfaces/workflow/gta5/gta5_frame_cost.hpp"
 #include "services/interfaces/workflow/gta5/gta5_geometry.hpp"
 #include "services/interfaces/workflow/gta5/gta5_instance_batch.hpp"
 #include "services/interfaces/workflow/gta5/gta5_load_pool.hpp"
@@ -70,10 +71,8 @@ struct Gta5StreamState {
     int lastDrawLogged{-1};
     /// This frame's visible instances, built by gta5.tiles.cull.
     Gta5InstanceBatch batch;
-    /// CPU ms per step since gta5.frame.stats last reported.
-    double loadMs{0.0};
-    double cullMs{0.0};
-    double drawMs{0.0};
+    /// CPU time this frame, per step; gta5.frame.stats reports it.
+    Gta5FrameCost cost;
     int textureBinds{0};
 };
 

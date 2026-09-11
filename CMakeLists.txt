@@ -807,6 +807,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_geometry_upload.cpp
         src/services/impl/workflow/gta5/gta5_grid.cpp
         src/services/impl/workflow/gta5/gta5_ground_probe.cpp
+        src/services/impl/workflow/gta5/gta5_hitch_report.cpp
         src/services/impl/workflow/gta5/gta5_indexed_texture.cpp
         src/services/impl/workflow/gta5/gta5_instance_batch_build.cpp
         src/services/impl/workflow/gta5/gta5_instance_batch_upload.cpp
