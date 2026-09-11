@@ -34,7 +34,13 @@ void WorkflowGta5LoadingTextStep::Execute(const WorkflowStepDefinition&,
     const std::string text = context.GetString("gta5.loading.text", "");
     if (uploaded_ && text == shown_) return;
     const SDL_Color amber{255, 220, 50, 255};
-    if (UploadGpuTextOverlayText(*res, cmd, text.c_str(), amber)) {
+    const bool ok = UploadGpuTextOverlayText(*res, cmd, text.c_str(), amber);
+    if (logger_) {
+        // Trace, not Info: the percentage changes a hundred times a load.
+        logger_->Trace("WorkflowGta5LoadingTextStep", "Execute",
+                       "text='" + text + "'", ok ? "uploaded" : "FAILED");
+    }
+    if (ok) {
         uploaded_ = true;
         shown_ = text;
     }

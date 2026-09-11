@@ -17,6 +17,11 @@ bool UploadGpuTextOverlayText(const GpuTextOverlayResources& res,
                                colour.a);
         SDL_RenderDebugText(res.renderer, 5.0f, 2.0f, text);
     }
+    // SDL3 batches render commands, even for a software renderer drawing
+    // into a surface, while SDL_ClearSurface acts at once. Without the
+    // flush the copy below reads a surface with the text still queued --
+    // blank -- and the label never appears.
+    SDL_FlushRenderer(res.renderer);
 
     void* mapped = SDL_MapGPUTransferBuffer(res.device, res.transfer, false);
     if (!mapped) return false;
