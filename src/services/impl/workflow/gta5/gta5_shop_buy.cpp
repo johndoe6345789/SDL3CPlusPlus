@@ -43,7 +43,7 @@ void WorkflowGta5ShopStep::SwapCar(WorkflowContext& context,
         logger_->Info("gta5.shop: " + pick.name +
                       (ok ? " is yours" : " failed"));
     }
-    settings_.car = pick.model;
+    state_->settings.car = pick.model;
     Remember(context);
     page_ = Gta5ShopPage::Closed;  // go and see it
 }

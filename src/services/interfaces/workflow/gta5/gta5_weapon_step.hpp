@@ -38,7 +38,8 @@ struct Gta5Projectile {
  * as a projectile and goes off (gta5.effects). Rounds strike what the
  * camera looks at, push cars about, and leave their mark. Publishes
  * what the HUD shows: gta5.weapon.name, .clip and .reserve. Not while
- * driving, nor with a menu or the map open.
+ * driving, nor with a menu or the map open. What is carried is kept
+ * between sessions, moments after it changes.
  */
 class WorkflowGta5WeaponStep final : public IWorkflowStep {
 public:
@@ -58,6 +59,7 @@ private:
     void Fire(WorkflowContext& context, const Gta5Weapon& weapon);
     void Throw(WorkflowContext& context, const Gta5Weapon& weapon);
     void Advance(WorkflowContext& context, float dt);
+    void Keep(WorkflowContext& context, const Gta5Inventory& in, float dt);
     void Explode(WorkflowContext& context, const glm::vec3& at, float radius,
                  float damage);
 
@@ -68,6 +70,7 @@ private:
     std::unordered_map<std::string, bool> held_;
     std::mt19937 rng_{4242};
     float cooldown_{0.f};
+    float keepIn_{0.f};  // seconds until the guns may be written again
     float wheelPick_{0.f};  // where the mouse has swung, in items
     bool wheelOpen_{false};
     bool fireHeld_{false};

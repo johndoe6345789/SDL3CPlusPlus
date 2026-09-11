@@ -908,6 +908,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_roads_load.cpp
         src/services/impl/workflow/gta5/gta5_roads_near.cpp
         src/services/impl/workflow/gta5/gta5_settings.cpp
+        src/services/impl/workflow/gta5/gta5_settings_keep.cpp
         src/services/impl/workflow/gta5/gta5_shader_surface.cpp
         src/services/impl/workflow/gta5/gta5_shader_textures.cpp
         src/services/impl/workflow/gta5/gta5_shadow_draw.cpp
@@ -983,6 +984,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_water_upload.cpp
         src/services/impl/workflow/gta5/gta5_weapon_blast.cpp
         src/services/impl/workflow/gta5/gta5_weapon_fire.cpp
+        src/services/impl/workflow/gta5/gta5_weapon_keep.cpp
         src/services/impl/workflow/gta5/gta5_weapon_load.cpp
         src/services/impl/workflow/gta5/gta5_weapon_projectile.cpp
         src/services/impl/workflow/gta5/gta5_weapon_ray.cpp

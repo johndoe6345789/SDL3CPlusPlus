@@ -8,6 +8,7 @@
 #include "services/interfaces/workflow/gta5/gta5_load_pool.hpp"
 #include "services/interfaces/workflow/gta5/gta5_resident_tile.hpp"
 #include "services/interfaces/workflow/gta5/gta5_resource_cache.hpp"
+#include "services/interfaces/workflow/gta5/gta5_settings.hpp"
 #include "services/interfaces/workflow/gta5/gta5_texture_cache.hpp"
 #include "services/interfaces/workflow/gta5/gta5_tile_coord.hpp"
 #include "services/interfaces/workflow/gta5/gta5_vehicle_types.hpp"
@@ -22,18 +23,17 @@
 
 namespace sdl3cpp::services::impl {
 
-/// Shared by the gta5.* steps. Owned by the registrar and injected into
-/// each step rather than copied through the workflow context: it holds
-/// the geometry cache and is far too large to round-trip per frame.
+/// Shared by the gta5.* steps. Owned by the registrar and injected
+/// into each step, not copied per frame: it holds the geometry cache.
 struct Gta5StreamState {
     Gta5WorldConfig world;
     Gta5StreamingConfig streaming;
+    Gta5Settings settings;  // what is kept between sessions
 
     std::unordered_map<Gta5TileCoord, Gta5ResidentTile, Gta5TileCoordHash>
         resident;
     std::unordered_map<std::string, Gta5Geometry> geometryCache;
-    /// Textures outlive individual archetypes on purpose: one is
-    /// typically shared across a whole district.
+    /// Textures outlive archetypes: one is shared across a district.
     Gta5TextureCache textureCache;
 
     /// Written by gta5.tiles.resolve, consumed by load and evict in the

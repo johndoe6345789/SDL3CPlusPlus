@@ -29,4 +29,10 @@ bool LoadGta5Settings(Gta5Settings& settings);
 /// Writes them, making the folder if it is not there.
 bool SaveGta5Settings(const Gta5Settings& settings);
 
+/// Takes the live health, armour and guns into `settings` and writes
+/// them out. An inventory holding nothing is left alone: a run whose
+/// weapons failed to load must not wipe the guns already kept.
+bool KeepGta5Settings(Gta5Settings& settings, float health, float armour,
+                      const Gta5Inventory& inventory);
+
 }  // namespace sdl3cpp::services::impl

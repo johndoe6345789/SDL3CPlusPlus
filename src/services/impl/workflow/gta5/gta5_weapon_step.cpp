@@ -72,6 +72,7 @@ void WorkflowGta5WeaponStep::Execute(const WorkflowStepDefinition& step,
     context.Set<std::string>("gta5.weapon.model",
                              armed ? weapons_[current].model : "");
     context.Set("gta5.inventory", inventory);
+    Keep(context, inventory, dt);
 }
 
 }  // namespace sdl3cpp::services::impl

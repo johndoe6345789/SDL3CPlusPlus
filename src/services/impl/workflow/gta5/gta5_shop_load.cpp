@@ -3,6 +3,7 @@
 #include "services/interfaces/workflow/gta5/gta5_step_params.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
+#include <algorithm>
 #include <fstream>
 
 namespace sdl3cpp::services::impl {
@@ -15,11 +16,18 @@ void WorkflowGta5ShopStep::Load(const WorkflowStepDefinition& step,
         step, context, "garage_file", "packages/gta5/data/garage.json"));
     weapons_ = LoadGta5Weapons(Gta5ResolvePath(
         step, context, "weapons_file", "packages/gta5/data/weapons.json"));
-    if (LoadGta5Settings(settings_)) {
-        colour_ = settings_.colour;
-        settings_.inventory.Fit(weapons_.size());
-        context.Set("gta5.inventory", settings_.inventory);
-        context.Set<float>("gta5.player.armour", settings_.armour);
+    if (LoadGta5Settings(state_->settings)) {
+        Gta5Inventory& kept = state_->settings.inventory;
+        colour_ = state_->settings.colour;
+        kept.Fit(weapons_.size());
+        // Nothing kept leaves the pistol gta5.weapon hands out, rather
+        // than a player standing there empty handed.
+        if (std::any_of(kept.clip.begin(), kept.clip.end(),
+                        [](int c) { return c >= 0; })) {
+            context.Set("gta5.inventory", kept);
+        }
+        context.Set<float>("gta5.player.armour",
+                           state_->settings.armour);
         if (logger_) logger_->Info("gta5.shop: kept in " + Gta5SettingsPath());
     }
     // The shops are the map's own points: every LS Customs and every

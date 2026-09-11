@@ -45,12 +45,12 @@ void WorkflowGta5ShopStep::FillAmmo(WorkflowContext& context) {
 }
 
 void WorkflowGta5ShopStep::Remember(WorkflowContext& context) {
-    settings_.colour = colour_;
-    settings_.armour = context.Get<float>("gta5.player.armour", 0.f);
-    settings_.health = context.Get<float>("gta5.player.health", 100.f);
-    settings_.inventory =
-        context.Get<Gta5Inventory>("gta5.inventory", Gta5Inventory{});
-    SaveGta5Settings(settings_);
+    state_->settings.colour = colour_;
+    KeepGta5Settings(
+        state_->settings,
+        context.Get<float>("gta5.player.health", 100.f),
+        context.Get<float>("gta5.player.armour", 0.f),
+        context.Get<Gta5Inventory>("gta5.inventory", Gta5Inventory{}));
 }
 
 }  // namespace sdl3cpp::services::impl

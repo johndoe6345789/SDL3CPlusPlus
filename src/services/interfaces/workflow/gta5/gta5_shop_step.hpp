@@ -66,7 +66,6 @@ private:
     Gta5Garage garage_;
     std::vector<Gta5Weapon> weapons_;
     Gta5Roads roads_;
-    Gta5Settings settings_;
     std::string roadsDir_;
     std::unordered_map<std::string, bool> held_;
     Gta5ShopPage page_{Gta5ShopPage::Closed};
