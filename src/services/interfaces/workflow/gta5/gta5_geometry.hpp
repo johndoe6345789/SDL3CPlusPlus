@@ -1,5 +1,7 @@
 #pragma once
 
+#include "services/interfaces/workflow/gta5/gta5_geometry_arena.hpp"
+
 #include <SDL3/SDL_gpu.h>
 #include <btBulletDynamicsCommon.h>
 
@@ -14,14 +16,14 @@ namespace sdl3cpp::services::impl {
 /// vertices. Splitting a drawable per material keeps most well under it.
 inline constexpr std::size_t kGta5MaxVerticesPerMesh = 65536u;
 
-/// One material's worth of an archetype: its own buffers and texture.
+/// One material's worth of an archetype: its range of the geometry
+/// arena, and its texture.
 ///
 /// A GTA V drawable is several geometries with different textures, so it
 /// cannot be one draw. The texture and sampler are borrowed from the
 /// state's texture cache and are not owned here.
 struct Gta5SubMesh {
-    SDL_GPUBuffer* vertexBuffer{nullptr};
-    SDL_GPUBuffer* indexBuffer{nullptr};
+    Gta5ArenaSlot slot;
     std::uint32_t indexCount{0};
     SDL_GPUTexture* texture{nullptr};
     SDL_GPUSampler* sampler{nullptr};

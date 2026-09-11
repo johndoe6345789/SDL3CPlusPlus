@@ -55,6 +55,15 @@ any smaller than `cull_size_ratio` of its distance; physics steps up to
 0.15 s of wall time a frame (`max_delta_time`), so a slow frame no
 longer means slow motion.
 
+Drawing is instanced. `gta5.tiles.cull` groups the visible instances by
+archetype and uploads their matrices to one storage buffer, and every map
+mesh lives in a few large vertex and index blocks (`Gta5GeometryArena`),
+so a frame binds one buffer pair rather than two per draw: SDL's Vulkan
+backend tracks each buffer a command buffer uses with a linear scan,
+which at 6,000 buffers a frame cost more than everything else together.
+`gta5.frame.stats` logs the frame rate and per-step CPU time every 2 s,
+and `SDL3CPP_PRESENT_MODE=immediate` lifts vsync to measure headroom.
+
 Skipped on purpose: grass ymaps (315 files of instance data, and GTAUtil
 turned each into ~40 MB of XML), LOD lights, occlusion, and placed
 interiors (`CMloInstanceDef`).

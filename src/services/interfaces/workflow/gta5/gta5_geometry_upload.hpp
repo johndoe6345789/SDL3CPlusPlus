@@ -16,7 +16,8 @@ namespace sdl3cpp::services::impl {
 /// Leaves `geometry` usable only if at least one submesh survived.
 /// Returns false, without throwing, on any import or GPU failure.
 bool BuildGta5Geometry(const Gta5Placement& placement, SDL_GPUDevice* device,
-                       Gta5TextureCache& textures, Gta5Geometry& geometry,
+                       Gta5GeometryArena& arena, Gta5TextureCache& textures,
+                       Gta5Geometry& geometry,
                        const std::shared_ptr<ILogger>& logger);
 
 }  // namespace sdl3cpp::services::impl

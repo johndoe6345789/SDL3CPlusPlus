@@ -24,7 +24,8 @@ void Warn(const std::shared_ptr<ILogger>& logger, const std::string& what) {
 }  // namespace
 
 bool BuildGta5Geometry(const Gta5Placement& placement, SDL_GPUDevice* device,
-                       Gta5TextureCache& textures, Gta5Geometry& geometry,
+                       Gta5GeometryArena& arena, Gta5TextureCache& textures,
+                       Gta5Geometry& geometry,
                        const std::shared_ptr<ILogger>& logger) {
     Assimp::Importer importer;
     const aiScene* scene =
@@ -49,7 +50,7 @@ bool BuildGta5Geometry(const Gta5Placement& placement, SDL_GPUDevice* device,
         try {
             // One oversized or unuploadable material must not cost the
             // rest of the building.
-            if (UploadGta5SubMesh(part, device, textures, sub,
+            if (UploadGta5SubMesh(part, device, arena, textures, sub,
                                   logger)) {
                 geometry.subMeshes.push_back(sub);
             }

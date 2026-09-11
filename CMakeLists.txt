@@ -798,6 +798,8 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_fragment_axles.cpp
         src/services/impl/workflow/gta5/gta5_frame_stats_step.cpp
         src/services/impl/workflow/gta5/gta5_frustum.cpp
+        src/services/impl/workflow/gta5/gta5_geometry_arena.cpp
+        src/services/impl/workflow/gta5/gta5_geometry_arena_upload.cpp
         src/services/impl/workflow/gta5/gta5_geometry_cache.cpp
         src/services/impl/workflow/gta5/gta5_geometry_request.cpp
         src/services/impl/workflow/gta5/gta5_geometry_upload.cpp
@@ -824,6 +826,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_player_pin.cpp
         src/services/impl/workflow/gta5/gta5_prepared_finish.cpp
         src/services/impl/workflow/gta5/gta5_prepared_geometry.cpp
+        src/services/impl/workflow/gta5/gta5_range_allocator.cpp
         src/services/impl/workflow/gta5/gta5_resource.cpp
         src/services/impl/workflow/gta5/gta5_resource_cache.cpp
         src/services/impl/workflow/gta5/gta5_resource_load.cpp

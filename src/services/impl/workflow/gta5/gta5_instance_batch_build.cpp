@@ -55,7 +55,8 @@ void BuildGta5InstanceBatch(const Gta5StreamState& state,
         ++batch.groups.back().count;
     }
     // One archetype's materials mostly use different textures, so it is
-    // the draws, not the groups, that are sorted: by texture, then tint.
+    // the draws, not the groups, that are sorted: by arena block, whose
+    // buffers are then bound once, then texture, then tint.
     batch.items.clear();
     for (const Gta5DrawGroup& group : batch.groups) {
         for (const Gta5SubMesh& sub : group.geometry->subMeshes) {
@@ -65,6 +66,9 @@ void BuildGta5InstanceBatch(const Gta5StreamState& state,
     }
     std::sort(batch.items.begin(), batch.items.end(),
               [](const Gta5DrawItem& a, const Gta5DrawItem& b) {
+                  if (a.sub->slot.block != b.sub->slot.block) {
+                      return a.sub->slot.block < b.sub->slot.block;
+                  }
                   if (a.sub->texture != b.sub->texture) {
                       return a.sub->texture < b.sub->texture;
                   }

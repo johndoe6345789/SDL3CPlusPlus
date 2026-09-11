@@ -19,6 +19,14 @@ Gta5InstancedUniforms MakeUniforms(const Gta5DrawContext& draw) {
     return vu;
 }
 
+void BindBlock(const Gta5StreamState& state, const Gta5DrawContext& draw,
+               int block) {
+    SDL_GPUBufferBinding vb = {state.arena.Vertices(block), 0};
+    SDL_BindGPUVertexBuffers(draw.pass, 0, &vb, 1);
+    SDL_GPUBufferBinding ib = {state.arena.Indices(block), 0};
+    SDL_BindGPUIndexBuffer(draw.pass, &ib, SDL_GPU_INDEXELEMENTSIZE_16BIT);
+}
+
 }  // namespace
 
 int DrawGta5Instances(const Gta5StreamState& state,
@@ -33,27 +41,26 @@ int DrawGta5Instances(const Gta5StreamState& state,
     SDL_PushGPUVertexUniformData(draw.cmd, 0, &vu, sizeof(vu));
     rendering::FragmentUniformData fu = draw.fragUniforms;
     SDL_GPUTexture* boundTexture = nullptr;
+    int boundBlock = -1;
     bool surfacePushed = false;
     int drawn = 0, binds = 0;
     for (const Gta5DrawItem& item : batch.items) {
         const Gta5SubMesh& sub = *item.sub;
-        // A submesh with no texture of its own falls back to the package
-        // default rather than being dropped.
+        if (sub.slot.block < 0) continue;
         SDL_GPUTexture* texture = sub.texture ? sub.texture : draw.texture;
         SDL_GPUSampler* sampler = sub.texture ? sub.sampler : draw.sampler;
         if (!texture || !sampler) continue;
+        if (sub.slot.block != boundBlock) {
+            BindBlock(state, draw, sub.slot.block);
+            boundBlock = sub.slot.block;
+        }
         if (texture != boundTexture) {
             SDL_GPUTextureSamplerBinding binding = {texture, sampler};
             SDL_BindGPUFragmentSamplers(draw.pass, 0, &binding, 1);
             boundTexture = texture;
             ++binds;
         }
-        SDL_GPUBufferBinding vb = {sub.vertexBuffer, 0};
-        SDL_BindGPUVertexBuffers(draw.pass, 0, &vb, 1);
-        SDL_GPUBufferBinding ib = {sub.indexBuffer, 0};
-        SDL_BindGPUIndexBuffer(draw.pass, &ib, SDL_GPU_INDEXELEMENTSIZE_16BIT);
-        // The fragment shader reads the spotlight slot as the tint and
-        // alpha threshold; the sort keeps equal ones together.
+        // Tint and alpha threshold ride in the spotlight slot.
         if (!surfacePushed || std::memcmp(fu.flash_color, sub.surface.data(),
                                           sizeof(fu.flash_color)) != 0) {
             std::memcpy(fu.flash_color, sub.surface.data(),
@@ -61,8 +68,9 @@ int DrawGta5Instances(const Gta5StreamState& state,
             SDL_PushGPUFragmentUniformData(draw.cmd, 0, &fu, sizeof(fu));
             surfacePushed = true;
         }
-        SDL_DrawGPUIndexedPrimitives(draw.pass, sub.indexCount, item.count, 0,
-                                     0, item.first);
+        SDL_DrawGPUIndexedPrimitives(
+            draw.pass, sub.indexCount, item.count, sub.slot.firstIndex,
+            static_cast<Sint32>(sub.slot.vertexOffset), item.first);
         ++drawn;
     }
     if (textureBinds) *textureBinds = binds;

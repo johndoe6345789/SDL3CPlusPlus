@@ -64,13 +64,13 @@ struct Gta5StreamState {
     /// Archetypes already reported missing, so the log says it once.
     std::unordered_set<std::string> reportedMissing;
 
-    /// Last draw count written to the log, so a steady frame stays quiet
-    /// and only real changes are reported.
+    /// Every map mesh's vertices and indices, packed.
+    Gta5GeometryArena arena;
+    /// Last instance count logged, so a steady frame stays quiet.
     int lastDrawLogged{-1};
     /// This frame's visible instances, built by gta5.tiles.cull.
     Gta5InstanceBatch batch;
-    /// CPU milliseconds tiles.load and tiles.draw have spent since
-    /// gta5.frame.stats last reported.
+    /// CPU ms per step since gta5.frame.stats last reported.
     double loadMs{0.0};
     double cullMs{0.0};
     double drawMs{0.0};
