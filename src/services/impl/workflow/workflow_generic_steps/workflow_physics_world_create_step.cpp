@@ -35,6 +35,11 @@ void WorkflowPhysicsWorldCreateStep::Execute(
     readParam("gravity_x", gravity_x);
     readParam("gravity_y", gravity_y);
     readParam("gravity_z", gravity_z);
+    // 0 updates only moving bodies' bounds each step. Bullet's default
+    // recomputes every object's, which a streamed map of tens of thousands
+    // of static pieces turned into 8-15 ms every physics step.
+    int forceUpdateAllAabbs = 1;
+    readParam("force_update_all_aabbs", forceUpdateAllAabbs);
 
     // Bullet broadphase, dispatcher, solver, world
     auto* broadphase = new btDbvtBroadphase();
@@ -44,6 +49,7 @@ void WorkflowPhysicsWorldCreateStep::Execute(
 
     auto* world = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfig);
     world->setGravity(btVector3(gravity_x, gravity_y, gravity_z));
+    world->setForceUpdateAllAabbs(forceUpdateAllAabbs != 0);
 
     // Store in context
     context.Set<btDiscreteDynamicsWorld*>("physics_world", world);

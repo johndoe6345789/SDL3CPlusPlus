@@ -3,6 +3,7 @@
 #include <SDL3/SDL_timer.h>
 
 #include <cstdint>
+#include <string>
 
 namespace sdl3cpp::services::impl {
 
@@ -17,6 +18,10 @@ struct Gta5FrameCost {
     double cull{0.0};
     double draw{0.0};
     int spawned{0};
+    /// The whole frame by phase, from gta5.frame.mark steps placed through
+    /// the frame workflow: "physics 2.1, streaming 0.4, ...". Not summed.
+    std::string phases;
+    std::uint64_t lastMark{0};
 
     void Add(const Gta5FrameCost& o) {
         load += o.load;

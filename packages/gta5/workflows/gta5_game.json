@@ -407,7 +407,10 @@
       "position": [
         0,
         200
-      ]
+      ],
+      "parameters": {
+        "force_update_all_aabbs": 0
+      }
     },
     {
       "id": "player",

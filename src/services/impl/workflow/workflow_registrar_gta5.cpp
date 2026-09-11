@@ -2,6 +2,7 @@
 
 #include "services/interfaces/workflow/gta5/gta5_stream_state.hpp"
 #include "services/interfaces/workflow/gta5/gta5_assets_index_step.hpp"
+#include "services/interfaces/workflow/gta5/gta5_frame_mark_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_frame_stats_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_loading_text_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_player_hold_step.hpp"
@@ -58,10 +59,12 @@ int RegisterGta5StreamingSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
         std::make_shared<WorkflowGta5LoadingTextStep>(logger));
     registry->RegisterStep(
         std::make_shared<WorkflowGta5FrameStatsStep>(logger, state));
+    registry->RegisterStep(
+        std::make_shared<WorkflowGta5FrameMarkStep>(logger, state));
     // The sky needs no streaming state: it is the camera and the sun.
     registry->RegisterStep(std::make_shared<WorkflowGta5SkyDrawStep>(logger));
 
-    return 15;
+    return 16;
 }
 
 }  // namespace sdl3cpp::services::impl::registrar_detail

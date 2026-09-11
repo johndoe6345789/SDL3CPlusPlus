@@ -38,6 +38,7 @@ void WorkflowGta5FrameStatsStep::Execute(const WorkflowStepDefinition& step,
     last_ = now;
     window_.Add(state_->cost);
     state_->cost = {};
+    state_->cost.lastMark = now;  // the next frame's marks count from here
     const double seconds = static_cast<double>(now - windowStart_) / 1e9;
     if (seconds < Gta5NumberOr(step, "interval_s", 2.f) || frames_ == 0) {
         return;

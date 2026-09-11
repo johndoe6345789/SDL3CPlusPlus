@@ -11,10 +11,24 @@
       "comment": "The input group is reused verbatim from quake3. It only produces move/look/jump/crouch intent, which is exactly what the q3.pm.* steps consume, so there is nothing GTA-specific to restate."
     },
     {
+      "id": "mark_input",
+      "plugin": "gta5.frame.mark",
+      "parameters": {
+        "phase": "input"
+      }
+    },
+    {
       "id": "physics_group",
       "plugin": "workflow.include",
       "parameters": {
         "path": "packages/gta5/workflows/gta5_physics.json"
+      }
+    },
+    {
+      "id": "mark_physics",
+      "plugin": "gta5.frame.mark",
+      "parameters": {
+        "phase": "physics"
       }
     },
     {
@@ -29,6 +43,13 @@
         "path": "packages/gta5/workflows/gta5_streaming.json"
       },
       "comment": "Streaming runs after movement so it centres on the origin this frame produced rather than the last one's."
+    },
+    {
+      "id": "mark_streaming",
+      "plugin": "gta5.frame.mark",
+      "parameters": {
+        "phase": "streaming"
+      }
     },
     {
       "id": "vehicle_spawn",
@@ -71,6 +92,13 @@
       "comment": "Chase camera while seated. After vehicles_sync so it reads this frame's chassis, and before render_prepare so it overrides the first-person view camera.fps.update wrote -- which, seated, is from inside the roof."
     },
     {
+      "id": "mark_vehicles",
+      "plugin": "gta5.frame.mark",
+      "parameters": {
+        "phase": "vehicles"
+      }
+    },
+    {
       "id": "render_prepare",
       "plugin": "render.prepare"
     },
@@ -83,11 +111,25 @@
       }
     },
     {
+      "id": "mark_cull",
+      "plugin": "gta5.frame.mark",
+      "parameters": {
+        "phase": "cull"
+      }
+    },
+    {
       "id": "frame_begin",
       "plugin": "frame.gpu.begin_offscreen",
       "comment": "Renders into an HDR target rather than straight to the swapchain, at twice the window's size: the composite resolves it down with a light sharpen, which keeps distant detail sharp and still.",
       "parameters": {
         "render_scale": 2.0
+      }
+    },
+    {
+      "id": "mark_acquire",
+      "plugin": "gta5.frame.mark",
+      "parameters": {
+        "phase": "acquire"
       }
     },
     {
@@ -142,6 +184,13 @@
     {
       "id": "command_buffer_submit",
       "plugin": "gpu.command_buffer_submit"
+    },
+    {
+      "id": "mark_render",
+      "plugin": "gta5.frame.mark",
+      "parameters": {
+        "phase": "render"
+      }
     },
     {
       "id": "frame_stats",
