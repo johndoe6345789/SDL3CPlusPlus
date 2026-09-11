@@ -26,6 +26,7 @@ SDL_GPUShader* CreateCompiledShader(SDL_GPUDevice* device,
     shader_info.stage      = stage;
     shader_info.num_uniform_buffers = params.numUniformBuffers;
     shader_info.num_samplers        = params.numSamplers;
+    shader_info.num_storage_buffers = params.numStorageBuffers;
 
     SDL_GPUShader* shader = SDL_CreateGPUShader(device, &shader_info);
     if (!shader) {

@@ -25,6 +25,7 @@ ShaderCompileParams ReadShaderCompileParams(const WorkflowStepDefinition& step,
     result.stage             = getStr("stage", "vertex");
     result.numUniformBuffers = getInt("num_uniform_buffers", 0);
     result.numSamplers       = getInt("num_samplers", 0);
+    result.numStorageBuffers = getInt("num_storage_buffers", 0);
     result.outputKey         = getStr("output_key", "compiled_shader");
 
     // Fallback: resolve shader_path from inputs (for JSON workflow usage).

@@ -5,6 +5,8 @@
 #include "services/interfaces/workflow/gta5/gta5_draw_probe.hpp"
 #include "services/interfaces/workflow/gta5/gta5_step_params.hpp"
 
+#include <SDL3/SDL_timer.h>
+
 #include <utility>
 
 namespace sdl3cpp::services::impl {
@@ -40,8 +42,11 @@ void WorkflowGta5TilesDrawStep::Execute(const WorkflowStepDefinition& step,
         return;
     }
 
+    const std::uint64_t start = SDL_GetTicksNS();
     SDL_BindGPUGraphicsPipeline(draw.pass, pipeline);
-    const int drawn = DrawGta5Instances(*state_, draw);
+    const int drawn =
+        DrawGta5Instances(*state_, draw, &state_->textureBinds);
+    state_->drawMs += static_cast<double>(SDL_GetTicksNS() - start) / 1e6;
     context.Set("gta5.tiles.drawn_last_frame", drawn);
 
     std::size_t instances = 0;

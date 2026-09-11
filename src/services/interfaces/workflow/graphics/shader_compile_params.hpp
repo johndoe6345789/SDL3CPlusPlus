@@ -15,6 +15,7 @@ struct ShaderCompileParams {
     std::string stage     = "vertex";
     int numUniformBuffers = 0;
     int numSamplers       = 0;
+    int numStorageBuffers = 0;
     std::string outputKey = "compiled_shader";
 };
 

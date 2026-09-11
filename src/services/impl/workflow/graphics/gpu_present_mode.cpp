@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/graphics/gpu_present_mode.hpp"
 
+#include <cstdlib>
 #include <string>
 
 namespace sdl3cpp::services::impl {
@@ -10,6 +11,11 @@ void ApplyPresentModeOverride(SDL_GPUDevice* device, SDL_Window* window,
     if (!viewportConfig.contains("present_mode")) return;
 
     std::string mode = viewportConfig["present_mode"];
+    // For benchmarking: SDL3CPP_PRESENT_MODE=immediate lifts the vsync
+    // cap without editing a package.
+    if (const char* forced = std::getenv("SDL3CPP_PRESENT_MODE")) {
+        if (*forced) mode = forced;
+    }
 
     if (mode == "auto") {
         // Query actual monitor refresh rate and pick the best present

@@ -3,6 +3,7 @@
 #include "services/interfaces/workflow/gta5/gta5_asset_index.hpp"
 #include "services/interfaces/workflow/gta5/gta5_config_types.hpp"
 #include "services/interfaces/workflow/gta5/gta5_geometry.hpp"
+#include "services/interfaces/workflow/gta5/gta5_instance_batch.hpp"
 #include "services/interfaces/workflow/gta5/gta5_load_pool.hpp"
 #include "services/interfaces/workflow/gta5/gta5_resident_tile.hpp"
 #include "services/interfaces/workflow/gta5/gta5_resource_cache.hpp"
@@ -66,6 +67,14 @@ struct Gta5StreamState {
     /// Last draw count written to the log, so a steady frame stays quiet
     /// and only real changes are reported.
     int lastDrawLogged{-1};
+    /// This frame's visible instances, built by gta5.tiles.cull.
+    Gta5InstanceBatch batch;
+    /// CPU milliseconds tiles.load and tiles.draw have spent since
+    /// gta5.frame.stats last reported.
+    double loadMs{0.0};
+    double cullMs{0.0};
+    double drawMs{0.0};
+    int textureBinds{0};
 };
 
 }  // namespace sdl3cpp::services::impl

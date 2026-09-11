@@ -2,10 +2,12 @@
 
 #include "services/interfaces/workflow/gta5/gta5_stream_state.hpp"
 #include "services/interfaces/workflow/gta5/gta5_assets_index_step.hpp"
+#include "services/interfaces/workflow/gta5/gta5_frame_stats_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_loading_text_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_player_hold_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_lod_select_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_sky_draw_step.hpp"
+#include "services/interfaces/workflow/gta5/gta5_tiles_cull_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_tiles_draw_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_vehicle_camera_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_vehicle_control_step.hpp"
@@ -37,6 +39,8 @@ int RegisterGta5StreamingSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
     registry->RegisterStep(
         std::make_shared<WorkflowGta5LodSelectStep>(logger, state));
     registry->RegisterStep(
+        std::make_shared<WorkflowGta5TilesCullStep>(logger, state));
+    registry->RegisterStep(
         std::make_shared<WorkflowGta5TilesDrawStep>(logger, state));
     registry->RegisterStep(
         std::make_shared<WorkflowGta5VehicleSpawnStep>(logger, state));
@@ -52,10 +56,12 @@ int RegisterGta5StreamingSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
         std::make_shared<WorkflowGta5PlayerHoldStep>(logger, state));
     registry->RegisterStep(
         std::make_shared<WorkflowGta5LoadingTextStep>(logger));
+    registry->RegisterStep(
+        std::make_shared<WorkflowGta5FrameStatsStep>(logger, state));
     // The sky needs no streaming state: it is the camera and the sun.
     registry->RegisterStep(std::make_shared<WorkflowGta5SkyDrawStep>(logger));
 
-    return 13;
+    return 15;
 }
 
 }  // namespace sdl3cpp::services::impl::registrar_detail

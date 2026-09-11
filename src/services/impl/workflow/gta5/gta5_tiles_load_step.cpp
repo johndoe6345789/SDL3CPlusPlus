@@ -2,6 +2,7 @@
 
 #include "services/interfaces/workflow/gta5/gta5_assets_index_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_geometry_request.hpp"
+#include "services/interfaces/workflow/gta5/gta5_load_budget.hpp"
 #include "services/interfaces/workflow/gta5/gta5_prepared_finish.hpp"
 #include "services/interfaces/workflow/gta5/gta5_spawn_tile.hpp"
 #include "services/interfaces/workflow/gta5/gta5_step_params.hpp"
@@ -10,6 +11,7 @@
 #include "services/interfaces/workflow_context.hpp"
 
 #include <SDL3/SDL_gpu.h>
+#include <SDL3/SDL_timer.h>
 #include <btBulletDynamicsCommon.h>
 
 #include <utility>
@@ -37,19 +39,16 @@ void WorkflowGta5TilesLoadStep::Execute(const WorkflowStepDefinition& step,
     const bool indexed = state_->assets || state_->assetsPending.valid();
     if (indexed && !Gta5AssetsReady(*state_, logger_)) return;
 
+    const std::uint64_t start = SDL_GetTicksNS();
+    const Gta5LoadBudget limits =
+        ReadGta5LoadBudget(step, context, state_->streaming);
     // First, upload what the workers have finished, within a budget.
-    FinishGta5PreparedGeometry(*state_, device,
-                               Gta5NumberOr(step, "upload_budget_ms", 8.f),
-                               logger_);
+    FinishGta5PreparedGeometry(*state_, device, limits.uploadMs, logger_);
 
     const std::string tilesDir = Gta5ResolvePath(
         step, context, "tiles_dir", "packages/gta5/assets/tiles");
-    int budget = Gta5ParameterOrInt(step, "max_spawns_per_frame",
-                                    state_->streaming.maxSpawnsPerFrame);
-    if (budget <= 0) budget = 64;
-    // Reading a tile's ymaps is done here; a couple a frame keeps the
-    // first frame from reading all of them at once.
-    int reads = Gta5ParameterOrInt(step, "tile_reads_per_frame", 2);
+    const int budget = limits.spawns;
+    int reads = limits.reads;
 
     int spawned = 0;
     for (const Gta5TileCoord& tile : OrderGta5TilesByDistance(*state_)) {
@@ -68,6 +67,7 @@ void WorkflowGta5TilesLoadStep::Execute(const WorkflowStepDefinition& step,
     if (spawned > 0) {
         context.Set("gta5.tiles.spawned_last_frame", spawned);
     }
+    state_->loadMs += static_cast<double>(SDL_GetTicksNS() - start) / 1e6;
 }
 
 }  // namespace sdl3cpp::services::impl

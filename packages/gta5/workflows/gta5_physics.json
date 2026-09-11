@@ -57,7 +57,7 @@
         "sensitivity": 0.003,
         "eye_height": 1.4,
         "fov": 75.0,
-        "near": 0.1,
+        "near": 0.5,
         "far": 6000.0
       }
     }

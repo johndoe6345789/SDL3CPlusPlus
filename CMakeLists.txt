@@ -790,13 +790,13 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_collision_shape.cpp
         src/services/impl/workflow/gta5/gta5_draw_context_build.cpp
         src/services/impl/workflow/gta5/gta5_draw_instances.cpp
-        src/services/impl/workflow/gta5/gta5_draw_one.cpp
         src/services/impl/workflow/gta5/gta5_draw_probe.cpp
         src/services/impl/workflow/gta5/gta5_drawable_geometry.cpp
         src/services/impl/workflow/gta5/gta5_drawable_locate.cpp
         src/services/impl/workflow/gta5/gta5_drawable_mesh.cpp
         src/services/impl/workflow/gta5/gta5_evict_plan.cpp
         src/services/impl/workflow/gta5/gta5_fragment_axles.cpp
+        src/services/impl/workflow/gta5/gta5_frame_stats_step.cpp
         src/services/impl/workflow/gta5/gta5_frustum.cpp
         src/services/impl/workflow/gta5/gta5_geometry_cache.cpp
         src/services/impl/workflow/gta5/gta5_geometry_request.cpp
@@ -804,7 +804,10 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_grid.cpp
         src/services/impl/workflow/gta5/gta5_ground_probe.cpp
         src/services/impl/workflow/gta5/gta5_indexed_texture.cpp
+        src/services/impl/workflow/gta5/gta5_instance_batch_build.cpp
+        src/services/impl/workflow/gta5/gta5_instance_batch_upload.cpp
         src/services/impl/workflow/gta5/gta5_json_file.cpp
+        src/services/impl/workflow/gta5/gta5_load_budget.cpp
         src/services/impl/workflow/gta5/gta5_load_pool.cpp
         src/services/impl/workflow/gta5/gta5_load_progress.cpp
         src/services/impl/workflow/gta5/gta5_loading_text_step.cpp
@@ -841,6 +844,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_tile_io.cpp
         src/services/impl/workflow/gta5/gta5_tile_order.cpp
         src/services/impl/workflow/gta5/gta5_tile_source.cpp
+        src/services/impl/workflow/gta5/gta5_tiles_cull_step.cpp
         src/services/impl/workflow/gta5/gta5_tiles_draw_step.cpp
         src/services/impl/workflow/gta5/gta5_tiles_evict_step.cpp
         src/services/impl/workflow/gta5/gta5_tiles_load_step.cpp

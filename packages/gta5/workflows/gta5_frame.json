@@ -75,6 +75,13 @@
       "plugin": "render.prepare"
     },
     {
+      "id": "tiles_cull",
+      "plugin": "gta5.tiles.cull",
+      "parameters": {
+        "cull_size_ratio": 0.003
+      }
+    },
+    {
       "id": "frame_begin",
       "plugin": "frame.gpu.begin_offscreen",
       "comment": "Renders into an HDR target rather than straight to the swapchain, so the composite has something to antialias and tone map."
@@ -131,6 +138,10 @@
     {
       "id": "command_buffer_submit",
       "plugin": "gpu.command_buffer_submit"
+    },
+    {
+      "id": "frame_stats",
+      "plugin": "gta5.frame.stats"
     },
     {
       "id": "composite_finish",
