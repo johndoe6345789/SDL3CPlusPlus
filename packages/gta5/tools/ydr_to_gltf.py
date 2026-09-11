@@ -211,6 +211,91 @@ def read_drawable_at(res, base):
     return parts
 
 
+def split_wheels(parts, capture=0.38):
+    """Separate a vehicle's four wheels from its chassis.
+
+    GTA V bakes the wheels into the body mesh -- one merged tyre
+    geometry spanning all four corners, with rims spread across the
+    shared detail geometries -- so they cannot be picked out by
+    geometry index. They can be picked out by position: the tyre mesh
+    gives four symmetric clusters, and any triangle sitting entirely
+    within `capture` metres of one belongs to that wheel.
+
+    Returns (chassis_parts, [wheel_parts x4]) with each wheel re-centred
+    on its own axle so the engine can place it from the physics
+    transform. Returns (parts, []) when the mesh has no tyres.
+    """
+    tyres = [p for p in parts if "tyrewall" in p[4].lower()]
+    if not tyres:
+        return parts, [], []
+
+    centres = {}
+    for x, y, z in tyres[0][0]:
+        centres.setdefault((x > 0, z > 0), []).append((x, y, z))
+    if len(centres) != 4:
+        return parts, [], []
+    # engine wheel order: front-right, front-left, rear-right, rear-left
+    order = [(True, True), (False, True), (True, False), (False, False)]
+    middle = []
+    for key in order:
+        pts = centres[key]
+        middle.append(tuple((min(c[i] for c in pts) + max(c[i] for c in pts))
+                            * 0.5 for i in range(3)))
+
+    def owner(triangle):
+        for index, centre in enumerate(middle):
+            if all(math.dist(v, centre) < capture for v in triangle):
+                return index
+        return -1
+
+    chassis = []
+    # Each wheel keeps its source materials apart: a wheel is a black
+    # tyre and a metal rim, and merging them under one texture paints
+    # the rim with the tyre.
+    wheel_parts = [{} for _ in range(4)]
+
+    for positions, normals, uvs, indices, texture in parts:
+        keep_pos, keep_nrm, keep_uv, keep_idx = [], [], [], []
+        remap = {}
+        tables = [{} for _ in range(4)]
+        for t in range(0, len(indices) - 2, 3):
+            tri = indices[t:t + 3]
+            target = owner([positions[i] for i in tri])
+            if target < 0:
+                for i in tri:
+                    if i not in remap:
+                        remap[i] = len(keep_pos)
+                        keep_pos.append(positions[i])
+                        keep_nrm.append(normals[i])
+                        keep_uv.append(uvs[i])
+                    keep_idx.append(remap[i])
+                continue
+
+            bucket = wheel_parts[target].setdefault(texture, ([], [], [], []))
+            wp, wn, wu, wi = bucket
+            table = tables[target]
+            centre = middle[target]
+            for i in tri:
+                if i not in table:
+                    table[i] = len(wp)
+                    wp.append(tuple(positions[i][k] - centre[k]
+                                    for k in range(3)))
+                    wn.append(normals[i])
+                    wu.append(uvs[i])
+                wi.append(table[i])
+        if keep_idx:
+            chassis.append((keep_pos, keep_nrm, keep_uv, keep_idx, texture))
+
+    out = []
+    for index in range(4):
+        parts_for_wheel = []
+        for texture, (wp, wn, wu, wi) in wheel_parts[index].items():
+            if wi:
+                parts_for_wheel.append((wp, wn, wu, wi, texture))
+        out.append(parts_for_wheel)
+    return chassis, out, middle
+
+
 def read_drawable(path):
     """A .ydr holds its drawable at the start of the resource.
 
@@ -336,6 +421,9 @@ def main():
     parser.add_argument("--texture-dir", dest="textures", default=None,
                         help="PNGs from ytd_to_png.py, referenced by the "
                              "materials; without it meshes are untextured")
+    parser.add_argument("--split-wheels", action="store_true",
+                        help="for vehicles: separate the four wheels into "
+                             "<name>_wheel0..3.gltf so they can turn")
     parser.add_argument("--ymap-dir", dest="ymaps", default=None,
                         help="ymap XML, to name .ydd entries by hash; "
                              "without it only loose .ydr are converted")
@@ -430,10 +518,29 @@ def main():
         except Exception:
             skipped += 1
             continue
-        if parts:
-            emit(name, parts)
-        else:
+        if not parts:
             skipped += 1
+            continue
+        if args.split_wheels:
+            chassis, wheels, axles = split_wheels(parts)
+            if wheels and any(wheels):
+                emit(name, chassis)
+                for index, wheel in enumerate(wheels):
+                    if wheel:
+                        emit("%s_wheel%d" % (name, index), wheel)
+                # The axle positions have to travel with the meshes: the
+                # engine cannot infer them from a chassis bounding box,
+                # which puts the wheels near the bumpers.
+                radius = 0.0
+                for wheel in wheels:
+                    for vertex in (wheel[0][0] if wheel else []):
+                        radius = max(radius, math.hypot(vertex[1], vertex[2]))
+                with open(os.path.join(args.dst, name + "_wheels.json"),
+                          "w", encoding="utf-8") as handle:
+                    json.dump({"axles": [list(a) for a in axles],
+                               "radius": round(radius, 4)}, handle, indent=2)
+                continue
+        emit(name, parts)
 
     from_dicts = 0
     for path in dictionaries:

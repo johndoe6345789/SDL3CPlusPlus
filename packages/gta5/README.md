@@ -251,11 +251,28 @@ Notes on how it is wired, and why:
 - Input lands a frame after it is pressed, because the physics step for
   the frame has already run by the time the control step sees the key.
 
-**The wheels do not turn or steer visually.** The taxi's wheels are part
-of the chassis drawable rather than separate ones, so the suspension
-moves the body but nothing spins. Drawing them properly means reading
-the fragment's wheel drawables and placing them from
-`getWheelTransformWS`.
+### Wheels
+
+`--split-wheels` separates a vehicle's four wheels so they turn and
+steer. GTA V bakes them into the body: one merged tyre geometry spanning
+all four corners, rims spread across the shared detail geometries, and a
+single model whose bone index is 255. They cannot be picked out by
+index -- but they can by position. The tyre mesh gives four clean
+symmetric clusters, and any triangle sitting entirely within 0.38 m of
+one belongs to that wheel.
+
+Two details that each cost a wrong-looking render:
+
+- **Each wheel keeps its source materials apart.** Merging a wheel into
+  one part paints the rim with the tyre's texture. A wheel comes out as
+  three parts: rim, detail, and black tyre.
+- **The axle positions travel with the meshes**, in a
+  `<name>_wheels.json` sidecar. Deriving them from the chassis bounding
+  box puts the wheels out by the bumpers, and the wheel meshes then draw
+  visibly detached from the car.
+
+Placement is then just `getWheelTransformWS`, which already carries both
+the steer angle and the rolling rotation Bullet integrated.
 
 ## Shaders
 

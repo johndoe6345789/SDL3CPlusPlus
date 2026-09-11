@@ -22,17 +22,24 @@ void AttachGta5Wheels(Gta5Vehicle& out, btDiscreteDynamicsWorld* world,
     out.vehicle->setCoordinateSystem(0, 1, 2);
 
     const btVector3 down(0.f, -1.f, 0.f);
-    const btVector3 axle(-1.f, 0.f, 0.f);
+    const btVector3 axis(-1.f, 0.f, 0.f);
     const float x = halfExtents.x() - setup.width * 0.5f;
     const float z = halfExtents.z() - setup.radius;
     const float y = -halfExtents.y() + setup.connectionHeight;
 
-    // Front pair steers; the rear pair drives.
+    // Front pair steers; the rear pair drives. Order is front-right,
+    // front-left, rear-right, rear-left, matching the converter.
     for (int i = 0; i < 4; ++i) {
         const bool front = i < 2;
-        const float side = (i % 2 == 0) ? 1.f : -1.f;
-        const btVector3 connection(side * x, y, front ? z : -z);
-        out.vehicle->addWheel(connection, down, axle, setup.suspensionRest,
+        btVector3 connection(((i % 2 == 0) ? 1.f : -1.f) * x, y,
+                             front ? z : -z);
+        if (setup.hasAxles) {
+            // The suspension connects above the axle; the wheel hangs
+            // down to it by the rest length.
+            connection = setup.axles[i] + btVector3(0.f, setup.suspensionRest,
+                                                    0.f);
+        }
+        out.vehicle->addWheel(connection, down, axis, setup.suspensionRest,
                               setup.radius, tuning, front);
     }
 

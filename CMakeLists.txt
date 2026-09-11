@@ -815,6 +815,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_vehicle_wheels.cpp
         src/services/impl/workflow/gta5/gta5_vehicles_sync_step.cpp
         src/services/impl/workflow/gta5/gta5_wanted_tiles.cpp
+        src/services/impl/workflow/gta5/gta5_wheel_meshes.cpp
         src/services/impl/workflow/gta5/gta5_world_config_load.cpp
         src/services/impl/workflow/workflow_definition_parser_includes.cpp
         src/services/impl/workflow/workflow_definition_parser_include_path.cpp

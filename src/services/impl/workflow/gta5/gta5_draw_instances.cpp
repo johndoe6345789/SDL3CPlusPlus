@@ -19,6 +19,10 @@ int DrawGta5Instances(const Gta5StreamState& state,
     // world, not the streamer, so they draw after it.
     for (const Gta5Vehicle& car : state.vehicles) {
         drawn += DrawGta5Instance(car.instance, draw, boundTexture);
+        if (!car.hasWheels) continue;
+        for (const Gta5Instance& wheel : car.wheels) {
+            drawn += DrawGta5Instance(wheel, draw, boundTexture);
+        }
     }
     return drawn;
 }

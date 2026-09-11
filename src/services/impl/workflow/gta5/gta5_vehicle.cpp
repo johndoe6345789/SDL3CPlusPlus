@@ -3,6 +3,7 @@
 #include "services/interfaces/workflow/gta5/gta5_geometry_upload.hpp"
 #include "services/interfaces/workflow/gta5/gta5_vehicle_body.hpp"
 #include "services/interfaces/workflow/gta5/gta5_vehicle_wheels.hpp"
+#include "services/interfaces/workflow/gta5/gta5_wheel_meshes.hpp"
 
 namespace sdl3cpp::services::impl {
 bool SpawnGta5Vehicle(Gta5StreamState& state, const std::string& modelPath,
@@ -32,9 +33,13 @@ bool SpawnGta5Vehicle(Gta5StreamState& state, const std::string& modelPath,
     world->addRigidBody(car.chassis);
     car.instance.body = car.chassis;
 
+    Gta5WheelSetup setup;
+    LoadGta5VehicleWheels(state, car, modelPath, device, setup,
+                          logger);
+
     const btVector3 half =
         static_cast<btBoxShape*>(car.chassisShape)->getHalfExtentsWithMargin();
-    AttachGta5Wheels(car, world, half, Gta5WheelSetup{});
+    AttachGta5Wheels(car, world, half, setup);
 
     // Held by the vehicle list, so the geometry sweep cannot free the
     // mesh from under a car still in the world.
@@ -51,11 +56,18 @@ bool SpawnGta5Vehicle(Gta5StreamState& state, const std::string& modelPath,
 void UpdateGta5Vehicles(Gta5StreamState& state) {
     for (Gta5Vehicle& car : state.vehicles) {
         if (!car.vehicle) continue;
-        for (int i = 0; i < car.vehicle->getNumWheels(); ++i) {
-            car.vehicle->updateWheelTransform(i, true);
-        }
         car.vehicle->getChassisWorldTransform().getOpenGLMatrix(
             car.instance.modelMatrix.data());
+        // Each wheel transform carries the steer angle and the rolling
+        // rotation Bullet integrated, so placing the mesh from it is all
+        // the turning and steering there is to do.
+        for (int i = 0; i < car.vehicle->getNumWheels(); ++i) {
+            car.vehicle->updateWheelTransform(i, true);
+            if (car.hasWheels && i < 4) {
+                car.vehicle->getWheelTransformWS(i).getOpenGLMatrix(
+                    car.wheels[i].modelMatrix.data());
+            }
+        }
     }
 }
 
