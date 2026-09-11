@@ -4,6 +4,7 @@
 #include "services/interfaces/workflow/quake3/q3_pm_constants.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
+#include <cmath>
 #include <glm/glm.hpp>
 #include <btBulletDynamicsCommon.h>
 #include <BulletCollision/CollisionDispatch/btCollisionWorld.h>
@@ -221,6 +222,12 @@ inline Q3Trace TraceBox(
         // against every surface they touch. When the sweep began in
         // contact (fraction 0) this also eases them back out.
         constexpr float kSurfaceClipEpsilon = 0.125f / 32.0f;
+        // A box that starts inside a hull -- a player stepping out of a
+        // car -- can get no normal back at all, and NaN from here on.
+        const glm::vec3 m = result.normal;
+        if (!std::isfinite(m.x + m.y + m.z) || glm::dot(m, m) < 1e-6f) {
+            result.normal = glm::vec3(0.f, 1.f, 0.f);
+        }
         glm::vec3 delta = to - from;
         result.endPos   = from + delta * result.fraction
                         + result.normal * kSurfaceClipEpsilon;
