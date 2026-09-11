@@ -142,8 +142,20 @@ writing an empty map.
 ## Textures
 
 `tools/ytd_to_png.py` extracts textures from `.ytd` dictionaries as PNG.
-Pure stdlib: the BC block decoder and the PNG writer are in the file
-rather than pulled from Pillow, matching the other tools here.
+It runs on the standard library alone -- the BC decoder and PNG writer
+are both in the file -- and uses numpy and Pillow when installed, which
+is about 14x faster and makes full-resolution extraction practical:
+2,413 downtown textures in under two minutes.
+
+Both paths are kept honest by `--self-test`, which decodes with each and
+compares byte for byte. That is not decoration; it caught a real bug the
+eye had already missed. The stdlib path decoded BC3 alpha and then let
+the colour block overwrite all four channels with opaque 255, so every
+cutout was silently lost. A birch billboard still *looked* plausible,
+because the discarded texels keep their RGB. Now BC3 comes out with
+alpha 0-255 and 24% of that billboard fully transparent, while a BC1
+building atlas is opaque throughout -- exactly as each format should
+behave.
 
 Dictionary layout, probed rather than assumed -- `+0x20` is a list of
 name hashes, `+0x30` a list of texture pointers, and per texture:
