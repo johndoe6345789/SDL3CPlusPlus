@@ -42,6 +42,10 @@ Gta5SkyUniforms BuildGta5SkyUniforms(const WorkflowStepDefinition& step,
     sky.horizon = ColourParam(step, "horizon", sky.horizon);
     sky.zenith = ColourParam(step, "zenith", sky.zenith);
     sky.zenith.a = Gta5NumberOr(step, "sun_size", sky.zenith.a);
+    sky.horizon.a = 0.f;  // no stars without a clock
+    // The clock's sky when there is a clock (gta5.time): dusk and night.
+    sky.horizon = context.Get<glm::vec4>("gta5.time.horizon", sky.horizon);
+    sky.zenith = context.Get<glm::vec4>("gta5.time.zenith", sky.zenith);
     return sky;
 }
 

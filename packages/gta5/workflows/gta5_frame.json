@@ -107,6 +107,15 @@
       }
     },
     {
+      "id": "time",
+      "plugin": "gta5.time",
+      "comment": "The clock: sun, moon and sky by the hour. Hold T to run it an hour a second.",
+      "parameters": {
+        "start_hour": 12.0,
+        "minutes_per_second": 1.0
+      }
+    },
+    {
       "id": "render_prepare",
       "plugin": "render.prepare"
     },

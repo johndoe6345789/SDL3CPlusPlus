@@ -9,12 +9,12 @@
 namespace sdl3cpp::services::impl {
 namespace {
 
-/// A stand-in for a special pass -- see Gta5ProxyKind -- which the view
-/// never draws. Land, LOD and prop "proxies" are scenery and still are.
-bool IsPassProxy(const Gta5StreamState& state, std::uint32_t hash) {
-    return state.assets && hash != 0 &&
-           ClassifyGta5Proxy(Gta5ArchetypeName(*state.assets, hash)) !=
-               Gta5ProxyKind::None;
+/// What a placement stands in for: see Gta5ProxyKind. Land, LOD and prop
+/// "proxies" are scenery.
+Gta5ProxyKind ProxyKind(const Gta5StreamState& state, std::uint32_t hash) {
+    return state.assets && hash != 0
+               ? ClassifyGta5Proxy(Gta5ArchetypeName(*state.assets, hash))
+               : Gta5ProxyKind::None;
 }
 
 }  // namespace
@@ -30,13 +30,14 @@ int SpawnGta5TilePlacements(Gta5StreamState& state,
            consumed < budget) {
         const Gta5Placement& placement =
             resident.placements[resident.spawnedCount];
+        const Gta5ProxyKind proxy = ProxyKind(state, placement.archetypeHash);
 
         // Placements authored for a finer band than the tile is drawn at
         // are skipped: at SLOD range we want the merged shells, not every
-        // railing. Nor are pass proxies drawn at all.
+        // railing. Weather proxies have no pass to feed yet.
         if (static_cast<int>(placement.lod) <
                 static_cast<int>(resident.bandAtSpawn) ||
-            IsPassProxy(state, placement.archetypeHash)) {
+            proxy == Gta5ProxyKind::Rain || proxy == Gta5ProxyKind::Smoke) {
             ++resident.spawnedCount;
             ++consumed;
             continue;
@@ -57,13 +58,15 @@ int SpawnGta5TilePlacements(Gta5StreamState& state,
         instance.modelMatrix = BuildGta5ModelMatrix(placement);
         instance.lodDist = placement.lodDist;
         instance.archetype = placement.archetypeHash;
+        instance.proxy = static_cast<std::uint8_t>(proxy);
         // Always handed over up close. Waiving it for a tile's finest band
         // kept every parent whose lodDist fell in the HD band -- and many
         // do -- drawn over its own children: blurry lumps on the road.
         instance.childLodDist = placement.childLodDist;
         // Only the finest level collides: a parent's coarse mesh, hidden
-        // up close, still stood in the road as an invisible lump.
-        if (placement.childLodDist <= 0.f) {
+        // up close, still stood in the road as an invisible lump. Proxies
+        // never do.
+        if (placement.childLodDist <= 0.f && proxy == Gta5ProxyKind::None) {
             AddGta5InstanceBody(world, placement, *geometry, instance);
         }
         resident.instances.push_back(instance);

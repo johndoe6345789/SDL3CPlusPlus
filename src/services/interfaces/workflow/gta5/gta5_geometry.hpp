@@ -60,11 +60,9 @@ struct Gta5Geometry {
     btBvhTriangleMeshShape* collisionShape{nullptr};
 };
 
-/// One placed copy of an archetype.
-///
-/// The geometry pointer addresses an element of the cache's
-/// unordered_map, whose element addresses are stable across rehashing,
-/// so it stays valid as more archetypes are cached.
+/// One placed copy of an archetype. Its geometry pointer addresses an
+/// element of the cache's unordered_map, whose element addresses are
+/// stable across rehashing, so it stays valid as more are cached.
 struct Gta5Instance {
     Gta5Geometry* geometry{nullptr};
     std::array<float, 16> modelMatrix{};
@@ -75,6 +73,7 @@ struct Gta5Instance {
     float lodDist{0.f};
     float childLodDist{0.f};
     std::uint32_t archetype{0};  // name hash, for F3
+    std::uint8_t proxy{0};  // a Gta5ProxyKind: 0 is scenery
 };
 
 }  // namespace sdl3cpp::services::impl

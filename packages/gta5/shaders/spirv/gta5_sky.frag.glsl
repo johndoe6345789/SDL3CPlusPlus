@@ -12,7 +12,7 @@ layout(set = 3, binding = 0) uniform SkyUniforms {
     mat4 u_invViewProj;   // clip space back to a world direction
     vec4 u_cameraPos;     // xyz = eye, w unused
     vec4 u_sunDir;        // xyz = direction the light travels
-    vec4 u_horizon;       // rgb = haze colour, matches the model fog
+    vec4 u_horizon;       // rgb = haze colour, matches the model fog; a = stars
     vec4 u_zenith;        // rgb = sky overhead, a = sun size
 };
 
@@ -40,6 +40,15 @@ void main() {
     color += u_horizon.rgb * haze * 0.6;
     color += vec3(1.0, 0.92, 0.78) * pow(toSun, 2200.0) * u_zenith.a;
 
+    // Stars: a sparse hash of the view direction, faded in with the
+    // night, which the clock puts in the horizon's alpha.
+    if (u_horizon.a > 0.0 && dir.y > 0.0) {
+        vec3 cell = floor(dir * 320.0);
+        float h = fract(sin(dot(cell, vec3(12.9898, 78.233, 37.719))) *
+                        43758.5453);
+        float star = step(0.9972, h) * u_horizon.a * smoothstep(0.0, 0.2, dir.y);
+        color += vec3(0.9, 0.93, 1.0) * star * (0.5 + 0.5 * fract(h * 97.0));
+    }
     // Below the horizon is ground haze, not sky: the streamed tiles run
     // out long before the view does, and an unfilled lower half reads as
     // a hole rather than as distance.

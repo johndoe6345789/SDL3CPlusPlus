@@ -55,6 +55,8 @@ struct Gta5CullOptions {
     /// would show: F2. A collider nothing visible accounts for -- a lump
     /// in the road -- then appears on top of what is normally drawn.
     bool collision{false};
+    /// Which instances: a bit per Gta5ProxyKind. The view draws scenery.
+    std::uint32_t kinds{1u};
 };
 
 /// Cull resident instances to the view, group the rest by archetype and

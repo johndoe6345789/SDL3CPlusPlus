@@ -15,6 +15,7 @@ void Collect(const Gta5StreamState& state, const Gta5Frustum& frustum,
     for (const auto& entry : state.resident) {
         for (const Gta5Instance& instance : entry.second.instances) {
             if (!instance.geometry || !instance.geometry->usable) continue;
+            if (!((options.kinds >> instance.proxy) & 1u)) continue;
             const bool shown =
                 Gta5InstanceVisible(frustum, instance, camera,
                                     options.sizeRatio, options.lodScale) ||
@@ -53,8 +54,7 @@ void BuildGta5InstanceBatch(const Gta5StreamState& state,
         batch.matrices.push_back(instance->modelMatrix);
         ++batch.groups.back().count;
     }
-    // Draws, not groups, are sorted -- an archetype's materials differ --
-    // by pipeline, arena block, texture, then tint.
+    // Draws, not groups, are sorted: by pipeline, block, texture, tint.
     batch.items.clear();
     for (const Gta5DrawGroup& group : batch.groups) {
         for (const Gta5SubMesh& sub : group.geometry->subMeshes) {
