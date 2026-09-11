@@ -21,12 +21,6 @@ namespace sdl3cpp::services::impl {
  * sprites are drawn at load, not loaded. Carries them forward by
  * physics_dt first, so they move whether anything is firing or not.
  */
-/// The sprites and the buffer the quads go through, made once.
-void SetUpGta5Effects(Gta5Effects& effects, Gta5StreamState& state,
-                      SDL_GPUDevice* device, SDL_GPUBuffer*& vertices,
-                      SDL_GPUTransferBuffer*& staging,
-                      std::uint32_t maxVertices);
-
 class WorkflowGta5EffectsDrawStep final : public IWorkflowStep {
 public:
     WorkflowGta5EffectsDrawStep(std::shared_ptr<ILogger> logger,
@@ -39,10 +33,6 @@ public:
 private:
     std::shared_ptr<ILogger> logger_;
     std::shared_ptr<Gta5StreamState> state_;
-    SDL_GPUBuffer* vertices_{nullptr};
-    SDL_GPUTransferBuffer* staging_{nullptr};
-    std::uint32_t capacity_{0};  // vertices the buffer holds
-    bool tried_{false};
 };
 
 }  // namespace sdl3cpp::services::impl

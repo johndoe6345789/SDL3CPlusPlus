@@ -1,4 +1,5 @@
 #include "services/interfaces/workflow/gta5/gta5_effects.hpp"
+#include "services/interfaces/workflow/gta5/gta5_effects_spawn.hpp"
 
 #include <algorithm>
 #include <random>

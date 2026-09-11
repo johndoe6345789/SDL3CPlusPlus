@@ -803,6 +803,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_effects_blast.cpp
         src/services/impl/workflow/gta5/gta5_effects_impact.cpp
         src/services/impl/workflow/gta5/gta5_effects_mesh.cpp
+        src/services/impl/workflow/gta5/gta5_effects_prepare_step.cpp
         src/services/impl/workflow/gta5/gta5_effects_setup.cpp
         src/services/impl/workflow/gta5/gta5_effects_spawn.cpp
         src/services/impl/workflow/gta5/gta5_effects_step.cpp
@@ -984,6 +985,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_weapon_fire.cpp
         src/services/impl/workflow/gta5/gta5_weapon_load.cpp
         src/services/impl/workflow/gta5/gta5_weapon_projectile.cpp
+        src/services/impl/workflow/gta5/gta5_weapon_ray.cpp
         src/services/impl/workflow/gta5/gta5_weapon_step.cpp
         src/services/impl/workflow/gta5/gta5_weapon_wheel.cpp
         src/services/impl/workflow/gta5/gta5_world_config_load.cpp

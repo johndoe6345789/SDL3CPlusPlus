@@ -1,4 +1,5 @@
 #include "services/interfaces/workflow/gta5/gta5_effects.hpp"
+#include "services/interfaces/workflow/gta5/gta5_effects_spawn.hpp"
 
 #include <random>
 
@@ -64,7 +65,7 @@ void SpawnGta5Tracer(Gta5Effects& effects, const glm::vec3& from,
     streak.length = far;
     streak.size = 0.035f;
     streak.colour = glm::vec3(1.f, 0.8f, 0.4f);
-    streak.life = 0.05f;
+    streak.life = 0.09f;
     streak.sprite = kGta5Puff;
     effects.particles.push_back(streak);
 }

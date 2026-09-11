@@ -168,6 +168,11 @@
       }
     },
     {
+      "id": "effects_prepare",
+      "plugin": "gta5.effects.prepare",
+      "comment": "Carries the effects forward and stages their quads before the cull submits them: a copy cannot be made once the render pass is open."
+    },
+    {
       "id": "tiles_cull",
       "plugin": "gta5.tiles.cull",
       "parameters": {

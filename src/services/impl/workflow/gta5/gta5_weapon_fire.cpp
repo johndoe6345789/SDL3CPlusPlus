@@ -1,31 +1,12 @@
 #include "services/interfaces/workflow/gta5/gta5_weapon_step.hpp"
+#include "services/interfaces/workflow/gta5/gta5_effects_spawn.hpp"
 
 #include "services/interfaces/workflow/gta5/gta5_vehicle_input.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
-#include <btBulletDynamicsCommon.h>
-
 #include <algorithm>
 
 namespace sdl3cpp::services::impl {
-
-bool Gta5ShootRay(btDiscreteDynamicsWorld* world, const glm::vec3& from,
-                  const glm::vec3& to, const btCollisionObject* skip,
-                  Gta5Shot& shot) {
-    if (!world) return false;
-    const btVector3 start(from.x, from.y, from.z);
-    const btVector3 end(to.x, to.y, to.z);
-    btCollisionWorld::ClosestRayResultCallback hit(start, end);
-    world->rayTest(start, end, hit);
-    if (!hit.hasHit() || hit.m_collisionObject == skip) return false;
-    shot.at = glm::vec3(hit.m_hitPointWorld.x(), hit.m_hitPointWorld.y(),
-                        hit.m_hitPointWorld.z());
-    shot.normal = glm::vec3(hit.m_hitNormalWorld.x(), hit.m_hitNormalWorld.y(),
-                            hit.m_hitNormalWorld.z());
-    shot.object = hit.m_collisionObject;
-    return true;
-}
-
 void WorkflowGta5WeaponStep::Fire(WorkflowContext& context,
                                   const Gta5Weapon& weapon) {
     auto* world =

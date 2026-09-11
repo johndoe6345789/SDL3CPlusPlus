@@ -1,4 +1,5 @@
 #include "services/interfaces/workflow/gta5/gta5_weapon_step.hpp"
+#include "services/interfaces/workflow/gta5/gta5_effects_spawn.hpp"
 #include "services/interfaces/workflow_context.hpp"
 #include <btBulletDynamicsCommon.h>
 #include <algorithm>

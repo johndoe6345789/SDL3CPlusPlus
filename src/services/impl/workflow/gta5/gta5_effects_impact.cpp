@@ -1,4 +1,5 @@
 #include "services/interfaces/workflow/gta5/gta5_effects.hpp"
+#include "services/interfaces/workflow/gta5/gta5_effects_spawn.hpp"
 #include <random>
 
 namespace sdl3cpp::services::impl {
@@ -37,14 +38,14 @@ void SpawnGta5Impact(Gta5Effects& effects, const glm::vec3& at,
     dust.at = at + normal * 0.05f;
     dust.velocity = normal * 0.8f;
     dust.colour = glm::vec3(0.62f, 0.58f, 0.52f);
-    dust.size = 0.12f;
-    dust.growth = 0.9f;
+    dust.size = 0.18f;
+    dust.growth = 1.2f;
     dust.drag = 3.f;
     dust.life = 0.6f;
     dust.fade = 0.7f;
     dust.sprite = kGta5Smoke;
     effects.particles.push_back(dust);
-    SpawnGta5Scorch(effects, at, normal, 0.06f, 90.f);
+    SpawnGta5Scorch(effects, at, normal, 0.1f, 90.f);
 }
 
 }  // namespace sdl3cpp::services::impl

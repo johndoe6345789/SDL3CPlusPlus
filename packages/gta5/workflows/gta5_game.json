@@ -619,8 +619,6 @@
         "color_format": "rgba16_float",
         "alpha_blend": 1,
         "depth_write": 0,
-        "depth_test": 1,
-        "has_depth": 1,
         "cull_mode": "none"
       }
     },
