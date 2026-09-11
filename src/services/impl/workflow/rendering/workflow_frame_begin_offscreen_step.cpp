@@ -36,12 +36,10 @@ void WorkflowFrameBeginOffscreenStep::Execute(
         return;
     }
 
-    // Store swapchain texture for the composite step.
     context.Set<SDL_GPUTexture*>("postfx_swapchain_texture", swap.texture);
 
-    // render_scale above 1 supersamples. frame_width/height stay the
-    // window's, for passes drawn at its size; render_width/height are
-    // the scene target's.
+    // render_scale above 1 supersamples; frame_width/height stay the
+    // window's, render_width/height are the scene target's.
     const float scale = ReadFrameRenderScale(step);
     const uint32_t renderWidth =
         std::max(1u, static_cast<uint32_t>(swap.width * scale));

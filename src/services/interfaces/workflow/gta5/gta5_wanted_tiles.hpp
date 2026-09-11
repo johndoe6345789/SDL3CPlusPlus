@@ -6,8 +6,11 @@
 
 namespace sdl3cpp::services::impl {
 
-/// Fill state.wanted with the tiles that should be resident around
-/// `centre`, capped at the configured maximum with the nearest winning.
-void ResolveGta5WantedTiles(Gta5StreamState& state, const glm::vec3& centre);
+/// Fill state.wanted with the tiles within the load radius of `origin`,
+/// where the player is, or of `lead`, where they are heading -- so tiles
+/// ahead are read before they are reached. Under the resident budget the
+/// nearest to either win.
+void ResolveGta5WantedTiles(Gta5StreamState& state, const glm::vec3& origin,
+                            const glm::vec3& lead);
 
 }  // namespace sdl3cpp::services::impl

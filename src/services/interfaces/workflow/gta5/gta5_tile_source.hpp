@@ -18,11 +18,18 @@ void ReadGta5TilePlacements(const Gta5StreamState& state,
                             std::vector<Gta5Placement>& out,
                             const std::shared_ptr<ILogger>& logger);
 
-/// Read a newly wanted tile: its placements, the band it spawns at, and
-/// every archetype it needs handed to the load pool at once.
-void ReadGta5ResidentTile(Gta5StreamState& state, const std::string& tilesDir,
-                          const Gta5TileCoord& tile,
-                          Gta5ResidentTile& resident,
-                          const std::shared_ptr<ILogger>& logger);
+/// Start reading a newly wanted tile on a thread of its own: parsing a
+/// tile's ymaps took 4-9 ms, more than a whole frame at 240 Hz.
+void StartGta5TileRead(const Gta5StreamState& state,
+                       const std::string& tilesDir, const Gta5TileCoord& tile,
+                       Gta5ResidentTile& resident,
+                       const std::shared_ptr<ILogger>& logger);
+
+/// Adopt a finished read: its placements, the band it spawns at, and
+/// every archetype it needs handed to the load pool at once. False while
+/// it is still being read.
+bool TakeGta5TileRead(Gta5StreamState& state, const Gta5TileCoord& tile,
+                      Gta5ResidentTile& resident,
+                      const std::shared_ptr<ILogger>& logger);
 
 }  // namespace sdl3cpp::services::impl

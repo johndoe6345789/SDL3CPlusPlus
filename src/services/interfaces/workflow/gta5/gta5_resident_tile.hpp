@@ -5,6 +5,7 @@
 #include "services/interfaces/workflow/gta5/gta5_placement.hpp"
 
 #include <cstddef>
+#include <future>
 #include <vector>
 
 namespace sdl3cpp::services::impl {
@@ -23,6 +24,8 @@ struct Gta5ResidentTile {
     bool placementsRead{false};
     /// Its archetypes have been handed to the load pool at bandAtSpawn.
     bool prefetched{false};
+    /// Its placements, being read on a thread of their own.
+    std::future<std::vector<Gta5Placement>> reading;
 };
 
 }  // namespace sdl3cpp::services::impl

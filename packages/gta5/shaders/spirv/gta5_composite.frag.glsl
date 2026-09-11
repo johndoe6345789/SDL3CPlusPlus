@@ -28,7 +28,7 @@ layout(location = 0) out vec4 o_color;
 const float EDGE_MIN = 0.03125;   // below this, the pixel is flat
 const float EDGE_SCALE = 0.125;   // edge threshold as a share of the max
 const float SPAN_MAX = 8.0;       // how far the blur may reach, in texels
-const float SHARPNESS = 0.6;      // 0 = gentle, 1 = strongest
+const float SHARPNESS = 1.0;      // 0 = gentle, 1 = strongest
 
 float luma(vec3 c) {
     return dot(c, vec3(0.299, 0.587, 0.114));
@@ -56,12 +56,18 @@ vec3 resolved(vec2 uv, vec2 pixel) {
                    tapped(uv + vec2(q.x, q.y)));
 }
 
+// Resolved, then gamma encoded: the sharpen works on what is displayed,
+// where the same lobe reads as crisper than it does on linear values.
+vec3 encoded(vec2 uv, vec2 pixel) {
+    return pow(resolved(uv, pixel), vec3(1.0 / 2.2));
+}
+
 vec3 supersampled(vec2 pixel) {
-    vec3 c = resolved(v_uv, pixel);
-    vec3 n = resolved(v_uv + vec2(0.0, -pixel.y), pixel);
-    vec3 s = resolved(v_uv + vec2(0.0, pixel.y), pixel);
-    vec3 w = resolved(v_uv + vec2(-pixel.x, 0.0), pixel);
-    vec3 e = resolved(v_uv + vec2(pixel.x, 0.0), pixel);
+    vec3 c = encoded(v_uv, pixel);
+    vec3 n = encoded(v_uv + vec2(0.0, -pixel.y), pixel);
+    vec3 s = encoded(v_uv + vec2(0.0, pixel.y), pixel);
+    vec3 w = encoded(v_uv + vec2(-pixel.x, 0.0), pixel);
+    vec3 e = encoded(v_uv + vec2(pixel.x, 0.0), pixel);
     // Contrast-adaptive: the headroom left between the neighbourhood's
     // extremes sets how hard a negative-lobed cross may push.
     vec3 lo = min(c, min(min(n, s), min(w, e)));
@@ -107,7 +113,9 @@ void main() {
     // One window pixel's extent in uv; the scene target is larger than
     // the window when it spans more than one texel.
     vec2 pixel = vec2(abs(dFdx(v_uv.x)), abs(dFdy(v_uv.y)));
-    vec3 result = (pixel.x > texel.x * 1.25) ? supersampled(pixel)
-                                             : fxaa(texel);
-    o_color = vec4(pow(result, vec3(1.0 / 2.2)), 1.0);
+    if (pixel.x > texel.x * 1.25) {
+        o_color = vec4(supersampled(pixel), 1.0);  // already encoded
+        return;
+    }
+    o_color = vec4(pow(fxaa(texel), vec3(1.0 / 2.2)), 1.0);
 }

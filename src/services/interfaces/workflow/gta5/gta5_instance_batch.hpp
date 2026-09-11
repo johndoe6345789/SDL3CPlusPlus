@@ -49,11 +49,12 @@ struct Gta5InstancedUniforms {
 
 /// Cull resident instances to the view, group the rest by archetype and
 /// list their draws. Vehicles are always in: few, and the camera follows
-/// one.
+/// one. `lodScale` stretches every LOD distance: above 1, finer models
+/// are kept further out.
 void BuildGta5InstanceBatch(const Gta5StreamState& state,
                             const glm::mat4& viewProj,
                             const glm::vec3& camera, float sizeRatio,
-                            Gta5InstanceBatch& batch);
+                            float lodScale, Gta5InstanceBatch& batch);
 
 /// Upload the batch's matrices on a command buffer of its own, submitted
 /// before the frame's, growing the buffers as needed.

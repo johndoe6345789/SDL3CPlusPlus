@@ -9,13 +9,14 @@ namespace sdl3cpp::services::impl {
 namespace {
 
 void Collect(const Gta5StreamState& state, const Gta5Frustum& frustum,
-             const glm::vec3& camera, float sizeRatio,
+             const glm::vec3& camera, float sizeRatio, float lodScale,
              std::vector<const Gta5Instance*>& visible) {
     visible.clear();
     for (const auto& entry : state.resident) {
         for (const Gta5Instance& instance : entry.second.instances) {
             if (!instance.geometry || !instance.geometry->usable) continue;
-            if (Gta5InstanceVisible(frustum, instance, camera, sizeRatio)) {
+            if (Gta5InstanceVisible(frustum, instance, camera, sizeRatio,
+                                    lodScale)) {
                 visible.push_back(&instance);
             }
         }
@@ -34,8 +35,8 @@ void Collect(const Gta5StreamState& state, const Gta5Frustum& frustum,
 void BuildGta5InstanceBatch(const Gta5StreamState& state,
                             const glm::mat4& viewProj,
                             const glm::vec3& camera, float sizeRatio,
-                            Gta5InstanceBatch& batch) {
-    Collect(state, MakeGta5Frustum(viewProj), camera, sizeRatio,
+                            float lodScale, Gta5InstanceBatch& batch) {
+    Collect(state, MakeGta5Frustum(viewProj), camera, sizeRatio, lodScale,
             batch.visible);
     // Copies of one archetype side by side: each run is one group.
     std::sort(batch.visible.begin(), batch.visible.end(),
