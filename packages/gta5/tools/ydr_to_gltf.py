@@ -62,6 +62,7 @@ import sys
 import xml.etree.ElementTree as ElementTree
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from shader_traits import shader_trait
 from vehicle_wheels import (face_forward, shape_wheel,
                             wheel_axles)
 from rage_resource import Resource, jenkins, to_engine  # noqa: E402
@@ -109,13 +110,20 @@ def texcoord_offset(raw, data, count, stride, blocked):
 
 
 def shader_textures(res, base=0):
-    """Diffuse texture name per shader index, empty where none is found."""
+    """Per shader index, its diffuse texture name and its own name.
+
+    The shader's name is what says whether a surface is painted
+    bodywork or a leaf billboard; the texture cannot tell you either.
+    In a G9 resource that name hash is at +0x00.
+    """
     group = res.resolve(res.u64(base + 0x10))
     if group is None:
         return []
     names = []
     for shader_ptr in res.pointer_list(group + 0x10):
         shader = res.resolve(shader_ptr)
+        trait = shader_trait(res.u32(shader), res.u8(shader + 0x39),
+                             res.u32(shader + 0x3C)) if shader else ""
         name = ""
         params = res.resolve(res.u64(shader + 0x10)) if shader else None
         if params is not None:
@@ -134,7 +142,7 @@ def shader_textures(res, base=0):
                 if candidate and not candidate.endswith(("_n", "_s")):
                     name = candidate
                     break
-        names.append(name)
+        names.append((name, trait))
     return names
 
 
@@ -204,12 +212,12 @@ def read_drawable_at(res, base):
             part = read_geometry(res, geom_ptr)
             if part is None:
                 continue
-            texture = ""
+            texture, trait = "", ""
             if mapping is not None and textures:
                 shader_index = res.u16(mapping + 2 * index)
                 if shader_index < len(textures):
-                    texture = textures[shader_index]
-            parts.append(part + (texture,))
+                    texture, trait = textures[shader_index]
+            parts.append(part + (texture, trait))
     return parts
 
 
@@ -249,14 +257,19 @@ def read_dictionary(path, by_hash):
     return out
 
 
-def write_gltf(path, parts, texture_uri):
-    """One primitive and material per part."""
+def write_gltf(path, parts, texture_uri, paint=None):
+    """One primitive and material per part.
+
+    A material is keyed by texture and trait together: the same paint
+    texture on a painted panel and on an unpainted one must not share a
+    material, or the tint leaks onto the wrong geometry.
+    """
     blob = bytearray()
     views, accessors, primitives = [], [], []
     images, gl_textures, materials = [], [], []
     material_of = {}
 
-    for positions, normals, uvs, indices, texture in parts:
+    for positions, normals, uvs, indices, texture, trait in parts:
         base = len(accessors)
         for values, fmt, kind in ((positions, "<3f", "VEC3"),
                                   (normals, "<3f", "VEC3"),
@@ -285,19 +298,25 @@ def write_gltf(path, parts, texture_uri):
                                     "TEXCOORD_0": base + 2},
                      "indices": base + 3}
         if texture:
-            if texture not in material_of:
+            key = (texture, trait)
+            if key not in material_of:
                 images.append({"uri": texture_uri(texture)})
                 gl_textures.append({"source": len(images) - 1, "sampler": 0})
-                materials.append({
-                    "name": texture,
-                    "pbrMetallicRoughness": {
-                        "baseColorTexture": {"index": len(gl_textures) - 1},
-                        "metallicFactor": 0.0,
-                        "roughnessFactor": 0.9,
-                    },
-                })
-                material_of[texture] = len(materials) - 1
-            primitive["material"] = material_of[texture]
+                pbr = {"baseColorTexture": {"index": len(gl_textures) - 1},
+                       "metallicFactor": 0.0, "roughnessFactor": 0.9}
+                material = {"name": texture, "pbrMetallicRoughness": pbr}
+                if trait == "paint" and paint:
+                    pbr["baseColorFactor"] = list(paint) + [1.0]
+                    pbr["roughnessFactor"] = 0.35
+                if trait == "cutout":
+                    # MASK, not BLEND: a cutout's alpha says "not here",
+                    # and discarding needs no sorting where blending
+                    # would.
+                    material["alphaMode"] = "MASK"
+                    material["alphaCutoff"] = 0.5
+                materials.append(material)
+                material_of[key] = len(materials) - 1
+            primitive["material"] = material_of[key]
         primitives.append(primitive)
 
     if not primitives:
@@ -347,12 +366,20 @@ def main():
                              "that carries the real one is not in the "
                              "extract, and 0.36 is a saloon's")
     parser.add_argument("--wheel-width", type=float, default=0.25)
+    parser.add_argument("--paint", default=None,
+                        help="R,G,B in 0..1 for painted bodywork. GTA V "
+                             "paint textures are a few white pixels and "
+                             "the colour comes from carcols.ymt, which is "
+                             "not in the extract, so a car without this "
+                             "renders white")
     parser.add_argument("--ymap-dir", dest="ymaps", default=None,
                         help="ymap XML, to name .ydd entries by hash; "
                              "without it only loose .ydr are converted")
     parser.add_argument("--limit", type=int, default=0,
                         help="convert at most this many, for a quick look")
     args = parser.parse_args()
+    if args.paint:
+        args.paint = [float(v) for v in args.paint.split(",")][:3]
 
     files, dictionaries = [], []
     for root, _, names in os.walk(args.src):
@@ -429,12 +456,12 @@ def main():
             wanted = available.get(part[4].lower(), "") if part[4] else ""
             if part[4] and not wanted:
                 missing.add(part[4])
-            resolved.append(part[:4] + (wanted,))
+            resolved.append(part[:4] + (wanted, part[5]))
         textured += sum(1 for p in resolved if p[4])
         untextured += sum(1 for p in resolved if not p[4])
 
         if write_gltf(os.path.join(args.dst, name + ".gltf"), resolved,
-                      texture_uri):
+                      texture_uri, args.paint):
             done += 1
         else:
             skipped += 1

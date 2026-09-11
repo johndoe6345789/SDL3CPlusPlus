@@ -23,12 +23,16 @@ rem ===================================================================
 rem --- edit these ------------------------------------------------------
 set "GTAUTIL=D:\gtautil-2.2.13\GTAUtil.exe"
 
-rem A folder of extracted .ymap files. Must be real files on disk: this
-rem cannot read them out of the install's archives.
-set "YMAP_SRC=D:\gtautil-2.2.13\levels\gta5\_citye\downtown_01\downtown_01_metadata.rpf"
+rem The extracted map. Every tool below walks it recursively, so this is
+rem the whole of Los Santos and Blaine County: 84 folders of ymaps and
+rem about 62,000 drawables. Point it at one district, such as
+rem levels\gta5\_citye\downtown_01, for a quick look.
+set "MAP_SRC=D:\gtautil-2.2.13\levels\gta5"
+set "YMAP_SRC=%MAP_SRC%"
+set "YDR_SRC=%MAP_SRC%"
 
-rem Extracted .ydr drawables, and where the converted glTF goes.
-set "YDR_SRC=D:\gtautil-2.2.13\levels\gta5\_citye\downtown_01"
+rem Where the converted glTF and PNG go.
+set "TEXTURE_SRC=D:\gta5_export\textures"
 set "MODEL_SRC=D:\gta5_export\models"
 
 rem Vehicles, and the shared wheel pack. A vehicle's .yft has no wheels
@@ -80,14 +84,22 @@ if not exist "%CACHE%" (
 )
 
 rem --- 2. placements: ymap -> XML, written beside each input ------------
+rem exportmeta takes one folder's wildcard at a time, so walk every
+rem folder that holds a ymap. About 14 s each once the cache exists.
 echo [2/5] Converting ymaps to XML...
-"%GTAUTIL%" exportmeta -i "%YMAP_SRC%\*.ymap"
+for /f "delims=" %%D in ('dir /s /b /a:-d "%YMAP_SRC%\*.ymap" ^| findstr /v /i "\.xml$"') do (
+    if not "%%~dpD"=="!LASTDIR!" (
+        set "LASTDIR=%%~dpD"
+        echo       %%~dpD
+        echo.| "%GTAUTIL%" exportmeta -i "%%~dpD*.ymap" >nul
+    )
+)
 
 set /a XMLCOUNT=0
-for %%F in ("%YMAP_SRC%\*.ymap.xml") do set /a XMLCOUNT+=1
+for /r "%YMAP_SRC%" %%F in (*.ymap.xml) do set /a XMLCOUNT+=1
 if !XMLCOUNT!==0 (
     echo.
-    echo ERROR: no .ymap.xml files appeared in "%YMAP_SRC%".
+    echo ERROR: no .ymap.xml files appeared under "%YMAP_SRC%".
     echo        exportmeta matched nothing -- check the path and that it
     echo        contains loose .ymap files.
     exit /b 1

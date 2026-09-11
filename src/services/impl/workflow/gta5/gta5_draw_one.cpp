@@ -57,9 +57,16 @@ int DrawGta5Instance(const Gta5Instance& instance,
         SDL_GPUBufferBinding ib = {sub.indexBuffer, 0};
         SDL_BindGPUIndexBuffer(draw.pass, &ib,
                                SDL_GPU_INDEXELEMENTSIZE_16BIT);
+        // The gta5 fragment shader reads the spotlight slot, which it
+        // has no use for, as this submesh's tint and alpha threshold.
+        rendering::FragmentUniformData fu = draw.fragUniforms;
+        fu.flash_color[0] = sub.surface[0];
+        fu.flash_color[1] = sub.surface[1];
+        fu.flash_color[2] = sub.surface[2];
+        fu.flash_color[3] = sub.surface[3];
+
         SDL_PushGPUVertexUniformData(draw.cmd, 0, &vu, sizeof(vu));
-        SDL_PushGPUFragmentUniformData(draw.cmd, 0, &draw.fragUniforms,
-                                       sizeof(draw.fragUniforms));
+        SDL_PushGPUFragmentUniformData(draw.cmd, 0, &fu, sizeof(fu));
         SDL_DrawGPUIndexedPrimitives(draw.pass, sub.indexCount, 1, 0, 0, 0);
         ++drawn;
     }

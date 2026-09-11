@@ -26,6 +26,15 @@ Gta5DrawContext BuildGta5DrawContext(const WorkflowStepDefinition& step,
     draw.fragUniforms.material[0] = 0.75f;  // roughness
     draw.fragUniforms.material[1] = 0.0f;   // metallic
 
+    // The sky step publishes the colour it painted the horizon; the
+    // model shader fogs to it out of the spotlight-position slot, which
+    // this package has no other use for.
+    const auto horizon = context.Get<glm::vec3>(
+        "gta5.sky.horizon", glm::vec3(0.32f, 0.38f, 0.48f));
+    draw.fragUniforms.flash_pos[0] = horizon.x;
+    draw.fragUniforms.flash_pos[1] = horizon.y;
+    draw.fragUniforms.flash_pos[2] = horizon.z;
+
     draw.texture = context.Get<SDL_GPUTexture*>(
         Gta5ParameterOr(step, "texture_key", "walls_texture_gpu"), nullptr);
     draw.sampler = context.Get<SDL_GPUSampler*>(

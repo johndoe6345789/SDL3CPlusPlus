@@ -23,6 +23,16 @@ int Gta5ParameterOrInt(const WorkflowStepDefinition& step,
     return static_cast<int>(it->second.numberValue);
 }
 
+float Gta5NumberOr(const WorkflowStepDefinition& step,
+                   const std::string& name, float fallback) {
+    const auto it = step.parameters.find(name);
+    if (it == step.parameters.end() ||
+        it->second.type != WorkflowParameterValue::Type::Number) {
+        return fallback;
+    }
+    return static_cast<float>(it->second.numberValue);
+}
+
 std::string Gta5ResolvePath(const WorkflowStepDefinition& step,
                             const WorkflowContext& context,
                             const std::string& name,

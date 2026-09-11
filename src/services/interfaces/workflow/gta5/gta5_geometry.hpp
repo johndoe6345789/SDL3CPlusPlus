@@ -25,6 +25,9 @@ struct Gta5SubMesh {
     std::uint32_t indexCount{0};
     SDL_GPUTexture* texture{nullptr};
     SDL_GPUSampler* sampler{nullptr};
+    /// rgb multiplies the texture, a is the alpha-discard threshold.
+    /// The draw pushes this as one vec4, so they travel together.
+    std::array<float, 4> surface{1.f, 1.f, 1.f, 0.f};
 };
 
 /// An archetype's mesh, uploaded once and drawn many times.

@@ -12,6 +12,10 @@ std::string Gta5ParameterOr(const WorkflowStepDefinition& step,
                             const std::string& name,
                             const std::string& fallback);
 
+/// Read a numeric parameter as a float, falling back when absent.
+float Gta5NumberOr(const WorkflowStepDefinition& step,
+                   const std::string& name, float fallback);
+
 /// Read a numeric parameter as an int, falling back when absent.
 int Gta5ParameterOrInt(const WorkflowStepDefinition& step,
                        const std::string& name, int fallback);

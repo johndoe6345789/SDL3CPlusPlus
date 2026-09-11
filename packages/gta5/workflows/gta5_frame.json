@@ -47,12 +47,37 @@
       "plugin": "gta5.vehicles.sync"
     },
     {
+      "id": "vehicle_camera",
+      "plugin": "gta5.vehicle.camera",
+      "parameters": {
+        "distance": 6.5,
+        "height": 2.2,
+        "ease": 0.18
+      },
+      "comment": "Chase camera while seated. After vehicles_sync so it reads this frame's chassis, and before render_prepare so it overrides the first-person view camera.fps.update wrote -- which, seated, is from inside the roof."
+    },
+    {
       "id": "render_prepare",
       "plugin": "render.prepare"
     },
     {
       "id": "frame_begin",
-      "plugin": "frame.gpu.begin"
+      "plugin": "frame.gpu.begin_offscreen",
+      "comment": "Renders into an HDR target rather than straight to the swapchain, so the composite has something to antialias and tone map."
+    },
+    {
+      "id": "sky_draw",
+      "plugin": "gta5.sky.draw",
+      "parameters": {
+        "horizon_r": 0.3,
+        "horizon_g": 0.36,
+        "horizon_b": 0.46,
+        "zenith_r": 0.05,
+        "zenith_g": 0.14,
+        "zenith_b": 0.42,
+        "sun_size": 8.0
+      },
+      "comment": "Before the tiles and at depth 1.0, so the city occludes it by depth test. Colours are linear: the composite applies ACES then gamma, which lifts them a long way. The horizon is also the city's fog colour -- the step publishes it -- so the two cannot drift into a band where the tiles run out."
     },
     {
       "id": "tiles_draw",

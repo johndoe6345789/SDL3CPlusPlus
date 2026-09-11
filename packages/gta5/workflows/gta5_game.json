@@ -54,6 +54,26 @@
       "name": "shader_gta5_frag_path",
       "type": "string",
       "defaultValue": "packages/gta5/shaders/msl/gta5_model.frag.metal"
+    },
+    "shader_gta5_sky_vert_path": {
+      "name": "shader_gta5_sky_vert_path",
+      "type": "string",
+      "defaultValue": "packages/gta5/shaders/msl/gta5_sky.vert.metal"
+    },
+    "shader_gta5_sky_frag_path": {
+      "name": "shader_gta5_sky_frag_path",
+      "type": "string",
+      "defaultValue": "packages/gta5/shaders/msl/gta5_sky.frag.metal"
+    },
+    "shader_postfx_vert_path": {
+      "name": "shader_postfx_vert_path",
+      "type": "string",
+      "defaultValue": "packages/seed/shaders/msl/postfx_fullscreen.vert.metal"
+    },
+    "shader_gta5_composite_frag_path": {
+      "name": "shader_gta5_composite_frag_path",
+      "type": "string",
+      "defaultValue": "packages/gta5/shaders/msl/gta5_composite.frag.metal"
     }
   },
   "nodes": [
@@ -177,7 +197,128 @@
         "vertex_shader_key": "gta5_vertex_shader",
         "fragment_shader_key": "gta5_fragment_shader",
         "vertex_format": "position_uv_lmuv_normal",
-        "pipeline_key": "gpu_pipeline_gta5"
+        "pipeline_key": "gpu_pipeline_gta5",
+        "color_format": "rgba16_float"
+      }
+    },
+    {
+      "id": "compile_gta5_sky_vert",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [
+        1300,
+        100
+      ],
+      "parameters": {
+        "stage": "vertex",
+        "output_key": "gta5_sky_vertex_shader",
+        "num_uniform_buffers": 0,
+        "num_samplers": 0
+      },
+      "inputs": {
+        "shader_path": "shader_gta5_sky_vert_path"
+      }
+    },
+    {
+      "id": "compile_gta5_sky_frag",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [
+        1300,
+        100
+      ],
+      "parameters": {
+        "stage": "fragment",
+        "output_key": "gta5_sky_fragment_shader",
+        "num_uniform_buffers": 1,
+        "num_samplers": 0
+      },
+      "inputs": {
+        "shader_path": "shader_gta5_sky_frag_path"
+      }
+    },
+    {
+      "id": "create_gta5_sky_pipeline",
+      "type": "graphics.gpu.pipeline.create",
+      "typeVersion": 1,
+      "position": [
+        1300,
+        100
+      ],
+      "parameters": {
+        "vertex_shader_key": "gta5_sky_vertex_shader",
+        "fragment_shader_key": "gta5_sky_fragment_shader",
+        "vertex_format": "none",
+        "pipeline_key": "gpu_pipeline_gta5_sky",
+        "color_format": "rgba16_float",
+        "depth_test": 1,
+        "depth_write": 0,
+        "has_depth": 1,
+        "cull_mode": "none"
+      }
+    },
+    {
+      "id": "postfx_setup",
+      "type": "postfx.setup",
+      "typeVersion": 1,
+      "position": [
+        1300,
+        100
+      ]
+    },
+    {
+      "id": "compile_postfx_vert",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [
+        1300,
+        100
+      ],
+      "parameters": {
+        "stage": "vertex",
+        "output_key": "postfx_vertex_shader",
+        "num_uniform_buffers": 0,
+        "num_samplers": 0
+      },
+      "inputs": {
+        "shader_path": "shader_postfx_vert_path"
+      }
+    },
+    {
+      "id": "compile_gta5_composite_frag",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [
+        1300,
+        100
+      ],
+      "parameters": {
+        "stage": "fragment",
+        "output_key": "gta5_composite_fragment_shader",
+        "num_uniform_buffers": 0,
+        "num_samplers": 3
+      },
+      "inputs": {
+        "shader_path": "shader_gta5_composite_frag_path"
+      }
+    },
+    {
+      "id": "create_composite_pipeline",
+      "type": "graphics.gpu.pipeline.create",
+      "typeVersion": 1,
+      "position": [
+        1300,
+        100
+      ],
+      "parameters": {
+        "vertex_shader_key": "postfx_vertex_shader",
+        "fragment_shader_key": "gta5_composite_fragment_shader",
+        "vertex_format": "none",
+        "pipeline_key": "postfx_composite_pipeline",
+        "depth_test": 0,
+        "depth_write": 0,
+        "has_depth": 0,
+        "cull_mode": "none"
       }
     },
     {
@@ -218,9 +359,9 @@
         "name": "player",
         "shape": "capsule",
         "mass": 80,
-        "pos_x": 195.0,
+        "pos_x": 193.0,
         "pos_y": 34.0,
-        "pos_z": 934.0,
+        "pos_z": 937.0,
         "radius": 0.3,
         "height": 1.0,
         "lock_rotation": 1,
@@ -258,7 +399,7 @@
         "ambient_g": 0.47,
         "ambient_b": 0.58,
         "ambient_intensity": 0.9,
-        "exposure": 1.0
+        "exposure": 0.2
       }
     },
     {
@@ -448,7 +589,7 @@
       "main": {
         "0": [
           {
-            "node": "tex_walls",
+            "node": "compile_gta5_sky_vert",
             "type": "main",
             "index": 0
           }
@@ -460,6 +601,83 @@
         "0": [
           {
             "node": "create_gta5_pipeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "compile_gta5_sky_vert": {
+      "main": {
+        "0": [
+          {
+            "node": "compile_gta5_sky_frag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "compile_gta5_sky_frag": {
+      "main": {
+        "0": [
+          {
+            "node": "create_gta5_sky_pipeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "create_gta5_sky_pipeline": {
+      "main": {
+        "0": [
+          {
+            "node": "postfx_setup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "postfx_setup": {
+      "main": {
+        "0": [
+          {
+            "node": "compile_postfx_vert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "compile_postfx_vert": {
+      "main": {
+        "0": [
+          {
+            "node": "compile_gta5_composite_frag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "compile_gta5_composite_frag": {
+      "main": {
+        "0": [
+          {
+            "node": "create_composite_pipeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "create_composite_pipeline": {
+      "main": {
+        "0": [
+          {
+            "node": "tex_walls",
             "type": "main",
             "index": 0
           }

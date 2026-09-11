@@ -791,9 +791,13 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_json_file.cpp
         src/services/impl/workflow/gta5/gta5_lod.cpp
         src/services/impl/workflow/gta5/gta5_lod_select_step.cpp
+        src/services/impl/workflow/gta5/gta5_material_surface.cpp
         src/services/impl/workflow/gta5/gta5_mesh_extract.cpp
+        src/services/impl/workflow/gta5/gta5_mesh_vertex.cpp
         src/services/impl/workflow/gta5/gta5_model_matrix.cpp
         src/services/impl/workflow/gta5/gta5_placement_parse.cpp
+        src/services/impl/workflow/gta5/gta5_sky_draw_step.cpp
+        src/services/impl/workflow/gta5/gta5_sky_uniforms.cpp
         src/services/impl/workflow/gta5/gta5_spawn_tile.cpp
         src/services/impl/workflow/gta5/gta5_step_params.cpp
         src/services/impl/workflow/gta5/gta5_streaming_config_load.cpp
@@ -808,8 +812,10 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_tiles_resolve_step.cpp
         src/services/impl/workflow/gta5/gta5_vehicle.cpp
         src/services/impl/workflow/gta5/gta5_vehicle_body.cpp
+        src/services/impl/workflow/gta5/gta5_vehicle_camera_step.cpp
         src/services/impl/workflow/gta5/gta5_vehicle_control_step.cpp
         src/services/impl/workflow/gta5/gta5_vehicle_drive.cpp
+        src/services/impl/workflow/gta5/gta5_vehicle_input.cpp
         src/services/impl/workflow/gta5/gta5_vehicle_seat.cpp
         src/services/impl/workflow/gta5/gta5_vehicle_spawn_step.cpp
         src/services/impl/workflow/gta5/gta5_vehicle_wheels.cpp

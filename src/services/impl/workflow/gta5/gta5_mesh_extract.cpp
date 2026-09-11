@@ -1,35 +1,14 @@
 #include "services/interfaces/workflow/gta5/gta5_mesh_extract.hpp"
 
+#include "services/interfaces/workflow/gta5/gta5_material_surface.hpp"
+#include "services/interfaces/workflow/gta5/gta5_mesh_vertex.hpp"
+
 #include <assimp/material.h>
 
 #include <filesystem>
 
 namespace sdl3cpp::services::impl {
 namespace {
-
-BspRenderVertex MakeVertex(const aiMesh& mesh, unsigned int i) {
-    BspRenderVertex vertex{};
-    const aiVector3D& position = mesh.mVertices[i];
-    vertex.x = position.x;
-    vertex.y = position.y;
-    vertex.z = position.z;
-
-    if (mesh.HasTextureCoords(0)) {
-        const aiVector3D& uv = mesh.mTextureCoords[0][i];
-        vertex.u = uv.x;
-        vertex.v = uv.y;
-    }
-
-    if (mesh.HasNormals()) {
-        const aiVector3D& normal = mesh.mNormals[i];
-        vertex.nx = normal.x;
-        vertex.ny = normal.y;
-        vertex.nz = normal.z;
-    } else {
-        vertex.ny = 1.f;
-    }
-    return vertex;
-}
 
 /// glTF puts the map in baseColorTexture, which assimp surfaces as
 /// BASE_COLOR and older exporters as DIFFUSE; try both.
@@ -58,9 +37,15 @@ Gta5MeshData ExtractGta5Mesh(const aiScene& scene,
         if (mesh.mNumVertices == 0 || mesh.mNumFaces == 0) continue;
         Gta5SubMeshData part;
         part.texturePath = TexturePath(scene, mesh, baseDirectory);
+        if (mesh.mMaterialIndex < scene.mNumMaterials) {
+            const std::array<float, 4> surface = ReadGta5MaterialSurface(
+                *scene.mMaterials[mesh.mMaterialIndex]);
+            part.tint = {surface[0], surface[1], surface[2]};
+            part.alphaCutoff = surface[3];
+        }
         part.vertices.reserve(mesh.mNumVertices);
         for (unsigned int i = 0; i < mesh.mNumVertices; ++i) {
-            part.vertices.push_back(MakeVertex(mesh, i));
+            part.vertices.push_back(MakeGta5Vertex(mesh, i));
         }
         for (unsigned int f = 0; f < mesh.mNumFaces; ++f) {
             // Triangulate guarantees three, but a degenerate face can

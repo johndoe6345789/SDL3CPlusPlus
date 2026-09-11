@@ -33,10 +33,10 @@ def face_forward(parts):
     normals come along unchanged.
     """
     out = []
-    for positions, normals, uvs, indices, texture in parts:
+    for positions, normals, uvs, indices, texture, trait in parts:
         out.append(([(-x, y, -z) for x, y, z in positions],
                     [(-x, y, -z) for x, y, z in normals],
-                    uvs, indices, texture))
+                    uvs, indices, texture, trait))
     return out
 
 
@@ -92,7 +92,7 @@ def shape_wheel(parts, radius, width, mirror):
     flipped back.
     """
     radial, axial = 0.0, 0.0
-    for positions, _, _, _, _ in parts:
+    for positions, *_ in parts:
         for x, y, z in positions:
             radial = max(radial, math.hypot(y, z))
             axial = max(axial, abs(x))
@@ -101,7 +101,7 @@ def shape_wheel(parts, radius, width, mirror):
     across = (width * 0.5 / axial) * (-1.0 if mirror else 1.0)
     around = radius / radial
     out = []
-    for positions, normals, uvs, indices, texture in parts:
+    for positions, normals, uvs, indices, texture, trait in parts:
         moved = [(x * across, y * around, z * around)
                  for x, y, z in positions]
         turned = [(-x, y, z) if mirror else (x, y, z) for x, y, z in normals]
@@ -109,5 +109,5 @@ def shape_wheel(parts, radius, width, mirror):
         if mirror:
             for t in range(0, len(order) - 2, 3):
                 order[t + 1], order[t + 2] = order[t + 2], order[t + 1]
-        out.append((moved, turned, uvs, order, texture))
+        out.append((moved, turned, uvs, order, texture, trait))
     return out
