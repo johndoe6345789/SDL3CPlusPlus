@@ -57,8 +57,19 @@ void LoadGta5VehicleWheels(Gta5StreamState& state, Gta5Vehicle& car,
     }
 
     car.hasWheels = found == 4;
-    if (logger && car.hasWheels) {
-        logger->Info("gta5.vehicle.spawn: 4 wheel meshes loaded");
+    if (logger) {
+        std::uint32_t indices = 0;
+        for (const Gta5Instance& wheel : car.wheels) {
+            if (!wheel.geometry) continue;
+            for (const Gta5SubMesh& sub : wheel.geometry->subMeshes) {
+                indices += sub.indexCount;
+            }
+        }
+        // Counting the indices that reached the GPU separates "no
+        // wheel files" from "wheel files that carve out to nothing".
+        logger->Info("gta5.vehicle.spawn: " + std::to_string(found) +
+                     " wheel meshes, " + std::to_string(indices) +
+                     " indices");
     }
 }
 

@@ -31,6 +31,12 @@ rem Extracted .ydr drawables, and where the converted glTF goes.
 set "YDR_SRC=D:\gtautil-2.2.13\levels\gta5\_citye\downtown_01"
 set "MODEL_SRC=D:\gta5_export\models"
 
+rem Vehicles, and the shared wheel pack. A vehicle's .yft has no wheels
+rem in it -- only a brake-disc hub per corner -- because the game
+rem instances a wheel model from wheels_mods.rpf at each axle.
+set "VEHICLE_SRC=D:\gtautil-2.2.13\levels\gta5\vehicles.rpf"
+set "WHEEL_MODEL=D:\gtautil-2.2.13\levels\gta5\vehiclemods\wheels_mods.rpf\wheel_spt_01.ydr"
+
 rem Answer to the "GTAV folder :" prompt. Must be a LEGACY install:
 rem GTAUtil predates the Enhanced edition and identifies a game folder by
 rem GTA5.exe, which Enhanced does not ship (it has GTA5_Enhanced.exe).
@@ -59,7 +65,7 @@ if not exist "%YMAP_SRC%" (
 
 rem --- 1. cache --------------------------------------------------------
 if not exist "%CACHE%" (
-    echo [1/4] Building GTAUtil cache. Slow, and only happens once.
+    echo [1/5] Building GTAUtil cache. Slow, and only happens once.
     echo.
     echo       At the "GTAV folder :" prompt, paste this and press enter:
     echo           %GTAV_DIR%
@@ -70,11 +76,11 @@ if not exist "%CACHE%" (
         exit /b 1
     )
 ) else (
-    echo [1/4] Cache already built, skipping.
+    echo [1/5] Cache already built, skipping.
 )
 
 rem --- 2. placements: ymap -> XML, written beside each input ------------
-echo [2/4] Converting ymaps to XML...
+echo [2/5] Converting ymaps to XML...
 "%GTAUTIL%" exportmeta -i "%YMAP_SRC%\*.ymap"
 
 set /a XMLCOUNT=0
@@ -90,7 +96,7 @@ echo       !XMLCOUNT! ymap XML files written.
 
 rem --- 3. pair with meshes and tile ------------------------------------
 rem --- 3. meshes: ydr -> glTF -------------------------------------------
-echo [3/4] Converting drawables to glTF...
+echo [3/5] Converting drawables to glTF...
 python "%REPO%\packages\gta5\tools\ydr_to_gltf.py" ^
     --in "%YDR_SRC%" --out "%MODEL_SRC%"
 if errorlevel 1 (
@@ -98,7 +104,16 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo [4/4] Building tiles...
+echo [4/5] Converting vehicles to glTF...
+python "%REPO%\packages\gta5\tools\ydr_to_gltf.py" ^
+    --in "%VEHICLE_SRC%" --out "%MODEL_SRC%" ^
+    --wheel-model "%WHEEL_MODEL%"
+if errorlevel 1 (
+    echo ERROR: vehicle conversion failed.
+    exit /b 1
+)
+
+echo [5/5] Building tiles...
 python "%REPO%\packages\gta5\tools\import_codewalker_export.py" ^
     --ymap-dir "%YMAP_SRC%" ^
     --model-dir "%MODEL_SRC%" ^

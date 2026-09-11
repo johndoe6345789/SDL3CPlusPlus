@@ -253,19 +253,29 @@ Notes on how it is wired, and why:
 
 ### Wheels
 
-`--split-wheels` separates a vehicle's four wheels so they turn and
-steer. GTA V bakes them into the body: one merged tyre geometry spanning
-all four corners, rims spread across the shared detail geometries, and a
-single model whose bone index is 255. They cannot be picked out by
-index -- but they can by position. The tyre mesh gives four clean
-symmetric clusters, and any triangle sitting entirely within 0.38 m of
-one belongs to that wheel.
+A vehicle's `.yft` has no wheels in it. Where each wheel belongs it
+carries only a small brake-disc hub -- for the taxi a filled disc of
+radius 0.17 m, drawn with the tyre-wall material -- because the game
+instances a wheel model chosen by the vehicle's `wheelType` and places
+one at each axle. Those models are their own pack,
+`vehiclemods/wheels_mods.rpf`, as `wheel_<family>_<nn>.ydr`: a tyre and
+a rim, modelled about the origin with the axle along x and the rim face
+towards -x.
+
+So `--wheel-model` points at one of those, the four axles are measured
+from the hubs, and each wheel is that model scaled to `--wheel-radius`
+(0.36 m, a saloon's -- the `vehicles.meta` carrying the real one is not
+in the extract) and mirrored for the right-hand side.
+
+Vehicles are also turned to face +z on the way in. GTA models face +y,
+which the axis conversion maps to -z, so a car imported as it stands
+drives backwards and has its steering on the rear axle.
 
 Two details that each cost a wrong-looking render:
 
 - **Each wheel keeps its source materials apart.** Merging a wheel into
   one part paints the rim with the tyre's texture. A wheel comes out as
-  three parts: rim, detail, and black tyre.
+  two parts: black tyre and rim.
 - **The axle positions travel with the meshes**, in a
   `<name>_wheels.json` sidecar. Deriving them from the chassis bounding
   box puts the wheels out by the bumpers, and the wheel meshes then draw
@@ -276,22 +286,25 @@ the steer angle and the rolling rotation Bullet integrated. The
 positions are exact -- the logged wheel transforms sit at the axle
 offsets to the millimetre.
 
-**Use the `_hi` variant of a vehicle.** `taxi.yft` carries an 80
-triangle tyre stub for all four wheels -- 20 each -- and carving that
-out gives hollow, spoke-like wheels at any capture radius. `taxi_hi.yft`
-carries 4,528 triangles of tyre, and splits into four wheels of about
-1,350 triangles each with rim, detail and black tyre.
+That the wheels are not in the vehicle file at all took a while to
+find, so the dead ends are worth recording. They are **not** in the
+fragment's drawable array (`+0x38`, whose count at `+0x48` is 0),
+**not** in the physics LOD children (`+0xF0` to `+0x10` to `+0xD0`, of
+which exactly one has geometry and it is untextured), and **not** in
+any of the four drawable LOD lists, which all hold a single model with
+bone index 255. The `wheelmesh_lf` strings in the file are bone and
+variant names, not geometry. Neither does the `_hi` variant help:
+`taxi_hi.yft` has 4,528 triangles of tyre-wall material, but clustered
+about each axle they are a filled disc of radius 0.17 m -- a brake
+disc, not a wheel.
 
-That took a while to find, so the dead ends are worth recording. The
-wheels are **not** in the fragment's drawable array (`+0x38`, whose
-count at `+0x48` is 0 with flag -1), **not** in the physics LOD children
-(`+0xF0` to `+0x10` to `+0xD0`, of which exactly one has geometry and it
-is untextured), and **not** in any of the four drawable LOD lists, which
-all hold a single model with bone index 255. The `wheelmesh_lf` strings
-in the file are bone and variant names, not geometry. CodeWalker selects
-a shared wheel by `wheelType` from `vehicles.meta`, which is a different
-mechanism again -- but the `_hi` model has wheels baked in, and that is
-enough here.
+The measurement that settles it is a radial histogram of that material
+about one axle in the plane perpendicular to it. A wheel would run out
+to the tyre radius; this runs out at 0.17 m and stops.
+
+Carving the body mesh near an axle, which is what this used to do,
+only ever cut holes in the wheel arches -- through which the road was
+visible, which is what the arches looked like in a screenshot.
 
 ## Shaders
 
