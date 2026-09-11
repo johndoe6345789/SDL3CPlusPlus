@@ -911,6 +911,11 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_vertex_layout.cpp
         src/services/impl/workflow/gta5/gta5_vertex_terrain.cpp
         src/services/impl/workflow/gta5/gta5_wanted_tiles.cpp
+        src/services/impl/workflow/gta5/gta5_water_load.cpp
+        src/services/impl/workflow/gta5/gta5_water_mesh.cpp
+        src/services/impl/workflow/gta5/gta5_water_step.cpp
+        src/services/impl/workflow/gta5/gta5_water_uniforms.cpp
+        src/services/impl/workflow/gta5/gta5_water_upload.cpp
         src/services/impl/workflow/gta5/gta5_world_config_load.cpp
         src/services/impl/workflow/gta5/gta5_ymap.cpp
         src/services/impl/workflow/gta5/gta5_ymap_placement.cpp

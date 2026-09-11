@@ -183,6 +183,14 @@
       }
     },
     {
+      "id": "water_draw",
+      "plugin": "gta5.water.draw",
+      "comment": "GTA V's sea, lakes and rivers from water.xml (extracted from common.rpf with GTAUtil).",
+      "parameters": {
+        "water_file": "D:/gtautil-2.2.13/extract_common/data/levels/gta5/water.xml"
+      }
+    },
+    {
       "id": "frame_end",
       "plugin": "frame.gpu.end_scene"
     },

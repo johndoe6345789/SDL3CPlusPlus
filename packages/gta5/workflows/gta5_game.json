@@ -89,6 +89,16 @@
       "name": "shader_gta5_shadow_frag_path",
       "type": "string",
       "defaultValue": "packages/gta5/shaders/msl/gta5_shadow.frag.metal"
+    },
+    "shader_gta5_water_vert_path": {
+      "name": "shader_gta5_water_vert_path",
+      "type": "string",
+      "defaultValue": "packages/gta5/shaders/msl/gta5_water.vert.metal"
+    },
+    "shader_gta5_water_frag_path": {
+      "name": "shader_gta5_water_frag_path",
+      "type": "string",
+      "defaultValue": "packages/gta5/shaders/msl/gta5_water.frag.metal"
     }
   },
   "nodes": [
@@ -348,6 +358,61 @@
         "cull_mode": "none",
         "depth_bias": 2.0,
         "depth_bias_slope": 2.5
+      }
+    },
+    {
+      "id": "compile_gta5_water_vert",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [
+        1330,
+        200
+      ],
+      "parameters": {
+        "stage": "vertex",
+        "output_key": "gta5_water_vertex_shader",
+        "num_uniform_buffers": 1,
+        "num_samplers": 0
+      },
+      "inputs": {
+        "shader_path": "shader_gta5_water_vert_path"
+      }
+    },
+    {
+      "id": "compile_gta5_water_frag",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [
+        1340,
+        200
+      ],
+      "parameters": {
+        "stage": "fragment",
+        "output_key": "gta5_water_fragment_shader",
+        "num_uniform_buffers": 1,
+        "num_samplers": 1
+      },
+      "inputs": {
+        "shader_path": "shader_gta5_water_frag_path"
+      }
+    },
+    {
+      "id": "create_gta5_water_pipeline",
+      "type": "graphics.gpu.pipeline.create",
+      "typeVersion": 1,
+      "position": [
+        1350,
+        200
+      ],
+      "parameters": {
+        "vertex_shader_key": "gta5_water_vertex_shader",
+        "fragment_shader_key": "gta5_water_fragment_shader",
+        "vertex_format": "position_uv_lmuv_normal",
+        "pipeline_key": "gpu_pipeline_gta5_water",
+        "color_format": "rgba16_float",
+        "alpha_blend": 1,
+        "depth_write": 0,
+        "cull_mode": "none"
       }
     },
     {
