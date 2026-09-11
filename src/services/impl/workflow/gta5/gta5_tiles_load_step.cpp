@@ -73,9 +73,7 @@ void WorkflowGta5TilesLoadStep::Execute(const WorkflowStepDefinition& step,
             *state_, resident, budget - spawned, device, world, logger_);
     }
 
-    if (spawned > 0) {
-        context.Set("gta5.tiles.spawned_last_frame", spawned);
-    }
+    if (spawned > 0) context.Set("gta5.tiles.spawned_last_frame", spawned);
     state_->cost.spawned += spawned;
 }
 
