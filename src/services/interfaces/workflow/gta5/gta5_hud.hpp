@@ -12,9 +12,7 @@
 #include <vector>
 
 namespace sdl3cpp::services::impl {
-
-/// The heads-up display's GPU side: the map's quad overlay, its own
-/// copy, with the gauges' art beside the lettering.
+/// The display's GPU side: the map's quad overlay, its own copy.
 struct Gta5Hud {
     Gta5MapOverlay overlay;  // pipeline, buffers, samplers, lettering
     SDL_GPUTexture* speedDial{nullptr};
@@ -28,8 +26,7 @@ struct Gta5Hud {
     bool tried{false};
     bool ready{false};
 };
-
-/// What the display shows this frame.
+/// What it shows this frame.
 struct Gta5HudState {
     float health{100.f};  // 0..100
     float armour{0.f};    // 0..100
@@ -43,28 +40,32 @@ struct Gta5HudState {
     std::string prompt;  // "E  LS CUSTOMS": a shop's door
     bool menuOpen{false};
     Gta5Menu menu;
+    Gta5Wheel wheel;
 };
-
 bool LoadGta5Hud(Gta5Hud& hud, SDL_GPUDevice* device,
                  SDL_GPUTextureFormat format, Gta5UploadBatch& uploads,
                  const std::shared_ptr<ILogger>& logger);
-
-/// The dials' faces and the needle, drawn here rather than loaded.
+/// The dials and the needle, drawn rather than loaded.
 bool CreateGta5HudArt(Gta5Hud& hud, SDL_GPUDevice* device,
                       Gta5UploadBatch& uploads);
 
-/// The needle, 64 x 64 RGBA: from the hub straight up, over a grey hub.
+/// The needle, 64 x 64 RGBA: up from a grey hub.
 std::vector<std::uint8_t> Gta5HudNeedlePixels();
 
 Gta5MapFrame BuildGta5HudFrame(const Gta5Hud& hud, int width, int height,
                                const Gta5HudState& state);
 
-/// A gauge `radius` pixels about `centre`: its face, labels every `step`
-/// from 0 to `top`, `caption` below the hub, and the needle at `value`.
+/// A gauge about `centre`: face, labels every `step` to `top`, the
+/// caption below the hub, and the needle at `value`.
 void AddGta5HudGauge(Gta5MapFrame& frame, const Gta5MapLayout& layout,
                      const Gta5Hud& hud, SDL_GPUTexture* dial,
                      glm::vec2 centre, float radius, float value, float top,
                      float step, const std::string& caption);
+
+/// The weapon wheel, in the middle.
+void AddGta5HudWheel(Gta5MapFrame& frame, const Gta5MapLayout& layout,
+                     const Gta5Hud& hud, const Gta5HudState& state, float w,
+                     float h);
 
 /// A shop's prompt at the bottom middle, or its open menu at the left.
 void AddGta5HudMenu(Gta5MapFrame& frame, const Gta5MapLayout& layout,

@@ -57,6 +57,7 @@ void WorkflowGta5SoundStep::Execute(const WorkflowStepDefinition& step,
     Feet(context, dt);
     Engine(context, dt);
     Water(context);
+    Shots(context);
 }
 
 }  // namespace sdl3cpp::services::impl

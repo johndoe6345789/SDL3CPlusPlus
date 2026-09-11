@@ -23,6 +23,8 @@ struct Gta5Sounds {
     std::vector<Gta5Clip> splash;   // falling in
     std::vector<Gta5Clip> engine;   // a loop, pitched by the revs
     std::vector<Gta5Clip> water;    // a loop: the lapping of the shore
+    std::vector<Gta5Clip> shots;    // GTA's own gunfire
+    std::vector<Gta5Clip> blasts;   // and its explosions
 };
 
 /// Every .wav in dir/steps, dir/strokes, dir/splash, dir/engine and

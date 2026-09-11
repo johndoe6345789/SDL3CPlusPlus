@@ -69,6 +69,8 @@ void WorkflowGta5WeaponStep::Execute(const WorkflowStepDefinition& step,
     context.Set<int>("gta5.weapon.clip", armed ? inventory.clip[current] : -1);
     context.Set<int>("gta5.weapon.reserve",
                      armed ? inventory.reserve[current] : 0);
+    context.Set<std::string>("gta5.weapon.model",
+                             armed ? weapons_[current].model : "");
     context.Set("gta5.inventory", inventory);
 }
 

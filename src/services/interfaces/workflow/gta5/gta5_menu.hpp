@@ -14,4 +14,11 @@ struct Gta5Menu {
     std::string hint;
 };
 
+/// The weapon wheel, while it is held open (gta5.wheel.*).
+struct Gta5Wheel {
+    std::vector<std::string> items;
+    int selected{0};
+    bool open{false};
+};
+
 }  // namespace sdl3cpp::services::impl

@@ -2,6 +2,7 @@
 
 #include "services/interfaces/i_logger.hpp"
 #include "services/interfaces/i_workflow_step.hpp"
+#include "services/interfaces/workflow/gta5/gta5_held_weapon.hpp"
 #include "services/interfaces/workflow/gta5/gta5_ped.hpp"
 #include "services/interfaces/workflow/gta5/gta5_stream_state.hpp"
 
@@ -35,6 +36,8 @@ private:
     std::shared_ptr<ILogger> logger_;
     std::shared_ptr<Gta5StreamState> state_;
     Gta5Ped ped_;
+    Gta5Geometry weapon_;
+    std::string weaponModel_;
     Gta5PedWalk walk_;
     std::vector<glm::mat4> skin_;
     std::vector<BspRenderVertex> skinned_;

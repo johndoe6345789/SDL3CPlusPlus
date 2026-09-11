@@ -829,6 +829,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_geometry_upload.cpp
         src/services/impl/workflow/gta5/gta5_grid.cpp
         src/services/impl/workflow/gta5/gta5_ground_probe.cpp
+        src/services/impl/workflow/gta5/gta5_held_weapon.cpp
         src/services/impl/workflow/gta5/gta5_hitch_report.cpp
         src/services/impl/workflow/gta5/gta5_hud_art.cpp
         src/services/impl/workflow/gta5/gta5_hud_frame.cpp
@@ -837,6 +838,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_hud_menu.cpp
         src/services/impl/workflow/gta5/gta5_hud_needle.cpp
         src/services/impl/workflow/gta5/gta5_hud_step.cpp
+        src/services/impl/workflow/gta5/gta5_hud_wheel.cpp
         src/services/impl/workflow/gta5/gta5_indexed_texture.cpp
         src/services/impl/workflow/gta5/gta5_instance_batch_build.cpp
         src/services/impl/workflow/gta5/gta5_instance_batch_upload.cpp
@@ -924,6 +926,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_sound_feet.cpp
         src/services/impl/workflow/gta5/gta5_sound_load.cpp
         src/services/impl/workflow/gta5/gta5_sound_loop.cpp
+        src/services/impl/workflow/gta5/gta5_sound_shots.cpp
         src/services/impl/workflow/gta5/gta5_sound_step.cpp
         src/services/impl/workflow/gta5/gta5_sound_synth.cpp
         src/services/impl/workflow/gta5/gta5_spawn_tile.cpp

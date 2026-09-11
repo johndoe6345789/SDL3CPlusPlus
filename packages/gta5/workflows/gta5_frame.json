@@ -115,7 +115,8 @@
       "plugin": "gta5.player.character",
       "parameters": {
         "ped_dir": "D:/gtautil-2.2.13/models/cdimages/componentpeds_a_m_y.rpf",
-        "ped": "a_m_y_hipster_01"
+        "ped": "a_m_y_hipster_01",
+        "weapons_dir": "D:/gtautil-2.2.13/models/cdimages/weapons.rpf"
       }
     },
     {

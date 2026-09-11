@@ -40,6 +40,8 @@ private:
     void Feet(WorkflowContext& context, float dt);
     void Engine(WorkflowContext& context, float dt);
     void Water(WorkflowContext& context);
+    /// GTA's gunfire and explosions, as the weapon counts them.
+    void Shots(WorkflowContext& context);
 
     std::shared_ptr<ILogger> logger_;
     std::shared_ptr<Gta5StreamState> state_;
@@ -57,6 +59,8 @@ private:
     float strokePhase_{0.f};  // 0..1 through a stroke
     float revs_{0.f};         // 0 idle .. 1 the top of a gear
     int car_{-1};             // the car last driven, its engine running
+    int shots_{0};
+    int blasts_{0};
     bool wasSwimming_{false};
     bool tried_{false};
 };

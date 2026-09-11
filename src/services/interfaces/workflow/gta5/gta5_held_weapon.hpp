@@ -1,0 +1,28 @@
+#pragma once
+
+#include "services/interfaces/workflow/gta5/gta5_ped.hpp"
+#include "services/interfaces/workflow/gta5/gta5_stream_state.hpp"
+
+#include <memory>
+#include <string>
+#include <vector>
+
+namespace sdl3cpp::services::impl {
+
+/// Where the right hand is in the ped's own space this frame: its posed
+/// bone. False when the skeleton has no such bone.
+bool Gta5HandMatrix(const Gta5Skeleton& skeleton,
+                    const std::vector<glm::mat4>& skin, glm::mat4& hand);
+
+/// The gun in the hand. `want` is a weapons.rpf model (w_pi_pistol and
+/// the like) held in `dir`; it is read once and kept in `geometry`,
+/// with `loaded` saying which is there. The instance is added to the
+/// character, so it is drawn and culled with the player.
+void AddGta5HeldWeapon(Gta5StreamState& state, SDL_GPUDevice* device,
+                       const Gta5Ped& ped, const std::vector<glm::mat4>& skin,
+                       const glm::mat4& model, const std::string& dir,
+                       const std::string& want, Gta5Geometry& geometry,
+                       std::string& loaded,
+                       const std::shared_ptr<ILogger>& logger);
+
+}  // namespace sdl3cpp::services::impl

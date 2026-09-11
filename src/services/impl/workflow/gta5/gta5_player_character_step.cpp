@@ -20,11 +20,9 @@ namespace sdl3cpp::services::impl {
 WorkflowGta5PlayerCharacterStep::WorkflowGta5PlayerCharacterStep(
     std::shared_ptr<ILogger> logger, std::shared_ptr<Gta5StreamState> state)
     : logger_(std::move(logger)), state_(std::move(state)) {}
-
 std::string WorkflowGta5PlayerCharacterStep::GetPluginId() const {
     return "gta5.player.character";
 }
-
 void WorkflowGta5PlayerCharacterStep::Load(const WorkflowStepDefinition& step,
                                            SDL_GPUDevice* device) {
     tried_ = true;
@@ -34,7 +32,6 @@ void WorkflowGta5PlayerCharacterStep::Load(const WorkflowStepDefinition& step,
         {"head_000_r", "hair_000_r", "uppr_000_r", "lowr_000_u"}};
     LoadGta5Ped(*state_, device, spec, ped_, logger_);
 }
-
 void WorkflowGta5PlayerCharacterStep::Execute(
     const WorkflowStepDefinition& step, WorkflowContext& context) {
     if (!state_) return;
@@ -74,6 +71,10 @@ void WorkflowGta5PlayerCharacterStep::Execute(
     std::memcpy(instance.modelMatrix.data(), glm::value_ptr(model),
                 sizeof(float) * 16);
     state_->character.push_back(instance);
+    AddGta5HeldWeapon(*state_, device, ped_, skin_, model,
+                      Gta5ParameterOr(step, "weapons_dir", ""),
+                      context.GetString("gta5.weapon.model", ""), weapon_,
+                      weaponModel_, logger_);
 }
 
 }  // namespace sdl3cpp::services::impl

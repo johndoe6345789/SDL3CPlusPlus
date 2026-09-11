@@ -45,7 +45,8 @@ Gta5Sounds LoadGta5Sounds(const std::filesystem::path& dir,
     const std::pair<const char*, std::vector<Gta5Clip>*> kinds[] = {
         {"steps", &sounds.steps},   {"strokes", &sounds.strokes},
         {"splash", &sounds.splash}, {"engine", &sounds.engine},
-        {"water", &sounds.water}};
+        {"water", &sounds.water},   {"weapons", &sounds.shots},
+        {"explosions", &sounds.blasts}};
     std::string report;
     for (const auto& [name, set] : kinds) {
         *set = LoadSet(dir / name);

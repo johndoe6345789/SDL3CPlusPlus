@@ -13,6 +13,19 @@ void WorkflowGta5WeaponStep::Load(const WorkflowStepDefinition& step,
     loaded_ = true;
     weapons_ = LoadGta5Weapons(Gta5ResolvePath(
         step, context, "weapons_file", "packages/gta5/data/weapons.json"));
+    // A pistol to be going on with, as GTA gives one early.
+    auto inventory =
+        context.Get<Gta5Inventory>("gta5.inventory", Gta5Inventory{});
+    inventory.Fit(weapons_.size());
+    const auto owns = std::count_if(inventory.clip.begin(),
+                                    inventory.clip.end(),
+                                    [](int c) { return c >= 0; });
+    if (owns == 0 && !weapons_.empty()) {
+        inventory.clip[0] = weapons_[0].clip;
+        inventory.reserve[0] = weapons_[0].max;
+        inventory.current = 0;
+        context.Set("gta5.inventory", inventory);
+    }
     if (logger_) {
         logger_->Info("gta5.weapon: " + std::to_string(weapons_.size()) +
                       " weapons");

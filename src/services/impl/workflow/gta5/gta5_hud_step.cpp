@@ -50,6 +50,12 @@ void WorkflowGta5HudStep::Execute(const WorkflowStepDefinition&,
     s.prompt = context.GetString("gta5.prompt", "");
     s.menuOpen = context.GetBool("gta5.menu.open", false);
     if (s.menuOpen) s.menu = context.Get<Gta5Menu>("gta5.menu", Gta5Menu{});
+    s.wheel.open = context.GetBool("gta5.wheel.open", false);
+    if (s.wheel.open) {
+        s.wheel.items = context.Get<std::vector<std::string>>(
+            "gta5.wheel.items", {});
+        s.wheel.selected = context.Get<int>("gta5.wheel.selected", 0);
+    }
     const Gta5MapFrame frame = BuildGta5HudFrame(
         hud_, static_cast<int>(context.Get<uint32_t>("frame_width", 1280u)),
         static_cast<int>(context.Get<uint32_t>("frame_height", 960u)), s);
