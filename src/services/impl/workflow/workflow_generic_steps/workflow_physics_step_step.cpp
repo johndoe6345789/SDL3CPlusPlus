@@ -29,12 +29,18 @@ void WorkflowPhysicsStepStep::Execute(
     WorkflowStepParameterResolver paramResolver;
     float dt = 0.0f;  // sentinel: 0 means "compute real dt"
     int maxSubSteps = 10;
+    float maxDelta = 1.0f / 30.0f;
 
     if (const auto* p = paramResolver.FindParameter(step, "delta_time")) {
         if (p->type == WorkflowParameterValue::Type::Number) dt = static_cast<float>(p->numberValue);
     }
     if (const auto* p = paramResolver.FindParameter(step, "max_sub_steps")) {
         if (p->type == WorkflowParameterValue::Type::Number) maxSubSteps = static_cast<int>(p->numberValue);
+    }
+    // A package that streams heavily can raise the cap: at 5 fps a 1/30 cap
+    // runs the world at a sixth of real time. maxSubSteps must cover it.
+    if (const auto* p = paramResolver.FindParameter(step, "max_delta_time")) {
+        if (p->type == WorkflowParameterValue::Type::Number) maxDelta = static_cast<float>(p->numberValue);
     }
 
     // When delta_time isn't pinned in the workflow, derive it from the real
@@ -45,7 +51,7 @@ void WorkflowPhysicsStepStep::Execute(
         const Uint64 now = SDL_GetTicksNS();
         if (last_tick_ns_ != 0) {
             dt = static_cast<float>(static_cast<double>(now - last_tick_ns_) / 1e9);
-            dt = std::clamp(dt, 1.0f / 600.0f, 1.0f / 30.0f);
+            dt = std::clamp(dt, 1.0f / 600.0f, maxDelta);
         } else {
             dt = 1.0f / 60.0f;
         }

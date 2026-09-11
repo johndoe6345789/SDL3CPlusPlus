@@ -36,6 +36,8 @@ int DrawGta5Instance(const Gta5Instance& instance,
     std::memcpy(glm::value_ptr(model), instance.modelMatrix.data(),
                 sizeof(float) * 16);
     const rendering::VertexUniformData vu = MakeVertexUniforms(draw, model);
+    // Uniforms stay pushed for every draw after, so once per instance.
+    SDL_PushGPUVertexUniformData(draw.cmd, 0, &vu, sizeof(vu));
 
     int drawn = 0;
     for (const Gta5SubMesh& sub : geometry->subMeshes) {
@@ -65,7 +67,6 @@ int DrawGta5Instance(const Gta5Instance& instance,
         fu.flash_color[2] = sub.surface[2];
         fu.flash_color[3] = sub.surface[3];
 
-        SDL_PushGPUVertexUniformData(draw.cmd, 0, &vu, sizeof(vu));
         SDL_PushGPUFragmentUniformData(draw.cmd, 0, &fu, sizeof(fu));
         SDL_DrawGPUIndexedPrimitives(draw.pass, sub.indexCount, 1, 0, 0, 0);
         ++drawn;

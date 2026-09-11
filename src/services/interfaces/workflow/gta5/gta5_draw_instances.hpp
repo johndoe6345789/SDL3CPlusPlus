@@ -17,6 +17,8 @@ struct Gta5DrawContext {
     glm::mat4 proj{1.f};
     glm::mat4 shadowVP{1.f};
     glm::vec3 cameraPos{0.f};
+    /// Instances smaller than this fraction of their distance are culled.
+    float cullSizeRatio{0.f};
     rendering::FragmentUniformData fragUniforms{};
     SDL_GPUTexture* texture{nullptr};
     SDL_GPUSampler* sampler{nullptr};
@@ -24,7 +26,7 @@ struct Gta5DrawContext {
     SDL_GPUSampler* shadowSampler{nullptr};
 };
 
-/// Draw every instance of every resident tile. Returns the draw count.
+/// Draw every resident instance in view. Returns the draw count.
 int DrawGta5Instances(const Gta5StreamState& state,
                       const Gta5DrawContext& draw);
 

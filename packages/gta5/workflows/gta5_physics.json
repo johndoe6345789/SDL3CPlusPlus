@@ -1,9 +1,7 @@
 {
   "name": "GTA V Physics",
   "description": "Player movement over the streamed GTA V map. The movement model is Quake 3's: the same q3.pm.* pipeline the quake3 package runs, unchanged.",
-
   "rationale": "GTA V authors its world in metres and this engine's q3.pm.* constants are already expressed in metres (q3_pm_constants.hpp divides the raw Quake units by 32). Both sides therefore agree on scale and the ioq3 pmove steps drop straight onto Los Santos with no retuning. What changes is only the collision world the trace steps run against: streamed tile meshes instead of a single BSP.",
-
   "steps": [
     {
       "id": "player_sync",
@@ -38,7 +36,11 @@
     },
     {
       "id": "physics_step",
-      "plugin": "physics.step"
+      "plugin": "physics.step",
+      "parameters": {
+        "max_delta_time": 0.15,
+        "max_sub_steps": 10
+      }
     },
     {
       "id": "player_commit",

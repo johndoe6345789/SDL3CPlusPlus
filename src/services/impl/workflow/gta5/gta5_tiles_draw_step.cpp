@@ -44,14 +44,14 @@ void WorkflowGta5TilesDrawStep::Execute(const WorkflowStepDefinition& step,
     const int drawn = DrawGta5Instances(*state_, draw);
     context.Set("gta5.tiles.drawn_last_frame", drawn);
 
-    if (logger_ && drawn != state_->lastDrawLogged) {
-        state_->lastDrawLogged = drawn;
-        std::size_t instances = 0;
-        for (const auto& entry : state_->resident) {
-            instances += entry.second.instances.size();
-        }
-        // One instance is several draws now, one per material, so the
-        // draw count legitimately exceeds the instance count.
+    std::size_t instances = 0;
+    for (const auto& entry : state_->resident) {
+        instances += entry.second.instances.size();
+    }
+    // Logged when streaming changes what is resident: culled, the draw
+    // count changes whenever the camera turns.
+    if (logger_ && static_cast<int>(instances) != state_->lastDrawLogged) {
+        state_->lastDrawLogged = static_cast<int>(instances);
         logger_->Info("gta5.tiles.draw: " + std::to_string(drawn) +
                       " submesh draws across " + std::to_string(instances) +
                       " instances, y=" +

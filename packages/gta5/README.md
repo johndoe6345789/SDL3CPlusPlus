@@ -50,6 +50,10 @@ and read its textures; the main thread only uploads finished work, for
 is capped at 1/30 s a step -- holds up while a district streams in.
 Opened dictionaries sit in an LRU bounded by inflated bytes, 8 GB by
 default (`resource_cache_mb`), shared by the workers under a lock.
+Drawing tests each instance's bounding sphere against the view and skips
+any smaller than `cull_size_ratio` of its distance; physics steps up to
+0.15 s of wall time a frame (`max_delta_time`), so a slow frame no
+longer means slow motion.
 
 Skipped on purpose: grass ymaps (315 files of instance data, and GTAUtil
 turned each into ~40 MB of XML), LOD lights, occlusion, and placed

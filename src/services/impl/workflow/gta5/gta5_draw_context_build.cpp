@@ -16,6 +16,7 @@ Gta5DrawContext BuildGta5DrawContext(const WorkflowStepDefinition& step,
         context.Get<glm::mat4>("render.shadow_vp", glm::mat4(1.f));
     draw.cameraPos =
         context.Get<glm::vec3>("render.camera_pos", glm::vec3(0.f));
+    draw.cullSizeRatio = Gta5NumberOr(step, "cull_size_ratio", 0.003f);
 
     draw.fragUniforms = context.Get<rendering::FragmentUniformData>(
         "render.frag_uniforms", rendering::FragmentUniformData{});

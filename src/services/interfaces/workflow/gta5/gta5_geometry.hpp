@@ -38,6 +38,9 @@ struct Gta5SubMesh {
 /// archetype ever seen.
 struct Gta5Geometry {
     std::vector<Gta5SubMesh> subMeshes;
+    /// Bounding sphere in model space: centre xyz, radius w. A negative
+    /// radius is unknown, and such geometry is never culled.
+    std::array<float, 4> bounds{0.f, 0.f, 0.f, -1.f};
     int references{0};
     bool usable{false};
     /// Being prepared by the load pool; drawable once it lands.
