@@ -276,17 +276,22 @@ the steer angle and the rolling rotation Bullet integrated. The
 positions are exact -- the logged wheel transforms sit at the axle
 offsets to the millimetre.
 
-**The extracted wheel meshes are wrong, though, and the approach is the
-reason.** The tyre geometry in the body is 80 triangles for all four
-wheels -- 20 each. A real GTA V tyre is a few hundred. It is a stub,
-because the actual wheels are separate drawables the fragment names
-`wheelmesh_lf`, `wheelmesh_lf_ng`, `wheelmesh_lf_l1`, `wheelmesh_lf_l2`.
-Carving a sphere out of the body around each axle therefore recovers a
-stub plus whatever wheel-arch geometry falls inside the radius, which
-renders hollow and spoke-like no matter how the radius is tuned.
+**Use the `_hi` variant of a vehicle.** `taxi.yft` carries an 80
+triangle tyre stub for all four wheels -- 20 each -- and carving that
+out gives hollow, spoke-like wheels at any capture radius. `taxi_hi.yft`
+carries 4,528 triangles of tyre, and splits into four wheels of about
+1,350 triangles each with rim, detail and black tyre.
 
-The real fix is to read those wheel drawables out of the fragment. The
-name table sits at fragment `+0x58`, with a pointer at its `+0x28`.
+That took a while to find, so the dead ends are worth recording. The
+wheels are **not** in the fragment's drawable array (`+0x38`, whose
+count at `+0x48` is 0 with flag -1), **not** in the physics LOD children
+(`+0xF0` to `+0x10` to `+0xD0`, of which exactly one has geometry and it
+is untextured), and **not** in any of the four drawable LOD lists, which
+all hold a single model with bone index 255. The `wheelmesh_lf` strings
+in the file are bone and variant names, not geometry. CodeWalker selects
+a shared wheel by `wheelType` from `vehicles.meta`, which is a different
+mechanism again -- but the `_hi` model has wheels baked in, and that is
+enough here.
 
 ## Shaders
 
