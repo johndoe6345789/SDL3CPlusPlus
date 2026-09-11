@@ -48,6 +48,14 @@
       }
     },
     {
+      "id": "weapon",
+      "plugin": "gta5.weapon",
+      "comment": "What the player holds and fires: the weapon wheel on Q or LB, the left button or RT to fire, R to reload, and rockets and grenades that fly and go off. After the shop, which hands the weapons over.",
+      "parameters": {
+        "weapons_file": "packages/gta5/data/weapons.json"
+      }
+    },
+    {
       "id": "streaming_group",
       "plugin": "workflow.include",
       "parameters": {
@@ -248,6 +256,11 @@
         "fade_from": 40.0,
         "fade_to": 120.0
       }
+    },
+    {
+      "id": "effects_draw",
+      "plugin": "gta5.effects.draw",
+      "comment": "Muzzle flashes, tracers, the dust off a hit, fireballs, smoke and the scorch left behind: quads in world space, blended over the scene."
     },
     {
       "id": "frame_end",

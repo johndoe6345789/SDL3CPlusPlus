@@ -799,6 +799,14 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_drawable_geometry.cpp
         src/services/impl/workflow/gta5/gta5_drawable_locate.cpp
         src/services/impl/workflow/gta5/gta5_drawable_mesh.cpp
+        src/services/impl/workflow/gta5/gta5_effects_art.cpp
+        src/services/impl/workflow/gta5/gta5_effects_blast.cpp
+        src/services/impl/workflow/gta5/gta5_effects_impact.cpp
+        src/services/impl/workflow/gta5/gta5_effects_mesh.cpp
+        src/services/impl/workflow/gta5/gta5_effects_setup.cpp
+        src/services/impl/workflow/gta5/gta5_effects_spawn.cpp
+        src/services/impl/workflow/gta5/gta5_effects_step.cpp
+        src/services/impl/workflow/gta5/gta5_effects_update.cpp
         src/services/impl/workflow/gta5/gta5_engine_bank_load.cpp
         src/services/impl/workflow/gta5/gta5_engine_grain.cpp
         src/services/impl/workflow/gta5/gta5_engine_voice.cpp
@@ -969,6 +977,12 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_water_step.cpp
         src/services/impl/workflow/gta5/gta5_water_uniforms.cpp
         src/services/impl/workflow/gta5/gta5_water_upload.cpp
+        src/services/impl/workflow/gta5/gta5_weapon_blast.cpp
+        src/services/impl/workflow/gta5/gta5_weapon_fire.cpp
+        src/services/impl/workflow/gta5/gta5_weapon_load.cpp
+        src/services/impl/workflow/gta5/gta5_weapon_projectile.cpp
+        src/services/impl/workflow/gta5/gta5_weapon_step.cpp
+        src/services/impl/workflow/gta5/gta5_weapon_wheel.cpp
         src/services/impl/workflow/gta5/gta5_world_config_load.cpp
         src/services/impl/workflow/gta5/gta5_ymap.cpp
         src/services/impl/workflow/gta5/gta5_ymap_placement.cpp
