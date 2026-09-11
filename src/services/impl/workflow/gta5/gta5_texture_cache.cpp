@@ -27,7 +27,7 @@ const Gta5Texture* GetOrLoadGta5Texture(
         const UploadedTexture uploaded = UploadTextureImage(device, image);
         entry.texture = uploaded.texture;
         entry.sampler = CreateTextureLoadSampler(device, uploaded.texture,
-                                                 uploaded.numLevels);
+                                                 uploaded.numLevels, 0.f);
         entry.usable = true;
     } catch (const std::exception& ex) {
         if (logger) {

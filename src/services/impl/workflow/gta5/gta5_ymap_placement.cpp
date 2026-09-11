@@ -29,6 +29,10 @@ Gta5Placement MakeGta5YmapPlacement(const Gta5YmapEntity& entity) {
     const float z = entity.scaleZ != 0.f ? entity.scaleZ : 1.f;
     p.scale = glm::vec3(xy, z, xy);
     p.lod = BandForLodDist(entity.lodDist);
+    // A lodDist of 0 defers to the archetype's, which lives in the ytyp
+    // files this does not read: leave it unlimited.
+    p.lodDist = entity.lodDist > 0.f ? entity.lodDist : 0.f;
+    p.childLodDist = entity.numChildren > 0 ? entity.childLodDist : 0.f;
     return p;
 }
 

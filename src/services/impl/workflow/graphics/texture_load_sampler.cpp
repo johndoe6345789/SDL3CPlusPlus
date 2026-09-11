@@ -6,7 +6,8 @@ namespace sdl3cpp::services::impl {
 
 SDL_GPUSampler* CreateTextureLoadSampler(SDL_GPUDevice* device,
                                          SDL_GPUTexture* texture,
-                                         Uint32 numLevels) {
+                                         Uint32 numLevels,
+                                         float mipLodBias) {
     SDL_GPUSamplerCreateInfo samp_info = {};
     samp_info.min_filter               = SDL_GPU_FILTER_LINEAR;
     samp_info.mag_filter               = SDL_GPU_FILTER_LINEAR;
@@ -16,7 +17,7 @@ SDL_GPUSampler* CreateTextureLoadSampler(SDL_GPUDevice* device,
     samp_info.address_mode_w           = SDL_GPU_SAMPLERADDRESSMODE_REPEAT;
     samp_info.enable_anisotropy        = true;
     samp_info.max_anisotropy           = 16.0f;
-    samp_info.mip_lod_bias = 0.5f;  // bias toward higher mip = less aliasing.
+    samp_info.mip_lod_bias = mipLodBias;
     samp_info.min_lod      = 0.0f;
     samp_info.max_lod      = static_cast<float>(numLevels);
 

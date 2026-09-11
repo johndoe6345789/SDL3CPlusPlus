@@ -34,15 +34,18 @@ void WorkflowGta5FrameStatsStep::Execute(const WorkflowStepDefinition& step,
     if (seconds < Gta5NumberOr(step, "interval_s", 2.f) || frames_ == 0) {
         return;
     }
-    char line[240];
+    const auto eye =
+        context.Get<glm::vec3>("render.camera_pos", glm::vec3(0.f));
+    char line[280];
     std::snprintf(line, sizeof(line),
                   "gta5.frame: %.0f fps, worst %.1f ms, load %.2f ms, "
                   "cull %.2f ms, draw %.2f ms, %d draws, %zu groups, "
-                  "%d texture binds",
+                  "%d texture binds, eye (%.0f, %.0f, %.0f)",
                   frames_ / seconds, worstMs_, state_->loadMs / frames_,
                   state_->cullMs / frames_, state_->drawMs / frames_,
                   context.Get<int>("gta5.tiles.drawn_last_frame", 0),
-                  state_->batch.groups.size(), state_->textureBinds);
+                  state_->batch.groups.size(), state_->textureBinds, eye.x,
+                  eye.y, eye.z);
     logger_->Info(line);
     windowStart_ = now;
     frames_ = 0;

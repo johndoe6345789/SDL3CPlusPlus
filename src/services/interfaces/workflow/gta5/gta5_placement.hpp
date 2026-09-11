@@ -22,6 +22,9 @@ struct Gta5Placement {
     glm::quat rotation{1.f, 0.f, 0.f, 0.f};  // (w, x, y, z)
     glm::vec3 scale{1.f};
     Gta5Lod lod{Gta5Lod::Hd};
+    /// Drawn from childLodDist out to lodDist; 0 lifts either limit.
+    float lodDist{0.f};
+    float childLodDist{0.f};
 };
 
 }  // namespace sdl3cpp::services::impl

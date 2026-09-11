@@ -46,6 +46,8 @@ Gta5YmapEntity ReadEntity(const Gta5Resource& res, std::int64_t at) {
     e.scaleXY = res.F32(at + 0x40);
     e.scaleZ = res.F32(at + 0x44);
     e.lodDist = res.F32(at + 0x4C);
+    e.childLodDist = res.F32(at + 0x50);
+    e.numChildren = res.U32(at + 0x58);
     return e;
 }
 

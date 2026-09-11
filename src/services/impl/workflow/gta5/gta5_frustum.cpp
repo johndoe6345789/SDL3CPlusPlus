@@ -24,6 +24,15 @@ Gta5Frustum MakeGta5Frustum(const glm::mat4& viewProj) {
 bool Gta5InstanceVisible(const Gta5Frustum& frustum,
                          const Gta5Instance& instance,
                          const glm::vec3& camera, float sizeRatio) {
+    // GTA's LOD hierarchy: an entity is drawn out to its lodDist, and a
+    // parent only beyond childLodDist, where its children hand over.
+    // Drawn together they overlap, and fight for depth in the distance.
+    const glm::vec3 origin(instance.modelMatrix[12], instance.modelMatrix[13],
+                           instance.modelMatrix[14]);
+    const float away = glm::distance(origin, camera);
+    if (instance.lodDist > 0.f && away > instance.lodDist) return false;
+    if (away < instance.childLodDist) return false;
+
     const Gta5Geometry* geometry = instance.geometry;
     if (!geometry || geometry->bounds[3] < 0.f) return true;
     glm::mat4 model(1.f);

@@ -71,6 +71,9 @@ struct Gta5Instance {
     /// Non-null only when this instance is not at unit scale and needed
     /// its own scaled wrapper around the shared collision shape.
     btCollisionShape* scaledShape{nullptr};
+    /// Drawn from childLodDist out to lodDist, as its placement says.
+    float lodDist{0.f};
+    float childLodDist{0.f};
 };
 
 }  // namespace sdl3cpp::services::impl

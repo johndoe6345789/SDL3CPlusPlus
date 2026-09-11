@@ -41,6 +41,12 @@ int SpawnGta5TilePlacements(Gta5StreamState& state,
         Gta5Instance instance;
         instance.geometry = geometry;
         instance.modelMatrix = BuildGta5ModelMatrix(placement);
+        instance.lodDist = placement.lodDist;
+        // The finest band this tile spawned has no children here to hand
+        // over to up close, so it stays drawn.
+        instance.childLodDist = placement.lod == resident.bandAtSpawn
+                                    ? 0.f
+                                    : placement.childLodDist;
         AddGta5InstanceBody(world, placement, *geometry, instance);
         resident.instances.push_back(instance);
         ++geometry->references;
