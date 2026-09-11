@@ -46,30 +46,30 @@ void Complete(Gta5StreamState& state, Gta5PreparedGeometry& prepared,
 }  // namespace
 
 void FinishGta5PreparedGeometry(Gta5StreamState& state, SDL_GPUDevice* device,
-                                float budgetMs,
+                                const Gta5LoadBudget& limits,
                                 const std::shared_ptr<ILogger>& logger) {
     if (!state.pool || !device) return;
     const std::uint64_t start = SDL_GetTicksNS();
     const auto spent = [&] {
-        return static_cast<float>(SDL_GetTicksNS() - start) / 1e6f >= budgetMs;
+        return static_cast<float>(SDL_GetTicksNS() - start) / 1e6f >=
+                   limits.uploadMs ||
+               state.uploads.Pending() >= limits.uploadBytes;
     };
-    while (!spent()) {
-        std::vector<Gta5PreparedGeometry> batch = state.pool->Take(8);
-        if (batch.empty()) break;
-        for (Gta5PreparedGeometry& prepared : batch) {
-            for (const Gta5TextureBlob& blob : prepared.blobs) {
-                InstallGta5TextureBlob(state, blob, device);
-            }
-            prepared.blobs.clear();
-            state.waiting.push_back(std::move(prepared));
-        }
+    // Taking is cheap; uploading is what the budget is for.
+    for (Gta5PreparedGeometry& prepared : state.pool->Take(64)) {
+        state.waiting.push_back(std::move(prepared));
     }
     for (std::size_t i = 0; i < state.waiting.size() && !spent();) {
-        if (!TexturesIn(state, state.waiting[i])) {
+        Gta5PreparedGeometry& prepared = state.waiting[i];
+        while (!prepared.blobs.empty() && !spent()) {
+            InstallGta5TextureBlob(state, prepared.blobs.back(), device);
+            prepared.blobs.pop_back();
+        }
+        if (!prepared.blobs.empty() || !TexturesIn(state, prepared)) {
             ++i;
             continue;
         }
-        Complete(state, state.waiting[i], device, logger);
+        Complete(state, prepared, device, logger);
         state.waiting.erase(state.waiting.begin() +
                             static_cast<std::ptrdiff_t>(i));
     }

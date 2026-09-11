@@ -65,14 +65,13 @@ struct Gta5StreamState {
     /// Archetypes already reported missing, so the log says it once.
     std::unordered_set<std::string> reportedMissing;
 
-    /// Every map mesh's vertices and indices, packed.
-    Gta5GeometryArena arena;
+    Gta5GeometryArena arena;  // every map mesh's vertices and indices
+    Gta5UploadBatch uploads;  // staged GPU copies: one submit a frame
+    SDL_GPUSampler* textureSampler{nullptr};  // shared by map textures
     /// Last instance count logged, so a steady frame stays quiet.
     int lastDrawLogged{-1};
-    /// This frame's visible instances, built by gta5.tiles.cull.
-    Gta5InstanceBatch batch;
-    /// CPU time this frame, per step; gta5.frame.stats reports it.
-    Gta5FrameCost cost;
+    Gta5InstanceBatch batch;  // this frame's visible instances, culled
+    Gta5FrameCost cost;  // CPU time this frame; see gta5.frame.stats
     int textureBinds{0};
 };
 

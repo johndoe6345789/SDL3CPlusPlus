@@ -11,14 +11,15 @@
 
 namespace sdl3cpp::services::impl {
 
-/// Upload one material into the geometry arena and resolve its texture.
+/// Place one material in the geometry arena, stage its upload in the
+/// frame's batch, and resolve its texture.
 ///
 /// Returns false for a part too large for 16-bit indices. Throws if the
 /// GPU upload fails, which the caller catches per part so one bad
 /// material does not cost the rest of the building.
 bool UploadGta5SubMesh(const Gta5SubMeshData& part, SDL_GPUDevice* device,
-                       Gta5GeometryArena& arena, Gta5TextureCache& textures,
-                       Gta5SubMesh& out,
+                       Gta5GeometryArena& arena, Gta5UploadBatch& uploads,
+                       Gta5TextureCache& textures, Gta5SubMesh& out,
                        const std::shared_ptr<ILogger>& logger);
 
 }  // namespace sdl3cpp::services::impl

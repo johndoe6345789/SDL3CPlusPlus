@@ -8,13 +8,13 @@ static_assert(sizeof(BspRenderVertex) == Gta5GeometryArena::kVertexStride,
               "the arena is laid out for position_uv_lmuv_normal");
 
 bool UploadGta5SubMesh(const Gta5SubMeshData& part, SDL_GPUDevice* device,
-                       Gta5GeometryArena& arena, Gta5TextureCache& textures,
-                       Gta5SubMesh& out,
+                       Gta5GeometryArena& arena, Gta5UploadBatch& uploads,
+                       Gta5TextureCache& textures, Gta5SubMesh& out,
                        const std::shared_ptr<ILogger>& logger) {
     if (part.vertices.empty() || part.indices.empty()) return false;
     if (part.vertices.size() >= kGta5MaxVerticesPerMesh) return false;
 
-    if (!arena.Upload(device, part.vertices.data(),
+    if (!arena.Upload(device, uploads, part.vertices.data(),
                       static_cast<std::uint32_t>(part.vertices.size()),
                       part.indices.data(),
                       static_cast<std::uint32_t>(part.indices.size()),

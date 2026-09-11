@@ -44,7 +44,7 @@ bool UploadGta5MeshGeometry(Gta5StreamState& state, const Gta5MeshData& mesh,
         Gta5SubMesh sub;
         try {
             // One unuploadable part must not cost the rest of the model.
-            if (!UploadGta5SubMesh(part, device, state.arena,
+            if (!UploadGta5SubMesh(part, device, state.arena, state.uploads,
                                    state.textureCache, sub, logger)) {
                 continue;
             }

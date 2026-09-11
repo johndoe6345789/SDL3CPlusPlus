@@ -10,7 +10,9 @@ bool BuildGta5CollisionShape(const Gta5MeshData& mesh,
         // Cutouts do not collide: a leaf card is a rectangle whose shape
         // is only in its alpha, and as collision a canopy held up a car
         // dropped into the desert. Trunks and branches are solid parts.
-        if (part.alphaCutoff > 0.f) continue;
+        // Nor decals: a tyre track or road marking floats on the road,
+        // and at speed the wheels rode over every one.
+        if (part.alphaCutoff > 0.f || part.blend) continue;
         const auto base =
             static_cast<int>(geometry.collisionVertices.size() / 3);
         for (const BspRenderVertex& vertex : part.vertices) {

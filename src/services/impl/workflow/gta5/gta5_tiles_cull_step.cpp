@@ -19,9 +19,13 @@ std::string WorkflowGta5TilesCullStep::GetPluginId() const {
 
 void WorkflowGta5TilesCullStep::Execute(const WorkflowStepDefinition& step,
                                         WorkflowContext& context) {
-    if (!state_ || context.GetBool("frame_skip", false)) return;
+    if (!state_) return;
     auto* device = context.Get<SDL_GPUDevice*>("gpu_device", nullptr);
     if (!device) return;
+    // Everything staged this frame -- meshes, textures -- in one submit,
+    // ahead of the frame that draws it.
+    state_->uploads.Flush(device);
+    if (context.GetBool("frame_skip", false)) return;
     const Gta5CostTimer timed(state_->cost.cull);
 
     const auto view =

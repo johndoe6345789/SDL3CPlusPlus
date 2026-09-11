@@ -1,5 +1,7 @@
 #include "services/interfaces/workflow/gta5/gta5_texture_cache.hpp"
 
+#include <unordered_set>
+
 #include "services/interfaces/workflow/graphics/texture_gpu_upload.hpp"
 #include "services/interfaces/workflow/graphics/texture_image_io.hpp"
 #include "services/interfaces/workflow/graphics/texture_load_sampler.hpp"
@@ -41,9 +43,13 @@ const Gta5Texture* GetOrLoadGta5Texture(
 
 void ClearGta5TextureCache(Gta5TextureCache& cache, SDL_GPUDevice* device) {
     if (device) {
+        // Map textures share one sampler: release each sampler once.
+        std::unordered_set<SDL_GPUSampler*> samplers;
         for (auto& entry : cache) {
             if (!entry.second.usable) continue;
-            SDL_ReleaseGPUSampler(device, entry.second.sampler);
+            if (samplers.insert(entry.second.sampler).second) {
+                SDL_ReleaseGPUSampler(device, entry.second.sampler);
+            }
             SDL_ReleaseGPUTexture(device, entry.second.texture);
         }
     }

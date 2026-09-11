@@ -1,9 +1,12 @@
 #include "services/interfaces/workflow/gta5/gta5_texture_upload.hpp"
 
+#include <algorithm>
+
 namespace sdl3cpp::services::impl {
 
 Gta5GpuTexture UploadGta5TextureBlob(const Gta5TextureBlob& blob,
-                                     SDL_GPUDevice* device) {
+                                     SDL_GPUDevice* device,
+                                     Gta5UploadBatch& uploads) {
     Gta5GpuTexture out;
     if (blob.bytes.empty() || !device ||
         !SDL_GPUTextureSupportsFormat(device, blob.format.gpu,
@@ -21,10 +24,20 @@ Gta5GpuTexture UploadGta5TextureBlob(const Gta5TextureBlob& blob,
     info.usage = SDL_GPU_TEXTUREUSAGE_SAMPLER;
     SDL_GPUTexture* texture = SDL_CreateGPUTexture(device, &info);
     if (!texture) return out;
-    if (!CopyGta5Mips(device, texture, blob.bytes.data(), blob.bytes.size(),
-                      blob.format, blob.width, blob.height, blob.levels)) {
-        SDL_ReleaseGPUTexture(device, texture);
-        return out;
+    // Each mip staged into the frame's upload batch: the mips follow one
+    // another in the blob, as they did in the dictionary.
+    std::uint64_t offset = 0;
+    for (std::uint32_t level = 0; level < blob.levels; ++level) {
+        const std::uint32_t w = std::max(1u, blob.width >> level);
+        const std::uint32_t h = std::max(1u, blob.height >> level);
+        const std::uint64_t bytes = Gta5MipBytes(blob.format, w, h);
+        if (!uploads.StageTexture(device, blob.bytes.data() + offset,
+                                  static_cast<std::uint32_t>(bytes), texture,
+                                  level, w, h)) {
+            SDL_ReleaseGPUTexture(device, texture);
+            return out;
+        }
+        offset += bytes;
     }
     out.texture = texture;
     out.levels = blob.levels;

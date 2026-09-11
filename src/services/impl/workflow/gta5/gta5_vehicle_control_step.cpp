@@ -49,6 +49,13 @@ void WorkflowGta5VehicleControlStep::Execute(
         }
     }
 
+    // Every car nobody is in: engine off, brakes on. Nothing touched a
+    // car once left, so it rolled off down any slope, or drove away on
+    // the throttle held while getting out.
+    for (std::size_t i = 0; i < state_->vehicles.size(); ++i) {
+        if (static_cast<int>(i) == state_->seated) continue;
+        DriveGta5Vehicle(state_->vehicles[i], 0.f, 0.f, 1.f);
+    }
     if (state_->seated < 0 ||
         state_->seated >= static_cast<int>(state_->vehicles.size())) {
         return;

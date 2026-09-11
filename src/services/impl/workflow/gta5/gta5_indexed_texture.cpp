@@ -14,17 +14,18 @@ const Gta5Texture* InstallGta5TextureBlob(Gta5StreamState& state,
                                           SDL_GPUDevice* device) {
     Gta5Texture& entry = state.textureCache[Gta5TextureKey(blob.hash)];
     if (entry.usable) return &entry;
-    const Gta5GpuTexture gpu = UploadGta5TextureBlob(blob, device);
-    if (!gpu.texture) return nullptr;  // cached unusable: settled as missing
-    // No mip bias: GTA's mips are authored, and 16x anisotropy keeps the
-    // distance from shimmering; the default's +0.5 read as fuzzy.
-    entry.sampler =
-        CreateTextureLoadSampler(device, gpu.texture, gpu.levels, 0.f);
-    if (!entry.sampler) {
-        SDL_ReleaseGPUTexture(device, gpu.texture);
-        return nullptr;
+    if (!state.textureSampler) {
+        // One for every map texture, rather than a driver object each. No
+        // mip bias: GTA's mips are authored, and 16x anisotropy keeps the
+        // distance from shimmering; the default's +0.5 read as fuzzy.
+        state.textureSampler =
+            CreateTextureLoadSampler(device, nullptr, 16, 0.f);
     }
+    const Gta5GpuTexture gpu =
+        UploadGta5TextureBlob(blob, device, state.uploads);
+    if (!gpu.texture) return nullptr;  // cached unusable: settled as missing
     entry.texture = gpu.texture;
+    entry.sampler = state.textureSampler;
     entry.usable = true;
     return &entry;
 }

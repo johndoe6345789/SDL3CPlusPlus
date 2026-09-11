@@ -5,6 +5,13 @@
 #include <string>
 
 namespace sdl3cpp::services::impl {
+namespace {
+
+std::uint64_t Megabytes(float mb) {
+    return static_cast<std::uint64_t>(mb > 0.f ? mb : 1.f) << 20;
+}
+
+}  // namespace
 
 Gta5LoadBudget ReadGta5LoadBudget(const WorkflowStepDefinition& step,
                                   const WorkflowContext& context,
@@ -15,15 +22,18 @@ Gta5LoadBudget ReadGta5LoadBudget(const WorkflowStepDefinition& step,
     Gta5LoadBudget budget;
     if (loading) {
         budget.uploadMs = Gta5NumberOr(step, "upload_budget_ms", 8.f);
+        budget.uploadBytes = Megabytes(Gta5NumberOr(step, "upload_mb", 64.f));
         budget.spawns = Gta5ParameterOrInt(step, "max_spawns_per_frame",
                                            streaming.maxSpawnsPerFrame);
     } else {
         budget.uploadMs = Gta5NumberOr(step, "stream_upload_budget_ms", 2.f);
+        budget.uploadBytes =
+            Megabytes(Gta5NumberOr(step, "stream_upload_mb", 8.f));
         budget.spawns = Gta5ParameterOrInt(step, "stream_spawns_per_frame", 48);
     }
     if (budget.spawns <= 0) budget.spawns = 64;
-    // Reading a tile's ymaps is done on this thread; a couple a frame
-    // keeps the first frame from reading all of them at once.
+    // Reading a tile's ymaps is started on this thread; a couple a frame
+    // keeps the first frame from starting all of them at once.
     budget.reads = Gta5ParameterOrInt(step, "tile_reads_per_frame", 2);
     return budget;
 }

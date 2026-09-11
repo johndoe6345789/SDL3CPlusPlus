@@ -1,5 +1,6 @@
 #pragma once
 
+#include "services/interfaces/workflow/gta5/gta5_upload_batch.hpp"
 #include "services/interfaces/workflow/gta5/gta5_resource.hpp"
 
 #include <SDL3/SDL_gpu.h>
@@ -54,15 +55,11 @@ struct Gta5GpuTexture {
     std::uint32_t levels{0};
 };
 
-/// Put a blob on the GPU as stored, mips included. Main thread only.
-/// Empty when the blob is, or the device cannot sample its format.
+/// Create a blob's texture and stage its mips in `uploads`, which the
+/// frame submits. Main thread only. Empty when the blob is, or the
+/// device cannot sample its format.
 Gta5GpuTexture UploadGta5TextureBlob(const Gta5TextureBlob& blob,
-                                     SDL_GPUDevice* device);
-
-/// Copy `levels` packed mips into `texture` with one command buffer.
-bool CopyGta5Mips(SDL_GPUDevice* device, SDL_GPUTexture* texture,
-                  const std::uint8_t* pixels, std::uint64_t total,
-                  const Gta5TextureFormat& format, std::uint32_t width,
-                  std::uint32_t height, std::uint32_t levels);
+                                     SDL_GPUDevice* device,
+                                     Gta5UploadBatch& uploads);
 
 }  // namespace sdl3cpp::services::impl

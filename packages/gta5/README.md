@@ -63,6 +63,10 @@ backend tracks each buffer a command buffer uses with a linear scan,
 which at 6,000 buffers a frame cost more than everything else together.
 `gta5.frame.stats` logs the frame rate and per-step CPU time every 2 s,
 and `SDL3CPP_PRESENT_MODE=immediate` lifts vsync to measure headroom.
+Every map upload of a frame -- meshes and textures -- is staged into one
+persistent transfer buffer and submitted as one copy pass
+(`Gta5UploadBatch`), within `stream_upload_mb` (8) a frame once the player
+is free; a frame over `hitch_ms` (12) logs where it went (`gta5.hitch`).
 
 The scene renders at twice the window's size (`render_scale` on
 `frame.gpu.begin_offscreen`), and the composite resolves each pixel from

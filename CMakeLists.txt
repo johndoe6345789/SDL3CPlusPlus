@@ -846,7 +846,6 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_submesh_upload.cpp
         src/services/impl/workflow/gta5/gta5_texture_blob_upload.cpp
         src/services/impl/workflow/gta5/gta5_texture_cache.cpp
-        src/services/impl/workflow/gta5/gta5_texture_copy.cpp
         src/services/impl/workflow/gta5/gta5_texture_format.cpp
         src/services/impl/workflow/gta5/gta5_texture_upload.cpp
         src/services/impl/workflow/gta5/gta5_tile_coord.cpp
@@ -858,6 +857,8 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_tiles_evict_step.cpp
         src/services/impl/workflow/gta5/gta5_tiles_load_step.cpp
         src/services/impl/workflow/gta5/gta5_tiles_resolve_step.cpp
+        src/services/impl/workflow/gta5/gta5_upload_batch.cpp
+        src/services/impl/workflow/gta5/gta5_upload_batch_flush.cpp
         src/services/impl/workflow/gta5/gta5_vehicle.cpp
         src/services/impl/workflow/gta5/gta5_vehicle_body.cpp
         src/services/impl/workflow/gta5/gta5_vehicle_camera_step.cpp

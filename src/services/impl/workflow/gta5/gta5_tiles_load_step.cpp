@@ -43,7 +43,7 @@ void WorkflowGta5TilesLoadStep::Execute(const WorkflowStepDefinition& step,
         ReadGta5LoadBudget(step, context, state_->streaming);
     {  // First, upload what the workers have finished, within a budget.
         const Gta5CostTimer finishing(state_->cost.finish);
-        FinishGta5PreparedGeometry(*state_, device, limits.uploadMs, logger_);
+        FinishGta5PreparedGeometry(*state_, device, limits, logger_);
     }
 
     const std::string tilesDir = Gta5ResolvePath(

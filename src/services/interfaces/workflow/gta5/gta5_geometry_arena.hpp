@@ -1,6 +1,7 @@
 #pragma once
 
 #include "services/interfaces/workflow/gta5/gta5_range_allocator.hpp"
+#include "services/interfaces/workflow/gta5/gta5_upload_batch.hpp"
 
 #include <SDL3/SDL_gpu.h>
 
@@ -29,9 +30,10 @@ class Gta5GeometryArena {
 public:
     static constexpr std::uint32_t kVertexStride = 40;
 
-    /// Place and upload a submesh's vertices and 16-bit indices, in one
-    /// block, adding a block when none has room.
-    bool Upload(SDL_GPUDevice* device, const void* vertices,
+    /// Place a submesh's vertices and 16-bit indices, in one block,
+    /// adding a block when none has room, and stage their upload.
+    bool Upload(SDL_GPUDevice* device, Gta5UploadBatch& uploads,
+                const void* vertices,
                 std::uint32_t vertexCount, const std::uint16_t* indices,
                 std::uint32_t indexCount, Gta5ArenaSlot& slot);
     /// Give a slot's space back. The GPU may still be drawing from it

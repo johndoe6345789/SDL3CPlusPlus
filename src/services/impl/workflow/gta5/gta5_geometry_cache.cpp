@@ -37,8 +37,8 @@ Gta5Geometry* GetOrLoadGta5Geometry(Gta5StreamState& state,
     // Inserted before building so a failure is remembered as an unusable
     // entry, rather than retried for every instance every frame.
     Gta5Geometry& geometry = state.geometryCache[placement.archetype];
-    if (!BuildGta5Geometry(placement, device, state.arena, state.textureCache,
-                           geometry, logger)) {
+    if (!BuildGta5Geometry(placement, device, state.arena, state.uploads,
+                           state.textureCache, geometry, logger)) {
         return nullptr;
     }
     return &geometry;
