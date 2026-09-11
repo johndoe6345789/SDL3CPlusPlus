@@ -46,8 +46,8 @@ btRigidBody* MakeGta5VehicleBody(const Gta5Geometry& geometry,
     info.m_friction = 0.9f;
     info.m_restitution = 0.05f;
     auto* body = new btRigidBody(info);
-    // Cars settle; without damping the box skates along the road.
-    body->setDamping(0.15f, 0.6f);
+    // No manual damping: btRaycastVehicle applies suspension and tyre
+    // forces itself, and damping on top of it fights the suspension.
 
     outShape = shape;
     return body;

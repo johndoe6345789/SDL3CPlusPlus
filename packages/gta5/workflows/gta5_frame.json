@@ -38,6 +38,11 @@
       "comment": "Spawns once, and only after a tile has streamed in: a car dropped into an empty world falls straight through."
     },
     {
+      "id": "vehicle_control",
+      "plugin": "gta5.vehicle.control",
+      "comment": "F gets in and out of the nearest car, WASD drives, space brakes. Forces land a frame later than they are pressed, since the physics step already ran this frame."
+    },
+    {
       "id": "vehicles_sync",
       "plugin": "gta5.vehicles.sync"
     },

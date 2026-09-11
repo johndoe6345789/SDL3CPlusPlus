@@ -221,6 +221,42 @@ district folder, so both are still worth extracting. A submesh whose
 texture is genuinely missing still draws on the package default rather
 than vanishing.
 
+## Driving
+
+`gta5.vehicle.spawn` puts a car on the road as a **btRaycastVehicle**:
+a chassis body plus four wheels that cast a ray each step and apply
+suspension and tyre forces. It rides on springs and grips through
+corners, rather than sliding as a box.
+
+| key | action |
+|-----|--------|
+| `F` | get in or out of the nearest car within 6 m |
+| `W` / `S` | throttle / reverse (rear-wheel drive) |
+| `A` / `D` | steer (front wheels) |
+| `Space` | brake |
+
+Notes on how it is wired, and why:
+
+- The collider is a **box sized to the mesh bounds**, not the render
+  mesh. A concave car shell is a poor dynamic collider and Bullet will
+  not solve it against the ground.
+- The chassis gets `DISABLE_DEACTIVATION`. A sleeping raycast vehicle
+  stops casting its wheels and sinks.
+- While seated the player's physics body is **pinned** to the chassis
+  each frame rather than constrained. The camera already follows the
+  player body, so that is all it takes to ride along, and a constraint
+  would feed the player's mass back into the suspension.
+- Spawning happens inside the frame loop and waits for a resident tile.
+  A car dropped into a world that has not streamed yet falls through it.
+- Input lands a frame after it is pressed, because the physics step for
+  the frame has already run by the time the control step sees the key.
+
+**The wheels do not turn or steer visually.** The taxi's wheels are part
+of the chassis drawable rather than separate ones, so the suspension
+moves the body but nothing spins. Drawing them properly means reading
+the fragment's wheel drawables and placing them from
+`getWheelTransformWS`.
+
 ## Shaders
 
 The package has its own pair, `shaders/spirv/gta5_model.{vert,frag}`,

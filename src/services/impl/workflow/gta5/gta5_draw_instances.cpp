@@ -17,8 +17,8 @@ int DrawGta5Instances(const Gta5StreamState& state,
     }
     // Vehicles are not part of any tile: they belong to the physics
     // world, not the streamer, so they draw after it.
-    for (const Gta5Instance& vehicle : state.vehicles) {
-        drawn += DrawGta5Instance(vehicle, draw, boundTexture);
+    for (const Gta5Vehicle& car : state.vehicles) {
+        drawn += DrawGta5Instance(car.instance, draw, boundTexture);
     }
     return drawn;
 }

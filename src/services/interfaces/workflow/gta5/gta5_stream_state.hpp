@@ -4,6 +4,7 @@
 #include "services/interfaces/workflow/gta5/gta5_geometry.hpp"
 #include "services/interfaces/workflow/gta5/gta5_placement.hpp"
 #include "services/interfaces/workflow/gta5/gta5_texture_cache.hpp"
+#include "services/interfaces/workflow/gta5/gta5_vehicle_types.hpp"
 #include "services/interfaces/workflow/gta5/gta5_tile_coord.hpp"
 
 #include <cstddef>
@@ -49,10 +50,12 @@ struct Gta5StreamState {
     Gta5TileCoord centre{0, 0};
     glm::vec3 centreOrigin{0.f};
 
-    /// Dynamic bodies that are not part of any tile -- vehicles. They
-    /// are drawn with the world but never streamed out from under the
-    /// physics that owns them.
-    std::vector<Gta5Instance> vehicles;
+    /// Cars. Not part of any tile: they belong to the physics world and
+    /// must never be streamed out from under it.
+    std::vector<Gta5Vehicle> vehicles;
+
+    /// Index into `vehicles` the player is sitting in, or -1 on foot.
+    int seated{-1};
 
     /// Tiles whose band changed; evict tears them down, load rebuilds.
     std::unordered_set<Gta5TileCoord, Gta5TileCoordHash> rebuild;

@@ -3,6 +3,7 @@
 #include "services/interfaces/workflow/gta5/gta5_stream_state.hpp"
 #include "services/interfaces/workflow/gta5/gta5_lod_select_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_tiles_draw_step.hpp"
+#include "services/interfaces/workflow/gta5/gta5_vehicle_control_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_vehicle_spawn_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_vehicles_sync_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_tiles_evict_step.hpp"
@@ -36,8 +37,10 @@ int RegisterGta5StreamingSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
         std::make_shared<WorkflowGta5VehicleSpawnStep>(logger, state));
     registry->RegisterStep(
         std::make_shared<WorkflowGta5VehiclesSyncStep>(logger, state));
+    registry->RegisterStep(
+        std::make_shared<WorkflowGta5VehicleControlStep>(logger, state));
 
-    return 7;
+    return 8;
 }
 
 }  // namespace sdl3cpp::services::impl::registrar_detail

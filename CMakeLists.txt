@@ -808,7 +808,11 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_tiles_resolve_step.cpp
         src/services/impl/workflow/gta5/gta5_vehicle.cpp
         src/services/impl/workflow/gta5/gta5_vehicle_body.cpp
+        src/services/impl/workflow/gta5/gta5_vehicle_control_step.cpp
+        src/services/impl/workflow/gta5/gta5_vehicle_drive.cpp
+        src/services/impl/workflow/gta5/gta5_vehicle_seat.cpp
         src/services/impl/workflow/gta5/gta5_vehicle_spawn_step.cpp
+        src/services/impl/workflow/gta5/gta5_vehicle_wheels.cpp
         src/services/impl/workflow/gta5/gta5_vehicles_sync_step.cpp
         src/services/impl/workflow/gta5/gta5_wanted_tiles.cpp
         src/services/impl/workflow/gta5/gta5_world_config_load.cpp

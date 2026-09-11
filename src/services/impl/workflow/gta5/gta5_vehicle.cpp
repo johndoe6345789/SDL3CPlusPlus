@@ -2,9 +2,9 @@
 
 #include "services/interfaces/workflow/gta5/gta5_geometry_upload.hpp"
 #include "services/interfaces/workflow/gta5/gta5_vehicle_body.hpp"
+#include "services/interfaces/workflow/gta5/gta5_vehicle_wheels.hpp"
 
 namespace sdl3cpp::services::impl {
-
 bool SpawnGta5Vehicle(Gta5StreamState& state, const std::string& modelPath,
                       const glm::vec3& position, float mass,
                       SDL_GPUDevice* device, btDiscreteDynamicsWorld* world,
@@ -25,29 +25,37 @@ bool SpawnGta5Vehicle(Gta5StreamState& state, const std::string& modelPath,
         return false;
     }
 
-    Gta5Instance instance;
-    instance.geometry = &geometry;
-    instance.body = MakeGta5VehicleBody(geometry, position, mass,
-                                        instance.scaledShape);
-    world->addRigidBody(instance.body);
-    // Held by the vehicle list, so the geometry sweep never frees the
-    // mesh out from under a car that is still in the world.
+    Gta5Vehicle car;
+    car.instance.geometry = &geometry;
+    car.chassis = MakeGta5VehicleBody(geometry, position, mass,
+                                      car.chassisShape);
+    world->addRigidBody(car.chassis);
+    car.instance.body = car.chassis;
+
+    const btVector3 half =
+        static_cast<btBoxShape*>(car.chassisShape)->getHalfExtentsWithMargin();
+    AttachGta5Wheels(car, world, half, Gta5WheelSetup{});
+
+    // Held by the vehicle list, so the geometry sweep cannot free the
+    // mesh from under a car still in the world.
     ++geometry.references;
-    state.vehicles.push_back(instance);
+    state.vehicles.push_back(car);
 
     if (logger) {
-        logger->Info("gta5.vehicle.spawn: " + modelPath + " at y=" +
-                     std::to_string(position.y));
+        logger->Info("gta5.vehicle.spawn: " + modelPath + " with " +
+                     std::to_string(car.vehicle->getNumWheels()) + " wheels");
     }
     return true;
 }
 
 void UpdateGta5Vehicles(Gta5StreamState& state) {
-    for (Gta5Instance& vehicle : state.vehicles) {
-        if (!vehicle.body || !vehicle.body->getMotionState()) continue;
-        btTransform transform;
-        vehicle.body->getMotionState()->getWorldTransform(transform);
-        transform.getOpenGLMatrix(vehicle.modelMatrix.data());
+    for (Gta5Vehicle& car : state.vehicles) {
+        if (!car.vehicle) continue;
+        for (int i = 0; i < car.vehicle->getNumWheels(); ++i) {
+            car.vehicle->updateWheelTransform(i, true);
+        }
+        car.vehicle->getChassisWorldTransform().getOpenGLMatrix(
+            car.instance.modelMatrix.data());
     }
 }
 

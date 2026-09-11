@@ -11,16 +11,22 @@
 
 namespace sdl3cpp::services::impl {
 
-/// Load a vehicle model and drop it into the world as a dynamic body.
+/// Load a vehicle model and put it on the road as a raycast vehicle.
 ///
-/// Unlike map geometry this is not static: it has mass, so it falls onto
-/// the road, settles on its suspension-less box, and can be shoved.
+/// It gets a chassis body plus four sprung wheels, so it rides on
+/// suspension and grips through corners rather than sliding as a box.
 bool SpawnGta5Vehicle(Gta5StreamState& state, const std::string& modelPath,
                       const glm::vec3& position, float mass,
                       SDL_GPUDevice* device, btDiscreteDynamicsWorld* world,
                       const std::shared_ptr<ILogger>& logger);
 
-/// Copy each vehicle's body transform into the matrix it draws with.
+/// Copy each chassis transform into the matrix its body draws with.
 void UpdateGta5Vehicles(Gta5StreamState& state);
+
+/// Apply engine, steering and brake to the seated car.
+///
+/// throttle and steer are -1..1; brake is 0..1.
+void DriveGta5Vehicle(Gta5Vehicle& car, float throttle, float steer,
+                      float brake);
 
 }  // namespace sdl3cpp::services::impl
