@@ -787,6 +787,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_asset_scan_slice.cpp
         src/services/impl/workflow/gta5/gta5_assets_index_step.cpp
         src/services/impl/workflow/gta5/gta5_assets_ready.cpp
+        src/services/impl/workflow/gta5/gta5_bone_pose.cpp
         src/services/impl/workflow/gta5/gta5_collision_body.cpp
         src/services/impl/workflow/gta5/gta5_collision_shape.cpp
         src/services/impl/workflow/gta5/gta5_draw_bind.cpp

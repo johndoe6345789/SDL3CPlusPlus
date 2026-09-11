@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/gta5/gta5_drawable_mesh.hpp"
 
+#include "services/interfaces/workflow/gta5/gta5_bone_pose.hpp"
 #include "services/interfaces/workflow/gta5/gta5_geometry.hpp"
 #include "services/interfaces/workflow/gta5/gta5_shader_surface.hpp"
 #include "services/interfaces/workflow/gta5/gta5_vertex_layout.hpp"
@@ -41,15 +42,18 @@ Gta5MeshData ReadGta5DrawableMesh(const Gta5Resource& res,
                                   const glm::vec3& paint) {
     Gta5MeshData mesh;
     const auto surfaces = ReadGta5ShaderSurfaces(res, drawable);
+    const std::vector<glm::mat4> bones = ReadGta5BonePose(res, drawable);
     const std::int64_t models = res.Follow(drawable + 0x50);
     if (models < 0) return mesh;
     for (const std::int64_t model : res.PointerList(models)) {
         if (model < 0) continue;
         const auto geometries = res.PointerList(model + 0x08);
         const std::int64_t shaders = res.Follow(model + 0x20);
+        const glm::mat4* pose = Gta5ModelPose(res, model, bones);
         for (std::size_t g = 0; g < geometries.size(); ++g) {
             Gta5SubMeshData part;
             if (!ReadGeometry(res, geometries[g], part)) continue;
+            if (pose) PoseGta5Part(part, *pose);
             const std::size_t s =
                 shaders < 0 ? surfaces.size()
                             : res.U16(shaders + 2 * std::int64_t(g));
