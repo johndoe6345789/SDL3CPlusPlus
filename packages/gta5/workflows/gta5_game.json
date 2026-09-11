@@ -403,6 +403,19 @@
       }
     },
     {
+      "id": "assets_index",
+      "type": "gta5.assets.index",
+      "typeVersion": 1,
+      "position": [
+        700,
+        200
+      ],
+      "parameters": {
+        "map_dir": "D:/gtautil-2.2.13/levels/gta5",
+        "config": "packages/gta5/config/gta5_world.json"
+      }
+    },
+    {
       "id": "init_game_running",
       "type": "value.literal",
       "typeVersion": 1,
@@ -545,7 +558,7 @@
       "main": {
         "0": [
           {
-            "node": "init_game_running",
+            "node": "assets_index",
             "type": "main",
             "index": 0
           }
@@ -678,6 +691,17 @@
         "0": [
           {
             "node": "tex_walls",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "assets_index": {
+      "main": {
+        "0": [
+          {
+            "node": "init_game_running",
             "type": "main",
             "index": 0
           }

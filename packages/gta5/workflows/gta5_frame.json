@@ -18,6 +18,11 @@
       }
     },
     {
+      "id": "player_hold",
+      "plugin": "gta5.player.hold",
+      "comment": "Pins the player at the spawn point until the ground under them has streamed in -- read on demand, that takes seconds, and unheld the player falls through the empty world. After the physics group, so it overrides this frame's movement; before streaming, so streaming centres on the spawn point."
+    },
+    {
       "id": "streaming_group",
       "plugin": "workflow.include",
       "parameters": {
@@ -96,6 +101,23 @@
       "id": "composite_draw",
       "plugin": "postfx.composite_draw",
       "comment": "Blits the scene target to the swapchain. Without this and the submit below, the draws land in a texture nobody presents and the window stays black."
+    },
+    {
+      "id": "overlay_init",
+      "plugin": "postfx.overlay_fps_init"
+    },
+    {
+      "id": "overlay_quad",
+      "plugin": "postfx.overlay_fps_upload_quad"
+    },
+    {
+      "id": "loading_text",
+      "plugin": "gta5.loading.text",
+      "comment": "What gta5.player.hold is waiting on, in the overlay; a blank once the ground is in, so the label goes away."
+    },
+    {
+      "id": "overlay_draw",
+      "plugin": "postfx.overlay_fps_draw"
     },
     {
       "id": "command_buffer_submit",

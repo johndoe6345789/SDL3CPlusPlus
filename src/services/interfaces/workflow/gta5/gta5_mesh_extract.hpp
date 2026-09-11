@@ -22,6 +22,9 @@ struct Gta5SubMeshData {
     std::vector<BspRenderVertex> vertices;
     std::vector<std::uint16_t> indices;
     std::string texturePath;
+    /// Diffuse texture by name hash, for geometry read straight from a
+    /// drawable; resolved through the asset index. 0 when not used.
+    std::uint32_t textureHash{0};
     /// Multiplies the texture. GTA V paint textures are a few white
     /// pixels with the colour supplied per vehicle, so without this
     /// every car renders white.

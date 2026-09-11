@@ -110,6 +110,8 @@ find_package(spdlog CONFIG REQUIRED)
 
 find_package(GTest CONFIG REQUIRED)
 
+find_package(ZLIB CONFIG REQUIRED)
+
 
 # Build render stack library group
 set(SDL3CPP_RENDER_STACK_LIBS EnTT::EnTT)
@@ -442,6 +444,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/rendering/gpu_text_overlay_resources_destroy.cpp
         src/services/impl/workflow/rendering/gpu_text_overlay_shader_loader.cpp
         src/services/impl/workflow/rendering/gpu_text_overlay_surface_factory.cpp
+        src/services/impl/workflow/rendering/gpu_text_overlay_upload.cpp
         src/services/impl/workflow/rendering/grid_draw_config.cpp
         src/services/impl/workflow/rendering/grid_draw_cubes.cpp
         src/services/impl/workflow/rendering/grid_gpu_resources.cpp
@@ -778,17 +781,28 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/quake3/workflow_q3_triggers_check_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_weapon_fire_step.cpp
         src/services/impl/workflow/quake3/workflow_q3_weapon_select_step.cpp
+        src/services/impl/workflow/gta5/gta5_asset_index_build.cpp
+        src/services/impl/workflow/gta5/gta5_asset_scan.cpp
+        src/services/impl/workflow/gta5/gta5_asset_scan_slice.cpp
+        src/services/impl/workflow/gta5/gta5_assets_index_step.cpp
+        src/services/impl/workflow/gta5/gta5_assets_ready.cpp
         src/services/impl/workflow/gta5/gta5_collision_body.cpp
         src/services/impl/workflow/gta5/gta5_collision_shape.cpp
         src/services/impl/workflow/gta5/gta5_draw_context_build.cpp
         src/services/impl/workflow/gta5/gta5_draw_instances.cpp
         src/services/impl/workflow/gta5/gta5_draw_one.cpp
         src/services/impl/workflow/gta5/gta5_draw_probe.cpp
+        src/services/impl/workflow/gta5/gta5_drawable_geometry.cpp
+        src/services/impl/workflow/gta5/gta5_drawable_locate.cpp
+        src/services/impl/workflow/gta5/gta5_drawable_mesh.cpp
         src/services/impl/workflow/gta5/gta5_evict_plan.cpp
         src/services/impl/workflow/gta5/gta5_geometry_cache.cpp
         src/services/impl/workflow/gta5/gta5_geometry_upload.cpp
         src/services/impl/workflow/gta5/gta5_grid.cpp
+        src/services/impl/workflow/gta5/gta5_indexed_texture.cpp
         src/services/impl/workflow/gta5/gta5_json_file.cpp
+        src/services/impl/workflow/gta5/gta5_load_progress.cpp
+        src/services/impl/workflow/gta5/gta5_loading_text_step.cpp
         src/services/impl/workflow/gta5/gta5_lod.cpp
         src/services/impl/workflow/gta5/gta5_lod_select_step.cpp
         src/services/impl/workflow/gta5/gta5_material_surface.cpp
@@ -796,6 +810,12 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_mesh_vertex.cpp
         src/services/impl/workflow/gta5/gta5_model_matrix.cpp
         src/services/impl/workflow/gta5/gta5_placement_parse.cpp
+        src/services/impl/workflow/gta5/gta5_player_hold_step.cpp
+        src/services/impl/workflow/gta5/gta5_resource.cpp
+        src/services/impl/workflow/gta5/gta5_resource_cache.cpp
+        src/services/impl/workflow/gta5/gta5_resource_load.cpp
+        src/services/impl/workflow/gta5/gta5_resource_text.cpp
+        src/services/impl/workflow/gta5/gta5_shader_surface.cpp
         src/services/impl/workflow/gta5/gta5_sky_draw_step.cpp
         src/services/impl/workflow/gta5/gta5_sky_uniforms.cpp
         src/services/impl/workflow/gta5/gta5_spawn_tile.cpp
@@ -803,9 +823,13 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_streaming_config_load.cpp
         src/services/impl/workflow/gta5/gta5_submesh_upload.cpp
         src/services/impl/workflow/gta5/gta5_texture_cache.cpp
+        src/services/impl/workflow/gta5/gta5_texture_copy.cpp
+        src/services/impl/workflow/gta5/gta5_texture_format.cpp
+        src/services/impl/workflow/gta5/gta5_texture_upload.cpp
         src/services/impl/workflow/gta5/gta5_tile_coord.cpp
         src/services/impl/workflow/gta5/gta5_tile_io.cpp
         src/services/impl/workflow/gta5/gta5_tile_order.cpp
+        src/services/impl/workflow/gta5/gta5_tile_source.cpp
         src/services/impl/workflow/gta5/gta5_tiles_draw_step.cpp
         src/services/impl/workflow/gta5/gta5_tiles_evict_step.cpp
         src/services/impl/workflow/gta5/gta5_tiles_load_step.cpp
@@ -820,9 +844,13 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_vehicle_spawn_step.cpp
         src/services/impl/workflow/gta5/gta5_vehicle_wheels.cpp
         src/services/impl/workflow/gta5/gta5_vehicles_sync_step.cpp
+        src/services/impl/workflow/gta5/gta5_vertex_layout.cpp
         src/services/impl/workflow/gta5/gta5_wanted_tiles.cpp
         src/services/impl/workflow/gta5/gta5_wheel_meshes.cpp
         src/services/impl/workflow/gta5/gta5_world_config_load.cpp
+        src/services/impl/workflow/gta5/gta5_ymap.cpp
+        src/services/impl/workflow/gta5/gta5_ymap_placement.cpp
+        src/services/impl/workflow/gta5/gta5_ymap_tile.cpp
         src/services/impl/workflow/workflow_definition_parser_includes.cpp
         src/services/impl/workflow/workflow_definition_parser_include_path.cpp
         src/services/impl/workflow/workflow_definition_parser_expand_include.cpp
@@ -881,6 +909,7 @@ if(BUILD_SDL3_APP)
         libzip::zip
         assimp::assimp
         spdlog::spdlog
+        ZLIB::ZLIB
     )
 endif()
 

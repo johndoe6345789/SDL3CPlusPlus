@@ -1,14 +1,18 @@
 #pragma once
 
+#include "services/interfaces/workflow/gta5/gta5_asset_index.hpp"
 #include "services/interfaces/workflow/gta5/gta5_config_types.hpp"
 #include "services/interfaces/workflow/gta5/gta5_geometry.hpp"
 #include "services/interfaces/workflow/gta5/gta5_placement.hpp"
+#include "services/interfaces/workflow/gta5/gta5_resource_cache.hpp"
 #include "services/interfaces/workflow/gta5/gta5_texture_cache.hpp"
 #include "services/interfaces/workflow/gta5/gta5_vehicle_types.hpp"
 #include "services/interfaces/workflow/gta5/gta5_tile_coord.hpp"
 
-#include <cstddef>
 #include <glm/glm.hpp>
+#include <cstddef>
+#include <future>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -59,6 +63,11 @@ struct Gta5StreamState {
 
     /// Tiles whose band changed; evict tears them down, load rebuilds.
     std::unordered_set<Gta5TileCoord, Gta5TileCoordHash> rebuild;
+
+    /// The map, indexed in memory off-thread, and files opened lately.
+    std::shared_ptr<const Gta5AssetIndex> assets;
+    std::future<std::shared_ptr<const Gta5AssetIndex>> assetsPending;
+    Gta5ResourceCache resources;
 
     /// Archetypes already reported missing, so the log says it once.
     std::unordered_set<std::string> reportedMissing;

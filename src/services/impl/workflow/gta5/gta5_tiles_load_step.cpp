@@ -1,9 +1,10 @@
 #include "services/interfaces/workflow/gta5/gta5_tiles_load_step.hpp"
 
+#include "services/interfaces/workflow/gta5/gta5_assets_index_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_grid.hpp"
 #include "services/interfaces/workflow/gta5/gta5_spawn_tile.hpp"
 #include "services/interfaces/workflow/gta5/gta5_step_params.hpp"
-#include "services/interfaces/workflow/gta5/gta5_tile_io.hpp"
+#include "services/interfaces/workflow/gta5/gta5_tile_source.hpp"
 #include "services/interfaces/workflow/gta5/gta5_tile_order.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
@@ -30,6 +31,10 @@ void WorkflowGta5TilesLoadStep::Execute(const WorkflowStepDefinition& step,
     if (!device) return;
     auto* world =
         context.Get<btDiscreteDynamicsWorld*>("physics_world", nullptr);
+    // With the map indexed, tiles are read from its ymaps; until the
+    // background build finishes there is nothing to load yet.
+    const bool indexed = state_->assets || state_->assetsPending.valid();
+    if (indexed && !Gta5AssetsReady(*state_, logger_)) return;
 
     const std::string tilesDir = Gta5ResolvePath(
         step, context, "tiles_dir", "packages/gta5/assets/tiles");
@@ -44,10 +49,10 @@ void WorkflowGta5TilesLoadStep::Execute(const WorkflowStepDefinition& step,
         Gta5ResidentTile& resident = state_->resident[tile];
 
         if (!resident.placementsRead) {
-            // A missing tile file is normal out at sea. Mark it read so we
-            // do not stat the same absent file every frame.
-            ReadGta5TileFile(Gta5TilePath(tilesDir, tile),
-                             resident.placements, logger_);
+            // Marked read even when empty, so an empty tile is not
+            // searched again every frame.
+            ReadGta5TilePlacements(*state_, tilesDir, tile,
+                                   resident.placements, logger_);
             resident.placementsRead = true;
             const float distance =
                 glm::distance(Gta5TileCentre(state_->world, tile),

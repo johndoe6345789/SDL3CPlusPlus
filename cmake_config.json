@@ -54,7 +54,8 @@
       "assimp",
       "libzip",
       "spdlog",
-      "GTest"
+      "GTest",
+      "ZLIB"
     ]
   },
   "source_exclusions": [
@@ -198,7 +199,8 @@
         "EnTT::EnTT",
         "libzip::zip",
         "assimp::assimp",
-        "spdlog::spdlog"
+        "spdlog::spdlog",
+        "ZLIB::ZLIB"
       ],
       "compile_definitions": [],
       "name": "sdl3_app",

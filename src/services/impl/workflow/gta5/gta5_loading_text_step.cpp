@@ -1,0 +1,43 @@
+#include "services/interfaces/workflow/gta5/gta5_loading_text_step.hpp"
+
+#include "services/interfaces/workflow/rendering/gpu_text_overlay_upload.hpp"
+#include "services/interfaces/workflow/rendering/workflow_postfx_composite_state.hpp"
+
+#include <utility>
+
+namespace sdl3cpp::services::impl {
+
+WorkflowGta5LoadingTextStep::WorkflowGta5LoadingTextStep(
+    std::shared_ptr<ILogger> logger)
+    : logger_(std::move(logger)) {}
+
+std::string WorkflowGta5LoadingTextStep::GetPluginId() const {
+    return "gta5.loading.text";
+}
+
+void WorkflowGta5LoadingTextStep::Execute(const WorkflowStepDefinition&,
+                                          WorkflowContext& context) {
+    if (context.GetBool("frame_skip", false)) return;
+    if (context.GetString(kPostfxCompositeStateKey) !=
+        kPostfxCompositeStateDrawn) {
+        return;
+    }
+    auto* cmd =
+        context.Get<SDL_GPUCommandBuffer*>("gpu_command_buffer", nullptr);
+    auto* res = context.Get<GpuTextOverlayResources*>(
+        "postfx_overlay_resources", nullptr);
+    if (!cmd || !res) return;
+
+    // Blank until the hold has something to say, and blank again after:
+    // the overlay texture is never left holding whatever it was created
+    // with.
+    const std::string text = context.GetString("gta5.loading.text", "");
+    if (uploaded_ && text == shown_) return;
+    const SDL_Color amber{255, 220, 50, 255};
+    if (UploadGpuTextOverlayText(*res, cmd, text.c_str(), amber)) {
+        uploaded_ = true;
+        shown_ = text;
+    }
+}
+
+}  // namespace sdl3cpp::services::impl

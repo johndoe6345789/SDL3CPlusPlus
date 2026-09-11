@@ -4,6 +4,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <cstdint>
 #include <string>
 
 namespace sdl3cpp::services::impl {
@@ -12,6 +13,10 @@ namespace sdl3cpp::services::impl {
 /// packages/gta5/tools/import_codewalker_export.py.
 struct Gta5Placement {
     std::string archetype;
+    /// Jenkins hash of the archetype name, which is all a binary ymap
+    /// stores. Nonzero means the drawable is found through the asset
+    /// index rather than through modelPath.
+    std::uint32_t archetypeHash{0};
     std::string modelPath;  // empty when the archetype was not exported
     glm::vec3 position{0.f};
     glm::quat rotation{1.f, 0.f, 0.f, 0.f};  // (w, x, y, z)
