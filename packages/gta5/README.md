@@ -104,11 +104,26 @@ The cache build is slow and happens once; the script drops a
 `.cache_built` marker in the work folder to skip it afterwards. Delete
 that marker to force a rebuild after patching the game.
 
-It cannot do the meshes. GTAUtil has no drawable export command, so
-`.ydr`/`.ydd` still have to come out of CodeWalker as glTF, OBJ, FBX,
-DAE or PLY, named after their archetype. Point `MODEL_SRC` at them and
-re-run; until then placements are written with `model: null`, reported,
-and skipped at load, so a placements-only run still works.
+It does the meshes too. `tools/ydr_to_gltf.py` reads the RAGE resource
+format directly, so CodeWalker is not needed anywhere in the pipeline.
+On downtown it converts 1,879 drawables -- 6.4 million vertices -- with
+nothing skipped.
+
+That reader never touches archive encryption. An extracted `.ydr` is a
+plain RSC7 resource: stock `zlib.decompress(data[16:], -15)` opens it.
+Everything after that is structure walking, and it is checked rather
+than assumed -- the two page-size flag words must sum exactly to the
+decompressed length or the file is refused, and positions were
+confirmed by checking they fall inside the drawable's own bounding box.
+
+It emits POSITION and NORMAL only. UVs are skipped deliberately: the
+vertex layout varies per archetype and textures live in `.ytd`, a format
+this does not read, so a UV would have nothing to sample. Buildings come
+out untextured but correctly shaped, placed and lit.
+
+Archetypes still missing are the ones in `.ydd` dictionaries and the
+SLOD meshes that live in other folders; they are written with
+`model: null`, reported, and skipped at load.
 
 On its first run GTAUtil prompts `GTAV folder :` and waits for you to
 type the path to your install. **It has to be a Legacy install.**

@@ -1,0 +1,664 @@
+{
+  "tile": [
+    8,
+    17
+  ],
+  "bounds_min": [
+    96.0,
+    704.0
+  ],
+  "tile_size": 512.0,
+  "placements": [
+    {
+      "archetype": "test_road",
+      "model": "packages/gta5/assets/models/test_road.gltf",
+      "position": [
+        195.0,
+        30.7,
+        806.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "slod2"
+    },
+    {
+      "archetype": "test_tower_b",
+      "model": "packages/gta5/assets/models/test_tower_b.gltf",
+      "position": [
+        195.0,
+        30.7,
+        806.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "slod1"
+    },
+    {
+      "archetype": "test_road",
+      "model": "packages/gta5/assets/models/test_road.gltf",
+      "position": [
+        195.0,
+        30.7,
+        934.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "slod2"
+    },
+    {
+      "archetype": "test_road",
+      "model": "packages/gta5/assets/models/test_road.gltf",
+      "position": [
+        195.0,
+        30.7,
+        1062.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "slod2"
+    },
+    {
+      "archetype": "test_tower_b",
+      "model": "packages/gta5/assets/models/test_tower_b.gltf",
+      "position": [
+        195.0,
+        30.7,
+        1062.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "slod1"
+    },
+    {
+      "archetype": "test_road",
+      "model": "packages/gta5/assets/models/test_road.gltf",
+      "position": [
+        195.0,
+        30.7,
+        1190.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "slod2"
+    },
+    {
+      "archetype": "test_tower_b",
+      "model": "packages/gta5/assets/models/test_tower_b.gltf",
+      "position": [
+        195.0,
+        30.7,
+        1190.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "slod1"
+    },
+    {
+      "archetype": "test_road",
+      "model": "packages/gta5/assets/models/test_road.gltf",
+      "position": [
+        323.0,
+        30.7,
+        806.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "slod2"
+    },
+    {
+      "archetype": "test_tower_b",
+      "model": "packages/gta5/assets/models/test_tower_b.gltf",
+      "position": [
+        323.0,
+        30.7,
+        806.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "slod1"
+    },
+    {
+      "archetype": "test_road",
+      "model": "packages/gta5/assets/models/test_road.gltf",
+      "position": [
+        323.0,
+        30.7,
+        934.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "slod2"
+    },
+    {
+      "archetype": "test_tower_b",
+      "model": "packages/gta5/assets/models/test_tower_b.gltf",
+      "position": [
+        323.0,
+        30.7,
+        934.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "slod1"
+    },
+    {
+      "archetype": "test_road",
+      "model": "packages/gta5/assets/models/test_road.gltf",
+      "position": [
+        323.0,
+        30.7,
+        1062.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "slod2"
+    },
+    {
+      "archetype": "test_tower_b",
+      "model": "packages/gta5/assets/models/test_tower_b.gltf",
+      "position": [
+        323.0,
+        30.7,
+        1062.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "slod1"
+    },
+    {
+      "archetype": "test_road",
+      "model": "packages/gta5/assets/models/test_road.gltf",
+      "position": [
+        323.0,
+        30.7,
+        1190.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "slod2"
+    },
+    {
+      "archetype": "test_tower_b",
+      "model": "packages/gta5/assets/models/test_tower_b.gltf",
+      "position": [
+        323.0,
+        30.7,
+        1190.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "slod1"
+    },
+    {
+      "archetype": "test_road",
+      "model": "packages/gta5/assets/models/test_road.gltf",
+      "position": [
+        451.0,
+        30.7,
+        806.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "slod2"
+    },
+    {
+      "archetype": "test_tower_b",
+      "model": "packages/gta5/assets/models/test_tower_b.gltf",
+      "position": [
+        451.0,
+        30.7,
+        806.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "slod1"
+    },
+    {
+      "archetype": "test_road",
+      "model": "packages/gta5/assets/models/test_road.gltf",
+      "position": [
+        451.0,
+        30.7,
+        934.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "slod2"
+    },
+    {
+      "archetype": "test_tower_b",
+      "model": "packages/gta5/assets/models/test_tower_b.gltf",
+      "position": [
+        451.0,
+        30.7,
+        934.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "slod1"
+    },
+    {
+      "archetype": "test_road",
+      "model": "packages/gta5/assets/models/test_road.gltf",
+      "position": [
+        451.0,
+        30.7,
+        1062.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "slod2"
+    },
+    {
+      "archetype": "test_tower_b",
+      "model": "packages/gta5/assets/models/test_tower_b.gltf",
+      "position": [
+        451.0,
+        30.7,
+        1062.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "slod1"
+    },
+    {
+      "archetype": "test_road",
+      "model": "packages/gta5/assets/models/test_road.gltf",
+      "position": [
+        451.0,
+        30.7,
+        1190.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "slod2"
+    },
+    {
+      "archetype": "test_tower_b",
+      "model": "packages/gta5/assets/models/test_tower_b.gltf",
+      "position": [
+        451.0,
+        30.7,
+        1190.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "slod1"
+    },
+    {
+      "archetype": "test_road",
+      "model": "packages/gta5/assets/models/test_road.gltf",
+      "position": [
+        579.0,
+        30.7,
+        806.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "slod2"
+    },
+    {
+      "archetype": "test_tower_a",
+      "model": "packages/gta5/assets/models/test_tower_a.gltf",
+      "position": [
+        579.0,
+        30.7,
+        806.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "lod"
+    },
+    {
+      "archetype": "test_road",
+      "model": "packages/gta5/assets/models/test_road.gltf",
+      "position": [
+        579.0,
+        30.7,
+        934.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "slod2"
+    },
+    {
+      "archetype": "test_tower_a",
+      "model": "packages/gta5/assets/models/test_tower_a.gltf",
+      "position": [
+        579.0,
+        30.7,
+        934.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "lod"
+    },
+    {
+      "archetype": "test_road",
+      "model": "packages/gta5/assets/models/test_road.gltf",
+      "position": [
+        579.0,
+        30.7,
+        1062.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "slod2"
+    },
+    {
+      "archetype": "test_tower_a",
+      "model": "packages/gta5/assets/models/test_tower_a.gltf",
+      "position": [
+        579.0,
+        30.7,
+        1062.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "lod"
+    },
+    {
+      "archetype": "test_road",
+      "model": "packages/gta5/assets/models/test_road.gltf",
+      "position": [
+        579.0,
+        30.7,
+        1190.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "slod2"
+    },
+    {
+      "archetype": "test_tower_a",
+      "model": "packages/gta5/assets/models/test_tower_a.gltf",
+      "position": [
+        579.0,
+        30.7,
+        1190.0
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "lod": "lod"
+    }
+  ]
+}
