@@ -799,6 +799,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_drawable_locate.cpp
         src/services/impl/workflow/gta5/gta5_drawable_mesh.cpp
         src/services/impl/workflow/gta5/gta5_evict_plan.cpp
+        src/services/impl/workflow/gta5/gta5_fall_guard.cpp
         src/services/impl/workflow/gta5/gta5_finite_guard.cpp
         src/services/impl/workflow/gta5/gta5_fragment_axles.cpp
         src/services/impl/workflow/gta5/gta5_frame_mark_step.cpp

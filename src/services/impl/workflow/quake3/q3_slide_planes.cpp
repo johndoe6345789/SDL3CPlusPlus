@@ -43,8 +43,13 @@ glm::vec3 ResolveAgainstPlanes(const glm::vec3& velocity,
                 continue;  // no longer re-entering the first plane
             }
 
-            const glm::vec3 crease =
-                glm::normalize(glm::cross(planes[i], planes[j]));
+            // Two planes facing each other -- the player squeezed against
+            // a car's opposite sides -- have no crease to slide along, and
+            // normalising their zero cross product made the player NaN.
+            const glm::vec3 across = glm::cross(planes[i], planes[j]);
+            const float length = glm::length(across);
+            if (length < 1e-4f) return glm::vec3(0.0f);
+            const glm::vec3 crease = across / length;
             clipped = crease * glm::dot(crease, velocity);
 
             for (int k = 0; k < numPlanes; ++k) {

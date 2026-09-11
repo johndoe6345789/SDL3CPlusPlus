@@ -21,4 +21,11 @@ void GuardGta5PlayerFinite(Gta5StreamState& state, WorkflowContext& context,
                            btRigidBody* player,
                            const std::shared_ptr<ILogger>& logger);
 
+/// Catch a player who has fallen through the floor: falling fast, with
+/// nothing below for a kilometre but a surface above. Puts them back on
+/// that surface and logs where. Called by GuardGta5PlayerFinite.
+void GuardGta5PlayerFall(Gta5StreamState& state, WorkflowContext& context,
+                         btRigidBody* player,
+                         const std::shared_ptr<ILogger>& logger);
+
 }  // namespace sdl3cpp::services::impl

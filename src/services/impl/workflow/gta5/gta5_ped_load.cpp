@@ -60,7 +60,8 @@ bool LoadGta5Ped(Gta5StreamState& state, SDL_GPUDevice* device,
         logger->Info("gta5.player.character: " + spec.name + ", " +
                      std::to_string(ped.parts.size()) + " parts, " +
                      std::to_string(vertices) + " vertices, " +
-                     std::to_string(ped.skeleton.names.size()) + " bones");
+                     std::to_string(ped.skeleton.names.size()) + " bones, " +
+                     std::to_string(ped.textures.size()) + " textured");
     }
     return true;
 }

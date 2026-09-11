@@ -30,4 +30,18 @@ glm::vec3 Gta5ClearEye(btDiscreteDynamicsWorld* world, const glm::vec3& head,
            glm::normalize(head - eye) * 0.2f;
 }
 
+bool Gta5RayHit(btDiscreteDynamicsWorld* world, const glm::vec3& from,
+                const glm::vec3& to, const btCollisionObject* skip,
+                glm::vec3* at) {
+    if (!world) return false;
+    PastPlayer hit(btVector3(from.x, from.y, from.z),
+                   btVector3(to.x, to.y, to.z), skip);
+    world->rayTest(hit.m_rayFromWorld, hit.m_rayToWorld, hit);
+    if (hit.hasHit() && at) {
+        const btVector3& p = hit.m_hitPointWorld;
+        *at = glm::vec3(p.x(), p.y(), p.z());
+    }
+    return hit.hasHit();
+}
+
 }  // namespace sdl3cpp::services::impl

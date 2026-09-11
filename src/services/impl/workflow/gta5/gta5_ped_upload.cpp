@@ -1,6 +1,7 @@
 #include "services/interfaces/workflow/gta5/gta5_ped_frame.hpp"
 
 #include "services/interfaces/workflow/gta5/gta5_texture_upload.hpp"
+#include "services/interfaces/workflow/graphics/texture_load_sampler.hpp"
 
 namespace sdl3cpp::services::impl {
 
@@ -23,6 +24,12 @@ bool UploadGta5PedPart(Gta5StreamState& state, SDL_GPUDevice* device,
     const Gta5TextureBlob blob = ReadGta5DictionaryTexture(ytd, m.textureHash);
     const Gta5GpuTexture gpu =
         UploadGta5TextureBlob(blob, device, state.uploads);
+    // The ped loads on the first frame, before any map texture has made
+    // the shared sampler; without one it wore the placeholder bricks.
+    if (gpu.texture && !state.textureSampler) {
+        state.textureSampler = CreateTextureLoadSampler(device, nullptr, 16,
+                                                        0.f);
+    }
     if (gpu.texture && state.textureSampler) {
         owned.push_back(gpu.texture);
         sub.texture = gpu.texture;

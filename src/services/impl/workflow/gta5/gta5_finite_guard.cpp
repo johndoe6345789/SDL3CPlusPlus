@@ -44,6 +44,7 @@ void GuardGta5PlayerFinite(Gta5StreamState& state, WorkflowContext& context,
         g_lastAt = at;
         g_lastVelocity = velocity;
         g_known = true;
+        GuardGta5PlayerFall(state, context, player, logger);
         return;
     }
     if (!g_reported && logger) {

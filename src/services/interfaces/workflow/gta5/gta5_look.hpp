@@ -24,4 +24,10 @@ inline glm::vec3 Gta5LookRight(float yaw) {
 glm::vec3 Gta5ClearEye(btDiscreteDynamicsWorld* world, const glm::vec3& head,
                        const glm::vec3& eye, const btCollisionObject* player);
 
+/// Whether a ray from `from` to `to` hits anything but `skip`; the first
+/// hit's point goes to `at` when it is given.
+bool Gta5RayHit(btDiscreteDynamicsWorld* world, const glm::vec3& from,
+                const glm::vec3& to, const btCollisionObject* skip,
+                glm::vec3* at);
+
 }  // namespace sdl3cpp::services::impl
