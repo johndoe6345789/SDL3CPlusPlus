@@ -791,6 +791,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_bone_pose.cpp
         src/services/impl/workflow/gta5/gta5_collision_body.cpp
         src/services/impl/workflow/gta5/gta5_collision_shape.cpp
+        src/services/impl/workflow/gta5/gta5_daylight.cpp
         src/services/impl/workflow/gta5/gta5_draw_bind.cpp
         src/services/impl/workflow/gta5/gta5_draw_context_build.cpp
         src/services/impl/workflow/gta5/gta5_draw_instances.cpp
@@ -886,6 +887,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_tiles_evict_step.cpp
         src/services/impl/workflow/gta5/gta5_tiles_load_step.cpp
         src/services/impl/workflow/gta5/gta5_tiles_resolve_step.cpp
+        src/services/impl/workflow/gta5/gta5_time_step.cpp
         src/services/impl/workflow/gta5/gta5_upload_batch.cpp
         src/services/impl/workflow/gta5/gta5_upload_batch_flush.cpp
         src/services/impl/workflow/gta5/gta5_vehicle.cpp
