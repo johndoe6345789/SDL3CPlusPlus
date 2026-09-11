@@ -25,6 +25,17 @@ void WorkflowGta5VehiclesSyncStep::Execute(
     // Before the matrices are copied, so a frozen car draws where it is
     // held rather than where the physics step just dropped it.
     HoldGta5VehiclesOverMissingGround(*state_);
+    // Before UpdateGta5Vehicles, which clears each wheel's contact flag.
+    // While seated, on getting in and then twice a second: what the car is
+    // doing, since a car that will not move looks the same whatever the
+    // reason. Timed, not counted: streaming makes frames uneven.
+    const std::uint64_t now = SDL_GetTicks();
+    if (logger_ && state_->seated >= 0 &&
+        state_->seated < static_cast<int>(state_->vehicles.size()) &&
+        (lastReportMs_ == 0 || now - lastReportMs_ >= 500)) {
+        lastReportMs_ = now;
+        logger_->Info(DescribeGta5Vehicle(state_->vehicles[state_->seated]));
+    }
     UpdateGta5Vehicles(*state_);
 
     // Report once: a wheel drawn at the wrong place looks identical to
@@ -44,16 +55,6 @@ void WorkflowGta5VehiclesSyncStep::Execute(
                     std::to_string(w.y()) + "," + std::to_string(w.z()) + "]";
         }
         logger_->Info(line + (car.hasWheels ? "" : " (no wheel meshes)"));
-    }
-    // While seated, on getting in and then twice a second: what the car is
-    // doing, since a car that will not move looks the same whatever the
-    // reason. Timed, not counted: streaming makes frames uneven.
-    const std::uint64_t now = SDL_GetTicks();
-    if (logger_ && state_->seated >= 0 &&
-        state_->seated < static_cast<int>(state_->vehicles.size()) &&
-        (lastReportMs_ == 0 || now - lastReportMs_ >= 500)) {
-        lastReportMs_ = now;
-        logger_->Info(DescribeGta5Vehicle(state_->vehicles[state_->seated]));
     }
     context.Set("gta5.vehicles.count",
                 static_cast<int>(state_->vehicles.size()));

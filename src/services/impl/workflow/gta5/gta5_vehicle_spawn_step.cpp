@@ -52,6 +52,7 @@ void WorkflowGta5VehicleSpawnStep::Execute(const WorkflowStepDefinition& step,
                            Gta5NumberOr(step, "paint_b", 1.f));
     spec.wheelRadius = Gta5NumberOr(step, "wheel_radius", spec.wheelRadius);
     spec.wheelWidth = Gta5NumberOr(step, "wheel_width", spec.wheelWidth);
+    spec.heading = Gta5NumberOr(step, "heading", 0.f);
 
     // One attempt: reading from the map either works or it never will.
     spawned_ = true;

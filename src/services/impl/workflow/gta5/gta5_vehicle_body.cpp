@@ -7,8 +7,8 @@ namespace sdl3cpp::services::impl {
 namespace {
 
 /// Axis-aligned bounds of the collision mesh the upload already built.
-bool MeshBounds(const Gta5Geometry& geometry, btVector3& centre,
-                btVector3& half) {
+bool MeshBounds(const Gta5Geometry& geometry, float floorY,
+                btVector3& centre, btVector3& half) {
     const auto& verts = geometry.collisionVertices;
     if (verts.empty()) return false;
 
@@ -23,6 +23,7 @@ bool MeshBounds(const Gta5Geometry& geometry, btVector3& centre,
             hi[axis] = std::max(hi[axis], value);
         }
     }
+    lo[1] = std::min(std::max(lo[1], floorY), hi[1] - 0.2f);
     centre = btVector3((lo[0] + hi[0]) * 0.5f, (lo[1] + hi[1]) * 0.5f,
                        (lo[2] + hi[2]) * 0.5f);
     half = btVector3(std::max(0.1f, (hi[0] - lo[0]) * 0.5f),
@@ -35,10 +36,11 @@ bool MeshBounds(const Gta5Geometry& geometry, btVector3& centre,
 
 btRigidBody* MakeGta5VehicleBody(const Gta5Geometry& geometry,
                                  const glm::vec3& position, float mass,
-                                 btCollisionShape*& outShape) {
+                                 btCollisionShape*& outShape,
+                                 float floorY) {
     btVector3 centre(0, 0, 0);
     btVector3 half(2.4f, 0.75f, 1.0f);
-    const bool measured = MeshBounds(geometry, centre, half);
+    const bool measured = MeshBounds(geometry, floorY, centre, half);
 
     // The body mesh is not centred on its own origin, so a box placed at
     // the origin sits lower than the car and holds it off the road. A

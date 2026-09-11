@@ -17,8 +17,18 @@ bool SpawnGta5Vehicle(Gta5StreamState& state, const Gta5VehicleSpec& spec,
         return false;
     }
     Gta5Geometry& geometry = *car.instance.geometry;
-    car.chassis = MakeGta5VehicleBody(geometry, position, mass,
-                                      car.chassisShape);
+    // The box floor starts at axle height. Sized from the whole mesh it
+    // reached down to the brake discs, 8 cm above where the wheels rest,
+    // and beached the car on the first kerb with its front wheels off
+    // the ground.
+    car.chassis = MakeGta5VehicleBody(
+        geometry, position, mass, car.chassisShape,
+        setup.hasAxles ? setup.axles[0].y() : -1.0e9f);
+    btTransform facing = car.chassis->getWorldTransform();
+    facing.setRotation(
+        btQuaternion(btVector3(0.f, 1.f, 0.f), glm::radians(spec.heading)));
+    car.chassis->setWorldTransform(facing);
+    car.chassis->getMotionState()->setWorldTransform(facing);
     world->addRigidBody(car.chassis);
     car.instance.body = car.chassis;
 

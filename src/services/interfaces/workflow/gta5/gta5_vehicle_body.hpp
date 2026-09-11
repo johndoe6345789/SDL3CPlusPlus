@@ -13,6 +13,7 @@ namespace sdl3cpp::services::impl {
 /// the ground. `outShape` receives the box, which the caller owns.
 btRigidBody* MakeGta5VehicleBody(const Gta5Geometry& geometry,
                                  const glm::vec3& position, float mass,
-                                 btCollisionShape*& outShape);
+                                 btCollisionShape*& outShape,
+                                 float floorY = -1.0e9f);
 
 }  // namespace sdl3cpp::services::impl
