@@ -268,6 +268,11 @@
       "plugin": "postfx.overlay_fps_draw"
     },
     {
+      "id": "hud",
+      "plugin": "gta5.hud",
+      "comment": "The heads-up display: health and armour bars, the weapon and its ammunition, and while driving a speedometer and tachometer. Over the finished frame; the Tab map, after it, covers it."
+    },
+    {
       "id": "map_draw",
       "plugin": "gta5.map.draw",
       "comment": "Tab: GTA's pause-map art full screen, with an arrow where the player is. The rectangle is the world the six minimap tiles cover, in metres, GTA's y north.",

@@ -16,8 +16,8 @@ namespace {
 /// gear and fall back at the change.
 constexpr float kGearTop[5] = {8.f, 17.f, 27.f, 39.f, 55.f};
 
-float Revs(float speed) {
-    int gear = 0;
+float Revs(float speed, int& gear) {
+    gear = 0;
     while (gear < 4 && speed > kGearTop[gear]) ++gear;
     const float low = gear > 0 ? kGearTop[gear - 1] : 0.f;
     return std::clamp((speed - low) / (kGearTop[gear] - low), 0.f, 1.f);
@@ -40,9 +40,12 @@ void WorkflowGta5SoundStep::Engine(WorkflowContext& context, float dt) {
                                           Gta5KeyDown(keys, "S"));
     // Idle at rest; the throttle pulls the revs ahead of the speed, and
     // they ease rather than jump.
+    int gear = 0;
     const float wanted =
-        std::min(1.f, 0.85f * Revs(speed) + (throttle ? 0.15f : 0.f));
+        std::min(1.f, 0.85f * Revs(speed, gear) + (throttle ? 0.15f : 0.f));
     revs_ += (wanted - revs_) * std::min(1.f, dt * 6.f);
+    context.Set<float>("gta5.car.revs", revs_);  // for the tachometer
+    context.Set<int>("gta5.car.gear", gear + 1);
     // Heard from the player: full in the seat, fading 10 m out of it.
     const auto ps = context.Get<Q3PlayerState>("q3.ps", Q3PlayerState{});
     const btVector3 at = chassis->getCenterOfMassPosition();
