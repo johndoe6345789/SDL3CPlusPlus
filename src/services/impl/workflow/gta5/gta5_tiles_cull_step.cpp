@@ -32,6 +32,7 @@ void WorkflowGta5TilesCullStep::Execute(const WorkflowStepDefinition& step,
         context.Get<glm::vec3>("render.camera_pos", glm::vec3(0.f));
     BuildGta5InstanceBatch(*state_, proj * view, camera,
                            Gta5NumberOr(step, "cull_size_ratio", 0.003f),
+                           Gta5NumberOr(step, "lod_scale", 1.f),
                            state_->batch);
     if (!UploadGta5InstanceBatch(device, state_->batch)) {
         // Nothing is drawn from a batch that did not upload.

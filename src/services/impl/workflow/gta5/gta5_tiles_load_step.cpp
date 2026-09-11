@@ -55,8 +55,14 @@ void WorkflowGta5TilesLoadStep::Execute(const WorkflowStepDefinition& step,
         if (spawned >= budget) break;
         Gta5ResidentTile& resident = state_->resident[tile];
         if (!resident.placementsRead) {
-            if (reads-- <= 0) continue;
-            ReadGta5ResidentTile(*state_, tilesDir, tile, resident, logger_);
+            if (!resident.reading.valid()) {
+                if (reads-- > 0) {
+                    StartGta5TileRead(*state_, tilesDir, tile, resident,
+                                      logger_);
+                }
+                continue;
+            }
+            if (!TakeGta5TileRead(*state_, tile, resident, logger_)) continue;
         } else if (!resident.prefetched) {
             PrefetchGta5Tile(*state_, resident);  // rebuilt at a new band
         }

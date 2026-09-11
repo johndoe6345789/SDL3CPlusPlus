@@ -23,12 +23,12 @@
   "lod_rings": [
     {
       "name": "hd",
-      "max_distance_metres": 300,
+      "max_distance_metres": 800,
       "comment": "Full-detail drawables. Matches the lodDist most GTA V HD archetypes ship with."
     },
     {
       "name": "lod",
-      "max_distance_metres": 1000,
+      "max_distance_metres": 1600,
       "comment": "Per-building LOD meshes."
     },
     {

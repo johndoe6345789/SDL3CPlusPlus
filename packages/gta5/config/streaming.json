@@ -16,7 +16,7 @@
 
   "prefetch": {
     "enabled": true,
-    "velocity_lead_seconds": 2.0,
-    "comment": "Bias the load centre along the player's velocity so tiles land before they are looked at."
+    "velocity_lead_seconds": 6.0,
+    "comment": "Also want the tiles around where the player will be in velocity_lead_seconds -- the car's velocity when seated -- so tiles ahead are read before they are reached. Capped inside the evict radius."
   }
 }

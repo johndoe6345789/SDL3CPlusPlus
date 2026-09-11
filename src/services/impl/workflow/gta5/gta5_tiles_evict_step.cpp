@@ -1,5 +1,7 @@
 #include "services/interfaces/workflow/gta5/gta5_tiles_evict_step.hpp"
 
+#include <SDL3/SDL_timer.h>
+
 #include "services/interfaces/workflow/gta5/gta5_evict_plan.hpp"
 #include "services/interfaces/workflow/gta5/gta5_geometry_cache.hpp"
 #include "services/interfaces/workflow_context.hpp"
@@ -23,6 +25,7 @@ void WorkflowGta5TilesEvictStep::Execute(
     const WorkflowStepDefinition& /*step*/, WorkflowContext& context) {
     if (!state_ || state_->resident.empty()) return;
 
+    const std::uint64_t start = SDL_GetTicksNS();
     const Gta5EvictResult result = ApplyGta5EvictPlan(
         *state_,
         context.Get<btDiscreteDynamicsWorld*>("physics_world",
@@ -34,6 +37,13 @@ void WorkflowGta5TilesEvictStep::Execute(
     // it.
     SweepGta5GeometryCache(
         *state_, context.Get<SDL_GPUDevice*>("gpu_device", nullptr), logger_);
+    const auto ms = (SDL_GetTicksNS() - start) / 1000000u;
+    if (logger_ && ms >= 3) {
+        logger_->Info("gta5.tiles.evict: " + std::to_string(ms) +
+                      " ms to release " +
+                      std::to_string(result.instancesReleased) +
+                      " instances");
+    }
 
     if (logger_) {
         logger_->Trace("WorkflowGta5TilesEvictStep", "Execute",

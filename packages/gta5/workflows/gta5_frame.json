@@ -78,7 +78,8 @@
       "id": "tiles_cull",
       "plugin": "gta5.tiles.cull",
       "parameters": {
-        "cull_size_ratio": 0.003
+        "cull_size_ratio": 0.003,
+        "lod_scale": 1.25
       }
     },
     {

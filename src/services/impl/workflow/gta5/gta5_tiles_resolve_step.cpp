@@ -2,6 +2,7 @@
 
 #include "services/interfaces/workflow/gta5/gta5_grid.hpp"
 #include "services/interfaces/workflow/gta5/gta5_step_params.hpp"
+#include "services/interfaces/workflow/gta5/gta5_stream_lead.hpp"
 #include "services/interfaces/workflow/gta5/gta5_streaming_config_load.hpp"
 #include "services/interfaces/workflow/gta5/gta5_wanted_tiles.hpp"
 #include "services/interfaces/workflow/gta5/gta5_world_config_load.hpp"
@@ -44,13 +45,12 @@ void WorkflowGta5TilesResolveStep::Execute(
         return;
     }
 
-    glm::vec3 centre = playerState->origin;
-    if (state_->streaming.prefetchEnabled) {
-        centre += playerState->velocity * state_->streaming.velocityLeadSeconds;
-    }
-    state_->centreOrigin = playerState->origin;
-    state_->centre = Gta5TileForPosition(state_->world, centre);
-    ResolveGta5WantedTiles(*state_, centre);
+    const glm::vec3 origin = playerState->origin;
+    state_->centreOrigin = origin;
+    state_->centre = Gta5TileForPosition(state_->world, origin);
+    ResolveGta5WantedTiles(
+        *state_, origin,
+        origin + Gta5StreamLead(*state_, playerState->velocity));
 
     context.Set("gta5.tiles.wanted_count",
                 static_cast<int>(state_->wanted.size()));
