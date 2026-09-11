@@ -4,17 +4,17 @@
 #include "services/interfaces/workflow/gta5/gta5_collision_body.hpp"
 #include "services/interfaces/workflow/gta5/gta5_geometry_cache.hpp"
 #include "services/interfaces/workflow/gta5/gta5_model_matrix.hpp"
+#include "services/interfaces/workflow/gta5/gta5_proxy.hpp"
 
 namespace sdl3cpp::services::impl {
 namespace {
 
-/// Reflection, mirror, shadow, water and light proxies: stand-ins GTA
-/// renders only into reflections, shadow maps and light passes. Drawn,
-/// dt1_05_reflproxy smeared a district over its own streets.
-bool IsProxy(const Gta5StreamState& state, std::uint32_t hash) {
+/// A stand-in for a special pass -- see Gta5ProxyKind -- which the view
+/// never draws. Land, LOD and prop "proxies" are scenery and still are.
+bool IsPassProxy(const Gta5StreamState& state, std::uint32_t hash) {
     return state.assets && hash != 0 &&
-           Gta5ArchetypeName(*state.assets, hash).find("proxy") !=
-               std::string::npos;
+           ClassifyGta5Proxy(Gta5ArchetypeName(*state.assets, hash)) !=
+               Gta5ProxyKind::None;
 }
 
 }  // namespace
@@ -33,10 +33,10 @@ int SpawnGta5TilePlacements(Gta5StreamState& state,
 
         // Placements authored for a finer band than the tile is drawn at
         // are skipped: at SLOD range we want the merged shells, not every
-        // railing. Nor are proxies drawn at all.
+        // railing. Nor are pass proxies drawn at all.
         if (static_cast<int>(placement.lod) <
                 static_cast<int>(resident.bandAtSpawn) ||
-            IsProxy(state, placement.archetypeHash)) {
+            IsPassProxy(state, placement.archetypeHash)) {
             ++resident.spawnedCount;
             ++consumed;
             continue;

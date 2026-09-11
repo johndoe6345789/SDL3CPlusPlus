@@ -856,6 +856,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_player_pin.cpp
         src/services/impl/workflow/gta5/gta5_prepared_finish.cpp
         src/services/impl/workflow/gta5/gta5_prepared_geometry.cpp
+        src/services/impl/workflow/gta5/gta5_proxy.cpp
         src/services/impl/workflow/gta5/gta5_range_allocator.cpp
         src/services/impl/workflow/gta5/gta5_resource.cpp
         src/services/impl/workflow/gta5/gta5_resource_cache.cpp
