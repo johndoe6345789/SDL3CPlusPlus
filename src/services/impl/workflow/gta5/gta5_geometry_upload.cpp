@@ -1,15 +1,14 @@
 #include "services/interfaces/workflow/gta5/gta5_geometry_upload.hpp"
 
-#include "services/interfaces/workflow/graphics/graphics_gpu_buffer_upload.hpp"
 #include "services/interfaces/workflow/gta5/gta5_collision_shape.hpp"
 #include "services/interfaces/workflow/gta5/gta5_mesh_extract.hpp"
+#include "services/interfaces/workflow/gta5/gta5_submesh_upload.hpp"
 
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 
-#include <cstring>
 #include <exception>
-#include <vector>
+#include <filesystem>
 
 namespace sdl3cpp::services::impl {
 namespace {
@@ -25,7 +24,7 @@ void Warn(const std::shared_ptr<ILogger>& logger, const std::string& what) {
 }  // namespace
 
 bool BuildGta5Geometry(const Gta5Placement& placement, SDL_GPUDevice* device,
-                       Gta5Geometry& geometry,
+                       Gta5TextureCache& textures, Gta5Geometry& geometry,
                        const std::shared_ptr<ILogger>& logger) {
     Assimp::Importer importer;
     const aiScene* scene =
@@ -37,37 +36,30 @@ bool BuildGta5Geometry(const Gta5Placement& placement, SDL_GPUDevice* device,
         return false;
     }
 
-    const Gta5MeshData mesh = ExtractGta5Mesh(*scene);
-    if (mesh.vertices.empty()) {
-        Warn(logger, "'" + placement.modelPath + "' gave no vertices");
-        return false;
-    }
-    if (mesh.vertices.size() >= kGta5MaxVerticesPerMesh) {
-        // Truncating would silently corrupt the building, so refuse it.
-        Warn(logger, "'" + placement.archetype + "' has " +
-                         std::to_string(mesh.vertices.size()) +
-                         " vertices, past what a 16-bit index buffer can "
-                         "address; skipping rather than truncating");
+    const std::string base =
+        std::filesystem::path(placement.modelPath).parent_path().string();
+    const Gta5MeshData mesh = ExtractGta5Mesh(*scene, base);
+    if (mesh.parts.empty()) {
+        Warn(logger, "'" + placement.modelPath + "' gave no geometry");
         return false;
     }
 
-    std::vector<uint8_t> bytes(mesh.vertices.size() *
-                               sizeof(BspRenderVertex));
-    std::memcpy(bytes.data(), mesh.vertices.data(), bytes.size());
-    try {
-        // CreateAndUploadGpuBuffers throws on GPU failure. One bad
-        // archetype must not take the frame loop down.
-        const UploadedGpuBuffers buffers =
-            CreateAndUploadGpuBuffers(device, bytes, mesh.indices);
-        geometry.vertexBuffer = buffers.vertexBuffer;
-        geometry.indexBuffer = buffers.indexBuffer;
-    } catch (const std::exception& ex) {
-        Warn(logger, "upload failed for '" + placement.archetype + "': " +
-                         ex.what());
-        return false;
+    for (const Gta5SubMeshData& part : mesh.parts) {
+        Gta5SubMesh sub;
+        try {
+            // One oversized or unuploadable material must not cost the
+            // rest of the building.
+            if (UploadGta5SubMesh(part, device, textures, sub,
+                                  logger)) {
+                geometry.subMeshes.push_back(sub);
+            }
+        } catch (const std::exception& ex) {
+            Warn(logger, "upload failed for '" + placement.archetype +
+                             "': " + ex.what());
+        }
     }
+    if (geometry.subMeshes.empty()) return false;
 
-    geometry.indexCount = static_cast<std::uint32_t>(mesh.indices.size());
     // Collide against the drawn triangles: stand on what is visible.
     if (!BuildGta5CollisionShape(mesh, geometry)) {
         Warn(logger, "'" + placement.archetype + "' is not collidable");

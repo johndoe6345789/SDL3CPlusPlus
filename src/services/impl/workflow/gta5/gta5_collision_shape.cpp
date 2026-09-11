@@ -4,25 +4,28 @@ namespace sdl3cpp::services::impl {
 
 bool BuildGta5CollisionShape(const Gta5MeshData& mesh,
                              Gta5Geometry& geometry) {
-    const std::size_t triangles = mesh.indices.size() / 3u;
-    if (triangles == 0u || mesh.vertices.empty()) return false;
-
-    geometry.collisionVertices.reserve(mesh.vertices.size() * 3u);
-    for (const BspRenderVertex& vertex : mesh.vertices) {
-        geometry.collisionVertices.push_back(vertex.x);
-        geometry.collisionVertices.push_back(vertex.y);
-        geometry.collisionVertices.push_back(vertex.z);
+    // Every submesh merged: the player collides with the whole building,
+    // not with whichever material happened to come first.
+    for (const Gta5SubMeshData& part : mesh.parts) {
+        const auto base =
+            static_cast<int>(geometry.collisionVertices.size() / 3);
+        for (const BspRenderVertex& vertex : part.vertices) {
+            geometry.collisionVertices.push_back(vertex.x);
+            geometry.collisionVertices.push_back(vertex.y);
+            geometry.collisionVertices.push_back(vertex.z);
+        }
+        for (const std::uint16_t index : part.indices) {
+            geometry.collisionIndices.push_back(base + static_cast<int>(index));
+        }
     }
 
-    geometry.collisionIndices.reserve(mesh.indices.size());
-    for (const std::uint16_t index : mesh.indices) {
-        geometry.collisionIndices.push_back(static_cast<int>(index));
-    }
+    const std::size_t triangles = geometry.collisionIndices.size() / 3u;
+    if (triangles == 0u || geometry.collisionVertices.empty()) return false;
 
     geometry.collisionMesh = new btTriangleIndexVertexArray(
         static_cast<int>(triangles), geometry.collisionIndices.data(),
         static_cast<int>(3 * sizeof(int)),
-        static_cast<int>(mesh.vertices.size()),
+        static_cast<int>(geometry.collisionVertices.size() / 3),
         geometry.collisionVertices.data(),
         static_cast<int>(3 * sizeof(btScalar)));
 

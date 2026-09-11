@@ -191,15 +191,27 @@ Entry `[0]` is the diffuse; `_n` and `_s` siblings are normal and spec
 maps. The name matches a PNG that `ytd_to_png.py` wrote, so the join is
 by filename.
 
-**This is mapped out but not yet wired up.** Three things stand between
-here and textured buildings in the engine:
+This is wired up end to end. The converter emits `TEXCOORD_0` and one
+primitive and material per geometry; the engine uploads one submesh per
+material, caches textures by path, and binds per submesh.
 
-1. `ydr_to_gltf.py` emits no UVs. The texcoord offset varies per
-   archetype, so it needs the same kind of probe the normal uses.
-2. The glTF would need one primitive and material per geometry rather
-   than a single merged mesh.
-3. `gta5.tiles.draw` binds one texture for the whole map. Per-material
-   textures need a texture cache and per-primitive draws.
+The texcoord offset is recovered the same way the normal is, because
+nothing in the file declares it -- the table at the vertex buffer's
+`+0x38` is identical across strides 52, 64 and 68, so it is not a
+layout. The texcoord is the last Float2 clear of position and the
+unit-length vectors, and colour sits between them as a `UByte4` that
+reads as enormous or denormal taken as floats, so a magnitude test
+rejects it. Across every stride in downtown that lands on a 0..1 range.
+
+Textures are cached per path and shared across archetypes, and are
+deliberately *not* freed by the geometry sweep: one texture is typically
+used across a whole district, so tying its lifetime to a single
+archetype would thrash it.
+
+A submesh whose texture is missing still draws, falling back to the
+package default rather than vanishing. That matters while the texture
+set is incomplete: `im_*` names are shared dictionaries under
+`levels/gta5/generic`, not the district folder, so extract both.
 
 ## Shaders
 

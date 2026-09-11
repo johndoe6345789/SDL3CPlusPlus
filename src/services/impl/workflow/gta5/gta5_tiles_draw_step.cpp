@@ -50,8 +50,11 @@ void WorkflowGta5TilesDrawStep::Execute(const WorkflowStepDefinition& step,
         for (const auto& entry : state_->resident) {
             instances += entry.second.instances.size();
         }
-        logger_->Info("gta5.tiles.draw: drew " + std::to_string(drawn) +
-                      " of " + std::to_string(instances) + " instances, y=" +
+        // One instance is several draws now, one per material, so the
+        // draw count legitimately exceeds the instance count.
+        logger_->Info("gta5.tiles.draw: " + std::to_string(drawn) +
+                      " submesh draws across " + std::to_string(instances) +
+                      " instances, y=" +
                       std::to_string(state_->centreOrigin.y));
     }
 }

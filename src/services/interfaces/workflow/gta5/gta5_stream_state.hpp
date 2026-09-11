@@ -3,6 +3,7 @@
 #include "services/interfaces/workflow/gta5/gta5_config_types.hpp"
 #include "services/interfaces/workflow/gta5/gta5_geometry.hpp"
 #include "services/interfaces/workflow/gta5/gta5_placement.hpp"
+#include "services/interfaces/workflow/gta5/gta5_texture_cache.hpp"
 #include "services/interfaces/workflow/gta5/gta5_tile_coord.hpp"
 
 #include <cstddef>
@@ -38,6 +39,9 @@ struct Gta5StreamState {
     std::unordered_map<Gta5TileCoord, Gta5ResidentTile, Gta5TileCoordHash>
         resident;
     std::unordered_map<std::string, Gta5Geometry> geometryCache;
+    /// Textures outlive individual archetypes on purpose: one is
+    /// typically shared across a whole district.
+    Gta5TextureCache textureCache;
 
     /// Written by gta5.tiles.resolve, consumed by load and evict in the
     /// same frame so all three agree on one centre.

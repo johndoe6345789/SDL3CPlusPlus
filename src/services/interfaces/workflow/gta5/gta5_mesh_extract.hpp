@@ -5,23 +5,31 @@
 #include <assimp/scene.h>
 
 #include <cstdint>
+#include <string>
 #include <vector>
 
 namespace sdl3cpp::services::impl {
 
-/// An archetype's mesh on the CPU, in the 40-byte
-/// `position_uv_lmuv_normal` layout the gta5 pipeline draws with.
+/// One material's geometry, in the 40-byte position_uv_lmuv_normal
+/// layout the gta5 pipeline draws with.
 ///
-/// The engine's own ExtractAssimpMeshData drops normals -- it produces
-/// the 20-byte position/uv vertex -- and without them the shader has to
-/// light every surface from one constant direction. Buildings need real
-/// normals, so this extracts them.
-struct Gta5MeshData {
+/// The engine's own ExtractAssimpMeshData produces a 20-byte
+/// position/uv vertex and drops normals, and flattens everything into a
+/// single mesh. Buildings need per-vertex normals to shade, and a GTA V
+/// drawable carries several textures, so it cannot be one draw.
+struct Gta5SubMeshData {
     std::vector<BspRenderVertex> vertices;
     std::vector<std::uint16_t> indices;
+    std::string texturePath;
 };
 
-/// Flatten every mesh in a scene into one vertex/index pair.
-Gta5MeshData ExtractGta5Mesh(const aiScene& scene);
+struct Gta5MeshData {
+    std::vector<Gta5SubMeshData> parts;
+};
+
+/// Split a scene into one part per assimp mesh, resolving each one's
+/// diffuse texture from its material.
+Gta5MeshData ExtractGta5Mesh(const aiScene& scene,
+                             const std::string& baseDirectory);
 
 }  // namespace sdl3cpp::services::impl

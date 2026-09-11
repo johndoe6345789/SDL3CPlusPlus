@@ -10,26 +10,37 @@
 
 namespace sdl3cpp::services::impl {
 
-/// Index buffers are 16-bit, so one archetype cannot exceed this many
-/// vertices. Some GTA V building drawables do.
+/// Index buffers are 16-bit, so one submesh cannot exceed this many
+/// vertices. Splitting a drawable per material keeps most well under it.
 inline constexpr std::size_t kGta5MaxVerticesPerMesh = 65536u;
 
-/// An archetype's mesh, uploaded once and drawn many times.
+/// One material's worth of an archetype: its own buffers and texture.
 ///
-/// references counts the live instances pointing at it. Both the GPU
-/// buffers and the collision shape are released when that reaches zero,
-/// so walking out of a district frees its memory rather than holding
-/// every archetype ever seen.
-struct Gta5Geometry {
+/// A GTA V drawable is several geometries with different textures, so it
+/// cannot be one draw. The texture and sampler are borrowed from the
+/// state's texture cache and are not owned here.
+struct Gta5SubMesh {
     SDL_GPUBuffer* vertexBuffer{nullptr};
     SDL_GPUBuffer* indexBuffer{nullptr};
     std::uint32_t indexCount{0};
+    SDL_GPUTexture* texture{nullptr};
+    SDL_GPUSampler* sampler{nullptr};
+};
+
+/// An archetype's mesh, uploaded once and drawn many times.
+///
+/// references counts the live instances pointing at it. The buffers and
+/// the collision shape are released when that reaches zero, so walking
+/// out of a district frees its memory rather than holding every
+/// archetype ever seen.
+struct Gta5Geometry {
+    std::vector<Gta5SubMesh> subMeshes;
     int references{0};
     bool usable{false};
 
-    /// Collision mesh, shared by every instance of this archetype at unit
-    /// scale. Bullet does not copy these arrays, so they have to outlive
-    /// the shape that indexes them: they live here, beside it.
+    /// Collision mesh, every submesh merged, shared by each instance at
+    /// unit scale. Bullet does not copy these arrays, so they have to
+    /// outlive the shape indexing them: they live here, beside it.
     std::vector<btScalar> collisionVertices;
     std::vector<int> collisionIndices;
     btTriangleIndexVertexArray* collisionMesh{nullptr};
@@ -44,7 +55,6 @@ struct Gta5Geometry {
 struct Gta5Instance {
     Gta5Geometry* geometry{nullptr};
     std::array<float, 16> modelMatrix{};
-    /// Static body in the physics world, so the player can stand on it.
     btRigidBody* body{nullptr};
     /// Non-null only when this instance is not at unit scale and needed
     /// its own scaled wrapper around the shared collision shape.

@@ -796,6 +796,8 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_spawn_tile.cpp
         src/services/impl/workflow/gta5/gta5_step_params.cpp
         src/services/impl/workflow/gta5/gta5_streaming_config_load.cpp
+        src/services/impl/workflow/gta5/gta5_submesh_upload.cpp
+        src/services/impl/workflow/gta5/gta5_texture_cache.cpp
         src/services/impl/workflow/gta5/gta5_tile_coord.cpp
         src/services/impl/workflow/gta5/gta5_tile_io.cpp
         src/services/impl/workflow/gta5/gta5_tile_order.cpp
