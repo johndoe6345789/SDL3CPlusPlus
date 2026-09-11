@@ -139,6 +139,56 @@ The script still counts the XML files afterwards and fails if none
 appeared, so a run that produces nothing stops loudly rather than
 writing an empty map.
 
+## Textures
+
+`tools/ytd_to_png.py` extracts textures from `.ytd` dictionaries as PNG.
+Pure stdlib: the BC block decoder and the PNG writer are in the file
+rather than pulled from Pillow, matching the other tools here.
+
+Dictionary layout, probed rather than assumed -- `+0x20` is a list of
+name hashes, `+0x30` a list of texture pointers, and per texture:
+
+| offset | field |
+|--------|-------|
+| `+0x18` / `+0x1A` | width / height |
+| `+0x1F` | DXGI format code (71 = BC1, 77 = BC3) |
+| `+0x22` | mip count |
+| `+0x28` | pointer to the name, as a real string |
+| `+0x38` | pixel data, in the graphics block |
+
+Width and height were found as the only offset where both values are
+powers of two across every texture in a dictionary. The format field
+reads as valid DXGI codes throughout and lands where it should
+semantically: foliage is BC3 because it needs alpha, building faces are
+BC1. That agreement is the evidence the decode is right, and the decoded
+images confirm it.
+
+### Which texture goes on which triangle
+
+The whole chain is reachable from the drawable, and unlike shader names
+the textures are stored as **real strings**, not hashes:
+
+```
+DrawableModel +0x20  ->  shader index per geometry   e.g. [0,1,2,3,4,4]
+ShaderGroup   +0x10  ->  shader array
+shader        +0x10  ->  parameter array
+parameter[0]  +0x28  ->  texture name, e.g. "im_wall_concrete32"
+```
+
+Entry `[0]` is the diffuse; `_n` and `_s` siblings are normal and spec
+maps. The name matches a PNG that `ytd_to_png.py` wrote, so the join is
+by filename.
+
+**This is mapped out but not yet wired up.** Three things stand between
+here and textured buildings in the engine:
+
+1. `ydr_to_gltf.py` emits no UVs. The texcoord offset varies per
+   archetype, so it needs the same kind of probe the normal uses.
+2. The glTF would need one primitive and material per geometry rather
+   than a single merged mesh.
+3. `gta5.tiles.draw` binds one texture for the whole map. Per-material
+   textures need a texture cache and per-primitive draws.
+
 ## Shaders
 
 The package has its own pair, `shaders/spirv/gta5_model.{vert,frag}`,
