@@ -57,6 +57,7 @@ Gta5MeshData ReadGta5DrawableMesh(const Gta5Resource& res,
                 part.textureHash = surfaces[s].texture;
                 if (surfaces[s].paint) part.tint = {paint.r, paint.g, paint.b};
                 if (surfaces[s].cutout) part.alphaCutoff = 0.5f;
+                part.blend = surfaces[s].blend;
             }
             mesh.parts.push_back(std::move(part));
         }

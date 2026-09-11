@@ -38,7 +38,7 @@ void BuildGta5InstanceBatch(const Gta5StreamState& state,
                             float lodScale, Gta5InstanceBatch& batch) {
     Collect(state, MakeGta5Frustum(viewProj), camera, sizeRatio, lodScale,
             batch.visible);
-    // Copies of one archetype side by side: each run is one group.
+    // Copies of one archetype side by side, each run one group.
     std::sort(batch.visible.begin(), batch.visible.end(),
               [](const Gta5Instance* a, const Gta5Instance* b) {
                   return a->geometry < b->geometry;
@@ -55,9 +55,8 @@ void BuildGta5InstanceBatch(const Gta5StreamState& state,
         batch.matrices.push_back(instance->modelMatrix);
         ++batch.groups.back().count;
     }
-    // One archetype's materials mostly use different textures, so it is
-    // the draws, not the groups, that are sorted: by arena block, whose
-    // buffers are then bound once, then texture, then tint.
+    // Draws, not groups, are sorted -- an archetype's materials differ --
+    // by arena block, bound once each, then texture, then tint.
     batch.items.clear();
     for (const Gta5DrawGroup& group : batch.groups) {
         for (const Gta5SubMesh& sub : group.geometry->subMeshes) {
@@ -67,6 +66,7 @@ void BuildGta5InstanceBatch(const Gta5StreamState& state,
     }
     std::sort(batch.items.begin(), batch.items.end(),
               [](const Gta5DrawItem& a, const Gta5DrawItem& b) {
+                  if (a.sub->blend != b.sub->blend) return !a.sub->blend;
                   if (a.sub->slot.block != b.sub->slot.block) {
                       return a.sub->slot.block < b.sub->slot.block;
                   }

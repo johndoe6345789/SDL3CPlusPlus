@@ -20,6 +20,8 @@ struct Gta5DrawContext {
     rendering::FragmentUniformData fragUniforms{};
     SDL_GPUTexture* texture{nullptr};
     SDL_GPUSampler* sampler{nullptr};
+    /// Alpha-blended, no depth write: decals and glass, drawn last.
+    SDL_GPUGraphicsPipeline* blendPipeline{nullptr};
     SDL_GPUTexture* shadowTexture{nullptr};
     SDL_GPUSampler* shadowSampler{nullptr};
 };

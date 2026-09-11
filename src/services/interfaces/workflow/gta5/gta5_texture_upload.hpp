@@ -43,8 +43,11 @@ struct Gta5TextureBlob {
 /// (count at +0x28) and textures at +0x30; a texture its size (+0x18,
 /// +0x1A), format (+0x1F), mip count (+0x22) and pixels (+0x38). Mips
 /// follow mip 0 back to back.
+/// `dictionary` is where the dictionary starts: 0 in a .ytd, whose root
+/// it is; a drawable's shader group points at its own embedded one.
 Gta5TextureBlob ReadGta5DictionaryTexture(const Gta5Resource& ytd,
-                                          std::uint32_t nameHash);
+                                          std::uint32_t nameHash,
+                                          std::int64_t dictionary = 0);
 
 struct Gta5GpuTexture {
     SDL_GPUTexture* texture{nullptr};

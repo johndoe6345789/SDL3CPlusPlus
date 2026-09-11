@@ -25,6 +25,7 @@ bool UploadGta5SubMesh(const Gta5SubMeshData& part, SDL_GPUDevice* device,
     out.indexCount = static_cast<std::uint32_t>(part.indices.size());
     out.surface = {part.tint[0], part.tint[1], part.tint[2],
                    part.alphaCutoff};
+    out.blend = part.blend;
 
     // A part with no texture still draws; the shader falls back to the
     // map's default, which is better than dropping the geometry.

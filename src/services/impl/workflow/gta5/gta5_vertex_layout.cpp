@@ -54,13 +54,15 @@ BspRenderVertex ReadGta5Vertex(const Gta5Resource& res,
     } else {
         v.ny = 1.f;  // anything is better than a zero normal
     }
+    // Unflipped: texture rows are stored top first and Vulkan samples v = 0
+    // at the first row. 1 - v drew every sign and billboard upside down.
     const std::int64_t t = at + layout.uv;
     if (layout.uvFormat == kFloat2) {
         v.u = res.F32(t);
-        v.v = 1.f - res.F32(t + 4);
+        v.v = res.F32(t + 4);
     } else if (layout.uvFormat == kHalf2) {
         v.u = Gta5HalfToFloat(res.U16(t));
-        v.v = 1.f - Gta5HalfToFloat(res.U16(t + 2));
+        v.v = Gta5HalfToFloat(res.U16(t + 2));
     }
     return v;
 }

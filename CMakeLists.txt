@@ -789,6 +789,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_assets_ready.cpp
         src/services/impl/workflow/gta5/gta5_collision_body.cpp
         src/services/impl/workflow/gta5/gta5_collision_shape.cpp
+        src/services/impl/workflow/gta5/gta5_draw_bind.cpp
         src/services/impl/workflow/gta5/gta5_draw_context_build.cpp
         src/services/impl/workflow/gta5/gta5_draw_instances.cpp
         src/services/impl/workflow/gta5/gta5_draw_probe.cpp
@@ -833,6 +834,8 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_resource_load.cpp
         src/services/impl/workflow/gta5/gta5_resource_text.cpp
         src/services/impl/workflow/gta5/gta5_shader_surface.cpp
+        src/services/impl/workflow/gta5/gta5_shader_textures.cpp
+        src/services/impl/workflow/gta5/gta5_shown_transform.cpp
         src/services/impl/workflow/gta5/gta5_sky_draw_step.cpp
         src/services/impl/workflow/gta5/gta5_sky_uniforms.cpp
         src/services/impl/workflow/gta5/gta5_spawn_tile.cpp

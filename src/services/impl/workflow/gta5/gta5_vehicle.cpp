@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/gta5/gta5_vehicle.hpp"
 
+#include "services/interfaces/workflow/gta5/gta5_shown_transform.hpp"
 #include "services/interfaces/workflow/gta5/gta5_vehicle_body.hpp"
 #include "services/interfaces/workflow/gta5/gta5_vehicle_wheels.hpp"
 #include "services/interfaces/workflow/gta5/gta5_vehicle_load.hpp"
@@ -58,16 +59,19 @@ bool SpawnGta5Vehicle(Gta5StreamState& state, const Gta5VehicleSpec& spec,
 void UpdateGta5Vehicles(Gta5StreamState& state) {
     for (Gta5Vehicle& car : state.vehicles) {
         if (!car.vehicle) continue;
-        car.vehicle->getChassisWorldTransform().getOpenGLMatrix(
-            car.instance.modelMatrix.data());
+        // Drawn interpolated between physics steps; the wheels, which
+        // Bullet places from the last step, move by the same offset.
+        const btTransform shown = Gta5ShownTransform(car.chassis);
+        shown.getOpenGLMatrix(car.instance.modelMatrix.data());
+        const btTransform offset =
+            shown * car.chassis->getWorldTransform().inverse();
         // Each wheel transform carries the steer angle and the rolling
-        // rotation Bullet integrated, so placing the mesh from it is all
-        // the turning and steering there is to do.
+        // rotation Bullet integrated: all the turning there is to do.
         for (int i = 0; i < car.vehicle->getNumWheels(); ++i) {
             car.vehicle->updateWheelTransform(i, true);
             if (car.hasWheels && i < 4) {
-                car.vehicle->getWheelTransformWS(i).getOpenGLMatrix(
-                    car.wheels[i].modelMatrix.data());
+                (offset * car.vehicle->getWheelTransformWS(i))
+                    .getOpenGLMatrix(car.wheels[i].modelMatrix.data());
             }
         }
     }

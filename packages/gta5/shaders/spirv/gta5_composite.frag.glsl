@@ -28,7 +28,7 @@ layout(location = 0) out vec4 o_color;
 const float EDGE_MIN = 0.03125;   // below this, the pixel is flat
 const float EDGE_SCALE = 0.125;   // edge threshold as a share of the max
 const float SPAN_MAX = 8.0;       // how far the blur may reach, in texels
-const float SHARPNESS = 1.0;      // 0 = gentle, 1 = strongest
+const float SHARPNESS = 0.4;      // 0 = gentle, 1 = strongest; 1 grained
 
 float luma(vec3 c) {
     return dot(c, vec3(0.299, 0.587, 0.114));

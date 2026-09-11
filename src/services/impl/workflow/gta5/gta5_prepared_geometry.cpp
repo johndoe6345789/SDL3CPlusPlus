@@ -2,25 +2,32 @@
 
 #include "services/interfaces/workflow/gta5/gta5_collision_shape.hpp"
 #include "services/interfaces/workflow/gta5/gta5_drawable_geometry.hpp"
+#include "services/interfaces/workflow/gta5/gta5_drawable_mesh.hpp"
 
 #include <algorithm>
 
 namespace sdl3cpp::services::impl {
 namespace {
 
+/// A texture from the drawable's own dictionary when it embeds one --
+/// many props and trees carry theirs inside the .ydr, where no .ytd index
+/// finds them, and drew as the package's grey default -- else from the
+/// .ytd that holds it.
 Gta5TextureBlob ReadTexture(const Gta5AssetIndex& index,
                             Gta5ResourceCache& resources,
+                            const Gta5IndexedDrawable& owner,
                             std::uint32_t hash) {
+    const std::int64_t group = owner.res->Follow(owner.drawable + 0x10);
+    const std::int64_t embedded =
+        group < 0 ? -1 : owner.res->Follow(group + 0x08);
+    Gta5TextureBlob blob =
+        ReadGta5DictionaryTexture(*owner.res, hash, embedded);
+    if (!blob.bytes.empty()) return blob;
     const auto where = index.textures.find(hash);
     const auto ytd = where == index.textures.end()
                          ? nullptr
                          : AcquireGta5Resource(resources, index, where->second);
-    if (!ytd) {
-        Gta5TextureBlob missing;
-        missing.hash = hash;
-        return missing;
-    }
-    return ReadGta5DictionaryTexture(*ytd, hash);
+    return ytd ? ReadGta5DictionaryTexture(*ytd, hash) : blob;
 }
 
 }  // namespace
@@ -37,7 +44,10 @@ Gta5PreparedGeometry PrepareGta5Geometry(const Gta5AssetIndex& index,
                                          std::uint32_t hash) {
     Gta5PreparedGeometry out;
     out.key = key;
-    out.mesh = ReadGta5IndexedMesh(index, resources, hash);
+    const Gta5IndexedDrawable owner =
+        AcquireGta5IndexedDrawable(index, resources, hash);
+    if (!owner.res) return out;
+    out.mesh = ReadGta5DrawableMesh(*owner.res, owner.drawable);
     if (out.mesh.parts.empty()) return out;
 
     // Collision here, not on the main thread: building a BVH is the
@@ -51,7 +61,7 @@ Gta5PreparedGeometry PrepareGta5Geometry(const Gta5AssetIndex& index,
         }
         out.textures.push_back(texture);
         if (claims.Claim(texture)) {
-            out.blobs.push_back(ReadTexture(index, resources, texture));
+            out.blobs.push_back(ReadTexture(index, resources, owner, texture));
         }
     }
     return out;

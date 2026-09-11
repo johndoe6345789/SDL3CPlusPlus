@@ -1,5 +1,7 @@
 #include "services/interfaces/workflow/gta5/gta5_vehicle_camera_step.hpp"
 
+#include "services/interfaces/workflow/gta5/gta5_shown_transform.hpp"
+
 #include "services/interfaces/workflow/gta5/gta5_step_params.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -29,7 +31,9 @@ void WorkflowGta5VehicleCameraStep::Execute(
     const btRigidBody* chassis = state_->vehicles[state_->seated].chassis;
     if (!chassis) return;
 
-    const btTransform& t = chassis->getWorldTransform();
+    // The interpolated transform, as the car is drawn: following the
+    // stepped one jolted the view at 60 Hz.
+    const btTransform t = Gta5ShownTransform(chassis);
     const glm::vec3 car(t.getOrigin().x(), t.getOrigin().y(),
                         t.getOrigin().z());
     // Heading only. Following the chassis's pitch and roll puts every

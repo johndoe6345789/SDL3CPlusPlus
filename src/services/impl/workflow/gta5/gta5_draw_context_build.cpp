@@ -40,6 +40,9 @@ Gta5DrawContext BuildGta5DrawContext(const WorkflowStepDefinition& step,
     draw.sampler = context.Get<SDL_GPUSampler*>(
         Gta5ParameterOr(step, "sampler_key", "walls_texture_sampler"),
         nullptr);
+    draw.blendPipeline = context.Get<SDL_GPUGraphicsPipeline*>(
+        Gta5ParameterOr(step, "blend_pipeline_key", "gpu_pipeline_gta5_blend"),
+        nullptr);
     draw.shadowTexture =
         context.Get<SDL_GPUTexture*>("shadow_depth_texture", nullptr);
     draw.shadowSampler =

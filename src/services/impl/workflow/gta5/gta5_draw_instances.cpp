@@ -1,33 +1,10 @@
 #include "services/interfaces/workflow/gta5/gta5_draw_instances.hpp"
 
-#include <glm/gtc/type_ptr.hpp>
+#include "services/interfaces/workflow/gta5/gta5_draw_bind.hpp"
 
 #include <cstring>
 
 namespace sdl3cpp::services::impl {
-namespace {
-
-Gta5InstancedUniforms MakeUniforms(const Gta5DrawContext& draw) {
-    Gta5InstancedUniforms vu = {};
-    const glm::mat4 viewProj = draw.proj * draw.view;
-    std::memcpy(vu.viewProj, glm::value_ptr(viewProj), sizeof(vu.viewProj));
-    std::memcpy(vu.shadowVP, glm::value_ptr(draw.shadowVP),
-                sizeof(vu.shadowVP));
-    vu.cameraPos[0] = draw.cameraPos.x;
-    vu.cameraPos[1] = draw.cameraPos.y;
-    vu.cameraPos[2] = draw.cameraPos.z;
-    return vu;
-}
-
-void BindBlock(const Gta5StreamState& state, const Gta5DrawContext& draw,
-               int block) {
-    SDL_GPUBufferBinding vb = {state.arena.Vertices(block), 0};
-    SDL_BindGPUVertexBuffers(draw.pass, 0, &vb, 1);
-    SDL_GPUBufferBinding ib = {state.arena.Indices(block), 0};
-    SDL_BindGPUIndexBuffer(draw.pass, &ib, SDL_GPU_INDEXELEMENTSIZE_16BIT);
-}
-
-}  // namespace
 
 int DrawGta5Instances(const Gta5StreamState& state,
                       const Gta5DrawContext& draw, int* textureBinds) {
@@ -35,23 +12,34 @@ int DrawGta5Instances(const Gta5StreamState& state,
     if (!draw.pass || !draw.cmd || !batch.buffer || batch.items.empty()) {
         return 0;
     }
-    SDL_BindGPUVertexStorageBuffers(draw.pass, 0, &batch.buffer, 1);
-    // Once a frame: the group offset travels as first_instance.
-    const Gta5InstancedUniforms vu = MakeUniforms(draw);
-    SDL_PushGPUVertexUniformData(draw.cmd, 0, &vu, sizeof(vu));
+    BindGta5BatchShared(state, draw);
     rendering::FragmentUniformData fu = draw.fragUniforms;
     SDL_GPUTexture* boundTexture = nullptr;
     int boundBlock = -1;
-    bool surfacePushed = false;
+    bool surfacePushed = false, blending = false;
     int drawn = 0, binds = 0;
     for (const Gta5DrawItem& item : batch.items) {
         const Gta5SubMesh& sub = *item.sub;
         if (sub.slot.block < 0) continue;
+        if (sub.blend && !blending) {
+            // Blended surfaces sort last: switch once, writing no depth,
+            // and rebind what the pipeline change dropped.
+            if (!draw.blendPipeline) break;
+            SDL_BindGPUGraphicsPipeline(draw.pass, draw.blendPipeline);
+            BindGta5BatchShared(state, draw);
+            blending = true;
+            boundTexture = nullptr;
+            boundBlock = -1;
+            surfacePushed = false;
+        }
+        // A blended surface without its own texture would lay the grey
+        // default over the road as a slab: skip it.
+        if (sub.blend && !sub.texture) continue;
         SDL_GPUTexture* texture = sub.texture ? sub.texture : draw.texture;
         SDL_GPUSampler* sampler = sub.texture ? sub.sampler : draw.sampler;
         if (!texture || !sampler) continue;
         if (sub.slot.block != boundBlock) {
-            BindBlock(state, draw, sub.slot.block);
+            BindGta5ArenaBlock(state, draw, sub.slot.block);
             boundBlock = sub.slot.block;
         }
         if (texture != boundTexture) {

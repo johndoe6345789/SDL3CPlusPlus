@@ -13,9 +13,22 @@
 
 namespace sdl3cpp::services::impl {
 
-/// An archetype's mesh from the index and resource cache alone, touching
-/// no stream state, so the load pool's workers call it. `paint` tints
-/// vehicle_paint geometry. Empty when there is no such drawable.
+/// An archetype's drawable: the file holding it, opened, and where in
+/// that file the drawable starts. res is null when there is none.
+struct Gta5IndexedDrawable {
+    std::shared_ptr<const Gta5Resource> res;
+    std::int64_t drawable{-1};
+};
+
+/// Find and open an archetype's drawable through the index and resource
+/// cache alone, touching no stream state, so the load pool's workers
+/// call it.
+Gta5IndexedDrawable AcquireGta5IndexedDrawable(const Gta5AssetIndex& index,
+                                               Gta5ResourceCache& resources,
+                                               std::uint32_t hash);
+
+/// Its mesh; `paint` tints vehicle_paint geometry. Empty when there is
+/// no such drawable.
 Gta5MeshData ReadGta5IndexedMesh(const Gta5AssetIndex& index,
                                  Gta5ResourceCache& resources,
                                  std::uint32_t hash,

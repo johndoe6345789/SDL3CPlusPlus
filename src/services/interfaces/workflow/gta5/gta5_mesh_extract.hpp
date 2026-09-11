@@ -32,6 +32,8 @@ struct Gta5SubMeshData {
     /// Discard below this alpha; 0 draws everything. Foliage is a
     /// rectangle whose shape is entirely in its alpha.
     float alphaCutoff{0.f};
+    /// Drawn blended over the opaque scene: decals, glass.
+    bool blend{false};
 };
 
 struct Gta5MeshData {

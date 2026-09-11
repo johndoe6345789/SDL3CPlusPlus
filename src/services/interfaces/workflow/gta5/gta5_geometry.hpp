@@ -30,6 +30,7 @@ struct Gta5SubMesh {
     /// rgb multiplies the texture, a is the alpha-discard threshold.
     /// The draw pushes this as one vec4, so they travel together.
     std::array<float, 4> surface{1.f, 1.f, 1.f, 0.f};
+    bool blend{false};  // alpha-blended, drawn after the opaque scene
 };
 
 /// An archetype's mesh, uploaded once and drawn many times.

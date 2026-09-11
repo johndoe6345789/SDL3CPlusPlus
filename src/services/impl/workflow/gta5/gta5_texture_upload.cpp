@@ -5,13 +5,15 @@
 namespace sdl3cpp::services::impl {
 namespace {
 
-std::int64_t FindTexture(const Gta5Resource& ytd, std::uint32_t nameHash) {
-    const std::int64_t hashes = ytd.Follow(0x20);
-    const std::vector<std::int64_t> textures = ytd.PointerList(0x30);
+std::int64_t FindTexture(const Gta5Resource& res, std::int64_t dictionary,
+                         std::uint32_t nameHash) {
+    const std::int64_t hashes = res.Follow(dictionary + 0x20);
+    const std::vector<std::int64_t> textures =
+        res.PointerList(dictionary + 0x30);
     const std::size_t count =
-        std::min<std::size_t>(ytd.U16(0x28), textures.size());
+        std::min<std::size_t>(res.U16(dictionary + 0x28), textures.size());
     for (std::size_t i = 0; hashes >= 0 && i < count; ++i) {
-        if (ytd.U32(hashes + 4 * static_cast<std::int64_t>(i)) == nameHash) {
+        if (res.U32(hashes + 4 * static_cast<std::int64_t>(i)) == nameHash) {
             return textures[i];
         }
     }
@@ -21,10 +23,12 @@ std::int64_t FindTexture(const Gta5Resource& ytd, std::uint32_t nameHash) {
 }  // namespace
 
 Gta5TextureBlob ReadGta5DictionaryTexture(const Gta5Resource& ytd,
-                                          std::uint32_t nameHash) {
+                                          std::uint32_t nameHash,
+                                          std::int64_t dictionary) {
     Gta5TextureBlob blob;
     blob.hash = nameHash;
-    const std::int64_t tex = FindTexture(ytd, nameHash);
+    if (dictionary < 0) return blob;
+    const std::int64_t tex = FindTexture(ytd, dictionary, nameHash);
     if (tex < 0) return blob;
     const std::uint32_t w = ytd.U16(tex + 0x18);
     const std::uint32_t h = ytd.U16(tex + 0x1A);

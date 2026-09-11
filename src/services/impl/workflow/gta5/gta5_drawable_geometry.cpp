@@ -5,18 +5,30 @@
 
 namespace sdl3cpp::services::impl {
 
+Gta5IndexedDrawable AcquireGta5IndexedDrawable(const Gta5AssetIndex& index,
+                                               Gta5ResourceCache& resources,
+                                               std::uint32_t hash) {
+    Gta5IndexedDrawable found;
+    const auto where = index.drawables.find(hash);
+    if (where == index.drawables.end()) return found;
+    auto res = AcquireGta5Resource(resources, index, where->second);
+    if (!res) return found;
+    const std::int64_t drawable =
+        LocateGta5Drawable(*res, index.files[where->second], hash);
+    if (drawable < 0) return found;
+    found.res = std::move(res);
+    found.drawable = drawable;
+    return found;
+}
+
 Gta5MeshData ReadGta5IndexedMesh(const Gta5AssetIndex& index,
                                  Gta5ResourceCache& resources,
                                  std::uint32_t hash,
                                  const glm::vec3& paint) {
-    const auto where = index.drawables.find(hash);
-    if (where == index.drawables.end()) return {};
-    const auto res = AcquireGta5Resource(resources, index, where->second);
-    if (!res) return {};
-    const std::int64_t drawable =
-        LocateGta5Drawable(*res, index.files[where->second], hash);
-    return drawable < 0 ? Gta5MeshData{}
-                        : ReadGta5DrawableMesh(*res, drawable, paint);
+    const Gta5IndexedDrawable found =
+        AcquireGta5IndexedDrawable(index, resources, hash);
+    return found.res ? ReadGta5DrawableMesh(*found.res, found.drawable, paint)
+                     : Gta5MeshData{};
 }
 
 Gta5MeshData ReadGta5ArchetypeMesh(Gta5StreamState& state,

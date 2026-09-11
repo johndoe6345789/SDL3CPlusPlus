@@ -68,5 +68,6 @@ void main() {
     float fog = 1.0 - exp(-dist * 0.00035);
     color = mix(color, u_fogColor.rgb, fog);
 
-    o_color = vec4(color, 1.0);
+    // Alpha matters only to the blended pipeline: decals and glass.
+    o_color = vec4(color, texel.a);
 }
