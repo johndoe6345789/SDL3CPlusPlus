@@ -30,14 +30,13 @@ enum class Gta5ShopPage { Closed, Root, Cars, Colours, Weapons };
 /**
  * Plugin ID: gta5.shop
  *
- * Walk up to a Los Santos Customs or an Ammu-Nation (the map's points,
- * poi_file) and E -- the pad's D-pad right -- opens its menu, which the
- * HUD draws (gta5.menu); Up and Down choose, Enter takes, Backspace goes
- * back. The garage swaps the player's car for any in garage_file,
- * parked on the nearest road (roads_dir), or resprays it; Ammu-Nation
- * hands over weapons from weapons_file, ammunition and armour. The
- * player stands still while a menu is open, and what they leave with is
- * kept for next time (Gta5SettingsPath).
+ * Walk up to a Los Santos Customs or an Ammu-Nation (poi_file) and E --
+ * the pad's D-pad right -- opens its menu, which the HUD draws
+ * (gta5.menu): Up and Down choose, Enter takes, Backspace goes back.
+ * The garage swaps the car for any in garage_file, parked on the
+ * nearest road (roads_dir), or resprays it; Ammu-Nation hands over
+ * weapons_file's guns, ammunition and armour, all kept for next time
+ * (Gta5SettingsPath). The player stands still while a menu is open.
  */
 class WorkflowGta5ShopStep final : public IWorkflowStep {
 public:
