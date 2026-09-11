@@ -36,7 +36,8 @@ void WorkflowGta5VehiclesSyncStep::Execute(
         state_->seated < static_cast<int>(state_->vehicles.size()) &&
         (lastReportMs_ == 0 || now - lastReportMs_ >= 500)) {
         lastReportMs_ = now;
-        logger_->Info(DescribeGta5Vehicle(state_->vehicles[state_->seated]));
+        logger_->Trace("WorkflowGta5VehiclesSyncStep", "Execute", "",
+                       DescribeGta5Vehicle(state_->vehicles[state_->seated]));
     }
     UpdateGta5Vehicles(*state_);
 

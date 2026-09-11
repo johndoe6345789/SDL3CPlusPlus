@@ -37,7 +37,7 @@
       "source": "Z-up, right-handed (GTA V / RAGE)",
       "engine": "Y-up",
       "mapping": "(x, y, z) -> (x, z, -y)",
-      "critical": "Applied once at import time by tools/import_codewalker_export.py. The runtime never re-maps axes."
+      "critical": "Applied once, by the C++ readers as they read the extracted files. Nothing downstream re-maps axes."
     },
 
     "world_bounds_metres": {
@@ -55,7 +55,7 @@
   "asset_pipeline": {
     "status": "requires_user_supplied_export",
     "reason": "The shipped map archives are NG-encrypted RPF7 and cannot be read without circumventing their encryption. See README.md.",
-    "expected_input": "tools/import_codewalker_export.py output written to assets/tiles/"
+    "expected_input": "the extracted levels/gta5 folder, named by map_dir on gta5.assets.index; assets/tiles/ is a legacy fallback"
   },
 
   "bundled": false,

@@ -14,7 +14,7 @@ namespace sdl3cpp::services::impl {
 std::string Gta5TilePath(const std::string& tilesDir,
                          const Gta5TileCoord& tile);
 
-/// Read one tile file written by tools/import_codewalker_export.py.
+/// Read one legacy tile file, as the retired Python importer wrote them.
 ///
 /// Returns false when the tile file does not exist, which is the normal
 /// case for the sea and for any part of the map that was not exported:

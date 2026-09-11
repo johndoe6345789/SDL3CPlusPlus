@@ -10,7 +10,7 @@
 namespace sdl3cpp::services::impl {
 
 /// One entity from a ymap, already converted to engine space by
-/// packages/gta5/tools/import_codewalker_export.py.
+/// the ymap reader (gta5_ymap_placement), or by a legacy tile file.
 struct Gta5Placement {
     std::string archetype;
     /// Jenkins hash of the archetype name, which is all a binary ymap

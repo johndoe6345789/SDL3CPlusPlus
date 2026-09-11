@@ -25,4 +25,10 @@ void HoldGta5VehiclesOverMissingGround(Gta5StreamState& state,
 bool Gta5GroundBelow(btDiscreteDynamicsWorld* world, const glm::vec3& from,
                      float& groundY);
 
+/// The first surface under a body, from its own origin down 500 m,
+/// passing through the body itself and anything with no contact response
+/// -- a seated player, pinned inside the car.
+bool Gta5GroundUnder(btDiscreteDynamicsWorld* world,
+                     const btCollisionObject* self, float& groundY);
+
 }  // namespace sdl3cpp::services::impl
