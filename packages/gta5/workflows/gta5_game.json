@@ -440,6 +440,42 @@
       }
     },
     {
+      "id": "create_gta5_reflect_pipeline",
+      "type": "graphics.gpu.pipeline.create",
+      "typeVersion": 1,
+      "position": [
+        1362,
+        200
+      ],
+      "parameters": {
+        "vertex_shader_key": "gta5_vertex_shader",
+        "fragment_shader_key": "gta5_fragment_shader",
+        "vertex_format": "position_uv_lmuv_normal",
+        "pipeline_key": "gpu_pipeline_gta5_reflect",
+        "color_format": "rgba16_float",
+        "cull_mode": "front",
+        "release_shaders": 0
+      }
+    },
+    {
+      "id": "create_gta5_reflect_terrain_pipeline",
+      "type": "graphics.gpu.pipeline.create",
+      "typeVersion": 1,
+      "position": [
+        1364,
+        200
+      ],
+      "parameters": {
+        "vertex_shader_key": "gta5_vertex_shader",
+        "fragment_shader_key": "gta5_terrain_fragment_shader",
+        "vertex_format": "position_uv_lmuv_normal",
+        "pipeline_key": "gpu_pipeline_gta5_reflect_terrain",
+        "color_format": "rgba16_float",
+        "cull_mode": "front",
+        "release_shaders": 0
+      }
+    },
+    {
       "id": "create_gta5_emissive_pipeline",
       "type": "graphics.gpu.pipeline.create",
       "typeVersion": 1,

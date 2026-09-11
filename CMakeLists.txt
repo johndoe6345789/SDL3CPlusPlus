@@ -859,6 +859,9 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_prepared_geometry.cpp
         src/services/impl/workflow/gta5/gta5_proxy.cpp
         src/services/impl/workflow/gta5/gta5_range_allocator.cpp
+        src/services/impl/workflow/gta5/gta5_reflection_pass.cpp
+        src/services/impl/workflow/gta5/gta5_reflection_resources.cpp
+        src/services/impl/workflow/gta5/gta5_reflection_step.cpp
         src/services/impl/workflow/gta5/gta5_resource.cpp
         src/services/impl/workflow/gta5/gta5_resource_cache.cpp
         src/services/impl/workflow/gta5/gta5_resource_load.cpp

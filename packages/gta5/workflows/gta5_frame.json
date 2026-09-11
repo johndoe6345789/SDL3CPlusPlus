@@ -138,6 +138,11 @@
       }
     },
     {
+      "id": "reflection_draw",
+      "plugin": "gta5.reflection.draw",
+      "comment": "What the sea mirrors: the sky and the reflection and water proxies seen from the camera reflected in sea level."
+    },
+    {
       "id": "mark_cull",
       "plugin": "gta5.frame.mark",
       "parameters": {

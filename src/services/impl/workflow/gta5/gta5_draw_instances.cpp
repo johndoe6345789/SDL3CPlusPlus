@@ -7,12 +7,13 @@
 namespace sdl3cpp::services::impl {
 
 int DrawGta5Instances(const Gta5StreamState& state,
-                      const Gta5DrawContext& draw, int* textureBinds) {
-    const Gta5InstanceBatch& batch = state.batch;
+                      const Gta5DrawContext& draw, int* textureBinds,
+                      const Gta5InstanceBatch* only) {
+    const Gta5InstanceBatch& batch = only ? *only : state.batch;
     if (!draw.pass || !draw.cmd || !batch.buffer || batch.items.empty()) {
         return 0;
     }
-    BindGta5BatchShared(state, draw);
+    BindGta5BatchShared(draw, batch);
     rendering::FragmentUniformData fu = draw.fragUniforms;
     SDL_GPUTexture* boundTexture = nullptr;
     int boundBlock = -1, boundKind = 0;
@@ -32,7 +33,7 @@ int DrawGta5Instances(const Gta5StreamState& state,
                             : draw.blendPipeline;
             if (!next) continue;
             SDL_BindGPUGraphicsPipeline(draw.pass, next);
-            BindGta5BatchShared(state, draw);
+            BindGta5BatchShared(draw, batch);
             boundKind = kind;
             boundTexture = nullptr;
             boundBlock = -1;

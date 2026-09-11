@@ -6,9 +6,9 @@
 
 namespace sdl3cpp::services::impl {
 
-void BindGta5BatchShared(const Gta5StreamState& state,
-                         const Gta5DrawContext& draw) {
-    SDL_BindGPUVertexStorageBuffers(draw.pass, 0, &state.batch.buffer, 1);
+void BindGta5BatchShared(const Gta5DrawContext& draw,
+                         const Gta5InstanceBatch& batch) {
+    SDL_BindGPUVertexStorageBuffers(draw.pass, 0, &batch.buffer, 1);
     // Once a frame: each group's offset travels as first_instance.
     Gta5InstancedUniforms vu = {};
     const glm::mat4 viewProj = draw.proj * draw.view;

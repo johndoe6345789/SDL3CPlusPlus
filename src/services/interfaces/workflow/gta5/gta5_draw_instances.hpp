@@ -32,10 +32,11 @@ struct Gta5DrawContext {
     SDL_GPUSampler* shadowSampler{nullptr};
 };
 
-/// Draw the batch gta5.tiles.cull built, instanced: one call per
-/// archetype material. Returns the draw count.
+/// Draw a batch instanced, one call per archetype material: `only`, or
+/// the one gta5.tiles.cull built. Returns the draw count.
 int DrawGta5Instances(const Gta5StreamState& state,
                       const Gta5DrawContext& draw,
-                      int* textureBinds = nullptr);
+                      int* textureBinds = nullptr,
+                      const Gta5InstanceBatch* only = nullptr);
 
 }  // namespace sdl3cpp::services::impl
