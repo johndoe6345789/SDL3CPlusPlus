@@ -822,6 +822,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_loading_text_step.cpp
         src/services/impl/workflow/gta5/gta5_lod.cpp
         src/services/impl/workflow/gta5/gta5_lod_select_step.cpp
+        src/services/impl/workflow/gta5/gta5_look.cpp
         src/services/impl/workflow/gta5/gta5_map_atlas.cpp
         src/services/impl/workflow/gta5/gta5_map_font.cpp
         src/services/impl/workflow/gta5/gta5_map_frame.cpp
@@ -841,6 +842,8 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_model_matrix.cpp
         src/services/impl/workflow/gta5/gta5_pick.cpp
         src/services/impl/workflow/gta5/gta5_placement_parse.cpp
+        src/services/impl/workflow/gta5/gta5_player_camera_step.cpp
+        src/services/impl/workflow/gta5/gta5_player_fly_step.cpp
         src/services/impl/workflow/gta5/gta5_player_hold_step.cpp
         src/services/impl/workflow/gta5/gta5_player_pin.cpp
         src/services/impl/workflow/gta5/gta5_prepared_finish.cpp

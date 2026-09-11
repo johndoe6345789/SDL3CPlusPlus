@@ -35,6 +35,15 @@
       "comment": "Quake's step-up is 18 units (0.5625 m). GTA V kerbs are around 0.15 m and its stairs around 0.18 m, so the stock step height clears city geometry without any change."
     },
     {
+      "id": "player_fly",
+      "plugin": "gta5.player.fly",
+      "parameters": {
+        "base_speed": 12.0,
+        "ramp_seconds": 2.5,
+        "max_speed": 250.0
+      }
+    },
+    {
       "id": "physics_step",
       "plugin": "physics.step",
       "parameters": {
@@ -59,6 +68,15 @@
         "fov": 75.0,
         "near": 0.5,
         "far": 6000.0
+      }
+    },
+    {
+      "id": "player_camera",
+      "plugin": "gta5.player.camera",
+      "parameters": {
+        "distance": 3.2,
+        "height": 0.4,
+        "head_height": 0.6
       }
     }
   ]
