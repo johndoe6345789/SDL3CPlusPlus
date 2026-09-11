@@ -818,6 +818,9 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_instance_batch_build.cpp
         src/services/impl/workflow/gta5/gta5_instance_batch_upload.cpp
         src/services/impl/workflow/gta5/gta5_json_file.cpp
+        src/services/impl/workflow/gta5/gta5_lights_load.cpp
+        src/services/impl/workflow/gta5/gta5_lights_mesh.cpp
+        src/services/impl/workflow/gta5/gta5_lights_step.cpp
         src/services/impl/workflow/gta5/gta5_load_budget.cpp
         src/services/impl/workflow/gta5/gta5_load_pool.cpp
         src/services/impl/workflow/gta5/gta5_load_progress.cpp
@@ -860,6 +863,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_proxy.cpp
         src/services/impl/workflow/gta5/gta5_range_allocator.cpp
         src/services/impl/workflow/gta5/gta5_reflection_pass.cpp
+        src/services/impl/workflow/gta5/gta5_reflection_plane.cpp
         src/services/impl/workflow/gta5/gta5_reflection_resources.cpp
         src/services/impl/workflow/gta5/gta5_reflection_step.cpp
         src/services/impl/workflow/gta5/gta5_resource.cpp

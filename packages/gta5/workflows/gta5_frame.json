@@ -140,7 +140,11 @@
     {
       "id": "reflection_draw",
       "plugin": "gta5.reflection.draw",
-      "comment": "What the sea mirrors: the sky and the reflection and water proxies seen from the camera reflected in sea level."
+      "comment": "What the sea mirrors: the sky and the reflection and water proxies seen from the camera reflected in sea level.",
+      "parameters": {
+        "water_file": "D:/gtautil-2.2.13/extract_common/data/levels/gta5/water.xml",
+        "size_ratio": 0.015
+      }
     },
     {
       "id": "mark_cull",
@@ -193,6 +197,17 @@
       "comment": "GTA V's sea, lakes and rivers from water.xml (extracted from common.rpf with GTAUtil).",
       "parameters": {
         "water_file": "D:/gtautil-2.2.13/extract_common/data/levels/gta5/water.xml"
+      }
+    },
+    {
+      "id": "lights_draw",
+      "plugin": "gta5.lights.draw",
+      "comment": "GTA's distant lights at night: far-off street lamps and lit windows from lodlights.rpf.",
+      "parameters": {
+        "lights_dir": "D:/gtautil-2.2.13/levels/gta5/lodlights.rpf",
+        "size": 0.0022,
+        "fade_from": 40.0,
+        "fade_to": 120.0
       }
     },
     {

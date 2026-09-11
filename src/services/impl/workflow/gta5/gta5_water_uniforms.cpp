@@ -30,7 +30,8 @@ Gta5WaterUniforms BuildGta5WaterUniforms(const WorkflowContext& context,
     const std::uint64_t ms = SDL_GetTicks() % 3600000u;
     const float exposure = fu.light_color[3] > 0.f ? fu.light_color[3] : 1.f;
     w.params = glm::vec4(static_cast<float>(ms) / 1000.f, exposure,
-                         reflection ? 1.f : 0.f, 0.f);
+                         reflection ? 1.f : 0.f,
+                         context.Get<float>("gta5.reflection.height", 0.f));
     const auto width = std::max(context.Get<uint32_t>("render_width", 1u), 1u);
     const auto height =
         std::max(context.Get<uint32_t>("render_height", 1u), 1u);

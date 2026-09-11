@@ -47,7 +47,7 @@ int WorkflowGta5ReflectionDrawStep::DrawMirror(
     SDL_PushGPUFragmentUniformData(cmd, 0, &mirrored, sizeof(mirrored));
     SDL_DrawGPUPrimitives(pass, 3, 1, 0, 0);
     Gta5DrawContext draw = BuildGta5DrawContext(step, context);
-    draw.pass = pass, draw.cmd = cmd, draw.view = view;
+    draw.pass = pass, draw.cmd = cmd, draw.view = view, draw.proj = proj;
     draw.cameraPos = eye;
     draw.terrainPipeline = context.Get<SDL_GPUGraphicsPipeline*>(
         "gpu_pipeline_gta5_reflect_terrain", nullptr);

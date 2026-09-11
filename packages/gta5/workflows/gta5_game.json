@@ -104,6 +104,16 @@
       "name": "shader_gta5_emissive_frag_path",
       "type": "string",
       "defaultValue": "packages/gta5/shaders/msl/gta5_emissive.frag.metal"
+    },
+    "shader_gta5_lights_vert_path": {
+      "name": "shader_gta5_lights_vert_path",
+      "type": "string",
+      "defaultValue": "packages/gta5/shaders/msl/gta5_lights.vert.metal"
+    },
+    "shader_gta5_lights_frag_path": {
+      "name": "shader_gta5_lights_frag_path",
+      "type": "string",
+      "defaultValue": "packages/gta5/shaders/msl/gta5_lights.frag.metal"
     }
   },
   "nodes": [
@@ -490,6 +500,61 @@
         "pipeline_key": "gpu_pipeline_gta5_emissive",
         "color_format": "rgba16_float",
         "release_shaders": 1
+      }
+    },
+    {
+      "id": "compile_gta5_lights_vert",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [
+        1380,
+        200
+      ],
+      "parameters": {
+        "stage": "vertex",
+        "output_key": "gta5_lights_vertex_shader",
+        "num_uniform_buffers": 1,
+        "num_samplers": 0
+      },
+      "inputs": {
+        "shader_path": "shader_gta5_lights_vert_path"
+      }
+    },
+    {
+      "id": "compile_gta5_lights_frag",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [
+        1390,
+        200
+      ],
+      "parameters": {
+        "stage": "fragment",
+        "output_key": "gta5_lights_fragment_shader",
+        "num_uniform_buffers": 0,
+        "num_samplers": 0
+      },
+      "inputs": {
+        "shader_path": "shader_gta5_lights_frag_path"
+      }
+    },
+    {
+      "id": "create_gta5_lights_pipeline",
+      "type": "graphics.gpu.pipeline.create",
+      "typeVersion": 1,
+      "position": [
+        1400,
+        200
+      ],
+      "parameters": {
+        "vertex_shader_key": "gta5_lights_vertex_shader",
+        "fragment_shader_key": "gta5_lights_fragment_shader",
+        "vertex_format": "position_uv_lmuv_normal",
+        "pipeline_key": "gpu_pipeline_gta5_lights",
+        "color_format": "rgba16_float",
+        "alpha_blend": 1,
+        "depth_write": 0,
+        "cull_mode": "none"
       }
     },
     {

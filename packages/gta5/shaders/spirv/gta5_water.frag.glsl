@@ -15,7 +15,7 @@ layout(set = 3, binding = 0) uniform WaterUniforms {
     vec4 u_horizon;     // the clock's sky
     vec4 u_zenith;
     vec4 u_cameraPos;
-    vec4 u_params;      // x = seconds, y = exposure, z = reflection on
+    vec4 u_params;      // x seconds, y exposure, z reflection on, w its height
     vec4 u_screen;      // xy = 1 / render target size
 };
 
@@ -43,8 +43,8 @@ void main() {
     vec3 R = reflect(-V, N);
     vec3 mirrored = mix(u_horizon.rgb, u_zenith.rgb,
                         pow(clamp(R.y, 0.0, 1.0), 0.35));
-    // The mirror is sea level: lakes up the hills keep the sky.
-    if (u_params.z > 0.5 && abs(v_worldPos.y) < 2.0) {
+    // The mirror is at one water's height: others keep the sky.
+    if (u_params.z > 0.5 && abs(v_worldPos.y - u_params.w) < 2.0) {
         vec2 uv = gl_FragCoord.xy * u_screen.xy + N.xz * 0.04;
         vec4 seen = texture(reflectionTex, uv);
         mirrored = mix(mirrored, seen.rgb, seen.a);

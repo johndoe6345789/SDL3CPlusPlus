@@ -29,7 +29,7 @@ std::vector<BspRenderVertex> BuildGta5WaterMesh(
 /// gta5_water.frag's uniforms, std140.
 struct Gta5WaterUniforms {
     glm::vec4 lightDir, lightColor, ambient, horizon, zenith, cameraPos;
-    glm::vec4 params;  // seconds, exposure, reflection on
+    glm::vec4 params;  // seconds, exposure, reflection on, mirror height
     glm::vec4 screen;  // 1 / render target size
 };
 
