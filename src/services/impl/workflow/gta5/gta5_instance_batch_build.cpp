@@ -29,8 +29,8 @@ void Collect(const Gta5StreamState& state, const Gta5Frustum& frustum,
             if (wheel.geometry) visible.push_back(&wheel);
         }
     }
+    for (const Gta5Instance& part : state.character) visible.push_back(&part);
 }
-
 }  // namespace
 
 void BuildGta5InstanceBatch(const Gta5StreamState& state,

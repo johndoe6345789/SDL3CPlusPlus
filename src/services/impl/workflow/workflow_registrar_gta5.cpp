@@ -9,6 +9,7 @@
 #include "services/interfaces/workflow/gta5/gta5_lod_select_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_map_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_player_camera_step.hpp"
+#include "services/interfaces/workflow/gta5/gta5_player_character_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_player_fly_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_sky_draw_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_tiles_cull_step.hpp"
@@ -29,9 +30,7 @@ int RegisterGta5StreamingSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
                                std::shared_ptr<ILogger> logger) {
     if (!registry) return 0;
 
-    // The four steps share one streaming state. It holds the geometry cache
-    // and the resident tile set, which are far too large to round-trip through
-    // the workflow context every frame, so it is injected here instead.
+    // One shared streaming state, far too large to go through the context.
     auto state = std::make_shared<Gta5StreamState>();
 
     registry->RegisterStep(
@@ -70,10 +69,12 @@ int RegisterGta5StreamingSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
         std::make_shared<WorkflowGta5PlayerFlyStep>(logger, state));
     registry->RegisterStep(
         std::make_shared<WorkflowGta5PlayerCameraStep>(logger, state));
+    registry->RegisterStep(
+        std::make_shared<WorkflowGta5PlayerCharacterStep>(logger, state));
     // The sky needs no streaming state: it is the camera and the sun.
     registry->RegisterStep(std::make_shared<WorkflowGta5SkyDrawStep>(logger));
 
-    return 19;
+    return 20;
 }
 
 }  // namespace sdl3cpp::services::impl::registrar_detail

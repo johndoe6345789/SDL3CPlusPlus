@@ -47,6 +47,8 @@ struct Gta5StreamState {
     std::vector<Gta5Vehicle> vehicles;
     /// Index into `vehicles` the player is sitting in, or -1 on foot.
     int seated{-1};
+    /// The player's body in third person: drawn like the cars, never culled.
+    std::vector<Gta5Instance> character;
 
     /// Tiles whose band changed; evict tears them down, load rebuilds.
     std::unordered_set<Gta5TileCoord, Gta5TileCoordHash> rebuild;

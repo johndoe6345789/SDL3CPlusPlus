@@ -840,9 +840,16 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_mesh_transform.cpp
         src/services/impl/workflow/gta5/gta5_mesh_vertex.cpp
         src/services/impl/workflow/gta5/gta5_model_matrix.cpp
+        src/services/impl/workflow/gta5/gta5_ped_blend.cpp
+        src/services/impl/workflow/gta5/gta5_ped_load.cpp
+        src/services/impl/workflow/gta5/gta5_ped_mesh.cpp
+        src/services/impl/workflow/gta5/gta5_ped_skin.cpp
+        src/services/impl/workflow/gta5/gta5_ped_upload.cpp
+        src/services/impl/workflow/gta5/gta5_ped_walk.cpp
         src/services/impl/workflow/gta5/gta5_pick.cpp
         src/services/impl/workflow/gta5/gta5_placement_parse.cpp
         src/services/impl/workflow/gta5/gta5_player_camera_step.cpp
+        src/services/impl/workflow/gta5/gta5_player_character_step.cpp
         src/services/impl/workflow/gta5/gta5_player_fly_step.cpp
         src/services/impl/workflow/gta5/gta5_player_hold_step.cpp
         src/services/impl/workflow/gta5/gta5_player_pin.cpp
@@ -856,6 +863,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_shader_surface.cpp
         src/services/impl/workflow/gta5/gta5_shader_textures.cpp
         src/services/impl/workflow/gta5/gta5_shown_transform.cpp
+        src/services/impl/workflow/gta5/gta5_skeleton.cpp
         src/services/impl/workflow/gta5/gta5_sky_draw_step.cpp
         src/services/impl/workflow/gta5/gta5_sky_uniforms.cpp
         src/services/impl/workflow/gta5/gta5_spawn_tile.cpp

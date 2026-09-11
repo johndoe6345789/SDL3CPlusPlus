@@ -92,6 +92,14 @@
       "comment": "Chase camera while seated. After vehicles_sync so it reads this frame's chassis, and before render_prepare so it overrides the first-person view camera.fps.update wrote -- which, seated, is from inside the roof."
     },
     {
+      "id": "player_character",
+      "plugin": "gta5.player.character",
+      "parameters": {
+        "ped_dir": "D:/gtautil-2.2.13/models/cdimages/componentpeds_a_m_y.rpf",
+        "ped": "a_m_y_hipster_01"
+      }
+    },
+    {
       "id": "mark_vehicles",
       "plugin": "gta5.frame.mark",
       "parameters": {
