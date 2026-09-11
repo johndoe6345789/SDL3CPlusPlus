@@ -813,6 +813,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_gamepad_publish.cpp
         src/services/impl/workflow/gta5/gta5_gamepad_read.cpp
         src/services/impl/workflow/gta5/gta5_gamepad_step.cpp
+        src/services/impl/workflow/gta5/gta5_garage_load.cpp
         src/services/impl/workflow/gta5/gta5_geometry_arena.cpp
         src/services/impl/workflow/gta5/gta5_geometry_arena_upload.cpp
         src/services/impl/workflow/gta5/gta5_geometry_cache.cpp
@@ -825,6 +826,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_hud_frame.cpp
         src/services/impl/workflow/gta5/gta5_hud_gauge.cpp
         src/services/impl/workflow/gta5/gta5_hud_load.cpp
+        src/services/impl/workflow/gta5/gta5_hud_menu.cpp
         src/services/impl/workflow/gta5/gta5_hud_needle.cpp
         src/services/impl/workflow/gta5/gta5_hud_step.cpp
         src/services/impl/workflow/gta5/gta5_indexed_texture.cpp
@@ -894,12 +896,18 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_resource_text.cpp
         src/services/impl/workflow/gta5/gta5_roads_load.cpp
         src/services/impl/workflow/gta5/gta5_roads_near.cpp
+        src/services/impl/workflow/gta5/gta5_settings.cpp
         src/services/impl/workflow/gta5/gta5_shader_surface.cpp
         src/services/impl/workflow/gta5/gta5_shader_textures.cpp
         src/services/impl/workflow/gta5/gta5_shadow_draw.cpp
         src/services/impl/workflow/gta5/gta5_shadow_resources.cpp
         src/services/impl/workflow/gta5/gta5_shadow_step.cpp
         src/services/impl/workflow/gta5/gta5_shadow_view.cpp
+        src/services/impl/workflow/gta5/gta5_shop_buy.cpp
+        src/services/impl/workflow/gta5/gta5_shop_keep.cpp
+        src/services/impl/workflow/gta5/gta5_shop_load.cpp
+        src/services/impl/workflow/gta5/gta5_shop_pages.cpp
+        src/services/impl/workflow/gta5/gta5_shop_step.cpp
         src/services/impl/workflow/gta5/gta5_shown_transform.cpp
         src/services/impl/workflow/gta5/gta5_skeleton.cpp
         src/services/impl/workflow/gta5/gta5_sky_draw_step.cpp
@@ -942,8 +950,10 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_vehicle_load.cpp
         src/services/impl/workflow/gta5/gta5_vehicle_move.cpp
         src/services/impl/workflow/gta5/gta5_vehicle_pedals.cpp
+        src/services/impl/workflow/gta5/gta5_vehicle_remove.cpp
         src/services/impl/workflow/gta5/gta5_vehicle_report.cpp
         src/services/impl/workflow/gta5/gta5_vehicle_seat.cpp
+        src/services/impl/workflow/gta5/gta5_vehicle_spawn_saved.cpp
         src/services/impl/workflow/gta5/gta5_vehicle_spawn_step.cpp
         src/services/impl/workflow/gta5/gta5_vehicle_wheel_load.cpp
         src/services/impl/workflow/gta5/gta5_vehicle_wheels.cpp

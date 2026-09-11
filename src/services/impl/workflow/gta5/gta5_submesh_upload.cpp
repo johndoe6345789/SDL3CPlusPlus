@@ -23,6 +23,7 @@ bool UploadGta5SubMesh(const Gta5SubMeshData& part, SDL_GPUDevice* device,
                                  SDL_GetError());
     }
     out.indexCount = static_cast<std::uint32_t>(part.indices.size());
+    out.paint = part.paint;
     out.surface = {part.tint[0], part.tint[1], part.tint[2],
                    part.alphaCutoff};
     out.blend = part.blend;

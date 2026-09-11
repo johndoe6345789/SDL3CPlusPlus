@@ -22,6 +22,14 @@ void LeaveGta5Vehicle(const Gta5Vehicle& car, btRigidBody* player);
 float ControlGta5Vehicle(Gta5Vehicle& car, WorkflowContext& context,
                          float dt);
 
+/// Take car `index` out of the world and free it; the cars after it
+/// move up one. Its meshes stay cached.
+void RemoveGta5Vehicle(Gta5StreamState& state, std::size_t index,
+                       btDiscreteDynamicsWorld* world);
+
+/// A respray: its vehicle_paint parts take `paint`.
+void RepaintGta5Vehicle(Gta5Vehicle& car, const glm::vec3& paint);
+
 /// Put the car down at `at`: upright on its heading -- or facing `yaw`
 /// about +y, 0 being +z, its forward -- and at rest.
 void MoveGta5Vehicle(Gta5Vehicle& car, const glm::vec3& at);

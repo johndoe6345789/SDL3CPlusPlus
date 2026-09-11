@@ -59,7 +59,10 @@ Gta5MeshData ReadGta5DrawableMesh(const Gta5Resource& res,
                             : res.U16(shaders + 2 * std::int64_t(g));
             if (s < surfaces.size()) {
                 part.textureHash = surfaces[s].texture;
-                if (surfaces[s].paint) part.tint = {paint.r, paint.g, paint.b};
+                if (surfaces[s].paint) {
+                    part.tint = {paint.r, paint.g, paint.b};
+                    part.paint = true;
+                }
                 if (surfaces[s].cutout) part.alphaCutoff = 0.5f;
                 part.blend = surfaces[s].blend;
                 part.terrain = surfaces[s].terrain;

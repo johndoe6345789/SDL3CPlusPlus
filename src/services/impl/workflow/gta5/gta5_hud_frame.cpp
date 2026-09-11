@@ -53,6 +53,7 @@ Gta5MapFrame BuildGta5HudFrame(const Gta5Hud& hud, int width, int height,
                            1.f);
         }
     }
+    AddGta5HudMenu(frame, l, hud, s, w, h);
     if (!s.driving) return frame;
     // Speed and revs, bottom right, as a dashboard's pair of dials.
     const float r = std::clamp(h * 0.14f, 70.f, 130.f);

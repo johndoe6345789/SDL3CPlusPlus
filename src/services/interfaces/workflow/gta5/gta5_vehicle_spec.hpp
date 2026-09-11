@@ -28,4 +28,9 @@ struct Gta5VehicleSpec {
     float heading{0.f};
 };
 
+/// The car the player owns, from the settings (Gta5SettingsPath) and
+/// `garageFile`, in place of the spawn step's own. False with none.
+bool ApplyGta5SavedCar(Gta5VehicleSpec& spec, float& mass,
+                       const std::string& garageFile);
+
 }  // namespace sdl3cpp::services::impl

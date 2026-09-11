@@ -37,6 +37,7 @@ struct Gta5SubMeshData {
     /// Terrain: four diffuse layers, weighted by vertex colour 1.
     bool terrain{false};
     bool emissive{false};  // lit windows and signs: glow at night
+    bool paint{false};  // vehicle_paint: the car's own colour
     std::array<std::uint32_t, 5> layerHashes{};  // then the mask
 };
 

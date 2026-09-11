@@ -65,8 +65,11 @@ bool CreateGta5HudArt(Gta5Hud& hud, SDL_GPUDevice* device,
     hud.health = CreateGta5MapRgba(device, 1, 1, {90, 200, 90, 235}, uploads);
     hud.armour = CreateGta5MapRgba(device, 1, 1, {80, 160, 255, 235}, uploads);
     hud.back = CreateGta5MapRgba(device, 1, 1, {0, 0, 0, 150}, uploads);
+    hud.title = CreateGta5MapRgba(device, 1, 1, {30, 90, 190, 240}, uploads);
+    hud.highlight =
+        CreateGta5MapRgba(device, 1, 1, {255, 255, 255, 60}, uploads);
     return hud.speedDial && hud.tachDial && hud.needle && hud.health &&
-           hud.armour && hud.back;
+           hud.armour && hud.back && hud.title && hud.highlight;
 }
 
 }  // namespace sdl3cpp::services::impl

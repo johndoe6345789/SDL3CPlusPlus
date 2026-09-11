@@ -4,6 +4,7 @@
 #include "services/interfaces/workflow/gta5/gta5_map_art.hpp"
 #include "services/interfaces/workflow/gta5/gta5_map_frame.hpp"
 #include "services/interfaces/workflow/gta5/gta5_map_overlay.hpp"
+#include "services/interfaces/workflow/gta5/gta5_menu.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -22,6 +23,8 @@ struct Gta5Hud {
     SDL_GPUTexture* health{nullptr};  // one texel each: bar colours
     SDL_GPUTexture* armour{nullptr};
     SDL_GPUTexture* back{nullptr};
+    SDL_GPUTexture* title{nullptr};      // a menu's title bar
+    SDL_GPUTexture* highlight{nullptr};  // its selected row
     bool tried{false};
     bool ready{false};
 };
@@ -37,6 +40,9 @@ struct Gta5HudState {
     float kmh{0.f};
     float revs{0.f};  // 0 idle .. 1 the redline
     int gear{1};
+    std::string prompt;  // "E  LS CUSTOMS": a shop's door
+    bool menuOpen{false};
+    Gta5Menu menu;
 };
 
 bool LoadGta5Hud(Gta5Hud& hud, SDL_GPUDevice* device,
@@ -59,6 +65,11 @@ void AddGta5HudGauge(Gta5MapFrame& frame, const Gta5MapLayout& layout,
                      const Gta5Hud& hud, SDL_GPUTexture* dial,
                      glm::vec2 centre, float radius, float value, float top,
                      float step, const std::string& caption);
+
+/// A shop's prompt at the bottom middle, or its open menu at the left.
+void AddGta5HudMenu(Gta5MapFrame& frame, const Gta5MapLayout& layout,
+                    const Gta5Hud& hud, const Gta5HudState& state, float w,
+                    float h);
 
 /// `text` centred on `at` (align 0), or ending at it (align 1).
 void AddGta5HudText(Gta5MapFrame& frame, const Gta5MapLayout& layout,

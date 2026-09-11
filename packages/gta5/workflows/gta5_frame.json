@@ -40,6 +40,14 @@
       }
     },
     {
+      "id": "shop",
+      "plugin": "gta5.shop",
+      "comment": "E at an LS Customs or an Ammu-Nation opens its menu: any car from data/garage.json parked on the nearest road, a respray, weapons from data/weapons.json, ammunition and armour. After the physics, as the hold is, since it keeps the player at the counter.",
+      "parameters": {
+        "roads_dir": "D:/gtautil-2.2.13/levels/gta5/paths.rpf"
+      }
+    },
+    {
       "id": "streaming_group",
       "plugin": "workflow.include",
       "parameters": {

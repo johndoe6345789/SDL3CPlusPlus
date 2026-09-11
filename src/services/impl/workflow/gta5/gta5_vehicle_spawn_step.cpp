@@ -62,11 +62,14 @@ void WorkflowGta5VehicleSpawnStep::Execute(const WorkflowStepDefinition& step,
     spec.heading = Gta5NumberOr(step, "heading", 0.f);
     spec.rideHeight = Gta5NumberOr(step, "ride_height", spec.rideHeight);
 
+    // The car the player drove last, if they have swapped it.
+    float mass = Gta5NumberOr(step, "mass", 1600.f);
+    ApplyGta5SavedCar(spec, mass,
+                      Gta5ResolvePath(step, context, "garage_file",
+                                      "packages/gta5/data/garage.json"));
     // One attempt: reading from the map either works or it never will.
     spawned_ = true;
-    SpawnGta5Vehicle(*state_, spec, position,
-                     Gta5NumberOr(step, "mass", 1600.f), device, world,
-                     logger_);
+    SpawnGta5Vehicle(*state_, spec, position, mass, device, world, logger_);
 }
 
 }  // namespace sdl3cpp::services::impl

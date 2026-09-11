@@ -29,6 +29,7 @@ struct Gta5SubMesh {
     bool blend{false};  // alpha-blended, drawn after the opaque scene
     bool terrain{false};  // four layers; see gta5_terrain.frag
     bool emissive{false};  // windows, signs: see gta5_emissive.frag
+    bool paint{false};  // vehicle_paint: what a respray recolours
     std::array<SDL_GPUTexture*, 5> layers{};  // 4 layers, then the mask
     std::array<SDL_GPUSampler*, 5> layerSamplers{};
     int DrawKind() const {
