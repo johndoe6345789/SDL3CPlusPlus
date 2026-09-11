@@ -45,6 +45,7 @@ void WorkflowGta5PlayerSwimStep::Execute(const WorkflowStepDefinition& step,
         last_ = ps.origin;
         if (logger_) logger_->Info("gta5.swim: in");
     }
+    if (glm::distance(ps.origin, last_) > 30.f) last_ = ps.origin;  // moved
     const auto* keys = context.TryGet<nlohmann::json>("input.keyboard.state");
     const float dt =
         std::clamp(context.Get<float>("physics_dt", 1.f / 60.f), 0.f, 0.1f);

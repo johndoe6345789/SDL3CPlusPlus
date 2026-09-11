@@ -16,4 +16,7 @@ void RideGta5Vehicle(const Gta5Vehicle& car, btRigidBody* player,
 /// Put the player back on the road beside the car.
 void LeaveGta5Vehicle(const Gta5Vehicle& car, btRigidBody* player);
 
+/// Put the car down at `at`: upright on its heading, at rest.
+void MoveGta5Vehicle(Gta5Vehicle& car, const glm::vec3& at);
+
 }  // namespace sdl3cpp::services::impl

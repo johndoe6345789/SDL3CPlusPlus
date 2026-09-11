@@ -56,8 +56,8 @@ void WorkflowGta5PlayerFlyStep::Execute(const WorkflowStepDefinition& step,
     if (Gta5KeyDown(keys, "A")) velocity -= right * base;
     if (Gta5KeyDown(keys, "Space")) velocity.y += base;
     if (Gta5KeyDown(keys, "Left Ctrl")) velocity.y -= base;
-
-    // Undo this frame's walk, gravity and all, and fly instead: blocked.
+    // Undo this frame's walk and fly; a trip across the map starts anew.
+    if (glm::distance(ps.origin, last_) > 30.f) last_ = ps.origin;
     ps.origin = last_;
     ps.velocity = velocity;
     auto* world =

@@ -16,6 +16,7 @@ public:
 
 private:
     std::shared_ptr<ILogger> logger_;
+    int lastLogged_{-1};  // the grab last reported: this runs every frame
 };
 
 }  // namespace sdl3cpp::services::impl

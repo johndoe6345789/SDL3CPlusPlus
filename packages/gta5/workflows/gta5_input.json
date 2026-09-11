@@ -1,0 +1,95 @@
+{
+  "name": "GTA V Input",
+  "description": "quake3's input group (q3_input.json) with one change: while the Tab map is open (gta5.map.look) the cursor is free and mouse motion does not turn the view.",
+  "steps": [
+    {
+      "id": "frame_delta",
+      "plugin": "time.frame_delta"
+    },
+    {
+      "id": "input_poll",
+      "plugin": "input.poll"
+    },
+    {
+      "id": "keyboard_poll",
+      "plugin": "input.keyboard.poll"
+    },
+    {
+      "id": "move_axes",
+      "plugin": "input.axis.combine",
+      "parameters": {
+        "config_path": "packages/quake3/config/input_aggregation.json"
+      }
+    },
+    {
+      "id": "move_buttons",
+      "plugin": "input.button.combine",
+      "parameters": {
+        "config_path": "packages/quake3/config/input_aggregation.json"
+      }
+    },
+    {
+      "id": "q3_menu",
+      "plugin": "q3.menu.update"
+    },
+    {
+      "id": "should_stop",
+      "plugin": "bool.or",
+      "inputs": {
+        "left": "q3.menu_quit_pressed",
+        "right": "q3.menu_map_selected"
+      },
+      "outputs": {
+        "value": "q3.stop_game"
+      }
+    },
+    {
+      "id": "stop_game_loop",
+      "plugin": "value.set_if",
+      "inputs": {
+        "condition": "q3.stop_game"
+      },
+      "parameters": {
+        "value": false
+      },
+      "outputs": {
+        "value": "game_running"
+      }
+    },
+    {
+      "id": "set_quit_requested",
+      "plugin": "value.set_if",
+      "inputs": {
+        "condition": "q3.menu_quit_pressed"
+      },
+      "parameters": {
+        "value": true
+      },
+      "outputs": {
+        "value": "q3.quit_requested"
+      }
+    },
+    {
+      "id": "compute_movement_active",
+      "plugin": "bool.not",
+      "inputs": {
+        "value": "q3.menu_open"
+      },
+      "outputs": {
+        "value": "movement_active"
+      }
+    },
+    {
+      "id": "map_look",
+      "plugin": "gta5.map.look",
+      "comment": "While the Tab map is open the mouse is the map's: the cursor is freed and the view holds still."
+    },
+    {
+      "id": "update_mouse_grab",
+      "plugin": "input.mouse.grab",
+      "inputs": {
+        "enabled": "gta5.mouse_look"
+      }
+    }
+  ]
+}

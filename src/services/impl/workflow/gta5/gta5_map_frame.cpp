@@ -8,7 +8,8 @@ namespace sdl3cpp::services::impl {
 
 Gta5MapFrame BuildGta5MapFrame(const Gta5MapOverlay& map,
                                const Gta5MapRect& rect, int width,
-                               int height, glm::vec2 player, float angle) {
+                               int height, const std::vector<glm::vec2>& cars,
+                               glm::vec2 player, float angle) {
     Gta5MapFrame frame;
     frame.vertices.reserve(30 * (64 + map.pois.points.size()));
     const Gta5MapLayout l = FitGta5Map(width, height);
@@ -28,7 +29,18 @@ Gta5MapFrame BuildGta5MapFrame(const Gta5MapOverlay& map,
         AddGta5MapRect(frame, l, map.atlas, map.sampler, at - half,
                        at + half, Gta5MapIconUv(poi.category));
     }
+    for (std::size_t i = 0; i < map.pois.categories.size(); ++i) {
+        if (map.pois.categories[i].label != "YOUR CAR") continue;
+        for (const glm::vec2& car : cars) {
+            const glm::vec2 at = l.At(rect.U(car.x), rect.V(car.y));
+            AddGta5MapRect(frame, l, map.atlas, map.sampler, at - half,
+                           at + half, Gta5MapIconUv(static_cast<int>(i)));
+        }
+    }
     AddGta5MapLegend(frame, l, map);
+    AddGta5MapText(frame, l, map,
+                   glm::vec2(l.left + 12.f, l.top + 3.f * l.tile - 28.f), 2.f,
+                   "DOUBLE-CLICK TO TRAVEL");
     // Last, so the player is never under an icon.
     const glm::vec2 me = l.At(std::clamp(rect.U(player.x), 0.f, 1.f),
                               std::clamp(rect.V(player.y), 0.f, 1.f));

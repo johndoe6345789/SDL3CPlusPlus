@@ -6,9 +6,9 @@
       "id": "input_group",
       "plugin": "workflow.include",
       "parameters": {
-        "path": "packages/quake3/workflows/q3_input.json"
+        "path": "packages/gta5/workflows/gta5_input.json"
       },
-      "comment": "The input group is reused verbatim from quake3. It only produces move/look/jump/crouch intent, which is exactly what the q3.pm.* steps consume, so there is nothing GTA-specific to restate."
+      "comment": "quake3's input group, copied so the Tab map can free the cursor: it only produces move/look/jump/crouch intent, which the q3.pm.* steps consume."
     },
     {
       "id": "mark_input",

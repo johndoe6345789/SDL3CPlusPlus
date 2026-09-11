@@ -39,12 +39,20 @@ public:
                  WorkflowContext& context) override;
 
 private:
+    /// A double-click on the map (gta5.player.teleport_seq): hold there.
+    /// True in the frame a trip starts.
+    bool Travel(WorkflowContext& context, btRigidBody* player);
+    /// Landed after a trip: the car follows, parked alongside.
+    void Arrive(WorkflowContext& context, btRigidBody* player);
+
     std::shared_ptr<ILogger> logger_;
     std::shared_ptr<Gta5StreamState> state_;
     glm::vec3 hold_{0.f};
     std::uint64_t startMs_{0};
     bool recorded_{false};
     bool released_{false};
+    int travelSequence_{0};
+    bool travelling_{false};
 };
 
 }  // namespace sdl3cpp::services::impl

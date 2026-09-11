@@ -25,9 +25,16 @@ std::string WorkflowGta5PlayerHoldStep::GetPluginId() const {
 
 void WorkflowGta5PlayerHoldStep::Execute(const WorkflowStepDefinition&,
                                          WorkflowContext& context) {
-    if (!state_ || released_) return;
+    if (!state_) return;
     btRigidBody* player = Gta5PlayerBody(context);
     if (!player) return;
+    // A trip starts held over the destination: streaming, after this,
+    // then wants its tiles, and the ground there is waited for.
+    if (Travel(context, player)) {
+        PinGta5Player(context, player, hold_);
+        return;
+    }
+    if (released_) return;
     if (!recorded_) {
         const btVector3& origin = player->getWorldTransform().getOrigin();
         hold_ = glm::vec3(origin.x(), origin.y(), origin.z());
@@ -39,9 +46,14 @@ void WorkflowGta5PlayerHoldStep::Execute(const WorkflowStepDefinition&,
     const std::uint64_t waited = SDL_GetTicks() - startMs_;
     if (progress.done || waited > kGiveUpMs) {
         released_ = true;
-        // Let go on the ground, not at the spawn height, which may be set
-        // high to clear terrain of unknown height.
-        if (progress.done) DropGta5PlayerToGround(context, player, hold_);
+        // Let go on the ground, not at the hold's height, set high to
+        // clear terrain of unknown height. The search reaches 500 m down:
+        // from high over the map, look again lower until it meets ground.
+        for (glm::vec3 at = hold_; progress.done && at.y > -100.f;
+             at.y -= 490.f) {
+            if (DropGta5PlayerToGround(context, player, at)) break;
+        }
+        if (travelling_) Arrive(context, player);
         context.Set<std::string>("gta5.loading.text", "");
         if (logger_) {
             const std::string after = std::to_string(waited / 1000) + " s";

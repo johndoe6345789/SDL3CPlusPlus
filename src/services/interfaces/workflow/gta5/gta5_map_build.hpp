@@ -15,12 +15,13 @@ struct Gta5MapRect {
     float V(float y) const { return (maxY - y) / height; }
 };
 
-/// The whole overlay: backdrop, tiles, points of interest, legend, and
-/// the player's arrow at world (x, y), turned `angle` clockwise from
-/// north.
+/// The whole overlay: backdrop, tiles, points of interest, legend, the
+/// cars at world (x, y) in the YOUR CAR category's icon, and the
+/// player's arrow at world (x, y), turned `angle` clockwise from north.
 Gta5MapFrame BuildGta5MapFrame(const Gta5MapOverlay& map,
                                const Gta5MapRect& rect, int width,
-                               int height, glm::vec2 player, float angle);
+                               int height, const std::vector<glm::vec2>& cars,
+                               glm::vec2 player, float angle);
 
 /// Each category's icon and label in a box at the map's bottom left --
 /// open sea, off the south-west coast.

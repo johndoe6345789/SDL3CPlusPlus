@@ -1,5 +1,6 @@
 #pragma once
 
+#include "services/interfaces/workflow/gta5/gta5_map_travel.hpp"
 #include "services/interfaces/i_logger.hpp"
 #include "services/interfaces/i_workflow_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_map_overlay.hpp"
@@ -33,6 +34,7 @@ private:
     std::shared_ptr<ILogger> logger_;
     std::shared_ptr<Gta5StreamState> state_;
     Gta5MapOverlay map_;
+    Gta5MapTravel travel_;  // double-click to go there
     bool open_{false};
     bool held_{false};
 };

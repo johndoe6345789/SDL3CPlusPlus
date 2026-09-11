@@ -43,9 +43,11 @@ void WorkflowInputMouseGrabStep::Execute(
     SDL_SetWindowRelativeMouseMode(window, grab);
     context.Set<bool>("mouse_grabbed", grab);
 
-    if (logger_) {
+    // Said when it changes, not every frame.
+    if (logger_ && static_cast<int>(grab) != lastLogged_) {
         logger_->Info("input.mouse.grab: " + std::string(grab ? "enabled" : "disabled"));
     }
+    lastLogged_ = static_cast<int>(grab);
 }
 
 }  // namespace sdl3cpp::services::impl

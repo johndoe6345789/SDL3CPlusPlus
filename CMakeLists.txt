@@ -835,6 +835,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_map_font.cpp
         src/services/impl/workflow/gta5/gta5_map_frame.cpp
         src/services/impl/workflow/gta5/gta5_map_legend.cpp
+        src/services/impl/workflow/gta5/gta5_map_look_step.cpp
         src/services/impl/workflow/gta5/gta5_map_markers.cpp
         src/services/impl/workflow/gta5/gta5_map_overlay_draw.cpp
         src/services/impl/workflow/gta5/gta5_map_overlay_gpu.cpp
@@ -842,6 +843,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_map_poi.cpp
         src/services/impl/workflow/gta5/gta5_map_quads.cpp
         src/services/impl/workflow/gta5/gta5_map_step.cpp
+        src/services/impl/workflow/gta5/gta5_map_travel.cpp
         src/services/impl/workflow/gta5/gta5_material_surface.cpp
         src/services/impl/workflow/gta5/gta5_mesh_extract.cpp
         src/services/impl/workflow/gta5/gta5_mesh_geometry_upload.cpp
@@ -862,6 +864,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_player_hold_step.cpp
         src/services/impl/workflow/gta5/gta5_player_pin.cpp
         src/services/impl/workflow/gta5/gta5_player_swim_step.cpp
+        src/services/impl/workflow/gta5/gta5_player_travel.cpp
         src/services/impl/workflow/gta5/gta5_prepared_finish.cpp
         src/services/impl/workflow/gta5/gta5_prepared_geometry.cpp
         src/services/impl/workflow/gta5/gta5_proxy.cpp
@@ -925,6 +928,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_vehicle_hold.cpp
         src/services/impl/workflow/gta5/gta5_vehicle_input.cpp
         src/services/impl/workflow/gta5/gta5_vehicle_load.cpp
+        src/services/impl/workflow/gta5/gta5_vehicle_move.cpp
         src/services/impl/workflow/gta5/gta5_vehicle_report.cpp
         src/services/impl/workflow/gta5/gta5_vehicle_seat.cpp
         src/services/impl/workflow/gta5/gta5_vehicle_spawn_step.cpp

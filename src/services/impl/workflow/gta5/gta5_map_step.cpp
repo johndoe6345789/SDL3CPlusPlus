@@ -28,8 +28,17 @@ void WorkflowGta5MapDrawStep::Execute(const WorkflowStepDefinition& step,
     if (!state_) return;
     const bool tab = Gta5KeyDown(
         context.TryGet<nlohmann::json>("input.keyboard.state"), "Tab");
-    if (tab && !held_) open_ = !open_;
+    if (tab && !held_) {
+        open_ = !open_;
+        if (logger_) logger_->Info(open_ ? "gta5.map: open" : "gta5.map: shut");
+    }
     held_ = tab;
+    const Gta5MapRect rect = Gta5MapRectFor(step);
+    // A double-click on the map travels there, and closes it.
+    if (TravelGta5Map(context, travel_, open_, rect)) {
+        open_ = false;
+        if (logger_) logger_->Info("gta5.map: shut, travelling");
+    }
     if (!open_ || context.GetBool("frame_skip", false) ||
         context.GetString(kPostfxCompositeStateKey) !=
             kPostfxCompositeStateDrawn) {
@@ -59,17 +68,12 @@ void WorkflowGta5MapDrawStep::Execute(const WorkflowStepDefinition& step,
     const auto view =
         context.Get<glm::mat4>("render.view_matrix", glm::mat4(1.f));
     const glm::vec3 ahead(-view[0][2], -view[1][2], -view[2][2]);
-    // Engine x is east and -z north: GTA's y, the map's up.
-    Gta5MapRect rect;
-    rect.minX = Gta5NumberOr(step, "map_min_x", rect.minX);
-    rect.maxY = Gta5NumberOr(step, "map_max_y", rect.maxY);
-    rect.width = Gta5NumberOr(step, "map_width", rect.width);
-    rect.height = Gta5NumberOr(step, "map_height", rect.height);
     const Gta5MapFrame frame = BuildGta5MapFrame(
         map_, rect,
         static_cast<int>(context.Get<uint32_t>("frame_width", 1280u)),
         static_cast<int>(context.Get<uint32_t>("frame_height", 960u)),
-        glm::vec2(at.x, -at.z), std::atan2(ahead.x, -ahead.z));
+        Gta5MapCars(*state_), glm::vec2(at.x, -at.z),
+        std::atan2(ahead.x, -ahead.z));
     DrawGta5MapOverlay(map_, device, cmd, swapchain, frame);
 }
 

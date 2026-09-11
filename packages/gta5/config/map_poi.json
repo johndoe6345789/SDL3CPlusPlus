@@ -1,78 +1,435 @@
 {
   "comment": "Tab map points of interest, in GTA world metres (x east, y north): the widely published blip positions. Up to 8 categories; letter and colour make the icon, label the legend line.",
   "categories": [
-    {"id": "customs", "label": "LS CUSTOMS", "letter": "C", "colour": [255, 140, 30]},
-    {"id": "clothes", "label": "CLOTHES", "letter": "S", "colour": [190, 90, 230]},
-    {"id": "ammu", "label": "AMMU-NATION", "letter": "A", "colour": [220, 50, 50]},
-    {"id": "barber", "label": "BARBER", "letter": "B", "colour": [60, 140, 255]},
-    {"id": "tattoo", "label": "TATTOO", "letter": "T", "colour": [30, 180, 160]},
-    {"id": "hospital", "label": "HOSPITAL", "letter": "H", "colour": [60, 190, 80]},
-    {"id": "police", "label": "POLICE", "letter": "P", "colour": [40, 70, 190]}
+    {
+      "id": "customs",
+      "label": "LS CUSTOMS",
+      "letter": "C",
+      "colour": [
+        255,
+        140,
+        30
+      ]
+    },
+    {
+      "id": "clothes",
+      "label": "CLOTHES",
+      "letter": "S",
+      "colour": [
+        190,
+        90,
+        230
+      ]
+    },
+    {
+      "id": "ammu",
+      "label": "AMMU-NATION",
+      "letter": "A",
+      "colour": [
+        220,
+        50,
+        50
+      ]
+    },
+    {
+      "id": "barber",
+      "label": "BARBER",
+      "letter": "B",
+      "colour": [
+        60,
+        140,
+        255
+      ]
+    },
+    {
+      "id": "tattoo",
+      "label": "TATTOO",
+      "letter": "T",
+      "colour": [
+        30,
+        180,
+        160
+      ]
+    },
+    {
+      "id": "hospital",
+      "label": "HOSPITAL",
+      "letter": "H",
+      "colour": [
+        60,
+        190,
+        80
+      ]
+    },
+    {
+      "id": "police",
+      "label": "POLICE",
+      "letter": "P",
+      "colour": [
+        40,
+        70,
+        190
+      ]
+    },
+    {
+      "id": "vehicle",
+      "label": "YOUR CAR",
+      "letter": "V",
+      "colour": [
+        255,
+        200,
+        0
+      ]
+    }
   ],
   "points": [
-    {"category": "customs", "name": "Burton", "x": -337.4, "y": -136.9},
-    {"category": "customs", "name": "LSIA", "x": -1155.5, "y": -2007.2},
-    {"category": "customs", "name": "La Mesa", "x": 731.8, "y": -1088.8},
-    {"category": "customs", "name": "Route 68", "x": 1175.0, "y": 2640.0},
-    {"category": "customs", "name": "Beeker's Garage", "x": 110.9, "y": 6626.4},
-    {"category": "customs", "name": "Benny's", "x": -205.7, "y": -1310.6},
-
-    {"category": "clothes", "name": "Discount Store Strawberry", "x": 72.3, "y": -1399.1},
-    {"category": "clothes", "name": "Ponsonbys Rockford Hills", "x": -703.8, "y": -152.3},
-    {"category": "clothes", "name": "Ponsonbys Burton", "x": -167.9, "y": -299.0},
-    {"category": "clothes", "name": "Binco Textile City", "x": 428.7, "y": -800.1},
-    {"category": "clothes", "name": "Binco Vespucci", "x": -829.4, "y": -1073.7},
-    {"category": "clothes", "name": "Ponsonbys Morningwood", "x": -1447.8, "y": -242.5},
-    {"category": "clothes", "name": "Discount Store Paleto", "x": 11.6, "y": 6514.2},
-    {"category": "clothes", "name": "Suburban Hawick", "x": 123.6, "y": -219.4},
-    {"category": "clothes", "name": "Discount Store Grapeseed", "x": 1696.3, "y": 4829.3},
-    {"category": "clothes", "name": "Suburban Harmony", "x": 618.1, "y": 2759.6},
-    {"category": "clothes", "name": "Discount Store Route 68", "x": 1190.6, "y": 2713.4},
-    {"category": "clothes", "name": "Suburban Del Perro", "x": -1193.4, "y": -772.3},
-    {"category": "clothes", "name": "Suburban Chumash", "x": -3172.5, "y": 1048.1},
-    {"category": "clothes", "name": "Discount Store Great Ocean", "x": -1108.4, "y": 2708.9},
-
-    {"category": "ammu", "name": "Pillbox Hill", "x": 22.0, "y": -1107.2},
-    {"category": "ammu", "name": "Hawick", "x": 252.3, "y": -50.0},
-    {"category": "ammu", "name": "La Mesa", "x": 842.4, "y": -1033.4},
-    {"category": "ammu", "name": "Little Seoul", "x": -662.1, "y": -935.3},
-    {"category": "ammu", "name": "Cypress Flats", "x": 810.2, "y": -2157.3},
-    {"category": "ammu", "name": "Sandy Shores", "x": 1693.4, "y": 3759.5},
-    {"category": "ammu", "name": "Paleto Bay", "x": -330.2, "y": 6083.8},
-    {"category": "ammu", "name": "Tataviam", "x": 2567.6, "y": 294.3},
-    {"category": "ammu", "name": "Great Ocean Highway", "x": -1117.5, "y": 2698.6},
-    {"category": "ammu", "name": "Morningwood", "x": -1306.2, "y": -394.0},
-    {"category": "ammu", "name": "Chumash", "x": -3171.9, "y": 1087.7},
-
-    {"category": "barber", "name": "Rockford Hills", "x": -814.3, "y": -183.8},
-    {"category": "barber", "name": "Davis", "x": 136.8, "y": -1708.4},
-    {"category": "barber", "name": "Vespucci", "x": -1282.6, "y": -1116.8},
-    {"category": "barber", "name": "Sandy Shores", "x": 1931.5, "y": 3729.7},
-    {"category": "barber", "name": "Mirror Park", "x": 1212.8, "y": -472.9},
-    {"category": "barber", "name": "Hawick", "x": -32.9, "y": -152.3},
-    {"category": "barber", "name": "Paleto Bay", "x": -278.1, "y": 6228.5},
-
-    {"category": "tattoo", "name": "El Burro Heights", "x": 1322.6, "y": -1651.9},
-    {"category": "tattoo", "name": "Vespucci", "x": -1153.6, "y": -1425.6},
-    {"category": "tattoo", "name": "Vinewood", "x": 322.1, "y": 180.4},
-    {"category": "tattoo", "name": "Chumash", "x": -3170.0, "y": 1075.0},
-    {"category": "tattoo", "name": "Sandy Shores", "x": 1864.6, "y": 3747.7},
-    {"category": "tattoo", "name": "Paleto Bay", "x": -293.7, "y": 6200.0},
-
-    {"category": "hospital", "name": "Pillbox Hill Medical", "x": 307.8, "y": -595.0},
-    {"category": "hospital", "name": "Central Los Santos Medical", "x": 340.0, "y": -1396.0},
-    {"category": "hospital", "name": "Mount Zonah", "x": -449.8, "y": -340.8},
-    {"category": "hospital", "name": "St Fiacre", "x": 1151.2, "y": -1529.6},
-    {"category": "hospital", "name": "Sandy Shores Medical", "x": 1839.6, "y": 3672.9},
-    {"category": "hospital", "name": "Paleto Bay Medical", "x": -247.8, "y": 6331.2},
-
-    {"category": "police", "name": "Mission Row", "x": 425.1, "y": -979.5},
-    {"category": "police", "name": "Vespucci", "x": -1093.0, "y": -809.0},
-    {"category": "police", "name": "Davis", "x": 360.0, "y": -1584.0},
-    {"category": "police", "name": "Vinewood", "x": 638.0, "y": 1.0},
-    {"category": "police", "name": "Rockford Hills", "x": -561.0, "y": -132.0},
-    {"category": "police", "name": "La Mesa", "x": 826.8, "y": -1290.0},
-    {"category": "police", "name": "Sandy Shores Sheriff", "x": 1853.0, "y": 3689.0},
-    {"category": "police", "name": "Paleto Bay Sheriff", "x": -448.0, "y": 6008.0}
+    {
+      "category": "customs",
+      "name": "Burton",
+      "x": -337.4,
+      "y": -136.9
+    },
+    {
+      "category": "customs",
+      "name": "LSIA",
+      "x": -1155.5,
+      "y": -2007.2
+    },
+    {
+      "category": "customs",
+      "name": "La Mesa",
+      "x": 731.8,
+      "y": -1088.8
+    },
+    {
+      "category": "customs",
+      "name": "Route 68",
+      "x": 1175.0,
+      "y": 2640.0
+    },
+    {
+      "category": "customs",
+      "name": "Beeker's Garage",
+      "x": 110.9,
+      "y": 6626.4
+    },
+    {
+      "category": "customs",
+      "name": "Benny's",
+      "x": -205.7,
+      "y": -1310.6
+    },
+    {
+      "category": "clothes",
+      "name": "Discount Store Strawberry",
+      "x": 72.3,
+      "y": -1399.1
+    },
+    {
+      "category": "clothes",
+      "name": "Ponsonbys Rockford Hills",
+      "x": -703.8,
+      "y": -152.3
+    },
+    {
+      "category": "clothes",
+      "name": "Ponsonbys Burton",
+      "x": -167.9,
+      "y": -299.0
+    },
+    {
+      "category": "clothes",
+      "name": "Binco Textile City",
+      "x": 428.7,
+      "y": -800.1
+    },
+    {
+      "category": "clothes",
+      "name": "Binco Vespucci",
+      "x": -829.4,
+      "y": -1073.7
+    },
+    {
+      "category": "clothes",
+      "name": "Ponsonbys Morningwood",
+      "x": -1447.8,
+      "y": -242.5
+    },
+    {
+      "category": "clothes",
+      "name": "Discount Store Paleto",
+      "x": 11.6,
+      "y": 6514.2
+    },
+    {
+      "category": "clothes",
+      "name": "Suburban Hawick",
+      "x": 123.6,
+      "y": -219.4
+    },
+    {
+      "category": "clothes",
+      "name": "Discount Store Grapeseed",
+      "x": 1696.3,
+      "y": 4829.3
+    },
+    {
+      "category": "clothes",
+      "name": "Suburban Harmony",
+      "x": 618.1,
+      "y": 2759.6
+    },
+    {
+      "category": "clothes",
+      "name": "Discount Store Route 68",
+      "x": 1190.6,
+      "y": 2713.4
+    },
+    {
+      "category": "clothes",
+      "name": "Suburban Del Perro",
+      "x": -1193.4,
+      "y": -772.3
+    },
+    {
+      "category": "clothes",
+      "name": "Suburban Chumash",
+      "x": -3172.5,
+      "y": 1048.1
+    },
+    {
+      "category": "clothes",
+      "name": "Discount Store Great Ocean",
+      "x": -1108.4,
+      "y": 2708.9
+    },
+    {
+      "category": "ammu",
+      "name": "Pillbox Hill",
+      "x": 22.0,
+      "y": -1107.2
+    },
+    {
+      "category": "ammu",
+      "name": "Hawick",
+      "x": 252.3,
+      "y": -50.0
+    },
+    {
+      "category": "ammu",
+      "name": "La Mesa",
+      "x": 842.4,
+      "y": -1033.4
+    },
+    {
+      "category": "ammu",
+      "name": "Little Seoul",
+      "x": -662.1,
+      "y": -935.3
+    },
+    {
+      "category": "ammu",
+      "name": "Cypress Flats",
+      "x": 810.2,
+      "y": -2157.3
+    },
+    {
+      "category": "ammu",
+      "name": "Sandy Shores",
+      "x": 1693.4,
+      "y": 3759.5
+    },
+    {
+      "category": "ammu",
+      "name": "Paleto Bay",
+      "x": -330.2,
+      "y": 6083.8
+    },
+    {
+      "category": "ammu",
+      "name": "Tataviam",
+      "x": 2567.6,
+      "y": 294.3
+    },
+    {
+      "category": "ammu",
+      "name": "Great Ocean Highway",
+      "x": -1117.5,
+      "y": 2698.6
+    },
+    {
+      "category": "ammu",
+      "name": "Morningwood",
+      "x": -1306.2,
+      "y": -394.0
+    },
+    {
+      "category": "ammu",
+      "name": "Chumash",
+      "x": -3171.9,
+      "y": 1087.7
+    },
+    {
+      "category": "barber",
+      "name": "Rockford Hills",
+      "x": -814.3,
+      "y": -183.8
+    },
+    {
+      "category": "barber",
+      "name": "Davis",
+      "x": 136.8,
+      "y": -1708.4
+    },
+    {
+      "category": "barber",
+      "name": "Vespucci",
+      "x": -1282.6,
+      "y": -1116.8
+    },
+    {
+      "category": "barber",
+      "name": "Sandy Shores",
+      "x": 1931.5,
+      "y": 3729.7
+    },
+    {
+      "category": "barber",
+      "name": "Mirror Park",
+      "x": 1212.8,
+      "y": -472.9
+    },
+    {
+      "category": "barber",
+      "name": "Hawick",
+      "x": -32.9,
+      "y": -152.3
+    },
+    {
+      "category": "barber",
+      "name": "Paleto Bay",
+      "x": -278.1,
+      "y": 6228.5
+    },
+    {
+      "category": "tattoo",
+      "name": "El Burro Heights",
+      "x": 1322.6,
+      "y": -1651.9
+    },
+    {
+      "category": "tattoo",
+      "name": "Vespucci",
+      "x": -1153.6,
+      "y": -1425.6
+    },
+    {
+      "category": "tattoo",
+      "name": "Vinewood",
+      "x": 322.1,
+      "y": 180.4
+    },
+    {
+      "category": "tattoo",
+      "name": "Chumash",
+      "x": -3170.0,
+      "y": 1075.0
+    },
+    {
+      "category": "tattoo",
+      "name": "Sandy Shores",
+      "x": 1864.6,
+      "y": 3747.7
+    },
+    {
+      "category": "tattoo",
+      "name": "Paleto Bay",
+      "x": -293.7,
+      "y": 6200.0
+    },
+    {
+      "category": "hospital",
+      "name": "Pillbox Hill Medical",
+      "x": 307.8,
+      "y": -595.0
+    },
+    {
+      "category": "hospital",
+      "name": "Central Los Santos Medical",
+      "x": 340.0,
+      "y": -1396.0
+    },
+    {
+      "category": "hospital",
+      "name": "Mount Zonah",
+      "x": -449.8,
+      "y": -340.8
+    },
+    {
+      "category": "hospital",
+      "name": "St Fiacre",
+      "x": 1151.2,
+      "y": -1529.6
+    },
+    {
+      "category": "hospital",
+      "name": "Sandy Shores Medical",
+      "x": 1839.6,
+      "y": 3672.9
+    },
+    {
+      "category": "hospital",
+      "name": "Paleto Bay Medical",
+      "x": -247.8,
+      "y": 6331.2
+    },
+    {
+      "category": "police",
+      "name": "Mission Row",
+      "x": 425.1,
+      "y": -979.5
+    },
+    {
+      "category": "police",
+      "name": "Vespucci",
+      "x": -1093.0,
+      "y": -809.0
+    },
+    {
+      "category": "police",
+      "name": "Davis",
+      "x": 360.0,
+      "y": -1584.0
+    },
+    {
+      "category": "police",
+      "name": "Vinewood",
+      "x": 638.0,
+      "y": 1.0
+    },
+    {
+      "category": "police",
+      "name": "Rockford Hills",
+      "x": -561.0,
+      "y": -132.0
+    },
+    {
+      "category": "police",
+      "name": "La Mesa",
+      "x": 826.8,
+      "y": -1290.0
+    },
+    {
+      "category": "police",
+      "name": "Sandy Shores Sheriff",
+      "x": 1853.0,
+      "y": 3689.0
+    },
+    {
+      "category": "police",
+      "name": "Paleto Bay Sheriff",
+      "x": -448.0,
+      "y": 6008.0
+    }
   ]
 }
