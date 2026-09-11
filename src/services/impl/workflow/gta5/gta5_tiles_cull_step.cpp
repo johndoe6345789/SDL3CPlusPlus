@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/gta5/gta5_tiles_cull_step.hpp"
 
+#include "services/interfaces/workflow/gta5/gta5_pick.hpp"
 #include "services/interfaces/workflow/gta5/gta5_step_params.hpp"
 #include "services/interfaces/workflow/gta5/gta5_vehicle_input.hpp"
 #include "services/interfaces/workflow_context.hpp"
@@ -52,6 +53,15 @@ void WorkflowGta5TilesCullStep::Execute(const WorkflowStepDefinition& step,
     options.collision = collisionView_;
     BuildGta5InstanceBatch(*state_, proj * view, camera, options,
                            state_->batch);
+    // F3 names what the crosshair is on: a blurry surface, above all.
+    const bool pick = Gta5KeyDown(
+        context.TryGet<nlohmann::json>("input.keyboard.state"), "F3");
+    if (pick && !pickHeld_) {
+        LogGta5Pick(*state_, camera,
+                    glm::vec3(-view[0][2], -view[1][2], -view[2][2]),
+                    logger_);
+    }
+    pickHeld_ = pick;
     if (!UploadGta5InstanceBatch(device, state_->batch)) {
         // Nothing is drawn from a batch that did not upload.
         state_->batch.groups.clear();

@@ -33,6 +33,7 @@ private:
     std::shared_ptr<Gta5StreamState> state_;
     bool warned_{false};
     bool collisionView_{false};  // F2
+    bool pickHeld_{false};
     bool toggleHeld_{false};
 };
 

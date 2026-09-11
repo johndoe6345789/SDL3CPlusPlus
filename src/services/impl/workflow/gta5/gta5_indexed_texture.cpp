@@ -26,6 +26,8 @@ const Gta5Texture* InstallGta5TextureBlob(Gta5StreamState& state,
     if (!gpu.texture) return nullptr;  // cached unusable: settled as missing
     entry.texture = gpu.texture;
     entry.sampler = state.textureSampler;
+    entry.width = blob.width;
+    entry.height = blob.height;
     entry.usable = true;
     return &entry;
 }

@@ -785,6 +785,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_asset_index_build.cpp
         src/services/impl/workflow/gta5/gta5_asset_scan.cpp
         src/services/impl/workflow/gta5/gta5_asset_scan_slice.cpp
+        src/services/impl/workflow/gta5/gta5_asset_scan_textures.cpp
         src/services/impl/workflow/gta5/gta5_assets_index_step.cpp
         src/services/impl/workflow/gta5/gta5_assets_ready.cpp
         src/services/impl/workflow/gta5/gta5_bone_pose.cpp
@@ -832,6 +833,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_mesh_transform.cpp
         src/services/impl/workflow/gta5/gta5_mesh_vertex.cpp
         src/services/impl/workflow/gta5/gta5_model_matrix.cpp
+        src/services/impl/workflow/gta5/gta5_pick.cpp
         src/services/impl/workflow/gta5/gta5_placement_parse.cpp
         src/services/impl/workflow/gta5/gta5_player_hold_step.cpp
         src/services/impl/workflow/gta5/gta5_player_pin.cpp

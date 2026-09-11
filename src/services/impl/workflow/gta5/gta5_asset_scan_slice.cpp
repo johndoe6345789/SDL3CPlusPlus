@@ -59,9 +59,10 @@ Gta5ScanResult ScanGta5AssetSlice(const std::vector<std::string>* files,
         if (!LoadGta5Resource((*files)[id], res, !ymap)) continue;
         if (ymap) {
             ScanYmap(res, id, world, result);
+        } else if (ext == ".ytd") {
+            ScanGta5Textures(res, id, result);
         } else {
-            ScanDictionary(res, id, ext == ".ytd" ? result.textures
-                                                  : result.drawables);
+            ScanDictionary(res, id, result.drawables);
         }
     }
     return result;

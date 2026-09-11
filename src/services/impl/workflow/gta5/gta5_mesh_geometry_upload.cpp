@@ -59,6 +59,7 @@ bool UploadGta5MeshGeometry(Gta5StreamState& state, const Gta5MeshData& mesh,
                 state, part.textureHash, device)) {
             sub.texture = texture->texture;
             sub.sampler = texture->sampler;
+            sub.textureSize = {texture->width, texture->height};
         }
         for (int i = 0; part.terrain && i < 5; ++i) {
             if (const Gta5Texture* layer = GetOrLoadGta5IndexedTexture(

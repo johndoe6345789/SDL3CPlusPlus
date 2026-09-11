@@ -14,6 +14,8 @@ namespace sdl3cpp::services::impl {
 struct Gta5Texture {
     SDL_GPUTexture* texture{nullptr};
     SDL_GPUSampler* sampler{nullptr};
+    std::uint32_t width{0};  // F3 reports these: a small one is a blur
+    std::uint32_t height{0};
     /// False once loading has failed, so a missing file costs one
     /// attempt rather than one per archetype.
     bool usable{false};

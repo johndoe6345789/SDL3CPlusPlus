@@ -24,6 +24,7 @@ struct Gta5SubMesh {
     std::uint32_t indexCount{0};
     SDL_GPUTexture* texture{nullptr};
     SDL_GPUSampler* sampler{nullptr};
+    std::array<std::uint32_t, 2> textureSize{};  // width, height, for F3
     /// rgb tints the texture, a is the alpha-discard threshold: one vec4.
     std::array<float, 4> surface{1.f, 1.f, 1.f, 0.f};
     bool blend{false};  // alpha-blended, drawn after the opaque scene
@@ -50,7 +51,6 @@ struct Gta5Geometry {
     bool pending{false};
     /// Tried, and found to have nothing to draw; not asked for again.
     bool failed{false};
-
     /// Collision mesh, every submesh merged, shared by each instance at
     /// unit scale. Bullet does not copy these arrays, so they have to
     /// outlive the shape indexing them: they live here, beside it.
@@ -69,12 +69,12 @@ struct Gta5Instance {
     Gta5Geometry* geometry{nullptr};
     std::array<float, 16> modelMatrix{};
     btRigidBody* body{nullptr};
-    /// Non-null only when this instance is not at unit scale and needed
-    /// its own scaled wrapper around the shared collision shape.
+    /// Its own scaled wrapper of the shared shape, off unit scale only.
     btCollisionShape* scaledShape{nullptr};
     /// Drawn from childLodDist out to lodDist, as its placement says.
     float lodDist{0.f};
     float childLodDist{0.f};
+    std::uint32_t archetype{0};  // name hash, for F3
 };
 
 }  // namespace sdl3cpp::services::impl

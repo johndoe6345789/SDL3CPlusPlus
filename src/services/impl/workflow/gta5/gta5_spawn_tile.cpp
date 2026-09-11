@@ -1,10 +1,23 @@
 #include "services/interfaces/workflow/gta5/gta5_spawn_tile.hpp"
 
+#include "services/interfaces/workflow/gta5/gta5_asset_index.hpp"
 #include "services/interfaces/workflow/gta5/gta5_collision_body.hpp"
 #include "services/interfaces/workflow/gta5/gta5_geometry_cache.hpp"
 #include "services/interfaces/workflow/gta5/gta5_model_matrix.hpp"
 
 namespace sdl3cpp::services::impl {
+namespace {
+
+/// Reflection, mirror, shadow, water and light proxies: stand-ins GTA
+/// renders only into reflections, shadow maps and light passes. Drawn,
+/// dt1_05_reflproxy smeared a district over its own streets.
+bool IsProxy(const Gta5StreamState& state, std::uint32_t hash) {
+    return state.assets && hash != 0 &&
+           Gta5ArchetypeName(*state.assets, hash).find("proxy") !=
+               std::string::npos;
+}
+
+}  // namespace
 
 int SpawnGta5TilePlacements(Gta5StreamState& state,
                             Gta5ResidentTile& resident, int budget,
@@ -20,9 +33,10 @@ int SpawnGta5TilePlacements(Gta5StreamState& state,
 
         // Placements authored for a finer band than the tile is drawn at
         // are skipped: at SLOD range we want the merged shells, not every
-        // railing.
+        // railing. Nor are proxies drawn at all.
         if (static_cast<int>(placement.lod) <
-            static_cast<int>(resident.bandAtSpawn)) {
+                static_cast<int>(resident.bandAtSpawn) ||
+            IsProxy(state, placement.archetypeHash)) {
             ++resident.spawnedCount;
             ++consumed;
             continue;
@@ -42,6 +56,7 @@ int SpawnGta5TilePlacements(Gta5StreamState& state,
         instance.geometry = geometry;
         instance.modelMatrix = BuildGta5ModelMatrix(placement);
         instance.lodDist = placement.lodDist;
+        instance.archetype = placement.archetypeHash;
         // Always handed over up close. Waiving it for a tile's finest band
         // kept every parent whose lodDist fell in the HD band -- and many
         // do -- drawn over its own children: blurry lumps on the road.

@@ -35,12 +35,17 @@ bool Gta5AssetsReady(Gta5StreamState& state,
     }
     if (logger) {
         const Gta5AssetIndex& a = *state.assets;
+        std::size_t hi = 0;  // resolved to a full-size +hi.ytd copy
+        for (const auto& [hash, file] : a.textures) {
+            hi += a.files[file].find("+hi.ytd") != std::string::npos;
+        }
         logger->Info("gta5.assets.index: " + std::to_string(a.files.size()) +
                      " files, " + std::to_string(a.ymapCount) +
                      " ymaps over " + std::to_string(a.ymapsByTile.size()) +
                      " tiles, " + std::to_string(a.drawables.size()) +
                      " drawables, " + std::to_string(a.textures.size()) +
-                     " textures, in " + std::to_string(a.buildSeconds) +
+                     " textures (" + std::to_string(hi) + " +hi), in " +
+                     std::to_string(a.buildSeconds) +
                      " s; " + std::to_string(state.pool->Threads()) +
                      " load threads");
     }

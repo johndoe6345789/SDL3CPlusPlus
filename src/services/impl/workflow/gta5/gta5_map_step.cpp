@@ -57,10 +57,10 @@ void WorkflowGta5MapDrawStep::Execute(const WorkflowStepDefinition& step,
         context.Get<glm::mat4>("render.view_matrix", glm::mat4(1.f));
     const glm::vec3 ahead(-view[0][2], -view[1][2], -view[2][2]);
     // Engine x is east and -z north: GTA's y, the map's up.
-    const float minX = Gta5NumberOr(step, "map_min_x", -4000.f);
-    const float maxY = Gta5NumberOr(step, "map_max_y", 8000.f);
-    const float width = Gta5NumberOr(step, "map_width", 8000.f);
-    const float height = Gta5NumberOr(step, "map_height", 12000.f);
+    const float minX = Gta5NumberOr(step, "map_min_x", -4140.f);
+    const float maxY = Gta5NumberOr(step, "map_max_y", 8400.f);
+    const float width = Gta5NumberOr(step, "map_width", 9000.f);
+    const float height = Gta5NumberOr(step, "map_height", 13500.f);
     const std::vector<float> quads = BuildGta5MapQuads(
         static_cast<int>(context.Get<uint32_t>("frame_width", 1280u)),
         static_cast<int>(context.Get<uint32_t>("frame_height", 960u)),
