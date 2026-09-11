@@ -881,6 +881,12 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_skeleton.cpp
         src/services/impl/workflow/gta5/gta5_sky_draw_step.cpp
         src/services/impl/workflow/gta5/gta5_sky_uniforms.cpp
+        src/services/impl/workflow/gta5/gta5_sound_engine.cpp
+        src/services/impl/workflow/gta5/gta5_sound_feet.cpp
+        src/services/impl/workflow/gta5/gta5_sound_load.cpp
+        src/services/impl/workflow/gta5/gta5_sound_loop.cpp
+        src/services/impl/workflow/gta5/gta5_sound_step.cpp
+        src/services/impl/workflow/gta5/gta5_sound_synth.cpp
         src/services/impl/workflow/gta5/gta5_spawn_tile.cpp
         src/services/impl/workflow/gta5/gta5_step_params.cpp
         src/services/impl/workflow/gta5/gta5_stream_lead.cpp

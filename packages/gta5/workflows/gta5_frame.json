@@ -128,6 +128,16 @@
       }
     },
     {
+      "id": "sound",
+      "plugin": "gta5.sound",
+      "comment": "Footsteps, strokes and splashes, the engine of the car last driven, and the lapping shore. dir holds GTA's own sounds as WAVs, exported from its AWC banks, in steps/, strokes/, splash/, engine/ and water/; any folder left empty plays a synthesised stand-in. After water_map, which says how deep the camera is.",
+      "parameters": {
+        "dir": "D:/gtautil-2.2.13/extract_audio/wav",
+        "water_file": "D:/gtautil-2.2.13/extract_common/data/levels/gta5/water.xml",
+        "volume": 1.0
+      }
+    },
+    {
       "id": "tiles_cull",
       "plugin": "gta5.tiles.cull",
       "parameters": {

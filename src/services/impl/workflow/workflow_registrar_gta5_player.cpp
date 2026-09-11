@@ -7,6 +7,7 @@
 #include "services/interfaces/workflow/gta5/gta5_player_swim_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_reflection_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_shadow_step.hpp"
+#include "services/interfaces/workflow/gta5/gta5_sound_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_water_map_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_water_step.hpp"
 
@@ -34,7 +35,9 @@ int RegisterGta5PlayerSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
         std::make_shared<WorkflowGta5PlayerSwimStep>(logger, state));
     registry->RegisterStep(
         std::make_shared<WorkflowGta5WaterMapStep>(logger, state));
-    return 9;
+    registry->RegisterStep(
+        std::make_shared<WorkflowGta5SoundStep>(logger, state));
+    return 10;
 }
 
 }  // namespace sdl3cpp::services::impl::registrar_detail
