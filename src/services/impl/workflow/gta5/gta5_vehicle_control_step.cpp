@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/gta5/gta5_vehicle_control_step.hpp"
 
+#include "services/interfaces/workflow/gta5/gta5_player_pin.hpp"
 #include "services/interfaces/workflow/gta5/gta5_vehicle.hpp"
 #include "services/interfaces/workflow/gta5/gta5_vehicle_input.hpp"
 #include "services/interfaces/workflow/gta5/gta5_vehicle_seat.hpp"
@@ -33,6 +34,9 @@ void WorkflowGta5VehicleControlStep::Execute(
     if (pressed && player) {
         if (state_->seated >= 0) {
             LeaveGta5Vehicle(state_->vehicles[state_->seated], player);
+            // The movement state too, or it put them back where they got in.
+            const btVector3& at = player->getWorldTransform().getOrigin();
+            PinGta5Player(context, player, glm::vec3(at.x(), at.y(), at.z()));
             state_->seated = -1;
             if (logger_) logger_->Info("gta5.vehicle.control: out");
         } else {
@@ -49,9 +53,7 @@ void WorkflowGta5VehicleControlStep::Execute(
         }
     }
 
-    // Every car nobody is in: engine off, brakes on. Nothing touched a
-    // car once left, so it rolled off down any slope, or drove away on
-    // the throttle held while getting out.
+    // Every car nobody is in: engine off, brakes on, or it rolls away.
     for (std::size_t i = 0; i < state_->vehicles.size(); ++i) {
         if (static_cast<int>(i) == state_->seated) continue;
         DriveGta5Vehicle(state_->vehicles[i], 0.f, 0.f, 1.f);

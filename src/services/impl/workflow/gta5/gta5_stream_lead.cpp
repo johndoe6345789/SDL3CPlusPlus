@@ -30,4 +30,16 @@ glm::vec3 Gta5StreamLead(const Gta5StreamState& state,
     return length > reach ? lead * (reach / length) : lead;
 }
 
+glm::vec3 Gta5StreamOrigin(const Gta5StreamState& state,
+                           const glm::vec3& playerOrigin) {
+    if (state.seated < 0 ||
+        state.seated >= static_cast<int>(state.vehicles.size())) {
+        return playerOrigin;
+    }
+    const btRigidBody* chassis = state.vehicles[state.seated].chassis;
+    if (!chassis) return playerOrigin;
+    const btVector3& at = chassis->getWorldTransform().getOrigin();
+    return glm::vec3(at.x(), at.y(), at.z());
+}
+
 }  // namespace sdl3cpp::services::impl

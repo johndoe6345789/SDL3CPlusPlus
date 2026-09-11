@@ -45,7 +45,7 @@ void WorkflowGta5TilesResolveStep::Execute(
         return;
     }
 
-    const glm::vec3 origin = playerState->origin;
+    const glm::vec3 origin = Gta5StreamOrigin(*state_, playerState->origin);
     state_->centreOrigin = origin;
     state_->centre = Gta5TileForPosition(state_->world, origin);
     ResolveGta5WantedTiles(

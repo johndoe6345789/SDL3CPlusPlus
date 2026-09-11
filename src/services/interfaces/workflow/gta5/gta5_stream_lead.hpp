@@ -13,4 +13,11 @@ namespace sdl3cpp::services::impl {
 glm::vec3 Gta5StreamLead(const Gta5StreamState& state,
                          const glm::vec3& playerVelocity);
 
+/// Where to stream around: the player, or seated, their car. The on-foot
+/// state is not moved while riding, and centring on it left the streamer
+/// where the player got in: a long drive ran off the edge of the map
+/// that was loaded, into the distant LOD shells and then nothing.
+glm::vec3 Gta5StreamOrigin(const Gta5StreamState& state,
+                           const glm::vec3& playerOrigin);
+
 }  // namespace sdl3cpp::services::impl
