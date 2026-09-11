@@ -3,10 +3,11 @@
 // GTA V terrain: four texture layers blended per vertex.
 //
 // A terrain shader (terrain_cb_w_4lyr and its variants) carries four
-// diffuse layers -- sand, rock, dirt, grass -- and the mesh's colour 1
-// weighs them: blue mixes layer 0 with 1 and layer 2 with 3, green mixes
-// the two pairs. Drawn with one layer, as every other surface is, a
-// hillside showed its first layer in hard-edged patches.
+// diffuse layers -- sand, rock, dirt, grass -- and two weights: blue
+// mixes layer 0 with 1 and layer 2 with 3, green mixes the two pairs.
+// The weights are colour 1's; where the shader also has a lookup mask,
+// the mask's instead, giving way to colour 1 as colour 0's alpha rises.
+// The _cm shaders have no colour 1, and their mask alone decides.
 //
 // Lighting and haze match gta5_model.frag, so terrain and props meet
 // without a seam.
@@ -15,6 +16,7 @@ layout(set = 2, binding = 0) uniform sampler2D layer0;
 layout(set = 2, binding = 1) uniform sampler2D layer1;
 layout(set = 2, binding = 2) uniform sampler2D layer2;
 layout(set = 2, binding = 3) uniform sampler2D layer3;
+layout(set = 2, binding = 4) uniform sampler2D lookupMask;
 
 layout(set = 3, binding = 0) uniform PBRUniforms {
     vec4 u_lightDir;      // xyz = direction the light travels
@@ -23,7 +25,7 @@ layout(set = 3, binding = 0) uniform PBRUniforms {
     vec4 u_material;      // unused here
     vec4 u_fogColor;      // rgb = the sky step's horizon
     vec4 u_unused1;       // spotlight direction
-    vec4 u_surface;       // rgb = tint
+    vec4 u_surface;       // rgb = tint, a = 1 when there is a lookup mask
 };
 
 layout(location = 0) in vec2 v_uv;
@@ -31,14 +33,19 @@ layout(location = 1) in vec3 v_worldNormal;
 layout(location = 2) in vec3 v_worldPos;
 layout(location = 3) in vec3 v_cameraPos;
 layout(location = 4) in vec4 v_shadowPos;
-layout(location = 5) in vec4 v_blend;   // colour 1, 0..1
+layout(location = 5) in vec4 v_blend;   // colour 1 b, g; colour 0 a
+layout(location = 6) in vec2 v_uv1;     // where the mask is read
 
 layout(location = 0) out vec4 o_color;
 
 void main() {
-    vec4 near = mix(texture(layer0, v_uv), texture(layer1, v_uv), v_blend.b);
-    vec4 far = mix(texture(layer2, v_uv), texture(layer3, v_uv), v_blend.b);
-    vec3 albedo = mix(near, far, v_blend.g).rgb * u_surface.rgb;
+    vec2 w = v_blend.xy;  // (blue, green)
+    if (u_surface.a > 0.5) {
+        w = mix(texture(lookupMask, v_uv1).bg, w, v_blend.z);
+    }
+    vec4 near = mix(texture(layer0, v_uv), texture(layer1, v_uv), w.x);
+    vec4 far = mix(texture(layer2, v_uv), texture(layer3, v_uv), w.x);
+    vec3 albedo = mix(near, far, w.y).rgb * u_surface.rgb;
 
     vec3 N = normalize(v_worldNormal);
     vec3 L = normalize(-u_lightDir.xyz);

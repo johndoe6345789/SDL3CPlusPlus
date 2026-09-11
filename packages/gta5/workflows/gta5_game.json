@@ -220,7 +220,7 @@
         "stage": "fragment",
         "output_key": "gta5_terrain_fragment_shader",
         "num_uniform_buffers": 1,
-        "num_samplers": 4
+        "num_samplers": 5
       },
       "inputs": {
         "shader_path": "shader_gta5_terrain_frag_path"

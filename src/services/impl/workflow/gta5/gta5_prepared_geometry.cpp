@@ -56,7 +56,7 @@ Gta5PreparedGeometry PrepareGta5Geometry(const Gta5AssetIndex& index,
     for (const Gta5SubMeshData& part : out.mesh.parts) {
         const std::uint32_t wanted[] = {
             part.textureHash, part.layerHashes[0], part.layerHashes[1],
-            part.layerHashes[2], part.layerHashes[3]};
+            part.layerHashes[2], part.layerHashes[3], part.layerHashes[4]};
         for (const std::uint32_t texture : wanted) {
             if (texture == 0 ||
                 std::find(out.textures.begin(), out.textures.end(),

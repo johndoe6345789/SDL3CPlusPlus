@@ -27,6 +27,9 @@ bool UploadGta5SubMesh(const Gta5SubMeshData& part, SDL_GPUDevice* device,
                    part.alphaCutoff};
     out.blend = part.blend;
     out.terrain = part.terrain;
+    // Terrain reads its surface alpha as "has a lookup mask" -- it has no
+    // cutout to use it for.
+    if (part.terrain) out.surface[3] = part.layerHashes[4] ? 1.f : 0.f;
 
     // A part with no texture still draws; the shader falls back to the
     // map's default, which is better than dropping the geometry.

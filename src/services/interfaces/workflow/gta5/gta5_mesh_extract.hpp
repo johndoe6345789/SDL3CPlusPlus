@@ -36,7 +36,7 @@ struct Gta5SubMeshData {
     bool blend{false};
     /// Terrain: four diffuse layers, weighted by vertex colour 1.
     bool terrain{false};
-    std::array<std::uint32_t, 4> layerHashes{};
+    std::array<std::uint32_t, 5> layerHashes{};  // then the mask
 };
 
 struct Gta5MeshData {

@@ -9,7 +9,7 @@
 // placement, and the draw loop was the whole frame.
 //
 // Vertex format `position_uv_lmuv_normal` (BspRenderVertex, 40 bytes).
-// The varyings match gta5_model.frag.
+// The varyings match gta5_model.frag and gta5_terrain.frag.
 
 layout(location = 0) in vec3 a_position;
 layout(location = 1) in vec2 a_uv;
@@ -31,7 +31,8 @@ layout(location = 1) out vec3 v_worldNormal;
 layout(location = 2) out vec3 v_worldPos;
 layout(location = 3) out vec3 v_cameraPos;
 layout(location = 4) out vec4 v_shadowPos;
-layout(location = 5) out vec4 v_blend;  // colour 1, for terrain
+layout(location = 5) out vec4 v_blend;  // terrain: colour 1 b, g; colour 0 a
+layout(location = 6) out vec2 v_uv1;    // terrain: where the mask is read
 
 void main() {
     // Under Vulkan gl_InstanceIndex includes the draw's first_instance,
@@ -46,9 +47,11 @@ void main() {
     v_worldNormal = normalize(mat3(model) * a_normal);
     v_cameraPos = u_cameraPos.xyz;
     v_shadowPos = u_shadowVP * wp;
-    // Colour 1 comes packed two bytes to a float in the lightmap uv,
-    // as r + 256 g and b + 256 a (see gta5_vertex_layout).
-    v_blend = vec4(mod(a_lmuv.x, 256.0), floor(a_lmuv.x / 256.0),
-                   mod(a_lmuv.y, 256.0), floor(a_lmuv.y / 256.0)) /
-              255.0;
+    // Terrain's data comes packed in the lightmap uv as whole numbers
+    // (see gta5_vertex_layout): three bytes in x, two 12-bit coordinates
+    // in y. Unused by every other surface.
+    float w = a_lmuv.x;
+    v_blend = vec4(mod(w, 256.0), mod(floor(w / 256.0), 256.0),
+                   floor(w / 65536.0), 0.0) / 255.0;
+    v_uv1 = vec2(mod(a_lmuv.y, 4096.0), floor(a_lmuv.y / 4096.0)) / 4095.0;
 }

@@ -875,6 +875,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_vehicle_wheels.cpp
         src/services/impl/workflow/gta5/gta5_vehicles_sync_step.cpp
         src/services/impl/workflow/gta5/gta5_vertex_layout.cpp
+        src/services/impl/workflow/gta5/gta5_vertex_terrain.cpp
         src/services/impl/workflow/gta5/gta5_wanted_tiles.cpp
         src/services/impl/workflow/gta5/gta5_world_config_load.cpp
         src/services/impl/workflow/gta5/gta5_ymap.cpp

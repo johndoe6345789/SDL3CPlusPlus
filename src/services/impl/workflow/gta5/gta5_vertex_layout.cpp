@@ -1,18 +1,17 @@
 #include "services/interfaces/workflow/gta5/gta5_vertex_layout.hpp"
 
-#include "services/interfaces/workflow/gta5/gta5_half_float.hpp"
+#include "services/interfaces/workflow/gta5/gta5_vertex_terrain.hpp"
 
 namespace sdl3cpp::services::impl {
 namespace {
 
 constexpr int kPosition = 0;
 constexpr int kNormal = 4;
+constexpr int kColour0 = 24;
 constexpr int kColour1 = 25;
 constexpr int kTexcoord0 = 28;
-constexpr std::uint8_t kFloat3 = 6;   // R32G32B32_FLOAT
-constexpr std::uint8_t kFloat2 = 16;  // R32G32_TYPELESS, read as floats
-constexpr std::uint8_t kUnorm4 = 28;  // R8G8B8A8_UNORM
-constexpr std::uint8_t kHalf2 = 34;   // R16G16_FLOAT
+constexpr int kTexcoord1 = 29;
+constexpr std::uint8_t kFloat3 = 6;  // R32G32B32_FLOAT
 
 }  // namespace
 
@@ -26,18 +25,23 @@ bool ReadGta5VertexLayout(const Gta5Resource& res, std::int64_t buffer,
     if (decl < 0 || out.data < 0 || out.count == 0 || out.stride == 0) {
         return false;
     }
-    out.position = res.U32(decl + 4 * kPosition);
-    out.normal = res.U32(decl + 4 * kNormal);
-    out.uv = res.U32(decl + 4 * kTexcoord0);
-    out.colour1 = res.U32(decl + 4 * kColour1);
-    out.normalFormat = res.U8(decl + 260 + kNormal);
-    out.uvFormat = res.U8(decl + 260 + kTexcoord0);
-    out.colour1Format = res.U8(decl + 260 + kColour1);
+    const auto offset = [&](int slot) { return res.U32(decl + 4 * slot); };
+    const auto format = [&](int slot) { return res.U8(decl + 260 + slot); };
+    out.position = offset(kPosition);
+    out.normal = offset(kNormal);
+    out.uv = offset(kTexcoord0);
+    out.uv1 = offset(kTexcoord1);
+    out.colour0 = offset(kColour0);
+    out.colour1 = offset(kColour1);
+    out.normalFormat = format(kNormal);
+    out.uvFormat = format(kTexcoord0);
+    out.uv1Format = format(kTexcoord1);
+    out.colour0Format = format(kColour0);
+    out.colour1Format = format(kColour1);
     const std::uint64_t end = static_cast<std::uint64_t>(out.data) +
                               std::uint64_t{out.count} * out.stride;
     // Position is the one slot a vertex cannot do without.
-    return res.U8(decl + 260 + kPosition) == kFloat3 &&
-           end <= res.data.size();
+    return format(kPosition) == kFloat3 && end <= res.data.size();
 }
 
 BspRenderVertex ReadGta5Vertex(const Gta5Resource& res,
@@ -60,19 +64,8 @@ BspRenderVertex ReadGta5Vertex(const Gta5Resource& res,
     }
     // Unflipped: texture rows are stored top first and Vulkan samples v = 0
     // at the first row. 1 - v drew every sign and billboard upside down.
-    const std::int64_t t = at + layout.uv;
-    if (layout.uvFormat == kFloat2) {
-        v.u = res.F32(t);
-        v.v = res.F32(t + 4);
-    } else if (layout.uvFormat == kHalf2) {
-        v.u = Gta5HalfToFloat(res.U16(t));
-        v.v = Gta5HalfToFloat(res.U16(t + 2));
-    }
-    if (layout.colour1Format == kUnorm4) {
-        const std::int64_t c = at + layout.colour1;
-        v.lm_u = float(res.U8(c)) + 256.f * float(res.U8(c + 1));
-        v.lm_v = float(res.U8(c + 2)) + 256.f * float(res.U8(c + 3));
-    }
+    ReadGta5Uv(res, at + layout.uv, layout.uvFormat, v.u, v.v);
+    PackGta5TerrainVertex(res, layout, at, v);
     return v;
 }
 

@@ -23,9 +23,10 @@ struct Gta5ShaderSurface {
     bool paint{false};
     bool cutout{false};
     bool blend{false};
-    /// Four layers weighted by the vertex colour; see gta5_terrain.frag.
+    /// Four layers weighted by the vertex colour, and a lookup mask that
+    /// can stand in for it; see gta5_terrain.frag.
     bool terrain{false};
-    std::array<std::uint32_t, 4> layers{};
+    std::array<std::uint32_t, 5> layers{};
 };
 
 /// One entry per shader of the drawable at `drawable`: ShaderGroup at

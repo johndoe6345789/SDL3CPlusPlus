@@ -19,9 +19,10 @@ namespace sdl3cpp::services::impl {
 std::uint32_t ReadGta5DiffuseTexture(const Gta5Resource& res,
                                      std::int64_t shader);
 
-/// A terrain shader's four diffuse layers (DiffuseTexture_layer0..3), 0
-/// for any it lacks. True when it has at least two: a terrain shader.
+/// A terrain shader's four diffuse layers (DiffuseTexture_layer0..3), then
+/// its lookup mask (lookupTexture), 0 for any it lacks. True when it has
+/// at least two layers: a terrain shader.
 bool ReadGta5TerrainLayers(const Gta5Resource& res, std::int64_t shader,
-                           std::array<std::uint32_t, 4>& layers);
+                           std::array<std::uint32_t, 5>& layers);
 
 }  // namespace sdl3cpp::services::impl

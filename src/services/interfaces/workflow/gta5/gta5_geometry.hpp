@@ -28,8 +28,8 @@ struct Gta5SubMesh {
     std::array<float, 4> surface{1.f, 1.f, 1.f, 0.f};
     bool blend{false};  // alpha-blended, drawn after the opaque scene
     bool terrain{false};  // four layers; see gta5_terrain.frag
-    std::array<SDL_GPUTexture*, 4> layers{};
-    std::array<SDL_GPUSampler*, 4> layerSamplers{};
+    std::array<SDL_GPUTexture*, 5> layers{};  // 4 layers, then the mask
+    std::array<SDL_GPUSampler*, 5> layerSamplers{};
     int DrawKind() const { return blend ? 2 : (terrain ? 1 : 0); }  // order
 };
 

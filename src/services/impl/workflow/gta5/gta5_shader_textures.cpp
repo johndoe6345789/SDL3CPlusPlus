@@ -55,7 +55,7 @@ std::uint32_t ReadGta5DiffuseTexture(const Gta5Resource& res,
 }
 
 bool ReadGta5TerrainLayers(const Gta5Resource& res, std::int64_t shader,
-                           std::array<std::uint32_t, 4>& layers) {
+                           std::array<std::uint32_t, 5>& layers) {
     static const char* const kGen9[] = {
         "diffusetexture_layer0", "diffusetexture_layer1",
         "diffusetexture_layer2", "diffusetexture_layer3"};
@@ -67,6 +67,7 @@ bool ReadGta5TerrainLayers(const Gta5Resource& res, std::int64_t shader,
         layers[i] = FirstOf(res, shader, {kGen9[i], kOld[i]});
         if (layers[i]) ++found;
     }
+    layers[4] = FirstOf(res, shader, {"lookuptexture", "lookupsampler"});
     return found >= 2;
 }
 

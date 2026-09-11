@@ -27,14 +27,14 @@ int BindGta5SubMeshTextures(const Gta5DrawContext& draw,
     SDL_GPUSampler* sampler = sub.texture ? sub.sampler : draw.sampler;
     if (!texture || !sampler) return -1;
     if (sub.terrain) {
-        SDL_GPUTextureSamplerBinding layers[4];
-        for (int i = 0; i < 4; ++i) {
+        SDL_GPUTextureSamplerBinding layers[5];  // 4 layers, then the mask
+        for (int i = 0; i < 5; ++i) {
             layers[i] = sub.layers[i]
                             ? SDL_GPUTextureSamplerBinding{sub.layers[i],
                                                            sub.layerSamplers[i]}
                             : SDL_GPUTextureSamplerBinding{texture, sampler};
         }
-        SDL_BindGPUFragmentSamplers(draw.pass, 0, layers, 4);
+        SDL_BindGPUFragmentSamplers(draw.pass, 0, layers, 5);
         bound = nullptr;
         return 1;
     }
