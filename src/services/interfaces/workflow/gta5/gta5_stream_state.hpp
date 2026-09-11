@@ -3,14 +3,14 @@
 #include "services/interfaces/workflow/gta5/gta5_asset_index.hpp"
 #include "services/interfaces/workflow/gta5/gta5_config_types.hpp"
 #include "services/interfaces/workflow/gta5/gta5_geometry.hpp"
-#include "services/interfaces/workflow/gta5/gta5_placement.hpp"
+#include "services/interfaces/workflow/gta5/gta5_load_pool.hpp"
+#include "services/interfaces/workflow/gta5/gta5_resident_tile.hpp"
 #include "services/interfaces/workflow/gta5/gta5_resource_cache.hpp"
 #include "services/interfaces/workflow/gta5/gta5_texture_cache.hpp"
-#include "services/interfaces/workflow/gta5/gta5_vehicle_types.hpp"
 #include "services/interfaces/workflow/gta5/gta5_tile_coord.hpp"
+#include "services/interfaces/workflow/gta5/gta5_vehicle_types.hpp"
 
 #include <glm/glm.hpp>
-#include <cstddef>
 #include <future>
 #include <memory>
 #include <string>
@@ -20,23 +20,9 @@
 
 namespace sdl3cpp::services::impl {
 
-/// Bookkeeping for a tile that is loaded, or part-way through loading.
-struct Gta5ResidentTile {
-    std::vector<Gta5Placement> placements;
-    /// Instances spawned so far, drawn by gta5.tiles.draw.
-    std::vector<Gta5Instance> instances;
-    /// How many placements have been spawned. Spawning is spread over
-    /// frames, so a tile is only fully resident at placements.size().
-    std::size_t spawnedCount{0};
-    /// Band the spawned objects were built at. When a tile's band changes
-    /// it is torn down and rebuilt, which is how LOD switching works.
-    Gta5Lod bandAtSpawn{Gta5Lod::Hd};
-    bool placementsRead{false};
-};
-
-/// Shared by the four gta5.* steps. Owned by the registrar and injected
-/// into each step rather than copied through the workflow context: it
-/// holds the geometry cache and is far too large to round-trip per frame.
+/// Shared by the gta5.* steps. Owned by the registrar and injected into
+/// each step rather than copied through the workflow context: it holds
+/// the geometry cache and is far too large to round-trip per frame.
 struct Gta5StreamState {
     Gta5WorldConfig world;
     Gta5StreamingConfig streaming;
@@ -57,7 +43,6 @@ struct Gta5StreamState {
     /// Cars. Not part of any tile: they belong to the physics world and
     /// must never be streamed out from under it.
     std::vector<Gta5Vehicle> vehicles;
-
     /// Index into `vehicles` the player is sitting in, or -1 on foot.
     int seated{-1};
 
@@ -68,6 +53,12 @@ struct Gta5StreamState {
     std::shared_ptr<const Gta5AssetIndex> assets;
     std::future<std::shared_ptr<const Gta5AssetIndex>> assetsPending;
     Gta5ResourceCache resources;
+    /// Workers preparing archetypes, and prepared ones waiting on a
+    /// texture another job is still reading. Declared after `resources`,
+    /// which the workers use, so the pool is destroyed -- and its threads
+    /// joined -- first.
+    std::unique_ptr<Gta5LoadPool> pool;
+    std::vector<Gta5PreparedGeometry> waiting;
 
     /// Archetypes already reported missing, so the log says it once.
     std::unordered_set<std::string> reportedMissing;

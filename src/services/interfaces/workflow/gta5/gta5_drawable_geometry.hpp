@@ -13,9 +13,15 @@
 
 namespace sdl3cpp::services::impl {
 
-/// An archetype's mesh, read from whichever file the asset index says
-/// holds it; `paint` tints vehicle_paint geometry. Empty when there is
-/// no such drawable, or it cannot be read.
+/// An archetype's mesh from the index and resource cache alone, touching
+/// no stream state, so the load pool's workers call it. `paint` tints
+/// vehicle_paint geometry. Empty when there is no such drawable.
+Gta5MeshData ReadGta5IndexedMesh(const Gta5AssetIndex& index,
+                                 Gta5ResourceCache& resources,
+                                 std::uint32_t hash,
+                                 const glm::vec3& paint = glm::vec3(1.f));
+
+/// The same, on the main thread, through the stream state's index.
 Gta5MeshData ReadGta5ArchetypeMesh(Gta5StreamState& state,
                                    std::uint32_t hash,
                                    const glm::vec3& paint = glm::vec3(1.f));
@@ -28,8 +34,8 @@ bool UploadGta5MeshGeometry(Gta5StreamState& state, const Gta5MeshData& mesh,
                             bool collide, const std::string& name,
                             const std::shared_ptr<ILogger>& logger);
 
-/// Both, for a placement: its archetype's geometry straight from the
-/// extracted map. No converted file is involved at any point.
+/// Both, synchronously, for a placement: its archetype's geometry
+/// straight from the extracted map.
 bool BuildGta5DrawableGeometry(Gta5StreamState& state,
                                const Gta5Placement& placement,
                                SDL_GPUDevice* device, Gta5Geometry& geometry,

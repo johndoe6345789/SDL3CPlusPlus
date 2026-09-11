@@ -43,6 +43,8 @@ struct Gta5WheelSetup {
     float width{0.3f};
     float suspensionRest{0.2f};
     float connectionHeight{0.1f};
+    /// How far below its modelled axle a wheel hangs at rest.
+    float rideHeight{0.1f};
     std::array<btVector3, 4> axles{};
     bool hasAxles{false};
 };

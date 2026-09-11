@@ -9,14 +9,18 @@
 
 namespace sdl3cpp::services::impl {
 
-/// Fetch an archetype's GPU mesh, importing and uploading it on first use.
+/// Fetch an archetype's GPU mesh.
 ///
-/// Returns nullptr when the archetype has no exported model, or failed to
-/// import or upload. Failures are cached as unusable.
+/// A map archetype is prepared by the load pool: nullptr comes back with
+/// `pending` set until it lands, and the caller should come back for it.
+/// A legacy tile file's archetype is imported from its glTF here and now.
+/// Either way nullptr without `pending` means nothing to draw, cached so
+/// it is not tried again.
 Gta5Geometry* GetOrLoadGta5Geometry(Gta5StreamState& state,
                                     const Gta5Placement& placement,
                                     SDL_GPUDevice* device,
-                                    const std::shared_ptr<ILogger>& logger);
+                                    const std::shared_ptr<ILogger>& logger,
+                                    bool* pending = nullptr);
 
 /// Release the GPU buffers of every cached archetype no tile references.
 void SweepGta5GeometryCache(Gta5StreamState& state, SDL_GPUDevice* device,

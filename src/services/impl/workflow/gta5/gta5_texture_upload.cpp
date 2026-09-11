@@ -20,23 +20,20 @@ std::int64_t FindTexture(const Gta5Resource& ytd, std::uint32_t nameHash) {
 
 }  // namespace
 
-Gta5GpuTexture UploadGta5DictionaryTexture(const Gta5Resource& ytd,
-                                           std::uint32_t nameHash,
-                                           SDL_GPUDevice* device) {
-    Gta5GpuTexture out;
+Gta5TextureBlob ReadGta5DictionaryTexture(const Gta5Resource& ytd,
+                                          std::uint32_t nameHash) {
+    Gta5TextureBlob blob;
+    blob.hash = nameHash;
     const std::int64_t tex = FindTexture(ytd, nameHash);
-    if (tex < 0) return out;
+    if (tex < 0) return blob;
     const std::uint32_t w = ytd.U16(tex + 0x18);
     const std::uint32_t h = ytd.U16(tex + 0x1A);
     const Gta5TextureFormat format = Gta5TextureFormatFor(ytd.U8(tex + 0x1F));
     const std::int64_t pixels = ytd.Follow(tex + 0x38);
     // Block formats want whole blocks at mip 0.
     if (!w || !h || pixels < 0 || !format.bytes ||
-        (format.compressed && (w % 4 || h % 4)) ||
-        !SDL_GPUTextureSupportsFormat(device, format.gpu,
-                                      SDL_GPU_TEXTURETYPE_2D,
-                                      SDL_GPU_TEXTUREUSAGE_SAMPLER)) {
-        return out;
+        (format.compressed && (w % 4 || h % 4))) {
+        return blob;
     }
 
     // Keep the mips that fit in the file; a truncated chain still draws.
@@ -50,26 +47,15 @@ Gta5GpuTexture UploadGta5DictionaryTexture(const Gta5Resource& ytd,
         if (total + bytes > room) break;
         total += bytes;
     }
-    if (levels == 0) return out;
+    if (levels == 0) return blob;
 
-    SDL_GPUTextureCreateInfo info{};
-    info.type = SDL_GPU_TEXTURETYPE_2D;
-    info.format = format.gpu;
-    info.width = w;
-    info.height = h;
-    info.layer_count_or_depth = 1;
-    info.num_levels = levels;
-    info.usage = SDL_GPU_TEXTUREUSAGE_SAMPLER;
-    SDL_GPUTexture* texture = SDL_CreateGPUTexture(device, &info);
-    if (!texture) return out;
-    if (!CopyGta5Mips(device, texture, ytd.data.data() + pixels, total,
-                      format, w, h, levels)) {
-        SDL_ReleaseGPUTexture(device, texture);
-        return out;
-    }
-    out.texture = texture;
-    out.levels = levels;
-    return out;
+    blob.format = format;
+    blob.width = w;
+    blob.height = h;
+    blob.levels = levels;
+    blob.bytes.assign(ytd.data.begin() + pixels,
+                      ytd.data.begin() + pixels + std::int64_t(total));
+    return blob;
 }
 
 }  // namespace sdl3cpp::services::impl

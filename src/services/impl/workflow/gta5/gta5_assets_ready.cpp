@@ -1,9 +1,11 @@
 #include "services/interfaces/workflow/gta5/gta5_assets_index_step.hpp"
 
+#include <algorithm>
 #include <chrono>
 #include <exception>
 #include <future>
 #include <string>
+#include <thread>
 
 namespace sdl3cpp::services::impl {
 
@@ -17,6 +19,11 @@ bool Gta5AssetsReady(Gta5StreamState& state,
     }
     try {
         state.assets = state.assetsPending.get();
+        // Every core but one prepares archetypes; this thread uploads.
+        const unsigned cores =
+            std::max(2u, std::thread::hardware_concurrency());
+        state.pool = std::make_unique<Gta5LoadPool>(state.assets,
+                                                    state.resources, cores - 1);
     } catch (const std::exception& ex) {
         // get() has consumed the future, so this is reported once and the
         // package falls back to tile files.
@@ -34,7 +41,8 @@ bool Gta5AssetsReady(Gta5StreamState& state,
                      " tiles, " + std::to_string(a.drawables.size()) +
                      " drawables, " + std::to_string(a.textures.size()) +
                      " textures, in " + std::to_string(a.buildSeconds) +
-                     " s");
+                     " s; " + std::to_string(state.pool->Threads()) +
+                     " load threads");
     }
     return true;
 }

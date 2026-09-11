@@ -24,7 +24,9 @@
         "tiles_dir": "packages/gta5/assets/tiles",
         "objects_key": "scene_objects",
         "shader_key": "gpu_pipeline_textured",
-        "max_spawns_per_frame": 64
+        "max_spawns_per_frame": 256,
+        "upload_budget_ms": 8,
+        "tile_reads_per_frame": 2
       },
       "comment": "Reads assets/tiles/<x>_<z>.json and appends one scene object per placement, amortised across frames. Tiles are taken nearest first so the budget is spent where the player is standing."
     },

@@ -1,49 +1,44 @@
 #include "services/interfaces/workflow/gta5/gta5_geometry_cache.hpp"
 
 #include "services/interfaces/workflow/gta5/gta5_collision_shape.hpp"
-#include "services/interfaces/workflow/gta5/gta5_drawable_geometry.hpp"
+#include "services/interfaces/workflow/gta5/gta5_geometry_request.hpp"
 #include "services/interfaces/workflow/gta5/gta5_geometry_upload.hpp"
 
 namespace sdl3cpp::services::impl {
-namespace {
-
-void ReportMissingModel(Gta5StreamState& state,
-                        const Gta5Placement& placement,
-                        const std::shared_ptr<ILogger>& logger) {
-    if (state.reportedMissing.insert(placement.archetype).second && logger) {
-        logger->Warn("gta5.tiles.load: archetype '" + placement.archetype +
-                     "' has no drawable to load; its placements are skipped");
-    }
-}
-
-}  // namespace
 
 Gta5Geometry* GetOrLoadGta5Geometry(Gta5StreamState& state,
                                     const Gta5Placement& placement,
                                     SDL_GPUDevice* device,
-                                    const std::shared_ptr<ILogger>& logger) {
-    // From a binary ymap: through the asset index. Otherwise: its glTF.
-    const bool indexed = placement.archetypeHash != 0 && state.assets;
-    if ((!indexed && placement.modelPath.empty()) || !device) {
-        ReportMissingModel(state, placement, logger);
-        return nullptr;
+                                    const std::shared_ptr<ILogger>& logger,
+                                    bool* pending) {
+    // From a binary ymap: prepared by the load pool, off this thread.
+    if (placement.archetypeHash != 0 && state.pool) {
+        bool wait = false;
+        Gta5Geometry* geometry =
+            RequestGta5IndexedGeometry(state, placement, wait);
+        if (pending) *pending = wait;
+        return geometry;
     }
 
+    // From a legacy tile file: its glTF, imported here.
+    if (placement.modelPath.empty() || !device) {
+        if (state.reportedMissing.insert(placement.archetype).second &&
+            logger) {
+            logger->Warn("gta5.tiles.load: archetype '" +
+                         placement.archetype +
+                         "' has no model to load; its placements are skipped");
+        }
+        return nullptr;
+    }
     const auto cached = state.geometryCache.find(placement.archetype);
     if (cached != state.geometryCache.end()) {
         return cached->second.usable ? &cached->second : nullptr;
     }
-
     // Inserted before building so a failure is remembered as an unusable
     // entry, rather than retried for every instance every frame.
     Gta5Geometry& geometry = state.geometryCache[placement.archetype];
-    const bool built =
-        indexed ? BuildGta5DrawableGeometry(state, placement, device,
-                                            geometry, logger)
-                : BuildGta5Geometry(placement, device, state.textureCache,
-                                    geometry, logger);
-    if (!built) {
-        if (indexed) ReportMissingModel(state, placement, logger);
+    if (!BuildGta5Geometry(placement, device, state.textureCache, geometry,
+                           logger)) {
         return nullptr;
     }
     return &geometry;

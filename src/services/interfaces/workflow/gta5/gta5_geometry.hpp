@@ -40,6 +40,10 @@ struct Gta5Geometry {
     std::vector<Gta5SubMesh> subMeshes;
     int references{0};
     bool usable{false};
+    /// Being prepared by the load pool; drawable once it lands.
+    bool pending{false};
+    /// Tried, and found to have nothing to draw; not asked for again.
+    bool failed{false};
 
     /// Collision mesh, every submesh merged, shared by each instance at
     /// unit scale. Bullet does not copy these arrays, so they have to

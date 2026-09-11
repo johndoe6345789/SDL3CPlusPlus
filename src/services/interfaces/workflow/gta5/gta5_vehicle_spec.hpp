@@ -22,6 +22,8 @@ struct Gta5VehicleSpec {
     /// these suit a saloon.
     float wheelRadius{0.36f};
     float wheelWidth{0.25f};
+    /// Metres the body rides above the model's own stance.
+    float rideHeight{0.1f};
     /// Degrees about up; 0 faces +z. Point it along the road.
     float heading{0.f};
 };

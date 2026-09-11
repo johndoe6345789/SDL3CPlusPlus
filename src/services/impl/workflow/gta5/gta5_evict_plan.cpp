@@ -58,6 +58,7 @@ Gta5EvictResult ApplyGta5EvictPlan(Gta5StreamState& state,
             // so load rebuilds at the new detail level.
             result.instancesReleased += ReleaseInstances(resident, world);
             resident.spawnedCount = 0;
+            resident.prefetched = false;  // its new band, queued again
             resident.bandAtSpawn =
                 Gta5BandForDistance(state.world, distance);
             ++result.rebuilt;

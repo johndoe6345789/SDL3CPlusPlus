@@ -42,11 +42,14 @@ key. A `.ydd` or `.ytd` stores names only as Jenkins hashes, so each is
 opened to read its table -- inflating only the system pages, which is
 where that table lives. The 14.8 GB of `.ytd` pixel data is not touched.
 
-When a tile is wanted, `gta5.tiles.load` reads its ymaps and keeps the
-entities inside it; the first use of an archetype reads its drawable and
-uploads it. Opened dictionaries sit in an LRU bounded by inflated bytes,
-4 GB by default (`resource_cache_mb`), since a district asks a few
-hundred of them for many textures each.
+When a tile is wanted, `gta5.tiles.load` reads its ymaps and hands every
+archetype it will draw to a pool of worker threads, one per core but one.
+Workers inflate the drawable, decode its mesh, build its collision BVH
+and read its textures; the main thread only uploads finished work, for
+`upload_budget_ms` a frame, so the frame rate -- and the physics, which
+is capped at 1/30 s a step -- holds up while a district streams in.
+Opened dictionaries sit in an LRU bounded by inflated bytes, 8 GB by
+default (`resource_cache_mb`), shared by the workers under a lock.
 
 Skipped on purpose: grass ymaps (315 files of instance data, and GTAUtil
 turned each into ~40 MB of XML), LOD lights, occlusion, and placed

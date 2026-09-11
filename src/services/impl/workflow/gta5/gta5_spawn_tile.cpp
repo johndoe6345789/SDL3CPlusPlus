@@ -17,19 +17,25 @@ int SpawnGta5TilePlacements(Gta5StreamState& state,
            consumed < budget) {
         const Gta5Placement& placement =
             resident.placements[resident.spawnedCount];
-        ++resident.spawnedCount;
-        ++consumed;
 
         // Placements authored for a finer band than the tile is drawn at
         // are skipped: at SLOD range we want the merged shells, not every
         // railing.
         if (static_cast<int>(placement.lod) <
             static_cast<int>(resident.bandAtSpawn)) {
+            ++resident.spawnedCount;
+            ++consumed;
             continue;
         }
 
+        bool pending = false;
         Gta5Geometry* geometry =
-            GetOrLoadGta5Geometry(state, placement, device, logger);
+            GetOrLoadGta5Geometry(state, placement, device, logger, &pending);
+        // Still being prepared off-thread: this tile resumes here once it
+        // lands, and the budget goes to tiles that are ready.
+        if (pending) break;
+        ++resident.spawnedCount;
+        ++consumed;
         if (!geometry) continue;
 
         Gta5Instance instance;

@@ -49,6 +49,7 @@ bool LoadGta5VehicleChassis(Gta5StreamState& state,
     car.instance.geometry = &geometry;
 
     setup.radius = spec.wheelRadius;
+    setup.rideHeight = spec.rideHeight;
     setup.hasAxles = ReadAxles(state, hash, setup);
     if (!setup.hasAxles && logger) {
         logger->Warn("gta5.vehicle.spawn: '" + spec.model +

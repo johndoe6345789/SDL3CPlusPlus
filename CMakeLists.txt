@@ -798,11 +798,13 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_evict_plan.cpp
         src/services/impl/workflow/gta5/gta5_fragment_axles.cpp
         src/services/impl/workflow/gta5/gta5_geometry_cache.cpp
+        src/services/impl/workflow/gta5/gta5_geometry_request.cpp
         src/services/impl/workflow/gta5/gta5_geometry_upload.cpp
         src/services/impl/workflow/gta5/gta5_grid.cpp
         src/services/impl/workflow/gta5/gta5_ground_probe.cpp
         src/services/impl/workflow/gta5/gta5_indexed_texture.cpp
         src/services/impl/workflow/gta5/gta5_json_file.cpp
+        src/services/impl/workflow/gta5/gta5_load_pool.cpp
         src/services/impl/workflow/gta5/gta5_load_progress.cpp
         src/services/impl/workflow/gta5/gta5_loading_text_step.cpp
         src/services/impl/workflow/gta5/gta5_lod.cpp
@@ -816,6 +818,8 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_placement_parse.cpp
         src/services/impl/workflow/gta5/gta5_player_hold_step.cpp
         src/services/impl/workflow/gta5/gta5_player_pin.cpp
+        src/services/impl/workflow/gta5/gta5_prepared_finish.cpp
+        src/services/impl/workflow/gta5/gta5_prepared_geometry.cpp
         src/services/impl/workflow/gta5/gta5_resource.cpp
         src/services/impl/workflow/gta5/gta5_resource_cache.cpp
         src/services/impl/workflow/gta5/gta5_resource_load.cpp
@@ -827,6 +831,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_step_params.cpp
         src/services/impl/workflow/gta5/gta5_streaming_config_load.cpp
         src/services/impl/workflow/gta5/gta5_submesh_upload.cpp
+        src/services/impl/workflow/gta5/gta5_texture_blob_upload.cpp
         src/services/impl/workflow/gta5/gta5_texture_cache.cpp
         src/services/impl/workflow/gta5/gta5_texture_copy.cpp
         src/services/impl/workflow/gta5/gta5_texture_format.cpp

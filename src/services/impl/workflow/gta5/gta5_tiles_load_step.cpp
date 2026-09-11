@@ -1,11 +1,12 @@
 #include "services/interfaces/workflow/gta5/gta5_tiles_load_step.hpp"
 
 #include "services/interfaces/workflow/gta5/gta5_assets_index_step.hpp"
-#include "services/interfaces/workflow/gta5/gta5_grid.hpp"
+#include "services/interfaces/workflow/gta5/gta5_geometry_request.hpp"
+#include "services/interfaces/workflow/gta5/gta5_prepared_finish.hpp"
 #include "services/interfaces/workflow/gta5/gta5_spawn_tile.hpp"
 #include "services/interfaces/workflow/gta5/gta5_step_params.hpp"
-#include "services/interfaces/workflow/gta5/gta5_tile_source.hpp"
 #include "services/interfaces/workflow/gta5/gta5_tile_order.hpp"
+#include "services/interfaces/workflow/gta5/gta5_tile_source.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
 #include <SDL3/SDL_gpu.h>
@@ -36,38 +37,30 @@ void WorkflowGta5TilesLoadStep::Execute(const WorkflowStepDefinition& step,
     const bool indexed = state_->assets || state_->assetsPending.valid();
     if (indexed && !Gta5AssetsReady(*state_, logger_)) return;
 
+    // First, upload what the workers have finished, within a budget.
+    FinishGta5PreparedGeometry(*state_, device,
+                               Gta5NumberOr(step, "upload_budget_ms", 8.f),
+                               logger_);
+
     const std::string tilesDir = Gta5ResolvePath(
         step, context, "tiles_dir", "packages/gta5/assets/tiles");
-
     int budget = Gta5ParameterOrInt(step, "max_spawns_per_frame",
                                     state_->streaming.maxSpawnsPerFrame);
     if (budget <= 0) budget = 64;
+    // Reading a tile's ymaps is done here; a couple a frame keeps the
+    // first frame from reading all of them at once.
+    int reads = Gta5ParameterOrInt(step, "tile_reads_per_frame", 2);
 
     int spawned = 0;
     for (const Gta5TileCoord& tile : OrderGta5TilesByDistance(*state_)) {
         if (spawned >= budget) break;
         Gta5ResidentTile& resident = state_->resident[tile];
-
         if (!resident.placementsRead) {
-            // Marked read even when empty, so an empty tile is not
-            // searched again every frame.
-            ReadGta5TilePlacements(*state_, tilesDir, tile,
-                                   resident.placements, logger_);
-            resident.placementsRead = true;
-            const float distance =
-                glm::distance(Gta5TileCentre(state_->world, tile),
-                              state_->centreOrigin);
-            resident.bandAtSpawn =
-                Gta5BandForDistance(state_->world, distance);
-            if (logger_ && !resident.placements.empty()) {
-                logger_->Info("gta5.tiles.load: tile " +
-                              std::to_string(tile.x) + "_" +
-                              std::to_string(tile.z) + " has " +
-                              std::to_string(resident.placements.size()) +
-                              " placements");
-            }
+            if (reads-- <= 0) continue;
+            ReadGta5ResidentTile(*state_, tilesDir, tile, resident, logger_);
+        } else if (!resident.prefetched) {
+            PrefetchGta5Tile(*state_, resident);  // rebuilt at a new band
         }
-
         spawned += SpawnGta5TilePlacements(
             *state_, resident, budget - spawned, device, world, logger_);
     }

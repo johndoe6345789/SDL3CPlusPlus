@@ -6,7 +6,9 @@ void AttachGta5Wheels(Gta5Vehicle& out, btDiscreteDynamicsWorld* world,
                       const btVector3& halfExtents,
                       const Gta5WheelSetup& setup) {
     btRaycastVehicle::btVehicleTuning tuning;
-    tuning.m_suspensionStiffness = 20.f;
+    // Firm: at 20 the rear sat 12 cm down under its own weight and
+    // bottomed over every bump. At 50 it settles about 5 cm.
+    tuning.m_suspensionStiffness = 50.f;
     tuning.m_suspensionCompression = 4.4f;
     tuning.m_suspensionDamping = 2.3f;
     tuning.m_maxSuspensionTravelCm = 50.f;
@@ -39,14 +41,18 @@ void AttachGta5Wheels(Gta5Vehicle& out, btDiscreteDynamicsWorld* world,
             connection = setup.axles[i] + btVector3(0.f, setup.suspensionRest,
                                                     0.f);
         }
-        out.vehicle->addWheel(connection, down, axis, setup.suspensionRest,
+        // The longer rest length hangs each wheel rideHeight below its
+        // modelled axle: the body rides higher and clears the tyres.
+        out.vehicle->addWheel(connection, down, axis,
+                              setup.suspensionRest + setup.rideHeight,
                               setup.radius, tuning, front);
     }
 
     for (int i = 0; i < out.vehicle->getNumWheels(); ++i) {
         btWheelInfo& wheel = out.vehicle->getWheelInfo(i);
         wheel.m_suspensionStiffness = tuning.m_suspensionStiffness;
-        wheel.m_wheelsDampingRelaxation = 2.3f;
+        // About 0.4 of critical (2 sqrt k): settles without bouncing.
+        wheel.m_wheelsDampingRelaxation = 6.f;
         wheel.m_wheelsDampingCompression = 4.4f;
         wheel.m_frictionSlip = tuning.m_frictionSlip;
         wheel.m_rollInfluence = 0.05f;  // resists tipping in corners
