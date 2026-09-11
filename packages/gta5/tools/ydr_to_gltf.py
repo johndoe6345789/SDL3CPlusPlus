@@ -311,10 +311,15 @@ def main():
         sys.exit("no .ydr files under %s" % args.src)
 
     os.makedirs(args.dst, exist_ok=True)
-    available = set()
+    # Shaders name textures in mixed case ("IM_DT1_02_Metal_01") while
+    # the dictionaries store them lowercase, so match case-insensitively
+    # and keep the real filename for the URI.
+    available = {}
     if args.textures and os.path.isdir(args.textures):
-        available = {os.path.splitext(n)[0]
-                     for n in os.listdir(args.textures) if n.endswith(".png")}
+        for entry in os.listdir(args.textures):
+            if entry.endswith(".png"):
+                stem = os.path.splitext(entry)[0]
+                available[stem.lower()] = stem
 
     def texture_uri(name):
         target = os.path.join(os.path.abspath(args.textures), name + ".png")
@@ -344,10 +349,9 @@ def main():
         # missing file.
         resolved = []
         for part in parts:
-            wanted = part[4]
-            if wanted and wanted not in available:
-                missing.add(wanted)
-                wanted = ""
+            wanted = available.get(part[4].lower(), "") if part[4] else ""
+            if part[4] and not wanted:
+                missing.add(part[4])
             resolved.append(part[:4] + (wanted,))
         textured += sum(1 for p in resolved if p[4])
         untextured += sum(1 for p in resolved if not p[4])

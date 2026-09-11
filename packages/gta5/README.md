@@ -208,10 +208,18 @@ deliberately *not* freed by the geometry sweep: one texture is typically
 used across a whole district, so tying its lifetime to a single
 archetype would thrash it.
 
-A submesh whose texture is missing still draws, falling back to the
-package default rather than vanishing. That matters while the texture
-set is incomplete: `im_*` names are shared dictionaries under
-`levels/gta5/generic`, not the district folder, so extract both.
+Texture names are matched **case-insensitively**. Shaders name textures
+in mixed case (`IM_DT1_02_Metal_01`) while the dictionaries store them
+lowercase, so a literal match silently fails on most of them: downtown
+went from 1,490 textured primitives to 8,375 of 9,320 on that one change
+alone, having barely moved when thousands more textures were extracted.
+Worth remembering as a shape of bug -- it looked exactly like missing
+data, and extracting more data was the wrong fix.
+
+Shared `im_*` textures do live in `levels/gta5/generic` rather than the
+district folder, so both are still worth extracting. A submesh whose
+texture is genuinely missing still draws on the package default rather
+than vanishing.
 
 ## Shaders
 
