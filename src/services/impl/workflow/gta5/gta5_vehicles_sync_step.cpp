@@ -5,6 +5,8 @@
 #include "services/interfaces/workflow/gta5/gta5_vehicle_report.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
+#include <SDL3/SDL_timer.h>
+
 #include <utility>
 
 namespace sdl3cpp::services::impl {
@@ -43,11 +45,14 @@ void WorkflowGta5VehiclesSyncStep::Execute(
         }
         logger_->Info(line + (car.hasWheels ? "" : " (no wheel meshes)"));
     }
-    // While seated, twice a second: what the car is doing, since a car
-    // that will not move looks the same whatever the reason.
+    // While seated, on getting in and then twice a second: what the car is
+    // doing, since a car that will not move looks the same whatever the
+    // reason. Timed, not counted: streaming makes frames uneven.
+    const std::uint64_t now = SDL_GetTicks();
     if (logger_ && state_->seated >= 0 &&
         state_->seated < static_cast<int>(state_->vehicles.size()) &&
-        ++frames_ % 120 == 0) {
+        (lastReportMs_ == 0 || now - lastReportMs_ >= 500)) {
+        lastReportMs_ = now;
         logger_->Info(DescribeGta5Vehicle(state_->vehicles[state_->seated]));
     }
     context.Set("gta5.vehicles.count",

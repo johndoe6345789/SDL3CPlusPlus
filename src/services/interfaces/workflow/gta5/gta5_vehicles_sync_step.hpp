@@ -4,6 +4,7 @@
 #include "services/interfaces/i_workflow_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_stream_state.hpp"
 
+#include <cstdint>
 #include <memory>
 #include <string>
 
@@ -28,7 +29,7 @@ private:
     std::shared_ptr<ILogger> logger_;
     std::shared_ptr<Gta5StreamState> state_;
     bool reported_{false};
-    int frames_{0};
+    std::uint64_t lastReportMs_{0};
 };
 
 }  // namespace sdl3cpp::services::impl
