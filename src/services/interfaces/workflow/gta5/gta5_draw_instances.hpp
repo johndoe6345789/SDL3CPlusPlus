@@ -22,6 +22,8 @@ struct Gta5DrawContext {
     SDL_GPUSampler* sampler{nullptr};
     /// Alpha-blended, no depth write: decals and glass, drawn last.
     SDL_GPUGraphicsPipeline* blendPipeline{nullptr};
+    /// Four samplers, blended by vertex colour: GTA's layered terrain.
+    SDL_GPUGraphicsPipeline* terrainPipeline{nullptr};
     SDL_GPUTexture* shadowTexture{nullptr};
     SDL_GPUSampler* shadowSampler{nullptr};
 };

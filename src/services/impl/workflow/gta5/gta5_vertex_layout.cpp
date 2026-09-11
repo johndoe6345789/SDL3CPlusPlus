@@ -7,9 +7,11 @@ namespace {
 
 constexpr int kPosition = 0;
 constexpr int kNormal = 4;
+constexpr int kColour1 = 25;
 constexpr int kTexcoord0 = 28;
 constexpr std::uint8_t kFloat3 = 6;   // R32G32B32_FLOAT
 constexpr std::uint8_t kFloat2 = 16;  // R32G32_TYPELESS, read as floats
+constexpr std::uint8_t kUnorm4 = 28;  // R8G8B8A8_UNORM
 constexpr std::uint8_t kHalf2 = 34;   // R16G16_FLOAT
 
 }  // namespace
@@ -27,8 +29,10 @@ bool ReadGta5VertexLayout(const Gta5Resource& res, std::int64_t buffer,
     out.position = res.U32(decl + 4 * kPosition);
     out.normal = res.U32(decl + 4 * kNormal);
     out.uv = res.U32(decl + 4 * kTexcoord0);
+    out.colour1 = res.U32(decl + 4 * kColour1);
     out.normalFormat = res.U8(decl + 260 + kNormal);
     out.uvFormat = res.U8(decl + 260 + kTexcoord0);
+    out.colour1Format = res.U8(decl + 260 + kColour1);
     const std::uint64_t end = static_cast<std::uint64_t>(out.data) +
                               std::uint64_t{out.count} * out.stride;
     // Position is the one slot a vertex cannot do without.
@@ -63,6 +67,11 @@ BspRenderVertex ReadGta5Vertex(const Gta5Resource& res,
     } else if (layout.uvFormat == kHalf2) {
         v.u = Gta5HalfToFloat(res.U16(t));
         v.v = Gta5HalfToFloat(res.U16(t + 2));
+    }
+    if (layout.colour1Format == kUnorm4) {
+        const std::int64_t c = at + layout.colour1;
+        v.lm_u = float(res.U8(c)) + 256.f * float(res.U8(c + 1));
+        v.lm_v = float(res.U8(c + 2)) + 256.f * float(res.U8(c + 3));
     }
     return v;
 }

@@ -74,6 +74,11 @@
       "name": "shader_gta5_composite_frag_path",
       "type": "string",
       "defaultValue": "packages/gta5/shaders/msl/gta5_composite.frag.metal"
+    },
+    "shader_gta5_terrain_frag_path": {
+      "name": "shader_gta5_terrain_frag_path",
+      "type": "string",
+      "defaultValue": "packages/gta5/shaders/msl/gta5_terrain.frag.metal"
     }
   },
   "nodes": [
@@ -199,6 +204,41 @@
         "fragment_shader_key": "gta5_fragment_shader",
         "vertex_format": "position_uv_lmuv_normal",
         "pipeline_key": "gpu_pipeline_gta5",
+        "color_format": "rgba16_float",
+        "release_shaders": 0
+      }
+    },
+    {
+      "id": "compile_gta5_terrain_frag",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [
+        1260,
+        0
+      ],
+      "parameters": {
+        "stage": "fragment",
+        "output_key": "gta5_terrain_fragment_shader",
+        "num_uniform_buffers": 1,
+        "num_samplers": 4
+      },
+      "inputs": {
+        "shader_path": "shader_gta5_terrain_frag_path"
+      }
+    },
+    {
+      "id": "create_gta5_terrain_pipeline",
+      "type": "graphics.gpu.pipeline.create",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        0
+      ],
+      "parameters": {
+        "vertex_shader_key": "gta5_vertex_shader",
+        "fragment_shader_key": "gta5_terrain_fragment_shader",
+        "vertex_format": "position_uv_lmuv_normal",
+        "pipeline_key": "gpu_pipeline_gta5_terrain",
         "color_format": "rgba16_float",
         "release_shaders": 0
       }
@@ -625,7 +665,7 @@
       "main": {
         "0": [
           {
-            "node": "create_gta5_blend_pipeline",
+            "node": "compile_gta5_terrain_frag",
             "type": "main",
             "index": 0
           }
@@ -736,6 +776,28 @@
         "0": [
           {
             "node": "compile_gta5_sky_vert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "compile_gta5_terrain_frag": {
+      "main": {
+        "0": [
+          {
+            "node": "create_gta5_terrain_pipeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "create_gta5_terrain_pipeline": {
+      "main": {
+        "0": [
+          {
+            "node": "create_gta5_blend_pipeline",
             "type": "main",
             "index": 0
           }

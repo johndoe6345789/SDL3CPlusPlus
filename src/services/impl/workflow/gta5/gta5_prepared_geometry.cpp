@@ -54,14 +54,20 @@ Gta5PreparedGeometry PrepareGta5Geometry(const Gta5AssetIndex& index,
     // costliest thing done to a mesh.
     BuildGta5CollisionShape(out.mesh, out.collision);
     for (const Gta5SubMeshData& part : out.mesh.parts) {
-        const std::uint32_t texture = part.textureHash;
-        if (texture == 0 || std::find(out.textures.begin(), out.textures.end(),
-                                      texture) != out.textures.end()) {
-            continue;
-        }
-        out.textures.push_back(texture);
-        if (claims.Claim(texture)) {
-            out.blobs.push_back(ReadTexture(index, resources, owner, texture));
+        const std::uint32_t wanted[] = {
+            part.textureHash, part.layerHashes[0], part.layerHashes[1],
+            part.layerHashes[2], part.layerHashes[3]};
+        for (const std::uint32_t texture : wanted) {
+            if (texture == 0 ||
+                std::find(out.textures.begin(), out.textures.end(),
+                          texture) != out.textures.end()) {
+                continue;
+            }
+            out.textures.push_back(texture);
+            if (claims.Claim(texture)) {
+                out.blobs.push_back(
+                    ReadTexture(index, resources, owner, texture));
+            }
         }
     }
     return out;

@@ -21,6 +21,30 @@ void BindGta5BatchShared(const Gta5StreamState& state,
     SDL_PushGPUVertexUniformData(draw.cmd, 0, &vu, sizeof(vu));
 }
 
+int BindGta5SubMeshTextures(const Gta5DrawContext& draw,
+                            const Gta5SubMesh& sub, SDL_GPUTexture*& bound) {
+    SDL_GPUTexture* texture = sub.texture ? sub.texture : draw.texture;
+    SDL_GPUSampler* sampler = sub.texture ? sub.sampler : draw.sampler;
+    if (!texture || !sampler) return -1;
+    if (sub.terrain) {
+        SDL_GPUTextureSamplerBinding layers[4];
+        for (int i = 0; i < 4; ++i) {
+            layers[i] = sub.layers[i]
+                            ? SDL_GPUTextureSamplerBinding{sub.layers[i],
+                                                           sub.layerSamplers[i]}
+                            : SDL_GPUTextureSamplerBinding{texture, sampler};
+        }
+        SDL_BindGPUFragmentSamplers(draw.pass, 0, layers, 4);
+        bound = nullptr;
+        return 1;
+    }
+    if (texture == bound) return 0;
+    SDL_GPUTextureSamplerBinding binding = {texture, sampler};
+    SDL_BindGPUFragmentSamplers(draw.pass, 0, &binding, 1);
+    bound = texture;
+    return 1;
+}
+
 void BindGta5ArenaBlock(const Gta5StreamState& state,
                         const Gta5DrawContext& draw, int block) {
     SDL_GPUBufferBinding vb = {state.arena.Vertices(block), 0};

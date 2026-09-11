@@ -60,6 +60,13 @@ bool UploadGta5MeshGeometry(Gta5StreamState& state, const Gta5MeshData& mesh,
             sub.texture = texture->texture;
             sub.sampler = texture->sampler;
         }
+        for (int i = 0; part.terrain && i < 4; ++i) {
+            if (const Gta5Texture* layer = GetOrLoadGta5IndexedTexture(
+                    state, part.layerHashes[i], device)) {
+                sub.layers[i] = layer->texture;
+                sub.layerSamplers[i] = layer->sampler;
+            }
+        }
         geometry.subMeshes.push_back(sub);
     }
     if (geometry.subMeshes.empty()) return false;

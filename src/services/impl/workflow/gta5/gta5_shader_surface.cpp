@@ -51,6 +51,7 @@ std::vector<Gta5ShaderSurface> ReadGta5ShaderSurfaces(
             s.cutout = checked && !s.paint && bucket == kCutoutBucket;
             s.blend = checked && !s.paint &&
                       (bucket == kAlphaBucket || bucket == kDecalBucket);
+            s.terrain = ReadGta5TerrainLayers(res, shader, s.layers);
         }
         out.push_back(s);
     }

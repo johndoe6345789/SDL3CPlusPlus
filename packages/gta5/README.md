@@ -71,6 +71,11 @@ place of FXAA's edge blur. Textures use 16x anisotropic filtering with no
 mip bias, and entities switch LOD at their own `lodDist` and
 `childLodDist`, so each place is drawn by one level of detail at a time.
 
+Terrain shaders carry four diffuse layers (`DiffuseTexture_layer0..3`),
+weighted per vertex by colour 1: blue mixes layers 0/1 and 2/3, green
+mixes the pairs. The weights ride in the unused lightmap uv, and terrain
+draws with its own four-sampler pipeline (`gta5_terrain.frag`).
+
 Skipped on purpose: grass ymaps (315 files of instance data, and GTAUtil
 turned each into ~40 MB of XML), LOD lights, occlusion, and placed
 interiors (`CMloInstanceDef`).

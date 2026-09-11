@@ -31,6 +31,7 @@ layout(location = 1) out vec3 v_worldNormal;
 layout(location = 2) out vec3 v_worldPos;
 layout(location = 3) out vec3 v_cameraPos;
 layout(location = 4) out vec4 v_shadowPos;
+layout(location = 5) out vec4 v_blend;  // colour 1, for terrain
 
 void main() {
     // Under Vulkan gl_InstanceIndex includes the draw's first_instance,
@@ -45,4 +46,9 @@ void main() {
     v_worldNormal = normalize(mat3(model) * a_normal);
     v_cameraPos = u_cameraPos.xyz;
     v_shadowPos = u_shadowVP * wp;
+    // Colour 1 comes packed two bytes to a float in the lightmap uv,
+    // as r + 256 g and b + 256 a (see gta5_vertex_layout).
+    v_blend = vec4(mod(a_lmuv.x, 256.0), floor(a_lmuv.x / 256.0),
+                   mod(a_lmuv.y, 256.0), floor(a_lmuv.y / 256.0)) /
+              255.0;
 }

@@ -23,7 +23,6 @@ void Collect(const Gta5StreamState& state, const Gta5Frustum& frustum,
     }
     for (const Gta5Vehicle& car : state.vehicles) {
         if (car.instance.geometry) visible.push_back(&car.instance);
-        if (!car.hasWheels) continue;
         for (const Gta5Instance& wheel : car.wheels) {
             if (wheel.geometry) visible.push_back(&wheel);
         }
@@ -38,7 +37,6 @@ void BuildGta5InstanceBatch(const Gta5StreamState& state,
                             float lodScale, Gta5InstanceBatch& batch) {
     Collect(state, MakeGta5Frustum(viewProj), camera, sizeRatio, lodScale,
             batch.visible);
-    // Copies of one archetype side by side, each run one group.
     std::sort(batch.visible.begin(), batch.visible.end(),
               [](const Gta5Instance* a, const Gta5Instance* b) {
                   return a->geometry < b->geometry;
@@ -66,7 +64,9 @@ void BuildGta5InstanceBatch(const Gta5StreamState& state,
     }
     std::sort(batch.items.begin(), batch.items.end(),
               [](const Gta5DrawItem& a, const Gta5DrawItem& b) {
-                  if (a.sub->blend != b.sub->blend) return !a.sub->blend;
+                  if (a.sub->DrawKind() != b.sub->DrawKind()) {
+                      return a.sub->DrawKind() < b.sub->DrawKind();
+                  }
                   if (a.sub->slot.block != b.sub->slot.block) {
                       return a.sub->slot.block < b.sub->slot.block;
                   }

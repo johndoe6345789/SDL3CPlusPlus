@@ -15,19 +15,22 @@ int DrawGta5Instances(const Gta5StreamState& state,
     BindGta5BatchShared(state, draw);
     rendering::FragmentUniformData fu = draw.fragUniforms;
     SDL_GPUTexture* boundTexture = nullptr;
-    int boundBlock = -1;
-    bool surfacePushed = false, blending = false;
+    int boundBlock = -1, boundKind = 0;
+    bool surfacePushed = false;
     int drawn = 0, binds = 0;
     for (const Gta5DrawItem& item : batch.items) {
         const Gta5SubMesh& sub = *item.sub;
         if (sub.slot.block < 0) continue;
-        if (sub.blend && !blending) {
-            // Blended surfaces sort last: switch once, writing no depth,
-            // and rebind what the pipeline change dropped.
-            if (!draw.blendPipeline) break;
-            SDL_BindGPUGraphicsPipeline(draw.pass, draw.blendPipeline);
+        const int kind = sub.DrawKind();
+        if (kind != boundKind) {
+            // Opaque, terrain, then blended, as sorted: each pipeline is
+            // bound once, and what a switch drops is bound again.
+            SDL_GPUGraphicsPipeline* next =
+                kind == 1 ? draw.terrainPipeline : draw.blendPipeline;
+            if (!next) continue;
+            SDL_BindGPUGraphicsPipeline(draw.pass, next);
             BindGta5BatchShared(state, draw);
-            blending = true;
+            boundKind = kind;
             boundTexture = nullptr;
             boundBlock = -1;
             surfacePushed = false;
@@ -35,18 +38,12 @@ int DrawGta5Instances(const Gta5StreamState& state,
         // A blended surface without its own texture would lay the grey
         // default over the road as a slab: skip it.
         if (sub.blend && !sub.texture) continue;
-        SDL_GPUTexture* texture = sub.texture ? sub.texture : draw.texture;
-        SDL_GPUSampler* sampler = sub.texture ? sub.sampler : draw.sampler;
-        if (!texture || !sampler) continue;
+        const int bound = BindGta5SubMeshTextures(draw, sub, boundTexture);
+        if (bound < 0) continue;
+        binds += bound;
         if (sub.slot.block != boundBlock) {
             BindGta5ArenaBlock(state, draw, sub.slot.block);
             boundBlock = sub.slot.block;
-        }
-        if (texture != boundTexture) {
-            SDL_GPUTextureSamplerBinding binding = {texture, sampler};
-            SDL_BindGPUFragmentSamplers(draw.pass, 0, &binding, 1);
-            boundTexture = texture;
-            ++binds;
         }
         // Tint and alpha threshold ride in the spotlight slot.
         if (!surfacePushed || std::memcmp(fu.flash_color, sub.surface.data(),

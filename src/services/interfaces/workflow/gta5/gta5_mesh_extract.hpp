@@ -34,6 +34,9 @@ struct Gta5SubMeshData {
     float alphaCutoff{0.f};
     /// Drawn blended over the opaque scene: decals, glass.
     bool blend{false};
+    /// Terrain: four diffuse layers, weighted by vertex colour 1.
+    bool terrain{false};
+    std::array<std::uint32_t, 4> layerHashes{};
 };
 
 struct Gta5MeshData {

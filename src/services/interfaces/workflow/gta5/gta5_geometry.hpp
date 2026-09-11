@@ -16,21 +16,21 @@ namespace sdl3cpp::services::impl {
 /// vertices. Splitting a drawable per material keeps most well under it.
 inline constexpr std::size_t kGta5MaxVerticesPerMesh = 65536u;
 
-/// One material's worth of an archetype: its range of the geometry
-/// arena, and its texture.
-///
-/// A GTA V drawable is several geometries with different textures, so it
-/// cannot be one draw. The texture and sampler are borrowed from the
-/// state's texture cache and are not owned here.
+/// One material's worth of an archetype: its range of the geometry arena
+/// and its texture -- borrowed from the texture cache, not owned. A GTA V
+/// drawable is several geometries with different textures: several draws.
 struct Gta5SubMesh {
     Gta5ArenaSlot slot;
     std::uint32_t indexCount{0};
     SDL_GPUTexture* texture{nullptr};
     SDL_GPUSampler* sampler{nullptr};
-    /// rgb multiplies the texture, a is the alpha-discard threshold.
-    /// The draw pushes this as one vec4, so they travel together.
+    /// rgb tints the texture, a is the alpha-discard threshold: one vec4.
     std::array<float, 4> surface{1.f, 1.f, 1.f, 0.f};
     bool blend{false};  // alpha-blended, drawn after the opaque scene
+    bool terrain{false};  // four layers; see gta5_terrain.frag
+    std::array<SDL_GPUTexture*, 4> layers{};
+    std::array<SDL_GPUSampler*, 4> layerSamplers{};
+    int DrawKind() const { return blend ? 2 : (terrain ? 1 : 0); }  // order
 };
 
 /// An archetype's mesh, uploaded once and drawn many times.
