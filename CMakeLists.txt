@@ -822,9 +822,15 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_loading_text_step.cpp
         src/services/impl/workflow/gta5/gta5_lod.cpp
         src/services/impl/workflow/gta5/gta5_lod_select_step.cpp
+        src/services/impl/workflow/gta5/gta5_map_atlas.cpp
+        src/services/impl/workflow/gta5/gta5_map_font.cpp
+        src/services/impl/workflow/gta5/gta5_map_frame.cpp
+        src/services/impl/workflow/gta5/gta5_map_legend.cpp
         src/services/impl/workflow/gta5/gta5_map_markers.cpp
         src/services/impl/workflow/gta5/gta5_map_overlay_draw.cpp
+        src/services/impl/workflow/gta5/gta5_map_overlay_gpu.cpp
         src/services/impl/workflow/gta5/gta5_map_overlay_load.cpp
+        src/services/impl/workflow/gta5/gta5_map_poi.cpp
         src/services/impl/workflow/gta5/gta5_map_quads.cpp
         src/services/impl/workflow/gta5/gta5_map_step.cpp
         src/services/impl/workflow/gta5/gta5_material_surface.cpp

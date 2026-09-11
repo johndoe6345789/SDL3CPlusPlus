@@ -190,7 +190,8 @@
         "map_min_x": -4140,
         "map_max_y": 8400,
         "map_width": 9000,
-        "map_height": 13500
+        "map_height": 13500,
+        "poi_file": "packages/gta5/config/map_poi.json"
       }
     },
     {

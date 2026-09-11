@@ -18,7 +18,7 @@ namespace sdl3cpp::services::impl {
  * closes it. Runs after the composite. Parameters: minimap_dir, the
  * extract's data/cdimages/scaleform_generic.rpf; and the world rectangle
  * the art covers, map_min_x, map_max_y (GTA's north edge), map_width and
- * map_height, in metres.
+ * map_height, in metres; poi_file, the points of interest (JSON).
  */
 class WorkflowGta5MapDrawStep final : public IWorkflowStep {
 public:

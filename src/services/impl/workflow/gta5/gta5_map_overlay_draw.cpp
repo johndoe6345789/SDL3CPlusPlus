@@ -1,16 +1,20 @@
-#include "services/interfaces/workflow/gta5/gta5_map_overlay.hpp"
+#include "services/interfaces/workflow/gta5/gta5_map_build.hpp"
 
+#include <algorithm>
 #include <cstring>
 
 namespace sdl3cpp::services::impl {
 
 void DrawGta5MapOverlay(Gta5MapOverlay& map, SDL_GPUDevice* device,
                         SDL_GPUCommandBuffer* cmd, SDL_GPUTexture* swapchain,
-                        const std::vector<float>& quads) {
-    const auto bytes = static_cast<Uint32>(quads.size() * sizeof(float));
+                        const Gta5MapFrame& frame) {
+    const std::size_t floats = std::min<std::size_t>(
+        frame.vertices.size(), std::size_t{kGta5MapMaxQuads} * 30);
+    if (floats == 0) return;
+    const auto bytes = static_cast<Uint32>(floats * sizeof(float));
     void* mapped = SDL_MapGPUTransferBuffer(device, map.staging, true);
     if (!mapped) return;
-    std::memcpy(mapped, quads.data(), bytes);
+    std::memcpy(mapped, frame.vertices.data(), bytes);
     SDL_UnmapGPUTransferBuffer(device, map.staging);
     SDL_GPUCopyPass* copy = SDL_BeginGPUCopyPass(cmd);
     const SDL_GPUTransferBufferLocation from = {map.staging, 0};
@@ -27,14 +31,12 @@ void DrawGta5MapOverlay(Gta5MapOverlay& map, SDL_GPUDevice* device,
     SDL_BindGPUGraphicsPipeline(pass, map.pipeline);
     const SDL_GPUBufferBinding vertices = {map.vertices, 0};
     SDL_BindGPUVertexBuffers(pass, 0, &vertices, 1);
-    const auto draw = [&](SDL_GPUTexture* texture, int quad) {
-        const SDL_GPUTextureSamplerBinding binding = {texture, map.sampler};
+    for (const Gta5MapRange& range : frame.ranges) {
+        const SDL_GPUTextureSamplerBinding binding = {range.texture,
+                                                      range.sampler};
         SDL_BindGPUFragmentSamplers(pass, 0, &binding, 1);
-        SDL_DrawGPUPrimitives(pass, 6, 1, static_cast<Uint32>(quad * 6), 0);
-    };
-    draw(map.shade, 0);
-    for (int i = 0; i < 6; ++i) draw(map.tiles[i], 1 + i);
-    draw(map.marker, 7);
+        SDL_DrawGPUPrimitives(pass, range.count * 6, 1, range.first * 6, 0);
+    }
     SDL_EndGPURenderPass(pass);
 }
 

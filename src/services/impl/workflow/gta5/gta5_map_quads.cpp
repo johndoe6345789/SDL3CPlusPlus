@@ -1,53 +1,80 @@
-#include "services/interfaces/workflow/gta5/gta5_map_overlay.hpp"
+#include "services/interfaces/workflow/gta5/gta5_map_frame.hpp"
 
-#include <glm/glm.hpp>
+#include "services/interfaces/workflow/gta5/gta5_map_art.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 
 namespace sdl3cpp::services::impl {
 namespace {
 
-void Push(std::vector<float>& out, glm::vec2 p, float u, float v) {
-    out.insert(out.end(), {p.x, p.y, 0.f, u, v});
+glm::vec2 Ndc(const Gta5MapLayout& l, glm::vec2 p) {
+    return {p.x / l.width * 2.f - 1.f, 1.f - p.y / l.height * 2.f};
 }
 
-void Quad(std::vector<float>& out, glm::vec2 tl, glm::vec2 tr, glm::vec2 br,
-          glm::vec2 bl) {
-    Push(out, tl, 0.f, 0.f), Push(out, tr, 1.f, 0.f), Push(out, br, 1.f, 1.f);
-    Push(out, tl, 0.f, 0.f), Push(out, br, 1.f, 1.f), Push(out, bl, 0.f, 1.f);
+/// Corners top left, top right, bottom right, bottom left, in pixels.
+void Quad(Gta5MapFrame& f, const Gta5MapLayout& l, SDL_GPUTexture* texture,
+          SDL_GPUSampler* sampler, const std::array<glm::vec2, 4>& c,
+          glm::vec4 uv) {
+    const auto quad = static_cast<std::uint32_t>(f.vertices.size() / 30);
+    if (!texture || quad >= kGta5MapMaxQuads) return;
+    if (f.ranges.empty() || f.ranges.back().texture != texture ||
+        f.ranges.back().sampler != sampler) {
+        f.ranges.push_back({texture, sampler, quad, 0});
+    }
+    ++f.ranges.back().count;
+    const glm::vec2 t[4] = {{uv.x, uv.y}, {uv.z, uv.y}, {uv.z, uv.w},
+                            {uv.x, uv.w}};
+    for (const int i : {0, 1, 2, 0, 2, 3}) {
+        const glm::vec2 p = Ndc(l, c[i]);
+        f.vertices.insert(f.vertices.end(), {p.x, p.y, 0.f, t[i].x, t[i].y});
+    }
 }
 
 }  // namespace
 
-std::vector<float> BuildGta5MapQuads(int width, int height, float u, float v,
-                                     float angle) {
-    std::vector<float> out;
-    out.reserve(kGta5MapQuads * 30);
-    Quad(out, {-1.f, 1.f}, {1.f, 1.f}, {1.f, -1.f}, {-1.f, -1.f});
-    const float w = static_cast<float>(std::max(width, 1));
-    const float h = static_cast<float>(std::max(height, 1));
-    // Two tiles wide by three tall, as large as fits with a margin.
-    const float tile = std::min(w * 0.96f / 2.f, h * 0.96f / 3.f);
-    const float left = (w - 2.f * tile) / 2.f, top = (h - 3.f * tile) / 2.f;
-    const auto ndc = [&](float x, float y) {
-        return glm::vec2(x / w * 2.f - 1.f, 1.f - y / h * 2.f);
-    };
-    for (int row = 0; row < 3; ++row) {
-        for (int column = 0; column < 2; ++column) {
-            const float x = left + column * tile, y = top + row * tile;
-            Quad(out, ndc(x, y), ndc(x + tile, y), ndc(x + tile, y + tile),
-                 ndc(x, y + tile));
-        }
-    }
-    const float mx = left + std::clamp(u, 0.f, 1.f) * 2.f * tile;
-    const float my = top + std::clamp(v, 0.f, 1.f) * 3.f * tile;
-    const float c = std::cos(angle), s = std::sin(angle), r = 14.f;
+Gta5MapLayout FitGta5Map(int width, int height) {
+    Gta5MapLayout l;
+    l.width = static_cast<float>(std::max(width, 1));
+    l.height = static_cast<float>(std::max(height, 1));
+    l.tile = std::min(l.width * 0.96f / 2.f, l.height * 0.96f / 3.f);
+    l.left = (l.width - 2.f * l.tile) / 2.f;
+    l.top = (l.height - 3.f * l.tile) / 2.f;
+    return l;
+}
+
+void AddGta5MapRect(Gta5MapFrame& frame, const Gta5MapLayout& layout,
+                    SDL_GPUTexture* texture, SDL_GPUSampler* sampler,
+                    glm::vec2 min, glm::vec2 max, glm::vec4 uv) {
+    Quad(frame, layout, texture, sampler,
+         {min, glm::vec2(max.x, min.y), max, glm::vec2(min.x, max.y)}, uv);
+}
+
+void AddGta5MapTurned(Gta5MapFrame& frame, const Gta5MapLayout& layout,
+                      SDL_GPUTexture* texture, SDL_GPUSampler* sampler,
+                      glm::vec2 centre, float half, float angle) {
+    const float c = std::cos(angle), s = std::sin(angle);
     const auto corner = [&](float dx, float dy) {  // clockwise, y down
-        return ndc(mx + dx * c - dy * s, my + dx * s + dy * c);
+        return centre + glm::vec2(dx * c - dy * s, dx * s + dy * c);
     };
-    Quad(out, corner(-r, -r), corner(r, -r), corner(r, r), corner(-r, r));
-    return out;
+    Quad(frame, layout, texture, sampler,
+         {corner(-half, -half), corner(half, -half), corner(half, half),
+          corner(-half, half)},
+         glm::vec4(0.f, 0.f, 1.f, 1.f));
+}
+
+void AddGta5MapText(Gta5MapFrame& frame, const Gta5MapLayout& layout,
+                    const Gta5MapOverlay& map, glm::vec2 at, float scale,
+                    const std::string& text) {
+    glm::vec4 uv;
+    for (const char ch : text) {
+        if (Gta5MapGlyphUv(ch, uv)) {
+            AddGta5MapRect(frame, layout, map.atlas, map.nearest, at,
+                           at + glm::vec2(5.f, 7.f) * scale, uv);
+        }
+        at.x += 6.f * scale;
+    }
 }
 
 }  // namespace sdl3cpp::services::impl

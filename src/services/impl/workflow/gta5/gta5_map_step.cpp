@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/gta5/gta5_map_step.hpp"
 
+#include "services/interfaces/workflow/gta5/gta5_map_build.hpp"
 #include "services/interfaces/workflow/gta5/gta5_step_params.hpp"
 #include "services/interfaces/workflow/gta5/gta5_stream_lead.hpp"
 #include "services/interfaces/workflow/gta5/gta5_vehicle_input.hpp"
@@ -42,10 +43,12 @@ void WorkflowGta5MapDrawStep::Execute(const WorkflowStepDefinition& step,
         context.Get<SDL_GPUTexture*>("postfx_swapchain_texture", nullptr);
     if (!device || !window || !cmd || !swapchain) return;
     if (!map_.tried) {
-        LoadGta5MapOverlay(map_, device,
-                           SDL_GetGPUSwapchainTextureFormat(device, window),
-                           Gta5ParameterOr(step, "minimap_dir", ""),
-                           state_->uploads, logger_);
+        LoadGta5MapOverlay(
+            map_, device, SDL_GetGPUSwapchainTextureFormat(device, window),
+            Gta5ParameterOr(step, "minimap_dir", ""),
+            Gta5ResolvePath(step, context, "poi_file",
+                            "packages/gta5/config/map_poi.json"),
+            state_->uploads, logger_);
     }
     if (!map_.ready) return;
 
@@ -57,16 +60,17 @@ void WorkflowGta5MapDrawStep::Execute(const WorkflowStepDefinition& step,
         context.Get<glm::mat4>("render.view_matrix", glm::mat4(1.f));
     const glm::vec3 ahead(-view[0][2], -view[1][2], -view[2][2]);
     // Engine x is east and -z north: GTA's y, the map's up.
-    const float minX = Gta5NumberOr(step, "map_min_x", -4140.f);
-    const float maxY = Gta5NumberOr(step, "map_max_y", 8400.f);
-    const float width = Gta5NumberOr(step, "map_width", 9000.f);
-    const float height = Gta5NumberOr(step, "map_height", 13500.f);
-    const std::vector<float> quads = BuildGta5MapQuads(
+    Gta5MapRect rect;
+    rect.minX = Gta5NumberOr(step, "map_min_x", rect.minX);
+    rect.maxY = Gta5NumberOr(step, "map_max_y", rect.maxY);
+    rect.width = Gta5NumberOr(step, "map_width", rect.width);
+    rect.height = Gta5NumberOr(step, "map_height", rect.height);
+    const Gta5MapFrame frame = BuildGta5MapFrame(
+        map_, rect,
         static_cast<int>(context.Get<uint32_t>("frame_width", 1280u)),
         static_cast<int>(context.Get<uint32_t>("frame_height", 960u)),
-        (at.x - minX) / width, (maxY + at.z) / height,
-        std::atan2(ahead.x, -ahead.z));
-    DrawGta5MapOverlay(map_, device, cmd, swapchain, quads);
+        glm::vec2(at.x, -at.z), std::atan2(ahead.x, -ahead.z));
+    DrawGta5MapOverlay(map_, device, cmd, swapchain, frame);
 }
 
 }  // namespace sdl3cpp::services::impl

@@ -1,15 +1,13 @@
-#include "services/interfaces/workflow/gta5/gta5_map_overlay.hpp"
+#include "services/interfaces/workflow/gta5/gta5_map_art.hpp"
 
 #include <cstdint>
 
 namespace sdl3cpp::services::impl {
-namespace {
 
-constexpr int kMarker = 32;
-
-SDL_GPUTexture* Rgba(SDL_GPUDevice* device, int width, int height,
-                     const std::vector<std::uint8_t>& pixels,
-                     Gta5UploadBatch& uploads) {
+SDL_GPUTexture* CreateGta5MapRgba(SDL_GPUDevice* device, int width,
+                                  int height,
+                                  const std::vector<std::uint8_t>& pixels,
+                                  Gta5UploadBatch& uploads) {
     SDL_GPUTextureCreateInfo info = {};
     info.type = SDL_GPU_TEXTURETYPE_2D;
     info.format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
@@ -28,6 +26,10 @@ SDL_GPUTexture* Rgba(SDL_GPUDevice* device, int width, int height,
     }
     return texture;
 }
+
+namespace {
+
+constexpr int kMarker = 32;
 
 float Side(float ax, float ay, float bx, float by, float px, float py) {
     return (bx - ax) * (py - ay) - (by - ay) * (px - ax);
@@ -68,8 +70,8 @@ bool CreateGta5MapMarkers(Gta5MapOverlay& map, SDL_GPUDevice* device,
             }
         }
     }
-    map.marker = Rgba(device, kMarker, kMarker, pixels, uploads);
-    map.shade = Rgba(device, 1, 1, {10, 14, 18, 235}, uploads);
+    map.marker = CreateGta5MapRgba(device, kMarker, kMarker, pixels, uploads);
+    map.shade = CreateGta5MapRgba(device, 1, 1, {10, 14, 18, 235}, uploads);
     return map.marker && map.shade;
 }
 
