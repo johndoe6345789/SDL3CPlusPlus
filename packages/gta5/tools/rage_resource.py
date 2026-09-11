@@ -31,6 +31,22 @@ def page_size(flags):
     return (0x200 << (flags & 0xF)) * sum(parts)
 
 
+def jenkins(text):
+    """RAGE's name hash: Jenkins one-at-a-time over the lowercased name.
+
+    Drawable dictionaries store hashes rather than strings, so this is
+    how an entry gets matched back to an archetype name.
+    """
+    value = 0
+    for char in text.lower():
+        value = (value + ord(char)) & 0xFFFFFFFF
+        value = (value + (value << 10)) & 0xFFFFFFFF
+        value ^= (value >> 6)
+    value = (value + (value << 3)) & 0xFFFFFFFF
+    value ^= (value >> 11)
+    return (value + (value << 15)) & 0xFFFFFFFF
+
+
 def to_engine(vec):
     """GTA Z-up to engine Y-up.
 

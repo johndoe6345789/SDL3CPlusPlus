@@ -49,6 +49,11 @@ struct Gta5StreamState {
     Gta5TileCoord centre{0, 0};
     glm::vec3 centreOrigin{0.f};
 
+    /// Dynamic bodies that are not part of any tile -- vehicles. They
+    /// are drawn with the world but never streamed out from under the
+    /// physics that owns them.
+    std::vector<Gta5Instance> vehicles;
+
     /// Tiles whose band changed; evict tears them down, load rebuilds.
     std::unordered_set<Gta5TileCoord, Gta5TileCoordHash> rebuild;
 

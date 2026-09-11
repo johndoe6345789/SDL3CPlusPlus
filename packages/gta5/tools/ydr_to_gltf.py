@@ -59,9 +59,10 @@ import math
 import os
 import struct
 import sys
+import xml.etree.ElementTree as ElementTree
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from rage_resource import Resource, to_engine  # noqa: E402
+from rage_resource import Resource, jenkins, to_engine  # noqa: E402
 
 
 def unit_float3_offsets(raw, data, count, stride):
@@ -105,9 +106,9 @@ def texcoord_offset(raw, data, count, stride, blocked):
     return best
 
 
-def shader_textures(res):
+def shader_textures(res, base=0):
     """Diffuse texture name per shader index, empty where none is found."""
-    group = res.resolve(res.u64(0x10))
+    group = res.resolve(res.u64(base + 0x10))
     if group is None:
         return []
     names = []
@@ -179,14 +180,17 @@ def read_geometry(res, geom_ptr):
     return positions, normals, uvs, indices
 
 
-def read_drawable(path):
-    """Every high-LOD geometry as its own part, with its texture name."""
-    res = Resource(path)
-    model_list = res.resolve(res.u64(0x50))
+def read_drawable_at(res, base):
+    """Every high-LOD geometry of one drawable, with its texture name.
+
+    `base` is 0 for a .ydr, or the entry offset inside a .ydd: the two
+    hold the same structure, so a dictionary is just several of them.
+    """
+    model_list = res.resolve(res.u64(base + 0x50))
     if model_list is None:
         return []
 
-    textures = shader_textures(res)
+    textures = shader_textures(res, base)
     parts = []
     for model_ptr in res.pointer_list(model_list):
         model = res.resolve(model_ptr)
@@ -205,6 +209,42 @@ def read_drawable(path):
                     texture = textures[shader_index]
             parts.append(part + (texture,))
     return parts
+
+
+def read_drawable(path):
+    """A .ydr holds its drawable at the start of the resource.
+
+    A .yft is a fragment -- vehicles and breakables -- which wraps one at
+    +0x30, so the same walk serves both.
+    """
+    res = Resource(path)
+    if path.lower().endswith(".yft"):
+        base = res.resolve(res.u64(0x30))
+        return read_drawable_at(res, base) if base is not None else []
+    return read_drawable_at(res, 0)
+
+
+def read_dictionary(path, by_hash):
+    """A .ydd: several drawables, named by Jenkins hash.
+
+    Entries whose hash matches no known archetype are skipped -- they are
+    usually LOD children nothing places directly.
+    """
+    res = Resource(path)
+    hashes_at = res.resolve(res.u64(0x20))
+    entries = res.pointer_list(0x30)
+    if hashes_at is None:
+        return []
+    out = []
+    for index, entry in enumerate(entries):
+        name = by_hash.get(res.u32(hashes_at + 4 * index))
+        base = res.resolve(entry)
+        if not name or base is None:
+            continue
+        parts = read_drawable_at(res, base)
+        if parts:
+            out.append((name, parts))
+    return out
 
 
 def write_gltf(path, parts, texture_uri):
@@ -296,19 +336,45 @@ def main():
     parser.add_argument("--texture-dir", dest="textures", default=None,
                         help="PNGs from ytd_to_png.py, referenced by the "
                              "materials; without it meshes are untextured")
+    parser.add_argument("--ymap-dir", dest="ymaps", default=None,
+                        help="ymap XML, to name .ydd entries by hash; "
+                             "without it only loose .ydr are converted")
     parser.add_argument("--limit", type=int, default=0,
                         help="convert at most this many, for a quick look")
     args = parser.parse_args()
 
-    files = []
+    files, dictionaries = [], []
     for root, _, names in os.walk(args.src):
-        files += [os.path.join(root, n) for n in names
-                  if n.lower().endswith(".ydr")]
+        for name in names:
+            lowered = name.lower()
+            if lowered.endswith(".ydr") or lowered.endswith(".yft"):
+                files.append(os.path.join(root, name))
+            elif lowered.endswith(".ydd"):
+                dictionaries.append(os.path.join(root, name))
     files.sort()
+    dictionaries.sort()
     if args.limit:
         files = files[:args.limit]
-    if not files:
-        sys.exit("no .ydr files under %s" % args.src)
+        dictionaries = dictionaries[:args.limit]
+    if not files and not dictionaries:
+        sys.exit("no .ydr, .yft or .ydd files under %s" % args.src)
+
+    # Dictionary entries are keyed by hash, so a pool of real names from
+    # the ymaps is what turns them back into archetypes.
+    by_hash = {}
+    if args.ymaps:
+        for root, _, names in os.walk(args.ymaps):
+            for name in names:
+                if not name.lower().endswith(".xml"):
+                    continue
+                try:
+                    tree = ElementTree.parse(os.path.join(root, name))
+                except ElementTree.ParseError:
+                    continue
+                for node in tree.getroot().iter("archetypeName"):
+                    text = (node.get("value") or node.text or "").strip()
+                    if text:
+                        by_hash[jenkins(text)] = text
 
     os.makedirs(args.dst, exist_ok=True)
     # Shaders name textures in mixed case ("IM_DT1_02_Metal_01") while
@@ -334,16 +400,12 @@ def main():
     done = skipped = 0
     textured = untextured = 0
     missing = set()
-    for path in files:
-        name = os.path.splitext(os.path.basename(path))[0]
-        try:
-            parts = read_drawable(path)
-        except Exception:
-            skipped += 1
-            continue
-        if not parts:
-            skipped += 1
-            continue
+
+    jobs = [(os.path.splitext(os.path.basename(p))[0], p, None) for p in files]
+
+    def emit(name, parts):
+        """Resolve textures for one drawable and write it out."""
+        nonlocal done, skipped, textured, untextured
 
         # Only reference textures that exist, so no material points at a
         # missing file.
@@ -362,7 +424,29 @@ def main():
         else:
             skipped += 1
 
-    print("converted %d drawables, skipped %d -> %s" % (done, skipped, args.dst))
+    for name, path, _ in jobs:
+        try:
+            parts = read_drawable(path)
+        except Exception:
+            skipped += 1
+            continue
+        if parts:
+            emit(name, parts)
+        else:
+            skipped += 1
+
+    from_dicts = 0
+    for path in dictionaries:
+        try:
+            entries = read_dictionary(path, by_hash)
+        except Exception:
+            continue
+        for name, parts in entries:
+            emit(name, parts)
+            from_dicts += 1
+
+    print("converted %d drawables (%d from .ydd), skipped %d -> %s"
+          % (done, from_dicts, skipped, args.dst))
     print("  primitives: %d textured, %d untextured" % (textured, untextured))
     if missing:
         print("  %d texture names had no PNG (run ytd_to_png.py over more "

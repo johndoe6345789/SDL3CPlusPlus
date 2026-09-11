@@ -26,6 +26,22 @@
       "comment": "Streaming runs after movement so it centres on the origin this frame produced rather than the last one's."
     },
     {
+      "id": "vehicle_spawn",
+      "plugin": "gta5.vehicle.spawn",
+      "parameters": {
+        "model": "D:/gta5_export/models/taxi.gltf",
+        "x": 190,
+        "y": 34,
+        "z": 940,
+        "mass": 1600
+      },
+      "comment": "Spawns once, and only after a tile has streamed in: a car dropped into an empty world falls straight through."
+    },
+    {
+      "id": "vehicles_sync",
+      "plugin": "gta5.vehicles.sync"
+    },
+    {
       "id": "render_prepare",
       "plugin": "render.prepare"
     },
