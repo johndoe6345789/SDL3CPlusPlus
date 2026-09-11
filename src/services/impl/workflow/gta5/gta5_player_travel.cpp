@@ -43,18 +43,38 @@ void WorkflowGta5PlayerHoldStep::Arrive(WorkflowContext& context,
                                         btRigidBody* player) {
     travelling_ = false;
     if (state_->vehicles.empty()) return;
-    // 5 m to the player's right, dropped onto the ground there.
-    const btVector3& me = player->getWorldTransform().getOrigin();
+    if (!roads_.loaded && !roadsDir_.empty()) LoadGta5Roads(roadsDir_, roads_);
+    const btVector3& b = player->getWorldTransform().getOrigin();
+    const glm::vec3 me(b.x(), b.y(), b.z());
+    // On the nearest road, in its lane and facing its way, clear of the
+    // player; with none near, 5 m to the player's right.
+    Gta5RoadSpot road;
+    const bool onRoad = NearestGta5Road(roads_, me, 150.f, road);
     const float yaw = context.Get<float>("camera_yaw", 0.f);
-    glm::vec3 spot =
-        glm::vec3(me.x(), me.y() + 3.f, me.z()) + Gta5LookRight(yaw) * 5.f;
+    glm::vec3 spot = me + Gta5LookRight(yaw) * 5.f;
+    if (onRoad) {
+        spot = road.at;
+        const glm::vec2 gap(spot.x - me.x, spot.z - me.z);
+        if (glm::length(gap) < 4.f) {
+            spot += glm::vec3(road.ahead.x, 0.f, road.ahead.y) * 7.f;
+        }
+    }
+    // From just above the road itself: an overpass must not catch it.
     float ground = 0.f;
     if (Gta5GroundBelow(
             context.Get<btDiscreteDynamicsWorld*>("physics_world", nullptr),
-            spot, ground)) {
+            spot + glm::vec3(0.f, 2.f, 0.f), ground)) {
         spot.y = ground + 1.5f;
     }
-    MoveGta5Vehicle(state_->vehicles.front(), spot);
+    if (onRoad) {
+        MoveGta5Vehicle(state_->vehicles.front(), spot, road.yaw);
+    } else {
+        MoveGta5Vehicle(state_->vehicles.front(), spot);
+    }
+    if (logger_) {
+        logger_->Info(std::string("gta5.player.hold: car parked ") +
+                      (onRoad ? "on the nearest road" : "beside the player"));
+    }
 }
 
 }  // namespace sdl3cpp::services::impl

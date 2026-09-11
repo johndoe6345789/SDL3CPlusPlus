@@ -30,4 +30,18 @@ void UpdateGta5Vehicles(Gta5StreamState& state);
 void DriveGta5Vehicle(Gta5Vehicle& car, float throttle, float steer,
                       float brake, float dt);
 
+/// What the pedals do: throttle -1..1 (back..forward), brake 0..1.
+struct Gta5Pedals {
+    float throttle{0.f};
+    float brake{0.f};
+};
+
+/// From how hard the accelerator (RT, W) and the brake (LT, S) are
+/// pressed, 0..1, as a driver means them: rolling forward the brake
+/// brakes, progressively, and only at a standstill does it reverse;
+/// rolling back the accelerator brakes first. The handbrake locks all
+/// four.
+Gta5Pedals DecideGta5Pedals(const Gta5Vehicle& car, float accelerate,
+                            float slow, bool handbrake);
+
 }  // namespace sdl3cpp::services::impl

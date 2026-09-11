@@ -15,6 +15,14 @@
       "plugin": "input.keyboard.poll"
     },
     {
+      "id": "gamepad",
+      "plugin": "gta5.gamepad",
+      "comment": "An Xbox One pad laid out as GTA V's: it presses the keys the rest reads, adds the right stick to the mouse's look, and publishes throttle, brake, steering, fire and aim as analogue values.",
+      "parameters": {
+        "look_speed": 1100.0
+      }
+    },
+    {
       "id": "move_axes",
       "plugin": "input.axis.combine",
       "parameters": {

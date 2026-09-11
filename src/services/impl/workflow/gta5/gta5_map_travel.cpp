@@ -16,8 +16,10 @@ bool TravelGta5Map(WorkflowContext& context, Gta5MapTravel& travel,
                    bool open, const Gta5MapRect& rect) {
     context.Set<bool>("gta5.map.open", open);
     auto* window = context.Get<SDL_Window*>("sdl_window", nullptr);
+    // A click, or A on the pad (gta5.gamepad), which goes at once.
+    const bool pad = context.GetBool("gta5.pad.pick", false);
     if (!open || !window ||
-        !context.GetBool("input_mouse_left_pressed", false)) {
+        !(pad || context.GetBool("input_mouse_left_pressed", false))) {
         return false;
     }
     // The cursor is in window points; the map is laid out in the frame's
@@ -31,8 +33,8 @@ bool TravelGta5Map(WorkflowContext& context, Gta5MapTravel& travel,
     const glm::vec2 at(mx * fw / float(std::max(ww, 1)),
                        my * fh / float(std::max(wh, 1)));
     const std::uint64_t now = SDL_GetTicks();
-    const bool twice = now - travel.clickMs < 400 &&
-                       glm::distance(at, travel.click) < 10.f;
+    const bool twice = pad || (now - travel.clickMs < 400 &&
+                               glm::distance(at, travel.click) < 10.f);
     travel.clickMs = now;
     travel.click = at;
     if (!twice) return false;

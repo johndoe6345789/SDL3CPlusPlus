@@ -2,6 +2,7 @@
 
 #include "services/interfaces/i_logger.hpp"
 #include "services/interfaces/i_workflow_step.hpp"
+#include "services/interfaces/workflow/gta5/gta5_roads.hpp"
 #include "services/interfaces/workflow/gta5/gta5_stream_state.hpp"
 
 #include <glm/glm.hpp>
@@ -53,6 +54,8 @@ private:
     bool released_{false};
     int travelSequence_{0};
     bool travelling_{false};
+    Gta5Roads roads_;  // read on the first arrival, from roads_dir
+    std::string roadsDir_;
 };
 
 }  // namespace sdl3cpp::services::impl

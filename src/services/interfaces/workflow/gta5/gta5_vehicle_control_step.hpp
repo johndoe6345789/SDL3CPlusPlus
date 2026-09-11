@@ -34,6 +34,7 @@ public:
 
 private:
     std::shared_ptr<ILogger> logger_;
+    float reportIn_{0.f};  // seconds to the next speed report
     std::shared_ptr<Gta5StreamState> state_;
     bool toggleHeld_{false};
 };

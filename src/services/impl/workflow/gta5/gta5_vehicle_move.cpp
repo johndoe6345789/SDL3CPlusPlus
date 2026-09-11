@@ -12,7 +12,11 @@ void MoveGta5Vehicle(Gta5Vehicle& car, const glm::vec3& at) {
     // Its heading kept, levelled: however it lay, it lands on its wheels.
     const btVector3 ahead =
         car.chassis->getWorldTransform().getBasis() * btVector3(0, 0, 1);
-    const float yaw = std::atan2(ahead.x(), ahead.z());
+    MoveGta5Vehicle(car, at, std::atan2(ahead.x(), ahead.z()));
+}
+
+void MoveGta5Vehicle(Gta5Vehicle& car, const glm::vec3& at, float yaw) {
+    if (!car.chassis) return;
     const btTransform to(btQuaternion(btVector3(0.f, 1.f, 0.f), yaw),
                          btVector3(at.x, at.y, at.z));
     car.chassis->setWorldTransform(to);

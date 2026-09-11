@@ -2,6 +2,7 @@
 
 #include "services/interfaces/workflow/gta5/gta5_load_progress.hpp"
 #include "services/interfaces/workflow/gta5/gta5_player_pin.hpp"
+#include "services/interfaces/workflow/gta5/gta5_step_params.hpp"
 #include "services/interfaces/workflow/gta5/gta5_vehicle_input.hpp"
 
 #include <SDL3/SDL_timer.h>
@@ -23,9 +24,10 @@ std::string WorkflowGta5PlayerHoldStep::GetPluginId() const {
     return "gta5.player.hold";
 }
 
-void WorkflowGta5PlayerHoldStep::Execute(const WorkflowStepDefinition&,
+void WorkflowGta5PlayerHoldStep::Execute(const WorkflowStepDefinition& step,
                                          WorkflowContext& context) {
     if (!state_) return;
+    roadsDir_ = Gta5ParameterOr(step, "roads_dir", "");
     btRigidBody* player = Gta5PlayerBody(context);
     if (!player) return;
     // A trip starts held over the destination: streaming, after this,

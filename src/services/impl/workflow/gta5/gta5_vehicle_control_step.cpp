@@ -8,6 +8,7 @@
 #include "services/interfaces/workflow_context.hpp"
 
 #include <nlohmann/json.hpp>
+#include <algorithm>
 #include <utility>
 
 namespace sdl3cpp::services::impl {
@@ -65,14 +66,12 @@ void WorkflowGta5VehicleControlStep::Execute(
     }
 
     Gta5Vehicle& car = state_->vehicles[state_->seated];
-    const float throttle = (Gta5KeyDown(keys, "W") ? 1.f : 0.f) -
-                           (Gta5KeyDown(keys, "S") ? 1.f : 0.f);
-    // Bullet steers anticlockwise about up for a positive value, and the
-    // car faces +z: a positive value turns it left, so A is positive.
-    const float steer = (Gta5KeyDown(keys, "A") ? 1.f : 0.f) -
-                        (Gta5KeyDown(keys, "D") ? 1.f : 0.f);
-    const float brake = Gta5KeyDown(keys, "Space") ? 1.f : 0.f;
-    DriveGta5Vehicle(car, throttle, steer, brake, dt);
+    const float speed = ControlGta5Vehicle(car, context, dt);
+    if (logger_ && (reportIn_ -= dt) <= 0.f) {
+        reportIn_ = 1.f;
+        logger_->Info("gta5.vehicle.control: " +
+                      std::to_string(int(speed * 3.6f)) + " km/h");
+    }
     RideGta5Vehicle(car, player, context);
     context.Set("gta5.vehicle.seated", state_->seated);
 }

@@ -15,7 +15,9 @@ constexpr float kMaxWheelForce = 6000.f;
 constexpr float kDragPerSpeed2 = 0.40f;
 // Rolling resistance, as a share of the car's weight.
 constexpr float kRollingShare = 0.015f;
-constexpr float kBrakeForce = 220.f;
+// The most brake impulse a wheel takes a step, at full pedal: about
+// 1 g from all four, short of locking them.
+constexpr float kBrakeForce = 100.f;
 constexpr float kMaxSteer = 0.45f;
 // Full lock is for low speeds: it halves by 15 m/s and is a quarter by
 // 45, or a tap at speed flicks the car round.
