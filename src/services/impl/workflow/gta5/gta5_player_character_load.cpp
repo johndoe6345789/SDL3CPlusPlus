@@ -41,8 +41,8 @@ void WorkflowGta5PlayerCharacterStep::Load(const WorkflowStepDefinition& step,
     // or turns the body is counted off these, so if one reads wrong the
     // pose is wrong in exactly the way this says.
     const Gta5PedAxes axes = Gta5AxesOf(s);
-    logger_->Info("gta5.player.character: head over foot " +
-                  Runs(s, "SKEL_L_Foot", "SKEL_Head") + ", hand " +
+    logger_->Info("gta5.player.character: hip to head " +
+                  Runs(s, "SKEL_L_Thigh", "SKEL_Head") + ", hand " +
                   Runs(s, "SKEL_R_Forearm", "SKEL_R_Hand"));
     logger_->Info("gta5.player.character: up " + Three(axes.up) +
                   ", front " + Three(axes.front) + ", arm hangs " +
