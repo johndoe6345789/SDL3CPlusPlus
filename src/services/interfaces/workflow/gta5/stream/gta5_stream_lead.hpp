@@ -1,0 +1,23 @@
+#pragma once
+
+#include "services/interfaces/workflow/gta5/stream/gta5_stream_state.hpp"
+
+#include <glm/glm.hpp>
+
+namespace sdl3cpp::services::impl {
+
+/// How far ahead to stream: velocity_lead_seconds of horizontal travel.
+/// Seated, the car's velocity -- the player body is pinned to it and reads
+/// zero. Held short enough that the tiles it asks for stay inside the
+/// evict radius, or evict would drop them again. Zero with prefetch off.
+glm::vec3 Gta5StreamLead(const Gta5StreamState& state,
+                         const glm::vec3& playerVelocity);
+
+/// Where to stream around: the player, or seated, their car. The on-foot
+/// state is not moved while riding, and centring on it left the streamer
+/// where the player got in: a long drive ran off the edge of the map
+/// that was loaded, into the distant LOD shells and then nothing.
+glm::vec3 Gta5StreamOrigin(const Gta5StreamState& state,
+                           const glm::vec3& playerOrigin);
+
+}  // namespace sdl3cpp::services::impl

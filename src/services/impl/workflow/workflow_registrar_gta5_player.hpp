@@ -2,7 +2,7 @@
 
 #include "services/interfaces/i_logger.hpp"
 #include "services/interfaces/i_workflow_step_registry.hpp"
-#include "services/interfaces/workflow/gta5/gta5_stream_state.hpp"
+#include "services/interfaces/workflow/gta5/stream/gta5_stream_state.hpp"
 
 #include <memory>
 

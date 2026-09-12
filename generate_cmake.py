@@ -101,7 +101,7 @@ def expand_globs(config: dict) -> dict:
             for src in target['sources']:
                 if '*' in src:
                     # Glob pattern - expand it
-                    matches = sorted(_posix_path(m) for m in glob(src))
+                    matches = sorted(_posix_path(m) for m in glob(src, recursive=True))
                     # Filter out excluded files
                     matches = [m for m in matches if m not in exclusions]
                     expanded.extend(matches)
@@ -114,7 +114,7 @@ def expand_globs(config: dict) -> dict:
             expanded = []
             for src in test['sources']:
                 if '*' in src:
-                    matches = sorted(_posix_path(m) for m in glob(src))
+                    matches = sorted(_posix_path(m) for m in glob(src, recursive=True))
                     # Filter out excluded files
                     matches = [m for m in matches if m not in exclusions]
                     expanded.extend(matches)

@@ -141,7 +141,7 @@
         "src/services/impl/workflow/scene/*.cpp",
         "src/services/impl/workflow/compute/*.cpp",
         "src/services/impl/workflow/quake3/*.cpp",
-        "src/services/impl/workflow/gta5/*.cpp",
+        "src/services/impl/workflow/gta5/**/*.cpp",
         "src/services/impl/workflow/workflow_definition_parser_includes.cpp",
         "src/services/impl/workflow/workflow_definition_parser_include_path.cpp",
         "src/services/impl/workflow/workflow_definition_parser_expand_include.cpp",

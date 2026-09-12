@@ -101,9 +101,14 @@
         "cycle": 20.0,
         "amber": 3.0,
         "near": 40.0,
-        "far": 170.0
+        "far": 170.0,
+        "wheel": "wheel_spt_01",
+        "wheel_radius": 0.36,
+        "wheel_width": 0.25,
+        "ride_height": 0.1,
+        "mass": 1300
       },
-      "comment": "Cars driving themselves on GTA's own node network, stopping at the lights of every crossing it describes. After the vehicle spawn, which shares the geometry cache with it, and before the draw, which picks the cars up out of the frame's instance list."
+      "comment": "Cars driving themselves on GTA's own node network, as raycast vehicles like the player's own: they ride on suspension, roll their wheels and collide with whatever they meet. They stop at the lights of every crossing the network describes, and the lamps are hung on the map's own signal props. After the vehicle spawn, which shares the geometry cache with it."
     },
     {
       "id": "vehicle_control",
