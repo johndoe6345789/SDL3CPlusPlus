@@ -792,6 +792,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_collision_body.cpp
         src/services/impl/workflow/gta5/gta5_collision_shape.cpp
         src/services/impl/workflow/gta5/gta5_daylight.cpp
+        src/services/impl/workflow/gta5/gta5_decal_stick.cpp
         src/services/impl/workflow/gta5/gta5_draw_bind.cpp
         src/services/impl/workflow/gta5/gta5_draw_context_build.cpp
         src/services/impl/workflow/gta5/gta5_draw_instances.cpp

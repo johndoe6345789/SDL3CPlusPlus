@@ -26,7 +26,7 @@ glm::vec3 Scatter(float much) {
 constexpr int kHoles[] = {16, 17, 25, 26, 27, 3, 4};
 
 void SpawnGta5Impact(Gta5Effects& effects, const glm::vec3& at,
-                     const glm::vec3& normal) {
+                     const glm::vec3& normal, const Gta5Stuck& stuck) {
     for (int i = 0; i < 5; ++i) {
         Gta5Particle spark;
         spark.at = at;
@@ -52,7 +52,8 @@ void SpawnGta5Impact(Gta5Effects& effects, const glm::vec3& at,
     const std::size_t pick =
         static_cast<std::size_t>(Rng()() % (sizeof(kHoles) /
                                             sizeof(kHoles[0])));
-    SpawnGta5Scorch(effects, at, normal, 0.25f, 90.f, kHoles[pick]);
+    SpawnGta5Scorch(effects, at, normal, 0.25f, 90.f, kHoles[pick],
+                    stuck);
 }
 
 }  // namespace sdl3cpp::services::impl

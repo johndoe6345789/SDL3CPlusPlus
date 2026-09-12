@@ -60,7 +60,7 @@ void SpawnGta5Explosion(Gta5Effects& effects, const glm::vec3& at,
 
 void SpawnGta5Scorch(Gta5Effects& effects, const glm::vec3& at,
                      const glm::vec3& normal, float radius, float seconds,
-                     int cell) {
+                     int cell, const Gta5Stuck& stuck) {
     Gta5Particle mark;
     mark.at = at + normal * 0.03f;  // clear of the surface it lies on
     mark.normal = normal;
@@ -69,6 +69,11 @@ void SpawnGta5Scorch(Gta5Effects& effects, const glm::vec3& at,
     mark.life = seconds;
     mark.sprite = kGta5Scorch;
     mark.cell = cell;
+    // Stuck to something that moves, it is placed from there each frame
+    // rather than left where the shot happened to find it.
+    mark.on = stuck.on;
+    mark.local = stuck.local;
+    mark.localNormal = stuck.normal;
     effects.particles.push_back(mark);
 }
 

@@ -1,4 +1,5 @@
 #include "services/interfaces/workflow/gta5/gta5_weapon_step.hpp"
+#include "services/interfaces/workflow/gta5/gta5_decal_stick.hpp"
 #include "services/interfaces/workflow/gta5/gta5_effects_spawn.hpp"
 
 #include "services/interfaces/workflow/gta5/gta5_vehicle_input.hpp"
@@ -42,18 +43,31 @@ void WorkflowGta5WeaponStep::Fire(WorkflowContext& context,
         const bool struck = Gta5ShootRay(world, aim, far, me, shot);
         SpawnGta5Tracer(*effects, muzzle, struck ? shot.at : far);
         if (!struck) continue;
-        SpawnGta5Impact(*effects, shot.at, shot.normal);
         // A car takes the hit where it was struck, and rocks with it.
+        Gta5Stuck stuck;
+        glm::vec3 at = shot.at, facing = shot.normal;
         for (Gta5Vehicle& car : state_->vehicles) {
             if (!car.chassis || car.chassis != shot.object) continue;
+            // On the panel it actually hit, not on the box round the
+            // car, and held there so it goes where the car goes.
+            if (Gta5StickToCar(car, aim, far, stuck)) {
+                at = Gta5StuckAt(stuck);
+                const btVector3 out = car.chassis->getWorldTransform()
+                                          .getBasis() *
+                                      btVector3(stuck.normal.x,
+                                                stuck.normal.y,
+                                                stuck.normal.z);
+                facing = glm::vec3(out.x(), out.y(), out.z());
+            }
             car.chassis->activate(true);
             const btVector3 push(way.x * weapon.damage * 2.f,
                                  way.y * weapon.damage * 2.f,
                                  way.z * weapon.damage * 2.f);
             car.chassis->applyImpulse(
-                push, btVector3(shot.at.x, shot.at.y, shot.at.z) -
+                push, btVector3(at.x, at.y, at.z) -
                           car.chassis->getCenterOfMassPosition());
         }
+        SpawnGta5Impact(*effects, at, facing, stuck);
     }
     context.Set<int>("gta5.weapon.shot",
                      context.Get<int>("gta5.weapon.shot", 0) + 1);

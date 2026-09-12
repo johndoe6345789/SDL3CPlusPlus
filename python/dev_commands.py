@@ -171,15 +171,55 @@ def _find_vcvarsall() -> str:
     """Auto-detect vcvarsall.bat across VS editions and versions."""
     if not IS_WINDOWS:
         return ""
-    base = "C:\\Program Files\\Microsoft Visual Studio"
-    # Search newest VS version first, then editions
-    for version in ["18", "2022", "2019"]:
-        for edition in ["Community", "Professional", "Enterprise", "BuildTools"]:
-            bat = f"{base}\\{version}\\{edition}\\VC\\Auxiliary\\Build\\vcvarsall.bat"
-            if os.path.isfile(bat):
-                return bat
+    # 2022 first: this project pins the msvc 194 toolset, and taking
+    # VS 18's environment would hand 2026 headers to a 14.4 compiler.
+    # Build Tools installs under Program Files (x86) even on x64, so
+    # both roots are searched. Forward slashes here, native ones out.
+    bases = [
+        "C:/Program Files/Microsoft Visual Studio",
+        "C:/Program Files (x86)/Microsoft Visual Studio",
+    ]
+    editions = ["BuildTools", "Community", "Professional", "Enterprise"]
+    for version in ["2022", "18", "2019"]:
+        for edition in editions:
+            for base in bases:
+                bat = (f"{base}/{version}/{edition}"
+                       "/VC/Auxiliary/Build/vcvarsall.bat")
+                if os.path.isfile(bat):
+                    return os.path.normpath(bat)
     return ""
 
+
+
+_VCVARS_ENV_CACHE: dict[str, dict[str, str]] = {}
+
+
+def _vcvars_env(bat: str, arch: str = "x64") -> dict[str, str]:
+    """
+    The environment `vcvarsall.bat` sets, as a dict.
+
+    Handing this to the compiler as its environment beats running it
+    through `cmd /c call ... && ...`: the one-liner has to quote a path
+    with spaces inside an already quoted string, which cmd.exe will not
+    parse. Asking the batch file what it set, once, sidesteps that.
+    """
+    if not bat or not IS_WINDOWS:
+        return {}
+    key = f"{bat}|{arch}"
+    if key in _VCVARS_ENV_CACHE:
+        return _VCVARS_ENV_CACHE[key]
+    out = subprocess.run(
+        f'"{bat}" {arch} >nul && set',
+        shell=True, capture_output=True, text=True, check=False,
+    )
+    env: dict[str, str] = {}
+    if out.returncode == 0:
+        for line in out.stdout.splitlines():
+            name, sep, value = line.partition("=")
+            if sep and name:
+                env[name] = value
+    _VCVARS_ENV_CACHE[key] = env
+    return env
 
 DEFAULT_VCVARSALL = _find_vcvarsall()
 
@@ -520,7 +560,11 @@ def build(args: argparse.Namespace) -> None:
     if build_tool_args:
         cmd.append("--")
         cmd.extend(build_tool_args)
-    run_argvs([cmd], args.dry_run)
+    # cl.exe needs the Visual Studio environment: without it it cannot
+    # find so much as <string>. Ninja records the compiler by path, so
+    # nothing sets that up for us the way a generated .sln would.
+    run_argvs([cmd], args.dry_run,
+              env_overrides=_vcvars_env(DEFAULT_VCVARSALL) or None)
 
 
 def tests(args: argparse.Namespace) -> None:
@@ -899,7 +943,6 @@ def gui(args: argparse.Namespace) -> None:
             self.process = None
             self.current_game = None
             self.current_bootloader = None
-            self.current_game_package = None
 
             # Build settings
             self.preset = "default"
@@ -1199,27 +1242,10 @@ def gui(args: argparse.Namespace) -> None:
             bootloader_column.addWidget(self.bootloader_list)
             packages_row.addLayout(bootloader_column)
 
-            packages_row.addSpacing(10)
-
-            # Game package list
-            game_pkg_column = QVBoxLayout()
-            game_pkg_label = QLabel("GAME PACKAGE")
-            game_pkg_label.setStyleSheet("color: #8f98a0; font-weight: bold; font-size: 9pt;")
-            game_pkg_column.addWidget(game_pkg_label)
-
-            self.game_package_list = QListWidget()
-            self.game_package_list.setStyleSheet(list_style)
-            self.game_package_list.setMaximumHeight(120)
-            for game_pkg in self.game_packages:
-                item = QListWidgetItem(game_pkg["name"])
-                item.setData(Qt.ItemDataRole.UserRole, game_pkg)
-                self.game_package_list.addItem(item)
-            if self.game_packages:
-                self.current_game_package = self.game_packages[0]
-                self.game_package_list.setCurrentRow(0)
-            self.game_package_list.currentItemChanged.connect(self.on_game_package_selected)
-            game_pkg_column.addWidget(self.game_package_list)
-            packages_row.addLayout(game_pkg_column)
+            # Only the bootloader is chosen here. Which game runs is the
+            # LIBRARY selection on the left; a second list of the same
+            # packages here looked like a choice but drove nothing.
+            packages_row.addStretch(1)
 
             detail_layout.addLayout(packages_row)
 
@@ -1452,12 +1478,6 @@ def gui(args: argparse.Namespace) -> None:
                 self.current_bootloader = current.data(Qt.ItemDataRole.UserRole)
                 self.log(f"Selected bootloader: {self.current_bootloader['name']}")
 
-        def on_game_package_selected(self, current, previous):
-            """Handle game package selection"""
-            if current:
-                self.current_game_package = current.data(Qt.ItemDataRole.UserRole)
-                self.log(f"Selected game package: {self.current_game_package['name']}")
-
         def on_game_selected(self, current, previous):
             """Handle game selection from library"""
             if current:
@@ -1554,9 +1574,7 @@ def gui(args: argparse.Namespace) -> None:
             for key, value in game_data.items():
                 self.log(f"{key}={value}")
 
-            # Report what was actually passed on the command line. The separate
-            # game-package dropdown (current_game_package) is not what gets
-            # launched, so logging it here reported the wrong package name.
+            # Report what was actually passed on the command line.
             self.log(f"Bootloader: {bootstrap}")
             self.log(f"Game: {self.current_game['id']} ({self.current_game.get('name', '')})")
             self.run_command(cmd, env_overrides=game_data or None)

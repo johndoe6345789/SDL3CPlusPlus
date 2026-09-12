@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/gta5/gta5_shop_step.hpp"
 
+#include "services/interfaces/workflow/gta5/gta5_effects_spawn.hpp"
 #include "services/interfaces/workflow/gta5/gta5_vehicle.hpp"
 #include "services/interfaces/workflow/gta5/gta5_vehicle_hold.hpp"
 #include "services/interfaces/workflow/gta5/gta5_vehicle_seat.hpp"
@@ -34,7 +35,12 @@ void WorkflowGta5ShopStep::SwapCar(WorkflowContext& context,
     }
     if (logger_) logger_->Info("gta5.shop: taking the old car away");
     while (!state_->vehicles.empty()) {
-        RemoveGta5Vehicle(*state_, state_->vehicles.size() - 1, world);
+        const std::size_t last = state_->vehicles.size() - 1;
+        // Any bullet holes riding on it go with it: they hold its
+        // chassis to follow, and it is about to be deleted.
+        DropGta5MarksOn(*Gta5EffectsOf(context),
+                        state_->vehicles[last].chassis);
+        RemoveGta5Vehicle(*state_, last, world);
     }
     if (logger_) logger_->Info("gta5.shop: bringing " + pick.name);
     const bool ok = SpawnGta5Vehicle(*state_, spec, spot, pick.mass, device,
