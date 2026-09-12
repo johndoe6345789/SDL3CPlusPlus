@@ -21,7 +21,8 @@ void SpawnGta5Explosion(Gta5Effects& effects, const glm::vec3& at,
                         float radius);
 /// The mark left behind.
 void SpawnGta5Scorch(Gta5Effects& effects, const glm::vec3& at,
-                     const glm::vec3& normal, float radius, float seconds);
+                     const glm::vec3& normal, float radius, float seconds,
+                     int cell = -1);
 
 /// Carry them forward `dt` seconds and drop the spent ones.
 void UpdateGta5Effects(Gta5Effects& effects, float dt);

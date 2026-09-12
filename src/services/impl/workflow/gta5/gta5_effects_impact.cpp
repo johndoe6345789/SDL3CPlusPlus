@@ -21,6 +21,10 @@ glm::vec3 Scatter(float much) {
 
 }  // namespace
 
+/// The cells of GTA's sheet that look like a round went in: dark
+/// holes with a rim, and the cracked concrete bangs.
+constexpr int kHoles[] = {16, 17, 25, 26, 27, 3, 4};
+
 void SpawnGta5Impact(Gta5Effects& effects, const glm::vec3& at,
                      const glm::vec3& normal) {
     for (int i = 0; i < 5; ++i) {
@@ -45,7 +49,10 @@ void SpawnGta5Impact(Gta5Effects& effects, const glm::vec3& at,
     dust.fade = 0.95f;
     dust.sprite = kGta5Smoke;
     effects.particles.push_back(dust);
-    SpawnGta5Scorch(effects, at, normal, 0.25f, 90.f);
+    const std::size_t pick =
+        static_cast<std::size_t>(Rng()() % (sizeof(kHoles) /
+                                            sizeof(kHoles[0])));
+    SpawnGta5Scorch(effects, at, normal, 0.25f, 90.f, kHoles[pick]);
 }
 
 }  // namespace sdl3cpp::services::impl

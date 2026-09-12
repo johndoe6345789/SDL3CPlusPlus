@@ -3,8 +3,10 @@
 namespace sdl3cpp::services::impl {
 
 void SetUpGta5Effects(Gta5Effects& effects, Gta5StreamState& state,
-                      SDL_GPUDevice* device, std::uint32_t maxVertices) {
+                      SDL_GPUDevice* device, std::uint32_t maxVertices,
+                      const std::string& decalFile) {
     CreateGta5EffectAtlas(effects, device, state.uploads);
+    LoadGta5EffectDecals(effects, device, state.uploads, decalFile);
     const auto bytes =
         static_cast<Uint32>(maxVertices * sizeof(BspRenderVertex));
     SDL_GPUBufferCreateInfo info = {};

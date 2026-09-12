@@ -22,7 +22,7 @@ void WorkflowGta5EffectsDrawStep::Execute(const WorkflowStepDefinition&,
         "gpu_pipeline_gta5_effects", nullptr);
     const Gta5EffectsPtr effects = Gta5EffectsOf(context);
     if (!pass || !cmd || !pipeline) return;
-    if (!effects->ready || effects->count == 0) return;
+    if (!effects->ready || effects->count + effects->marks == 0) return;
     const auto view =
         context.Get<glm::mat4>("render.view_matrix", glm::mat4(1.f));
     const glm::mat4 viewProj =
@@ -30,11 +30,21 @@ void WorkflowGta5EffectsDrawStep::Execute(const WorkflowStepDefinition&,
     SDL_BindGPUGraphicsPipeline(pass, pipeline);
     const SDL_GPUBufferBinding binding = {effects->vertices, 0};
     SDL_BindGPUVertexBuffers(pass, 0, &binding, 1);
+    SDL_PushGPUVertexUniformData(cmd, 0, &viewProj, sizeof(viewProj));
     const SDL_GPUTextureSamplerBinding art = {effects->atlas,
                                               effects->sampler};
-    SDL_BindGPUFragmentSamplers(pass, 0, &art, 1);
-    SDL_PushGPUVertexUniformData(cmd, 0, &viewProj, sizeof(viewProj));
-    SDL_DrawGPUPrimitives(pass, effects->count, 1, 0, 0);
+    if (effects->count > 0) {
+        SDL_BindGPUFragmentSamplers(pass, 0, &art, 1);
+        SDL_DrawGPUPrimitives(pass, effects->count, 1, 0, 0);
+    }
+    // The marks wear GTA's own sheet, so they are drawn on their own.
+    if (effects->marks > 0) {
+        const SDL_GPUTextureSamplerBinding mark = {
+            effects->decals ? effects->decals : effects->atlas,
+            effects->sampler};
+        SDL_BindGPUFragmentSamplers(pass, 0, &mark, 1);
+        SDL_DrawGPUPrimitives(pass, effects->marks, 1, effects->count, 0);
+    }
 }
 
 }  // namespace sdl3cpp::services::impl

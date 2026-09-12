@@ -801,9 +801,11 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_drawable_mesh.cpp
         src/services/impl/workflow/gta5/gta5_effects_art.cpp
         src/services/impl/workflow/gta5/gta5_effects_blast.cpp
+        src/services/impl/workflow/gta5/gta5_effects_decal.cpp
         src/services/impl/workflow/gta5/gta5_effects_impact.cpp
         src/services/impl/workflow/gta5/gta5_effects_mesh.cpp
         src/services/impl/workflow/gta5/gta5_effects_prepare_step.cpp
+        src/services/impl/workflow/gta5/gta5_effects_quad.cpp
         src/services/impl/workflow/gta5/gta5_effects_setup.cpp
         src/services/impl/workflow/gta5/gta5_effects_spawn.cpp
         src/services/impl/workflow/gta5/gta5_effects_step.cpp

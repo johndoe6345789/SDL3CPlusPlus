@@ -170,7 +170,10 @@
     {
       "id": "effects_prepare",
       "plugin": "gta5.effects.prepare",
-      "comment": "Carries the effects forward and stages their quads before the cull submits them: a copy cannot be made once the render pass is open."
+      "comment": "Carries the effects forward and stages their quads before the cull submits them: a copy cannot be made once the render pass is open. decals_file is GTA own bullet marks.",
+      "parameters": {
+        "decals_file": "D:/gtautil-2.2.13/textures/fxdecal.ytd"
+      }
     },
     {
       "id": "tiles_cull",
