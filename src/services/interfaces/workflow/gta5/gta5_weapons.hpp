@@ -19,6 +19,7 @@ struct Gta5Weapon {
     int clip{0};  // -1: none, as a bat has none
     int max{0};
     int pellets{1};
+    int hands{2};  // 1 for a pistol, 2 for anything shouldered
     float damage{0.f};
     float rate{1.f};
     float range{100.f};

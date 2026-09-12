@@ -879,7 +879,9 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_ped_blend.cpp
         src/services/impl/workflow/gta5/gta5_ped_load.cpp
         src/services/impl/workflow/gta5/gta5_ped_mesh.cpp
+        src/services/impl/workflow/gta5/gta5_ped_pose.cpp
         src/services/impl/workflow/gta5/gta5_ped_skin.cpp
+        src/services/impl/workflow/gta5/gta5_ped_stance.cpp
         src/services/impl/workflow/gta5/gta5_ped_upload.cpp
         src/services/impl/workflow/gta5/gta5_ped_walk.cpp
         src/services/impl/workflow/gta5/gta5_pick.cpp
@@ -986,7 +988,9 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_water_uniforms.cpp
         src/services/impl/workflow/gta5/gta5_water_upload.cpp
         src/services/impl/workflow/gta5/gta5_weapon_blast.cpp
+        src/services/impl/workflow/gta5/gta5_weapon_dress.cpp
         src/services/impl/workflow/gta5/gta5_weapon_fire.cpp
+        src/services/impl/workflow/gta5/gta5_weapon_grip.cpp
         src/services/impl/workflow/gta5/gta5_weapon_keep.cpp
         src/services/impl/workflow/gta5/gta5_weapon_load.cpp
         src/services/impl/workflow/gta5/gta5_weapon_muzzle.cpp

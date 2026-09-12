@@ -14,6 +14,9 @@ namespace sdl3cpp::services::impl {
 bool Gta5HandMatrix(const Gta5Skeleton& skeleton,
                     const std::vector<glm::mat4>& skin, glm::mat4& hand);
 
+/// The half turn that puts a weapon the right way round in the fist.
+glm::mat4 Gta5GripTurn(const Gta5Skeleton& skeleton);
+
 /// The gun in the hand. `want` is a weapons.rpf model (w_pi_pistol and
 /// the like) held in `dir`; it is read once and kept in `geometry`,
 /// with `loaded` saying which is there. The instance is added to the

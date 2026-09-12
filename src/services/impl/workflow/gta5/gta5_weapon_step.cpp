@@ -71,6 +71,8 @@ void WorkflowGta5WeaponStep::Execute(const WorkflowStepDefinition& step,
                      armed ? inventory.reserve[current] : 0);
     context.Set<std::string>("gta5.weapon.model",
                              armed ? weapons_[current].model : "");
+    context.Set<int>("gta5.weapon.hands",
+                     armed ? weapons_[current].hands : 1);
     context.Set("gta5.inventory", inventory);
     Keep(context, inventory, dt);
 }

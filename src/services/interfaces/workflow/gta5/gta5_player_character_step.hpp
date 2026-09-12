@@ -4,6 +4,7 @@
 #include "services/interfaces/i_workflow_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_held_weapon.hpp"
 #include "services/interfaces/workflow/gta5/gta5_ped.hpp"
+#include "services/interfaces/workflow/gta5/gta5_ped_stance.hpp"
 #include "services/interfaces/workflow/gta5/gta5_stream_state.hpp"
 
 #include <memory>
@@ -43,7 +44,7 @@ private:
     std::vector<BspRenderVertex> skinned_;
     bool tried_{false};
     int frame_{0};
-    float yaw_{3.14159265f};  // away from the camera at its first yaw
+    Gta5Stance stance_;  // which way he faces, and his hands
 };
 
 }  // namespace sdl3cpp::services::impl

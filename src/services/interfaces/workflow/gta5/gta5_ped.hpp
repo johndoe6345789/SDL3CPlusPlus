@@ -62,10 +62,12 @@ bool LoadGta5Ped(Gta5StreamState& state, SDL_GPUDevice* device,
                  const Gta5PedSpec& spec, Gta5Ped& ped,
                  const std::shared_ptr<ILogger>& logger);
 
-/// This frame's skin matrices: the rest pose with the arms down and the
-/// legs and arms swung for a walk at `speed` m/s.
+/// This frame's skin matrices: the legs and arms swung for a walk at
+/// `speed` m/s, and the arms brought up down the sights as `aim` goes
+/// to one, along a view pitched `pitch` radians (+ is up).
 void PoseGta5Ped(const Gta5Skeleton& skeleton, Gta5PedWalk& walk,
-                 float speed, float dt, std::vector<glm::mat4>& skin);
+                 float speed, float dt, float aim, float pitch,
+                 bool twoHanded, std::vector<glm::mat4>& skin);
 
 /// A part's bind-pose vertices moved by `skin`, weight-blended.
 void SkinGta5PedPart(const Gta5PedPart& part,

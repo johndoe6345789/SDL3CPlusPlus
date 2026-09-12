@@ -58,6 +58,7 @@ std::vector<Gta5Weapon> LoadGta5Weapons(const std::string& file) {
         weapon.clip = w.value("clip", 0);
         weapon.max = w.value("max", 0);
         weapon.pellets = w.value("pellets", 1);
+        weapon.hands = w.value("hands", 2);
         weapon.damage = w.value("damage", 0.f);
         weapon.rate = w.value("rate", 1.f);
         weapon.range = w.value("range", 100.f);
