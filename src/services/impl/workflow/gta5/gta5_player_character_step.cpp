@@ -1,6 +1,7 @@
 #include "services/interfaces/workflow/gta5/gta5_player_character_step.hpp"
 
 #include "services/interfaces/workflow/gta5/gta5_ped_frame.hpp"
+#include "services/interfaces/workflow/gta5/gta5_ped_pose.hpp"
 #include "services/interfaces/workflow/gta5/gta5_ped_stance.hpp"
 #include "services/interfaces/workflow/gta5/gta5_shown_transform.hpp"
 #include "services/interfaces/workflow/gta5/gta5_step_params.hpp"
@@ -24,15 +25,6 @@ WorkflowGta5PlayerCharacterStep::WorkflowGta5PlayerCharacterStep(
 std::string WorkflowGta5PlayerCharacterStep::GetPluginId() const {
     return "gta5.player.character";
 }
-void WorkflowGta5PlayerCharacterStep::Load(const WorkflowStepDefinition& step,
-                                           SDL_GPUDevice* device) {
-    tried_ = true;
-    const Gta5PedSpec spec{
-        Gta5ParameterOr(step, "ped_dir", "."),
-        Gta5ParameterOr(step, "ped", "a_m_y_hipster_01"),
-        {"head_000_r", "hair_000_r", "uppr_000_r", "lowr_000_u"}};
-    LoadGta5Ped(*state_, device, spec, ped_, logger_);
-}
 void WorkflowGta5PlayerCharacterStep::Execute(
     const WorkflowStepDefinition& step, WorkflowContext& context) {
     if (!state_) return;
@@ -46,12 +38,14 @@ void WorkflowGta5PlayerCharacterStep::Execute(
     if (!tried_) Load(step, device);
     if (ped_.parts.empty()) return;
 
+    Watch(context);
     const auto ps = context.Get<Q3PlayerState>("q3.ps", Q3PlayerState{});
     const float dt =
         std::clamp(context.Get<float>("physics_dt", 1.f / 60.f), 0.f, 0.1f);
     const glm::vec2 run(ps.velocity.x, ps.velocity.z);
     const float speed = glm::length(run);
-    SettleGta5Stance(stance_, context, run, dt);
+    SettleGta5Stance(stance_, context, run, dt,
+                     Gta5PedBaseYaw(Gta5AxesOf(ped_.skeleton)));
     PoseGta5Ped(ped_.skeleton, walk_, speed, dt, stance_.aim,
                 context.Get<float>("camera_pitch", 0.f),
                 context.Get<int>("gta5.weapon.hands", 2) == 2, skin_);

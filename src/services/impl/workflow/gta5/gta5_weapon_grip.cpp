@@ -1,4 +1,5 @@
 #include "services/interfaces/workflow/gta5/gta5_held_weapon.hpp"
+#include "services/interfaces/workflow/gta5/gta5_ped_pose.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -21,22 +22,25 @@ glm::mat4 Gta5GripTurn(const Gta5Skeleton& s) {
     if (static_cast<std::size_t>(h) >= s.rest.size()) return glm::mat4(1.f);
     if (static_cast<std::size_t>(f) >= s.rest.size()) return glm::mat4(1.f);
     // A gun is gripped, so its barrel lies along the way the hand
-    // points and its top follows the back of the hand. Both are taken
-    // in the bone own frame, which is why this holds however the arm
-    // is posed: hanging, the barrel points at the floor; brought up to
+    // points and its top stands up out of the fist. Both are taken in
+    // the bone's own frame, which is why this holds however the arm is
+    // posed: hanging, the barrel points at the floor; brought up to
     // aim, it points where the hand does. The barrel is the model x,
-    // measured: a weapon .ydr is far longer along it than across.
+    // measured: a weapon .ydr is far longer along it than across. Up
+    // is the model z, as everything of GTA's stands on z.
     const glm::mat3 frame(s.rest[h]);
     const glm::mat3 inv = glm::inverse(frame);
     const glm::vec3 reach(s.rest[h][3] - s.rest[f][3]);
     glm::vec3 along = inv * reach;
     if (glm::length(along) < 1e-5f) return glm::mat4(1.f);
     along = glm::normalize(along);
-    glm::vec3 up = inv * glm::vec3(0.f, 1.f, 0.f);
+    glm::vec3 up = inv * Gta5AxesOf(s).up;
     up = up - along * glm::dot(along, up);
     if (glm::length(up) < 1e-5f) return glm::mat4(1.f);
     up = glm::normalize(up);
-    return glm::mat4(glm::mat3(along, up, glm::cross(along, up)));
+    // Out of the wrist and into the palm, where the grip is closed.
+    return glm::translate(glm::mat4(1.f), along * 0.045f) *
+           glm::mat4(glm::mat3(along, glm::cross(up, along), up));
 }
 
 }  // namespace sdl3cpp::services::impl

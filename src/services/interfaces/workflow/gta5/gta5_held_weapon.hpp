@@ -9,6 +9,17 @@
 
 namespace sdl3cpp::services::impl {
 
+/// GTA's axes into the engine's. The engine's (x, y, z) is GTA's
+/// (x, -z, y), so GTA's up lands on the engine's and GTA's forward on
+/// the engine's -z. A pose read in the one only holds in the other
+/// through this and its inverse.
+inline glm::mat4 Gta5ToEngine() {
+    return glm::mat4(glm::vec4(1.f, 0.f, 0.f, 0.f),
+                     glm::vec4(0.f, 0.f, -1.f, 0.f),
+                     glm::vec4(0.f, 1.f, 0.f, 0.f),
+                     glm::vec4(0.f, 0.f, 0.f, 1.f));
+}
+
 /// Where the right hand is in the ped's own space this frame: its posed
 /// bone. False when the skeleton has no such bone.
 bool Gta5HandMatrix(const Gta5Skeleton& skeleton,

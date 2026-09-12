@@ -1,22 +1,13 @@
 #include "services/interfaces/workflow/gta5/gta5_weapon_step.hpp"
 
 #include "services/interfaces/workflow/gta5/gta5_vehicle_input.hpp"
+#include "services/interfaces/workflow/gta5/gta5_weapon_hold.hpp"
 #include "services/interfaces/workflow_context.hpp"
-
-#include <SDL3/SDL_mouse.h>
 
 #include <algorithm>
 #include <utility>
 
 namespace sdl3cpp::services::impl {
-namespace {
-
-bool Trigger() {
-    return (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_LMASK) != 0;
-}
-
-}  // namespace
-
 WorkflowGta5WeaponStep::WorkflowGta5WeaponStep(
     std::shared_ptr<ILogger> logger, std::shared_ptr<Gta5StreamState> state)
     : logger_(std::move(logger)), state_(std::move(state)) {}
@@ -49,7 +40,7 @@ void WorkflowGta5WeaponStep::Execute(const WorkflowStepDefinition& step,
                        inventory.Owns(current);
     if (armed && !busy && !wheelOpen_) {
         const Gta5Weapon& weapon = weapons_[current];
-        const bool down = Trigger() || context.GetBool("gta5.pad.fire", false);
+        const bool down = Gta5TriggerHeld(context);
         const bool pull = weapon.automatic ? down : (down && !fireHeld_);
         fireHeld_ = down;
         if (Edge(keys, "R")) Reload(inventory, weapon);
@@ -73,6 +64,9 @@ void WorkflowGta5WeaponStep::Execute(const WorkflowStepDefinition& step,
                              armed ? weapons_[current].model : "");
     context.Set<int>("gta5.weapon.hands",
                      armed ? weapons_[current].hands : 1);
+    context.Set<bool>("gta5.weapon.aiming",
+                      armed && !busy && !wheelOpen_ &&
+                          Gta5AimHeld(context));
     context.Set("gta5.inventory", inventory);
     Keep(context, inventory, dt);
 }

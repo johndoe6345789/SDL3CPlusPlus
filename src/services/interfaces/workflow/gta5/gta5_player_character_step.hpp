@@ -33,6 +33,9 @@ public:
 
 private:
     void Load(const WorkflowStepDefinition& step, SDL_GPUDevice* device);
+    /// Says, each time it turns over, what the aim is doing and what
+    /// asked for it: which way an arm is pointed follows from these.
+    void Watch(WorkflowContext& context);
 
     std::shared_ptr<ILogger> logger_;
     std::shared_ptr<Gta5StreamState> state_;
@@ -43,6 +46,7 @@ private:
     std::vector<glm::mat4> skin_;
     std::vector<BspRenderVertex> skinned_;
     bool tried_{false};
+    bool aimed_{false};
     int frame_{0};
     Gta5Stance stance_;  // which way he faces, and his hands
 };

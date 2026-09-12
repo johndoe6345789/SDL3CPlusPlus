@@ -55,13 +55,16 @@ void AddGta5HeldWeapon(Gta5StreamState& state, SDL_GPUDevice* device,
     }
     glm::mat4 hand(1.f);
     if (loaded.empty() || !Gta5HandMatrix(ped.skeleton, skin, hand)) return;
-    // In the fist: laid along the hand, then nudged into the palm.
-    const glm::mat4 grip =
-        glm::translate(glm::mat4(1.f), glm::vec3(0.f, -0.02f, 0.02f)) *
-        Gta5GripTurn(ped.skeleton);
+    // The hand is posed in GTA's space and the gun is read into the
+    // engine's, so it is gripped over there and brought back. Handing
+    // the one straight to the other is what left it floating by the
+    // hip: GTA's up was read as depth, and its forward as height.
+    const glm::mat4 grip = Gta5GripTurn(ped.skeleton);
     Gta5Instance gun;
     gun.geometry = &geometry;
-    const glm::mat4 placed = model * hand * grip;
+    const glm::mat4 there = Gta5ToEngine();
+    const glm::mat4 placed =
+        model * there * hand * grip * glm::inverse(there);
     std::memcpy(gun.modelMatrix.data(), glm::value_ptr(placed),
                 sizeof(float) * 16);
     state.character.push_back(gun);

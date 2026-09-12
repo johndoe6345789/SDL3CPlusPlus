@@ -7,7 +7,7 @@
 
 namespace sdl3cpp::services::impl {
 
-glm::mat3 Gta5About(float degrees, glm::vec3 axis) {
+glm::mat3 Gta5About(float degrees, const glm::vec3& axis) {
     return glm::mat3(
         glm::rotate(glm::mat4(1.f), glm::radians(degrees), axis));
 }
@@ -33,17 +33,6 @@ glm::mat3 Gta5ArmTowards(const Gta5Skeleton& s, const char* arm,
         std::acos(std::clamp(glm::dot(along, to), -1.f, 1.f));
     return glm::mat3(
         glm::rotate(glm::mat4(1.f), angle, glm::normalize(axis)));
-}
-
-glm::vec3 Gta5ArmRest(const Gta5Skeleton& s, const char* arm,
-                      const char* fore) {
-    const int a = FindGta5Bone(s, arm), f = FindGta5Bone(s, fore);
-    if (a < 0 || f < 0) return glm::vec3(0.f, -1.f, 0.f);
-    const glm::vec3 along =
-        glm::normalize(glm::vec3(s.rest[f][3] - s.rest[a][3]));
-    // Down, leaning out to whichever side this arm is on.
-    return glm::normalize(
-        glm::vec3(along.x > 0.f ? 0.2f : -0.2f, -1.f, 0.f));
 }
 
 }  // namespace sdl3cpp::services::impl
