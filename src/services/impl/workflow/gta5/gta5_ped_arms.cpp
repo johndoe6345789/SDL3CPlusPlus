@@ -56,10 +56,14 @@ void PoseGta5PedArms(const Gta5Skeleton& s, const Gta5PedAxes& axes,
                                   "SKEL_L_Forearm", hold, walk.pitch, 0.22f);
     const glm::vec3 wantR = Wants(s, axes, "SKEL_R_UpperArm",
                                   "SKEL_R_Forearm", aim, walk.pitch, 0.12f);
+    // Opposite the leg on the same side, and a bent elbow the faster
+    // he goes: at a walk the arms hang and swing, at a run they drive.
+    const float sway = walk.degrees * a * swing;
+    const float bend = 8.f + walk.elbow * a;
     Arm(s, axes.right, locals, "SKEL_L_UpperArm", "SKEL_L_Forearm", wantL,
-        -20.f * a * swing * downL, (12.f + 18.f * a) * downL);
+        -sway * downL, bend * downL);
     Arm(s, axes.right, locals, "SKEL_R_UpperArm", "SKEL_R_Forearm", wantR,
-        20.f * a * swing * downR, (12.f + 18.f * a) * downR);
+        sway * downR, bend * downR);
 }
 
 }  // namespace sdl3cpp::services::impl

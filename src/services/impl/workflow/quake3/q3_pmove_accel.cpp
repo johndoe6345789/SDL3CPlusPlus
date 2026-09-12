@@ -8,7 +8,8 @@
 
 namespace sdl3cpp::q3 {
 
-void PmFriction(services::impl::Q3PlayerState& ps, float dt) {
+void PmFriction(services::impl::Q3PlayerState& ps, float dt,
+                const Q3PmTuning& tuning) {
     if (!ps.onGround) return;
 
     const float speed = std::sqrt(ps.velocity.x * ps.velocity.x +
@@ -19,8 +20,8 @@ void PmFriction(services::impl::Q3PlayerState& ps, float dt) {
         return;
     }
 
-    const float control  = std::max(speed, kStopSpeed);
-    const float drop     = control * kFriction * dt;
+    const float control  = std::max(speed, tuning.stopSpeed);
+    const float drop     = control * tuning.friction * dt;
     const float newSpeed = std::max(0.0f, speed - drop);
 
     const float scale = newSpeed / speed;
@@ -29,9 +30,12 @@ void PmFriction(services::impl::Q3PlayerState& ps, float dt) {
 }
 
 void PmAccelerate(services::impl::Q3PlayerState& ps, const Q3UserCmd& cmd,
-                  float dt) {
+                  float dt, const Q3PmTuning& tuning) {
+    // Sprinting is a higher top speed, not a shove: the same walk
+    // acceleration carries them up to it over about a second.
+    const float top = cmd.sprint ? tuning.sprintSpeed : tuning.maxSpeed;
     const auto wish =
-        ComputeWish(cmd.forwardMove, cmd.rightMove, cmd.yaw, kMaxSpeed);
+        ComputeWish(cmd.forwardMove, cmd.rightMove, cmd.yaw, top);
     if (wish.speed <= 0.0f) return;
 
     // ioq3 PM_WalkMove projects the movement basis onto the ground plane
@@ -50,7 +54,8 @@ void PmAccelerate(services::impl::Q3PlayerState& ps, const Q3UserCmd& cmd,
         }
     }
 
-    const float accel        = ps.onGround ? kAccelerate : kAirAccelerate;
+    const float accel =
+        ps.onGround ? tuning.accelerate : tuning.airAccelerate;
     const float currentSpeed = glm::dot(ps.velocity, wishDir);
     const float addSpeed     = wish.speed - currentSpeed;
     if (addSpeed <= 0.0f) return;

@@ -15,19 +15,38 @@
     {
       "id": "pm_ground",
       "plugin": "q3.pm.ground",
-      "comment": "Ground trace. Sets groundNormal so walking a Vinewood Hills slope pushes along it rather than into it."
+      "comment": "Ground trace. Sets groundNormal so walking a Vinewood Hills slope pushes along it rather than into it. A touch heavier than real gravity so a fall does not hang.",
+      "parameters": {
+        "gravity": 12.0
+      }
     },
     {
       "id": "pm_friction",
-      "plugin": "q3.pm.friction"
+      "plugin": "q3.pm.friction",
+      "parameters": {
+        "friction": 8.0,
+        "stop_speed": 1.2
+      },
+      "comment": "Stops like a man, not like a marine on ice: Quake sheds speed against a 3.1 m/s floor, which at walking pace is the whole of it at once."
     },
     {
       "id": "pm_accelerate",
-      "plugin": "q3.pm.accelerate"
+      "plugin": "q3.pm.accelerate",
+      "parameters": {
+        "max_speed": 3.4,
+        "sprint_speed": 6.0,
+        "accelerate": 9.0,
+        "air_accelerate": 1.2
+      },
+      "comment": "A jog at 3.4 m/s, Left Shift for a 7 m/s sprint. Quake runs everything at 10 m/s, which crosses Los Santos at the speed of a moped."
     },
     {
       "id": "pm_jump",
-      "plugin": "q3.pm.jump"
+      "plugin": "q3.pm.jump",
+      "parameters": {
+        "jump_velocity": 4.8
+      },
+      "comment": "About a metre off the ground. Quake's 8.4 m/s clears three, which over a city of kerbs and railings reads as a man on the moon."
     },
     {
       "id": "pm_slide",

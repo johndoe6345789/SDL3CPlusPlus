@@ -1,6 +1,7 @@
 #include "services/interfaces/workflow/quake3/workflow_q3_pm_jump_step.hpp"
 #include "services/interfaces/workflow/quake3/q3_pm_types.hpp"
 #include "services/interfaces/workflow/quake3/q3_pm_constants.hpp"
+#include "services/interfaces/workflow/quake3/q3_pm_tuning.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
 #include <glm/glm.hpp>
@@ -16,7 +17,7 @@ WorkflowQ3PmJumpStep::WorkflowQ3PmJumpStep(std::shared_ptr<ILogger> logger)
 std::string WorkflowQ3PmJumpStep::GetPluginId() const { return "q3.pm.jump"; }
 
 void WorkflowQ3PmJumpStep::Execute(
-    const WorkflowStepDefinition& /*step*/, WorkflowContext& context)
+    const WorkflowStepDefinition& step, WorkflowContext& context)
 {
     auto* psPtr = context.TryGet<Q3PlayerState>("q3.ps");
     if (!psPtr) return;
@@ -27,7 +28,7 @@ void WorkflowQ3PmJumpStep::Execute(
     const bool jumpHeld    = context.GetBool("q3.pm_jump_held", false);
 
     if (jumpPressed && !jumpHeld && ps.onGround) {
-        ps.velocity.y = q3::kJumpVelocity;
+        ps.velocity.y = Q3TuningOf(step).jumpVelocity;
         ps.onGround   = false;
     }
 

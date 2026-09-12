@@ -37,6 +37,11 @@ glm::mat3 Gta5About(float degrees, const glm::vec3& axis);
 void Gta5Turn(const Gta5Skeleton& s, std::vector<glm::mat4>& locals,
               const char* name, const glm::mat3& turn);
 
+/// Move bone `name` and everything under it by `by`, given in the ped
+/// space: what carries the whole body up and down over its feet.
+void Gta5Shift(const Gta5Skeleton& s, std::vector<glm::mat4>& locals,
+               const char* name, const glm::vec3& by);
+
 /// The bind pose holds the arms out in a T. This swings one from there
 /// to point along `want`, in the ped space.
 glm::mat3 Gta5ArmTowards(const Gta5Skeleton& s, const char* arm,

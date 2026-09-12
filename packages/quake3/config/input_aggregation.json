@@ -4,38 +4,110 @@
     "axes": {
       "move_forward": {
         "sources": [
-          { "type": "key", "key": "W", "scale": 1.0 },
-          { "type": "key", "key": "Up", "scale": 1.0 },
-          { "type": "key", "key": "S", "scale": -1.0 },
-          { "type": "key", "key": "Down", "scale": -1.0 },
-          { "type": "gamepad_axis", "axis": "left_y", "scale": -1.0, "deadzone": 0.15 }
+          {
+            "type": "key",
+            "key": "W",
+            "scale": 1.0
+          },
+          {
+            "type": "key",
+            "key": "Up",
+            "scale": 1.0
+          },
+          {
+            "type": "key",
+            "key": "S",
+            "scale": -1.0
+          },
+          {
+            "type": "key",
+            "key": "Down",
+            "scale": -1.0
+          },
+          {
+            "type": "gamepad_axis",
+            "axis": "left_y",
+            "scale": -1.0,
+            "deadzone": 0.15
+          }
         ],
-        "outputs": ["input.move_forward"]
+        "outputs": [
+          "input.move_forward"
+        ]
       },
       "move_right": {
         "sources": [
-          { "type": "key", "key": "D", "scale": 1.0 },
-          { "type": "key", "key": "A", "scale": -1.0 },
-          { "type": "gamepad_axis", "axis": "left_x", "scale": 1.0, "deadzone": 0.15 }
+          {
+            "type": "key",
+            "key": "D",
+            "scale": 1.0
+          },
+          {
+            "type": "key",
+            "key": "A",
+            "scale": -1.0
+          },
+          {
+            "type": "gamepad_axis",
+            "axis": "left_x",
+            "scale": 1.0,
+            "deadzone": 0.15
+          }
         ],
-        "outputs": ["input.move_right"]
+        "outputs": [
+          "input.move_right"
+        ]
       }
     },
     "buttons": {
       "jump": {
         "sources": [
-          { "type": "key", "key": "Space" },
-          { "type": "gamepad_button", "button": "a" }
+          {
+            "type": "key",
+            "key": "Space"
+          },
+          {
+            "type": "gamepad_button",
+            "button": "a"
+          }
         ],
-        "outputs": ["input.jump"]
+        "outputs": [
+          "input.jump"
+        ]
       },
       "crouch": {
         "sources": [
-          { "type": "key", "key": "Left Ctrl" },
-          { "type": "key", "key": "C" },
-          { "type": "gamepad_button", "button": "b" }
+          {
+            "type": "key",
+            "key": "Left Ctrl"
+          },
+          {
+            "type": "key",
+            "key": "C"
+          },
+          {
+            "type": "gamepad_button",
+            "button": "b"
+          }
         ],
-        "outputs": ["input.crouch"]
+        "outputs": [
+          "input.crouch"
+        ]
+      },
+      "sprint": {
+        "sources": [
+          {
+            "type": "key",
+            "key": "Left Shift"
+          },
+          {
+            "type": "gamepad_button",
+            "button": "left_stick"
+          }
+        ],
+        "outputs": [
+          "input.sprint"
+        ]
       }
     }
   }

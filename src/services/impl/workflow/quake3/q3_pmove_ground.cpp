@@ -13,7 +13,8 @@ constexpr float kGroundProbe = 0.05f;
 
 void PmGroundTrace(services::impl::Q3PlayerState& ps,
                    btDiscreteDynamicsWorld* world, float dt,
-                   const btCollisionObject* self) {
+                   const btCollisionObject* self,
+                   const Q3PmTuning& tuning) {
     bool grounded = false;
     if (world) {
         const services::impl::Q3Trace tr = services::impl::GroundProbe(
@@ -35,7 +36,7 @@ void PmGroundTrace(services::impl::Q3PlayerState& ps,
     if (!grounded) {
         ps.onGround     = false;
         ps.groundNormal = glm::vec3(0.0f, 1.0f, 0.0f);
-        ps.velocity.y -= kGravity * dt;
+        ps.velocity.y -= tuning.gravity * dt;
     }
 
     ps.groundFraction = grounded ? 1.0f : 0.0f;

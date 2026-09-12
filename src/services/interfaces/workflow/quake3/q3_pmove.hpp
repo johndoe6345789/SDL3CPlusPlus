@@ -1,5 +1,6 @@
 #pragma once
 
+#include "services/interfaces/workflow/quake3/q3_pm_tuning.hpp"
 #include "services/interfaces/workflow/quake3/q3_pm_types.hpp"
 
 namespace sdl3cpp::q3 {
@@ -22,21 +23,24 @@ struct Q3UserCmd {
     float rightMove   = 0.0f;
     float yaw         = 0.0f;  // radians, the engine's yaw convention
     bool jump         = false;
+    bool sprint       = false;  // a higher top speed while held
 };
 
 /// bg_pmove.c PM_GroundTrace: records the plane underfoot, or applies
 /// gravity for this frame when there is nothing under it.
 void PmGroundTrace(services::impl::Q3PlayerState& ps,
                    btDiscreteDynamicsWorld* world, float dt,
-                   const btCollisionObject* self);
+                   const btCollisionObject* self,
+                   const Q3PmTuning& tuning = Q3PmTuning{});
 
 /// bg_pmove.c PM_Friction, ground only.
-void PmFriction(services::impl::Q3PlayerState& ps, float dt);
+void PmFriction(services::impl::Q3PlayerState& ps, float dt,
+                const Q3PmTuning& tuning = Q3PmTuning{});
 
 /// bg_pmove.c PM_Accelerate, with PM_WalkMove's projection of the
 /// movement basis onto the ground plane.
 void PmAccelerate(services::impl::Q3PlayerState& ps, const Q3UserCmd& cmd,
-                  float dt);
+                  float dt, const Q3PmTuning& tuning = Q3PmTuning{});
 
 /**
  * @brief Runs a whole frame of movement for one mover.

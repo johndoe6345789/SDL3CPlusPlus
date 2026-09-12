@@ -13,6 +13,8 @@ struct Gta5ArmSwing {
     float aim{0.f};     // the gun hand: 0 hanging, 1 down the sights
     float hold{0.f};    // the off hand: only a two handed gun takes it
     float pitch{0.f};   // where the view looks, radians, + is up
+    float degrees{16.f};  // how far the shoulder swings, from the gait
+    float elbow{20.f};    // how much the elbow holds, from the gait
 };
 
 /// Both arms into `locals`. The gun hand comes up down the sights as

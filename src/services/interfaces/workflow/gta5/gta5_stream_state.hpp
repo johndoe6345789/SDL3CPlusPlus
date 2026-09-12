@@ -49,6 +49,10 @@ struct Gta5StreamState {
     /// Index into `vehicles` the player is sitting in, or -1 on foot.
     int seated{-1};
     std::vector<Gta5Instance> character;  // third person: drawn like cars
+    /// This frame's driven-around cars. Rebuilt each frame by
+    /// gta5.traffic, which owns them; nothing here is in the physics
+    /// world, so streaming never has to know about them.
+    std::vector<Gta5Instance> traffic;
 
     /// Tiles whose band changed; evict tears them down, load rebuilds.
     std::unordered_set<Gta5TileCoord, Gta5TileCoordHash> rebuild;

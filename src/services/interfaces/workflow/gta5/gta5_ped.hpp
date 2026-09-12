@@ -40,6 +40,7 @@ struct Gta5Ped {
 struct Gta5PedWalk {
     float phase{0.f};   // radians through the two-step cycle
     float amount{0.f};  // 0 standing, 1 walking; eased
+    float breath{0.f};  // seconds, for the rise and fall of standing
 };
 
 /// Where a ped comes from: `dir` holds name.yft (the skeleton), name.ydd

@@ -12,6 +12,7 @@
 #include "services/interfaces/workflow/gta5/gta5_gamepad_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_hud_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_shop_step.hpp"
+#include "services/interfaces/workflow/gta5/gta5_traffic_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_weapon_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_map_look_step.hpp"
 #include "services/interfaces/workflow/gta5/gta5_radio_step.hpp"
@@ -59,8 +60,10 @@ int RegisterGta5PlayerSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
     registry->RegisterStep(
         std::make_shared<WorkflowGta5WeaponStep>(logger, state));
     registry->RegisterStep(
+        std::make_shared<WorkflowGta5TrafficStep>(logger, state));
+    registry->RegisterStep(
         std::make_shared<WorkflowGta5EffectsPrepareStep>(logger, state));
-    return 18;
+    return 19;
 }
 
 }  // namespace sdl3cpp::services::impl::registrar_detail

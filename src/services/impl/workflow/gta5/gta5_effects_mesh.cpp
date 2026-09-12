@@ -45,6 +45,7 @@ std::vector<BspRenderVertex> BuildGta5EffectQuads(const Gta5Effects& effects,
     for (const Gta5Particle& p : effects.particles) {
         if (p.cell < 0) Piece(out, p, right, up);
     }
+    for (const Gta5Particle& p : effects.lamps) Piece(out, p, right, up);
     const std::size_t strip = out.size();
     for (const Gta5Particle& p : effects.particles) {
         if (p.cell >= 0) Piece(out, p, right, up);

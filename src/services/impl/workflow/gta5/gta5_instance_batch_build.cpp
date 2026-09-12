@@ -31,6 +31,9 @@ void Collect(const Gta5StreamState& state, const Gta5Frustum& frustum,
         }
     }
     for (const Gta5Instance& part : state.character) visible.push_back(&part);
+    for (const Gta5Instance& car : state.traffic) {
+        if (car.geometry) visible.push_back(&car);
+    }
 }
 }  // namespace
 

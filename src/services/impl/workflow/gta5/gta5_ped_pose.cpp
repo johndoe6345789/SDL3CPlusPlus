@@ -20,6 +20,19 @@ void Gta5Turn(const Gta5Skeleton& s, std::vector<glm::mat4>& locals,
     locals[b] = locals[b] * glm::mat4(glm::inverse(frame) * turn * frame);
 }
 
+void Gta5Shift(const Gta5Skeleton& s, std::vector<glm::mat4>& locals,
+               const char* name, const glm::vec3& by) {
+    const int b = FindGta5Bone(s, name);
+    if (b < 0 || static_cast<std::size_t>(b) >= locals.size()) return;
+    const int p = s.parents[b];
+    // Into the frame the bone is held in, which is its parent's.
+    glm::vec3 step = by;
+    if (p >= 0 && static_cast<std::size_t>(p) < s.rest.size()) {
+        step = glm::inverse(glm::mat3(s.rest[p])) * by;
+    }
+    locals[b] = glm::translate(glm::mat4(1.f), step) * locals[b];
+}
+
 glm::mat3 Gta5ArmTowards(const Gta5Skeleton& s, const char* arm,
                          const char* fore, const glm::vec3& want) {
     const int a = FindGta5Bone(s, arm), f = FindGta5Bone(s, fore);

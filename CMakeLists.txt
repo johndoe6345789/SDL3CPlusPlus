@@ -707,6 +707,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/quake3/q3_pk3_reader.cpp
         src/services/impl/workflow/quake3/q3_player_position.cpp
         src/services/impl/workflow/quake3/q3_pm_slide_move_helpers.cpp
+        src/services/impl/workflow/quake3/q3_pm_tuning.cpp
         src/services/impl/workflow/quake3/q3_pmove.cpp
         src/services/impl/workflow/quake3/q3_pmove_accel.cpp
         src/services/impl/workflow/quake3/q3_pmove_ground.cpp
@@ -881,11 +882,15 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_ped_arms.cpp
         src/services/impl/workflow/gta5/gta5_ped_axes.cpp
         src/services/impl/workflow/gta5/gta5_ped_blend.cpp
+        src/services/impl/workflow/gta5/gta5_ped_gait.cpp
+        src/services/impl/workflow/gta5/gta5_ped_legs.cpp
         src/services/impl/workflow/gta5/gta5_ped_load.cpp
         src/services/impl/workflow/gta5/gta5_ped_mesh.cpp
+        src/services/impl/workflow/gta5/gta5_ped_plant.cpp
         src/services/impl/workflow/gta5/gta5_ped_pose.cpp
         src/services/impl/workflow/gta5/gta5_ped_skin.cpp
         src/services/impl/workflow/gta5/gta5_ped_stance.cpp
+        src/services/impl/workflow/gta5/gta5_ped_torso.cpp
         src/services/impl/workflow/gta5/gta5_ped_upload.cpp
         src/services/impl/workflow/gta5/gta5_ped_walk.cpp
         src/services/impl/workflow/gta5/gta5_pick.cpp
@@ -960,6 +965,15 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_tiles_load_step.cpp
         src/services/impl/workflow/gta5/gta5_tiles_resolve_step.cpp
         src/services/impl/workflow/gta5/gta5_time_step.cpp
+        src/services/impl/workflow/gta5/gta5_traffic_drive.cpp
+        src/services/impl/workflow/gta5/gta5_traffic_junctions.cpp
+        src/services/impl/workflow/gta5/gta5_traffic_lamps.cpp
+        src/services/impl/workflow/gta5/gta5_traffic_lights.cpp
+        src/services/impl/workflow/gta5/gta5_traffic_load.cpp
+        src/services/impl/workflow/gta5/gta5_traffic_path.cpp
+        src/services/impl/workflow/gta5/gta5_traffic_show.cpp
+        src/services/impl/workflow/gta5/gta5_traffic_spawn.cpp
+        src/services/impl/workflow/gta5/gta5_traffic_step.cpp
         src/services/impl/workflow/gta5/gta5_upload_batch.cpp
         src/services/impl/workflow/gta5/gta5_upload_batch_flush.cpp
         src/services/impl/workflow/gta5/gta5_vantage.cpp

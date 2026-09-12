@@ -92,6 +92,20 @@
       "comment": "Read from the map on the fly: the body from taxi_hi.yft, its axles from that fragment's wheel bones, and the wheel from vehiclemods/wheels_mods.rpf. Paint and wheel size stand in for carcols.ymt and vehicles.meta, which are not in the extract. On the Grand Senora Desert road, in-game (1119, 3490); y is only where the drop starts looking, since nothing out there is overhead. Downtown kept putting it on kerbs and in underpasses. Spawns once the ground under it has streamed in."
     },
     {
+      "id": "traffic",
+      "plugin": "gta5.traffic",
+      "parameters": {
+        "roads_dir": "D:/gtautil-2.2.13/levels/gta5/paths.rpf",
+        "model": "taxi_hi",
+        "cars": 28,
+        "cycle": 20.0,
+        "amber": 3.0,
+        "near": 40.0,
+        "far": 170.0
+      },
+      "comment": "Cars driving themselves on GTA's own node network, stopping at the lights of every crossing it describes. After the vehicle spawn, which shares the geometry cache with it, and before the draw, which picks the cars up out of the frame's instance list."
+    },
+    {
       "id": "vehicle_control",
       "plugin": "gta5.vehicle.control",
       "comment": "F gets in and out of the nearest car, WASD drives, space brakes. Forces land a frame later than they are pressed, since the physics step already ran this frame."

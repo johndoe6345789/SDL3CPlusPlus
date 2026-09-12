@@ -19,6 +19,11 @@ namespace sdl3cpp::services::impl {
 /// Everything alight, shared through the context (gta5.effects).
 struct Gta5Effects {
     std::vector<Gta5Particle> particles;
+    /// Lamps: rebuilt from scratch every frame by whatever owns them,
+    /// never aged and never carried over. A traffic light is not a
+    /// spark that fades -- it is on until the frame it is not, and
+    /// leaving it in `particles` would stack one on top of the last.
+    std::vector<Gta5Particle> lamps;
     SDL_GPUTexture* atlas{nullptr};
     /// GTA's own fxdecal sheet: bullet marks, 8 across and 4 down.
     SDL_GPUTexture* decals{nullptr};

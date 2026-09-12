@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/quake3/workflow_q3_pm_ground_step.hpp"
 #include "services/interfaces/workflow/quake3/q3_pm_types.hpp"
+#include "services/interfaces/workflow/quake3/q3_pm_tuning.hpp"
 #include "services/interfaces/workflow/quake3/q3_pmove.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
@@ -15,7 +16,7 @@ std::string WorkflowQ3PmGroundStep::GetPluginId() const {
     return "q3.pm.ground";
 }
 
-void WorkflowQ3PmGroundStep::Execute(const WorkflowStepDefinition& /*step*/,
+void WorkflowQ3PmGroundStep::Execute(const WorkflowStepDefinition& step,
                                      WorkflowContext& context) {
     auto* psPtr = context.TryGet<Q3PlayerState>("q3.ps");
     if (!psPtr) return;
@@ -24,7 +25,7 @@ void WorkflowQ3PmGroundStep::Execute(const WorkflowStepDefinition& /*step*/,
     q3::PmGroundTrace(
         ps, context.Get<btDiscreteDynamicsWorld*>("physics_world", nullptr),
         static_cast<float>(context.GetDouble("frame.delta_time", 0.016)),
-        PlayerBody(context));
+        PlayerBody(context), Q3TuningOf(step));
     context.Set("q3.ps", ps);
 }
 
