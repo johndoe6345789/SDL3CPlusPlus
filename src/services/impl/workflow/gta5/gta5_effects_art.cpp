@@ -46,8 +46,9 @@ bool CreateGta5EffectAtlas(Gta5Effects& effects, SDL_GPUDevice* device,
             // A scorch: an uneven dark blotch, hard at the middle.
             const float edge = 0.75f + 0.25f * std::sin(std::atan2(dy, dx) *
                                                         5.f);
-            Put(px, x + 3 * kCell, y, 0.06f,
-                std::pow(std::max(0.f, 1.f - r / edge), 1.2f));
+            Put(px, x + 3 * kCell, y, 0.04f,
+                std::min(1.f, std::pow(std::max(0.f, 1.f - r / edge),
+                                       0.45f) * 1.8f));
         }
     }
     effects.atlas =

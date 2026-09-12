@@ -63,9 +63,9 @@ void SpawnGta5Tracer(Gta5Effects& effects, const glm::vec3& from,
     streak.at = from;
     streak.normal = along / far;
     streak.length = far;
-    streak.size = 0.035f;
+    streak.size = 0.09f;
     streak.colour = glm::vec3(1.f, 0.8f, 0.4f);
-    streak.life = 0.09f;
+    streak.life = 0.13f;
     streak.sprite = kGta5Puff;
     effects.particles.push_back(streak);
 }

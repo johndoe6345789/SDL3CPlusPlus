@@ -986,6 +986,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_weapon_fire.cpp
         src/services/impl/workflow/gta5/gta5_weapon_keep.cpp
         src/services/impl/workflow/gta5/gta5_weapon_load.cpp
+        src/services/impl/workflow/gta5/gta5_weapon_muzzle.cpp
         src/services/impl/workflow/gta5/gta5_weapon_projectile.cpp
         src/services/impl/workflow/gta5/gta5_weapon_ray.cpp
         src/services/impl/workflow/gta5/gta5_weapon_step.cpp

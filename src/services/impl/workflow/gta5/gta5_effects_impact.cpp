@@ -28,7 +28,7 @@ void SpawnGta5Impact(Gta5Effects& effects, const glm::vec3& at,
         spark.at = at;
         spark.velocity = normal * 2.5f + Scatter(2.f);
         spark.colour = glm::vec3(1.f, 0.7f, 0.3f);
-        spark.size = 0.03f;
+        spark.size = 0.06f;
         spark.gravity = 9.f;
         spark.life = 0.18f + Spread(0.06f);
         spark.sprite = kGta5Flash;
@@ -37,15 +37,15 @@ void SpawnGta5Impact(Gta5Effects& effects, const glm::vec3& at,
     Gta5Particle dust;
     dust.at = at + normal * 0.05f;
     dust.velocity = normal * 0.8f;
-    dust.colour = glm::vec3(0.62f, 0.58f, 0.52f);
-    dust.size = 0.18f;
-    dust.growth = 1.2f;
+    dust.colour = glm::vec3(0.38f, 0.33f, 0.28f);
+    dust.size = 0.4f;
+    dust.growth = 1.8f;
     dust.drag = 3.f;
     dust.life = 0.6f;
-    dust.fade = 0.7f;
+    dust.fade = 0.95f;
     dust.sprite = kGta5Smoke;
     effects.particles.push_back(dust);
-    SpawnGta5Scorch(effects, at, normal, 0.1f, 90.f);
+    SpawnGta5Scorch(effects, at, normal, 0.25f, 90.f);
 }
 
 }  // namespace sdl3cpp::services::impl

@@ -2,6 +2,7 @@
 #include "services/interfaces/workflow/gta5/gta5_effects_spawn.hpp"
 
 #include "services/interfaces/workflow/gta5/gta5_vehicle_input.hpp"
+#include "services/interfaces/workflow/quake3/q3_pm_types.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
 #include <algorithm>
@@ -20,7 +21,11 @@ void WorkflowGta5WeaponStep::Fire(WorkflowContext& context,
         -glm::vec3(view[0][2], view[1][2], view[2][2]);
     const glm::vec3 eye =
         context.Get<glm::vec3>("render.camera_pos", glm::vec3(0.f));
-    const glm::vec3 muzzle = eye + ahead * 0.6f;
+    const glm::vec3 aim = eye + ahead * 0.6f;
+    const auto ps = context.Get<Q3PlayerState>("q3.ps", Q3PlayerState{});
+    const glm::vec3 muzzle = Gta5MuzzlePoint(
+        eye, ahead, ps.origin, ps.maxs.y,
+        context.GetBool("gta5.third_person", false));
     SpawnGta5Muzzle(*effects, muzzle, ahead);
     std::uniform_real_distribution<float> scatter(-weapon.spread,
                                                   weapon.spread);
@@ -32,9 +37,9 @@ void WorkflowGta5WeaponStep::Fire(WorkflowContext& context,
                                                    scatter(rng_),
                                                    scatter(rng_)));
         }
-        const glm::vec3 far = muzzle + way * weapon.range;
+        const glm::vec3 far = aim + way * weapon.range;
         Gta5Shot shot;
-        const bool struck = Gta5ShootRay(world, muzzle, far, me, shot);
+        const bool struck = Gta5ShootRay(world, aim, far, me, shot);
         SpawnGta5Tracer(*effects, muzzle, struck ? shot.at : far);
         if (!struck) continue;
         SpawnGta5Impact(*effects, shot.at, shot.normal);

@@ -15,8 +15,12 @@ void WorkflowGta5WeaponStep::Explode(WorkflowContext& context,
     SpawnGta5Explosion(*effects, at, radius);
     // The mark it burns into whatever lies below.
     Gta5Shot ground;
-    if (Gta5ShootRay(world, at, at - glm::vec3(0.f, radius, 0.f), nullptr,
-                     ground)) {
+    // From a little above: a blast sitting on the surface would
+    // otherwise start the ray in the face it means to mark, and miss.
+    const glm::vec3 over = at + glm::vec3(0.f, 0.5f, 0.f);
+    const bool below = Gta5ShootRay(
+        world, over, at - glm::vec3(0.f, radius, 0.f), nullptr, ground);
+    if (below) {
         SpawnGta5Scorch(*effects, ground.at, ground.normal, radius * 0.9f,
                         120.f);
     }

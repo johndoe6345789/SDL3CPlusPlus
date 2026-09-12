@@ -2,6 +2,7 @@
 #include "services/interfaces/workflow/gta5/gta5_effects_spawn.hpp"
 
 #include "services/interfaces/workflow/gta5/gta5_vehicle_input.hpp"
+#include "services/interfaces/workflow/quake3/q3_pm_types.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
 #include <btBulletDynamicsCommon.h>
@@ -17,9 +18,14 @@ void WorkflowGta5WeaponStep::Throw(WorkflowContext& context,
     const glm::vec3 ahead = -glm::vec3(view[0][2], view[1][2], view[2][2]);
     const glm::vec3 eye =
         context.Get<glm::vec3>("render.camera_pos", glm::vec3(0.f));
+    const auto ps = context.Get<Q3PlayerState>("q3.ps", Q3PlayerState{});
+    const glm::vec3 muzzle = Gta5MuzzlePoint(
+        eye, ahead, ps.origin, ps.maxs.y,
+        context.GetBool("gta5.third_person", false));
     Gta5Projectile shot;
     shot.rocket = weapon.kind == Gta5WeaponKind::Rocket;
-    shot.at = eye + ahead * 1.2f;
+    // Clear of the player, so it is not set off in their own face.
+    shot.at = muzzle + ahead * 0.6f;
     // A rocket flies flat and fast; a grenade is lobbed and falls.
     shot.velocity = ahead * weapon.speed +
                     (shot.rocket ? glm::vec3(0.f) : glm::vec3(0.f, 3.f, 0.f));

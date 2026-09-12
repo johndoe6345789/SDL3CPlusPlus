@@ -46,10 +46,9 @@ void WorkflowGta5EffectsPrepareStep::Execute(const WorkflowStepDefinition&,
         std::min<std::size_t>(quads.size(), kMaxVertices));
     const auto bytes =
         static_cast<std::uint32_t>(count * sizeof(BspRenderVertex));
-    if (state_->uploads.StageBuffer(device, quads.data(), bytes,
-                                    effects->vertices, 0)) {
-        effects->count = count;
-    }
+    const bool staged = state_->uploads.StageBuffer(
+        device, quads.data(), bytes, effects->vertices, 0);
+    if (staged) effects->count = count;
 }
 
 }  // namespace sdl3cpp::services::impl
