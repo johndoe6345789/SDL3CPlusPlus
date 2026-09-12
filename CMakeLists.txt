@@ -835,6 +835,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/gta5_held_weapon.cpp
         src/services/impl/workflow/gta5/gta5_hitch_report.cpp
         src/services/impl/workflow/gta5/gta5_hud_art.cpp
+        src/services/impl/workflow/gta5/gta5_hud_cross.cpp
         src/services/impl/workflow/gta5/gta5_hud_frame.cpp
         src/services/impl/workflow/gta5/gta5_hud_gauge.cpp
         src/services/impl/workflow/gta5/gta5_hud_load.cpp

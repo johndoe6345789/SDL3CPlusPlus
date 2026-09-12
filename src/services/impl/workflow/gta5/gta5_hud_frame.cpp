@@ -1,4 +1,4 @@
-#include "services/interfaces/workflow/gta5/gta5_hud.hpp"
+#include "services/interfaces/workflow/gta5/gta5_hud_cross.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -53,6 +53,7 @@ Gta5MapFrame BuildGta5HudFrame(const Gta5Hud& hud, int width, int height,
                            1.f);
         }
     }
+    AddGta5HudCrosshair(frame, l, hud, s, w, h);
     AddGta5HudMenu(frame, l, hud, s, w, h);
     AddGta5HudWheel(frame, l, hud, s, w, h);
     if (!s.driving) return frame;
