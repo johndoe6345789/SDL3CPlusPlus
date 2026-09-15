@@ -10,7 +10,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
-        cmake \
         libegl-dev \
         libegl1-mesa-dev \
         libgl-dev \
@@ -33,7 +32,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:${PATH}"
 RUN pip install --upgrade pip
-RUN pip install --no-cache-dir "conan>=2"
+RUN pip install --no-cache-dir "conan>=2" "cmake==3.31.6"
 
 RUN if ! getent group "${USERNAME}" >/dev/null 2>&1; then \
         groupadd --gid "${GID}" -o "${USERNAME}"; \
@@ -44,8 +43,8 @@ RUN if ! getent group "${USERNAME}" >/dev/null 2>&1; then \
 
 WORKDIR /workspace
 COPY . /workspace
-RUN conan profile detect
-RUN conan install . --output-folder /conan_build --build=missing -c tools.system.package_manager:mode=install -c tools.build:cxxflags='["-include","cstdint"]'
+RUN conan profile detect && { echo ""; echo "[platform_tool_requires]"; echo "cmake/3.31.6"; } >> "$(conan config home)/profiles/default"
+RUN conan install . --output-folder /conan_build --build=missing -c tools.system.package_manager:mode=install -c '&:tools.build:cxxflags=["-include","cstdint"]'
 RUN chown -R ${USERNAME}:${USERNAME} /workspace /conan_build
 
 USER ${USERNAME}
