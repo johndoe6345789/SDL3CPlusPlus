@@ -163,43 +163,56 @@ jobs:
   # once - compile the dependency tree - and keep the result in an Actions
   # cache instead of a registry. The first run on a new conanfile.py is slow
   # for the same reason the image build is; every run after it is not.
+  #
+  # Each entry builds one architecture per pass, so macOS can ask for two
+  # and lipo them into a single universal binary at the end.
   build-native:
     strategy:
       fail-fast: false
       matrix:
         include:
-          - name: macos-arm64
-            runner: macos-15
-            generator: -G Ninja
-            cxxflags: '["-include","cstdint"]'
-            # apple-clang detects gnu17, which already clears the C++17
-            # floor four of these dependencies set, so nothing to add.
-            settings: ''
           - name: windows-amd64
             runner: windows-2025
+            arches: x86_64
+            native_arch: x86_64
             # No -G at all: CMake defaults to the newest Visual Studio on
             # the machine, which is the one Conan detected and built the
             # dependencies with. Naming a generator here is how this job
             # broke twice - the label now resolves to a VS 2026 image, and
-            # anything hardcoded is a guess about which image is behind a
+            # anything hardcoded is a guess about which image sits behind a
             # label GitHub moves. A Visual Studio generator also brings its
             # own compiler environment, so nothing has to source vcvars; it
             # parallelises per project rather than per file, which /MP buys
             # back.
             generator: ''
             cxxflags: '["/FIcstdint","/MP"]'
-            # msvc detects cppstd=14, and entt, gtest, assimp and
-            # lunasvg all refuse to configure below 17. 20 rather than the
-            # 17 that would just clear the bar, because 20 is what
+            # msvc detects cppstd=14, and entt, gtest, assimp and lunasvg
+            # all refuse to configure below 17. 20 rather than the 17 that
+            # would just clear the bar, because 20 is what
             # python/dev_commands.py has always built this project with on
             # Windows, and because our own code is C++20 - a dependency
             # whose inline code was compiled to a different standard than
             # its consumer is an ODR problem in waiting.
-            #
-            # compiler.version is left to detection. It reports 195, which
-            # is simply true: the runner has Visual Studio 2026 and no
-            # 2022 to fall back to.
             settings: '-s compiler.cppstd=20'
+          - name: windows-arm64
+            runner: windows-11-arm
+            arches: armv8
+            native_arch: armv8
+            generator: ''
+            cxxflags: '["/FIcstdint","/MP"]'
+            settings: '-s compiler.cppstd=20'
+          - name: macos-universal
+            runner: macos-15
+            # Two slices, joined by lipo at the end. Conan turns -s arch
+            # into CMAKE_OSX_ARCHITECTURES, so each pass produces a
+            # single-architecture binary that knows nothing of the other.
+            # The runner is arm64, which makes the x86_64 pass a cross
+            # build - and is why only one of the two can be tested.
+            arches: armv8 x86_64
+            native_arch: armv8
+            generator: -G Ninja
+            cxxflags: '["-include","cstdint"]'
+            settings: ''
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 360
@@ -209,8 +222,14 @@ jobs:
       run:
         shell: bash
     env:
-      BUILD_DIR: build/${{ matrix.name }}
+      # One directory per architecture under SLICE_ROOT, and the tree the
+      # ZIP is built from in BUILD_DIR. They are separate because a
+      # universal build has two of the former and one of the latter.
+      SLICE_ROOT: build/${{ matrix.name }}
+      BUILD_DIR: build/${{ matrix.name }}/release
       ZIP_NAME: sdl3_app-${{ matrix.name }}.zip
+      ARCHES: ${{ matrix.arches }}
+      NATIVE_ARCH: ${{ matrix.native_arch }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -281,22 +300,29 @@ jobs:
             > "${CONAN_HOME}/global.conf"
 
       # Settings are kept to what the graph actually needs, because every
-      # one of them that departs from `conan profile detect` moves a
-      # package ID away from the binaries ConanCenter publishes and turns a
-      # download into a compile. See the matrix for why Windows needs one.
+      # one that departs from `conan profile detect` moves a package ID away
+      # from the binaries ConanCenter publishes and turns a download into a
+      # compile. See the matrix for why Windows needs one.
       - name: Install Conan dependencies
         env:
           EXTRA_SETTINGS: ${{ matrix.settings }}
         run: |
-          conan install . \
-            --build=missing \
-            -s build_type=Release \
-            $EXTRA_SETTINGS \
-            -c tools.system.package_manager:mode=install \
-            -c '&:tools.build:cxxflags=${{ matrix.cxxflags }}'
+          set -euo pipefail
+          for arch in $ARCHES; do
+            echo "::group::conan install $arch"
+            conan install . \
+              --output-folder "$SLICE_ROOT/$arch" \
+              --build=missing \
+              -s build_type=Release \
+              -s arch="$arch" \
+              ${EXTRA_SETTINGS:-} \
+              -c tools.system.package_manager:mode=install \
+              -c '&:tools.build:cxxflags=${{ matrix.cxxflags }}'
+            echo "::endgroup::"
+          done
 
       # Sources and build trees are dead weight once the binary exists, and
-      # the repository shares a 10 GB cache budget across both runners.
+      # the repository shares a 10 GB cache budget across the runners.
       - name: Trim the Conan cache
         if: always() && steps.conan-cache.outcome == 'success'
         run: conan cache clean
@@ -310,39 +336,74 @@ jobs:
             conan-${{ matrix.name }}-${{ hashFiles('conanfile.py')
             }}-${{ github.run_id }}
 
-      - name: Configure
+      - name: Configure and build each architecture
         env:
           GENERATOR: ${{ matrix.generator }}
         run: |
           set -euo pipefail
-          toolchain=$(find "$PWD" -type f -name conan_toolchain.cmake \
-            -path '*/generators/*' | head -n 1)
-          if [ -z "$toolchain" ]; then
-            echo "conan_toolchain.cmake was not generated" >&2
-            exit 1
-          fi
-          # CMake is a native Windows program even when bash starts it, so
-          # hand it a drive-letter path and not the /d/a/... one find prints.
-          if command -v cygpath >/dev/null 2>&1; then
-            toolchain=$(cygpath -m "$toolchain")
-          fi
-          echo "Using toolchain: $toolchain"
-          cmake -S . -B "$BUILD_DIR" \
-            ${GENERATOR:-} \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_TOOLCHAIN_FILE="$toolchain" \
-            -DSDL_VERSION=SDL3 \
-            -DBUILD_SDL3_APP=ON
+          for arch in $ARCHES; do
+            toolchain=$(find "$PWD/$SLICE_ROOT/$arch" -type f \
+              -name conan_toolchain.cmake -path '*/generators/*' | head -n 1)
+            if [ -z "$toolchain" ]; then
+              echo "conan_toolchain.cmake was not generated for $arch" >&2
+              exit 1
+            fi
+            # CMake is a native Windows program even when bash starts it,
+            # so hand it a drive-letter path, not the /d/a/... find prints.
+            if command -v cygpath >/dev/null 2>&1; then
+              toolchain=$(cygpath -m "$toolchain")
+            fi
+            echo "::group::build $arch"
+            echo "Using toolchain: $toolchain"
+            cmake -S . -B "$SLICE_ROOT/$arch/app" \
+              ${GENERATOR:-} \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_TOOLCHAIN_FILE="$toolchain" \
+              -DSDL_VERSION=SDL3 \
+              -DBUILD_SDL3_APP=ON
+            cmake --build "$SLICE_ROOT/$arch/app" --config Release --parallel
+            echo "::endgroup::"
+          done
 
-      - name: Build
-        run: cmake --build "$BUILD_DIR" --config Release --parallel
-
-      # -C names the configuration for the Visual Studio generator, which
-      # builds every one of them and so cannot guess which to test.
+      # Only the slice matching the runner can execute: on the universal
+      # build the x86_64 half is cross-compiled and has nothing here to run
+      # it. -C names the configuration for the Visual Studio generator,
+      # which builds every one of them and so cannot guess which to test.
       - name: Test
         run: |
-          ctest --test-dir "$BUILD_DIR" -C Release \
+          ctest --test-dir "$SLICE_ROOT/$NATIVE_ARCH/app" -C Release \
             --output-on-failure --no-tests=error
+
+      # package_release.py wants one directory holding the binary beside the
+      # packages/ tree, which is what this assembles - joining the slices
+      # with lipo when the matrix asked for more than one.
+      - name: Assemble the release tree
+        run: |
+          set -euo pipefail
+          find_binary() {
+            for candidate in "$1/sdl3_app" "$1/sdl3_app.exe" \
+                "$1/Release/sdl3_app" "$1/Release/sdl3_app.exe"; do
+              if [ -f "$candidate" ]; then
+                printf '%s\n' "$candidate"
+                return 0
+              fi
+            done
+            echo "no sdl3_app built under $1" >&2
+            return 1
+          }
+          mkdir -p "$BUILD_DIR"
+          cp -R "$SLICE_ROOT/$NATIVE_ARCH/app/packages" "$BUILD_DIR/packages"
+          slices=()
+          for arch in $ARCHES; do
+            slices+=("$(find_binary "$SLICE_ROOT/$arch/app")")
+          done
+          binary="$BUILD_DIR/$(basename "${slices[0]}")"
+          if [ "${#slices[@]}" -gt 1 ]; then
+            lipo -create "${slices[@]}" -output "$binary"
+            lipo -info "$binary"
+          else
+            cp "${slices[0]}" "$binary"
+          fi
 
       - name: Package release ZIP
         run: python scripts/package_release.py

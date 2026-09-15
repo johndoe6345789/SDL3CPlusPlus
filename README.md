@@ -7,9 +7,11 @@ SDL3 GPU 2D/3D game engine with a JSON-driven workflow system. Built with C++20,
 ### Run a Release (No Build)
 
 Every push to `main` publishes a ZIP per platform to the
-[Releases page](../../releases) - `linux-amd64`, `linux-arm64`, `macos-arm64`
-and `windows-amd64`. Each carries `sdl3_app`, the `packages/` tree and the
-launcher, so unzipping and starting the GUI is the whole setup:
+[Releases page](../../releases) - `linux-amd64`, `linux-arm64`,
+`windows-amd64`, `windows-arm64` and `macos-universal`, the last a fat binary
+that runs on both Apple silicon and Intel. Each carries `sdl3_app`, the
+`packages/` tree and the launcher, so unzipping and starting the GUI is the
+whole setup:
 
 ```bash
 chmod +x sdl3_app run_gui.sh   # ZIPs do not carry the executable bit
