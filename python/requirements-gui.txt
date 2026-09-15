@@ -1,0 +1,4 @@
+# Dependencies of `python/dev_commands.py gui`, the point-and-click launcher.
+# run_gui.sh installs these into .venv-gui when the system Python cannot
+# already import PyQt6.
+PyQt6>=6.6

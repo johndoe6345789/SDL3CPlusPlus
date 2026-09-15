@@ -61,5 +61,17 @@ jobs:
             Automated build of [`${{ github.sha }}`](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}).
 
             > ${{ steps.describe.outputs.subject }}
+
+            Unzip, then start the point-and-click launcher - it lists the
+            bundled game packages and runs `sdl3_app` for the one you pick:
+
+            ```sh
+            bash run_gui.sh
+            ```
+
+            It needs Python 3 and PyQt6; when PyQt6 is missing the script
+            installs it into a `.venv-gui` beside itself. ZIP archives do not
+            carry the executable bit, so mark the binary runnable first:
+            `chmod +x sdl3_app run_gui.sh`.
           files: release/*.zip
           fail_on_unmatched_files: true

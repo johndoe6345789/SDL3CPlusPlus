@@ -4,6 +4,20 @@ SDL3 GPU 2D/3D game engine with a JSON-driven workflow system. Built with C++20,
 
 ## Quick Start
 
+### Run a Release (No Build)
+
+Every push to `main` publishes a ZIP per platform to the
+[Releases page](../../releases). It carries `sdl3_app`, the `packages/` tree and
+the launcher, so unzipping and starting the GUI is the whole setup:
+
+```bash
+chmod +x sdl3_app run_gui.sh   # ZIPs do not carry the executable bit
+./run_gui.sh
+```
+
+The launcher needs Python 3 and PyQt6; it installs PyQt6 into a `.venv-gui`
+beside itself when the system Python does not already have it.
+
 ### Prerequisites
 
 - C++20 compiler (MSVC, Clang, or GCC)
@@ -49,6 +63,9 @@ python python/dev_commands.py run --game quake3 --env QUAKE3_PAK0=/path/to/pak0.
 
 # Point-and-click launcher (PyQt6): pick bootloader, game, and map
 python python/dev_commands.py gui
+
+# Same launcher, but installs PyQt6 into .venv-gui if it is missing
+./run_gui.sh
 ```
 
 `QUAKE3_PAK0` is auto-detected from a Steam install when present, so `--game quake3`

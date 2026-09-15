@@ -32,6 +32,30 @@ def find_binary(build_dir: Path) -> Path:
     raise SystemExit(f"Missing sdl3_app binary. Looked in:\n  {searched}")
 
 
+def copy_launcher(root: Path, package_dir: Path) -> None:
+    """Ship the PyQt6 launcher: run_gui.sh plus the python/ package it runs.
+
+    The GUI resolves everything - packages/, the sdl3_app binary - relative
+    to the parent of python/, so laying these out beside the binary is what
+    makes the launcher work from an unpacked release.
+    """
+    sources = root / "python"
+    if not sources.is_dir():
+        raise SystemExit(f"Missing python directory at {sources}")
+    shutil.copytree(
+        sources,
+        package_dir / "python",
+        ignore=shutil.ignore_patterns("__pycache__", "*.pyc"),
+    )
+
+    script = root / "run_gui.sh"
+    if not script.is_file():
+        raise SystemExit(f"Missing launcher script at {script}")
+    destination = package_dir / script.name
+    shutil.copy2(script, destination)
+    destination.chmod(destination.stat().st_mode | 0o111)
+
+
 def main() -> None:
     root = Path.cwd()
     build_dir = root / require_env("BUILD_DIR")
@@ -54,6 +78,8 @@ def main() -> None:
     if not packages.is_dir():
         raise SystemExit(f"Missing packages directory at {packages}")
     shutil.copytree(packages, package_dir / "packages")
+
+    copy_launcher(root, package_dir)
 
     for doc in ("README.md", "LICENSE"):
         source = root / doc

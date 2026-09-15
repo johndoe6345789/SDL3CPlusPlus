@@ -990,11 +990,25 @@ def gui(args: argparse.Namespace) -> None:
             candidates = self._candidate_build_dirs()
             return candidates[0] if candidates else None
 
+        def _binary_search_dirs(self) -> "list[Path]":
+            """Where a runnable sdl3_app may sit, build dirs first.
+
+            The release ZIP unpacks the binary, packages/ and python/ into
+            one directory with no CMake cache in it, so the shipped GUI has
+            nothing for _candidate_build_dirs() to find - the project root
+            is that layout's build directory.
+            """
+            dirs = self._candidate_build_dirs()
+            root = self._project_root()
+            if root not in dirs:
+                dirs.append(root)
+            return dirs
+
         def _find_binary(self) -> "str | None":
             """Return the path to the most recently built sdl3_app binary, or None."""
             exe_name = platform_target.app_executable()
             best: tuple[float, str] | None = None
-            for build_dir in self._candidate_build_dirs():
+            for build_dir in self._binary_search_dirs():
                 exe = build_dir / exe_name
                 if exe.is_file():
                     mtime = exe.stat().st_mtime
@@ -1421,7 +1435,15 @@ def gui(args: argparse.Namespace) -> None:
             exit_action.triggered.connect(self.close)
             file_menu.addAction(exit_action)
 
-            # Developer menu
+            # Developer menu. Every entry below shells back into Conan or
+            # CMake against the sources, so the copy of this GUI shipped in
+            # a release ZIP - which carries packages/ and the binary but no
+            # sources - offers Play alone rather than menu items that can
+            # only fail.
+            if not self._is_source_checkout():
+                self._add_view_menu(menubar)
+                return
+
             dev_menu = menubar.addMenu("Developer")
 
             deps_action = QAction("Install Dependencies", self)
@@ -1450,12 +1472,18 @@ def gui(args: argparse.Namespace) -> None:
             settings_action.triggered.connect(self.show_settings)
             dev_menu.addAction(settings_action)
 
-            # View menu
+            self._add_view_menu(menubar)
+
+        def _add_view_menu(self, menubar) -> None:
             view_menu = menubar.addMenu("View")
 
             clear_console_action = QAction("Clear Console", self)
             clear_console_action.triggered.connect(self.console.clear)
             view_menu.addAction(clear_console_action)
+
+        def _is_source_checkout(self) -> bool:
+            """True when the sources the developer actions need are here."""
+            return (self._project_root() / "CMakeLists.txt").is_file()
 
         def show_settings(self):
             """Show build settings dialog"""
@@ -1543,7 +1571,12 @@ def gui(args: argparse.Namespace) -> None:
 
             binary = self._find_binary()
             if not binary:
-                self.log("❌ Could not find sdl3_app binary. Build the project first (Developer → Build Project).")
+                if self._is_source_checkout():
+                    hint = "Build the project first (Developer → Build Project)."
+                else:
+                    hint = (f"Expected it next to this launcher, in "
+                            f"{self._project_root()}.")
+                self.log(f"❌ Could not find sdl3_app binary. {hint}")
                 return
 
             self.log(f"Binary: {binary}")
