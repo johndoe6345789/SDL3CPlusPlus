@@ -172,6 +172,9 @@ jobs:
             runner: macos-15
             generator: Ninja
             cxxflags: '["-include","cstdint"]'
+            # apple-clang detects gnu17, which already clears the C++17
+            # floor four of these dependencies set, so nothing to add.
+            cppstd: ''
           - name: windows-amd64
             runner: windows-2025
             # The Visual Studio generator carries its own compiler
@@ -180,6 +183,13 @@ jobs:
             # buys back.
             generator: Visual Studio 17 2022
             cxxflags: '["/FIcstdint","/MP"]'
+            # msvc detects cppstd=14, and entt, gtest, assimp and lunasvg
+            # all refuse to configure below 17. 20 rather than 17, because
+            # that is what python/dev_commands.py has always built this
+            # project with on Windows, and because our own code is C++20 -
+            # a dependency whose inline code was compiled to a different
+            # standard than its consumer is an ODR problem in waiting.
+            cppstd: '-s compiler.cppstd=20'
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 360
@@ -227,13 +237,24 @@ jobs:
       # six hours part way through the dependency tree still banks what it
       # compiled. Without that, a tree too big for one job never finishes,
       # however many times it is retried.
+      #
+      # The save key carries the run id, so every run writes a new entry and
+      # the restore keys below pick up the newest. Keying the save on the
+      # recipe hash instead looks tidier and silently caps progress at
+      # whatever the first run managed: that entry then exists, every later
+      # run reports a cache hit, and a guard on that hit skips the save
+      # forever.
       - name: Restore the Conan cache
         id: conan-cache
         uses: actions/cache/restore@v4
         with:
           path: ${{ env.CONAN_HOME }}
-          key: conan-${{ matrix.name }}-${{ hashFiles('conanfile.py') }}
-          restore-keys: conan-${{ matrix.name }}-
+          key: >-
+            conan-${{ matrix.name }}-${{ hashFiles('conanfile.py')
+            }}-${{ github.run_id }}
+          restore-keys: |
+            conan-${{ matrix.name }}-${{ hashFiles('conanfile.py') }}-
+            conan-${{ matrix.name }}-
 
       - name: Configure Conan
         run: |
@@ -247,14 +268,18 @@ jobs:
           echo "core.sources:download_urls=[\"$mirror\", \"origin\"]" \
             > "${CONAN_HOME}/global.conf"
 
-      # No -s settings beyond the build type: whatever `conan profile detect`
-      # chose is what ConanCenter publishes binaries for, and a build that
-      # downloads its dependencies beats one that compiles them.
+      # Settings are kept to what the graph actually needs, because every
+      # one of them that departs from `conan profile detect` moves a
+      # package ID away from the binaries ConanCenter publishes and turns a
+      # download into a compile. See the matrix for why Windows needs one.
       - name: Install Conan dependencies
+        env:
+          CPPSTD: ${{ matrix.cppstd }}
         run: |
           conan install . \
             --build=missing \
             -s build_type=Release \
+            $CPPSTD \
             -c tools.system.package_manager:mode=install \
             -c '&:tools.build:cxxflags=${{ matrix.cxxflags }}'
 
@@ -265,11 +290,13 @@ jobs:
         run: conan cache clean
 
       - name: Save the Conan cache
-        if: always() && steps.conan-cache.outputs.cache-hit != 'true'
+        if: always() && steps.conan-cache.outcome == 'success'
         uses: actions/cache/save@v4
         with:
           path: ${{ env.CONAN_HOME }}
-          key: conan-${{ matrix.name }}-${{ hashFiles('conanfile.py') }}
+          key: >-
+            conan-${{ matrix.name }}-${{ hashFiles('conanfile.py')
+            }}-${{ github.run_id }}
 
       - name: Configure
         run: |
