@@ -8,7 +8,64 @@ permissions:
   packages: read
 
 jobs:
+  # The image is named after a digest of the recipe it was baked from, so
+  # this job answers two questions before a matrix job starts: which image
+  # this commit is entitled to, and whether it exists yet. A missing image
+  # stops the run here with a sentence about it rather than an opaque
+  # `docker pull` failure in `Initialize containers`.
+  image:
+    name: Resolve build image
+    runs-on: ubuntu-24.04
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+    env:
+      IMAGE: ghcr.io/${{ github.repository_owner }}/sdl3_app
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Compute the content tag
+        id: tag
+        run: |
+          set -euo pipefail
+          tag="$(bash scripts/image_tag.sh)"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "Build image content tag: $tag"
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Require a published image for every architecture
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          missing=()
+          # Mirrors the matrix below: one missing architecture should stop
+          # the run here, not after the other one has built for an hour.
+          for arch in amd64 arm64; do
+            ref="${IMAGE}:linux-${arch}-${TAG}"
+            if docker manifest inspect "$ref" >/dev/null 2>&1; then
+              echo "Found $ref"
+            else
+              missing+=("$ref")
+            fi
+          done
+          if [ ${#missing[@]} -ne 0 ]; then
+            hint="Publish Container Image bakes it from conanfile.py and"
+            hint="$hint .github/workflows/Dockerfile, which takes up to an"
+            hint="$hint hour the first time. Re-run this build once that"
+            hint="$hint workflow has finished."
+            echo "::error::No build image for ${missing[*]}. $hint"
+            exit 1
+          fi
+
   build:
+    needs: image
     strategy:
       fail-fast: false
       matrix:
@@ -27,11 +84,13 @@ jobs:
     # Everything the build needs - system libraries, Conan, CMake, Ninja and a
     # Conan cache holding the whole dependency tree already compiled - is baked
     # into this image by publish-container.yml, so the job starts at our own
-    # sources. Rebuild the image whenever conanfile.py changes; until then a
-    # changed recipe still builds, Conan just compiles the difference.
+    # sources. The tag carries a digest of the recipe (scripts/image_tag.sh),
+    # so this can only ever be the image that matches the checkout - never a
+    # leftover from an earlier one.
     container:
       image: >-
-        ghcr.io/${{ github.repository_owner }}/sdl3_app:linux-${{ matrix.arch }}
+        ghcr.io/${{ github.repository_owner }}/sdl3_app:linux-${{
+        matrix.arch }}-${{ needs.image.outputs.tag }}
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}

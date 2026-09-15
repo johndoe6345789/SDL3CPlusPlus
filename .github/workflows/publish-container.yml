@@ -1,18 +1,16 @@
 name: Publish Container Image
 
 # The image in .github/workflows/Dockerfile is a build environment (system
-# packages plus a warm Conan cache), not a runnable app, so it is published
-# only when the recipe it bakes in or the image itself changes. build.yml runs
-# inside it, so a stale image costs build time rather than correctness.
+# packages plus a warm Conan cache), not a runnable app. It is tagged with a
+# digest of what went into it - scripts/image_tag.sh - so a push whose recipe
+# is unchanged finds the image already in the registry and does nothing. That
+# makes it cheap enough to run on every push to main, which in turn means a
+# missing image gets rebuilt without anyone remembering to ask.
 on:
   workflow_dispatch:
   push:
     branches:
       - main
-    paths:
-      - conanfile.py
-      - .github/workflows/Dockerfile
-      - .github/workflows/publish-container.yml
 
 # An hours-long image build is never worth racing against itself.
 concurrency:
@@ -24,7 +22,25 @@ permissions:
   packages: write
 
 jobs:
+  resolve:
+    name: Resolve image tag
+    runs-on: ubuntu-24.04
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Compute the content tag
+        id: tag
+        run: |
+          set -euo pipefail
+          tag="$(bash scripts/image_tag.sh)"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "Build image content tag: $tag"
+
   publish-image:
+    needs: resolve
     strategy:
       fail-fast: false
       matrix:
@@ -40,12 +56,14 @@ jobs:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 180
+    env:
+      IMAGE: ghcr.io/${{ github.repository_owner }}/sdl3_app
+      TAG: >-
+        ${{ matrix.platform }}-${{ matrix.arch
+        }}-${{ needs.resolve.outputs.tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -54,14 +72,40 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # Nothing about the image depends on the commit, only on the files the
+      # tag is derived from, so an existing tag is already the image this
+      # push would produce.
+      - name: Look for an image that already matches
+        id: existing
+        run: |
+          set -euo pipefail
+          if docker manifest inspect "${IMAGE}:${TAG}" >/dev/null 2>&1; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+            echo "${IMAGE}:${TAG} is already published; nothing to build."
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "${IMAGE}:${TAG} is missing; building it."
+          fi
+
+      - name: Set up Docker Buildx
+        if: steps.existing.outputs.present == 'false'
+        uses: docker/setup-buildx-action@v3
+
+      # The moving linux-<arch> tag is published alongside the content tag as
+      # a convenience for `docker run` by hand. CI never asks for it: pulling
+      # a tag that some later push can move is how a build ends up inside an
+      # image baked from a different recipe.
       - name: Build and publish container image
+        if: steps.existing.outputs.present == 'false'
         uses: docker/build-push-action@v6
         with:
           context: .
           file: .github/workflows/Dockerfile
           push: true
           platforms: linux/${{ matrix.arch }}
-          tags: ghcr.io/${{ github.repository_owner }}/sdl3_app:${{ matrix.platform }}-${{ matrix.arch }}
+          tags: |
+            ${{ env.IMAGE }}:${{ env.TAG }}
+            ${{ env.IMAGE }}:${{ matrix.platform }}-${{ matrix.arch }}
           build-args: |
             USERNAME=builder
             UID=1000
