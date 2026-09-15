@@ -8,6 +8,8 @@ namespace sdl3cpp::services::impl {
 
 /// The next road out of `node`, never straight back the way it came
 /// unless that is the only way out -- a dead end has to be turned in.
+/// `from` comes back for a node off the end of the network, so a caller
+/// need not have checked one it read out of a link.
 std::uint32_t NextGta5Link(const Gta5Roads& roads, std::uint32_t node,
                            std::uint32_t from);
 

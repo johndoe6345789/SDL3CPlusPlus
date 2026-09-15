@@ -140,5 +140,14 @@ TEST(NextGta5Link, TurnsBackAtADeadEnd) {
     EXPECT_EQ(NextGta5Link(roads, 1u, 0u), 0u);
 }
 
+// A node off the end of what is loaded is answered, not indexed: the
+// caller gets back where it came from rather than a read past the end.
+TEST(NextGta5Link, AnswersForANodePastTheEnd) {
+    const Gta5Roads roads = Straight();
+    EXPECT_EQ(NextGta5Link(roads, 9u, 1u), 1u);
+    const Gta5Roads empty;
+    EXPECT_EQ(NextGta5Link(empty, 0u, 4u), 4u);
+}
+
 }  // namespace
 }  // namespace sdl3cpp::services::impl

@@ -1,5 +1,7 @@
 #include "services/interfaces/workflow/gta5/vehicle/gta5_vehicle_seat.hpp"
 
+#include "services/interfaces/workflow/gta5/vehicle/gta5_seat_index.hpp"
+
 #include <btBulletDynamicsCommon.h>
 #include <BulletDynamics/Vehicle/btRaycastVehicle.h>
 
@@ -41,7 +43,7 @@ void RemoveGta5Vehicle(Gta5StreamState& state, std::size_t index,
                        btDiscreteDynamicsWorld* world) {
     if (index >= state.vehicles.size()) return;
     DestroyGta5Vehicle(state.vehicles[index], world);
-    if (state.seated == static_cast<int>(index)) state.seated = -1;
+    state.seated = Gta5SeatAfterRemoval(state.seated, index);
     state.vehicles.erase(state.vehicles.begin() +
                          static_cast<std::ptrdiff_t>(index));
 }

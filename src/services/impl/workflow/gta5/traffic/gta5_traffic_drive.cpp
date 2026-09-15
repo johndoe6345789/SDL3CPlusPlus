@@ -13,7 +13,14 @@ constexpr float kPi = 3.14159265f;
 void DriveGta5Traffic(Gta5Traffic& traffic, const Gta5Roads& roads,
                       const Gta5StreamState& state, float dt) {
     for (Gta5TrafficCar& car : traffic.cars) {
-        if (!car.car.chassis || car.to >= roads.nodes.size()) continue;
+        if (!car.car.chassis) continue;
+        if (car.to >= roads.nodes.size()) {
+            // Nothing left to steer at. Counted as going nowhere so it
+            // is recycled, rather than skipped every frame and left
+            // standing in a lane for as long as the player is near.
+            car.stuck += dt;
+            continue;
+        }
         const btTransform& shown = car.car.chassis->getWorldTransform();
         const btVector3& origin = shown.getOrigin();
         const glm::vec3 at(origin.x(), origin.y(), origin.z());

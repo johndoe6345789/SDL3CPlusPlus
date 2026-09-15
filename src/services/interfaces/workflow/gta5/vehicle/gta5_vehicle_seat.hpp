@@ -5,6 +5,8 @@
 
 namespace sdl3cpp::services::impl {
 
+struct Gta5Effects;
+
 /// Nearest car within `reach` metres of a point, or -1.
 int FindGta5VehicleNear(const Gta5StreamState& state, const btVector3& point,
                         float reach);
@@ -37,6 +39,14 @@ int StealGta5TrafficCar(Gta5StreamState& state, const btVector3& near,
 
 void RemoveGta5Vehicle(Gta5StreamState& state, std::size_t index,
                        btDiscreteDynamicsWorld* world);
+
+/// Every car the state holds -- the player's and the traffic's alike --
+/// taken out of the world and deleted, and the state left empty. For
+/// shutting down: nothing else gives these bodies back, so without it
+/// they outlive the run. Marks riding a car go first, as ever.
+void DestroyGta5Vehicles(Gta5StreamState& state,
+                         btDiscreteDynamicsWorld* world,
+                         Gta5Effects* effects);
 
 /// A respray: its vehicle_paint parts take `paint`.
 void RepaintGta5Vehicle(Gta5Vehicle& car, const glm::vec3& paint);

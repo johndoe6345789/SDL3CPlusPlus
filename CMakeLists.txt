@@ -996,6 +996,8 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/vehicle/gta5_vehicle_steal.cpp
         src/services/impl/workflow/gta5/vehicle/gta5_vehicle_wheel_load.cpp
         src/services/impl/workflow/gta5/vehicle/gta5_vehicle_wheels.cpp
+        src/services/impl/workflow/gta5/vehicle/gta5_vehicles_destroy.cpp
+        src/services/impl/workflow/gta5/vehicle/gta5_vehicles_free_step.cpp
         src/services/impl/workflow/gta5/vehicle/gta5_vehicles_sync_step.cpp
         src/services/impl/workflow/gta5/weapon/gta5_held_weapon.cpp
         src/services/impl/workflow/gta5/weapon/gta5_pick.cpp
@@ -1483,6 +1485,16 @@ target_link_libraries(q3_bot_move_test PRIVATE
     nlohmann_json::nlohmann_json
 )
 add_test(NAME q3_bot_move_test COMMAND q3_bot_move_test)
+
+add_executable(gta5_vehicle_seat_test)
+target_sources(gta5_vehicle_seat_test PRIVATE tests/gta5_vehicle_seat_test.cpp)
+target_include_directories(gta5_vehicle_seat_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(gta5_vehicle_seat_test PRIVATE
+    GTest::gtest_main
+)
+add_test(NAME gta5_vehicle_seat_test COMMAND gta5_vehicle_seat_test)
 
 add_executable(gta5_traffic_aim_test)
 target_sources(gta5_traffic_aim_test PRIVATE tests/gta5_traffic_aim_test.cpp)

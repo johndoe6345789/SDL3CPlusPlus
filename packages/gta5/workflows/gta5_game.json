@@ -871,6 +871,16 @@
       }
     },
     {
+      "id": "vehicles_free",
+      "type": "gta5.vehicles.free",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        200
+      ],
+      "comment": "Gives every car back once the loop stops -- the player's and the traffic's, out of the physics world and deleted. Nothing else does: cars are only ever let go of one at a time, when the shop replaces one or the traffic recycles one. Before system.exit and while physics_world is still there, since taking a body out of the world needs the world."
+    },
+    {
       "id": "exit",
       "type": "system.exit",
       "typeVersion": 1,
@@ -1003,6 +1013,17 @@
       }
     },
     "game_loop": {
+      "main": {
+        "0": [
+          {
+            "node": "vehicles_free",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "vehicles_free": {
       "main": {
         "0": [
           {

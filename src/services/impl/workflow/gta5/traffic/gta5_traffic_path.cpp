@@ -17,6 +17,7 @@ std::uint32_t Gta5TrafficRoll() { return Rng()(); }
 
 std::uint32_t NextGta5Link(const Gta5Roads& roads, std::uint32_t node,
                            std::uint32_t from) {
+    if (node >= roads.nodes.size()) return from;
     const Gta5RoadNode& here = roads.nodes[node];
     std::uint32_t picks[8];
     std::uint8_t count = 0;

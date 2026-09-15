@@ -642,6 +642,18 @@
       ]
     },
     {
+      "name": "gta5_vehicle_seat_test",
+      "sources": [
+        "tests/gta5_vehicle_seat_test.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main"
+      ]
+    },
+    {
       "name": "gta5_traffic_aim_test",
       "sources": [
         "tests/gta5_traffic_aim_test.cpp",

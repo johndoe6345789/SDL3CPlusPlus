@@ -43,7 +43,7 @@ void WorkflowGta5VehiclesSyncStep::Execute(
 
     // Report once: a wheel drawn at the wrong place looks identical to
     // one that is not drawn at all.
-    if (!reported_ && logger_) {
+    if (!reported_ && logger_ && state_->vehicles.front().chassis) {
         reported_ = true;
         const Gta5Vehicle& car = state_->vehicles.front();
         const btVector3 body = car.chassis->getWorldTransform().getOrigin();
@@ -51,7 +51,7 @@ void WorkflowGta5VehiclesSyncStep::Execute(
                            std::to_string(body.x()) + "," +
                            std::to_string(body.y()) + "," +
                            std::to_string(body.z()) + ") wheels";
-        for (int i = 0; i < 4 && car.hasWheels; ++i) {
+        for (int i = 0; i < 4 && car.hasWheels && car.vehicle; ++i) {
             const btVector3 w =
                 car.vehicle->getWheelTransformWS(i).getOrigin();
             line += " [" + std::to_string(w.x()) + "," +
