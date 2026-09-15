@@ -49,11 +49,19 @@ ENV CONAN_HOME=/opt/conan2
 # cmake.org/files now answers 403. Bring our own; 3.31.6 satisfies every cmake
 # range in the graph. build.yml relies on this profile, so the two stay in
 # step by virtue of the job running inside this image.
+#
+# fontconfig 2.17.1's meson.build wants Meson >= 1.6.1, but its recipe asks
+# only for meson/[>=1.4.0 <2] and Conan settles on 1.4.0, so name the Meson
+# that can build it. Scoped to fontconfig: every other recipe keeps the Meson
+# it was tested against.
 RUN conan profile detect \
     && { \
         echo ""; \
         echo "[platform_tool_requires]"; \
         echo "cmake/3.31.6"; \
+        echo ""; \
+        echo "[tool_requires]"; \
+        echo "fontconfig/*: meson/1.10.2"; \
     } >> "${CONAN_HOME}/profiles/default" \
     && cat "${CONAN_HOME}/profiles/default"
 
