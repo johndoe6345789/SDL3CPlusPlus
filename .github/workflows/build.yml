@@ -35,9 +35,20 @@ jobs:
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
+    # A job in a container gets `sh` unless asked otherwise, and `set -o
+    # pipefail` is not POSIX, so the scripted steps below need real bash.
+    defaults:
+      run:
+        shell: bash
     env:
       BUILD_DIR: build/${{ matrix.name }}
       ZIP_NAME: sdl3_app-${{ matrix.name }}.zip
+      # Where the image keeps its warm cache. Actions rewrites HOME to
+      # /github/home inside a container job, so leaving this to the image's
+      # own default would send Conan looking in an empty home directory.
+      # Stated here as well so an image without the cache fails outright
+      # instead of quietly rebuilding the tree from source.
+      CONAN_HOME: /opt/conan2
     steps:
       - name: Checkout
         uses: actions/checkout@v5
