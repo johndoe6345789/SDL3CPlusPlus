@@ -46,17 +46,21 @@ void KeepGta5Traffic(Gta5Traffic& traffic, const Gta5Roads& roads,
     car.from = from;
     car.to = to;
     car.want = 7.5f + static_cast<float>(from % 7u) * 0.6f;
+    // A different car each time, and a colour to go with it: one model
+    // in one paint reads as a fleet, not as traffic.
+    const Gta5TrafficModel& kind =
+        traffic.models[Gta5TrafficRoll() % traffic.models.size()];
     Gta5VehicleSpec spec;
-    spec.model = traffic.model;
-    spec.wheel = traffic.wheel;
-    spec.paint = glm::vec3(0.55f, 0.57f, 0.60f);
-    spec.wheelRadius = traffic.radius;
+    spec.model = kind.model;
+    spec.wheel = kind.wheel;
+    spec.paint = Gta5TrafficPaint(Gta5TrafficRoll());
+    spec.wheelRadius = kind.radius;
     spec.wheelWidth = traffic.width;
     spec.rideHeight = traffic.ride;
     spec.heading = glm::degrees(std::atan2(way.x, way.z));
     const glm::vec3 spot = a + glm::vec3(way.z, 0.f, -way.x) * car.lane +
                            glm::vec3(0.f, 1.2f, 0.f);
-    if (!MakeGta5Vehicle(state, spec, spot, traffic.mass, device, world,
+    if (!MakeGta5Vehicle(state, spec, spot, kind.mass, device, world,
                          car.car, logger)) {
         return;
     }

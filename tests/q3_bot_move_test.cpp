@@ -3,9 +3,9 @@
 // Before that they added a velocity straight onto their origin, so they
 // hovered at spawn height and walked through walls.
 
-#include "services/interfaces/workflow/quake3/q3_axes.hpp"
-#include "services/interfaces/workflow/quake3/q3_bot_mover.hpp"
-#include "services/interfaces/workflow/quake3/q3_bot_usercmd.hpp"
+#include "services/interfaces/workflow/quake3/core/q3_axes.hpp"
+#include "services/interfaces/workflow/quake3/bot/q3_bot_mover.hpp"
+#include "services/interfaces/workflow/quake3/bot/q3_bot_usercmd.hpp"
 
 #include "q3_test_scene.hpp"
 

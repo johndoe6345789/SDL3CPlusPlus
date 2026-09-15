@@ -140,7 +140,7 @@
         "src/services/impl/workflow/input/*.cpp",
         "src/services/impl/workflow/scene/*.cpp",
         "src/services/impl/workflow/compute/*.cpp",
-        "src/services/impl/workflow/quake3/*.cpp",
+        "src/services/impl/workflow/quake3/**/*.cpp",
         "src/services/impl/workflow/gta5/**/*.cpp",
         "src/services/impl/workflow/workflow_definition_parser_includes.cpp",
         "src/services/impl/workflow/workflow_definition_parser_include_path.cpp",
@@ -213,7 +213,7 @@
       "name": "q3_slide_planes_test",
       "sources": [
         "tests/q3_slide_planes_test.cpp",
-        "src/services/impl/workflow/quake3/q3_slide_planes.cpp"
+        "src/services/impl/workflow/quake3/pmove/q3_slide_planes.cpp"
       ],
       "include_directories": [
         "src"
@@ -227,7 +227,7 @@
       "name": "q3_overlay_scale_test",
       "sources": [
         "tests/q3_overlay_scale_test.cpp",
-        "src/services/impl/workflow/quake3/q3_overlay_scale.cpp"
+        "src/services/impl/workflow/quake3/hud/q3_overlay_scale.cpp"
       ],
       "include_directories": [
         "src"
@@ -279,7 +279,7 @@
       "name": "q3_sound_bank_test",
       "sources": [
         "tests/q3_sound_bank_test.cpp",
-        "src/services/impl/workflow/quake3/q3_sound_bank.cpp"
+        "src/services/impl/workflow/quake3/audio/q3_sound_bank.cpp"
       ],
       "include_directories": [
         "src"
@@ -293,7 +293,7 @@
       "name": "q3_skin_file_test",
       "sources": [
         "tests/q3_skin_file_test.cpp",
-        "src/services/impl/workflow/quake3/q3_skin_file.cpp"
+        "src/services/impl/workflow/quake3/md3/q3_skin_file.cpp"
       ],
       "include_directories": [
         "src"
@@ -306,7 +306,7 @@
       "name": "q3_anim_cfg_test",
       "sources": [
         "tests/q3_anim_cfg_test.cpp",
-        "src/services/impl/workflow/quake3/q3_anim_cfg.cpp"
+        "src/services/impl/workflow/quake3/md3/q3_anim_cfg.cpp"
       ],
       "include_directories": [
         "src"
@@ -319,7 +319,7 @@
       "name": "q3_wish_dir_test",
       "sources": [
         "tests/q3_wish_dir_test.cpp",
-        "src/services/impl/workflow/quake3/q3_wish_dir.cpp"
+        "src/services/impl/workflow/quake3/pmove/q3_wish_dir.cpp"
       ],
       "include_directories": [
         "src"
@@ -333,19 +333,20 @@
       "name": "q3_movement_integration_test",
       "sources": [
         "tests/q3_movement_integration_test.cpp",
-        "src/services/impl/workflow/quake3/workflow_q3_pm_accelerate_step.cpp",
-        "src/services/impl/workflow/quake3/workflow_q3_pm_friction_step.cpp",
-        "src/services/impl/workflow/quake3/workflow_q3_pm_ground_step.cpp",
-        "src/services/impl/workflow/quake3/workflow_q3_pm_step_slide_step.cpp",
-        "src/services/impl/workflow/quake3/q3_step_slide.cpp",
-        "src/services/impl/workflow/quake3/q3_step_slide_trace.cpp",
-        "src/services/impl/workflow/quake3/q3_slide_move.cpp",
-        "src/services/impl/workflow/quake3/q3_slide_planes.cpp",
-        "src/services/impl/workflow/quake3/q3_wish_dir.cpp",
-        "src/services/impl/workflow/quake3/q3_brush_trace.cpp",
-        "src/services/impl/workflow/quake3/q3_brush_trace_clip.cpp",
-        "src/services/impl/workflow/quake3/q3_pmove_accel.cpp",
-        "src/services/impl/workflow/quake3/q3_pmove_ground.cpp"
+        "src/services/impl/workflow/quake3/pmove/workflow_q3_pm_accelerate_step.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_pm_tuning.cpp",
+        "src/services/impl/workflow/quake3/pmove/workflow_q3_pm_friction_step.cpp",
+        "src/services/impl/workflow/quake3/pmove/workflow_q3_pm_ground_step.cpp",
+        "src/services/impl/workflow/quake3/pmove/workflow_q3_pm_step_slide_step.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_step_slide.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_step_slide_trace.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_slide_move.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_slide_planes.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_wish_dir.cpp",
+        "src/services/impl/workflow/quake3/collision/q3_brush_trace.cpp",
+        "src/services/impl/workflow/quake3/collision/q3_brush_trace_clip.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_pmove_accel.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_pmove_ground.cpp"
       ],
       "include_directories": [
         "src"
@@ -387,15 +388,16 @@
       "name": "q3_map_movement_test",
       "sources": [
         "tests/q3_map_movement_test.cpp",
-        "src/services/impl/workflow/quake3/workflow_q3_pm_accelerate_step.cpp",
-        "src/services/impl/workflow/quake3/workflow_q3_pm_friction_step.cpp",
-        "src/services/impl/workflow/quake3/workflow_q3_pm_ground_step.cpp",
-        "src/services/impl/workflow/quake3/workflow_q3_pm_step_slide_step.cpp",
-        "src/services/impl/workflow/quake3/q3_step_slide.cpp",
-        "src/services/impl/workflow/quake3/q3_step_slide_trace.cpp",
-        "src/services/impl/workflow/quake3/q3_slide_move.cpp",
-        "src/services/impl/workflow/quake3/q3_slide_planes.cpp",
-        "src/services/impl/workflow/quake3/q3_wish_dir.cpp",
+        "src/services/impl/workflow/quake3/pmove/workflow_q3_pm_accelerate_step.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_pm_tuning.cpp",
+        "src/services/impl/workflow/quake3/pmove/workflow_q3_pm_friction_step.cpp",
+        "src/services/impl/workflow/quake3/pmove/workflow_q3_pm_ground_step.cpp",
+        "src/services/impl/workflow/quake3/pmove/workflow_q3_pm_step_slide_step.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_step_slide.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_step_slide_trace.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_slide_move.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_slide_planes.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_wish_dir.cpp",
         "src/services/impl/workflow/rendering/workflow_bsp_load_step.cpp",
         "src/services/impl/workflow/rendering/pk3_bsp_loader.cpp",
         "src/services/impl/workflow/rendering/workflow_bsp_build_collision_step.cpp",
@@ -417,12 +419,12 @@
         "src/services/impl/workflow/workflow_step_parameter_resolver.cpp",
         "src/services/impl/workflow/workflow_step_parameter_resolver_scalars.cpp",
         "src/services/impl/workflow/workflow_step_parameter_resolver_lists.cpp",
-        "src/services/impl/workflow/quake3/q3_brush_trace.cpp",
-        "src/services/impl/workflow/quake3/q3_brush_trace_clip.cpp",
-        "src/services/impl/workflow/quake3/q3_brush_collision.cpp",
+        "src/services/impl/workflow/quake3/collision/q3_brush_trace.cpp",
+        "src/services/impl/workflow/quake3/collision/q3_brush_trace_clip.cpp",
+        "src/services/impl/workflow/quake3/collision/q3_brush_collision.cpp",
         "src/services/impl/workflow/rendering/bsp_pmove_brush_model.cpp",
-        "src/services/impl/workflow/quake3/q3_pmove_accel.cpp",
-        "src/services/impl/workflow/quake3/q3_pmove_ground.cpp"
+        "src/services/impl/workflow/quake3/pmove/q3_pmove_accel.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_pmove_ground.cpp"
       ],
       "include_directories": [
         "src"
@@ -444,13 +446,14 @@
         "src/services/impl/workflow/input/input_axis_combine_write.cpp",
         "src/services/impl/workflow/input/input_axis_deadzone.cpp",
         "src/services/impl/workflow/input/input_axis_source_value.cpp",
-        "src/services/impl/workflow/quake3/workflow_q3_pm_accelerate_step.cpp",
-        "src/services/impl/workflow/quake3/q3_slide_planes.cpp",
-        "src/services/impl/workflow/quake3/q3_wish_dir.cpp",
+        "src/services/impl/workflow/quake3/pmove/workflow_q3_pm_accelerate_step.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_pm_tuning.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_slide_planes.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_wish_dir.cpp",
         "src/services/impl/workflow/workflow_step_parameter_resolver.cpp",
         "src/services/impl/workflow/workflow_step_parameter_resolver_scalars.cpp",
         "src/services/impl/workflow/workflow_step_parameter_resolver_lists.cpp",
-        "src/services/impl/workflow/quake3/q3_pmove_accel.cpp"
+        "src/services/impl/workflow/quake3/pmove/q3_pmove_accel.cpp"
       ],
       "include_directories": [
         "src"
@@ -467,19 +470,20 @@
       "name": "q3_step_up_test",
       "sources": [
         "tests/q3_step_up_test.cpp",
-        "src/services/impl/workflow/quake3/workflow_q3_pm_accelerate_step.cpp",
-        "src/services/impl/workflow/quake3/workflow_q3_pm_friction_step.cpp",
-        "src/services/impl/workflow/quake3/workflow_q3_pm_ground_step.cpp",
-        "src/services/impl/workflow/quake3/workflow_q3_pm_step_slide_step.cpp",
-        "src/services/impl/workflow/quake3/q3_step_slide.cpp",
-        "src/services/impl/workflow/quake3/q3_step_slide_trace.cpp",
-        "src/services/impl/workflow/quake3/q3_slide_move.cpp",
-        "src/services/impl/workflow/quake3/q3_slide_planes.cpp",
-        "src/services/impl/workflow/quake3/q3_wish_dir.cpp",
-        "src/services/impl/workflow/quake3/q3_brush_trace.cpp",
-        "src/services/impl/workflow/quake3/q3_brush_trace_clip.cpp",
-        "src/services/impl/workflow/quake3/q3_pmove_accel.cpp",
-        "src/services/impl/workflow/quake3/q3_pmove_ground.cpp"
+        "src/services/impl/workflow/quake3/pmove/workflow_q3_pm_accelerate_step.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_pm_tuning.cpp",
+        "src/services/impl/workflow/quake3/pmove/workflow_q3_pm_friction_step.cpp",
+        "src/services/impl/workflow/quake3/pmove/workflow_q3_pm_ground_step.cpp",
+        "src/services/impl/workflow/quake3/pmove/workflow_q3_pm_step_slide_step.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_step_slide.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_step_slide_trace.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_slide_move.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_slide_planes.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_wish_dir.cpp",
+        "src/services/impl/workflow/quake3/collision/q3_brush_trace.cpp",
+        "src/services/impl/workflow/quake3/collision/q3_brush_trace_clip.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_pmove_accel.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_pmove_ground.cpp"
       ],
       "include_directories": [
         "src"
@@ -494,19 +498,20 @@
       "name": "q3_ramp_walk_test",
       "sources": [
         "tests/q3_ramp_walk_test.cpp",
-        "src/services/impl/workflow/quake3/workflow_q3_pm_accelerate_step.cpp",
-        "src/services/impl/workflow/quake3/workflow_q3_pm_friction_step.cpp",
-        "src/services/impl/workflow/quake3/workflow_q3_pm_ground_step.cpp",
-        "src/services/impl/workflow/quake3/workflow_q3_pm_step_slide_step.cpp",
-        "src/services/impl/workflow/quake3/q3_step_slide.cpp",
-        "src/services/impl/workflow/quake3/q3_step_slide_trace.cpp",
-        "src/services/impl/workflow/quake3/q3_slide_move.cpp",
-        "src/services/impl/workflow/quake3/q3_slide_planes.cpp",
-        "src/services/impl/workflow/quake3/q3_wish_dir.cpp",
-        "src/services/impl/workflow/quake3/q3_brush_trace.cpp",
-        "src/services/impl/workflow/quake3/q3_brush_trace_clip.cpp",
-        "src/services/impl/workflow/quake3/q3_pmove_accel.cpp",
-        "src/services/impl/workflow/quake3/q3_pmove_ground.cpp"
+        "src/services/impl/workflow/quake3/pmove/workflow_q3_pm_accelerate_step.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_pm_tuning.cpp",
+        "src/services/impl/workflow/quake3/pmove/workflow_q3_pm_friction_step.cpp",
+        "src/services/impl/workflow/quake3/pmove/workflow_q3_pm_ground_step.cpp",
+        "src/services/impl/workflow/quake3/pmove/workflow_q3_pm_step_slide_step.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_step_slide.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_step_slide_trace.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_slide_move.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_slide_planes.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_wish_dir.cpp",
+        "src/services/impl/workflow/quake3/collision/q3_brush_trace.cpp",
+        "src/services/impl/workflow/quake3/collision/q3_brush_trace_clip.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_pmove_accel.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_pmove_ground.cpp"
       ],
       "include_directories": [
         "src"
@@ -521,19 +526,20 @@
       "name": "q3_stairs_test",
       "sources": [
         "tests/q3_stairs_test.cpp",
-        "src/services/impl/workflow/quake3/workflow_q3_pm_accelerate_step.cpp",
-        "src/services/impl/workflow/quake3/workflow_q3_pm_friction_step.cpp",
-        "src/services/impl/workflow/quake3/workflow_q3_pm_ground_step.cpp",
-        "src/services/impl/workflow/quake3/workflow_q3_pm_step_slide_step.cpp",
-        "src/services/impl/workflow/quake3/q3_step_slide.cpp",
-        "src/services/impl/workflow/quake3/q3_step_slide_trace.cpp",
-        "src/services/impl/workflow/quake3/q3_slide_move.cpp",
-        "src/services/impl/workflow/quake3/q3_slide_planes.cpp",
-        "src/services/impl/workflow/quake3/q3_wish_dir.cpp",
-        "src/services/impl/workflow/quake3/q3_brush_trace.cpp",
-        "src/services/impl/workflow/quake3/q3_brush_trace_clip.cpp",
-        "src/services/impl/workflow/quake3/q3_pmove_accel.cpp",
-        "src/services/impl/workflow/quake3/q3_pmove_ground.cpp"
+        "src/services/impl/workflow/quake3/pmove/workflow_q3_pm_accelerate_step.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_pm_tuning.cpp",
+        "src/services/impl/workflow/quake3/pmove/workflow_q3_pm_friction_step.cpp",
+        "src/services/impl/workflow/quake3/pmove/workflow_q3_pm_ground_step.cpp",
+        "src/services/impl/workflow/quake3/pmove/workflow_q3_pm_step_slide_step.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_step_slide.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_step_slide_trace.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_slide_move.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_slide_planes.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_wish_dir.cpp",
+        "src/services/impl/workflow/quake3/collision/q3_brush_trace.cpp",
+        "src/services/impl/workflow/quake3/collision/q3_brush_trace_clip.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_pmove_accel.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_pmove_ground.cpp"
       ],
       "include_directories": [
         "src"
@@ -548,8 +554,8 @@
       "name": "q3_brush_trace_test",
       "sources": [
         "tests/q3_brush_trace_test.cpp",
-        "src/services/impl/workflow/quake3/q3_brush_trace.cpp",
-        "src/services/impl/workflow/quake3/q3_brush_trace_clip.cpp"
+        "src/services/impl/workflow/quake3/collision/q3_brush_trace.cpp",
+        "src/services/impl/workflow/quake3/collision/q3_brush_trace_clip.cpp"
       ],
       "include_directories": [
         "src"
@@ -564,7 +570,7 @@
       "name": "q3_weapon_cycle_test",
       "sources": [
         "tests/q3_weapon_cycle_test.cpp",
-        "src/services/impl/workflow/quake3/q3_weapon_cycle.cpp"
+        "src/services/impl/workflow/quake3/weapon/q3_weapon_cycle.cpp"
       ],
       "include_directories": [
         "src"
@@ -578,9 +584,9 @@
       "name": "q3_pickup_rules_test",
       "sources": [
         "tests/q3_pickup_rules_test.cpp",
-        "src/services/impl/workflow/quake3/q3_pickup_apply.cpp",
-        "src/services/impl/workflow/quake3/q3_pickup_can_grab.cpp",
-        "src/services/impl/workflow/quake3/q3_pickup_lookup_tables.cpp"
+        "src/services/impl/workflow/quake3/pickup/q3_pickup_apply.cpp",
+        "src/services/impl/workflow/quake3/pickup/q3_pickup_can_grab.cpp",
+        "src/services/impl/workflow/quake3/pickup/q3_pickup_lookup_tables.cpp"
       ],
       "include_directories": [
         "src"
@@ -595,8 +601,8 @@
       "name": "q3_axes_test",
       "sources": [
         "tests/q3_axes_test.cpp",
-        "src/services/impl/workflow/quake3/q3_axes.cpp",
-        "src/services/impl/workflow/quake3/q3_axes_model.cpp"
+        "src/services/impl/workflow/quake3/core/q3_axes.cpp",
+        "src/services/impl/workflow/quake3/core/q3_axes_model.cpp"
       ],
       "include_directories": [
         "src"
@@ -610,19 +616,19 @@
       "name": "q3_bot_move_test",
       "sources": [
         "tests/q3_bot_move_test.cpp",
-        "src/services/impl/workflow/quake3/q3_bot_mover.cpp",
-        "src/services/impl/workflow/quake3/q3_bot_usercmd.cpp",
-        "src/services/impl/workflow/quake3/q3_pmove.cpp",
-        "src/services/impl/workflow/quake3/q3_pmove_ground.cpp",
-        "src/services/impl/workflow/quake3/q3_pmove_accel.cpp",
-        "src/services/impl/workflow/quake3/q3_axes.cpp",
-        "src/services/impl/workflow/quake3/q3_step_slide.cpp",
-        "src/services/impl/workflow/quake3/q3_step_slide_trace.cpp",
-        "src/services/impl/workflow/quake3/q3_slide_move.cpp",
-        "src/services/impl/workflow/quake3/q3_slide_planes.cpp",
-        "src/services/impl/workflow/quake3/q3_wish_dir.cpp",
-        "src/services/impl/workflow/quake3/q3_brush_trace.cpp",
-        "src/services/impl/workflow/quake3/q3_brush_trace_clip.cpp"
+        "src/services/impl/workflow/quake3/bot/q3_bot_mover.cpp",
+        "src/services/impl/workflow/quake3/bot/q3_bot_usercmd.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_pmove.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_pmove_ground.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_pmove_accel.cpp",
+        "src/services/impl/workflow/quake3/core/q3_axes.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_step_slide.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_step_slide_trace.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_slide_move.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_slide_planes.cpp",
+        "src/services/impl/workflow/quake3/pmove/q3_wish_dir.cpp",
+        "src/services/impl/workflow/quake3/collision/q3_brush_trace.cpp",
+        "src/services/impl/workflow/quake3/collision/q3_brush_trace_clip.cpp"
       ],
       "include_directories": [
         "src",
@@ -633,6 +639,24 @@
         "glm::glm",
         "Bullet::Bullet",
         "nlohmann_json::nlohmann_json"
+      ]
+    },
+    {
+      "name": "gta5_traffic_aim_test",
+      "sources": [
+        "tests/gta5_traffic_aim_test.cpp",
+        "src/services/impl/workflow/gta5/traffic/gta5_traffic_aim.cpp",
+        "src/services/impl/workflow/gta5/traffic/gta5_traffic_path.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main",
+        "glm::glm",
+        "Bullet::Bullet",
+        "${SDL_TARGET}",
+        "assimp::assimp"
       ]
     }
   ],

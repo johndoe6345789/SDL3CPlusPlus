@@ -3,7 +3,7 @@
 // decoded MD3's local +Y is up, but the hand-rolled matrices put world
 // "right" on column 1, so every model was laid on its side.
 
-#include "services/interfaces/workflow/quake3/q3_axes.hpp"
+#include "services/interfaces/workflow/quake3/core/q3_axes.hpp"
 
 #include <gtest/gtest.h>
 

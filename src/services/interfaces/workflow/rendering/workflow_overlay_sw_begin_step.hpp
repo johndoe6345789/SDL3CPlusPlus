@@ -2,7 +2,7 @@
 #include "services/interfaces/i_workflow_step.hpp"
 #include "services/interfaces/i_logger.hpp"
 #include "services/interfaces/workflow_context.hpp"
-#include "services/interfaces/workflow/quake3/q3_overlay_utils.hpp"
+#include "services/interfaces/workflow/quake3/hud/q3_overlay_utils.hpp"
 #include "services/interfaces/workflow/rendering/overlay_sw_begin_resources.hpp"
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_surface.h>

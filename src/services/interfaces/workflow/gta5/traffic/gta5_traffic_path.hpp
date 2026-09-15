@@ -2,6 +2,7 @@
 
 #include "services/interfaces/workflow/gta5/effects/gta5_effects.hpp"
 #include "services/interfaces/workflow/gta5/traffic/gta5_traffic.hpp"
+#include "services/interfaces/workflow/gta5/vehicle/gta5_vehicle.hpp"
 
 namespace sdl3cpp::services::impl {
 
@@ -16,8 +17,18 @@ bool Gta5TrafficSpot(const Gta5Roads& roads, const Gta5Traffic& traffic,
                      const glm::vec3& at, std::uint32_t& from,
                      std::uint32_t& to);
 
+/// A colour for one car, off a small palette: a street is mostly greys
+/// with the odd one someone chose.
+glm::vec3 Gta5TrafficPaint(std::uint32_t roll);
+
 /// A roll of the traffic's own die, for picking among roads.
 std::uint32_t Gta5TrafficRoll();
+
+/// The point on the road a car should steer at: further ahead the
+/// faster it goes, and easing onto the next road as a corner nears, so
+/// it takes a bend in one movement instead of sawing at each node.
+glm::vec3 Gta5TrafficAim(const Gta5Roads& roads, const Gta5TrafficCar& car,
+                         const glm::vec3& at, float speed);
 
 /// How fast a car should be going: what it would like, held down for
 /// the car in front and for a light standing against it.

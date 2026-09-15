@@ -2,7 +2,7 @@
 // rely on them: the shader names inside the MD3 are often absent, so
 // trusting those leaves the model untextured.
 
-#include "services/interfaces/workflow/quake3/q3_skin_file.hpp"
+#include "services/interfaces/workflow/quake3/md3/q3_skin_file.hpp"
 
 #include <gtest/gtest.h>
 

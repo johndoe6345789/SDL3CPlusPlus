@@ -1,7 +1,7 @@
 #include "services/interfaces/workflow/gta5/audio/gta5_sound_step.hpp"
 
 #include "services/interfaces/workflow/gta5/vehicle/gta5_vehicle_input.hpp"
-#include "services/interfaces/workflow/quake3/q3_pm_types.hpp"
+#include "services/interfaces/workflow/quake3/pmove/q3_pm_types.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
 #include <btBulletDynamicsCommon.h>

@@ -3,7 +3,7 @@
 // A tiny static Bullet world for movement tests: add boxes, walk into
 // them. Shared so each test file stays focused on its assertions.
 
-#include "services/interfaces/workflow/quake3/q3_brush_collision.hpp"
+#include "services/interfaces/workflow/quake3/collision/q3_brush_collision.hpp"
 
 #include <btBulletDynamicsCommon.h>
 

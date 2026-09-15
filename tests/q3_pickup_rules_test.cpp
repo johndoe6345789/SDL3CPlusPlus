@@ -2,7 +2,7 @@
 // whether an item may be taken at all, and g_items.c Pickup_* decides
 // what it gives. The quantities come from bg_itemlist.
 
-#include "services/interfaces/workflow/quake3/q3_pickup_apply.hpp"
+#include "services/interfaces/workflow/quake3/pickup/q3_pickup_apply.hpp"
 
 #include <gtest/gtest.h>
 

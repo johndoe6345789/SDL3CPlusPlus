@@ -2,7 +2,7 @@
 // direction pressed: using the input vector's magnitude makes diagonals
 // sqrt(2) faster, which feels like the straight directions are stuck.
 
-#include "services/interfaces/workflow/quake3/q3_wish_dir.hpp"
+#include "services/interfaces/workflow/quake3/pmove/q3_wish_dir.hpp"
 
 #include <gtest/gtest.h>
 #include <cmath>

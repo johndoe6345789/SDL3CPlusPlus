@@ -2,7 +2,7 @@
 // live in their own model that lacks the torso-only frames. ioq3
 // subtracts that gap; without it the legs animate from the wrong frames.
 
-#include "services/interfaces/workflow/quake3/q3_anim_cfg.hpp"
+#include "services/interfaces/workflow/quake3/md3/q3_anim_cfg.hpp"
 
 #include <gtest/gtest.h>
 

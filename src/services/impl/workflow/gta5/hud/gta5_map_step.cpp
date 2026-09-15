@@ -4,7 +4,7 @@
 #include "services/interfaces/workflow/gta5/core/gta5_step_params.hpp"
 #include "services/interfaces/workflow/gta5/stream/gta5_stream_lead.hpp"
 #include "services/interfaces/workflow/gta5/vehicle/gta5_vehicle_input.hpp"
-#include "services/interfaces/workflow/quake3/q3_pm_types.hpp"
+#include "services/interfaces/workflow/quake3/pmove/q3_pm_types.hpp"
 #include "services/interfaces/workflow/rendering/workflow_postfx_composite_state.hpp"
 #include "services/interfaces/workflow_context.hpp"
 

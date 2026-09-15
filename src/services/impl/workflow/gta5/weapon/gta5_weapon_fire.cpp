@@ -3,7 +3,7 @@
 #include "services/interfaces/workflow/gta5/effects/gta5_effects_spawn.hpp"
 
 #include "services/interfaces/workflow/gta5/vehicle/gta5_vehicle_input.hpp"
-#include "services/interfaces/workflow/quake3/q3_pm_types.hpp"
+#include "services/interfaces/workflow/quake3/pmove/q3_pm_types.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
 #include <algorithm>

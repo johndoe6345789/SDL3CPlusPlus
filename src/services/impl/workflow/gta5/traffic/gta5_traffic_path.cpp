@@ -29,4 +29,16 @@ std::uint32_t NextGta5Link(const Gta5Roads& roads, std::uint32_t node,
     return picks[Rng()() % count];
 }
 
+glm::vec3 Gta5TrafficPaint(std::uint32_t roll) {
+    // The colours a street of parked cars actually is: mostly greys,
+    // with the odd one that someone chose.
+    static const glm::vec3 kPaints[] = {
+        {0.82f, 0.83f, 0.85f}, {0.16f, 0.17f, 0.19f},
+        {0.45f, 0.47f, 0.50f}, {0.62f, 0.64f, 0.66f},
+        {0.30f, 0.33f, 0.38f}, {0.55f, 0.12f, 0.12f},
+        {0.12f, 0.25f, 0.45f}, {0.20f, 0.35f, 0.25f},
+    };
+    return kPaints[roll % (sizeof(kPaints) / sizeof(kPaints[0]))];
+}
+
 }  // namespace sdl3cpp::services::impl

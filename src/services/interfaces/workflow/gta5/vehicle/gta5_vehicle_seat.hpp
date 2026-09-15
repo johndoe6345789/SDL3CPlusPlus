@@ -28,6 +28,13 @@ float ControlGta5Vehicle(Gta5Vehicle& car, WorkflowContext& context,
 /// and its hold on the meshes. Leaves the struct empty and safe to drop.
 void DestroyGta5Vehicle(Gta5Vehicle& car, btDiscreteDynamicsWorld* world);
 
+/// Take the nearest car the game is driving within `reach` metres out
+/// of the traffic and into the player's own list, and say where it
+/// landed, or -1 when there is none to take. What was traffic a moment
+/// ago is now a car like any other.
+int StealGta5TrafficCar(Gta5StreamState& state, const btVector3& near,
+                        float reach);
+
 void RemoveGta5Vehicle(Gta5StreamState& state, std::size_t index,
                        btDiscreteDynamicsWorld* world);
 

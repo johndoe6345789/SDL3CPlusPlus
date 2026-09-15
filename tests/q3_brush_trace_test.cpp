@@ -2,7 +2,7 @@
 // This is the property Bullet's convex sweep could not give us: the
 // exact plane that stopped the move, and an honest "started solid".
 
-#include "services/interfaces/workflow/quake3/q3_brush_trace.hpp"
+#include "services/interfaces/workflow/quake3/collision/q3_brush_trace.hpp"
 
 #include <gtest/gtest.h>
 

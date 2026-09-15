@@ -3,8 +3,8 @@
 // a bug in the handover between them would hide from either test.
 
 #include "services/interfaces/workflow/input/workflow_input_axis_combine_step.hpp"
-#include "services/interfaces/workflow/quake3/workflow_q3_pm_accelerate_step.hpp"
-#include "services/interfaces/workflow/quake3/q3_pm_types.hpp"
+#include "services/interfaces/workflow/quake3/pmove/workflow_q3_pm_accelerate_step.hpp"
+#include "services/interfaces/workflow/quake3/pmove/q3_pm_types.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
 #include <gtest/gtest.h>

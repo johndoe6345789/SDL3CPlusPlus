@@ -5,12 +5,12 @@
 //
 // Needs the game data; skipped when QUAKE3_PAK0 is not set.
 
-#include "services/interfaces/workflow/quake3/workflow_q3_pm_accelerate_step.hpp"
-#include "services/interfaces/workflow/quake3/workflow_q3_pm_friction_step.hpp"
-#include "services/interfaces/workflow/quake3/workflow_q3_pm_ground_step.hpp"
-#include "services/interfaces/workflow/quake3/workflow_q3_pm_step_slide_step.hpp"
-#include "services/interfaces/workflow/quake3/q3_pm_constants.hpp"
-#include "services/interfaces/workflow/quake3/q3_pm_types.hpp"
+#include "services/interfaces/workflow/quake3/pmove/workflow_q3_pm_accelerate_step.hpp"
+#include "services/interfaces/workflow/quake3/pmove/workflow_q3_pm_friction_step.hpp"
+#include "services/interfaces/workflow/quake3/pmove/workflow_q3_pm_ground_step.hpp"
+#include "services/interfaces/workflow/quake3/pmove/workflow_q3_pm_step_slide_step.hpp"
+#include "services/interfaces/workflow/quake3/pmove/q3_pm_constants.hpp"
+#include "services/interfaces/workflow/quake3/pmove/q3_pm_types.hpp"
 #include "services/interfaces/workflow/rendering/workflow_bsp_build_collision_step.hpp"
 #include "services/interfaces/workflow/rendering/workflow_bsp_load_step.hpp"
 #include "services/interfaces/workflow/rendering/workflow_bsp_parse_spawn_step.hpp"

@@ -41,7 +41,6 @@ private:
     std::shared_ptr<ILogger> logger_;
     std::shared_ptr<Gta5StreamState> state_;
     Gta5Roads roads_;
-    Gta5Traffic traffic_;
     bool tried_{false};
 };
 

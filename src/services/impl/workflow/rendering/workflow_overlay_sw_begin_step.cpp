@@ -1,5 +1,5 @@
 #include "services/interfaces/workflow/rendering/workflow_overlay_sw_begin_step.hpp"
-#include "services/interfaces/workflow/quake3/q3_overlay_scale.hpp"
+#include "services/interfaces/workflow/quake3/hud/q3_overlay_scale.hpp"
 
 #include <nlohmann/json.hpp>
 #include <SDL3/SDL.h>

@@ -2,7 +2,7 @@
 
 #include "services/interfaces/workflow/gta5/player/gta5_look.hpp"
 #include "services/interfaces/workflow/gta5/player/gta5_player_pin.hpp"
-#include "services/interfaces/workflow/quake3/q3_pm_types.hpp"
+#include "services/interfaces/workflow/quake3/pmove/q3_pm_types.hpp"
 
 #include <string>
 

@@ -2,7 +2,7 @@
 // The player getting stuck on a flat wall was this logic cancelling a
 // move that should have slid, so each case below is a movement bug.
 
-#include "services/interfaces/workflow/quake3/q3_slide_planes.hpp"
+#include "services/interfaces/workflow/quake3/pmove/q3_slide_planes.hpp"
 
 #include <gtest/gtest.h>
 

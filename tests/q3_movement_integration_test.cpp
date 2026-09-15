@@ -3,12 +3,12 @@
 // wish direction is symmetric; this asks whether the player is, which
 // is the thing that felt wrong on screen.
 
-#include "services/interfaces/workflow/quake3/workflow_q3_pm_accelerate_step.hpp"
-#include "services/interfaces/workflow/quake3/workflow_q3_pm_friction_step.hpp"
-#include "services/interfaces/workflow/quake3/workflow_q3_pm_ground_step.hpp"
-#include "services/interfaces/workflow/quake3/workflow_q3_pm_step_slide_step.hpp"
-#include "services/interfaces/workflow/quake3/q3_pm_constants.hpp"
-#include "services/interfaces/workflow/quake3/q3_pm_types.hpp"
+#include "services/interfaces/workflow/quake3/pmove/workflow_q3_pm_accelerate_step.hpp"
+#include "services/interfaces/workflow/quake3/pmove/workflow_q3_pm_friction_step.hpp"
+#include "services/interfaces/workflow/quake3/pmove/workflow_q3_pm_ground_step.hpp"
+#include "services/interfaces/workflow/quake3/pmove/workflow_q3_pm_step_slide_step.hpp"
+#include "services/interfaces/workflow/quake3/pmove/q3_pm_constants.hpp"
+#include "services/interfaces/workflow/quake3/pmove/q3_pm_types.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
 #include <btBulletDynamicsCommon.h>

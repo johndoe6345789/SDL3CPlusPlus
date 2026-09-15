@@ -1,6 +1,6 @@
 #include "services/interfaces/workflow/rendering/bsp_pmove_brush_model.hpp"
 
-#include "services/interfaces/workflow/quake3/q3_brush_collision.hpp"
+#include "services/interfaces/workflow/quake3/collision/q3_brush_collision.hpp"
 
 #include <memory>
 

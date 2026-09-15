@@ -5,7 +5,7 @@
 // diagonal between them rather than either tread.
 
 #include "q3_test_walk.hpp"
-#include "services/interfaces/workflow/quake3/q3_slide_move.hpp"
+#include "services/interfaces/workflow/quake3/pmove/q3_slide_move.hpp"
 
 #include <gtest/gtest.h>
 

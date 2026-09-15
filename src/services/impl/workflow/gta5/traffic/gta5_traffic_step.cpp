@@ -2,7 +2,6 @@
 
 #include "services/interfaces/workflow/gta5/effects/gta5_effects_spawn.hpp"
 #include "services/interfaces/workflow/gta5/traffic/gta5_traffic_path.hpp"
-#include "services/interfaces/workflow/gta5/core/gta5_step_params.hpp"
 #include "services/interfaces/workflow/gta5/vehicle/gta5_vehicle_input.hpp"
 
 #include <algorithm>
@@ -22,7 +21,6 @@ void WorkflowGta5TrafficStep::Execute(const WorkflowStepDefinition& step,
                                       WorkflowContext& context) {
     if (!state_) return;
     if (!tried_ && !Load(step, context)) return;
-    state_->traffic.clear();
     const float dt =
         std::clamp(context.Get<float>("physics_dt", 1.f / 60.f), 0.f, 0.1f);
     btRigidBody* player = Gta5PlayerBody(context);
@@ -32,25 +30,15 @@ void WorkflowGta5TrafficStep::Execute(const WorkflowStepDefinition& step,
     auto* world =
         context.Get<btDiscreteDynamicsWorld*>("physics_world", nullptr);
     auto* device = context.Get<SDL_GPUDevice*>("gpu_device", nullptr);
-    StepGta5Lights(traffic_, roads_, at, dt);
-    KeepGta5Traffic(traffic_, roads_, *state_, at, device, world,
-                    logger_);
-    DriveGta5Traffic(traffic_, roads_, dt);
+    Gta5Traffic& traffic = state_->traffic;
+    StepGta5Lights(traffic, roads_, at, dt);
+    KeepGta5Traffic(traffic, roads_, *state_, at, device, world, logger_);
+    DriveGta5Traffic(traffic, roads_, dt);
     // Drawn from the physics, wheels and all, the same way the player's
-    // own car is: its transform is where Bullet has actually put it.
-    for (Gta5TrafficCar& car : traffic_.cars) {
-        UpdateGta5Vehicle(car.car);
-        if (car.car.instance.geometry) {
-            state_->traffic.push_back(car.car.instance);
-        }
-        for (const Gta5Instance& wheel : car.car.wheels) {
-            if (car.car.hasWheels && wheel.geometry) {
-                state_->traffic.push_back(wheel);
-            }
-        }
-    }
-    FindGta5Lamps(*state_, traffic_, roads_, dt);
-    ShowGta5Lights(*Gta5EffectsOf(context), traffic_, roads_);
+    // own car is: the batch reads the cars straight out of the state.
+    for (Gta5TrafficCar& car : traffic.cars) UpdateGta5Vehicle(car.car);
+    FindGta5Lamps(*state_, traffic, roads_, dt);
+    ShowGta5Lights(*Gta5EffectsOf(context), traffic, roads_);
 }
 
 }  // namespace sdl3cpp::services::impl

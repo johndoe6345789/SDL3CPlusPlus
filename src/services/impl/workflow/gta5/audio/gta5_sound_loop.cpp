@@ -1,6 +1,6 @@
 #include "services/interfaces/workflow/gta5/audio/gta5_sound.hpp"
 
-#include "services/interfaces/workflow/quake3/q3_sound_playback.hpp"
+#include "services/interfaces/workflow/quake3/audio/q3_sound_playback.hpp"
 
 #include <algorithm>
 #include <cmath>

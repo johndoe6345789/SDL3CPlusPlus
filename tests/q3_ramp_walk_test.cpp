@@ -4,7 +4,7 @@
 // stop against, so it is exercised here on its own geometry.
 
 #include "q3_test_walk.hpp"
-#include "services/interfaces/workflow/quake3/q3_slide_move.hpp"
+#include "services/interfaces/workflow/quake3/pmove/q3_slide_move.hpp"
 
 #include <gtest/gtest.h>
 

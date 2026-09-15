@@ -1,7 +1,7 @@
 #pragma once
 
 #include "services/interfaces/i_logger.hpp"
-#include "services/interfaces/workflow/quake3/q3_sound_bank.hpp"
+#include "services/interfaces/workflow/quake3/audio/q3_sound_bank.hpp"
 
 #include <SDL3/SDL_audio.h>
 

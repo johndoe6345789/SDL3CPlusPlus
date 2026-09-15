@@ -1,6 +1,6 @@
 #pragma once
 
-#include "services/interfaces/workflow/quake3/q3_overlay_utils.hpp"
+#include "services/interfaces/workflow/quake3/hud/q3_overlay_utils.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
 #include <SDL3/SDL_render.h>

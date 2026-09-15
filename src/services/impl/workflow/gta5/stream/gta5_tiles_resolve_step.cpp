@@ -6,7 +6,7 @@
 #include "services/interfaces/workflow/gta5/stream/gta5_streaming_config_load.hpp"
 #include "services/interfaces/workflow/gta5/stream/gta5_wanted_tiles.hpp"
 #include "services/interfaces/workflow/gta5/stream/gta5_world_config_load.hpp"
-#include "services/interfaces/workflow/quake3/q3_pm_types.hpp"
+#include "services/interfaces/workflow/quake3/pmove/q3_pm_types.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
 #include <utility>

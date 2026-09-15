@@ -1,6 +1,6 @@
 // Decoding Quake's WAVs straight out of the pk3 into memory.
 
-#include "services/interfaces/workflow/quake3/q3_sound_bank.hpp"
+#include "services/interfaces/workflow/quake3/audio/q3_sound_bank.hpp"
 
 #include <gtest/gtest.h>
 #include <cstring>

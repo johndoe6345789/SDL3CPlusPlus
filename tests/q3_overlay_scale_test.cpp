@@ -2,7 +2,7 @@
 // at native resolution; rendering into a 640x480 surface and stretching
 // it is what makes the menu soft on a modern display.
 
-#include "services/interfaces/workflow/quake3/q3_overlay_scale.hpp"
+#include "services/interfaces/workflow/quake3/hud/q3_overlay_scale.hpp"
 
 #include <gtest/gtest.h>
 

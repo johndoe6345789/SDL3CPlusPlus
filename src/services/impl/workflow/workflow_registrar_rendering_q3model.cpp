@@ -1,16 +1,16 @@
 #include "services/impl/workflow/workflow_registrar_categories.hpp"
 
-#include "services/interfaces/workflow/quake3/workflow_q3_md3_read_step.hpp"
-#include "services/interfaces/workflow/quake3/workflow_q3_md3_parse_tags_step.hpp"
-#include "services/interfaces/workflow/quake3/workflow_q3_md3_parse_anim_step.hpp"
-#include "services/interfaces/workflow/quake3/workflow_q3_md3_upload_surfaces_step.hpp"
-#include "services/interfaces/workflow/quake3/workflow_q3_md3_draw_step.hpp"
-#include "services/interfaces/workflow/quake3/workflow_q3_bots_spawn_step.hpp"
-#include "services/interfaces/workflow/quake3/workflow_q3_bots_update_step.hpp"
-#include "services/interfaces/workflow/quake3/workflow_q3_bots_draw_step.hpp"
-#include "services/interfaces/workflow/quake3/workflow_q3_player_sync_step.hpp"
-#include "services/interfaces/workflow/quake3/workflow_q3_pm_step_slide_step.hpp"
-#include "services/interfaces/workflow/quake3/workflow_q3_frame_time_step.hpp"
+#include "services/interfaces/workflow/quake3/md3/workflow_q3_md3_read_step.hpp"
+#include "services/interfaces/workflow/quake3/md3/workflow_q3_md3_parse_tags_step.hpp"
+#include "services/interfaces/workflow/quake3/md3/workflow_q3_md3_parse_anim_step.hpp"
+#include "services/interfaces/workflow/quake3/md3/workflow_q3_md3_upload_surfaces_step.hpp"
+#include "services/interfaces/workflow/quake3/md3/workflow_q3_md3_draw_step.hpp"
+#include "services/interfaces/workflow/quake3/bot/workflow_q3_bots_spawn_step.hpp"
+#include "services/interfaces/workflow/quake3/bot/workflow_q3_bots_update_step.hpp"
+#include "services/interfaces/workflow/quake3/bot/workflow_q3_bots_draw_step.hpp"
+#include "services/interfaces/workflow/quake3/player/workflow_q3_player_sync_step.hpp"
+#include "services/interfaces/workflow/quake3/pmove/workflow_q3_pm_step_slide_step.hpp"
+#include "services/interfaces/workflow/quake3/core/workflow_q3_frame_time_step.hpp"
 
 #include <memory>
 

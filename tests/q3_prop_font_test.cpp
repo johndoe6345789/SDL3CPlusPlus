@@ -2,7 +2,7 @@
 // glyph's width against the space width, which silently dropped every
 // glyph that happened to be that wide: ' ', '(', 'I' and 'i'.
 
-#include "services/interfaces/workflow/quake3/q3_overlay_utils.hpp"
+#include "services/interfaces/workflow/quake3/hud/q3_overlay_utils.hpp"
 
 #include <gtest/gtest.h>
 

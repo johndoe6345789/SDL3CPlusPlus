@@ -1,6 +1,6 @@
 #include "services/impl/workflow/workflow_registrar_categories.hpp"
 
-#include "services/interfaces/workflow/quake3/workflow_q3_sky_draw_step.hpp"
+#include "services/interfaces/workflow/quake3/sky/workflow_q3_sky_draw_step.hpp"
 
 #include "services/interfaces/workflow/rendering/workflow_bsp_load_step.hpp"
 #include "services/interfaces/workflow/rendering/workflow_bsp_lightmap_atlas_step.hpp"

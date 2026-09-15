@@ -11,6 +11,7 @@
 #include "services/interfaces/workflow/gta5/hud/gta5_settings.hpp"
 #include "services/interfaces/workflow/gta5/render/gta5_texture_cache.hpp"
 #include "services/interfaces/workflow/gta5/stream/gta5_tile_coord.hpp"
+#include "services/interfaces/workflow/gta5/traffic/gta5_traffic_types.hpp"
 #include "services/interfaces/workflow/gta5/vehicle/gta5_vehicle_types.hpp"
 
 #include <glm/glm.hpp>
@@ -49,10 +50,10 @@ struct Gta5StreamState {
     /// Index into `vehicles` the player is sitting in, or -1 on foot.
     int seated{-1};
     std::vector<Gta5Instance> character;  // third person: drawn like cars
-    /// This frame's driven-around cars. Rebuilt each frame by
-    /// gta5.traffic, which owns them; nothing here is in the physics
-    /// world, so streaming never has to know about them.
-    std::vector<Gta5Instance> traffic;
+    /// The cars the game drives itself, and the lights they stop at.
+    /// Kept here rather than inside gta5.traffic so that pressing F at
+    /// one can take it out of the traffic and into `vehicles`.
+    Gta5Traffic traffic;
 
     /// Tiles whose band changed; evict tears them down, load rebuilds.
     std::unordered_set<Gta5TileCoord, Gta5TileCoordHash> rebuild;

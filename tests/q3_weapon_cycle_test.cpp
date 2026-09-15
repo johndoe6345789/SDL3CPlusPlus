@@ -2,7 +2,7 @@
 // skips the gauntlet, and only stops on a weapon you carry and have
 // ammo for (cg_weapons.c CG_NextWeapon_f / CG_WeaponSelectable).
 
-#include "services/interfaces/workflow/quake3/q3_weapon_cycle.hpp"
+#include "services/interfaces/workflow/quake3/weapon/q3_weapon_cycle.hpp"
 
 #include <gtest/gtest.h>
 

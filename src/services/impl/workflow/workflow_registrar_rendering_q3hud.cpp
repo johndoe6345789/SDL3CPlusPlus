@@ -1,12 +1,12 @@
 #include "services/impl/workflow/workflow_registrar_categories.hpp"
 
-#include "services/interfaces/workflow/quake3/workflow_q3_menu_update_step.hpp"
-#include "services/interfaces/workflow/quake3/workflow_q3_hud_step.hpp"
-#include "services/interfaces/workflow/quake3/workflow_q3_hud_head_step.hpp"
-#include "services/interfaces/workflow/quake3/workflow_q3_crosshair_step.hpp"
-#include "services/interfaces/workflow/quake3/workflow_q3_hitmarker_step.hpp"
-#include "services/interfaces/workflow/quake3/workflow_q3_menu_frame_step.hpp"
-#include "services/interfaces/workflow/quake3/workflow_q3_mapselect_step.hpp"
+#include "services/interfaces/workflow/quake3/menu/workflow_q3_menu_update_step.hpp"
+#include "services/interfaces/workflow/quake3/hud/workflow_q3_hud_step.hpp"
+#include "services/interfaces/workflow/quake3/hud/workflow_q3_hud_head_step.hpp"
+#include "services/interfaces/workflow/quake3/hud/workflow_q3_crosshair_step.hpp"
+#include "services/interfaces/workflow/quake3/hud/workflow_q3_hitmarker_step.hpp"
+#include "services/interfaces/workflow/quake3/menu/workflow_q3_menu_frame_step.hpp"
+#include "services/interfaces/workflow/quake3/menu/workflow_q3_mapselect_step.hpp"
 #include "services/interfaces/workflow/rendering/workflow_overlay_sw_begin_step.hpp"
 #include "services/interfaces/workflow/rendering/workflow_overlay_sw_end_init_step.hpp"
 #include "services/interfaces/workflow/rendering/workflow_overlay_sw_end_upload_surface_step.hpp"
@@ -14,7 +14,7 @@
 #include "services/interfaces/workflow/rendering/workflow_overlay_sw_end_draw_step.hpp"
 #include "services/interfaces/workflow/rendering/workflow_overlay_sw_end_blit_head_step.hpp"
 #include "services/interfaces/workflow/rendering/workflow_overlay_sw_end_screenshot_step.hpp"
-#include "services/interfaces/workflow/quake3/workflow_q3_pickups_draw_step.hpp"
+#include "services/interfaces/workflow/quake3/pickup/workflow_q3_pickups_draw_step.hpp"
 
 #include <memory>
 

@@ -2,7 +2,7 @@
 // carry a length and scale with the map; per-second coefficients do not.
 // Scaling the coefficients is what made movement feel wrong.
 
-#include "services/interfaces/workflow/quake3/q3_pm_constants.hpp"
+#include "services/interfaces/workflow/quake3/pmove/q3_pm_constants.hpp"
 
 #include <gtest/gtest.h>
 

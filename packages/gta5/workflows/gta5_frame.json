@@ -81,32 +81,29 @@
         "paint_b": 0.05,
         "wheel_radius": 0.36,
         "wheel_width": 0.25,
-        "x": 1124,
-        "y": 45,
-        "z": -3540,
+        "x": 228.0,
+        "y": 45.0,
+        "z": 905.0,
         "mass": 1300,
         "drop_height": 1.5,
-        "heading": 90,
+        "heading": 0.0,
         "ride_height": 0.1
       },
-      "comment": "Read from the map on the fly: the body from taxi_hi.yft, its axles from that fragment's wheel bones, and the wheel from vehiclemods/wheels_mods.rpf. Paint and wheel size stand in for carcols.ymt and vehicles.meta, which are not in the extract. On the Grand Senora Desert road, in-game (1119, 3490); y is only where the drop starts looking, since nothing out there is overhead. Downtown kept putting it on kerbs and in underpasses. Spawns once the ground under it has streamed in."
+      "comment": "Read from the map on the fly: the body from taxi_hi.yft, its axles from that fragment's wheel bones, and the wheel from vehiclemods/wheels_mods.rpf. Paint and wheel size stand in for carcols.ymt and vehicles.meta, which are not in the extract. Parked on Alta Street beside Legion Square, in-game (228, -905), a few steps from where the player starts -- it used to sit out in the Grand Senora Desert, three kilometres from downtown. y is only where the drop starts looking. Spawns once the ground under it has streamed in."
     },
     {
       "id": "traffic",
       "plugin": "gta5.traffic",
       "parameters": {
         "roads_dir": "D:/gtautil-2.2.13/levels/gta5/paths.rpf",
-        "model": "taxi_hi",
         "cars": 28,
         "cycle": 20.0,
         "amber": 3.0,
         "near": 40.0,
         "far": 170.0,
-        "wheel": "wheel_spt_01",
-        "wheel_radius": 0.36,
         "wheel_width": 0.25,
         "ride_height": 0.1,
-        "mass": 1300
+        "cars_file": "packages/gta5/data/garage.json"
       },
       "comment": "Cars driving themselves on GTA's own node network, as raycast vehicles like the player's own: they ride on suspension, roll their wheels and collide with whatever they meet. They stop at the lights of every crossing the network describes, and the lamps are hung on the map's own signal props. After the vehicle spawn, which shares the geometry cache with it."
     },

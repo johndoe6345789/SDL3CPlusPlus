@@ -1,7 +1,7 @@
 #include "services/interfaces/workflow/gta5/audio/gta5_sound_step.hpp"
 
 #include "services/interfaces/workflow/gta5/core/gta5_step_params.hpp"
-#include "services/interfaces/workflow/quake3/q3_sound_playback.hpp"
+#include "services/interfaces/workflow/quake3/audio/q3_sound_playback.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
 #include <SDL3/SDL_init.h>

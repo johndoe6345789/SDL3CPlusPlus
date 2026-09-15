@@ -2,7 +2,7 @@
 // real elapsed time move the player per frame rather than per second,
 // so the faster the machine the faster the player travels.
 
-#include "services/interfaces/workflow/quake3/q3_frame_time.hpp"
+#include "services/interfaces/workflow/quake3/core/q3_frame_time.hpp"
 
 #include <gtest/gtest.h>
 #include <cmath>

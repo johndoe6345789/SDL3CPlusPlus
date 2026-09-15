@@ -22,7 +22,7 @@ std::string WorkflowGta5VehicleControlStep::GetPluginId() const {
 
 void WorkflowGta5VehicleControlStep::Execute(
     const WorkflowStepDefinition& /*step*/, WorkflowContext& context) {
-    if (!state_ || state_->vehicles.empty()) return;
+    if (!state_) return;
 
     const auto* keys = context.TryGet<nlohmann::json>("input.keyboard.state");
     btRigidBody* player = Gta5PlayerBody(context);
@@ -41,8 +41,11 @@ void WorkflowGta5VehicleControlStep::Execute(
             state_->seated = -1;
             if (logger_) logger_->Info("gta5.vehicle.control: out");
         } else {
-            const int found = FindGta5VehicleNear(
-                *state_, player->getWorldTransform().getOrigin(), 6.f);
+            const btVector3& stood = player->getWorldTransform().getOrigin();
+            int found = FindGta5VehicleNear(*state_, stood, 6.f);
+            // Any car will do, including one the game was driving: it
+            // is taken out of the traffic and becomes the player's.
+            if (found < 0) found = StealGta5TrafficCar(*state_, stood, 6.f);
             state_->seated = found;
             // Said either way: a miss must not look like a lost key.
             if (logger_) {
