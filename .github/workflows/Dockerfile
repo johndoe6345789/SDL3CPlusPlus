@@ -65,6 +65,13 @@ RUN conan profile detect \
     } >> "${CONAN_HOME}/profiles/default" \
     && cat "${CONAN_HOME}/profiles/default"
 
+# The ARM runners cannot reach www.freedesktop.org at all - fontconfig
+# and pulseaudio both time out there - so take sources from the
+# ConanCenter backup mirror first and fall back to the original URL.
+RUN echo 'core.sources:download_urls=["https://c3i.jfrog.io/artifactory/conan-center-backup-sources/", "origin"]' \
+    >> "${CONAN_HOME}/global.conf" \
+    && cat "${CONAN_HOME}/global.conf"
+
 # Only the recipe is copied, so editing application sources never invalidates
 # the layer that spends an hour building the dependency tree.
 COPY conanfile.py /tmp/recipe/conanfile.py
