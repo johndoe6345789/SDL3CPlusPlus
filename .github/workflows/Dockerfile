@@ -1,3 +1,7 @@
+# Build environment for the CI job: the system libraries, Conan 2, a pinned
+# CMake, Ninja, and a Conan cache with every dependency in conanfile.py
+# already compiled. Published per architecture by publish-container.yml so
+# that build.yml only has to compile this repository.
 ARG USERNAME=builder
 ARG UID=1000
 ARG GID=1000
@@ -10,6 +14,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
+        ninja-build \
         libegl-dev \
         libegl1-mesa-dev \
         libgl-dev \
@@ -34,6 +39,37 @@ ENV PATH="/opt/venv/bin:${PATH}"
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir "conan>=2" "cmake==3.31.6"
 
+# The warm cache has to be readable by whichever account ends up running the
+# build - root under GitHub Actions, the builder user locally - so keep it out
+# of any one home directory instead of letting it land in ~/.conan2.
+ENV CONAN_HOME=/opt/conan2
+
+# ConanCenter publishes no Linux ARM binaries, so on arm64 Conan would build
+# its own CMake package, which means downloading it from cmake.org - and
+# cmake.org/files now answers 403. Bring our own; 3.31.6 satisfies every cmake
+# range in the graph. build.yml relies on this profile, so the two stay in
+# step by virtue of the job running inside this image.
+RUN conan profile detect \
+    && { \
+        echo ""; \
+        echo "[platform_tool_requires]"; \
+        echo "cmake/3.31.6"; \
+    } >> "${CONAN_HOME}/profiles/default" \
+    && cat "${CONAN_HOME}/profiles/default"
+
+# Only the recipe is copied, so editing application sources never invalidates
+# the layer that spends an hour building the dependency tree.
+COPY conanfile.py /tmp/recipe/conanfile.py
+RUN conan install /tmp/recipe \
+        --output-folder /tmp/recipe/build \
+        --build=missing \
+        -s build_type=Release \
+        -c tools.system.package_manager:mode=install \
+        -c '&:tools.build:cxxflags=["-include","cstdint"]' \
+    && conan cache clean \
+    && rm -rf /tmp/recipe \
+    && chmod -R a+rwX "${CONAN_HOME}"
+
 RUN if ! getent group "${USERNAME}" >/dev/null 2>&1; then \
         groupadd --gid "${GID}" -o "${USERNAME}"; \
     fi && \
@@ -41,12 +77,7 @@ RUN if ! getent group "${USERNAME}" >/dev/null 2>&1; then \
         useradd --uid "${UID}" --gid "${GID}" --non-unique -m "${USERNAME}"; \
     fi
 
-WORKDIR /workspace
-COPY . /workspace
-RUN conan profile detect && { echo ""; echo "[platform_tool_requires]"; echo "cmake/3.31.6"; } >> "$(conan config home)/profiles/default"
-RUN conan install . --output-folder /conan_build --build=missing -c tools.system.package_manager:mode=install -c '&:tools.build:cxxflags=["-include","cstdint"]'
-RUN chown -R ${USERNAME}:${USERNAME} /workspace /conan_build
-
-USER ${USERNAME}
-ENV HOME=/home/${USERNAME}
+# The default user stays root: GitHub Actions mounts the workspace into a
+# container job owned by root, and a non-root default breaks checkout. Local
+# use can still pass `docker run --user builder`.
 WORKDIR /workspace

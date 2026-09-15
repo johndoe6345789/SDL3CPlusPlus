@@ -7,8 +7,10 @@ on:
       - main
   workflow_dispatch:
 
+# build.yml runs inside the prebaked image published to GHCR.
 permissions:
   contents: read
+  packages: read
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -17,3 +19,6 @@ concurrency:
 jobs:
   build:
     uses: ./.github/workflows/build.yml
+    permissions:
+      contents: read
+      packages: read

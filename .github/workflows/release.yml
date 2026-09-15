@@ -17,6 +17,10 @@ concurrency:
 jobs:
   build:
     uses: ./.github/workflows/build.yml
+    # build.yml runs inside the prebaked image published to GHCR.
+    permissions:
+      contents: read
+      packages: read
 
   release:
     name: Publish release

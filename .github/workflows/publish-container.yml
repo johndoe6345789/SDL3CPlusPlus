@@ -1,10 +1,23 @@
 name: Publish Container Image
 
 # The image in .github/workflows/Dockerfile is a build environment (system
-# packages plus a warm Conan cache), not a runnable app, so it is published on
-# demand rather than on every commit.
+# packages plus a warm Conan cache), not a runnable app, so it is published
+# only when the recipe it bakes in or the image itself changes. build.yml runs
+# inside it, so a stale image costs build time rather than correctness.
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - conanfile.py
+      - .github/workflows/Dockerfile
+      - .github/workflows/publish-container.yml
+
+# An hours-long image build is never worth racing against itself.
+concurrency:
+  group: publish-container
+  cancel-in-progress: false
 
 permissions:
   contents: read

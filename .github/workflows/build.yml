@@ -5,6 +5,7 @@ on:
 
 permissions:
   contents: read
+  packages: read
 
 jobs:
   build:
@@ -23,6 +24,17 @@ jobs:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 180
+    # Everything the build needs - system libraries, Conan, CMake, Ninja and a
+    # Conan cache holding the whole dependency tree already compiled - is baked
+    # into this image by publish-container.yml, so the job starts at our own
+    # sources. Rebuild the image whenever conanfile.py changes; until then a
+    # changed recipe still builds, Conan just compiles the difference.
+    container:
+      image: >-
+        ghcr.io/${{ github.repository_owner }}/sdl3_app:linux-${{ matrix.arch }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     env:
       BUILD_DIR: build/${{ matrix.name }}
       ZIP_NAME: sdl3_app-${{ matrix.name }}.zip
@@ -33,75 +45,21 @@ jobs:
       - name: Enforce macro policy
         run: bash ./scripts/check_macros.sh
 
-      - name: Install system build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            build-essential \
-            ninja-build \
-            pkg-config \
-            libegl-dev \
-            libegl1-mesa-dev \
-            libgl-dev \
-            libgl1-mesa-dev \
-            libudev-dev \
-            libwayland-dev \
-            libxcb-util-dev \
-            libxcb-util0-dev \
-            libxkbcommon-dev \
-            libxrandr-dev \
-            libx11-dev
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-
-      # ConanCenter publishes no Linux ARM binaries, so on arm64 Conan
-      # builds its own CMake package, which means downloading it from
-      # cmake.org - and cmake.org/files now answers 403. Bring our own
-      # CMake instead; 3.31.6 satisfies every cmake range in the graph.
-      - name: Install Conan and CMake
-        run: |
-          set -euo pipefail
-          pip install --upgrade "conan>=2" "cmake==3.31.6"
-          test "$(cmake --version | head -n 1)" = "cmake version 3.31.6"
-
-      # Building this dependency tree from source takes over an hour, so the
-      # Conan home is cached and only rebuilt when conanfile.py changes.
-      - name: Restore Conan cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.conan2
-          key: conan-${{ matrix.name }}-${{ hashFiles('conanfile.py') }}
-          restore-keys: |
-            conan-${{ matrix.name }}-
-
-      - name: Detect Conan profile
-        run: |
-          set -euo pipefail
-          conan profile detect --force
-          profile="$(conan config home)/profiles/default"
-          {
-            echo ""
-            echo "[platform_tool_requires]"
-            echo "cmake/3.31.6"
-          } >> "$profile"
-          cat "$profile"
-
+      # The settings have to match the ones the image was baked with, or the
+      # package IDs differ and Conan rebuilds the tree from source.
       - name: Install Conan dependencies
         run: |
           conan install . \
             --build=missing \
             -s build_type=Release \
             -c tools.system.package_manager:mode=install \
-            -c tools.system.package_manager:sudo=True \
             -c '&:tools.build:cxxflags=["-include","cstdint"]'
 
       - name: Configure
         run: |
           set -euo pipefail
-          toolchain=$(find "${GITHUB_WORKSPACE}" -type f -name conan_toolchain.cmake -path '*/generators/*' | head -n 1)
+          toolchain=$(find "${GITHUB_WORKSPACE}" -type f \
+            -name conan_toolchain.cmake -path '*/generators/*' | head -n 1)
           if [ -z "$toolchain" ]; then
             echo "conan_toolchain.cmake was not generated" >&2
             exit 1
