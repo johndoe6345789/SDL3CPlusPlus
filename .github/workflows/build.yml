@@ -299,6 +299,23 @@ jobs:
           echo "core.sources:download_urls=[\"$mirror\", \"origin\"]" \
             > "${CONAN_HOME}/global.conf"
 
+          # sdl asks for cmake/[>=3.24 <4], and other recipes bound it the
+          # same way. That upper bound is older than the compiler on this
+          # image: only CMake 4.1 and up can generate for Visual Studio
+          # 2026, so Conan dutifully fetched 3.31.12 to build sdl with and
+          # CMake answered "Could not create named generator". Name the
+          # CMake every recipe gets, the way the image names a Meson for
+          # fontconfig, so a pin written before this compiler existed stops
+          # deciding which compiler we can build for.
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            {
+              echo ""
+              echo "[tool_requires]"
+              echo "*: cmake/[>=4.1 <5]"
+            } >> "${CONAN_HOME}/profiles/default"
+          fi
+          cat "${CONAN_HOME}/profiles/default"
+
       # Settings are kept to what the graph actually needs, because every
       # one that departs from `conan profile detect` moves a package ID away
       # from the binaries ConanCenter publishes and turns a download into a
