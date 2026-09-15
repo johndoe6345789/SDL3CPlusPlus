@@ -170,40 +170,36 @@ jobs:
         include:
           - name: macos-arm64
             runner: macos-15
-            generator: Ninja
+            generator: -G Ninja
             cxxflags: '["-include","cstdint"]'
             # apple-clang detects gnu17, which already clears the C++17
             # floor four of these dependencies set, so nothing to add.
             settings: ''
           - name: windows-amd64
             runner: windows-2025
-            # The Visual Studio generator carries its own compiler
-            # environment, so nothing here has to find and source vcvars.
-            # It parallelises per project rather than per file, which /MP
-            # buys back.
-            generator: Visual Studio 17 2022
+            # No -G at all: CMake defaults to the newest Visual Studio on
+            # the machine, which is the one Conan detected and built the
+            # dependencies with. Naming a generator here is how this job
+            # broke twice - the label now resolves to a VS 2026 image, and
+            # anything hardcoded is a guess about which image is behind a
+            # label GitHub moves. A Visual Studio generator also brings its
+            # own compiler environment, so nothing has to source vcvars; it
+            # parallelises per project rather than per file, which /MP buys
+            # back.
+            generator: ''
             cxxflags: '["/FIcstdint","/MP"]'
-            # Two things `conan profile detect` gets wrong here.
-            #
-            # cppstd: it settles on 14, and entt, gtest, assimp and lunasvg
-            # all refuse to configure below 17. 20 rather than the 17 that
-            # would just clear the bar, because 20 is what
+            # msvc detects cppstd=14, and entt, gtest, assimp and
+            # lunasvg all refuse to configure below 17. 20 rather than the
+            # 17 that would just clear the bar, because 20 is what
             # python/dev_commands.py has always built this project with on
             # Windows, and because our own code is C++20 - a dependency
             # whose inline code was compiled to a different standard than
             # its consumer is an ODR problem in waiting.
             #
-            # compiler.version: it reports 195, and Conan turns that into a
-            # `Visual Studio 18 2026` generator. The image carries only
-            # Visual Studio 2022 (17.14), and our CMake is older than that
-            # generator, so every dependency built through CMake dies at
-            # configure - brotli first, 74 behind it. 194 is the toolset
-            # this project pins anyway, see _find_vcvarsall in
-            # python/dev_commands.py, and it maps to the `Visual Studio 17
-            # 2022` the Configure step below already asks for.
-            settings: >-
-              -s compiler.cppstd=20
-              -s compiler.version=194
+            # compiler.version is left to detection. It reports 195, which
+            # is simply true: the runner has Visual Studio 2026 and no
+            # 2022 to fall back to.
+            settings: '-s compiler.cppstd=20'
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 360
@@ -224,12 +220,14 @@ jobs:
         with:
           python-version: '3.12'
 
-      # Conan plus the same CMake the image pins, so a native build and a
-      # containerised one are driven by the same tools. Ninja comes from pip
-      # as well rather than from Homebrew: one line, and no runner is asked
-      # for a tool it might not have preinstalled.
+      # CMake is deliberately the runner's own. The image pins 3.31.6
+      # because ConanCenter publishes no Linux ARM binaries and cmake.org
+      # answers 403 - neither is true here, and pinning it cost a run: a
+      # CMake older than the Visual Studio on the same machine cannot
+      # generate for it. Ninja comes from pip so no runner is asked for a
+      # tool it might not have preinstalled.
       - name: Install the build tools
-        run: pip install "conan>=2" "cmake==3.31.6" ninja
+        run: pip install "conan>=2" ninja
 
       # The cache has to live outside the checkout, or the search for
       # conan_toolchain.cmake below could turn up one of Conan's own copies.
@@ -313,6 +311,8 @@ jobs:
             }}-${{ github.run_id }}
 
       - name: Configure
+        env:
+          GENERATOR: ${{ matrix.generator }}
         run: |
           set -euo pipefail
           toolchain=$(find "$PWD" -type f -name conan_toolchain.cmake \
@@ -328,7 +328,7 @@ jobs:
           fi
           echo "Using toolchain: $toolchain"
           cmake -S . -B "$BUILD_DIR" \
-            -G "${{ matrix.generator }}" \
+            ${GENERATOR:-} \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_TOOLCHAIN_FILE="$toolchain" \
             -DSDL_VERSION=SDL3 \
