@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tasklist)",
+      "Bash(tasklist *)",
+      "Bash(openssl dgst *)",
+      "Bash(openssl base64)",
+      "Bash(vswhere)",
+      "Bash(vswhere *)",
+      "Bash(xxd *)",
+      "mcp__Claude_Browser__read_page",
+      "mcp__Claude_Browser__get_page_text",
+      "mcp__Claude_Browser__find"
+    ]
+  }
+}
