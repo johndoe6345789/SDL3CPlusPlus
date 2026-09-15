@@ -62,16 +62,30 @@ jobs:
 
             > ${{ steps.describe.outputs.subject }}
 
-            Unzip, then start the point-and-click launcher - it lists the
-            bundled game packages and runs `sdl3_app` for the one you pick:
+            One ZIP per platform - `linux-amd64`, `linux-arm64`,
+            `macos-arm64`, `windows-amd64`. Unzip the one for your machine,
+            then start the point-and-click launcher: it lists the bundled
+            game packages and runs `sdl3_app` for the one you pick.
 
             ```sh
             bash run_gui.sh
             ```
 
             It needs Python 3 and PyQt6; when PyQt6 is missing the script
-            installs it into a `.venv-gui` beside itself. ZIP archives do not
-            carry the executable bit, so mark the binary runnable first:
-            `chmod +x sdl3_app run_gui.sh`.
+            installs it into a `.venv-gui` beside itself.
+
+            ZIP archives do not carry the executable bit, so on Linux and
+            macOS mark the binary runnable first:
+
+            ```sh
+            chmod +x sdl3_app run_gui.sh
+            ```
+
+            These builds are unsigned, and macOS quarantines what a browser
+            downloaded, so clear that too:
+
+            ```sh
+            xattr -dr com.apple.quarantine .
+            ```
           files: release/*.zip
           fail_on_unmatched_files: true

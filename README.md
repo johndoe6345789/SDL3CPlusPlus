@@ -7,13 +7,18 @@ SDL3 GPU 2D/3D game engine with a JSON-driven workflow system. Built with C++20,
 ### Run a Release (No Build)
 
 Every push to `main` publishes a ZIP per platform to the
-[Releases page](../../releases). It carries `sdl3_app`, the `packages/` tree and
-the launcher, so unzipping and starting the GUI is the whole setup:
+[Releases page](../../releases) - `linux-amd64`, `linux-arm64`, `macos-arm64`
+and `windows-amd64`. Each carries `sdl3_app`, the `packages/` tree and the
+launcher, so unzipping and starting the GUI is the whole setup:
 
 ```bash
 chmod +x sdl3_app run_gui.sh   # ZIPs do not carry the executable bit
 ./run_gui.sh
 ```
+
+On macOS the build is unsigned, so clear the download quarantine first with
+`xattr -dr com.apple.quarantine .`. On Windows there is no bit to set; run
+`bash run_gui.sh` from Git Bash, or `python python/dev_commands.py gui`.
 
 The launcher needs Python 3 and PyQt6; it installs PyQt6 into a `.venv-gui`
 beside itself when the system Python does not already have it.

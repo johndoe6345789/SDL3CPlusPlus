@@ -157,3 +157,158 @@ jobs:
           name: sdl3_app-${{ matrix.name }}
           path: release/${{ env.ZIP_NAME }}
           if-no-files-found: error
+
+  # macOS and Windows get no prebaked image: Actions only runs container
+  # jobs on Linux. So these builds do on the runner what the Dockerfile does
+  # once - compile the dependency tree - and keep the result in an Actions
+  # cache instead of a registry. The first run on a new conanfile.py is slow
+  # for the same reason the image build is; every run after it is not.
+  build-native:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macos-arm64
+            runner: macos-15
+            generator: Ninja
+            cxxflags: '["-include","cstdint"]'
+          - name: windows-amd64
+            runner: windows-2025
+            # The Visual Studio generator carries its own compiler
+            # environment, so nothing here has to find and source vcvars.
+            # It parallelises per project rather than per file, which /MP
+            # buys back.
+            generator: Visual Studio 17 2022
+            cxxflags: '["/FIcstdint","/MP"]'
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 360
+    # Windows runners default to PowerShell; the scripted steps below are
+    # the same bash the Linux job runs.
+    defaults:
+      run:
+        shell: bash
+    env:
+      BUILD_DIR: build/${{ matrix.name }}
+      ZIP_NAME: sdl3_app-${{ matrix.name }}.zip
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # Conan plus the same CMake the image pins, so a native build and a
+      # containerised one are driven by the same tools. Ninja comes from pip
+      # as well rather than from Homebrew: one line, and no runner is asked
+      # for a tool it might not have preinstalled.
+      - name: Install the build tools
+        run: pip install "conan>=2" "cmake==3.31.6" ninja
+
+      # The cache has to live outside the checkout, or the search for
+      # conan_toolchain.cmake below could turn up one of Conan's own copies.
+      # On Windows it also has to be short and spelled with forward slashes:
+      # a source tree unpacked inside it still has to fit MAX_PATH, and
+      # RUNNER_TEMP is a backslash path that bash would mangle.
+      - name: Choose where the Conan cache lives
+        run: |
+          set -euo pipefail
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            home="C:/conan2"
+          else
+            home="$RUNNER_TEMP/conan2"
+          fi
+          echo "CONAN_HOME=$home" >> "$GITHUB_ENV"
+          echo "Conan cache: $home"
+
+      # Restore and save are separate steps so that a run which exhausts its
+      # six hours part way through the dependency tree still banks what it
+      # compiled. Without that, a tree too big for one job never finishes,
+      # however many times it is retried.
+      - name: Restore the Conan cache
+        id: conan-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.CONAN_HOME }}
+          key: conan-${{ matrix.name }}-${{ hashFiles('conanfile.py') }}
+          restore-keys: conan-${{ matrix.name }}-
+
+      - name: Configure Conan
+        run: |
+          set -euo pipefail
+          conan profile detect --force
+          # The same fallback the image uses: take sources from the
+          # ConanCenter backup mirror when an upstream host is unreachable.
+          # Written rather than appended, so a restored cache does not
+          # accumulate a copy of this line per run.
+          mirror=https://c3i.jfrog.io/artifactory/conan-center-backup-sources/
+          echo "core.sources:download_urls=[\"$mirror\", \"origin\"]" \
+            > "${CONAN_HOME}/global.conf"
+
+      # No -s settings beyond the build type: whatever `conan profile detect`
+      # chose is what ConanCenter publishes binaries for, and a build that
+      # downloads its dependencies beats one that compiles them.
+      - name: Install Conan dependencies
+        run: |
+          conan install . \
+            --build=missing \
+            -s build_type=Release \
+            -c tools.system.package_manager:mode=install \
+            -c '&:tools.build:cxxflags=${{ matrix.cxxflags }}'
+
+      # Sources and build trees are dead weight once the binary exists, and
+      # the repository shares a 10 GB cache budget across both runners.
+      - name: Trim the Conan cache
+        if: always() && steps.conan-cache.outcome == 'success'
+        run: conan cache clean
+
+      - name: Save the Conan cache
+        if: always() && steps.conan-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ env.CONAN_HOME }}
+          key: conan-${{ matrix.name }}-${{ hashFiles('conanfile.py') }}
+
+      - name: Configure
+        run: |
+          set -euo pipefail
+          toolchain=$(find "$PWD" -type f -name conan_toolchain.cmake \
+            -path '*/generators/*' | head -n 1)
+          if [ -z "$toolchain" ]; then
+            echo "conan_toolchain.cmake was not generated" >&2
+            exit 1
+          fi
+          # CMake is a native Windows program even when bash starts it, so
+          # hand it a drive-letter path and not the /d/a/... one find prints.
+          if command -v cygpath >/dev/null 2>&1; then
+            toolchain=$(cygpath -m "$toolchain")
+          fi
+          echo "Using toolchain: $toolchain"
+          cmake -S . -B "$BUILD_DIR" \
+            -G "${{ matrix.generator }}" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_TOOLCHAIN_FILE="$toolchain" \
+            -DSDL_VERSION=SDL3 \
+            -DBUILD_SDL3_APP=ON
+
+      - name: Build
+        run: cmake --build "$BUILD_DIR" --config Release --parallel
+
+      # -C names the configuration for the Visual Studio generator, which
+      # builds every one of them and so cannot guess which to test.
+      - name: Test
+        run: |
+          ctest --test-dir "$BUILD_DIR" -C Release \
+            --output-on-failure --no-tests=error
+
+      - name: Package release ZIP
+        run: python scripts/package_release.py
+
+      - name: Upload release ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdl3_app-${{ matrix.name }}
+          path: release/${{ env.ZIP_NAME }}
+          if-no-files-found: error
