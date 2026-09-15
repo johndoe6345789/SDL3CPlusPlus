@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/gta5/traffic/gta5_traffic_path.hpp"
 
+#include "services/interfaces/workflow/gta5/effects/gta5_effects_spawn.hpp"
 #include "services/interfaces/workflow/gta5/vehicle/gta5_vehicle_seat.hpp"
 
 #include <algorithm>
@@ -19,6 +20,7 @@ glm::vec3 Standing(const Gta5TrafficCar& car) {
 void KeepGta5Traffic(Gta5Traffic& traffic, const Gta5Roads& roads,
                      Gta5StreamState& state, const glm::vec3& at,
                      SDL_GPUDevice* device, btDiscreteDynamicsWorld* world,
+                     Gta5Effects* effects,
                      const std::shared_ptr<ILogger>& logger) {
     if (!roads.loaded || roads.nodes.empty() || !device || !world) return;
     // Let go of what has fallen behind, or what has been sitting on its
@@ -28,6 +30,9 @@ void KeepGta5Traffic(Gta5Traffic& traffic, const Gta5Roads& roads,
         const bool lost = !car.car.chassis ||
                           glm::distance(Standing(car), at) > traffic.far + 50.f;
         if (!lost && car.stuck < 10.f) continue;
+        // Any bullet holes riding on it are let go of first: they hold
+        // its chassis to follow, and it is about to be deleted.
+        if (effects) DropGta5MarksOn(*effects, car.car.chassis);
         DestroyGta5Vehicle(car.car, world);
         traffic.cars.erase(traffic.cars.begin() +
                            static_cast<std::ptrdiff_t>(i));

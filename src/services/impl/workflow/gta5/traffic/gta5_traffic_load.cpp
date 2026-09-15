@@ -21,9 +21,14 @@ bool WorkflowGta5TrafficStep::Load(const WorkflowStepDefinition& step,
     // What it drives comes from the garage's own list, which is a set of
     // models already known to be in the extract and to have wheels that
     // fit them. Every car on the road being a taxi is not traffic.
+    // Through the resolver, as the shop reads the same file: a bare
+    // relative path only lands when the app was launched from the
+    // package root, and a miss here is silent -- it just falls back to
+    // the one taxi below and the street is a fleet again.
     const std::string cars = Gta5ParameterOr(step, "cars_file", "");
     if (!cars.empty()) {
-        const Gta5Garage garage = LoadGta5Garage(cars);
+        const Gta5Garage garage =
+            LoadGta5Garage(Gta5ResolvePath(step, context, "cars_file", cars));
         for (const Gta5GarageCar& pick : garage.cars) {
             Gta5TrafficModel kind;
             kind.model = pick.model + "_hi";
@@ -49,7 +54,6 @@ bool WorkflowGta5TrafficStep::Load(const WorkflowStepDefinition& step,
                       std::to_string(traffic.models.size()) +
                       " kinds of car");
     }
-    (void)context;
     return roads_.loaded;
 }
 

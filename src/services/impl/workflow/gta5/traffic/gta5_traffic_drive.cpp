@@ -11,7 +11,7 @@ constexpr float kPi = 3.14159265f;
 }  // namespace
 
 void DriveGta5Traffic(Gta5Traffic& traffic, const Gta5Roads& roads,
-                      float dt) {
+                      const Gta5StreamState& state, float dt) {
     for (Gta5TrafficCar& car : traffic.cars) {
         if (!car.car.chassis || car.to >= roads.nodes.size()) continue;
         const btTransform& shown = car.car.chassis->getWorldTransform();
@@ -27,7 +27,7 @@ void DriveGta5Traffic(Gta5Traffic& traffic, const Gta5Roads& roads,
         const glm::vec3 aim = Gta5TrafficAim(roads, car, at, speed);
         const float wanted = std::atan2(aim.x - at.x, aim.z - at.z);
         const float off = std::remainder(wanted - facing, 2.f * kPi);
-        float want = Gta5TrafficWant(traffic, roads, car, at, facing);
+        float want = Gta5TrafficWant(traffic, state, roads, car, at, facing);
         // Slow into a bend rather than understeering through it.
         want *= std::max(0.4f, 1.f - std::fabs(off) * 0.6f);
         // A softer hand the faster it goes, and damped by how fast it

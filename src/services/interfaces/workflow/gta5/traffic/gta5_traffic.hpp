@@ -8,6 +8,8 @@
 
 namespace sdl3cpp::services::impl {
 
+struct Gta5Effects;
+
 /// Every crossing near `at` that is not already known, added.
 void Gta5FindJunctions(Gta5Traffic& traffic, const Gta5Roads& roads,
                        const glm::vec3& at);
@@ -26,13 +28,15 @@ bool Gta5LightOpen(const Gta5Traffic& traffic, std::uint32_t node,
 /// it is making for, easing off for the car in front and holding at
 /// the line for a light that is against it.
 void DriveGta5Traffic(Gta5Traffic& traffic, const Gta5Roads& roads,
-                      float dt);
+                      const Gta5StreamState& state, float dt);
 
 /// Keep the road around `at` populated, and let go of what is behind.
-/// Cars are built and destroyed here, so this owns the physics bodies.
+/// Cars are built and destroyed here, so this owns the physics bodies,
+/// and `effects` is given up any marks riding on one it lets go of.
 void KeepGta5Traffic(Gta5Traffic& traffic, const Gta5Roads& roads,
                      Gta5StreamState& state, const glm::vec3& at,
                      SDL_GPUDevice* device, btDiscreteDynamicsWorld* world,
+                     Gta5Effects* effects,
                      const std::shared_ptr<ILogger>& logger);
 
 }  // namespace sdl3cpp::services::impl

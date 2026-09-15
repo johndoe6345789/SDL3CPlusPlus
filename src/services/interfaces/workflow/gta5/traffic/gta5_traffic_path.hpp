@@ -31,8 +31,10 @@ glm::vec3 Gta5TrafficAim(const Gta5Roads& roads, const Gta5TrafficCar& car,
                          const glm::vec3& at, float speed);
 
 /// How fast a car should be going: what it would like, held down for
-/// the car in front and for a light standing against it.
-float Gta5TrafficWant(const Gta5Traffic& traffic, const Gta5Roads& roads,
+/// whatever is in front -- other traffic or one of the player's own
+/// cars -- and for a light standing against it.
+float Gta5TrafficWant(const Gta5Traffic& traffic,
+                      const Gta5StreamState& state, const Gta5Roads& roads,
                       const Gta5TrafficCar& car, const glm::vec3& at,
                       float facing);
 
