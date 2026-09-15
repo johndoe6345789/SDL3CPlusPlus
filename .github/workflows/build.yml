@@ -174,7 +174,7 @@ jobs:
             cxxflags: '["-include","cstdint"]'
             # apple-clang detects gnu17, which already clears the C++17
             # floor four of these dependencies set, so nothing to add.
-            cppstd: ''
+            settings: ''
           - name: windows-amd64
             runner: windows-2025
             # The Visual Studio generator carries its own compiler
@@ -183,13 +183,27 @@ jobs:
             # buys back.
             generator: Visual Studio 17 2022
             cxxflags: '["/FIcstdint","/MP"]'
-            # msvc detects cppstd=14, and entt, gtest, assimp and lunasvg
-            # all refuse to configure below 17. 20 rather than 17, because
-            # that is what python/dev_commands.py has always built this
-            # project with on Windows, and because our own code is C++20 -
-            # a dependency whose inline code was compiled to a different
-            # standard than its consumer is an ODR problem in waiting.
-            cppstd: '-s compiler.cppstd=20'
+            # Two things `conan profile detect` gets wrong here.
+            #
+            # cppstd: it settles on 14, and entt, gtest, assimp and lunasvg
+            # all refuse to configure below 17. 20 rather than the 17 that
+            # would just clear the bar, because 20 is what
+            # python/dev_commands.py has always built this project with on
+            # Windows, and because our own code is C++20 - a dependency
+            # whose inline code was compiled to a different standard than
+            # its consumer is an ODR problem in waiting.
+            #
+            # compiler.version: it reports 195, and Conan turns that into a
+            # `Visual Studio 18 2026` generator. The image carries only
+            # Visual Studio 2022 (17.14), and our CMake is older than that
+            # generator, so every dependency built through CMake dies at
+            # configure - brotli first, 74 behind it. 194 is the toolset
+            # this project pins anyway, see _find_vcvarsall in
+            # python/dev_commands.py, and it maps to the `Visual Studio 17
+            # 2022` the Configure step below already asks for.
+            settings: >-
+              -s compiler.cppstd=20
+              -s compiler.version=194
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 360
@@ -274,12 +288,12 @@ jobs:
       # download into a compile. See the matrix for why Windows needs one.
       - name: Install Conan dependencies
         env:
-          CPPSTD: ${{ matrix.cppstd }}
+          EXTRA_SETTINGS: ${{ matrix.settings }}
         run: |
           conan install . \
             --build=missing \
             -s build_type=Release \
-            $CPPSTD \
+            $EXTRA_SETTINGS \
             -c tools.system.package_manager:mode=install \
             -c '&:tools.build:cxxflags=${{ matrix.cxxflags }}'
 
