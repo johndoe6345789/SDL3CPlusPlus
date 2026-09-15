@@ -63,6 +63,12 @@ class SDL3CppConan(ConanFile):
     def requirements(self):
         self._add_requirements(self.BASE_REQUIRES)
         self._add_requirements(self.RENDER_STACK_REQUIRES)
+        # cairo asks for fontconfig/[>=2.15 <3], but 2.17.1's meson.build
+        # needs Meson >= 1.6.1 while its recipe only tool_requires
+        # meson/[>=1.4.0 <2], which Conan resolves to 1.4.0 and the build
+        # dies. 2.15.0 builds with that Meson, so pin it until upstream
+        # tightens the range.
+        self.requires("fontconfig/2.15.0", override=True)
 
     def _add_requirements(self, requirements):
         for requirement in requirements:
