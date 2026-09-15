@@ -38,7 +38,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             build-essential \
-            cmake \
             ninja-build \
             pkg-config \
             libegl-dev \
@@ -58,8 +57,15 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Install Conan
-        run: pip install --upgrade "conan>=2"
+      # ConanCenter publishes no Linux ARM binaries, so on arm64 Conan
+      # builds its own CMake package, which means downloading it from
+      # cmake.org - and cmake.org/files now answers 403. Bring our own
+      # CMake instead; 3.31.6 satisfies every cmake range in the graph.
+      - name: Install Conan and CMake
+        run: |
+          set -euo pipefail
+          pip install --upgrade "conan>=2" "cmake==3.31.6"
+          test "$(cmake --version | head -n 1)" = "cmake version 3.31.6"
 
       # Building this dependency tree from source takes over an hour, so the
       # Conan home is cached and only rebuilt when conanfile.py changes.
@@ -72,7 +78,16 @@ jobs:
             conan-${{ matrix.name }}-
 
       - name: Detect Conan profile
-        run: conan profile detect --force
+        run: |
+          set -euo pipefail
+          conan profile detect --force
+          profile="$(conan config home)/profiles/default"
+          {
+            echo ""
+            echo "[platform_tool_requires]"
+            echo "cmake/3.31.6"
+          } >> "$profile"
+          cat "$profile"
 
       - name: Install Conan dependencies
         run: |
@@ -81,7 +96,7 @@ jobs:
             -s build_type=Release \
             -c tools.system.package_manager:mode=install \
             -c tools.system.package_manager:sudo=True \
-            -c 'tools.build:cxxflags=["-include","cstdint"]'
+            -c '&:tools.build:cxxflags=["-include","cstdint"]'
 
       - name: Configure
         run: |
