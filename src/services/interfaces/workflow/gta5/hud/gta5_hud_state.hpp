@@ -1,6 +1,9 @@
 #pragma once
 
 #include "services/interfaces/workflow/gta5/hud/gta5_menu.hpp"
+#include "services/interfaces/workflow_context.hpp"
+
+#include <glm/glm.hpp>
 
 #include <cstdint>
 #include <string>
@@ -16,6 +19,8 @@ struct Gta5HudState {
     int reserve{0};
     bool aiming{false};      // the reticle is up only then
     bool showWeapon{false};  // the weapon and ammunition, top right
+    glm::vec2 where{0.f};    // GTA metres, x east and y north: the radar
+    float heading{0.f};      // radians clockwise from north
     bool driving{false};
     float kmh{0.f};
     float revs{0.f};  // 0 idle .. 1 redline
@@ -25,6 +30,13 @@ struct Gta5HudState {
     Gta5Menu menu;
     Gta5Wheel wheel;
 };
+
+struct Gta5StreamState;
+
+/// This frame's state from the context: the player's health, weapon,
+/// car, menus, and where they are and face for the radar.
+Gta5HudState ReadGta5HudState(const WorkflowContext& context,
+                              const Gta5StreamState& state);
 
 /// GTA shows the weapon readout while it matters -- aiming, firing,
 /// choosing, a new weapon -- and for a few seconds after, not always.

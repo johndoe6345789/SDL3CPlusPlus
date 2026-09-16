@@ -21,7 +21,6 @@ Status: `[ ]` open, `[~]` in progress, `[x]` done.
 
 ## 3. Weapons and HUD
 
-- [ ] **Minimap with health and armour.** A lone green bar today.
 
 ## 4. Life
 
@@ -69,3 +68,7 @@ Status: `[ ]` open, `[~]` in progress, `[x]` done.
   climbs onto it in about half a second (`gta5.player.climb`); anywhere
   else it is the jump. Tested on boxes (`gta5_climb_test`) and seen in a
   recording, up a 0.89 m planter in Legion Square.
+- [x] **Radar.** GTA's own minimap tiles, cut to a 328 x 200 window
+  about the player at 2.5 m a pixel, bottom left over the health and
+  armour bars, with the view's arrow in the middle. North stays up;
+  GTA's turns with the camera, which is still to do.

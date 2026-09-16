@@ -27,13 +27,14 @@ struct Gta5Hud {
     SDL_GPUTexture* mark{nullptr};
     bool tried{false};
     bool ready{false};
+    bool radar{false};  // the minimap tiles loaded
 };
+/// `tilesDir` holds the minimap tiles for the radar; without them the
+/// HUD still draws, radar aside.
 bool LoadGta5Hud(Gta5Hud& hud, SDL_GPUDevice* device,
-                 SDL_GPUTextureFormat format, Gta5UploadBatch& uploads,
+                 SDL_GPUTextureFormat format, const std::string& tilesDir,
+                 Gta5UploadBatch& uploads,
                  const std::shared_ptr<ILogger>& logger);
-/// The dials and needle, drawn not loaded.
-bool CreateGta5HudArt(Gta5Hud& hud, SDL_GPUDevice* device,
-                      Gta5UploadBatch& uploads);
 
 /// The needle, 64 x 64 RGBA.
 std::vector<std::uint8_t> Gta5HudNeedlePixels();
@@ -41,25 +42,6 @@ std::vector<std::uint8_t> Gta5HudNeedlePixels();
 Gta5MapFrame BuildGta5HudFrame(const Gta5Hud& hud, int width, int height,
                                const Gta5HudState& state);
 
-/// A gauge about `centre`: face, labels to `top`, needle at `value`.
-void AddGta5HudGauge(Gta5MapFrame& frame, const Gta5MapLayout& layout,
-                     const Gta5Hud& hud, SDL_GPUTexture* dial,
-                     glm::vec2 centre, float radius, float value, float top,
-                     float step, const std::string& caption);
-
-/// The weapon wheel.
-void AddGta5HudWheel(Gta5MapFrame& frame, const Gta5MapLayout& layout,
-                     const Gta5Hud& hud, const Gta5HudState& state, float w,
-                     float h);
-
-/// A shop's prompt, or its open menu.
-void AddGta5HudMenu(Gta5MapFrame& frame, const Gta5MapLayout& layout,
-                    const Gta5Hud& hud, const Gta5HudState& state, float w,
-                    float h);
-
-/// `text` centred on `at` (align 0), or ending there (align 1).
-void AddGta5HudText(Gta5MapFrame& frame, const Gta5MapLayout& layout,
-                    const Gta5Hud& hud, glm::vec2 at, float scale,
-                    const std::string& text, float align);
-
 }  // namespace sdl3cpp::services::impl
+
+#include "services/interfaces/workflow/gta5/hud/gta5_hud_parts.hpp"

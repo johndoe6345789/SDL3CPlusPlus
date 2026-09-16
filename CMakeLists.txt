@@ -855,12 +855,15 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/effects/gta5_effects_step.cpp
         src/services/impl/workflow/gta5/effects/gta5_effects_update.cpp
         src/services/impl/workflow/gta5/hud/gta5_hud_art.cpp
+        src/services/impl/workflow/gta5/hud/gta5_hud_bars.cpp
         src/services/impl/workflow/gta5/hud/gta5_hud_cross.cpp
         src/services/impl/workflow/gta5/hud/gta5_hud_frame.cpp
         src/services/impl/workflow/gta5/hud/gta5_hud_gauge.cpp
         src/services/impl/workflow/gta5/hud/gta5_hud_load.cpp
         src/services/impl/workflow/gta5/hud/gta5_hud_menu.cpp
         src/services/impl/workflow/gta5/hud/gta5_hud_needle.cpp
+        src/services/impl/workflow/gta5/hud/gta5_hud_radar.cpp
+        src/services/impl/workflow/gta5/hud/gta5_hud_read.cpp
         src/services/impl/workflow/gta5/hud/gta5_hud_step.cpp
         src/services/impl/workflow/gta5/hud/gta5_hud_weapon_timer.cpp
         src/services/impl/workflow/gta5/hud/gta5_hud_wheel.cpp
@@ -876,6 +879,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/hud/gta5_map_poi.cpp
         src/services/impl/workflow/gta5/hud/gta5_map_quads.cpp
         src/services/impl/workflow/gta5/hud/gta5_map_step.cpp
+        src/services/impl/workflow/gta5/hud/gta5_map_tiles.cpp
         src/services/impl/workflow/gta5/hud/gta5_map_travel.cpp
         src/services/impl/workflow/gta5/hud/gta5_settings.cpp
         src/services/impl/workflow/gta5/hud/gta5_settings_keep.cpp

@@ -43,6 +43,10 @@ bool LoadGta5MapOverlay(Gta5MapOverlay& map, SDL_GPUDevice* device,
                         const std::string& poiFile, Gta5UploadBatch& uploads,
                         const std::shared_ptr<ILogger>& logger);
 
+/// The six minimap tiles from `dir`; false when any is missing.
+bool LoadGta5MapTiles(Gta5MapOverlay& map, SDL_GPUDevice* device,
+                      const std::string& dir, Gta5UploadBatch& uploads);
+
 /// Vertex and staging buffers for kGta5MapMaxQuads, and both samplers.
 bool CreateGta5MapGpu(Gta5MapOverlay& map, SDL_GPUDevice* device);
 

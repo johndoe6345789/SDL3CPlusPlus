@@ -6,7 +6,8 @@
 namespace sdl3cpp::services::impl {
 
 bool LoadGta5Hud(Gta5Hud& hud, SDL_GPUDevice* device,
-                 SDL_GPUTextureFormat format, Gta5UploadBatch& uploads,
+                 SDL_GPUTextureFormat format, const std::string& tilesDir,
+                 Gta5UploadBatch& uploads,
                  const std::shared_ptr<ILogger>& logger) {
     hud.tried = true;
     // The map overlay's shaders and pipeline: textured quads, blended.
@@ -26,6 +27,9 @@ bool LoadGta5Hud(Gta5Hud& hud, SDL_GPUDevice* device,
         if (logger) logger->Warn("gta5.hud: could not create the display");
         return false;
     }
+    hud.radar = !tilesDir.empty() &&
+                LoadGta5MapTiles(hud.overlay, device, tilesDir, uploads);
+    if (!hud.radar && logger) logger->Warn("gta5.hud: no radar tiles");
     uploads.Flush(device);
     hud.ready = true;
     if (logger) logger->Info("gta5.hud: ready");

@@ -327,7 +327,10 @@
     {
       "id": "hud",
       "plugin": "gta5.hud",
-      "comment": "The heads-up display: health and armour bars, the weapon and its ammunition, and while driving a speedometer and tachometer. Over the finished frame; the Tab map, after it, covers it."
+      "comment": "The heads-up display: a radar from GTA's own minimap tiles with health and armour under it, the weapon and its ammunition while they matter, and while driving a speedometer and tachometer. Over the finished frame; the Tab map, after it, covers it.",
+      "parameters": {
+        "minimap_dir": "D:/gtautil-2.2.13/data/cdimages/scaleform_generic.rpf"
+      }
     },
     {
       "id": "map_draw",

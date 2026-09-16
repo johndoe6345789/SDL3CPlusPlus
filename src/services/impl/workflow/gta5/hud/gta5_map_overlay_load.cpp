@@ -1,36 +1,11 @@
 #include "services/interfaces/workflow/gta5/hud/gta5_map_overlay.hpp"
 
 #include "services/interfaces/workflow/gta5/hud/gta5_map_art.hpp"
-#include "services/interfaces/workflow/gta5/resource/gta5_resource.hpp"
-#include "services/interfaces/workflow/gta5/render/gta5_texture_upload.hpp"
 #include "services/interfaces/workflow/rendering/gpu_text_overlay_pipeline_factory.hpp"
 #include "services/interfaces/workflow/rendering/gpu_text_overlay_shader_loader.hpp"
 
-#include <cstdio>
-
 namespace sdl3cpp::services::impl {
 namespace {
-
-SDL_GPUTexture* LoadTile(SDL_GPUDevice* device, const std::string& dir,
-                         int row, int column, Gta5UploadBatch& uploads) {
-    char name[32];
-    std::snprintf(name, sizeof(name), "minimap_%d_%d", row, column);
-    Gta5Resource res;
-    if (!LoadGta5Resource(dir + "/" + name + ".ytd", res, false)) {
-        return nullptr;
-    }
-    const Gta5TextureBlob blob = ReadGta5DictionaryTexture(res, Gta5Hash(name));
-    return UploadGta5TextureBlob(blob, device, uploads).texture;
-}
-
-bool LoadTiles(Gta5MapOverlay& map, SDL_GPUDevice* device,
-               const std::string& dir, Gta5UploadBatch& uploads) {
-    for (int i = 0; i < 6; ++i) {
-        map.tiles[i] = LoadTile(device, dir, i / 2, i % 2, uploads);
-        if (!map.tiles[i]) return false;
-    }
-    return true;
-}
 
 SDL_GPUGraphicsPipeline* Pipeline(SDL_GPUDevice* device,
                                   SDL_GPUTextureFormat format) {
@@ -59,7 +34,7 @@ bool LoadGta5MapOverlay(Gta5MapOverlay& map, SDL_GPUDevice* device,
         if (logger) logger->Warn("gta5.map: could not create the overlay");
         return false;
     }
-    if (!LoadTiles(map, device, dir, uploads)) {
+    if (!LoadGta5MapTiles(map, device, dir, uploads)) {
         if (logger) logger->Warn("gta5.map: no minimap tiles in " + dir);
         return false;
     }
