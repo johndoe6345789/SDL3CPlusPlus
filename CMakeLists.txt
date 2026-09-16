@@ -1093,6 +1093,19 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/world/gta5_water_step.cpp
         src/services/impl/workflow/gta5/world/gta5_water_uniforms.cpp
         src/services/impl/workflow/gta5/world/gta5_water_upload.cpp
+        src/services/impl/workflow/fs2024/fs2024_frustum.cpp
+        src/services/impl/workflow/fs2024/fs2024_ground_guard_step.cpp
+        src/services/impl/workflow/fs2024/fs2024_heightfield.cpp
+        src/services/impl/workflow/fs2024/fs2024_player_place.cpp
+        src/services/impl/workflow/fs2024/fs2024_player_spawn_step.cpp
+        src/services/impl/workflow/fs2024/fs2024_step_params.cpp
+        src/services/impl/workflow/fs2024/fs2024_terrain_collision.cpp
+        src/services/impl/workflow/fs2024/fs2024_terrain_draw_step.cpp
+        src/services/impl/workflow/fs2024/fs2024_terrain_free_step.cpp
+        src/services/impl/workflow/fs2024/fs2024_terrain_load_step.cpp
+        src/services/impl/workflow/fs2024/fs2024_terrain_mesh.cpp
+        src/services/impl/workflow/fs2024/fs2024_terrain_uniforms.cpp
+        src/services/impl/workflow/fs2024/fs2024_terrain_upload.cpp
         src/services/impl/workflow/workflow_definition_parser_includes.cpp
         src/services/impl/workflow/workflow_definition_parser_include_path.cpp
         src/services/impl/workflow/workflow_definition_parser_expand_include.cpp
@@ -1137,6 +1150,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/workflow_template_resolver.cpp
         src/services/impl/workflow/workflow_registrar_gta5.cpp
         src/services/impl/workflow/workflow_registrar_gta5_player.cpp
+        src/services/impl/workflow/workflow_registrar_fs2024.cpp
     )
     target_include_directories(sdl3_app PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}/src"
@@ -1581,6 +1595,51 @@ target_link_libraries(gta5_traffic_aim_test PRIVATE
     assimp::assimp
 )
 add_test(NAME gta5_traffic_aim_test COMMAND gta5_traffic_aim_test)
+
+add_executable(fs2024_heightfield_test)
+target_sources(fs2024_heightfield_test PRIVATE tests/fs2024_heightfield_test.cpp)
+target_sources(fs2024_heightfield_test PRIVATE src/services/impl/workflow/fs2024/fs2024_heightfield.cpp)
+target_sources(fs2024_heightfield_test PRIVATE src/services/impl/workflow/fs2024/fs2024_terrain_collision.cpp)
+target_sources(fs2024_heightfield_test PRIVATE src/services/impl/workflow/fs2024/fs2024_terrain_mesh.cpp)
+target_sources(fs2024_heightfield_test PRIVATE src/services/impl/workflow/fs2024/fs2024_player_place.cpp)
+target_sources(fs2024_heightfield_test PRIVATE src/services/impl/workflow/quake3/pmove/q3_wish_dir.cpp)
+target_include_directories(fs2024_heightfield_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(fs2024_heightfield_test PRIVATE
+    GTest::gtest_main
+    glm::glm
+    Bullet::Bullet
+)
+add_test(NAME fs2024_heightfield_test COMMAND fs2024_heightfield_test)
+
+add_executable(fs2024_terrain_walk_test)
+target_sources(fs2024_terrain_walk_test PRIVATE tests/fs2024_terrain_walk_test.cpp)
+target_sources(fs2024_terrain_walk_test PRIVATE src/services/impl/workflow/fs2024/fs2024_heightfield.cpp)
+target_sources(fs2024_terrain_walk_test PRIVATE src/services/impl/workflow/fs2024/fs2024_terrain_collision.cpp)
+target_sources(fs2024_terrain_walk_test PRIVATE src/services/impl/workflow/quake3/pmove/workflow_q3_pm_accelerate_step.cpp)
+target_sources(fs2024_terrain_walk_test PRIVATE src/services/impl/workflow/quake3/pmove/q3_pm_tuning.cpp)
+target_sources(fs2024_terrain_walk_test PRIVATE src/services/impl/workflow/quake3/pmove/workflow_q3_pm_friction_step.cpp)
+target_sources(fs2024_terrain_walk_test PRIVATE src/services/impl/workflow/quake3/pmove/workflow_q3_pm_ground_step.cpp)
+target_sources(fs2024_terrain_walk_test PRIVATE src/services/impl/workflow/quake3/pmove/workflow_q3_pm_step_slide_step.cpp)
+target_sources(fs2024_terrain_walk_test PRIVATE src/services/impl/workflow/quake3/pmove/q3_step_slide.cpp)
+target_sources(fs2024_terrain_walk_test PRIVATE src/services/impl/workflow/quake3/pmove/q3_step_slide_trace.cpp)
+target_sources(fs2024_terrain_walk_test PRIVATE src/services/impl/workflow/quake3/pmove/q3_slide_move.cpp)
+target_sources(fs2024_terrain_walk_test PRIVATE src/services/impl/workflow/quake3/pmove/q3_slide_planes.cpp)
+target_sources(fs2024_terrain_walk_test PRIVATE src/services/impl/workflow/quake3/pmove/q3_wish_dir.cpp)
+target_sources(fs2024_terrain_walk_test PRIVATE src/services/impl/workflow/quake3/collision/q3_brush_trace.cpp)
+target_sources(fs2024_terrain_walk_test PRIVATE src/services/impl/workflow/quake3/collision/q3_brush_trace_clip.cpp)
+target_sources(fs2024_terrain_walk_test PRIVATE src/services/impl/workflow/quake3/pmove/q3_pmove_accel.cpp)
+target_sources(fs2024_terrain_walk_test PRIVATE src/services/impl/workflow/quake3/pmove/q3_pmove_ground.cpp)
+target_include_directories(fs2024_terrain_walk_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(fs2024_terrain_walk_test PRIVATE
+    GTest::gtest_main
+    glm::glm
+    Bullet::Bullet
+)
+add_test(NAME fs2024_terrain_walk_test COMMAND fs2024_terrain_walk_test)
 
 add_executable(video_encoder_test)
 target_sources(video_encoder_test PRIVATE tests/video_encoder_test.cpp)

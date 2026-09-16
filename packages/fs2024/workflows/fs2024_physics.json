@@ -1,0 +1,96 @@
+{
+  "name": "FS2024 Physics",
+  "description": "Quake 3 pmove (q3.pm.*) over the baked heightfield, with GTA V's walking tune.",
+  "rationale": "FS2024 works in metres and the q3.pm.* constants already are metres, so the chain runs unchanged. The traces sweep a Bullet heightfield rather than brushes.",
+  "steps": [
+    {
+      "id": "player_sync",
+      "plugin": "q3.player.sync"
+    },
+    {
+      "id": "pm_crouch",
+      "plugin": "q3.pm.crouch"
+    },
+    {
+      "id": "pm_ground",
+      "plugin": "q3.pm.ground",
+      "parameters": {
+        "gravity": 12.0
+      }
+    },
+    {
+      "id": "pm_friction",
+      "plugin": "q3.pm.friction",
+      "parameters": {
+        "friction": 8.0,
+        "stop_speed": 1.2
+      }
+    },
+    {
+      "id": "pm_accelerate",
+      "plugin": "q3.pm.accelerate",
+      "parameters": {
+        "max_speed": 3.4,
+        "sprint_speed": 6.0,
+        "accelerate": 9.0,
+        "air_accelerate": 1.2
+      }
+    },
+    {
+      "id": "pm_jump",
+      "plugin": "q3.pm.jump",
+      "parameters": {
+        "jump_velocity": 4.8
+      }
+    },
+    {
+      "id": "pm_slide",
+      "plugin": "q3.pm.step_slide"
+    },
+    {
+      "id": "player_fly",
+      "plugin": "gta5.player.fly",
+      "parameters": {
+        "base_speed": 12.0,
+        "ramp_seconds": 2.5,
+        "max_speed": 250.0
+      },
+      "comment": "Borrowed from gta5: Y toggles free flight, W held ramps up to 250 m/s. For looking round the valley."
+    },
+    {
+      "id": "ground_guard",
+      "plugin": "fs2024.player.ground_guard",
+      "parameters": {
+        "margin": 32.0
+      },
+      "comment": "After flight too: the baked field ends in a cliff to nothing; keep the player on it and above it."
+    },
+    {
+      "id": "physics_step",
+      "plugin": "physics.step",
+      "parameters": {
+        "max_delta_time": 0.15,
+        "max_sub_steps": 10
+      }
+    },
+    {
+      "id": "player_commit",
+      "plugin": "q3.player.commit"
+    },
+    {
+      "id": "sync_transforms",
+      "plugin": "physics.sync_transforms"
+    },
+    {
+      "id": "camera_update",
+      "plugin": "camera.fps.update",
+      "parameters": {
+        "sensitivity": 0.003,
+        "eye_height": 1.4,
+        "fov": 75.0,
+        "near": 0.25,
+        "far": 20000.0
+      }
+    }
+  ]
+}

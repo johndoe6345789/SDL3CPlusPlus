@@ -1,0 +1,92 @@
+{
+  "name": "FS2024 Frame",
+  "description": "Input, Quake 3 movement over the baked ground, then sky, ground and the composite.",
+  "steps": [
+    {
+      "id": "input_group",
+      "plugin": "workflow.include",
+      "parameters": {
+        "path": "packages/fs2024/workflows/fs2024_input.json"
+      }
+    },
+    {
+      "id": "physics_group",
+      "plugin": "workflow.include",
+      "parameters": {
+        "path": "packages/fs2024/workflows/fs2024_physics.json"
+      }
+    },
+    {
+      "id": "render_prepare",
+      "plugin": "render.prepare"
+    },
+    {
+      "id": "frame_begin",
+      "plugin": "frame.gpu.begin_offscreen",
+      "parameters": {
+        "render_scale": 1.5
+      },
+      "comment": "HDR target, supersampled; the composite resolves it and sharpens."
+    },
+    {
+      "id": "sky_draw",
+      "plugin": "gta5.sky.draw",
+      "parameters": {
+        "horizon_r": 0.36,
+        "horizon_g": 0.42,
+        "horizon_b": 0.52,
+        "zenith_r": 0.05,
+        "zenith_g": 0.14,
+        "zenith_b": 0.42,
+        "sun_size": 8.0
+      }
+    },
+    {
+      "id": "terrain_draw",
+      "plugin": "fs2024.terrain.draw",
+      "parameters": {
+        "texture": "ground_map",
+        "fog_density": 7e-05,
+        "runway_x": -646.11,
+        "runway_z": -376.95,
+        "runway_heading": 260.975,
+        "runway_length": 2002.318603515625,
+        "runway_width": 45.099998474121094
+      },
+      "comment": "The runway's markings are drawn by the shader, sharp at any range; the ground map has only its asphalt. From airport.json's runway."
+    },
+    {
+      "id": "frame_end",
+      "plugin": "frame.gpu.end_scene"
+    },
+    {
+      "id": "composite_draw",
+      "plugin": "postfx.composite_draw"
+    },
+    {
+      "id": "overlay_init",
+      "plugin": "postfx.overlay_fps_init"
+    },
+    {
+      "id": "overlay_quad",
+      "plugin": "postfx.overlay_fps_upload_quad"
+    },
+    {
+      "id": "overlay_text",
+      "plugin": "postfx.overlay_fps_upload_text"
+    },
+    {
+      "id": "overlay_draw",
+      "plugin": "postfx.overlay_fps_draw"
+    },
+    {
+      "id": "command_buffer_submit",
+      "plugin": "gpu.command_buffer_submit",
+      "comment": "Without this the frame lands in a target nobody presents."
+    },
+    {
+      "id": "composite_finish",
+      "plugin": "postfx.composite_finish"
+    }
+  ]
+}

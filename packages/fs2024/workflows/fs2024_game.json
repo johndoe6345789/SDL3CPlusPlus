@@ -1,0 +1,758 @@
+{
+  "name": "FS2024 Ground",
+  "active": true,
+  "settings": {
+    "executionTimeout": 0
+  },
+  "variables": {
+    "window_width": {
+      "name": "window_width",
+      "type": "number",
+      "defaultValue": 1280
+    },
+    "window_height": {
+      "name": "window_height",
+      "type": "number",
+      "defaultValue": 960
+    },
+    "window_title": {
+      "name": "window_title",
+      "type": "string",
+      "defaultValue": "FS2024 - Innsbruck (LOWI)"
+    },
+    "renderer_type": {
+      "name": "renderer_type",
+      "type": "string",
+      "defaultValue": "auto"
+    },
+    "present_mode": {
+      "name": "present_mode",
+      "type": "string",
+      "defaultValue": "mailbox"
+    },
+    "shader_terrain_vert_path": {
+      "name": "shader_terrain_vert_path",
+      "type": "string",
+      "defaultValue": "packages/fs2024/shaders/msl/fs2024_terrain.vert.metal"
+    },
+    "shader_terrain_frag_path": {
+      "name": "shader_terrain_frag_path",
+      "type": "string",
+      "defaultValue": "packages/fs2024/shaders/msl/fs2024_terrain.frag.metal"
+    },
+    "shader_sky_vert_path": {
+      "name": "shader_sky_vert_path",
+      "type": "string",
+      "defaultValue": "packages/gta5/shaders/msl/gta5_sky.vert.metal"
+    },
+    "shader_sky_frag_path": {
+      "name": "shader_sky_frag_path",
+      "type": "string",
+      "defaultValue": "packages/gta5/shaders/msl/gta5_sky.frag.metal"
+    },
+    "shader_postfx_vert_path": {
+      "name": "shader_postfx_vert_path",
+      "type": "string",
+      "defaultValue": "packages/seed/shaders/msl/postfx_fullscreen.vert.metal"
+    },
+    "shader_composite_frag_path": {
+      "name": "shader_composite_frag_path",
+      "type": "string",
+      "defaultValue": "packages/gta5/shaders/msl/gta5_composite.frag.metal"
+    },
+    "ground_map_path": {
+      "name": "ground_map_path",
+      "type": "string",
+      "defaultValue": "D:/fs2024/lowi/ground.jpg"
+    }
+  },
+  "nodes": [
+    {
+      "id": "sdl_init",
+      "type": "sdl.init",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "sdl_window",
+      "type": "sdl.window.create",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "gpu_init_viewport",
+      "type": "graphics.gpu.init_viewport",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "present_mode": "auto",
+        "inputs": {
+          "width": "window_width",
+          "height": "window_height"
+        },
+        "outputs": {
+          "viewport_config": "viewport_config"
+        }
+      }
+    },
+    {
+      "id": "gpu_init_renderer",
+      "type": "graphics.gpu.init_renderer",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "inputs": {
+          "renderer_type": "renderer_type"
+        },
+        "outputs": {
+          "selected_renderer": "selected_renderer"
+        }
+      }
+    },
+    {
+      "id": "gpu_init",
+      "type": "graphics.gpu.init",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "inputs": {
+          "viewport_config": "viewport_config",
+          "selected_renderer": "selected_renderer"
+        },
+        "outputs": {
+          "gpu_handle": "gpu_handle"
+        }
+      }
+    },
+    {
+      "id": "compile_terrain_vert",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "stage": "vertex",
+        "output_key": "fs2024_terrain_vertex_shader",
+        "num_uniform_buffers": 1,
+        "num_samplers": 0
+      },
+      "inputs": {
+        "shader_path": "shader_terrain_vert_path"
+      }
+    },
+    {
+      "id": "compile_terrain_frag",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "stage": "fragment",
+        "output_key": "fs2024_terrain_fragment_shader",
+        "num_uniform_buffers": 1,
+        "num_samplers": 1
+      },
+      "inputs": {
+        "shader_path": "shader_terrain_frag_path"
+      }
+    },
+    {
+      "id": "create_terrain_pipeline",
+      "type": "graphics.gpu.pipeline.create",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "vertex_shader_key": "fs2024_terrain_vertex_shader",
+        "fragment_shader_key": "fs2024_terrain_fragment_shader",
+        "vertex_format": "position_uv_lmuv_normal",
+        "pipeline_key": "gpu_pipeline_fs2024_terrain",
+        "color_format": "rgba16_float"
+      }
+    },
+    {
+      "id": "compile_sky_vert",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "stage": "vertex",
+        "output_key": "gta5_sky_vertex_shader",
+        "num_uniform_buffers": 0,
+        "num_samplers": 0
+      },
+      "inputs": {
+        "shader_path": "shader_sky_vert_path"
+      }
+    },
+    {
+      "id": "compile_sky_frag",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "stage": "fragment",
+        "output_key": "gta5_sky_fragment_shader",
+        "num_uniform_buffers": 1,
+        "num_samplers": 0
+      },
+      "inputs": {
+        "shader_path": "shader_sky_frag_path"
+      }
+    },
+    {
+      "id": "create_sky_pipeline",
+      "type": "graphics.gpu.pipeline.create",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "vertex_shader_key": "gta5_sky_vertex_shader",
+        "fragment_shader_key": "gta5_sky_fragment_shader",
+        "vertex_format": "none",
+        "pipeline_key": "gpu_pipeline_gta5_sky",
+        "color_format": "rgba16_float",
+        "depth_test": 1,
+        "depth_write": 0,
+        "has_depth": 1,
+        "cull_mode": "none"
+      },
+      "comment": "The GTA V package's procedural sky, reused as is: it only needs the camera and the sun, and it publishes the horizon colour the ground fogs to."
+    },
+    {
+      "id": "postfx_setup",
+      "type": "postfx.setup",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "compile_postfx_vert",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "stage": "vertex",
+        "output_key": "postfx_vertex_shader",
+        "num_uniform_buffers": 0,
+        "num_samplers": 0
+      },
+      "inputs": {
+        "shader_path": "shader_postfx_vert_path"
+      }
+    },
+    {
+      "id": "compile_composite_frag",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "stage": "fragment",
+        "output_key": "fs2024_composite_fragment_shader",
+        "num_uniform_buffers": 0,
+        "num_samplers": 3
+      },
+      "inputs": {
+        "shader_path": "shader_composite_frag_path"
+      }
+    },
+    {
+      "id": "create_composite_pipeline",
+      "type": "graphics.gpu.pipeline.create",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "vertex_shader_key": "postfx_vertex_shader",
+        "fragment_shader_key": "fs2024_composite_fragment_shader",
+        "vertex_format": "none",
+        "pipeline_key": "postfx_composite_pipeline",
+        "depth_test": 0,
+        "depth_write": 0,
+        "has_depth": 0,
+        "cull_mode": "none"
+      }
+    },
+    {
+      "id": "ground_map",
+      "type": "texture.load",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "inputs": {
+          "image_path": "ground_map_path"
+        },
+        "outputs": {
+          "texture": "ground_map"
+        }
+      },
+      "comment": "8192 x 8192 colour map baked by python/fs2024/bake_terrain.py: land cover guessed from height and slope, with the airport's runway and aprons from its FS2024 BGL painted over it."
+    },
+    {
+      "id": "physics_world",
+      "type": "physics.world.create",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "force_update_all_aabbs": 0
+      }
+    },
+    {
+      "id": "player",
+      "type": "physics.body.add",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "name": "player",
+        "shape": "capsule",
+        "mass": 80,
+        "pos_x": 0.0,
+        "pos_y": 50.0,
+        "pos_z": 0.0,
+        "radius": 0.3,
+        "height": 1.0,
+        "lock_rotation": 1,
+        "is_player": 1
+      },
+      "comment": "Placed properly by spawn below, once the ground is loaded."
+    },
+    {
+      "id": "terrain_load",
+      "type": "fs2024.terrain.load",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "file_path": "D:/fs2024/lowi/terrain.fst",
+        "cells_per_chunk": 64
+      },
+      "comment": "16 x 16 km around LOWI at 16 m: Copernicus GLO-30 heights, levelled to the runway under the airport. Engine origin is the airport reference point at its elevation (576.8 m); x east, z south."
+    },
+    {
+      "id": "camera_setup",
+      "type": "camera.setup",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "outputs": {
+          "camera_state": "camera.state"
+        }
+      }
+    },
+    {
+      "id": "spawn",
+      "type": "fs2024.player.spawn",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "x": 303.15,
+        "z": -527.73,
+        "heading": 261.0,
+        "clearance": 0.3
+      },
+      "comment": "Runway 26 threshold, lined up to walk down the runway towards the city. From airport.json's spawn."
+    },
+    {
+      "id": "lighting",
+      "type": "lighting.setup",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "light_dir_x": -0.35,
+        "light_dir_y": -0.8,
+        "light_dir_z": -0.45,
+        "light_intensity": 2.4,
+        "ambient_r": 0.42,
+        "ambient_g": 0.47,
+        "ambient_b": 0.58,
+        "ambient_intensity": 0.9,
+        "exposure": 0.42
+      },
+      "comment": "A mid-morning sun from the south-east, as the valley gets it."
+    },
+    {
+      "id": "init_game_running",
+      "type": "value.literal",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "value": true,
+        "outputs": {
+          "value": "game_running"
+        }
+      }
+    },
+    {
+      "id": "game_loop",
+      "type": "control.loop.while",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "condition_key": "game_running",
+        "package": "fs2024",
+        "workflow": "fs2024_frame"
+      }
+    },
+    {
+      "id": "terrain_free",
+      "type": "fs2024.terrain.free",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "comment": "Before system.exit, while the device and the physics world still exist."
+    },
+    {
+      "id": "exit",
+      "type": "system.exit",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "sdl_init": {
+      "main": {
+        "0": [
+          {
+            "node": "sdl_window",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "sdl_window": {
+      "main": {
+        "0": [
+          {
+            "node": "gpu_init_viewport",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "gpu_init_viewport": {
+      "main": {
+        "0": [
+          {
+            "node": "gpu_init_renderer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "gpu_init_renderer": {
+      "main": {
+        "0": [
+          {
+            "node": "gpu_init",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "gpu_init": {
+      "main": {
+        "0": [
+          {
+            "node": "compile_terrain_vert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "compile_terrain_vert": {
+      "main": {
+        "0": [
+          {
+            "node": "compile_terrain_frag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "compile_terrain_frag": {
+      "main": {
+        "0": [
+          {
+            "node": "create_terrain_pipeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "create_terrain_pipeline": {
+      "main": {
+        "0": [
+          {
+            "node": "compile_sky_vert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "compile_sky_vert": {
+      "main": {
+        "0": [
+          {
+            "node": "compile_sky_frag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "compile_sky_frag": {
+      "main": {
+        "0": [
+          {
+            "node": "create_sky_pipeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "create_sky_pipeline": {
+      "main": {
+        "0": [
+          {
+            "node": "postfx_setup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "postfx_setup": {
+      "main": {
+        "0": [
+          {
+            "node": "compile_postfx_vert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "compile_postfx_vert": {
+      "main": {
+        "0": [
+          {
+            "node": "compile_composite_frag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "compile_composite_frag": {
+      "main": {
+        "0": [
+          {
+            "node": "create_composite_pipeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "create_composite_pipeline": {
+      "main": {
+        "0": [
+          {
+            "node": "ground_map",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "ground_map": {
+      "main": {
+        "0": [
+          {
+            "node": "physics_world",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "physics_world": {
+      "main": {
+        "0": [
+          {
+            "node": "player",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "player": {
+      "main": {
+        "0": [
+          {
+            "node": "terrain_load",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "terrain_load": {
+      "main": {
+        "0": [
+          {
+            "node": "camera_setup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "camera_setup": {
+      "main": {
+        "0": [
+          {
+            "node": "spawn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "spawn": {
+      "main": {
+        "0": [
+          {
+            "node": "lighting",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "lighting": {
+      "main": {
+        "0": [
+          {
+            "node": "init_game_running",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "init_game_running": {
+      "main": {
+        "0": [
+          {
+            "node": "game_loop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "game_loop": {
+      "main": {
+        "0": [
+          {
+            "node": "terrain_free",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "terrain_free": {
+      "main": {
+        "0": [
+          {
+            "node": "exit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    }
+  }
+}

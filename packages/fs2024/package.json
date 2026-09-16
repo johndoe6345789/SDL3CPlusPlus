@@ -1,0 +1,59 @@
+{
+  "name": "FS2024 Ground",
+  "version": "0.1.0",
+  "id": "fs2024",
+  "type": "game",
+  "category": "demo",
+  "description": "Walk the ground around a Microsoft Flight Simulator 2024 airport (Innsbruck, LOWI) with Quake 3 player kinematics",
+
+  "defaultWorkflow": "workflows/fs2024_game.json",
+
+  "workflows": [
+    "workflows/fs2024_frame.json",
+    "workflows/fs2024_input.json",
+    "workflows/fs2024_physics.json"
+  ],
+
+  "scene": [],
+
+  "shaders": [],
+
+  "assets": [],
+
+  "world_specifications": {
+    "unit_scale": {
+      "units_per_meter": 1,
+      "explanation": "FS2024 and the q3.pm.* constants are both metres, so nothing is rescaled."
+    },
+
+    "axis_convention": {
+      "source": "WGS84 longitude/latitude, metres above sea level",
+      "engine": "Y-up, x east, z south",
+      "mapping": "A local tangent frame on the airport reference point: x = east metres, y = altitude - airport elevation, z = -(north metres)",
+      "critical": "Applied once, by python/fs2024/bake_terrain.py. The engine only ever sees engine-space heights."
+    },
+
+    "world_bounds_metres": {
+      "min": [-8000.0, -100.0, -8000.0],
+      "max": [8000.0, 2100.0, 8000.0],
+      "note": "The baked 16 km square around LOWI. fs2024.player.ground_guard keeps the player 32 m inside it."
+    },
+
+    "player": {
+      "kinematics": "quake3",
+      "explanation": "The ioq3 pmove chain (q3.pm.*) unchanged, with the gta5 package's walking tune. Its traces sweep a Bullet heightfield."
+    }
+  },
+
+  "asset_pipeline": {
+    "status": "requires_local_bake",
+    "reason": "FS2024 streams its world elevation and land cover, so the ground is baked from a public DEM. The airport - position, elevation, runway, aprons - comes from the airport BGL the game installs, which is not encrypted. See README.md.",
+    "expected_input": "D:/fs2024/lowi/terrain.fst and ground.jpg, written by python -m python.fs2024.bake_terrain"
+  },
+
+  "bundled": false,
+
+  "dependencies": ["gta5", "seed"],
+
+  "notes": "Borrows gta5.sky.draw with the gta5 sky and composite shaders, and seed's postfx_fullscreen vertex shader."
+}
