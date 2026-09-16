@@ -1,4 +1,5 @@
 #include "services/interfaces/workflow/gta5/audio/gta5_sound_step.hpp"
+#include "services/interfaces/workflow/graphics/published_audio_devices.hpp"
 
 #include "services/interfaces/workflow/gta5/core/gta5_step_params.hpp"
 #include "services/interfaces/workflow/quake3/audio/q3_sound_playback.hpp"
@@ -49,7 +50,10 @@ void WorkflowGta5SoundStep::Open(const WorkflowStepDefinition& step) {
 
 void WorkflowGta5SoundStep::Execute(const WorkflowStepDefinition& step,
                                     WorkflowContext& context) {
-    if (!tried_) Open(step);
+    if (!tried_) {
+        Open(step);
+        PublishAudioDevice(context, device_);  // for a recording
+    }
     if (!device_ || !state_) return;
     const float dt =
         std::clamp(context.Get<float>("physics_dt", 1.f / 60.f), 0.f, 0.1f);

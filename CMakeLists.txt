@@ -112,6 +112,8 @@ find_package(GTest CONFIG REQUIRED)
 
 find_package(ZLIB CONFIG REQUIRED)
 
+find_package(ffmpeg CONFIG REQUIRED)
+
 
 # Build render stack library group
 set(SDL3CPP_RENDER_STACK_LIBS EnTT::EnTT)
@@ -579,6 +581,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/graphics/graphics_index_buffer_upload.cpp
         src/services/impl/workflow/graphics/graphics_screenshot_path.cpp
         src/services/impl/workflow/graphics/graphics_screenshot_request_helpers.cpp
+        src/services/impl/workflow/graphics/published_audio_devices.cpp
         src/services/impl/workflow/graphics/shader_binary_io.cpp
         src/services/impl/workflow/graphics/shader_compile_params.cpp
         src/services/impl/workflow/graphics/shader_format_detection.cpp
@@ -587,6 +590,39 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/graphics/texture_gpu_upload.cpp
         src/services/impl/workflow/graphics/texture_image_io.cpp
         src/services/impl/workflow/graphics/texture_load_sampler.cpp
+        src/services/impl/workflow/graphics/video_audio_codec.cpp
+        src/services/impl/workflow/graphics/video_audio_encode.cpp
+        src/services/impl/workflow/graphics/video_audio_frame.cpp
+        src/services/impl/workflow/graphics/video_audio_pad.cpp
+        src/services/impl/workflow/graphics/video_audio_resampler.cpp
+        src/services/impl/workflow/graphics/video_audio_tap.cpp
+        src/services/impl/workflow/graphics/video_audio_tap_mix.cpp
+        src/services/impl/workflow/graphics/video_audio_write.cpp
+        src/services/impl/workflow/graphics/video_av_error_text.cpp
+        src/services/impl/workflow/graphics/video_encode_worker.cpp
+        src/services/impl/workflow/graphics/video_encode_worker_audio.cpp
+        src/services/impl/workflow/graphics/video_encode_worker_run.cpp
+        src/services/impl/workflow/graphics/video_encoder_close.cpp
+        src/services/impl/workflow/graphics/video_encoder_codec.cpp
+        src/services/impl/workflow/graphics/video_encoder_configure.cpp
+        src/services/impl/workflow/graphics/video_encoder_drain.cpp
+        src/services/impl/workflow/graphics/video_encoder_file.cpp
+        src/services/impl/workflow/graphics/video_encoder_free.cpp
+        src/services/impl/workflow/graphics/video_encoder_open.cpp
+        src/services/impl/workflow/graphics/video_encoder_write.cpp
+        src/services/impl/workflow/graphics/video_pixel_order.cpp
+        src/services/impl/workflow/graphics/video_readback_collect.cpp
+        src/services/impl/workflow/graphics/video_readback_deliver.cpp
+        src/services/impl/workflow/graphics/video_readback_queue.cpp
+        src/services/impl/workflow/graphics/video_recorder_audio.cpp
+        src/services/impl/workflow/graphics/video_recorder_due.cpp
+        src/services/impl/workflow/graphics/video_recorder_get.cpp
+        src/services/impl/workflow/graphics/video_recorder_present.cpp
+        src/services/impl/workflow/graphics/video_recorder_settings.cpp
+        src/services/impl/workflow/graphics/video_recorder_start.cpp
+        src/services/impl/workflow/graphics/video_recorder_stop.cpp
+        src/services/impl/workflow/graphics/video_recorder_target.cpp
+        src/services/impl/workflow/graphics/video_step_params.cpp
         src/services/impl/workflow/graphics/workflow_gpu_command_buffer_submit_step.cpp
         src/services/impl/workflow/graphics/workflow_gpu_pipeline_create_step.cpp
         src/services/impl/workflow/graphics/workflow_gpu_screenshot_capture_step.cpp
@@ -603,6 +639,9 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/graphics/workflow_graphics_init_viewport_step.cpp
         src/services/impl/workflow/graphics/workflow_graphics_screenshot_request_step.cpp
         src/services/impl/workflow/graphics/workflow_texture_load_step.cpp
+        src/services/impl/workflow/graphics/workflow_video_record_begin_step.cpp
+        src/services/impl/workflow/graphics/workflow_video_record_end_step.cpp
+        src/services/impl/workflow/graphics/workflow_video_record_stop_step.cpp
         src/services/impl/workflow/input/gamepad_state_read.cpp
         src/services/impl/workflow/input/input_aggregation_config.cpp
         src/services/impl/workflow/input/input_axis_combine_write.cpp
@@ -1088,6 +1127,11 @@ if(BUILD_SDL3_APP)
         assimp::assimp
         spdlog::spdlog
         ZLIB::ZLIB
+        ffmpeg::avformat
+        ffmpeg::avcodec
+        ffmpeg::swscale
+        ffmpeg::swresample
+        ffmpeg::avutil
     )
 endif()
 
@@ -1511,6 +1555,52 @@ target_link_libraries(gta5_traffic_aim_test PRIVATE
     assimp::assimp
 )
 add_test(NAME gta5_traffic_aim_test COMMAND gta5_traffic_aim_test)
+
+add_executable(video_encoder_test)
+target_sources(video_encoder_test PRIVATE tests/video_encoder_test.cpp)
+target_sources(video_encoder_test PRIVATE tests/video_encoder_audio_test.cpp)
+target_sources(video_encoder_test PRIVATE tests/video_test_media.cpp)
+target_sources(video_encoder_test PRIVATE tests/video_test_audio_media.cpp)
+target_sources(video_encoder_test PRIVATE src/services/impl/workflow/graphics/video_av_error_text.cpp)
+target_sources(video_encoder_test PRIVATE src/services/impl/workflow/graphics/video_audio_codec.cpp)
+target_sources(video_encoder_test PRIVATE src/services/impl/workflow/graphics/video_audio_encode.cpp)
+target_sources(video_encoder_test PRIVATE src/services/impl/workflow/graphics/video_audio_frame.cpp)
+target_sources(video_encoder_test PRIVATE src/services/impl/workflow/graphics/video_audio_pad.cpp)
+target_sources(video_encoder_test PRIVATE src/services/impl/workflow/graphics/video_audio_resampler.cpp)
+target_sources(video_encoder_test PRIVATE src/services/impl/workflow/graphics/video_audio_write.cpp)
+target_sources(video_encoder_test PRIVATE src/services/impl/workflow/graphics/video_encoder_close.cpp)
+target_sources(video_encoder_test PRIVATE src/services/impl/workflow/graphics/video_encoder_codec.cpp)
+target_sources(video_encoder_test PRIVATE src/services/impl/workflow/graphics/video_encoder_configure.cpp)
+target_sources(video_encoder_test PRIVATE src/services/impl/workflow/graphics/video_encoder_drain.cpp)
+target_sources(video_encoder_test PRIVATE src/services/impl/workflow/graphics/video_encoder_file.cpp)
+target_sources(video_encoder_test PRIVATE src/services/impl/workflow/graphics/video_encoder_free.cpp)
+target_sources(video_encoder_test PRIVATE src/services/impl/workflow/graphics/video_encoder_open.cpp)
+target_sources(video_encoder_test PRIVATE src/services/impl/workflow/graphics/video_encoder_write.cpp)
+target_include_directories(video_encoder_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(video_encoder_test PRIVATE
+    GTest::gtest_main
+    ffmpeg::avformat
+    ffmpeg::avcodec
+    ffmpeg::swscale
+    ffmpeg::avutil
+    ffmpeg::swresample
+)
+add_test(NAME video_encoder_test COMMAND video_encoder_test)
+
+add_executable(video_audio_tap_test)
+target_sources(video_audio_tap_test PRIVATE tests/video_audio_tap_test.cpp)
+target_sources(video_audio_tap_test PRIVATE src/services/impl/workflow/graphics/video_audio_tap.cpp)
+target_sources(video_audio_tap_test PRIVATE src/services/impl/workflow/graphics/video_audio_tap_mix.cpp)
+target_include_directories(video_audio_tap_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(video_audio_tap_test PRIVATE
+    GTest::gtest_main
+    ${SDL_TARGET}
+)
+add_test(NAME video_audio_tap_test COMMAND video_audio_tap_test)
 
 # ============================================================================
 # FILE COPYING

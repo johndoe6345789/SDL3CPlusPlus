@@ -228,6 +228,22 @@ glslc -fshader-stage=frag shaders/spirv/gta5_model.frag.glsl -o shaders/spirv/gt
 because the engine rewrites it to `shaders/spirv/` off Metal; a Metal
 build needs the `.metal` variants written.
 
+## Recording
+
+`gta5_frame.json` carries the engine's `video.record.begin` and
+`video.record.end` steps, and `gta5_game.json` ends the recording with
+`video.record.stop` once the loop exits. They do nothing unless
+`SDL3CPP_RECORD` (or `output_path` on `video_record_begin`) names a
+`.mp4` or `.mkv`; see the top-level README for the settings.
+`SDL3CPP_RECORD_DELAY=45` skips the indexing and loading, which
+takes about 40 s from a warm OS cache.
+
+On a recorded frame the composite, overlay, HUD and map draw into a
+texture the recorder owns rather than into the swapchain -- SDL's
+Vulkan swapchain images cannot be read back -- and `video.record.end`
+blits that texture to the window. Recording at 30 fps costs about
+10 fps of the ~160 the downtown spawn runs at.
+
 ## Known gaps
 
 - **Load speed.** Drawables and textures are read, inflated and

@@ -1,4 +1,5 @@
 #include "services/interfaces/workflow/quake3/audio/workflow_q3_sound_init_step.hpp"
+#include "services/interfaces/workflow/graphics/published_audio_devices.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
 #include <SDL3/SDL_audio.h>
@@ -36,6 +37,7 @@ void WorkflowQ3SoundInitStep::Execute(const WorkflowStepDefinition&,
         }
         return;
     }
+    PublishAudioDevice(context, device);  // for a recording
 
     // Streams must be created against the device's real format; a null
     // destination spec silently produces a stream that plays nothing.

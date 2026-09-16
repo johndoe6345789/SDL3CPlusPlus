@@ -55,7 +55,8 @@
       "libzip",
       "spdlog",
       "GTest",
-      "ZLIB"
+      "ZLIB",
+      "ffmpeg"
     ]
   },
   "source_exclusions": [
@@ -201,7 +202,12 @@
         "libzip::zip",
         "assimp::assimp",
         "spdlog::spdlog",
-        "ZLIB::ZLIB"
+        "ZLIB::ZLIB",
+        "ffmpeg::avformat",
+        "ffmpeg::avcodec",
+        "ffmpeg::swscale",
+        "ffmpeg::swresample",
+        "ffmpeg::avutil"
       ],
       "compile_definitions": [],
       "name": "sdl3_app",
@@ -669,6 +675,56 @@
         "Bullet::Bullet",
         "${SDL_TARGET}",
         "assimp::assimp"
+      ]
+    },
+    {
+      "name": "video_encoder_test",
+      "sources": [
+        "tests/video_encoder_test.cpp",
+        "tests/video_encoder_audio_test.cpp",
+        "tests/video_test_media.cpp",
+        "tests/video_test_audio_media.cpp",
+        "src/services/impl/workflow/graphics/video_av_error_text.cpp",
+        "src/services/impl/workflow/graphics/video_audio_codec.cpp",
+        "src/services/impl/workflow/graphics/video_audio_encode.cpp",
+        "src/services/impl/workflow/graphics/video_audio_frame.cpp",
+        "src/services/impl/workflow/graphics/video_audio_pad.cpp",
+        "src/services/impl/workflow/graphics/video_audio_resampler.cpp",
+        "src/services/impl/workflow/graphics/video_audio_write.cpp",
+        "src/services/impl/workflow/graphics/video_encoder_close.cpp",
+        "src/services/impl/workflow/graphics/video_encoder_codec.cpp",
+        "src/services/impl/workflow/graphics/video_encoder_configure.cpp",
+        "src/services/impl/workflow/graphics/video_encoder_drain.cpp",
+        "src/services/impl/workflow/graphics/video_encoder_file.cpp",
+        "src/services/impl/workflow/graphics/video_encoder_free.cpp",
+        "src/services/impl/workflow/graphics/video_encoder_open.cpp",
+        "src/services/impl/workflow/graphics/video_encoder_write.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main",
+        "ffmpeg::avformat",
+        "ffmpeg::avcodec",
+        "ffmpeg::swscale",
+        "ffmpeg::avutil",
+        "ffmpeg::swresample"
+      ]
+    },
+    {
+      "name": "video_audio_tap_test",
+      "sources": [
+        "tests/video_audio_tap_test.cpp",
+        "src/services/impl/workflow/graphics/video_audio_tap.cpp",
+        "src/services/impl/workflow/graphics/video_audio_tap_mix.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main",
+        "${SDL_TARGET}"
       ]
     }
   ],

@@ -871,6 +871,16 @@
       }
     },
     {
+      "id": "video_record_stop",
+      "type": "video.record.stop",
+      "typeVersion": 1,
+      "position": [
+        1050,
+        200
+      ],
+      "comment": "Finishes a recording once the loop stops: waits for the last downloads and writes the file's trailer, without which it will not play. Needs the GPU device, so before system.exit."
+    },
+    {
       "id": "vehicles_free",
       "type": "gta5.vehicles.free",
       "typeVersion": 1,
@@ -1013,6 +1023,17 @@
       }
     },
     "game_loop": {
+      "main": {
+        "0": [
+          {
+            "node": "video_record_stop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "video_record_stop": {
       "main": {
         "0": [
           {

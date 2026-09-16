@@ -78,6 +78,25 @@ python python/dev_commands.py gui
 `QUAKE3_PAK0` is auto-detected from a Steam install when present, so `--game quake3`
 usually needs no extra arguments; the map defaults to `q3dm7` if none is given.
 
+### Recording Video
+
+A workflow that includes the `video.record.begin`, `video.record.end` and
+`video.record.stop` steps (the `gta5` package does) records the window to
+H.264. Set `SDL3CPP_RECORD` to a `.mp4` or `.mkv` path to turn it on:
+
+```bash
+# 12 s at half size, starting once the map has loaded, then quit
+python python/dev_commands.py run --game gta5 \
+  --env SDL3CPP_RECORD=recordings/gta5.mp4 --env SDL3CPP_RECORD_DELAY=45 \
+  --env SDL3CPP_RECORD_SECONDS=12 --env SDL3CPP_RECORD_SCALE=0.5 \
+  --env SDL3CPP_RECORD_EXIT=1
+```
+
+Relative paths are relative to the build directory. The other settings are
+`SDL3CPP_RECORD_FPS` (30) and `SDL3CPP_RECORD_CRF` (23; lower is sharper and
+larger). Encoding runs on its own thread, and frames are read back from the
+GPU without waiting for it.
+
 ### Build Steps (Manual)
 
 

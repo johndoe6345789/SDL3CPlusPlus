@@ -1,4 +1,5 @@
 #include "services/interfaces/workflow/gta5/audio/gta5_radio_step.hpp"
+#include "services/interfaces/workflow/graphics/published_audio_devices.hpp"
 
 #include "services/interfaces/workflow/gta5/core/gta5_step_params.hpp"
 #include "services/interfaces/workflow_context.hpp"
@@ -35,6 +36,7 @@ void WorkflowGta5RadioStep::Open(const WorkflowStepDefinition& step,
         spec_ = {SDL_AUDIO_F32, 2, 48000};
     }
     SDL_ResumeAudioDevice(device_);
+    PublishAudioDevice(context, device_);  // for a recording
     if (logger_) {
         logger_->Info("gta5.radio: " + std::to_string(stations_.size()) +
                       (standIn ? " stand-in" : "") + " stations");
