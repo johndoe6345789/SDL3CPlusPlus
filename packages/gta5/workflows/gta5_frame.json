@@ -96,7 +96,7 @@
       "plugin": "gta5.traffic",
       "parameters": {
         "roads_dir": "D:/gtautil-2.2.13/levels/gta5/paths.rpf",
-        "cars": 28,
+        "cars": 40,
         "cycle": 20.0,
         "amber": 3.0,
         "near": 40.0,
