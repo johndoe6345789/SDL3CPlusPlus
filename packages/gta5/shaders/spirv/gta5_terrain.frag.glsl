@@ -36,7 +36,7 @@ layout(location = 1) in vec3 v_worldNormal;
 layout(location = 2) in vec3 v_worldPos;
 layout(location = 3) in vec3 v_cameraPos;
 layout(location = 4) in vec4 v_shadowPos;
-layout(location = 5) in vec4 v_blend;   // colour 1 b, g; colour 0 a
+layout(location = 5) in vec4 v_blend;   // colour 1 b, g; colour 0 a; has 1
 layout(location = 6) in vec2 v_uv1;     // where the mask is read
 
 layout(location = 0) out vec4 o_color;
@@ -48,7 +48,9 @@ layout(location = 0) out vec4 o_color;
 void main() {
     vec2 w = v_blend.xy;  // (blue, green)
     if (u_surface.a > 0.5) {
-        w = mix(texture(lookupMask, v_uv1).bg, w, v_blend.z);
+        // Without a colour 1 the mask alone decides.
+        float own = v_blend.w > 0.5 ? v_blend.z : 0.0;
+        w = mix(texture(lookupMask, v_uv1).bg, w, own);
     }
     vec4 near = mix(texture(layer0, v_uv), texture(layer1, v_uv), w.x);
     vec4 far = mix(texture(layer2, v_uv), texture(layer3, v_uv), w.x);

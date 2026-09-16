@@ -9,9 +9,6 @@ Status: `[ ]` open, `[~]` in progress, `[x]` done.
 
 ## 1. Look
 
-- [ ] **Dirt and decal shaders.** Walls carry hard black drips, the
-  paving dark blotches: GTA's dirt layers drawn as opaque paint. Done:
-  they read as the faint grime they are in GTA.
 - [ ] **Normal and specular maps.** Tiles and concrete are flat paint.
   GTA ships both maps per shader.
 - [ ] **Ambient occlusion.** No contact shadow where walls meet the
@@ -63,3 +60,9 @@ Status: `[ ]` open, `[~]` in progress, `[x]` done.
   concrete back near where it was, and water's own colour halved to
   match. The three shaders share their shadow, water and haze code
   from `include/` instead of three copies.
+- [x] **Dirt and decals.** The black drips and blotches were ordinary
+  decals (`decal`, `normal_spec_decal`, `decal_tnt`; no `decal_dirt`
+  downtown) drawn at their texture's full alpha. GTA fades each by its
+  vertex colour 0 alpha: across 8,088 decal meshes that alpha has a
+  median of 147/255, and only 2,221 are fully opaque. Colour 0's alpha
+  now rides in every vertex, and blended surfaces multiply it in.

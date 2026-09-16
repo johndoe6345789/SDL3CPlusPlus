@@ -35,18 +35,20 @@ bool ReadGta5Uv(const Gta5Resource& res, std::int64_t at,
 void PackGta5TerrainVertex(const Gta5Resource& res,
                            const Gta5VertexLayout& layout, std::int64_t at,
                            BspRenderVertex& v) {
-    // R8G8B8A8: red at +0, green +1, blue +2, alpha +3.
+    // R8G8B8A8: red at +0, green +1, blue +2, alpha +3. Blue and green
+    // keep seven bits each, which frees one for "has colour 1": colour
+    // 0's alpha now rides along for every surface (decals fade by it),
+    // and terrain still knows when its mask alone decides.
     const bool has1 = layout.colour1Format == kUnorm4;
     const std::int64_t c1 = at + layout.colour1;
-    const float blue = has1 ? res.U8(c1 + 2) : 128.f;
-    const float green = has1 ? res.U8(c1 + 1) : 128.f;
-    float alpha = 0.f;
-    if (has1) {
-        alpha = layout.colour0Format == kUnorm4
-                    ? static_cast<float>(res.U8(at + layout.colour0 + 3))
-                    : 255.f;
-    }
-    v.lm_u = blue + 256.f * green + 65536.f * alpha;
+    const float blue = has1 ? res.U8(c1 + 2) >> 1 : 64.f;
+    const float green = has1 ? res.U8(c1 + 1) >> 1 : 64.f;
+    const float alpha =
+        layout.colour0Format == kUnorm4
+            ? static_cast<float>(res.U8(at + layout.colour0 + 3))
+            : 255.f;
+    v.lm_u = blue + 128.f * green + 16384.f * alpha +
+             (has1 ? 4194304.f : 0.f);
     float u1 = 0.f, v1 = 0.f;
     ReadGta5Uv(res, at + layout.uv1, layout.uv1Format, u1, v1);
     v.lm_v = Twelve(u1) + 4096.f * Twelve(v1);

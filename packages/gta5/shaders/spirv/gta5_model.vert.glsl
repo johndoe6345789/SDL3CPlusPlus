@@ -31,7 +31,9 @@ layout(location = 1) out vec3 v_worldNormal;
 layout(location = 2) out vec3 v_worldPos;
 layout(location = 3) out vec3 v_cameraPos;
 layout(location = 4) out vec4 v_shadowPos;
-layout(location = 5) out vec4 v_blend;  // terrain: colour 1 b, g; colour 0 a
+// Colour 1's b and g (terrain), colour 0's a (everything), and 1 where
+// the vertex has a colour 1.
+layout(location = 5) out vec4 v_blend;
 layout(location = 6) out vec2 v_uv1;    // terrain: where the mask is read
 
 void main() {
@@ -49,11 +51,13 @@ void main() {
     // Looked up a little off the surface, along its normal: a face
     // compared against its own depth in the map shadows itself in bands.
     v_shadowPos = u_shadowVP * (wp + vec4(v_worldNormal * 0.08, 0.0));
-    // Terrain's data comes packed in the lightmap uv as whole numbers
-    // (see gta5_vertex_layout): three bytes in x, two 12-bit coordinates
-    // in y. Unused by every other surface.
+    // Packed in the lightmap uv as whole numbers (see
+    // gta5_vertex_terrain.cpp): 7-bit b and g, 8-bit a and a flag in x,
+    // two 12-bit coordinates in y.
     float w = a_lmuv.x;
-    v_blend = vec4(mod(w, 256.0), mod(floor(w / 256.0), 256.0),
-                   floor(w / 65536.0), 0.0) / 255.0;
+    v_blend = vec4(mod(w, 128.0) / 127.0,
+                   mod(floor(w / 128.0), 128.0) / 127.0,
+                   mod(floor(w / 16384.0), 256.0) / 255.0,
+                   floor(w / 4194304.0));
     v_uv1 = vec2(mod(a_lmuv.y, 4096.0), floor(a_lmuv.y / 4096.0)) / 4095.0;
 }

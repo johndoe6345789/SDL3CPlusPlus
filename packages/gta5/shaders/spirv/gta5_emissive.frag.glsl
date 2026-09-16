@@ -25,6 +25,7 @@ layout(location = 1) in vec3 v_worldNormal;
 layout(location = 2) in vec3 v_worldPos;
 layout(location = 3) in vec3 v_cameraPos;
 layout(location = 4) in vec4 v_shadowPos;
+layout(location = 5) in vec4 v_blend;  // z: colour 0's alpha
 
 layout(location = 0) out vec4 o_color;
 
@@ -45,5 +46,5 @@ void main() {
     // and moon light, and not shaded by them either.
     color += albedo * clamp(u_night.x, 0.0, 1.0) * 1.2;
     color = Atmosphere(color, Exposure());
-    o_color = vec4(color, texel.a);
+    o_color = vec4(color, texel.a * v_blend.z);
 }

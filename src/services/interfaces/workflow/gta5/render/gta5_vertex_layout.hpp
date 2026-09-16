@@ -28,10 +28,11 @@ bool ReadGta5VertexLayout(const Gta5Resource& res, std::int64_t buffer,
                           Gta5VertexLayout& out);
 
 /// One vertex in engine space: position and normal (x, z, -y), uv as
-/// stored. Terrain's data rides in the unused lightmap uv as whole
-/// numbers, which a float holds exactly below 2^24: lm_u is colour 1's
-/// blue + 256 green -- the layer weights -- + 65536 colour 0's alpha --
-/// how far a lookup mask gives way to them; lm_v is texcoord 1, where the
+/// stored. Colours ride in the unused lightmap uv as whole numbers,
+/// which a float holds exactly below 2^24: lm_u is colour 1's blue/2 +
+/// 128 green/2 -- terrain's layer weights -- + 16384 colour 0's alpha --
+/// how far a lookup mask gives way to them, and how strong a decal is --
+/// + 2^22 when there is a colour 1; lm_v is texcoord 1, where terrain's
 /// mask is read, as 12 bits each of u and v over [0, 1].
 BspRenderVertex ReadGta5Vertex(const Gta5Resource& res,
                                const Gta5VertexLayout& layout,
