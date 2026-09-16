@@ -862,6 +862,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/hud/gta5_hud_menu.cpp
         src/services/impl/workflow/gta5/hud/gta5_hud_needle.cpp
         src/services/impl/workflow/gta5/hud/gta5_hud_step.cpp
+        src/services/impl/workflow/gta5/hud/gta5_hud_weapon_timer.cpp
         src/services/impl/workflow/gta5/hud/gta5_hud_wheel.cpp
         src/services/impl/workflow/gta5/hud/gta5_map_atlas.cpp
         src/services/impl/workflow/gta5/hud/gta5_map_font.cpp

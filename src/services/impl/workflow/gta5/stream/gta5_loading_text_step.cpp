@@ -31,14 +31,10 @@ void WorkflowGta5LoadingTextStep::Execute(const WorkflowStepDefinition&,
     // Blank until the hold has something to say, and blank again after:
     // the overlay texture is never left holding whatever it was created
     // with.
-    // Loading progress while there is any, and the clock after it.
+    // Loading progress while there is any, and after it, for a few
+    // seconds in a car, the station. No clock: GTA shows none.
     std::string text = context.GetString("gta5.loading.text", "");
-    if (text.empty()) {
-        // The clock, and for a few seconds in a car the station before it.
-        text = context.GetString("gta5.clock.text", "");
-        const std::string radio = context.GetString("gta5.radio.text", "");
-        if (!radio.empty()) text = radio + "  " + text;
-    }
+    if (text.empty()) text = context.GetString("gta5.radio.text", "");
     if (uploaded_ && text == shown_) return;
     const SDL_Color amber{255, 220, 50, 255};
     const bool ok = UploadGpuTextOverlayText(*res, cmd, text.c_str(), amber);

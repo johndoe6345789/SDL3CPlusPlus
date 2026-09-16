@@ -41,9 +41,9 @@ Gta5MapFrame BuildGta5HudFrame(const Gta5Hud& hud, int width, int height,
     const Gta5MapLayout l = FitGta5Map(width, height);
     const float w = float(width), h = float(height);
     Bars(frame, l, hud, h, s);
-    // The weapon, top right under the clock: its name, then the clip and
-    // what is left besides.
-    if (!s.weapon.empty()) {
+    // The weapon, top right: its name, then the clip and what is left
+    // besides -- while it matters, as GTA shows it.
+    if (s.showWeapon) {
         AddGta5HudText(frame, l, hud, glm::vec2(w - 24.f, 36.f), 3.f,
                        s.weapon, 1.f);
         if (s.clip >= 0) {

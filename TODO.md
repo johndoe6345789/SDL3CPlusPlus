@@ -22,12 +22,6 @@ Status: `[ ]` open, `[~]` in progress, `[x]` done.
 
 ## 3. Weapons and HUD
 
-- [ ] **Start unarmed.** The pistol is out while strolling.
-- [ ] **Reticle only when aiming.** It sits on the character's head
-  all the time.
-- [ ] **Weapon readout only when it matters.** `PISTOL 6 190` never
-  leaves the screen; GTA shows it when aiming, firing or choosing.
-- [ ] **Drop the debug clock.** GTA has no clock on screen.
 - [ ] **Minimap with health and armour.** A lone green bar today.
 
 ## 4. Life
@@ -68,3 +62,7 @@ Status: `[ ]` open, `[~]` in progress, `[x]` done.
   and pulls in with a 0.45 m sphere instead of a ray: a ray that
   slipped past a wall's edge let the near plane, 0.8 m to its corners,
   cut a third of the screen out of it.
+- [x] **Weapons and HUD.** The game starts holstered (the pistol is
+  still owned, a Q away); the reticle shows only while aiming; the
+  weapon readout shows while aiming, choosing, or for 3 s after the
+  weapon or its clip changes; and the clock is gone.

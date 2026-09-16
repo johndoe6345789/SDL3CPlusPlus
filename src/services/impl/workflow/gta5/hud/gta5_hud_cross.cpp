@@ -7,9 +7,11 @@ namespace sdl3cpp::services::impl {
 void AddGta5HudCrosshair(Gta5MapFrame& frame, const Gta5MapLayout& layout,
                          const Gta5Hud& hud, const Gta5HudState& state,
                          float w, float h) {
-    // Only with something in hand, and not behind a windscreen, a menu
-    // or the wheel.
-    if (state.weapon.empty() || state.driving || state.menuOpen) return;
+    // Only while aiming, as GTA's: a reticle on the character's head
+    // the whole walk is in the way. Never behind a windscreen, a menu or
+    // the wheel.
+    if (!state.aiming || state.weapon.empty()) return;
+    if (state.driving || state.menuOpen) return;
     if (!state.wheel.items.empty()) return;
     const glm::vec2 mid(w * 0.5f, h * 0.5f);
     const float gap = 5.f, arm = 11.f, thick = 2.f;

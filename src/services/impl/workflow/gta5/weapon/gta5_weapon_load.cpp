@@ -23,9 +23,11 @@ void WorkflowGta5WeaponStep::Load(const WorkflowStepDefinition& step,
     if (owns == 0 && !weapons_.empty()) {
         inventory.clip[0] = weapons_[0].clip;
         inventory.reserve[0] = weapons_[0].max;
-        inventory.current = 0;
-        context.Set("gta5.inventory", inventory);
     }
+    // Holstered, whatever was in hand when the game was saved: GTA puts
+    // you in the world with your fists, the rest a Q away.
+    inventory.current = -1;
+    context.Set("gta5.inventory", inventory);
     if (logger_) {
         logger_->Info("gta5.weapon: " + std::to_string(weapons_.size()) +
                       " weapons");

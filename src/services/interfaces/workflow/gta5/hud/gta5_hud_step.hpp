@@ -32,6 +32,7 @@ private:
     std::shared_ptr<ILogger> logger_;
     std::shared_ptr<Gta5StreamState> state_;
     Gta5Hud hud_;
+    Gta5HudWeaponTimer weaponTimer_;
 };
 
 }  // namespace sdl3cpp::services::impl

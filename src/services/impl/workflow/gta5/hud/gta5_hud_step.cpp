@@ -4,6 +4,8 @@
 #include "services/interfaces/workflow/rendering/workflow_postfx_composite_state.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
+#include <SDL3/SDL_timer.h>
+
 #include <cmath>
 #include <utility>
 
@@ -43,6 +45,7 @@ void WorkflowGta5HudStep::Execute(const WorkflowStepDefinition&,
     s.weapon = context.GetString("gta5.weapon.name", "");
     s.clip = context.Get<int>("gta5.weapon.clip", -1);
     s.reserve = context.Get<int>("gta5.weapon.reserve", 0);
+    s.aiming = context.GetBool("gta5.weapon.aiming", false);
     s.driving = state_->seated >= 0;
     s.kmh = std::abs(context.Get<float>("gta5.car.speed", 0.f)) * 3.6f;
     s.revs = context.Get<float>("gta5.car.revs", 0.f);
@@ -56,6 +59,7 @@ void WorkflowGta5HudStep::Execute(const WorkflowStepDefinition&,
             "gta5.wheel.items", {});
         s.wheel.selected = context.Get<int>("gta5.wheel.selected", 0);
     }
+    s.showWeapon = Gta5HudWeaponShown(weaponTimer_, s, SDL_GetTicks());
     const Gta5MapFrame frame = BuildGta5HudFrame(
         hud_, static_cast<int>(context.Get<uint32_t>("frame_width", 1280u)),
         static_cast<int>(context.Get<uint32_t>("frame_height", 960u)), s);
