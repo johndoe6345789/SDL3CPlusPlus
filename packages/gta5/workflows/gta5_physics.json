@@ -63,6 +63,11 @@
       }
     },
     {
+      "id": "player_climb",
+      "plugin": "gta5.player.climb",
+      "comment": "Space facing a wall with a top 0.4-2 m up climbs onto it, as GTA's vault; anywhere else it is the jump above. After the slide, whose move it replaces while it lasts, and after the swim, which has Space to itself in water."
+    },
+    {
       "id": "player_fly",
       "plugin": "gta5.player.fly",
       "parameters": {

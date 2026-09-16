@@ -18,7 +18,6 @@ Status: `[ ]` open, `[~]` in progress, `[x]` done.
 
 ## 2. Feel
 
-- [ ] **Climb and vault.** A knee-high planter stops the player dead.
 
 ## 3. Weapons and HUD
 
@@ -66,3 +65,7 @@ Status: `[ ]` open, `[~]` in progress, `[x]` done.
   still owned, a Q away); the reticle shows only while aiming; the
   weapon readout shows while aiming, choosing, or for 3 s after the
   weapon or its clip changes; and the clock is gone.
+- [x] **Climb and vault.** Space facing a wall with a top 0.4-2 m up
+  climbs onto it in about half a second (`gta5.player.climb`); anywhere
+  else it is the jump. Tested on boxes (`gta5_climb_test`) and seen in a
+  recording, up a 0.89 m planter in Legion Square.

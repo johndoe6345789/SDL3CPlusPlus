@@ -726,6 +726,22 @@
         "GTest::gtest_main",
         "${SDL_TARGET}"
       ]
+    },
+    {
+      "name": "gta5_climb_test",
+      "sources": [
+        "tests/gta5_climb_test.cpp",
+        "src/services/impl/workflow/gta5/player/gta5_climb_find.cpp",
+        "src/services/impl/workflow/gta5/player/gta5_look.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main",
+        "Bullet::Bullet",
+        "glm::glm"
+      ]
     }
   ],
   "file_copying": [

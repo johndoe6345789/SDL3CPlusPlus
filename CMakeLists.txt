@@ -901,6 +901,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/ped/gta5_ped_upload.cpp
         src/services/impl/workflow/gta5/ped/gta5_ped_walk.cpp
         src/services/impl/workflow/gta5/ped/gta5_skeleton.cpp
+        src/services/impl/workflow/gta5/player/gta5_climb_find.cpp
         src/services/impl/workflow/gta5/player/gta5_gamepad_keys.cpp
         src/services/impl/workflow/gta5/player/gta5_gamepad_publish.cpp
         src/services/impl/workflow/gta5/player/gta5_gamepad_read.cpp
@@ -911,11 +912,15 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/player/gta5_player_character_id.cpp
         src/services/impl/workflow/gta5/player/gta5_player_character_load.cpp
         src/services/impl/workflow/gta5/player/gta5_player_character_step.cpp
+        src/services/impl/workflow/gta5/player/gta5_player_climb_begin.cpp
+        src/services/impl/workflow/gta5/player/gta5_player_climb_id.cpp
+        src/services/impl/workflow/gta5/player/gta5_player_climb_step.cpp
         src/services/impl/workflow/gta5/player/gta5_player_fly_step.cpp
         src/services/impl/workflow/gta5/player/gta5_player_hold_step.cpp
         src/services/impl/workflow/gta5/player/gta5_player_pin.cpp
         src/services/impl/workflow/gta5/player/gta5_player_swim_step.cpp
         src/services/impl/workflow/gta5/player/gta5_player_travel.cpp
+        src/services/impl/workflow/gta5/player/gta5_register_movement.cpp
         src/services/impl/workflow/gta5/player/gta5_shown_transform.cpp
         src/services/impl/workflow/gta5/player/gta5_wasd.cpp
         src/services/impl/workflow/gta5/render/gta5_daylight.cpp
@@ -1608,6 +1613,20 @@ target_link_libraries(video_audio_tap_test PRIVATE
     ${SDL_TARGET}
 )
 add_test(NAME video_audio_tap_test COMMAND video_audio_tap_test)
+
+add_executable(gta5_climb_test)
+target_sources(gta5_climb_test PRIVATE tests/gta5_climb_test.cpp)
+target_sources(gta5_climb_test PRIVATE src/services/impl/workflow/gta5/player/gta5_climb_find.cpp)
+target_sources(gta5_climb_test PRIVATE src/services/impl/workflow/gta5/player/gta5_look.cpp)
+target_include_directories(gta5_climb_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(gta5_climb_test PRIVATE
+    GTest::gtest_main
+    Bullet::Bullet
+    glm::glm
+)
+add_test(NAME gta5_climb_test COMMAND gta5_climb_test)
 
 # ============================================================================
 # FILE COPYING

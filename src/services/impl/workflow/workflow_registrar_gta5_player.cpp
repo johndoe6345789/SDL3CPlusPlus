@@ -3,8 +3,7 @@
 #include "services/interfaces/workflow/gta5/render/gta5_lights_step.hpp"
 #include "services/interfaces/workflow/gta5/player/gta5_player_camera_step.hpp"
 #include "services/interfaces/workflow/gta5/player/gta5_player_character_step.hpp"
-#include "services/interfaces/workflow/gta5/player/gta5_player_fly_step.hpp"
-#include "services/interfaces/workflow/gta5/player/gta5_player_swim_step.hpp"
+#include "services/interfaces/workflow/gta5/player/gta5_register_movement.hpp"
 #include "services/interfaces/workflow/gta5/render/gta5_reflection_step.hpp"
 #include "services/interfaces/workflow/gta5/render/gta5_shadow_step.hpp"
 #include "services/interfaces/workflow/gta5/effects/gta5_effects_prepare_step.hpp"
@@ -26,8 +25,7 @@ int RegisterGta5PlayerSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
                             std::shared_ptr<ILogger> logger,
                             std::shared_ptr<Gta5StreamState> state) {
     if (!registry) return 0;
-    registry->RegisterStep(
-        std::make_shared<WorkflowGta5PlayerFlyStep>(logger, state));
+    RegisterGta5MovementSteps(*registry, logger, state);
     registry->RegisterStep(
         std::make_shared<WorkflowGta5PlayerCameraStep>(logger, state));
     registry->RegisterStep(
@@ -40,8 +38,6 @@ int RegisterGta5PlayerSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
         std::make_shared<WorkflowGta5ReflectionDrawStep>(logger, state));
     registry->RegisterStep(
         std::make_shared<WorkflowGta5LightsDrawStep>(logger, state));
-    registry->RegisterStep(
-        std::make_shared<WorkflowGta5PlayerSwimStep>(logger, state));
     registry->RegisterStep(
         std::make_shared<WorkflowGta5WaterMapStep>(logger, state));
     registry->RegisterStep(
@@ -63,7 +59,7 @@ int RegisterGta5PlayerSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
         std::make_shared<WorkflowGta5TrafficStep>(logger, state));
     registry->RegisterStep(
         std::make_shared<WorkflowGta5EffectsPrepareStep>(logger, state));
-    return 19;
+    return 20;
 }
 
 }  // namespace sdl3cpp::services::impl::registrar_detail
