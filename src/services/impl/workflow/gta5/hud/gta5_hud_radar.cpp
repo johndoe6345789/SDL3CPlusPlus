@@ -3,6 +3,7 @@
 #include "services/interfaces/workflow/gta5/hud/gta5_map_build.hpp"
 
 #include <algorithm>
+#include <cmath>
 
 namespace sdl3cpp::services::impl {
 namespace {
@@ -10,24 +11,25 @@ namespace {
 constexpr float kWide = 328.f, kTall = 200.f;  // the radar, in pixels
 constexpr float kMetres = 2.5f;                // world metres a pixel
 
-/// The six tiles, cut to the window of the map about the player.
+/// The six tiles, turned so the view points up, about the player at
+/// the radar's centre; the scissor keeps them inside it.
 void Tiles(Gta5MapFrame& frame, const Gta5MapLayout& l, const Gta5Hud& hud,
-           glm::vec2 lo, glm::vec2 where) {
+           glm::vec2 centre, glm::vec2 where, float heading) {
     const Gta5MapRect rect;
-    const glm::vec2 centre(rect.U(where.x), rect.V(where.y));
-    const glm::vec2 half(kWide * kMetres / rect.width * 0.5f,
-                         kTall * kMetres / rect.height * 0.5f);
-    const glm::vec2 w0 = centre - half, w1 = centre + half;
-    const glm::vec2 cell(0.5f, 1.f / 3.f), size(kWide, kTall);
+    const glm::vec2 me(rect.U(where.x), rect.V(where.y));
+    const glm::vec2 pixels(rect.width / kMetres, rect.height / kMetres);
+    const float c = std::cos(-heading), s = std::sin(-heading);
+    const auto at = [&](glm::vec2 uv) {
+        const glm::vec2 d = (uv - me) * pixels;
+        return centre + glm::vec2(d.x * c - d.y * s, d.x * s + d.y * c);
+    };
+    const glm::vec2 cell(0.5f, 1.f / 3.f);
     for (int i = 0; i < 6; ++i) {
         const glm::vec2 t0 = glm::vec2(i % 2, i / 2) * cell;
-        const glm::vec2 i0 = glm::max(t0, w0);
-        const glm::vec2 i1 = glm::min(t0 + cell, w1);
-        if (i0.x >= i1.x || i0.y >= i1.y) continue;
-        const glm::vec2 a = (i0 - t0) / cell, b = (i1 - t0) / cell;
-        AddGta5MapRect(frame, l, hud.overlay.tiles[i], hud.overlay.sampler,
-                       lo + (i0 - w0) / (w1 - w0) * size,
-                       lo + (i1 - w0) / (w1 - w0) * size, glm::vec4(a, b));
+        const glm::vec2 t1 = t0 + cell;
+        AddGta5MapQuad(frame, l, hud.overlay.tiles[i], hud.overlay.sampler,
+                       {at(t0), at({t1.x, t0.y}), at(t1), at({t0.x, t1.y})},
+                       glm::vec4(0.f, 0.f, 1.f, 1.f));
     }
 }
 
@@ -42,9 +44,12 @@ void AddGta5HudRadar(Gta5MapFrame& frame, const Gta5MapLayout& l,
     const glm::vec2 hi = lo + glm::vec2(kWide, kTall);
     AddGta5MapRect(frame, l, hud.back, hud.overlay.sampler, lo - 3.f,
                    hi + 3.f);
-    Tiles(frame, l, hud, lo, s.where);
+    frame.clip = glm::vec4(lo, kWide, kTall);
+    Tiles(frame, l, hud, (lo + hi) * 0.5f, s.where, s.heading);
+    frame.clip = glm::vec4(0.f);
+    // The map turns, so the arrow always points up, as GTA's.
     AddGta5MapTurned(frame, l, hud.overlay.marker, hud.overlay.sampler,
-                     (lo + hi) * 0.5f, 9.f, s.heading);
+                     (lo + hi) * 0.5f, 9.f, 0.f);
 }
 
 }  // namespace sdl3cpp::services::impl

@@ -4,6 +4,7 @@
 
 #include <glm/glm.hpp>
 
+#include <array>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -16,12 +17,14 @@ struct Gta5MapRange {
     SDL_GPUSampler* sampler{nullptr};
     std::uint32_t first{0};
     std::uint32_t count{0};
+    glm::vec4 clip{0.f};  // x, y, w, h in pixels; w 0: unclipped
 };
 
 /// One frame's overlay: clip-space xyz + uv, six vertices per quad.
 struct Gta5MapFrame {
     std::vector<float> vertices;
     std::vector<Gta5MapRange> ranges;
+    glm::vec4 clip{0.f};  // what quads added now are clipped to
 };
 
 /// Where the map sits on screen, in pixels, y down: two tiles wide by
@@ -46,6 +49,12 @@ void AddGta5MapRect(Gta5MapFrame& frame, const Gta5MapLayout& layout,
                     SDL_GPUTexture* texture, SDL_GPUSampler* sampler,
                     glm::vec2 min, glm::vec2 max,
                     glm::vec4 uv = glm::vec4(0.f, 0.f, 1.f, 1.f));
+
+/// A quad with corners top left, top right, bottom right, bottom left,
+/// in pixels, and the uv box (u0, v0, u1, v1).
+void AddGta5MapQuad(Gta5MapFrame& frame, const Gta5MapLayout& layout,
+                    SDL_GPUTexture* texture, SDL_GPUSampler* sampler,
+                    const std::array<glm::vec2, 4>& corners, glm::vec4 uv);
 
 /// A square `half` pixels each way about `centre`, turned `angle`
 /// radians clockwise.
