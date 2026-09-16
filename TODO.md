@@ -9,12 +9,6 @@ Status: `[ ]` open, `[~]` in progress, `[x]` done.
 
 ## 1. Look
 
-- [ ] **Colour pipeline.** Sunlit pavement is near white and the whole
-  frame is flat. GTA's sRGB textures are uploaded as UNORM, the model
-  shader never linearises them, and the composite applies 1/2.2 gamma
-  on top. Done: sRGB formats upload as sRGB, one gamma at the end.
-- [ ] **Exposure.** Once colour is right, set exposure so noon
-  concrete sits near mid-grey rather than clipping.
 - [ ] **Dirt and decal shaders.** Walls carry hard black drips, the
   paving dark blotches: GTA's dirt layers drawn as opaque paint. Done:
   they read as the faint grime they are in GTA.
@@ -58,4 +52,14 @@ Status: `[ ]` open, `[~]` in progress, `[x]` done.
 
 ## Done
 
-(Moved here with the commit that did it.)
+- [x] **Colour pipeline.** No texture downtown is tagged sRGB (1,493
+  looked at: BC1, BC3, a few BC5/BC2), so the formats were not the
+  fault: the shaders lit GTA's display-encoded colour maps as linear,
+  and the composite encoded them again. The model, terrain, emissive and
+  effects shaders now decode them (`include/gta5_srgb.glsl`).
+- [x] **Sun and shade.** The wrapped sun lit a face turned away at half
+  strength; plain Lambert and a sky term that is weaker on faces turned
+  down now separate them. Exposure roughly doubled (noon 0.42) to put
+  concrete back near where it was, and water's own colour halved to
+  match. The three shaders share their shadow, water and haze code
+  from `include/` instead of three copies.

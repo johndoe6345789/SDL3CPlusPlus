@@ -68,9 +68,10 @@ void main() {
     vec3 L = normalize(-u_lightDir.xyz);
     float exposure = u_params.y;
     // Clear water, green-blue: in the shallows the bottom shows through.
-    vec3 deep = vec3(0.03, 0.12, 0.13) *
+    // Halved when exposure doubled for linear textures: same water.
+    vec3 deep = vec3(0.015, 0.06, 0.065) *
                 (u_ambient.rgb + u_lightColor.rgb * max(L.y, 0.0)) * exposure;
-    float glint = pow(max(dot(R, L), 0.0), 500.0) * 6.0;
+    float glint = pow(max(dot(R, L), 0.0), 500.0) * 3.0;
     vec3 color = mix(deep, mirrored, fresnel) +
                  u_lightColor.rgb * glint * exposure;
     float fog = Haze(u_cameraPos.xyz, v_worldPos);

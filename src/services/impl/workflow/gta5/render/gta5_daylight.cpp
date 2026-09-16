@@ -31,7 +31,9 @@ Gta5Daylight ComputeGta5Daylight(float hours) {
     d.ambient = glm::mix(glm::vec3(0.05f, 0.06f, 0.1f),
                          glm::vec3(0.38f, 0.42f, 0.52f), day) +
                 glm::vec3(0.12f, 0.06f, 0.02f) * low * day;
-    d.exposure = glm::mix(0.6f, 0.2f, day);
+    // About double what it was with textures lit as display values: linear
+    // albedo is darker, and noon concrete should land near mid-grey.
+    d.exposure = glm::mix(1.2f, 0.42f, day);
     const glm::vec3 dayH(0.3f, 0.36f, 0.46f), dayZ(0.05f, 0.14f, 0.42f);
     const glm::vec3 duskH(0.85f, 0.45f, 0.28f), duskZ(0.14f, 0.15f, 0.34f);
     const glm::vec3 nightH(0.025f, 0.035f, 0.07f);
