@@ -38,6 +38,7 @@ public:
 private:
     void Open(const WorkflowStepDefinition& step);
     void Feet(WorkflowContext& context, float dt);
+    void Strokes(float speed, float dt);
     void Engine(WorkflowContext& context, float dt);
     void Water(WorkflowContext& context);
     /// GTA's gunfire and explosions, as the weapon counts them.

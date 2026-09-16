@@ -1,55 +1,21 @@
 #include "services/interfaces/workflow/gta5/audio/gta5_sound.hpp"
 
-#include <algorithm>
-#include <cctype>
-#include <fstream>
-#include <iterator>
-#include <system_error>
+#include <string>
 #include <utility>
 
 namespace sdl3cpp::services::impl {
-
-bool IsGta5Wav(const std::filesystem::path& path) {
-    std::string ext = path.extension().string();
-    std::transform(ext.begin(), ext.end(), ext.begin(),
-                   [](unsigned char c) { return char(std::tolower(c)); });
-    return ext == ".wav";
-}
-
-namespace {
-
-std::vector<Gta5Clip> LoadSet(const std::filesystem::path& folder) {
-    std::vector<Gta5Clip> set;
-    std::error_code error;
-    std::filesystem::directory_iterator it(folder, error), end;
-    for (; !error && it != end; it.increment(error)) {
-        if (!IsGta5Wav(it->path())) continue;
-        std::ifstream file(it->path(), std::ios::binary);
-        const std::vector<char> bytes((std::istreambuf_iterator<char>(file)),
-                                      std::istreambuf_iterator<char>());
-        Gta5Clip clip;
-        if (::sdl3cpp::q3::DecodeWav(
-                reinterpret_cast<const uint8_t*>(bytes.data()), bytes.size(),
-                clip)) {
-            set.push_back(std::move(clip));
-        }
-    }
-    return set;
-}
-
-}  // namespace
 
 Gta5Sounds LoadGta5Sounds(const std::filesystem::path& dir,
                           const std::shared_ptr<ILogger>& logger) {
     Gta5Sounds sounds;
     const std::pair<const char*, std::vector<Gta5Clip>*> kinds[] = {
-        {"steps", &sounds.steps},   {"strokes", &sounds.strokes},
-        {"splash", &sounds.splash}, {"engine", &sounds.engine},
-        {"water", &sounds.water},   {"weapons", &sounds.shots},
+        {"steps", &sounds.steps},      {"strokes", &sounds.strokes},
+        {"splash", &sounds.splash},    {"engine", &sounds.engine},
+        {"water", &sounds.water},      {"weapons", &sounds.shots},
         {"explosions", &sounds.blasts}};
     std::string report;
     for (const auto& [name, set] : kinds) {
-        *set = LoadSet(dir / name);
+        *set = LoadGta5SoundSet(dir / name);
         report += std::string(" ") + name + " ";
         if (!set->empty()) {
             report += std::to_string(set->size());
@@ -63,6 +29,11 @@ Gta5Sounds LoadGta5Sounds(const std::filesystem::path& dir,
         }
         report += "synth";
     }
+    // GTA's wet_feet_heel layer: a splash on every step, so only ever
+    // in shallow water. Without it, wading sounds like walking.
+    sounds.wetSteps = LoadGta5SoundSet(dir / "wet_steps");
+    report += " wet_steps " + std::to_string(sounds.wetSteps.size());
+    if (sounds.wetSteps.empty()) sounds.wetSteps = sounds.steps;
     if (logger) {
         logger->Info("gta5.sound: from " + dir.string() + ":" + report);
     }

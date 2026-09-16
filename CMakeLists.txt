@@ -834,9 +834,12 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/audio/gta5_sound_feet.cpp
         src/services/impl/workflow/gta5/audio/gta5_sound_load.cpp
         src/services/impl/workflow/gta5/audio/gta5_sound_loop.cpp
+        src/services/impl/workflow/gta5/audio/gta5_sound_set.cpp
         src/services/impl/workflow/gta5/audio/gta5_sound_shots.cpp
         src/services/impl/workflow/gta5/audio/gta5_sound_step.cpp
+        src/services/impl/workflow/gta5/audio/gta5_sound_strokes.cpp
         src/services/impl/workflow/gta5/audio/gta5_sound_synth.cpp
+        src/services/impl/workflow/gta5/audio/gta5_sound_water.cpp
         src/services/impl/workflow/gta5/core/gta5_step_params.cpp
         src/services/impl/workflow/gta5/effects/gta5_decal_stick.cpp
         src/services/impl/workflow/gta5/effects/gta5_effects_art.cpp
