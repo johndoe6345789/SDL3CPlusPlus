@@ -33,6 +33,9 @@ Gta5Sounds LoadGta5Sounds(const std::filesystem::path& dir,
 /// The decodable .wav files in @p folder, in no particular order.
 std::vector<Gta5Clip> LoadGta5SoundSet(const std::filesystem::path& folder);
 
+/// One .wav; false when it cannot be read.
+bool LoadGta5Clip(const std::filesystem::path& path, Gta5Clip& clip);
+
 /// A .wav, whatever the case of its extension.
 bool IsGta5Wav(const std::filesystem::path& path);
 

@@ -9,12 +9,10 @@ Status: `[ ]` open, `[~]` in progress, `[x]` done.
 
 ## 1. Look
 
-- [ ] **Normal and specular maps.** Tiles and concrete are flat paint.
-  GTA ships both maps per shader.
 - [ ] **Ambient occlusion.** No contact shadow where walls meet the
   ground.
-- [ ] **Sky and weather.** One flat blue, no clouds. Use GTA's
-  timecycle and weather data for sky colour, haze and clouds by hour.
+- [ ] **Weather.** Clouds are done; still no rain or overcast skies from
+  GTA's weather data.
 
 ## 2. Feel
 
@@ -24,12 +22,8 @@ Status: `[ ]` open, `[~]` in progress, `[x]` done.
 
 ## 4. Life
 
-- [ ] **City ambience.** Between footsteps the track is silent.
-  audio_rel.rpf holds 960 ambient zones and 511 static emitters
-  (fountains, AC units, bars); play them.
 - [ ] **Pedestrians.** The plaza is empty. The ped loader already
   dresses the player; spawn ambient peds on GTA's paths.
-- [ ] **Traffic density.** Only a few distant cars downtown.
 
 ## Done
 
@@ -70,5 +64,18 @@ Status: `[ ]` open, `[~]` in progress, `[x]` done.
   recording, up a 0.89 m planter in Legion Square.
 - [x] **Radar.** GTA's own minimap tiles, cut to a 328 x 200 window
   about the player at 2.5 m a pixel, bottom left over the health and
-  armour bars, with the view's arrow in the middle. North stays up;
-  GTA's turns with the camera, which is still to do.
+  armour bars. It turns with the camera so the view's arrow always
+  points up, as GTA's does, and a scissor keeps the tiles inside it.
+- [x] **Normal and specular maps.** Every lit shader's BumpTex and
+  SpecularTex parameters are read alongside its diffuse; the model and
+  emissive shaders sample them where present
+  (`include/gta5_surface_maps.glsl`): a tangent frame built from
+  screen-space derivatives (no tangents in the vertex), and
+  Blinn-Phong specular from the sun only, in its shadow.
+- [x] **Clouds.** Fair-weather cumulus drift across the sky
+  (`include/gta5_clouds.glsl`), lit by the day's own colour.
+- [x] **City ambience.** GTA's ambient zones and rules
+  (audio_rel.rpf's Dat151AmbientZone/Rule), exported to WAV with their
+  positions, radii and hours, now play through `gta5.sound`: 720 zones,
+  673 rules with clips, mostly birds and distant traffic.
+- [x] **Traffic density.** Raised from 28 to 40 cars.

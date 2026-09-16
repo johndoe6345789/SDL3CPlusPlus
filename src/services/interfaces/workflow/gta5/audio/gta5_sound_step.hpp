@@ -2,6 +2,7 @@
 
 #include "services/interfaces/i_logger.hpp"
 #include "services/interfaces/i_workflow_step.hpp"
+#include "services/interfaces/workflow/gta5/audio/gta5_ambience.hpp"
 #include "services/interfaces/workflow/gta5/audio/gta5_engine_bank.hpp"
 #include "services/interfaces/workflow/gta5/audio/gta5_sound.hpp"
 #include "services/interfaces/workflow/gta5/stream/gta5_stream_state.hpp"
@@ -41,12 +42,14 @@ private:
     void Strokes(float speed, float dt);
     void Engine(WorkflowContext& context, float dt);
     void Water(WorkflowContext& context);
+    void Ambience(WorkflowContext& context, float dt);
     /// GTA's gunfire and explosions, as the weapon counts them.
     void Shots(WorkflowContext& context);
 
     std::shared_ptr<ILogger> logger_;
     std::shared_ptr<Gta5StreamState> state_;
     Gta5Sounds sounds_;
+    Gta5Ambience ambience_;  // GTA's ambient zones, where exported
     std::vector<Gta5WaterQuad> water_;
     SDL_AudioDeviceID device_{0};
     SDL_AudioSpec spec_{};

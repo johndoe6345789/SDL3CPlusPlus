@@ -40,6 +40,7 @@ void WorkflowGta5SoundStep::Open(const WorkflowStepDefinition& step) {
     }
     const std::filesystem::path dir = Gta5ParameterOr(step, "dir", "");
     sounds_ = LoadGta5Sounds(dir, logger_);
+    ambience_ = LoadGta5Ambience((dir / "ambience").string(), logger_);
     const std::string bank =
         Gta5ParameterOr(step, "engine_bank", "saloon_6_us_v8");
     if (LoadGta5EngineBank(dir / "engine" / bank, engineBank_) && logger_) {
@@ -61,6 +62,7 @@ void WorkflowGta5SoundStep::Execute(const WorkflowStepDefinition& step,
     Feet(context, dt);
     Engine(context, dt);
     Water(context);
+    Ambience(context, dt);
     Shots(context);
 }
 
