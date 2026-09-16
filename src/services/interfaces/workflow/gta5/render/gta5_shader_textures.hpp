@@ -4,8 +4,15 @@
 
 #include <array>
 #include <cstdint>
+#include <initializer_list>
 
 namespace sdl3cpp::services::impl {
+
+/// The name hash of the first of @p names the shader binds a texture
+/// to, or 0.
+std::uint32_t Gta5FirstShaderTexture(
+    const Gta5Resource& res, std::int64_t shader,
+    std::initializer_list<const char*> names);
 
 /// The name hash of the texture a G9 shader samples as its diffuse, or 0.
 ///
@@ -18,6 +25,13 @@ namespace sdl3cpp::services::impl {
 /// DiffuseTexture_layer0. With neither, 0: guessing drew normal maps.
 std::uint32_t ReadGta5DiffuseTexture(const Gta5Resource& res,
                                      std::int64_t shader);
+
+/// The normal map (BumpTex) and specular map (SpecularTex) a lit shader
+/// samples, by name hash, 0 for either it lacks.
+std::uint32_t ReadGta5BumpTexture(const Gta5Resource& res,
+                                  std::int64_t shader);
+std::uint32_t ReadGta5SpecularTexture(const Gta5Resource& res,
+                                      std::int64_t shader);
 
 /// A terrain shader's four diffuse layers (DiffuseTexture_layer0..3), then
 /// its lookup mask (lookupTexture), 0 for any it lacks. True when it has

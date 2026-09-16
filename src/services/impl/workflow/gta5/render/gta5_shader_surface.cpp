@@ -1,53 +1,14 @@
 #include "services/interfaces/workflow/gta5/render/gta5_shader_surface.hpp"
 
+#include "services/interfaces/workflow/gta5/render/gta5_shader_families.hpp"
 #include "services/interfaces/workflow/gta5/render/gta5_shader_textures.hpp"
-
-#include <string>
-#include <unordered_set>
 
 namespace sdl3cpp::services::impl {
 namespace {
 
-constexpr std::uint8_t kAlphaBucket = 1;
-constexpr std::uint8_t kDecalBucket = 2;
+constexpr std::uint8_t kAlphaBucket  = 1;
+constexpr std::uint8_t kDecalBucket  = 2;
 constexpr std::uint8_t kCutoutBucket = 3;
-
-const std::unordered_set<std::uint32_t>& PaintHashes() {
-    static const std::unordered_set<std::uint32_t> hashes = [] {
-        std::vector<std::string> names{"vehicle_mesh"};
-        for (int n = 1; n <= 9; ++n) {
-            names.push_back("vehicle_paint" + std::to_string(n));
-        }
-        const std::size_t plain = names.size();
-        for (std::size_t i = 0; i < plain; ++i) {
-            names.push_back(names[i] + "_enveff");
-        }
-        std::unordered_set<std::uint32_t> out;
-        for (const std::string& name : names) {
-            out.insert(Gta5Hash(name));
-            out.insert(Gta5Hash(name + ".sps"));
-        }
-        return out;
-    }();
-    return hashes;
-}
-
-/// GTA's emissive shaders, by name and by file name.
-const std::unordered_set<std::uint32_t>& EmissiveHashes() {
-    static const std::unordered_set<std::uint32_t> hashes = [] {
-        std::unordered_set<std::uint32_t> out;
-        for (const char* name :
-             {"emissive", "emissive_alpha", "emissive_clip", "emissive_speclum",
-              "emissive_tnt", "emissive_alpha_tnt", "emissivenight",
-              "emissivenight_alpha", "emissivenight_geomnightonly",
-              "emissivestrong", "emissivestrong_alpha"}) {
-            out.insert(Gta5Hash(name));
-            out.insert(Gta5Hash(std::string(name) + ".sps"));
-        }
-        return out;
-    }();
-    return hashes;
-}
 
 }  // namespace
 
@@ -64,13 +25,20 @@ std::vector<Gta5ShaderSurface> ReadGta5ShaderSurfaces(
                 bucket < 8 &&
                 res.U32(shader + 0x3C) == ((1u << bucket) | 0xFF00u);
             s.texture = ReadGta5DiffuseTexture(res, shader);
-            s.paint = checked && PaintHashes().count(res.U32(shader)) > 0;
+            s.paint   = checked &&
+                      Gta5PaintShaderHashes().count(res.U32(shader)) > 0;
             s.cutout = checked && !s.paint && bucket == kCutoutBucket;
-            s.blend = checked && !s.paint &&
+            s.blend  = checked && !s.paint &&
                       (bucket == kAlphaBucket || bucket == kDecalBucket);
             s.terrain = ReadGta5TerrainLayers(res, shader, s.layers);
-            s.emissive =
-                checked && EmissiveHashes().count(res.U32(shader)) > 0;
+            // Anything else carries its normal and specular maps in the
+            // first two layers; see gta5_model.frag.
+            if (!s.terrain) {
+                s.layers = {ReadGta5BumpTexture(res, shader),
+                            ReadGta5SpecularTexture(res, shader), 0, 0, 0};
+            }
+            s.emissive = checked && Gta5EmissiveShaderHashes().count(
+                                        res.U32(shader)) > 0;
         }
         out.push_back(s);
     }

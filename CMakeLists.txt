@@ -822,6 +822,9 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/quake3/world/workflow_q3_movers_update_step.cpp
         src/services/impl/workflow/quake3/world/workflow_q3_triggers_apply_step.cpp
         src/services/impl/workflow/quake3/world/workflow_q3_triggers_check_step.cpp
+        src/services/impl/workflow/gta5/audio/gta5_ambience_load.cpp
+        src/services/impl/workflow/gta5/audio/gta5_ambience_play.cpp
+        src/services/impl/workflow/gta5/audio/gta5_ambience_zone.cpp
         src/services/impl/workflow/gta5/audio/gta5_engine_bank_load.cpp
         src/services/impl/workflow/gta5/audio/gta5_engine_grain.cpp
         src/services/impl/workflow/gta5/audio/gta5_engine_voice.cpp
@@ -831,6 +834,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/audio/gta5_radio_play.cpp
         src/services/impl/workflow/gta5/audio/gta5_radio_step.cpp
         src/services/impl/workflow/gta5/audio/gta5_radio_synth.cpp
+        src/services/impl/workflow/gta5/audio/gta5_sound_ambience.cpp
         src/services/impl/workflow/gta5/audio/gta5_sound_engine.cpp
         src/services/impl/workflow/gta5/audio/gta5_sound_feet.cpp
         src/services/impl/workflow/gta5/audio/gta5_sound_load.cpp
@@ -877,6 +881,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/hud/gta5_map_overlay_gpu.cpp
         src/services/impl/workflow/gta5/hud/gta5_map_overlay_load.cpp
         src/services/impl/workflow/gta5/hud/gta5_map_poi.cpp
+        src/services/impl/workflow/gta5/hud/gta5_map_quad.cpp
         src/services/impl/workflow/gta5/hud/gta5_map_quads.cpp
         src/services/impl/workflow/gta5/hud/gta5_map_step.cpp
         src/services/impl/workflow/gta5/hud/gta5_map_tiles.cpp
@@ -929,6 +934,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/player/gta5_wasd.cpp
         src/services/impl/workflow/gta5/render/gta5_daylight.cpp
         src/services/impl/workflow/gta5/render/gta5_draw_bind.cpp
+        src/services/impl/workflow/gta5/render/gta5_draw_bind_textures.cpp
         src/services/impl/workflow/gta5/render/gta5_draw_context_build.cpp
         src/services/impl/workflow/gta5/render/gta5_draw_instances.cpp
         src/services/impl/workflow/gta5/render/gta5_draw_probe.cpp
@@ -938,6 +944,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/render/gta5_lights_mesh.cpp
         src/services/impl/workflow/gta5/render/gta5_lights_step.cpp
         src/services/impl/workflow/gta5/render/gta5_material_surface.cpp
+        src/services/impl/workflow/gta5/render/gta5_mesh_bounds.cpp
         src/services/impl/workflow/gta5/render/gta5_mesh_extract.cpp
         src/services/impl/workflow/gta5/render/gta5_mesh_geometry_upload.cpp
         src/services/impl/workflow/gta5/render/gta5_mesh_transform.cpp
@@ -947,6 +954,8 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/render/gta5_reflection_plane.cpp
         src/services/impl/workflow/gta5/render/gta5_reflection_resources.cpp
         src/services/impl/workflow/gta5/render/gta5_reflection_step.cpp
+        src/services/impl/workflow/gta5/render/gta5_shader_families.cpp
+        src/services/impl/workflow/gta5/render/gta5_shader_layers.cpp
         src/services/impl/workflow/gta5/render/gta5_shader_surface.cpp
         src/services/impl/workflow/gta5/render/gta5_shader_textures.cpp
         src/services/impl/workflow/gta5/render/gta5_shadow_draw.cpp
@@ -956,6 +965,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/render/gta5_sky_draw_step.cpp
         src/services/impl/workflow/gta5/render/gta5_sky_uniforms.cpp
         src/services/impl/workflow/gta5/render/gta5_submesh_upload.cpp
+        src/services/impl/workflow/gta5/render/gta5_surface_uniforms.cpp
         src/services/impl/workflow/gta5/render/gta5_texture_blob_upload.cpp
         src/services/impl/workflow/gta5/render/gta5_texture_cache.cpp
         src/services/impl/workflow/gta5/render/gta5_texture_format.cpp

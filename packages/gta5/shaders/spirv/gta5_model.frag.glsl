@@ -10,6 +10,8 @@
 layout(set = 2, binding = 0) uniform sampler2D albedoTex;
 layout(set = 2, binding = 1) uniform sampler2DShadow shadowMap;
 layout(set = 2, binding = 2) uniform sampler2D waterMap;
+layout(set = 2, binding = 3) uniform sampler2D bumpTex;
+layout(set = 2, binding = 4) uniform sampler2D specTex;
 
 // The engine's 112-byte FragmentUniformData. Its spotlight slots carry
 // the sky's horizon colour and the submesh's surface: GTA's paint
@@ -19,7 +21,7 @@ layout(set = 3, binding = 0) uniform PBRUniforms {
     vec4 u_lightDir;      // xyz = direction the light travels
     vec4 u_lightColor;    // rgb = colour * intensity, a = exposure
     vec4 u_ambient;       // rgb = ambient colour * intensity
-    vec4 u_material;      // z = how deep the camera is under water
+    vec4 u_material;      // x, y: normal, specular map; z: camera depth
     vec4 u_fogColor;      // rgb = the sky step's horizon
     vec4 u_unused1;       // spotlight direction
     vec4 u_surface;       // rgb = tint, a = alpha discard, 0 = off
@@ -37,6 +39,7 @@ layout(location = 0) out vec4 o_color;
 #include "include/gta5_sun_shadow.glsl"
 #include "include/gta5_shade.glsl"
 #include "include/gta5_water_haze.glsl"
+#include "include/gta5_surface_maps.glsl"
 
 void main() {
     vec4 texel = texture(albedoTex, v_uv);
@@ -49,9 +52,13 @@ void main() {
     // Foliage draws with culling off: a card's far side is lit as its
     // own front, or every leaf turned dark as the view went round it.
     if (!gl_FrontFacing) N = -N;
+    N = BumpedNormal(N);
 
     // Left linear: the composite tone maps and encodes, once.
-    vec3 color = Atmosphere(Shade(albedo, N), Exposure());
+    float shadow = SunShadow();
+    vec3 color = ShadeWith(albedo, N, shadow) +
+                 Specular(N, SpecularMask(), shadow) * Exposure();
+    color = Atmosphere(color, Exposure());
     // Alpha matters only to the blended pipeline: decals and glass,
     // which GTA fades by the vertex's colour 0 alpha. Leaks and grime
     // are painted faint that way; at full strength they read as paint.

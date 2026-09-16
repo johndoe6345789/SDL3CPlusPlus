@@ -23,8 +23,9 @@ Gta5DrawContext BuildGta5DrawContext(const WorkflowStepDefinition& step,
     // fully metallic surface with no environment to reflect resolves to
     // black, which is what turned the city into silhouettes. The engine's
     // own pickup draw overrides these the same way.
-    draw.fragUniforms.material[0] = 0.75f;  // roughness
-    draw.fragUniforms.material[1] = 0.0f;   // metallic
+    // x, y: normal and specular maps, per draw (SetGta5SurfaceUniforms).
+    draw.fragUniforms.material[0] = 0.0f;
+    draw.fragUniforms.material[1] = 0.0f;
 
     // The sky step publishes the colour it painted the horizon; the
     // model shader fogs to it out of the spotlight-position slot, which
