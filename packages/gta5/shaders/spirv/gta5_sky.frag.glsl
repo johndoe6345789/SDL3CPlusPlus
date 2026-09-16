@@ -1,4 +1,5 @@
 #version 450
+#extension GL_GOOGLE_include_directive : require
 
 // Procedural sky for the streamed city.
 //
@@ -10,7 +11,7 @@
 
 layout(set = 3, binding = 0) uniform SkyUniforms {
     mat4 u_invViewProj;   // clip space back to a world direction
-    vec4 u_cameraPos;     // xyz = eye, w unused
+    vec4 u_cameraPos;     // xyz = eye, w = seconds, for the wind
     vec4 u_sunDir;        // xyz = direction the light travels
     vec4 u_horizon;       // rgb = haze colour, matches the model fog; a = stars
     vec4 u_zenith;        // rgb = sky overhead, a = sun size
@@ -18,6 +19,9 @@ layout(set = 3, binding = 0) uniform SkyUniforms {
 
 layout(location = 0) in vec2 v_ndc;
 layout(location = 0) out vec4 o_color;
+
+#include "include/gta5_clouds.glsl"
+#include "include/gta5_stars.glsl"
 
 void main() {
     // Unproject the far plane, then subtract the eye: the result is the
@@ -46,15 +50,15 @@ void main() {
     color += u_horizon.rgb * haze * 0.6;
     color += vec3(1.0, 0.92, 0.78) * pow(toSun, 2200.0) * u_zenith.a;
 
-    // Stars: a sparse hash of the view direction, faded in with the
-    // night, which the clock puts in the horizon's alpha.
-    if (u_horizon.a > 0.0 && dir.y > 0.0) {
-        vec3 cell = floor(dir * 320.0);
-        float h = fract(sin(dot(cell, vec3(12.9898, 78.233, 37.719))) *
-                        43758.5453);
-        float star = step(0.9972, h) * u_horizon.a * smoothstep(0.0, 0.2, dir.y);
-        color += vec3(0.9, 0.93, 1.0) * star * (0.5 + 0.5 * fract(h * 97.0));
-    }
+    // Clouds, lit by the day's own light: the horizon's colour carries
+    // dusk's orange and the night's dark, and daylight adds white.
+    float day = clamp(dot(u_horizon.rgb, vec3(0.3, 0.59, 0.11)) / 0.35,
+                      0.0, 1.0);
+    vec3 light = u_horizon.rgb * 1.3 + vec3(0.55) * day;
+    color = Clouds(color, dir, u_cameraPos.xyz, sun, u_cameraPos.w, light,
+                   u_horizon.rgb);
+
+    color += Stars(dir, u_horizon.a);
     // Below the horizon is ground haze, not sky: the streamed tiles run
     // out long before the view does, and an unfilled lower half reads as
     // a hole rather than as distance.

@@ -3,6 +3,7 @@
 #include "services/interfaces/workflow/gta5/core/gta5_step_params.hpp"
 #include "services/interfaces/workflow/rendering/rendering_types.hpp"
 
+#include <SDL3/SDL_timer.h>
 #include <glm/gtc/matrix_inverse.hpp>
 
 namespace sdl3cpp::services::impl {
@@ -30,7 +31,10 @@ Gta5SkyUniforms BuildGta5SkyUniforms(const WorkflowStepDefinition& step,
 
     const auto eye =
         context.Get<glm::vec3>("render.camera_pos", glm::vec3(0.f));
-    sky.cameraPos = glm::vec4(eye, 1.f);
+    // Seconds in w drift the clouds, wrapped a day and a bit in, which a
+    // float and the noise both still hold exactly.
+    const float seconds = float(SDL_GetTicks() % 100000000u) / 1000.f;
+    sky.cameraPos = glm::vec4(eye, seconds);
 
     // The same light the city is shaded by, so the sun sits where the
     // shadows say it should.
