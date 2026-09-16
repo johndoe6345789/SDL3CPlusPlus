@@ -24,6 +24,7 @@ struct Q3UserCmd {
     float yaw         = 0.0f;  // radians, the engine's yaw convention
     bool jump         = false;
     bool sprint       = false;  // a higher top speed while held
+    bool walk         = false;  // a lower one, where sprint is not held
 };
 
 /// bg_pmove.c PM_GroundTrace: records the plane underfoot, or applies

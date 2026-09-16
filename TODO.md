@@ -18,15 +18,7 @@ Status: `[ ]` open, `[~]` in progress, `[x]` done.
 
 ## 2. Feel
 
-- [ ] **GTA movement speeds.** Footfalls every 0.2 s: the Quake 3 run
-  (~10 m/s). GTA walks ~1.5 m/s, jogs ~3, sprints ~7. Done: W jogs,
-  Shift sprints, a key walks, with GTA-like acceleration; the Quake
-  collision stays.
 - [ ] **Climb and vault.** A knee-high planter stops the player dead.
-- [ ] **Camera collision.** The camera goes into walls; GTA's pulls in
-  towards the player.
-- [ ] **Over-the-shoulder camera.** The character sits dead centre
-  under the reticle.
 
 ## 3. Weapons and HUD
 
@@ -66,3 +58,13 @@ Status: `[ ]` open, `[~]` in progress, `[x]` done.
   vertex colour 0 alpha: across 8,088 decal meshes that alpha has a
   median of 147/255, and only 2,221 are fully opaque. Colour 0's alpha
   now rides in every vertex, and blended surfaces multiply it in.
+- [x] **Stride, not speed.** The review blamed Quake's 10 m/s, but the
+  package already jogs at 3.4 and sprints at 6. The fast footfalls were
+  a fixed 1.4 m stride in the sound, and a run stride of 2.3 m in the
+  animation (5.2 steps a second at a sprint). The run stride is 2.8 m,
+  the footsteps follow the drawn walk cycle (0.2 s apart at a jog, now
+  0.28), and Left Alt walks at 1.5 m/s.
+- [x] **Camera.** It sits over the right shoulder (`shoulder`, 0.45 m),
+  and pulls in with a 0.45 m sphere instead of a ray: a ray that
+  slipped past a wall's edge let the near plane, 0.8 m to its corners,
+  cut a third of the screen out of it.

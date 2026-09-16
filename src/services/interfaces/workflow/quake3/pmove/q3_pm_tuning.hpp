@@ -14,6 +14,7 @@ namespace sdl3cpp::q3 {
 struct Q3PmTuning {
     float maxSpeed{kMaxSpeed};
     float sprintSpeed{kMaxSpeed};  // while input.sprint is held
+    float walkSpeed{kMaxSpeed};    // while input.walk is held
     float stopSpeed{kStopSpeed};
     float friction{kFriction};
     float accelerate{kAccelerate};

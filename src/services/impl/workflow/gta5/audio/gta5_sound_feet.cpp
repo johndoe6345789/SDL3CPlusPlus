@@ -1,4 +1,5 @@
 #include "services/interfaces/workflow/gta5/audio/gta5_sound_step.hpp"
+#include "services/interfaces/workflow/gta5/audio/gta5_foot_phase.hpp"
 
 #include "services/interfaces/workflow/quake3/pmove/q3_pm_types.hpp"
 #include "services/interfaces/workflow_context.hpp"
@@ -11,8 +12,7 @@
 namespace sdl3cpp::services::impl {
 namespace {
 
-constexpr float kPi     = 3.14159265f;
-constexpr float kStride = 1.4f;  // the ped walk's metres a two-step cycle
+constexpr float kPi = 3.14159265f;
 
 }  // namespace
 
@@ -32,11 +32,9 @@ void WorkflowGta5SoundStep::Feet(WorkflowContext& context, float dt) {
         Strokes(speed, dt);
         return;
     }
-    // The walk's phase as PoseGta5Ped turns it: a foot lands as each
-    // leg's swing peaks, at pi/2 and 3pi/2.
+    // A foot lands as each leg's swing peaks, at pi/2 and 3pi/2.
     const float before = walkPhase_;
-    const float rate   = std::min(speed, 6.f) / kStride * 2.f * kPi;
-    walkPhase_         = std::fmod(walkPhase_ + rate * dt, 2.f * kPi);
+    walkPhase_         = Gta5FootPhase(context, walkPhase_, speed, dt);
     const auto crossed = [&](float at) {
         return walkPhase_ < before ? (before < at || walkPhase_ >= at)
                                    : (before < at && walkPhase_ >= at);

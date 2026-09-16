@@ -35,10 +35,11 @@
       "parameters": {
         "max_speed": 3.4,
         "sprint_speed": 6.0,
+        "walk_speed": 1.5,
         "accelerate": 9.0,
         "air_accelerate": 1.2
       },
-      "comment": "A jog at 3.4 m/s, Left Shift for a 7 m/s sprint. Quake runs everything at 10 m/s, which crosses Los Santos at the speed of a moped."
+      "comment": "A jog at 3.4 m/s, Left Shift for a 6 m/s sprint, Left Alt for a 1.5 m/s walk. Quake runs everything at 10 m/s, which crosses Los Santos at the speed of a moped."
     },
     {
       "id": "pm_jump",

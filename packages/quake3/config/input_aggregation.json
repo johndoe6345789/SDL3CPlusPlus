@@ -108,6 +108,17 @@
         "outputs": [
           "input.sprint"
         ]
+      },
+      "walk": {
+        "sources": [
+          {
+            "type": "key",
+            "key": "Left Alt"
+          }
+        ],
+        "outputs": [
+          "input.walk"
+        ]
       }
     }
   }

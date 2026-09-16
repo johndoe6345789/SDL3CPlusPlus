@@ -19,6 +19,7 @@ q3::Q3PmTuning Q3TuningOf(const WorkflowStepDefinition& step) {
     q3::Q3PmTuning out;
     out.maxSpeed = NumberOr(step, "max_speed", out.maxSpeed);
     out.sprintSpeed = NumberOr(step, "sprint_speed", out.maxSpeed);
+    out.walkSpeed = NumberOr(step, "walk_speed", out.maxSpeed);
     out.stopSpeed = NumberOr(step, "stop_speed", out.stopSpeed);
     out.friction = NumberOr(step, "friction", out.friction);
     out.accelerate = NumberOr(step, "accelerate", out.accelerate);

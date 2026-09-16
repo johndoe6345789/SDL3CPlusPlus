@@ -825,6 +825,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/audio/gta5_engine_bank_load.cpp
         src/services/impl/workflow/gta5/audio/gta5_engine_grain.cpp
         src/services/impl/workflow/gta5/audio/gta5_engine_voice.cpp
+        src/services/impl/workflow/gta5/audio/gta5_foot_phase.cpp
         src/services/impl/workflow/gta5/audio/gta5_radio_list.cpp
         src/services/impl/workflow/gta5/audio/gta5_radio_open.cpp
         src/services/impl/workflow/gta5/audio/gta5_radio_play.cpp
@@ -904,7 +905,9 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/player/gta5_gamepad_read.cpp
         src/services/impl/workflow/gta5/player/gta5_gamepad_step.cpp
         src/services/impl/workflow/gta5/player/gta5_look.cpp
+        src/services/impl/workflow/gta5/player/gta5_player_camera_id.cpp
         src/services/impl/workflow/gta5/player/gta5_player_camera_step.cpp
+        src/services/impl/workflow/gta5/player/gta5_player_character_id.cpp
         src/services/impl/workflow/gta5/player/gta5_player_character_load.cpp
         src/services/impl/workflow/gta5/player/gta5_player_character_step.cpp
         src/services/impl/workflow/gta5/player/gta5_player_fly_step.cpp

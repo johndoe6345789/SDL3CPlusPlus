@@ -27,6 +27,7 @@ void WorkflowQ3PmAccelerateStep::Execute(const WorkflowStepDefinition& step,
     cmd.rightMove   = context.Get<float>("input.move_right", 0.0f);
     cmd.yaw         = context.Get<float>("q3.player_yaw", 0.0f);
     cmd.sprint      = context.GetBool("input.sprint", false);
+    cmd.walk        = context.GetBool("input.walk", false);
 
     q3::PmAccelerate(
         ps, cmd,

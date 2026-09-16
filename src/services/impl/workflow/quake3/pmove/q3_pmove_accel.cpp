@@ -32,8 +32,11 @@ void PmFriction(services::impl::Q3PlayerState& ps, float dt,
 void PmAccelerate(services::impl::Q3PlayerState& ps, const Q3UserCmd& cmd,
                   float dt, const Q3PmTuning& tuning) {
     // Sprinting is a higher top speed, not a shove: the same walk
-    // acceleration carries them up to it over about a second.
-    const float top = cmd.sprint ? tuning.sprintSpeed : tuning.maxSpeed;
+    // acceleration carries them up to it over about a second. Walking
+    // is a lower one; sprint wins when both are held.
+    const float top = cmd.sprint ? tuning.sprintSpeed
+                      : cmd.walk ? tuning.walkSpeed
+                                 : tuning.maxSpeed;
     const auto wish =
         ComputeWish(cmd.forwardMove, cmd.rightMove, cmd.yaw, top);
     if (wish.speed <= 0.0f) return;

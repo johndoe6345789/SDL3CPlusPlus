@@ -15,14 +15,6 @@
 
 namespace sdl3cpp::services::impl {
 
-WorkflowGta5PlayerCameraStep::WorkflowGta5PlayerCameraStep(
-    std::shared_ptr<ILogger> logger, std::shared_ptr<Gta5StreamState> state)
-    : logger_(std::move(logger)), state_(std::move(state)) {}
-
-std::string WorkflowGta5PlayerCameraStep::GetPluginId() const {
-    return "gta5.player.camera";
-}
-
 void WorkflowGta5PlayerCameraStep::Execute(const WorkflowStepDefinition& step,
                                            WorkflowContext& context) {
     if (!state_) return;
@@ -48,8 +40,13 @@ void WorkflowGta5PlayerCameraStep::Execute(const WorkflowStepDefinition& step,
     const glm::vec3 front =
         Gta5LookFront(context.Get<float>("camera_yaw", 0.f),
                       context.Get<float>("camera_pitch", 0.f));
+    // Over the right shoulder, as GTA's: the character stands left of
+    // centre and the reticle has a clear view past him.
+    const glm::vec3 right =
+        glm::normalize(glm::cross(front, glm::vec3(0.f, 1.f, 0.f)));
     const glm::vec3 wanted =
         head - front * Gta5NumberOr(step, "distance", 3.2f) +
+        right * Gta5NumberOr(step, "shoulder", 0.45f) +
         glm::vec3(0.f, Gta5NumberOr(step, "height", 0.4f), 0.f);
     // In front of a wall rather than behind it, looking at its back.
     const glm::vec3 eye = Gta5ClearEye(

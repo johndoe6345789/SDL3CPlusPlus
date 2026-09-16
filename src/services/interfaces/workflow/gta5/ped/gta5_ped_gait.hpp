@@ -22,6 +22,10 @@ struct Gta5Gait {
     float sway{0.035f};   // metres it leans onto the standing leg
 };
 
+/// The player's walk cycle this frame, radians (a foot lands at pi/2
+/// and 3pi/2), or -1 when no character is drawn. gta5.sound follows it.
+inline constexpr const char* kGta5WalkPhaseKey = "gta5.player.walk_phase";
+
 /// The gait at `speed` m/s: a walk, a run, or the mix between them.
 Gta5Gait Gta5GaitFor(float speed);
 

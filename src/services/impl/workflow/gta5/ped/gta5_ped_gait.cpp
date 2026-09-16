@@ -11,8 +11,9 @@ constexpr Gta5Gait kWalk{1.35f, 22.f, 55.f, 18.f, 16.f, 20.f,
                          2.f,   6.f,  0.035f};
 
 /// A hard run: long steps, the knee folded right up, the chest out over
-/// the hips and the arms working.
-constexpr Gta5Gait kRun{2.30f, 40.f, 95.f, 26.f, 44.f, 78.f,
+/// the hips and the arms working. 2.8 m a cycle at 6 m/s is 4.3 steps a
+/// second; at 2.3 it was 5.2, which read as scurrying.
+constexpr Gta5Gait kRun{2.80f, 48.f, 100.f, 26.f, 44.f, 78.f,
                         11.f,  13.f, 0.022f};
 
 float Mix(float from, float to, float t) { return from + (to - from) * t; }

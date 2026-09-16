@@ -1,6 +1,7 @@
 #include "services/interfaces/workflow/gta5/player/gta5_player_character_step.hpp"
 
 #include "services/interfaces/workflow/gta5/ped/gta5_ped_frame.hpp"
+#include "services/interfaces/workflow/gta5/ped/gta5_ped_gait.hpp"
 #include "services/interfaces/workflow/gta5/ped/gta5_ped_pose.hpp"
 #include "services/interfaces/workflow/gta5/ped/gta5_ped_stance.hpp"
 #include "services/interfaces/workflow/gta5/player/gta5_shown_transform.hpp"
@@ -19,16 +20,12 @@
 
 namespace sdl3cpp::services::impl {
 
-WorkflowGta5PlayerCharacterStep::WorkflowGta5PlayerCharacterStep(
-    std::shared_ptr<ILogger> logger, std::shared_ptr<Gta5StreamState> state)
-    : logger_(std::move(logger)), state_(std::move(state)) {}
-std::string WorkflowGta5PlayerCharacterStep::GetPluginId() const {
-    return "gta5.player.character";
-}
 void WorkflowGta5PlayerCharacterStep::Execute(
     const WorkflowStepDefinition& step, WorkflowContext& context) {
     if (!state_) return;
     state_->character.clear();
+    // Where the legs are, for the footsteps; -1 while none are drawn.
+    context.Set<float>(kGta5WalkPhaseKey, -1.f);
     auto* device = context.Get<SDL_GPUDevice*>("gpu_device", nullptr);
     btRigidBody* player = Gta5PlayerBody(context);
     if (!device || !player || state_->seated >= 0 ||
@@ -49,6 +46,7 @@ void WorkflowGta5PlayerCharacterStep::Execute(
     PoseGta5Ped(ped_.skeleton, walk_, speed, dt, stance_.aim,
                 context.Get<float>("camera_pitch", 0.f),
                 context.Get<int>("gta5.weapon.hands", 2) == 2, skin_);
+    context.Set<float>(kGta5WalkPhaseKey, walk_.phase);
     StageGta5PedFrame(*state_, device, ped_, skin_, frame_++ % kGta5PedRing,
                       skinned_);
     // Feet on the floor q3 stands the player on: its box's bottom.
