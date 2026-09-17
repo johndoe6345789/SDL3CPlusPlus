@@ -13,6 +13,7 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <filesystem>
@@ -105,42 +106,78 @@ TEST(Fs2024Polygon, TooFewPointsProducesNoTriangles) {
 TEST(Fs2024BuildingMesh, ProducesWallsAndARoofForASquareFootprint) {
     const std::vector<impl::Point2> square{
         {0.f, 0.f}, {10.f, 0.f}, {10.f, 10.f}, {0.f, 10.f}};
-    std::vector<impl::BspRenderVertex> vertices;
-    std::vector<std::uint32_t> indices;
-    impl::AppendBuildingMesh(square, 9.f, vertices, indices);
+    std::vector<impl::BspRenderVertex> wallVertices, roofVertices;
+    std::vector<std::uint32_t> wallIndices, roofIndices;
+    impl::AppendBuildingMesh(square, 9.f, wallVertices, wallIndices,
+                            roofVertices, roofIndices);
 
-    // 4 walls * 4 verts + 4 roof verts; 4 walls * 2 tris + 2 roof tris.
-    EXPECT_EQ(vertices.size(), 20u);
-    EXPECT_EQ(indices.size(), (4u * 2u + 2u) * 3u);
-    for (std::uint32_t index : indices) ASSERT_LT(index, vertices.size());
+    EXPECT_EQ(wallVertices.size(), 16u);  // 4 walls * 4 verts
+    EXPECT_EQ(wallIndices.size(), 4u * 2u * 3u);  // 4 walls * 2 tris
+    EXPECT_EQ(roofVertices.size(), 4u);
+    EXPECT_EQ(roofIndices.size(), 2u * 3u);  // a square roof is 2 tris
+    for (std::uint32_t index : wallIndices) {
+        ASSERT_LT(index, wallVertices.size());
+    }
+    for (std::uint32_t index : roofIndices) {
+        ASSERT_LT(index, roofVertices.size());
+    }
 }
 
 TEST(Fs2024BuildingMesh, RoofSitsAtTheGivenHeightFacingUp) {
     const std::vector<impl::Point2> square{
         {0.f, 0.f}, {10.f, 0.f}, {10.f, 10.f}, {0.f, 10.f}};
-    std::vector<impl::BspRenderVertex> vertices;
-    std::vector<std::uint32_t> indices;
-    impl::AppendBuildingMesh(square, 9.f, vertices, indices);
+    std::vector<impl::BspRenderVertex> wallVertices, roofVertices;
+    std::vector<std::uint32_t> wallIndices, roofIndices;
+    impl::AppendBuildingMesh(square, 9.f, wallVertices, wallIndices,
+                            roofVertices, roofIndices);
 
-    int roofVertices = 0;
-    for (const auto& v : vertices) {
-        if (v.ny > 0.5f) {
-            EXPECT_FLOAT_EQ(v.y, 9.f);
-            ++roofVertices;
-        }
+    ASSERT_EQ(roofVertices.size(), 4u);
+    for (const auto& v : roofVertices) {
+        EXPECT_FLOAT_EQ(v.ny, 1.f);
+        EXPECT_FLOAT_EQ(v.y, 9.f);
     }
-    EXPECT_EQ(roofVertices, 4);
+}
+
+TEST(Fs2024BuildingMesh, WallAndRoofUvsTileByWorldDistance) {
+    // A wall 8 m long and 4 m tall, and a roof whose footprint corner
+    // sits 8 m out -- both should read as exactly 2 texture tiles at
+    // this engine's fixed 4 m/8 m wall/roof tile size.
+    const std::vector<impl::Point2> square{
+        {0.f, 0.f}, {8.f, 0.f}, {8.f, 8.f}, {0.f, 8.f}};
+    std::vector<impl::BspRenderVertex> wallVertices, roofVertices;
+    std::vector<std::uint32_t> wallIndices, roofIndices;
+    impl::AppendBuildingMesh(square, 4.f, wallVertices, wallIndices,
+                            roofVertices, roofIndices);
+
+    ASSERT_EQ(wallVertices.size(), 16u);
+    EXPECT_FLOAT_EQ(wallVertices[0].u, 0.f);
+    EXPECT_FLOAT_EQ(wallVertices[1].u, 2.f);
+    EXPECT_FLOAT_EQ(wallVertices[2].v, 1.f);
+
+    // Winding normalisation may reorder/reverse the footprint, so check
+    // the tiling scale by extent rather than assuming a vertex index.
+    ASSERT_EQ(roofVertices.size(), 4u);
+    float maxU = 0.f, maxV = 0.f;
+    for (const auto& v : roofVertices) {
+        maxU = std::max(maxU, v.u);
+        maxV = std::max(maxV, v.v);
+    }
+    EXPECT_FLOAT_EQ(maxU, 1.f);
+    EXPECT_FLOAT_EQ(maxV, 1.f);
 }
 
 TEST(Fs2024BuildingMesh, NoHeightOrTooFewPointsProducesNothing) {
-    std::vector<impl::BspRenderVertex> vertices;
-    std::vector<std::uint32_t> indices;
+    std::vector<impl::BspRenderVertex> wallVertices, roofVertices;
+    std::vector<std::uint32_t> wallIndices, roofIndices;
     impl::AppendBuildingMesh({{0.f, 0.f}, {1.f, 0.f}, {1.f, 1.f}}, 0.f,
-                            vertices, indices);
-    EXPECT_TRUE(vertices.empty());
-    impl::AppendBuildingMesh({{0.f, 0.f}, {1.f, 0.f}}, 9.f, vertices,
-                            indices);
-    EXPECT_TRUE(vertices.empty());
+                            wallVertices, wallIndices, roofVertices,
+                            roofIndices);
+    EXPECT_TRUE(wallVertices.empty());
+    EXPECT_TRUE(roofVertices.empty());
+    impl::AppendBuildingMesh({{0.f, 0.f}, {1.f, 0.f}}, 9.f, wallVertices,
+                            wallIndices, roofVertices, roofIndices);
+    EXPECT_TRUE(wallVertices.empty());
+    EXPECT_TRUE(roofVertices.empty());
 }
 
 namespace {

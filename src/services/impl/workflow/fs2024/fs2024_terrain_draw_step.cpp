@@ -62,7 +62,7 @@ void DrawOneTile(
     SDL_GPURenderPass* pass, SDL_GPUCommandBuffer* cmd,
     const Fs2024LoadedTile& tile, const Fs2024Frustum& frustum,
     Fs2024TerrainFragmentUniforms fragment,
-    SDL_GPUTextureSamplerBinding building,
+    SDL_GPUTextureSamplerBinding building, SDL_GPUTextureSamplerBinding roof,
     const std::unordered_map<std::string, Fs2024LandmarkKitGpu>& kits) {
     if (tile.groundTexture && tile.groundSampler) {
         fragment.runway = tile.runway;
@@ -81,6 +81,13 @@ void DrawOneTile(
         SDL_PushGPUFragmentUniformData(cmd, 0, &fragment, sizeof(fragment));
         SDL_BindGPUFragmentSamplers(pass, 0, &building, 1);
         DrawChunk(pass, tile.buildingChunk, frustum);
+    }
+
+    if (tile.buildingRoofChunk.indexCount > 0 && roof.texture) {
+        fragment.runway = glm::vec4(0.f);
+        SDL_PushGPUFragmentUniformData(cmd, 0, &fragment, sizeof(fragment));
+        SDL_BindGPUFragmentSamplers(pass, 0, &roof, 1);
+        DrawChunk(pass, tile.buildingRoofChunk, frustum);
     }
 
     if (!tile.landmarks.empty()) {
@@ -127,12 +134,17 @@ void WorkflowFs2024TerrainDrawStep::Execute(
     SDL_GPUTextureSamplerBinding building{
         context.Get<SDL_GPUTexture*>(buildingKey + "_gpu", nullptr),
         context.Get<SDL_GPUSampler*>(buildingKey + "_sampler", nullptr)};
+    const std::string roofKey =
+        Fs2024StringOr(step, "roof_texture", "fs2024_roof");
+    SDL_GPUTextureSamplerBinding roof{
+        context.Get<SDL_GPUTexture*>(roofKey + "_gpu", nullptr),
+        context.Get<SDL_GPUSampler*>(roofKey + "_sampler", nullptr)};
 
     SDL_BindGPUGraphicsPipeline(pass, pipeline);
     SDL_PushGPUVertexUniformData(cmd, 0, &vertex, sizeof(vertex));
 
     for (const auto& [key, tile] : state_->resident) {
-        DrawOneTile(pass, cmd, tile, frustum, fragment, building,
+        DrawOneTile(pass, cmd, tile, frustum, fragment, building, roof,
                    state_->landmarkKits);
     }
 }

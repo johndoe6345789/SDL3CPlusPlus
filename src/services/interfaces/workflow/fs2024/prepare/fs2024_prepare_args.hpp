@@ -17,6 +17,8 @@ struct PrepareArgs {
     float spacing = 16.f;
     int texturePerTile = 512;
     std::string landmarkCatalog;  ///< optional; see fs2024_landmark_catalog.hpp
+    std::string wallTexture;   ///< optional; paired with roofTexture
+    std::string roofTexture;   ///< optional; see fs2024_building_kit_extract.hpp
 };
 
 /// Parses argv into `PrepareArgs`. Throws std::runtime_error (with a

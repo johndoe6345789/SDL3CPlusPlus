@@ -3,9 +3,12 @@
 Walk a real place with Quake 3's player kinematics, its ground and
 buildings streamed in around you as you move. Defaults to a road at
 Westminster, London (Bridge Street, by Big Ben); an airport such as
-Innsbruck (LOWI) works too. There are no aircraft; most buildings are
-flat-shaded massing, not textured models -- a handful of named
-landmarks (see `--landmark-catalog` below) are real, textured meshes.
+Innsbruck (LOWI) works too. There are no aircraft; every OSM
+building's footprint is real (OpenStreetMap) and its walls and roof
+are real FS2024 material textures (see `--wall-texture`/
+`--roof-texture` below), though the shape is still a plain extruded
+box, not a modelled facade -- a handful of named landmarks (see
+`--landmark-catalog` below) are real, complete meshes instead.
 
 ## What FS2024 does and does not give you
 
@@ -162,11 +165,11 @@ W to speed up, Space to rise and Left Ctrl to sink.
   every resident tile, once, before `system.exit`.
 - `fs2024.terrain.draw` draws every resident tile's ground blocks that
   reach into the view, each with its own texture bound, then its
-  building mesh (if it baked any) through the *same* pipeline and
-  shader -- buildings are drawn with the shared flat
-  `packages/fs2024/assets/building_flat.png` in place of a real ground
-  texture, and no runway overlay, but otherwise get the identical sun
-  plus sky plus fog shading the ground does. Extruding on load rather
+  buildings' walls and roof (if it baked any) as two more draw calls
+  through the *same* pipeline and shader -- FS2024's own generic brick
+  and roof-tile textures (`--wall-texture`/`--roof-texture`), shared
+  citywide, and no runway overlay, but otherwise the identical sun
+  plus sky plus fog shading the ground gets. Extruding on load rather
   than baking a mesh meant no second pipeline or vertex format was
   needed.
 - An airport's runway markings are drawn in the fragment shader
@@ -195,9 +198,13 @@ W to speed up, Space to rise and Left Ctrl to sink.
   `fs2024_terrain_walk_test` runs the real pmove chain over a Bullet
   heightfield, on the flat and up slopes. `fs2024_prepare_test` covers
   the bake tool's own pure logic: argument parsing, grid alignment,
-  polygon triangulation, and building extrusion (a footprint's walls
-  and roof come out counter-clockwise seen from outside, matching this
-  engine's own terrain-winding convention).
+  polygon triangulation, building extrusion (a footprint's walls and
+  roof come out counter-clockwise seen from outside, matching this
+  engine's own terrain-winding convention, and tile by real-world
+  distance at the wall/roof texture's own fixed metres-per-tile), the
+  landmark catalog and its OSM name matching. `fs2024_gltf_model_test`
+  covers the landmark glTF reader itself, against a small hand-built
+  RIFF/GLB fixture rather than a real (and uncommittable) FS2024 file.
 
 Only SPIR-V is built:
 
@@ -273,6 +280,38 @@ extraction. `fs2024.tiles.load` uploads a referenced model's kit once,
 the first tile that needs it; `fs2024.terrain.draw` draws it through
 the same pipeline as everything else, one draw call per material.
 
+## Real walls and roofs everywhere: `--wall-texture`/`--roof-texture`
+
+Every ordinary OSM building -- not just a named landmark -- is now
+textured with FS2024's own generic wall and roof materials, not the
+old flat placeholder colour:
+
+```bash
+fs2024_prepare ... \
+    --wall-texture "<FS2024 install>/asobo-modellib-texture/Asobo_Buildings/Texture/TILE_BRICKS_BROWN_01_ALBD.PNG.DDS" \
+    --roof-texture "<FS2024 install>/asobo-modellib-texture/Asobo_Buildings/Texture/TILE_ROOFTILE_BROWNDIRTY_ALBEDO.PNG.DDS"
+```
+
+Unlike a landmark, these are plain DDS files FS2024 ships directly --
+no BGL or glTF involved, just `DecodeDds` and a PNG write, once into
+shared `<out>/building_kit/wall.png`/`roof.png` (skipped if already
+there). `AppendBuildingMesh` (`fs2024_building_mesh.cpp`) now emits
+walls and roofs as two separate vertex/index lists with real UVs --
+a wall tiles its texture every 4 m of its own length/height, a roof
+every 8 m of its own (x, z), a flat planar projection from above --
+so `fs2024.tiles.load` uploads two GPU chunks per tile instead of
+one, and `fs2024.terrain.draw` draws them with their own real
+textures rather than one shared flat colour. No `buildings.fsb`
+format change: the split happens at mesh-build time, not bake time.
+
+The result is real, directional shading, not a flat colour: a box's
+sunlit face reads as bright brick, its shadowed face much darker,
+exactly like a real photograph of a street would -- confirmed by
+comparing two faces of the same building side by side, not assumed.
+A distant view where every visible wall happens to face away from the
+sun will look darker than the old flat placeholder ever did, simply
+because the placeholder had no real material darkness to reveal.
+
 ## Next
 
 1. A coarser outer ring of tiles at a lower level of detail, the way
@@ -289,3 +328,7 @@ the same pipeline as everything else, one draw call per material.
    engine's fs2024 shader takes none -- ground and OSM buildings are
    baked in world space too). Fine while every catalog only ever
    places each landmark once.
+5. More than one wall/roof material citywide -- every OSM building
+   currently shares the same one of each, picked once for the whole
+   bake, not varied per building the way a real street never repeats
+   the same brick on every house.

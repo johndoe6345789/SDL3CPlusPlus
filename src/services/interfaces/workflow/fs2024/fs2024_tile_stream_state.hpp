@@ -28,6 +28,9 @@ struct Fs2024LoadedTile {
     /// vertex format terrain uses, so the same pipeline draws both);
     /// indexCount 0 means the tile baked none.
     Fs2024TerrainChunkGpu buildingChunk;
+    /// The same buildings' roofs, drawn separately with their own real
+    /// roof-tile texture rather than the walls' brick.
+    Fs2024TerrainChunkGpu buildingRoofChunk;
     /// This tile's share of `landmarks.json`, if it baked one; look up
     /// each instance's GPU kit in Fs2024TileStreamState::landmarkKits.
     std::vector<Fs2024LandmarkInstance> landmarks;

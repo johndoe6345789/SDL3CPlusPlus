@@ -6,9 +6,15 @@
 namespace sdl3cpp::services::impl {
 namespace {
 
+// How many metres of wall/roof one full texture tile covers -- fixed,
+// since a flat extrusion has no natural unit (a real building's own
+// storey height/brick coursing) to derive it from.
+constexpr float kWallTextureMetres = 4.f;
+constexpr float kRoofTextureMetres = 8.f;
+
 BspRenderVertex Vertex(float x, float y, float z, float nx, float ny,
-                      float nz) {
-    return {x, y, z, 0.f, 0.f, 0.f, 0.f, nx, ny, nz};
+                      float nz, float u, float v) {
+    return {x, y, z, u, v, 0.f, 0.f, nx, ny, nz};
 }
 
 /// Reverses point order if needed so the shoelace sum is negative --
@@ -34,12 +40,14 @@ void AppendWall(const Point2& a, const Point2& b, float height,
     const float length = std::sqrt(dx * dx + dz * dz);
     if (length < 1e-4f) return;  // a duplicated node; no wall to build
     const float nx = -dz / length, nz = dx / length;
+    const float u = length / kWallTextureMetres;
+    const float v = height / kWallTextureMetres;
 
     const auto base = static_cast<std::uint32_t>(vertices.size());
-    vertices.push_back(Vertex(a.x, 0.f, a.y, nx, 0.f, nz));
-    vertices.push_back(Vertex(b.x, 0.f, b.y, nx, 0.f, nz));
-    vertices.push_back(Vertex(b.x, height, b.y, nx, 0.f, nz));
-    vertices.push_back(Vertex(a.x, height, a.y, nx, 0.f, nz));
+    vertices.push_back(Vertex(a.x, 0.f, a.y, nx, 0.f, nz, 0.f, 0.f));
+    vertices.push_back(Vertex(b.x, 0.f, b.y, nx, 0.f, nz, u, 0.f));
+    vertices.push_back(Vertex(b.x, height, b.y, nx, 0.f, nz, u, v));
+    vertices.push_back(Vertex(a.x, height, a.y, nx, 0.f, nz, 0.f, v));
     for (std::uint32_t i : {0u, 1u, 2u, 0u, 2u, 3u}) {
         indices.push_back(base + i);
     }
@@ -51,7 +59,9 @@ void AppendRoof(const std::vector<Point2>& footprint, float height,
     const auto triangles = TriangulatePolygon(footprint);
     const auto base = static_cast<std::uint32_t>(vertices.size());
     for (const Point2& p : footprint) {
-        vertices.push_back(Vertex(p.x, height, p.y, 0.f, 1.f, 0.f));
+        vertices.push_back(Vertex(p.x, height, p.y, 0.f, 1.f, 0.f,
+                                  p.x / kRoofTextureMetres,
+                                  p.y / kRoofTextureMetres));
     }
     for (std::uint32_t index : triangles) indices.push_back(base + index);
 }
@@ -60,16 +70,18 @@ void AppendRoof(const std::vector<Point2>& footprint, float height,
 
 void AppendBuildingMesh(const std::vector<Point2>& rawFootprint,
                        float height,
-                       std::vector<BspRenderVertex>& vertices,
-                       std::vector<std::uint32_t>& indices) {
+                       std::vector<BspRenderVertex>& wallVertices,
+                       std::vector<std::uint32_t>& wallIndices,
+                       std::vector<BspRenderVertex>& roofVertices,
+                       std::vector<std::uint32_t>& roofIndices) {
     if (rawFootprint.size() < 3 || height <= 0.f) return;
     const std::vector<Point2> footprint = NormalisedWinding(rawFootprint);
 
     for (std::size_t i = 0; i < footprint.size(); ++i) {
         AppendWall(footprint[i], footprint[(i + 1) % footprint.size()],
-                  height, vertices, indices);
+                  height, wallVertices, wallIndices);
     }
-    AppendRoof(footprint, height, vertices, indices);
+    AppendRoof(footprint, height, roofVertices, roofIndices);
 }
 
 }  // namespace sdl3cpp::services::impl

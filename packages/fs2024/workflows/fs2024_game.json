@@ -63,7 +63,12 @@
     "building_texture_path": {
       "name": "building_texture_path",
       "type": "string",
-      "defaultValue": "packages/fs2024/assets/building_flat.png"
+      "defaultValue": "D:/fs2024/westminster/building_kit/wall.png"
+    },
+    "roof_texture_path": {
+      "name": "roof_texture_path",
+      "type": "string",
+      "defaultValue": "D:/fs2024/westminster/building_kit/roof.png"
     }
   },
   "nodes": [
@@ -328,7 +333,25 @@
           "texture": "fs2024_building"
         }
       },
-      "comment": "A flat 2x2 colour, shared by every tile's buildings: they are massing, not textured models."
+      "comment": "FS2024's own generic wall brick, shared by every tile's OSM buildings citywide -- the footprints are real (OpenStreetMap), the walls are real FS2024 texture data, extracted once by fs2024_prepare's --wall-texture."
+    },
+    {
+      "id": "roof_texture",
+      "type": "texture.load",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "inputs": {
+          "image_path": "roof_texture_path"
+        },
+        "outputs": {
+          "texture": "fs2024_roof"
+        }
+      },
+      "comment": "FS2024's own generic roof tile, drawn over every building's flat roof separately from its walls."
     },
     {
       "id": "physics_world",
@@ -671,6 +694,17 @@
       }
     },
     "building_texture": {
+      "main": {
+        "0": [
+          {
+            "node": "roof_texture",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "roof_texture": {
       "main": {
         "0": [
           {

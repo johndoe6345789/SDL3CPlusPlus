@@ -9,7 +9,8 @@ const char* kUsage =
     "usage: fs2024_prepare --out DIR --dem FILE.tif "
     "(--icao ICAO [--bgl FILE.bgl] | --lat N --lon N --osm-json FILE.json) "
     "[--tile-size M] [--extent M] [--spacing M] [--texture-per-tile PX] "
-    "[--landmark-catalog FILE.json]";
+    "[--landmark-catalog FILE.json] "
+    "[--wall-texture FILE.dds --roof-texture FILE.dds]";
 
 std::string Next(int argc, char** argv, int& i) {
     if (i + 1 >= argc) throw std::runtime_error(kUsage);
@@ -41,6 +42,10 @@ PrepareArgs ParsePrepareArgs(int argc, char** argv) {
             args.texturePerTile = std::stoi(Next(argc, argv, i));
         else if (flag == "--landmark-catalog")
             args.landmarkCatalog = Next(argc, argv, i);
+        else if (flag == "--wall-texture")
+            args.wallTexture = Next(argc, argv, i);
+        else if (flag == "--roof-texture")
+            args.roofTexture = Next(argc, argv, i);
         else throw std::runtime_error(kUsage);
     }
     if (args.dem.empty() || args.out.empty()) throw std::runtime_error(kUsage);

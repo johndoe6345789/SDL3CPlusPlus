@@ -1201,6 +1201,7 @@ endif()
         src/services/impl/workflow/fs2024/prepare/fs2024_bgl_airport.cpp
         src/services/impl/workflow/fs2024/prepare/fs2024_bgl_model_library.cpp
         src/services/impl/workflow/fs2024/prepare/fs2024_bgl_model_name.cpp
+        src/services/impl/workflow/fs2024/prepare/fs2024_building_kit_extract.cpp
         src/services/impl/workflow/fs2024/prepare/fs2024_dds_texture.cpp
         src/services/impl/workflow/fs2024/prepare/fs2024_dem_tile.cpp
         src/services/impl/workflow/fs2024/prepare/fs2024_gltf_accessor.cpp

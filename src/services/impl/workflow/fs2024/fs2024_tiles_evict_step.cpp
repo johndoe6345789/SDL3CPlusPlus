@@ -17,6 +17,8 @@ void ReleaseTile(SDL_GPUDevice* device, btDiscreteDynamicsWorld* world,
         SDL_ReleaseGPUSampler(device, tile.groundSampler);
         SDL_ReleaseGPUBuffer(device, tile.buildingChunk.vertexBuffer);
         SDL_ReleaseGPUBuffer(device, tile.buildingChunk.indexBuffer);
+        SDL_ReleaseGPUBuffer(device, tile.buildingRoofChunk.vertexBuffer);
+        SDL_ReleaseGPUBuffer(device, tile.buildingRoofChunk.indexBuffer);
     }
 }
 

@@ -59,8 +59,8 @@ void LoadTileBuildings(SDL_GPUDevice* device, const std::string& dir,
 
     std::uint32_t count = 0;
     in.read(reinterpret_cast<char*>(&count), 4);
-    std::vector<BspRenderVertex> vertices;
-    std::vector<std::uint32_t> indices;
+    std::vector<BspRenderVertex> wallVertices, roofVertices;
+    std::vector<std::uint32_t> wallIndices, roofIndices;
     glm::vec3 min(1e30f), max(-1e30f);
 
     for (std::uint32_t i = 0; i < count && in; ++i) {
@@ -76,19 +76,32 @@ void LoadTileBuildings(SDL_GPUDevice* device, const std::string& dir,
             min.z = std::min(min.z, p.y); max.z = std::max(max.z, p.y);
         }
         max.y = std::max(max.y, height);
-        AppendBuildingMesh(footprint, height, vertices, indices);
+        AppendBuildingMesh(footprint, height, wallVertices, wallIndices,
+                          roofVertices, roofIndices);
     }
-    if (indices.empty()) return;
+    if (wallIndices.empty() && roofIndices.empty()) return;
 
     min.y = 0.f;
-    const BspGeometryBuffers buffers =
-        UploadBspGeometryBuffers(device, vertices, indices);
-    tile.buildingChunk.vertexBuffer = buffers.vertex_buffer;
-    tile.buildingChunk.indexBuffer = buffers.index_buffer;
-    tile.buildingChunk.indexCount =
-        static_cast<std::uint32_t>(indices.size());
-    tile.buildingChunk.min = min;
-    tile.buildingChunk.max = max;
+    if (!wallIndices.empty()) {
+        const BspGeometryBuffers buffers =
+            UploadBspGeometryBuffers(device, wallVertices, wallIndices);
+        tile.buildingChunk.vertexBuffer = buffers.vertex_buffer;
+        tile.buildingChunk.indexBuffer = buffers.index_buffer;
+        tile.buildingChunk.indexCount =
+            static_cast<std::uint32_t>(wallIndices.size());
+        tile.buildingChunk.min = min;
+        tile.buildingChunk.max = max;
+    }
+    if (!roofIndices.empty()) {
+        const BspGeometryBuffers buffers =
+            UploadBspGeometryBuffers(device, roofVertices, roofIndices);
+        tile.buildingRoofChunk.vertexBuffer = buffers.vertex_buffer;
+        tile.buildingRoofChunk.indexBuffer = buffers.index_buffer;
+        tile.buildingRoofChunk.indexCount =
+            static_cast<std::uint32_t>(roofIndices.size());
+        tile.buildingRoofChunk.min = min;
+        tile.buildingRoofChunk.max = max;
+    }
 }
 
 /// Loads a tile's own landmark instances and, for any model not

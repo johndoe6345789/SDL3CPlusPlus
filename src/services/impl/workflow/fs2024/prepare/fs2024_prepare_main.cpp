@@ -5,6 +5,7 @@
 // draws around RPF7 extraction (see packages/fs2024/README.md).
 
 #include "services/interfaces/workflow/fs2024/prepare/fs2024_bgl_airport.hpp"
+#include "services/interfaces/workflow/fs2024/prepare/fs2024_building_kit_extract.hpp"
 #include "services/interfaces/workflow/fs2024/prepare/fs2024_dem_tile.hpp"
 #include "services/interfaces/workflow/fs2024/prepare/fs2024_grid_layout.hpp"
 #include "services/interfaces/workflow/fs2024/prepare/fs2024_ground_cover.hpp"
@@ -183,6 +184,10 @@ int main(int argc, char** argv) {
             args.out, engineHeights, grid.cells, args.spacing, grid.originX,
             grid.originZ, grid.tileSize, cellsPerTile, image, setup.buildings,
             setup.runway);
+
+        if (!args.wallTexture.empty() && !args.roofTexture.empty()) {
+            ExtractBuildingKit(args.wallTexture, args.roofTexture, args.out);
+        }
 
         const auto catalog = ReadLandmarkCatalog(args.landmarkCatalog);
         if (!catalog.empty()) {
