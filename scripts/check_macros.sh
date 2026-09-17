@@ -14,6 +14,7 @@ WHITELIST=(
     "src/services/impl/workflow/rendering/frame_draw_bodies_helpers.cpp"
     "src/services/impl/workflow/workflow_generic_steps/camera_fps_update_helpers.cpp"
     "src/services/impl/workflow/workflow_generic_steps/camera_matrix_builder.cpp"
+    "src/services/impl/workflow/fs2024/prepare/texture/fs2024_ground_image.cpp"
 )
 
 # Function to check if a file is whitelisted
