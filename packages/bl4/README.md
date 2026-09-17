@@ -17,6 +17,35 @@ baked to disk.
 - **This package** only reads bl4x's *output*: OBJ meshes and JSON
   placement lists. It has no BL4-specific parsing at all.
 
+## Finding a region worth baking
+
+World_P cells have opaque hashed filenames -- nothing in the name says
+"this one has buildings" or "this one is empty desert". `bl4x`'s
+`find-cells` command walks every cell looking for placements whose mesh
+path contains any of a list of substrings, and prints each match's
+instance count and centroid, so you can pick a region by *content*
+rather than guessing:
+
+```
+bl4x.exe find-cells <max_hits> <pattern1> [pattern2 ...]
+# e.g. a settlement/outpost area (roads + modular architecture kit):
+bl4x.exe find-cells 60 SM_Building SM_Road SM_Global_Catwalk SM_Concrete_Block SM_Trim_Concrete
+```
+
+Two adjacent cells found this way (near World-space (245, 125, 435))
+turned out to share a modular outpost: paved roads, walls with doors and
+windows, catwalks, and a roof -- baked as the package's current default
+test region. Worth knowing before picking a spawn point: some pieces of
+this kit are long, thin meshes (a `SM_Road_Paved_Shoulder_2000_A`
+embankment segment, 20 m long) whose *pivot* can be many metres from
+where the mesh actually reaches -- checking "is anything within N metres
+of my spawn point's *pivot*" isn't enough; the first two spawn points
+this session that passed exactly that check still ended up with the
+camera embedded in that shoulder's slope. Once actually clear (checked
+against the full instance list, not just nearby pivots) and re-oriented
+to look down the road rather than face-on into a wall, the view reads
+correctly as a road between buildings.
+
 ## Baking a region
 
 bl4x's `bake` command walks one or more World_P cell `.umap` packages,

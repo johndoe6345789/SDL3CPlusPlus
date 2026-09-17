@@ -268,9 +268,9 @@
         "name": "player",
         "shape": "capsule",
         "mass": 80,
-        "pos_x": -1252.95,
+        "pos_x": 234.0,
         "pos_y": 150.0,
-        "pos_z": -2350.35,
+        "pos_z": 431.0,
         "radius": 0.3,
         "height": 1.0,
         "lock_rotation": 1,
@@ -320,12 +320,12 @@
       "typeVersion": 1,
       "position": [0, 0],
       "parameters": {
-        "x": -1252.95,
-        "y": 121.2,
-        "z": -2350.35,
-        "heading": 0.0
+        "x": 234.0,
+        "y": 121.5,
+        "z": 431.0,
+        "heading": 200.0
       },
-      "comment": "From bl4x's world.json spawn point for the baked test region (one World_P cell)."
+      "comment": "On SM_Road_Paved_1000_A (234.158, 430.636), 3-5m from the nearest walls -- close enough to read as 'on the road, next to the buildings' without being inside a wall's own mesh volume. Found via `bl4x find-cells` and baked from two World_P cells centred there."
     },
     {
       "id": "lighting",
