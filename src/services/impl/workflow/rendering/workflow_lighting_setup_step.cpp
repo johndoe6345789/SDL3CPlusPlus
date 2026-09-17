@@ -1,5 +1,5 @@
 #include "services/interfaces/workflow/rendering/workflow_lighting_setup_step.hpp"
-#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_parameter_resolver.hpp"
 
 #include <nlohmann/json.hpp>
 #include <cmath>

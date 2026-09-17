@@ -2,7 +2,7 @@
 #include "services/interfaces/workflow/graphics/texture_gpu_upload.hpp"
 #include "services/interfaces/workflow/graphics/texture_image_io.hpp"
 #include "services/interfaces/workflow/graphics/texture_load_sampler.hpp"
-#include "services/interfaces/workflow/workflow_step_io_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_io_resolver.hpp"
 
 #include <SDL3/SDL_gpu.h>
 #include <nlohmann/json.hpp>

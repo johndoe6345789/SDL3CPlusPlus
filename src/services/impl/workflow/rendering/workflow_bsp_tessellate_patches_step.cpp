@@ -3,7 +3,7 @@
 #include "services/interfaces/workflow/rendering/bsp_face_visibility.hpp"
 #include "services/interfaces/workflow/rendering/bsp_patch_face_builder.hpp"
 #include "services/interfaces/workflow/rendering/bsp_texture_groups_context.hpp"
-#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_parameter_resolver.hpp"
 
 #include <nlohmann/json.hpp>
 #include <stdexcept>

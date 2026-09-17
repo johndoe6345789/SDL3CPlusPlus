@@ -1,5 +1,5 @@
 #include "services/interfaces/workflow/graphics/gpu_pipeline_params.hpp"
-#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_parameter_resolver.hpp"
 
 namespace sdl3cpp::services::impl {
 namespace {

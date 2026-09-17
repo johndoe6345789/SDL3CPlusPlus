@@ -1,6 +1,6 @@
 #include "services/interfaces/workflow/graphics/workflow_graphics_framebuffer_readback_step.hpp"
 #include "services/interfaces/workflow/graphics/gpu_framebuffer_readback.hpp"
-#include "services/interfaces/workflow/workflow_step_io_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_io_resolver.hpp"
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_gpu.h>

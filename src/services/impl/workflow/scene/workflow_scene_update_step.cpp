@@ -1,6 +1,6 @@
 #include "services/interfaces/workflow/scene/workflow_scene_update_step.hpp"
 
-#include "services/interfaces/workflow/workflow_step_io_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_io_resolver.hpp"
 
 #include <stdexcept>
 #include <utility>

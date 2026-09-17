@@ -1,5 +1,5 @@
 #include "services/interfaces/workflow/graphics/gpu_readback_keys.hpp"
-#include "services/interfaces/workflow/workflow_step_io_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_io_resolver.hpp"
 
 #include <SDL3/SDL.h>
 

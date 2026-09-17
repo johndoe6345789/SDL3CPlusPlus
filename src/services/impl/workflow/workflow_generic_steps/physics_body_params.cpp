@@ -1,5 +1,5 @@
 #include "services/interfaces/workflow/workflow_generic_steps/physics_body_params.hpp"
-#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_parameter_resolver.hpp"
 
 #include <type_traits>
 

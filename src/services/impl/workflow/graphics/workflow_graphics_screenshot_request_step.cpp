@@ -1,7 +1,7 @@
 #include "services/interfaces/workflow/graphics/workflow_graphics_screenshot_request_step.hpp"
 #include "services/interfaces/workflow/graphics/graphics_screenshot_request_helpers.hpp"
 #include "services/interfaces/workflow/graphics/gpu_swapchain_capture.hpp"
-#include "services/interfaces/workflow/workflow_step_io_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_io_resolver.hpp"
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_gpu.h>

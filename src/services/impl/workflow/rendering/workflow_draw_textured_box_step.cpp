@@ -1,6 +1,6 @@
 #include "services/interfaces/workflow/rendering/workflow_draw_textured_box_step.hpp"
 #include "services/interfaces/workflow/rendering/box_face_geometry.hpp"
-#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_parameter_resolver.hpp"
 
 #include <string>
 

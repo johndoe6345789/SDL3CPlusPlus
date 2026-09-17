@@ -1,7 +1,7 @@
 #include "services/interfaces/workflow/compute/workflow_compute_tessellate_dispatch_step.hpp"
 #include "services/interfaces/workflow/compute/compute_tessellate_grid.hpp"
-#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
-#include "services/interfaces/workflow/workflow_step_io_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_parameter_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_io_resolver.hpp"
 
 #include <SDL3/SDL_gpu.h>
 #include <stdexcept>

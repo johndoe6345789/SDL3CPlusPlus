@@ -4,7 +4,7 @@
 #include "services/interfaces/workflow/graphics/frame_depth_texture.hpp"
 #include "services/interfaces/workflow/graphics/frame_render_pass.hpp"
 #include "services/interfaces/workflow/graphics/frame_swapchain.hpp"
-#include "services/interfaces/workflow/workflow_step_io_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_io_resolver.hpp"
 
 #include <SDL3/SDL_gpu.h>
 #include <nlohmann/json.hpp>

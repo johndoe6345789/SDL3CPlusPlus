@@ -1,5 +1,5 @@
 #include "services/interfaces/workflow/rendering/workflow_debug_screenshot_step.hpp"
-#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_parameter_resolver.hpp"
 
 #include <SDL3/SDL_surface.h>
 #include <SDL3/SDL_gpu.h>

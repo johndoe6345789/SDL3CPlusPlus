@@ -1,5 +1,5 @@
 #include "services/interfaces/workflow/rendering/draw_map_texture_config.hpp"
-#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_parameter_resolver.hpp"
 
 #include <algorithm>
 #include <cctype>

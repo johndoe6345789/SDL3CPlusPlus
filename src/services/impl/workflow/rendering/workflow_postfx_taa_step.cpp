@@ -3,7 +3,7 @@
 #include "services/interfaces/workflow/rendering/postfx_taa_jitter.hpp"
 #include "services/interfaces/workflow/rendering/postfx_taa_pipeline.hpp"
 #include "services/interfaces/workflow/rendering/postfx_taa_resolve.hpp"
-#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_parameter_resolver.hpp"
 
 #include <SDL3/SDL_gpu.h>
 #include <glm/glm.hpp>

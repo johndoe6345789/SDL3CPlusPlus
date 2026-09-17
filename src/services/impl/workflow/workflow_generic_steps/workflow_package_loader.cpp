@@ -1,5 +1,5 @@
 #include "services/interfaces/workflow/workflow_generic_steps/workflow_package_loader.hpp"
-#include "services/interfaces/workflow/workflow_definition_parser.hpp"
+#include "services/interfaces/workflow/parser/workflow_definition_parser.hpp"
 
 #include <filesystem>
 #include <stdexcept>

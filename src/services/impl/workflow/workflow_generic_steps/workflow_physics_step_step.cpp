@@ -1,5 +1,5 @@
 #include "services/interfaces/workflow/workflow_generic_steps/workflow_physics_step_step.hpp"
-#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_parameter_resolver.hpp"
 #include "services/interfaces/workflow_step_definition.hpp"
 #include "services/interfaces/workflow_context.hpp"
 

@@ -1,7 +1,7 @@
 #include "services/interfaces/workflow/quake3/audio/workflow_q3_sound_play_step.hpp"
 #include "services/interfaces/workflow/quake3/audio/q3_sound_bank.hpp"
 #include "services/interfaces/workflow/quake3/audio/q3_sound_playback.hpp"
-#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_parameter_resolver.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
 #include <SDL3/SDL_audio.h>

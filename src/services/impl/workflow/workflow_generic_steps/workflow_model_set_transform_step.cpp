@@ -1,8 +1,8 @@
 #include "services/interfaces/workflow/workflow_generic_steps/workflow_model_set_transform_step.hpp"
 
 #include "services/interfaces/workflow/workflow_generic_steps/model_input_helpers.hpp"
-#include "services/interfaces/workflow/workflow_step_io_resolver.hpp"
-#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_io_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_parameter_resolver.hpp"
 #include "services/interfaces/scene_types.hpp"
 
 #include <stdexcept>

@@ -1,6 +1,6 @@
 #include "services/interfaces/workflow/rendering/frame_render_scale.hpp"
 
-#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_parameter_resolver.hpp"
 
 #include <algorithm>
 

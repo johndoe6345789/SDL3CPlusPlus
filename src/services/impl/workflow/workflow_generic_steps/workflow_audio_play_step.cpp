@@ -1,8 +1,8 @@
 #include "services/interfaces/workflow/workflow_generic_steps/workflow_audio_play_step.hpp"
 
 #include "services/interfaces/workflow/workflow_generic_steps/audio_play_input_helpers.hpp"
-#include "services/interfaces/workflow/workflow_step_io_resolver.hpp"
-#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_io_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_parameter_resolver.hpp"
 
 #include <filesystem>
 #include <stdexcept>

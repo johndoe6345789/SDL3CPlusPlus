@@ -1,5 +1,5 @@
 #include "services/interfaces/workflow/quake3/bot/q3_bot_update_params.hpp"
-#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_parameter_resolver.hpp"
 
 namespace sdl3cpp::services::impl {
 namespace {

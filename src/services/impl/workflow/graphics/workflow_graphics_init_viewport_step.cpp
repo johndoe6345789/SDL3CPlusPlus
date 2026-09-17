@@ -1,6 +1,6 @@
 #include "services/interfaces/workflow/graphics/workflow_graphics_init_viewport_step.hpp"
-#include "services/interfaces/workflow/workflow_step_io_resolver.hpp"
-#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_io_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_parameter_resolver.hpp"
 
 #include <nlohmann/json.hpp>
 #include <stdexcept>

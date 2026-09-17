@@ -1,7 +1,7 @@
 #include "services/interfaces/workflow/workflow_generic_steps/workflow_vfx_spawn_step.hpp"
 
-#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
-#include "services/interfaces/workflow/workflow_step_io_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_parameter_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_io_resolver.hpp"
 
 #include <utility>
 #include <string>

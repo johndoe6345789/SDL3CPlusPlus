@@ -1,7 +1,7 @@
 #include "services/interfaces/workflow/quake3/bot/workflow_q3_bots_draw_step.hpp"
 #include "services/interfaces/workflow/quake3/bot/q3_bot_model_render.hpp"
 #include "services/interfaces/workflow/rendering/rendering_types.hpp"
-#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_parameter_resolver.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
 #include <SDL3/SDL_gpu.h>

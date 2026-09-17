@@ -1,0 +1,65 @@
+#include "services/impl/workflow/registrar/workflow_registrar_gta5_player.hpp"
+
+#include "services/interfaces/workflow/gta5/render/gta5_lights_step.hpp"
+#include "services/interfaces/workflow/gta5/player/gta5_player_camera_step.hpp"
+#include "services/interfaces/workflow/gta5/player/gta5_player_character_step.hpp"
+#include "services/interfaces/workflow/gta5/player/gta5_register_movement.hpp"
+#include "services/interfaces/workflow/gta5/render/gta5_reflection_step.hpp"
+#include "services/interfaces/workflow/gta5/render/gta5_shadow_step.hpp"
+#include "services/interfaces/workflow/gta5/effects/gta5_effects_prepare_step.hpp"
+#include "services/interfaces/workflow/gta5/effects/gta5_effects_step.hpp"
+#include "services/interfaces/workflow/gta5/player/gta5_gamepad_step.hpp"
+#include "services/interfaces/workflow/gta5/hud/gta5_hud_step.hpp"
+#include "services/interfaces/workflow/gta5/hud/gta5_shop_step.hpp"
+#include "services/interfaces/workflow/gta5/traffic/gta5_traffic_step.hpp"
+#include "services/interfaces/workflow/gta5/weapon/gta5_weapon_step.hpp"
+#include "services/interfaces/workflow/gta5/hud/gta5_map_look_step.hpp"
+#include "services/interfaces/workflow/gta5/audio/gta5_radio_step.hpp"
+#include "services/interfaces/workflow/gta5/audio/gta5_sound_step.hpp"
+#include "services/interfaces/workflow/gta5/world/gta5_water_map_step.hpp"
+#include "services/interfaces/workflow/gta5/world/gta5_water_step.hpp"
+
+namespace sdl3cpp::services::impl::registrar_detail {
+
+int RegisterGta5PlayerSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
+                            std::shared_ptr<ILogger> logger,
+                            std::shared_ptr<Gta5StreamState> state) {
+    if (!registry) return 0;
+    RegisterGta5MovementSteps(*registry, logger, state);
+    registry->RegisterStep(
+        std::make_shared<WorkflowGta5PlayerCameraStep>(logger, state));
+    registry->RegisterStep(
+        std::make_shared<WorkflowGta5PlayerCharacterStep>(logger, state));
+    registry->RegisterStep(
+        std::make_shared<WorkflowGta5ShadowDrawStep>(logger, state));
+    registry->RegisterStep(
+        std::make_shared<WorkflowGta5WaterDrawStep>(logger, state));
+    registry->RegisterStep(
+        std::make_shared<WorkflowGta5ReflectionDrawStep>(logger, state));
+    registry->RegisterStep(
+        std::make_shared<WorkflowGta5LightsDrawStep>(logger, state));
+    registry->RegisterStep(
+        std::make_shared<WorkflowGta5WaterMapStep>(logger, state));
+    registry->RegisterStep(
+        std::make_shared<WorkflowGta5SoundStep>(logger, state));
+    registry->RegisterStep(
+        std::make_shared<WorkflowGta5RadioStep>(logger, state));
+    registry->RegisterStep(std::make_shared<WorkflowGta5MapLookStep>(logger));
+    registry->RegisterStep(
+        std::make_shared<WorkflowGta5GamepadStep>(logger, state));
+    registry->RegisterStep(
+        std::make_shared<WorkflowGta5HudStep>(logger, state));
+    registry->RegisterStep(
+        std::make_shared<WorkflowGta5ShopStep>(logger, state));
+    registry->RegisterStep(
+        std::make_shared<WorkflowGta5EffectsDrawStep>(logger, state));
+    registry->RegisterStep(
+        std::make_shared<WorkflowGta5WeaponStep>(logger, state));
+    registry->RegisterStep(
+        std::make_shared<WorkflowGta5TrafficStep>(logger, state));
+    registry->RegisterStep(
+        std::make_shared<WorkflowGta5EffectsPrepareStep>(logger, state));
+    return 20;
+}
+
+}  // namespace sdl3cpp::services::impl::registrar_detail

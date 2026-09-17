@@ -186,60 +186,103 @@ if(BUILD_SDL3_APP)
         src/services/impl/app/app_workflow_runtime.cpp
         src/services/impl/app/app_package_config.cpp
         src/services/impl/app/app_context_populate.cpp
-        src/services/impl/workflow/workflow_executor.cpp
-        src/services/impl/workflow/workflow_step_registry.cpp
-        src/services/impl/workflow/workflow_exit_step.cpp
-        src/services/impl/workflow/workflow_parameter_reader.cpp
-        src/services/impl/workflow/workflow_parameter_node_reader.cpp
-        src/services/impl/workflow/workflow_parameter_value_parser.cpp
-        src/services/impl/workflow/workflow_parameter_array_parser.cpp
-        src/services/impl/workflow/workflow_step_io_resolver.cpp
-        src/services/impl/workflow/workflow_step_parameter_resolver.cpp
-        src/services/impl/workflow/workflow_step_parameter_resolver_scalars.cpp
-        src/services/impl/workflow/workflow_step_parameter_resolver_lists.cpp
-        src/services/impl/workflow/workflow_registrar.cpp
-        src/services/impl/workflow/workflow_registrar_graphics_init.cpp
-        src/services/impl/workflow/workflow_registrar_rendering_core.cpp
-        src/services/impl/workflow/workflow_registrar_rendering_bsp.cpp
-        src/services/impl/workflow/workflow_registrar_rendering_postfx.cpp
-        src/services/impl/workflow/workflow_registrar_rendering_overlay.cpp
-        src/services/impl/workflow/workflow_registrar_rendering_q3hud.cpp
-        src/services/impl/workflow/workflow_registrar_rendering_q3model.cpp
-        src/services/impl/workflow/workflow_registrar_rendering_q3pmove.cpp
-        src/services/impl/workflow/workflow_registrar_rendering_q3combat.cpp
-        src/services/impl/workflow/workflow_registrar_graphics_misc.cpp
-        src/services/impl/workflow/workflow_registrar_camera.cpp
-        src/services/impl/workflow/workflow_registrar_physics.cpp
-        src/services/impl/workflow/workflow_registrar_input.cpp
-        src/services/impl/workflow/workflow_registrar_audio.cpp
-        src/services/impl/workflow/workflow_registrar_control.cpp
-        src/services/impl/workflow/workflow_registrar_dataops_core.cpp
-        src/services/impl/workflow/workflow_registrar_list_number.cpp
-        src/services/impl/workflow/workflow_registrar_particle_string_value_vfx.cpp
-        src/services/impl/workflow/workflow_registrar_model.cpp
-        src/services/impl/workflow/workflow_registrar_scene.cpp
-        src/services/impl/workflow/workflow_registrar_camera_service.cpp
-        src/services/impl/workflow/workflow_registrar_system_data.cpp
-        src/services/impl/workflow/workflow_registrar_media.cpp
-        src/services/impl/workflow/workflow_registrar_shader.cpp
-        src/services/impl/workflow/workflow_registrar_exit.cpp
-        src/services/impl/workflow/workflow_sdl_init_step.cpp
-        src/services/impl/workflow/workflow_sdl_window_create_step.cpp
-        src/services/impl/workflow/workflow_app_init_step.cpp
-        src/services/impl/workflow/workflow_load_workflow_step.cpp
-        src/services/impl/workflow/workflow_definition_parser.cpp
-        src/services/impl/workflow/workflow_definition_parser_steps.cpp
-        src/services/impl/workflow/workflow_definition_parser_nodes.cpp
-        src/services/impl/workflow/workflow_definition_parser_node_parse.cpp
-        src/services/impl/workflow/workflow_definition_parser_node_sort.cpp
-        src/services/impl/workflow/workflow_definition_parser_variables.cpp
-        src/services/impl/workflow/workflow_connection_reader.cpp
-        src/services/impl/workflow/workflow_connection_main_parser.cpp
-        src/services/impl/workflow/workflow_node_topo_sorter.cpp
-        src/services/impl/workflow/workflow_connection_graph_builder.cpp
-        src/services/impl/workflow/workflow_kahn_topo_sort.cpp
-        src/services/impl/workflow/workflow_execute_step.cpp
-        src/services/impl/workflow/workflow_execute_helpers.cpp
+        src/services/impl/workflow/bootstrap/graphics_init_device_helpers.cpp
+        src/services/impl/workflow/bootstrap/package_root_resolver.cpp
+        src/services/impl/workflow/bootstrap/package_shader_load.cpp
+        src/services/impl/workflow/bootstrap/workflow_graphics_init_device_step.cpp
+        src/services/impl/workflow/bootstrap/workflow_graphics_init_swapchain_step.cpp
+        src/services/impl/workflow/bootstrap/workflow_sdl_init_step.cpp
+        src/services/impl/workflow/bootstrap/workflow_sdl_window_create_step.cpp
+        src/services/impl/workflow/executor/workflow_execute_helpers.cpp
+        src/services/impl/workflow/executor/workflow_execute_step.cpp
+        src/services/impl/workflow/executor/workflow_executor.cpp
+        src/services/impl/workflow/executor/workflow_step_io_resolver.cpp
+        src/services/impl/workflow/executor/workflow_step_parameter_resolver.cpp
+        src/services/impl/workflow/executor/workflow_step_parameter_resolver_lists.cpp
+        src/services/impl/workflow/executor/workflow_step_parameter_resolver_scalars.cpp
+        src/services/impl/workflow/executor/workflow_step_registry.cpp
+        src/services/impl/workflow/executor/workflow_template_resolver.cpp
+        src/services/impl/workflow/media/media_catalog_builder.cpp
+        src/services/impl/workflow/media/media_catalog_count.cpp
+        src/services/impl/workflow/media/media_catalog_items.cpp
+        src/services/impl/workflow/media/media_item_dispatch.cpp
+        src/services/impl/workflow/media/workflow_media_catalog_scan_step.cpp
+        src/services/impl/workflow/media/workflow_media_item_select_step.cpp
+        src/services/impl/workflow/network/network_connect_helpers.cpp
+        src/services/impl/workflow/network/network_receive_helpers.cpp
+        src/services/impl/workflow/network/network_receive_output_keys.cpp
+        src/services/impl/workflow/network/network_receive_params.cpp
+        src/services/impl/workflow/network/network_send_simulation.cpp
+        src/services/impl/workflow/network/workflow_network_connect_step.cpp
+        src/services/impl/workflow/network/workflow_network_receive_step.cpp
+        src/services/impl/workflow/network/workflow_network_send_step.cpp
+        src/services/impl/workflow/parser/workflow_connection_graph_builder.cpp
+        src/services/impl/workflow/parser/workflow_connection_main_parser.cpp
+        src/services/impl/workflow/parser/workflow_connection_reader.cpp
+        src/services/impl/workflow/parser/workflow_definition_parser.cpp
+        src/services/impl/workflow/parser/workflow_definition_parser_expand_include.cpp
+        src/services/impl/workflow/parser/workflow_definition_parser_include_path.cpp
+        src/services/impl/workflow/parser/workflow_definition_parser_includes.cpp
+        src/services/impl/workflow/parser/workflow_definition_parser_node_parse.cpp
+        src/services/impl/workflow/parser/workflow_definition_parser_node_sort.cpp
+        src/services/impl/workflow/parser/workflow_definition_parser_nodes.cpp
+        src/services/impl/workflow/parser/workflow_definition_parser_steps.cpp
+        src/services/impl/workflow/parser/workflow_definition_parser_variables.cpp
+        src/services/impl/workflow/parser/workflow_kahn_topo_sort.cpp
+        src/services/impl/workflow/parser/workflow_node_topo_sorter.cpp
+        src/services/impl/workflow/parser/workflow_parameter_array_parser.cpp
+        src/services/impl/workflow/parser/workflow_parameter_node_reader.cpp
+        src/services/impl/workflow/parser/workflow_parameter_reader.cpp
+        src/services/impl/workflow/parser/workflow_parameter_value_parser.cpp
+        src/services/impl/workflow/registrar/workflow_registrar.cpp
+        src/services/impl/workflow/registrar/workflow_registrar_audio.cpp
+        src/services/impl/workflow/registrar/workflow_registrar_camera.cpp
+        src/services/impl/workflow/registrar/workflow_registrar_camera_service.cpp
+        src/services/impl/workflow/registrar/workflow_registrar_control.cpp
+        src/services/impl/workflow/registrar/workflow_registrar_dataops_core.cpp
+        src/services/impl/workflow/registrar/workflow_registrar_exit.cpp
+        src/services/impl/workflow/registrar/workflow_registrar_fs2024.cpp
+        src/services/impl/workflow/registrar/workflow_registrar_graphics_init.cpp
+        src/services/impl/workflow/registrar/workflow_registrar_graphics_misc.cpp
+        src/services/impl/workflow/registrar/workflow_registrar_gta5.cpp
+        src/services/impl/workflow/registrar/workflow_registrar_gta5_player.cpp
+        src/services/impl/workflow/registrar/workflow_registrar_input.cpp
+        src/services/impl/workflow/registrar/workflow_registrar_list_number.cpp
+        src/services/impl/workflow/registrar/workflow_registrar_media.cpp
+        src/services/impl/workflow/registrar/workflow_registrar_model.cpp
+        src/services/impl/workflow/registrar/workflow_registrar_particle_string_value_vfx.cpp
+        src/services/impl/workflow/registrar/workflow_registrar_physics.cpp
+        src/services/impl/workflow/registrar/workflow_registrar_rendering_bsp.cpp
+        src/services/impl/workflow/registrar/workflow_registrar_rendering_core.cpp
+        src/services/impl/workflow/registrar/workflow_registrar_rendering_overlay.cpp
+        src/services/impl/workflow/registrar/workflow_registrar_rendering_postfx.cpp
+        src/services/impl/workflow/registrar/workflow_registrar_rendering_q3combat.cpp
+        src/services/impl/workflow/registrar/workflow_registrar_rendering_q3hud.cpp
+        src/services/impl/workflow/registrar/workflow_registrar_rendering_q3model.cpp
+        src/services/impl/workflow/registrar/workflow_registrar_rendering_q3pmove.cpp
+        src/services/impl/workflow/registrar/workflow_registrar_scene.cpp
+        src/services/impl/workflow/registrar/workflow_registrar_shader.cpp
+        src/services/impl/workflow/registrar/workflow_registrar_system_data.cpp
+        src/services/impl/workflow/shader/shader_compile_build_map.cpp
+        src/services/impl/workflow/shader/shader_compile_debug_marker.cpp
+        src/services/impl/workflow/shader/shader_compile_gpu_load.cpp
+        src/services/impl/workflow/shader/shader_compile_step_helpers.cpp
+        src/services/impl/workflow/shader/workflow_package_shader_loader_step.cpp
+        src/services/impl/workflow/shader/workflow_shader_builtin_constant_color_step.cpp
+        src/services/impl/workflow/shader/workflow_shader_compile_step.cpp
+        src/services/impl/workflow/shader/workflow_shader_system_compile_step.cpp
+        src/services/impl/workflow/shader/workflow_shader_system_gltf_load_step.cpp
+        src/services/impl/workflow/shader/workflow_shader_system_initialize_step.cpp
+        src/services/impl/workflow/shader/workflow_shader_system_set_step.cpp
+        src/services/impl/workflow/system/workflow_app_init_step.cpp
+        src/services/impl/workflow/system/workflow_cmdline_args_step.cpp
+        src/services/impl/workflow/system/workflow_data_deserialize_step.cpp
+        src/services/impl/workflow/system/workflow_data_serialize_step.cpp
+        src/services/impl/workflow/system/workflow_exit_step.cpp
+        src/services/impl/workflow/system/workflow_load_workflow_step.cpp
+        src/services/impl/workflow/system/workflow_state_clear_step.cpp
+        src/services/impl/workflow/system/workflow_state_load_step.cpp
+        src/services/impl/workflow/system/workflow_state_save_step.cpp
         src/stb_image.cpp
         src/services/impl/workflow/workflow_generic_steps/audio_play_input_helpers.cpp
         src/services/impl/workflow/workflow_generic_steps/camera_fps_eye_position.cpp
@@ -372,6 +415,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/geometry/workflow_geometry_create_cube_step.cpp
         src/services/impl/workflow/geometry/workflow_geometry_create_plane_step.cpp
         src/services/impl/workflow/geometry/workflow_geometry_cube_generate_step.cpp
+        src/services/impl/workflow/geometry/workflow_mesh_payload_converter.cpp
         src/services/impl/workflow/rendering/bloom_ping_pong.cpp
         src/services/impl/workflow/rendering/bloom_ping_pong_textures.cpp
         src/services/impl/workflow/rendering/box_face_builder.cpp
@@ -511,6 +555,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/rendering/workflow_bsp_portal_view_step.cpp
         src/services/impl/workflow/rendering/workflow_bsp_tessellate_patches_step.cpp
         src/services/impl/workflow/rendering/workflow_bsp_upload_geometry_step.cpp
+        src/services/impl/workflow/rendering/workflow_camera_view_state_builder.cpp
         src/services/impl/workflow/rendering/workflow_debug_screenshot_step.cpp
         src/services/impl/workflow/rendering/workflow_draw_map_step.cpp
         src/services/impl/workflow/rendering/workflow_draw_textured_box_step.cpp
@@ -1112,51 +1157,6 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/fs2024/fs2024_tiles_load_step.cpp
         src/services/impl/workflow/fs2024/fs2024_tiles_resolve.cpp
         src/services/impl/workflow/fs2024/fs2024_tiles_resolve_step.cpp
-        src/services/impl/workflow/workflow_definition_parser_includes.cpp
-        src/services/impl/workflow/workflow_definition_parser_include_path.cpp
-        src/services/impl/workflow/workflow_definition_parser_expand_include.cpp
-        src/services/impl/workflow/workflow_mesh_payload_converter.cpp
-        src/services/impl/workflow/workflow_camera_view_state_builder.cpp
-        src/services/impl/workflow/workflow_cmdline_args_step.cpp
-        src/services/impl/workflow/workflow_data_deserialize_step.cpp
-        src/services/impl/workflow/workflow_data_serialize_step.cpp
-        src/services/impl/workflow/graphics_init_device_helpers.cpp
-        src/services/impl/workflow/workflow_graphics_init_device_step.cpp
-        src/services/impl/workflow/workflow_graphics_init_swapchain_step.cpp
-        src/services/impl/workflow/media_catalog_items.cpp
-        src/services/impl/workflow/media_catalog_builder.cpp
-        src/services/impl/workflow/media_catalog_count.cpp
-        src/services/impl/workflow/media_item_dispatch.cpp
-        src/services/impl/workflow/workflow_media_catalog_scan_step.cpp
-        src/services/impl/workflow/workflow_media_item_select_step.cpp
-        src/services/impl/workflow/network_connect_helpers.cpp
-        src/services/impl/workflow/network_receive_helpers.cpp
-        src/services/impl/workflow/network_receive_params.cpp
-        src/services/impl/workflow/network_receive_output_keys.cpp
-        src/services/impl/workflow/network_send_simulation.cpp
-        src/services/impl/workflow/workflow_network_connect_step.cpp
-        src/services/impl/workflow/workflow_network_receive_step.cpp
-        src/services/impl/workflow/workflow_network_send_step.cpp
-        src/services/impl/workflow/package_root_resolver.cpp
-        src/services/impl/workflow/package_shader_load.cpp
-        src/services/impl/workflow/workflow_package_shader_loader_step.cpp
-        src/services/impl/workflow/workflow_shader_builtin_constant_color_step.cpp
-        src/services/impl/workflow/workflow_shader_compile_step.cpp
-        src/services/impl/workflow/shader_compile_step_helpers.cpp
-        src/services/impl/workflow/shader_compile_debug_marker.cpp
-        src/services/impl/workflow/shader_compile_build_map.cpp
-        src/services/impl/workflow/shader_compile_gpu_load.cpp
-        src/services/impl/workflow/workflow_shader_system_initialize_step.cpp
-        src/services/impl/workflow/workflow_shader_system_gltf_load_step.cpp
-        src/services/impl/workflow/workflow_shader_system_compile_step.cpp
-        src/services/impl/workflow/workflow_shader_system_set_step.cpp
-        src/services/impl/workflow/workflow_state_clear_step.cpp
-        src/services/impl/workflow/workflow_state_load_step.cpp
-        src/services/impl/workflow/workflow_state_save_step.cpp
-        src/services/impl/workflow/workflow_template_resolver.cpp
-        src/services/impl/workflow/workflow_registrar_gta5.cpp
-        src/services/impl/workflow/workflow_registrar_gta5_player.cpp
-        src/services/impl/workflow/workflow_registrar_fs2024.cpp
     )
     target_include_directories(sdl3_app PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}/src"
@@ -1356,9 +1356,9 @@ target_sources(q3_input_axes_test PRIVATE src/services/impl/workflow/input/input
 target_sources(q3_input_axes_test PRIVATE src/services/impl/workflow/input/input_button_combine_config.cpp)
 target_sources(q3_input_axes_test PRIVATE src/services/impl/workflow/input/input_button_gamepad_source.cpp)
 target_sources(q3_input_axes_test PRIVATE src/services/impl/workflow/input/input_button_combine_sources.cpp)
-target_sources(q3_input_axes_test PRIVATE src/services/impl/workflow/workflow_step_parameter_resolver.cpp)
-target_sources(q3_input_axes_test PRIVATE src/services/impl/workflow/workflow_step_parameter_resolver_scalars.cpp)
-target_sources(q3_input_axes_test PRIVATE src/services/impl/workflow/workflow_step_parameter_resolver_lists.cpp)
+target_sources(q3_input_axes_test PRIVATE src/services/impl/workflow/executor/workflow_step_parameter_resolver.cpp)
+target_sources(q3_input_axes_test PRIVATE src/services/impl/workflow/executor/workflow_step_parameter_resolver_scalars.cpp)
+target_sources(q3_input_axes_test PRIVATE src/services/impl/workflow/executor/workflow_step_parameter_resolver_lists.cpp)
 target_include_directories(q3_input_axes_test PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )
@@ -1399,9 +1399,9 @@ target_sources(q3_map_movement_test PRIVATE src/services/impl/workflow/rendering
 target_sources(q3_map_movement_test PRIVATE src/services/impl/workflow/rendering/bsp_entity_origin.cpp)
 target_sources(q3_map_movement_test PRIVATE src/services/impl/workflow/rendering/bsp_entity_classification.cpp)
 target_sources(q3_map_movement_test PRIVATE src/services/impl/workflow/rendering/bsp_q3_coordinates.cpp)
-target_sources(q3_map_movement_test PRIVATE src/services/impl/workflow/workflow_step_parameter_resolver.cpp)
-target_sources(q3_map_movement_test PRIVATE src/services/impl/workflow/workflow_step_parameter_resolver_scalars.cpp)
-target_sources(q3_map_movement_test PRIVATE src/services/impl/workflow/workflow_step_parameter_resolver_lists.cpp)
+target_sources(q3_map_movement_test PRIVATE src/services/impl/workflow/executor/workflow_step_parameter_resolver.cpp)
+target_sources(q3_map_movement_test PRIVATE src/services/impl/workflow/executor/workflow_step_parameter_resolver_scalars.cpp)
+target_sources(q3_map_movement_test PRIVATE src/services/impl/workflow/executor/workflow_step_parameter_resolver_lists.cpp)
 target_sources(q3_map_movement_test PRIVATE src/services/impl/workflow/quake3/collision/q3_brush_trace.cpp)
 target_sources(q3_map_movement_test PRIVATE src/services/impl/workflow/quake3/collision/q3_brush_trace_clip.cpp)
 target_sources(q3_map_movement_test PRIVATE src/services/impl/workflow/quake3/collision/q3_brush_collision.cpp)
@@ -1431,9 +1431,9 @@ target_sources(q3_input_to_motion_test PRIVATE src/services/impl/workflow/quake3
 target_sources(q3_input_to_motion_test PRIVATE src/services/impl/workflow/quake3/pmove/q3_pm_tuning.cpp)
 target_sources(q3_input_to_motion_test PRIVATE src/services/impl/workflow/quake3/pmove/q3_slide_planes.cpp)
 target_sources(q3_input_to_motion_test PRIVATE src/services/impl/workflow/quake3/pmove/q3_wish_dir.cpp)
-target_sources(q3_input_to_motion_test PRIVATE src/services/impl/workflow/workflow_step_parameter_resolver.cpp)
-target_sources(q3_input_to_motion_test PRIVATE src/services/impl/workflow/workflow_step_parameter_resolver_scalars.cpp)
-target_sources(q3_input_to_motion_test PRIVATE src/services/impl/workflow/workflow_step_parameter_resolver_lists.cpp)
+target_sources(q3_input_to_motion_test PRIVATE src/services/impl/workflow/executor/workflow_step_parameter_resolver.cpp)
+target_sources(q3_input_to_motion_test PRIVATE src/services/impl/workflow/executor/workflow_step_parameter_resolver_scalars.cpp)
+target_sources(q3_input_to_motion_test PRIVATE src/services/impl/workflow/executor/workflow_step_parameter_resolver_lists.cpp)
 target_sources(q3_input_to_motion_test PRIVATE src/services/impl/workflow/quake3/pmove/q3_pmove_accel.cpp)
 target_include_directories(q3_input_to_motion_test PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"

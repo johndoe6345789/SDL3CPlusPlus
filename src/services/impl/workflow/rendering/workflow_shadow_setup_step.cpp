@@ -1,6 +1,6 @@
 #include "services/interfaces/workflow/rendering/workflow_shadow_setup_step.hpp"
 #include "services/interfaces/workflow/rendering/shadow_map_resources.hpp"
-#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_parameter_resolver.hpp"
 
 #include <SDL3/SDL_gpu.h>
 #include <glm/glm.hpp>

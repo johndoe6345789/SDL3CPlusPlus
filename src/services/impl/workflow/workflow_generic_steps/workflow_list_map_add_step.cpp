@@ -1,5 +1,5 @@
 #include "services/interfaces/workflow/workflow_generic_steps/workflow_list_map_add_step.hpp"
-#include "services/interfaces/workflow/workflow_step_io_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_io_resolver.hpp"
 
 #include <stdexcept>
 #include <utility>

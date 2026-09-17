@@ -1,6 +1,6 @@
 #include "services/interfaces/workflow/rendering/workflow_spawn_apply_step.hpp"
 #include "services/interfaces/workflow/rendering/bsp_q3_coordinates.hpp"
-#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_parameter_resolver.hpp"
 
 #include <btBulletDynamicsCommon.h>
 #include <nlohmann/json.hpp>

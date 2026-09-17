@@ -1,7 +1,7 @@
 #include "services/interfaces/workflow/workflow_generic_steps/workflow_camera_set_pose_step.hpp"
 #include "services/interfaces/workflow/workflow_generic_steps/camera_set_pose_helpers.hpp"
-#include "services/interfaces/workflow/workflow_step_io_resolver.hpp"
-#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_io_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_parameter_resolver.hpp"
 
 namespace sdl3cpp::services::impl {
 

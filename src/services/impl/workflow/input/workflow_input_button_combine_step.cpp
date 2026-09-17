@@ -1,6 +1,6 @@
 #include "services/interfaces/workflow/input/workflow_input_button_combine_step.hpp"
 #include "services/interfaces/workflow/input/input_button_combine_helpers.hpp"
-#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_parameter_resolver.hpp"
 
 #include <nlohmann/json.hpp>
 

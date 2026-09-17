@@ -1,6 +1,6 @@
 #include "services/interfaces/workflow/rendering/workflow_geometry_create_flashlight_step.hpp"
 #include "services/interfaces/workflow/rendering/flashlight_mesh.hpp"
-#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_parameter_resolver.hpp"
 
 #include <SDL3/SDL_gpu.h>
 #include <nlohmann/json.hpp>

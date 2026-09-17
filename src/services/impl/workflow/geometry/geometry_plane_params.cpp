@@ -1,5 +1,5 @@
 #include "services/interfaces/workflow/geometry/geometry_plane_helpers.hpp"
-#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_parameter_resolver.hpp"
 
 namespace sdl3cpp::services::impl {
 

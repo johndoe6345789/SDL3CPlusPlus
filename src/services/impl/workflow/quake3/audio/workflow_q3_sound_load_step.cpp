@@ -1,7 +1,7 @@
 #include "services/interfaces/workflow/quake3/audio/workflow_q3_sound_load_step.hpp"
 #include "services/interfaces/workflow/quake3/core/q3_pk3_reader.hpp"
 #include "services/interfaces/workflow/quake3/audio/q3_sound_bank.hpp"
-#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_parameter_resolver.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
 #include <nlohmann/json.hpp>

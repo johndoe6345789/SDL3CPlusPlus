@@ -7,7 +7,7 @@
 #include <SDL3/SDL_main.h>
 
 #include "services/interfaces/app/app_bootstrap.hpp"
-#include "services/interfaces/workflow/workflow_definition_parser.hpp"
+#include "services/interfaces/workflow/parser/workflow_definition_parser.hpp"
 
 using sdl3cpp::services::WorkflowContext;
 namespace app = sdl3cpp::services::app;

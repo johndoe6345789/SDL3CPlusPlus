@@ -1,5 +1,5 @@
 #include "services/interfaces/workflow/graphics/workflow_graphics_init_renderer_step.hpp"
-#include "services/interfaces/workflow/workflow_step_io_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_io_resolver.hpp"
 
 #include <stdexcept>
 

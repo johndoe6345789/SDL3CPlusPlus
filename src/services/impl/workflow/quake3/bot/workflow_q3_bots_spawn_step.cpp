@@ -1,5 +1,5 @@
 #include "services/interfaces/workflow/quake3/bot/workflow_q3_bots_spawn_step.hpp"
-#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_parameter_resolver.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
 #include <nlohmann/json.hpp>

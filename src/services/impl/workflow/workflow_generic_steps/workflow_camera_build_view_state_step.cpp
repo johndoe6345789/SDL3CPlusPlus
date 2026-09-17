@@ -1,7 +1,7 @@
 #include "services/interfaces/workflow/workflow_generic_steps/workflow_camera_build_view_state_step.hpp"
 
-#include "services/interfaces/workflow/workflow_camera_view_state_builder.hpp"
-#include "services/interfaces/workflow/workflow_step_io_resolver.hpp"
+#include "services/interfaces/workflow/rendering/workflow_camera_view_state_builder.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_io_resolver.hpp"
 
 #include <stdexcept>
 #include <string>

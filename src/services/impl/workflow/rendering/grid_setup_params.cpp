@@ -1,5 +1,5 @@
 #include "services/interfaces/workflow/rendering/grid_setup_params.hpp"
-#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_parameter_resolver.hpp"
 
 #include <type_traits>
 

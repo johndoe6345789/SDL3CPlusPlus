@@ -6,8 +6,8 @@
 /// and workflow infrastructure, then load and run the default workflow.
 
 #include "services/interfaces/i_logger.hpp"
-#include "services/interfaces/workflow/workflow_executor.hpp"
-#include "services/interfaces/workflow/workflow_step_registry.hpp"
+#include "services/interfaces/workflow/executor/workflow_executor.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_registry.hpp"
 #include "services/interfaces/workflow_context.hpp"
 #include "services/interfaces/workflow_definition.hpp"
 #include "services/interfaces/workflow_registrar.hpp"

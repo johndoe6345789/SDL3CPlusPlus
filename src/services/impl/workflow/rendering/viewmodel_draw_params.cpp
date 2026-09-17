@@ -1,5 +1,5 @@
 #include "services/interfaces/workflow/rendering/viewmodel_draw.hpp"
-#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_parameter_resolver.hpp"
 
 namespace sdl3cpp::services::impl {
 

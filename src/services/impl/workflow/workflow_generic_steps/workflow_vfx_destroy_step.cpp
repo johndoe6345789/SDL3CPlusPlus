@@ -1,7 +1,7 @@
 #include "services/interfaces/workflow/workflow_generic_steps/workflow_vfx_destroy_step.hpp"
 
 #include "services/interfaces/workflow/workflow_generic_steps/vfx_destroy_selection.hpp"
-#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_parameter_resolver.hpp"
 
 #include <string>
 #include <vector>

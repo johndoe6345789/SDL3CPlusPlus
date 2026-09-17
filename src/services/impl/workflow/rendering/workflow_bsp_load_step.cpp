@@ -1,6 +1,6 @@
 #include "services/interfaces/workflow/rendering/workflow_bsp_load_step.hpp"
 #include "services/interfaces/workflow/rendering/pk3_bsp_loader.hpp"
-#include "services/interfaces/workflow/workflow_step_parameter_resolver.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_parameter_resolver.hpp"
 
 #include <nlohmann/json.hpp>
 #include <zip.h>

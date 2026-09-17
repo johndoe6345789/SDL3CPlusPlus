@@ -1,7 +1,7 @@
 #include "services/interfaces/app/app_bootstrap.hpp"
 
-#include "services/interfaces/workflow/workflow_app_init_step.hpp"
-#include "services/interfaces/workflow/workflow_load_workflow_step.hpp"
+#include "services/interfaces/workflow/system/workflow_app_init_step.hpp"
+#include "services/interfaces/workflow/system/workflow_load_workflow_step.hpp"
 
 namespace sdl3cpp::services::app {
 
