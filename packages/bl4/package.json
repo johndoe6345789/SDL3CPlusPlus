@@ -1,0 +1,59 @@
+{
+  "name": "Borderlands 4: Kairos",
+  "version": "0.1.0",
+  "id": "bl4",
+  "type": "game",
+  "category": "demo",
+  "description": "Walk a slice of Borderlands 4's open world, baked offline by bl4x, with Quake 3 player kinematics",
+
+  "defaultWorkflow": "workflows/bl4_game.json",
+
+  "workflows": [
+    "workflows/bl4_frame.json",
+    "workflows/bl4_input.json",
+    "workflows/bl4_physics.json"
+  ],
+
+  "scene": [],
+
+  "shaders": [],
+
+  "assets": [],
+
+  "world_specifications": {
+    "unit_scale": {
+      "units_per_meter": 1,
+      "explanation": "bl4x's placement walker already writes metres (UE centimetres / 100), so nothing is rescaled."
+    },
+
+    "axis_convention": {
+      "source": "Unreal Engine: Z-up, x forward, y right, centimetres, quaternion xyzw",
+      "engine": "Y-up, x east-ish, z south-ish, metres, quaternion xyzw",
+      "mapping": "glTF convention (Y up), the same one bl4x's walker already emits -- see D:\\BL4Export\\src\\cpp\\world\\walker.hpp.",
+      "critical": "Applied once, inside bl4x itself (world/walker.cpp). The engine only ever reads already-converted placements.json/world.json; nothing downstream re-maps axes."
+    },
+
+    "world_bounds_metres": {
+      "min": null,
+      "max": null,
+      "note": "Unbounded, same idea as packages/fs2024: bl4.tiles.resolve/load/evict stream a grid of tiles keyed by floor(x / tile_size), floor(z / tile_size) around the player. Only tiles bl4x actually baked exist; the grid itself is a baking convention (see README.md), not something BL4's own World Partition cells expose."
+    },
+
+    "player": {
+      "kinematics": "quake3",
+      "explanation": "The ioq3 pmove chain (q3.pm.*) unchanged, borrowing gta5's walking tune. Its traces sweep whichever archetype's btBvhTriangleMeshShape the player is currently over -- see bl4_collision_shape.cpp."
+    }
+  },
+
+  "asset_pipeline": {
+    "status": "requires_local_bake",
+    "reason": "BL4's IoStore archives are read by a separate, standalone tool (bl4x, outside this repo) that decodes Zen packages, Nanite mesh clusters, and Virtual Textures from scratch. This package only ever reads bl4x's already-baked output.",
+    "expected_input": "<BL4_MAP_DIR>/world.json plus <BL4_MAP_DIR>/tiles/<tx>_<tz>/placements.json and <BL4_MAP_DIR>/models/*.obj, written by `bl4x bake <out_dir> <tile_size> <cell1.umap> [cell2.umap ...]`. See README.md."
+  },
+
+  "bundled": false,
+
+  "dependencies": ["gta5", "quake3"],
+
+  "notes": "Borrows gta5.sky.draw with the gta5 sky/composite shaders, gta5.gamepad, gta5.player.fly, and quake3's input aggregation config. Meshes currently draw with one placeholder texture (bl4x doesn't resolve UMaterialInstance -> texture parameters yet), so this is a geometry-and-movement slice, not a textured one."
+}

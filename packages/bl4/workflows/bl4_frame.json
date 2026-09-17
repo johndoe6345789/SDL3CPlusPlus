@@ -1,0 +1,96 @@
+{
+  "name": "BL4 Frame",
+  "description": "Input, Quake 3 movement over bl4x-baked collision, then tile streaming, sky, models and the composite.",
+  "steps": [
+    {
+      "id": "input_group",
+      "plugin": "workflow.include",
+      "parameters": {
+        "path": "packages/bl4/workflows/bl4_input.json"
+      }
+    },
+    {
+      "id": "physics_group",
+      "plugin": "workflow.include",
+      "parameters": {
+        "path": "packages/bl4/workflows/bl4_physics.json"
+      }
+    },
+    {
+      "id": "tiles_resolve",
+      "plugin": "bl4.tiles.resolve",
+      "comment": "Runs after movement, so it centres on the origin this frame produced rather than the last one's."
+    },
+    {
+      "id": "tiles_load",
+      "plugin": "bl4.tiles.load"
+    },
+    {
+      "id": "tiles_evict",
+      "plugin": "bl4.tiles.evict"
+    },
+    {
+      "id": "render_prepare",
+      "plugin": "render.prepare"
+    },
+    {
+      "id": "frame_begin",
+      "plugin": "frame.gpu.begin_offscreen",
+      "parameters": {
+        "render_scale": 1.5
+      },
+      "comment": "HDR target, supersampled; the composite resolves it and sharpens."
+    },
+    {
+      "id": "sky_draw",
+      "plugin": "gta5.sky.draw",
+      "parameters": {
+        "horizon_r": 0.55,
+        "horizon_g": 0.5,
+        "horizon_b": 0.42,
+        "zenith_r": 0.1,
+        "zenith_g": 0.16,
+        "zenith_b": 0.4,
+        "sun_size": 8.0
+      },
+      "comment": "A dusty, arid-world palette -- Kairos is a desert moon."
+    },
+    {
+      "id": "models_draw",
+      "plugin": "bl4.models.draw"
+    },
+    {
+      "id": "frame_end",
+      "plugin": "frame.gpu.end_scene"
+    },
+    {
+      "id": "composite_draw",
+      "plugin": "postfx.composite_draw"
+    },
+    {
+      "id": "overlay_init",
+      "plugin": "postfx.overlay_fps_init"
+    },
+    {
+      "id": "overlay_quad",
+      "plugin": "postfx.overlay_fps_upload_quad"
+    },
+    {
+      "id": "overlay_text",
+      "plugin": "postfx.overlay_fps_upload_text"
+    },
+    {
+      "id": "overlay_draw",
+      "plugin": "postfx.overlay_fps_draw"
+    },
+    {
+      "id": "command_buffer_submit",
+      "plugin": "gpu.command_buffer_submit",
+      "comment": "Without this the frame lands in a target nobody presents."
+    },
+    {
+      "id": "composite_finish",
+      "plugin": "postfx.composite_finish"
+    }
+  ]
+}

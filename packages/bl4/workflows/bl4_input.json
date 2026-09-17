@@ -1,0 +1,98 @@
+{
+  "name": "BL4 Input",
+  "description": "quake3's input group, with the gta5 package's Xbox pad: move, look, jump and crouch intent for the q3.pm.* steps. The mouse is held while the menu is closed.",
+  "steps": [
+    {
+      "id": "frame_delta",
+      "plugin": "time.frame_delta"
+    },
+    {
+      "id": "input_poll",
+      "plugin": "input.poll"
+    },
+    {
+      "id": "keyboard_poll",
+      "plugin": "input.keyboard.poll"
+    },
+    {
+      "id": "gamepad",
+      "plugin": "gta5.gamepad",
+      "comment": "An Xbox One pad laid out as GTA V's: it presses the keys the rest reads, adds the right stick to the mouse's look, and publishes throttle, brake, steering, fire and aim as analogue values.",
+      "parameters": {
+        "look_speed": 1100.0
+      }
+    },
+    {
+      "id": "move_axes",
+      "plugin": "input.axis.combine",
+      "parameters": {
+        "config_path": "packages/quake3/config/input_aggregation.json"
+      }
+    },
+    {
+      "id": "move_buttons",
+      "plugin": "input.button.combine",
+      "parameters": {
+        "config_path": "packages/quake3/config/input_aggregation.json"
+      }
+    },
+    {
+      "id": "q3_menu",
+      "plugin": "q3.menu.update"
+    },
+    {
+      "id": "should_stop",
+      "plugin": "bool.or",
+      "inputs": {
+        "left": "q3.menu_quit_pressed",
+        "right": "q3.menu_map_selected"
+      },
+      "outputs": {
+        "value": "q3.stop_game"
+      }
+    },
+    {
+      "id": "stop_game_loop",
+      "plugin": "value.set_if",
+      "inputs": {
+        "condition": "q3.stop_game"
+      },
+      "parameters": {
+        "value": false
+      },
+      "outputs": {
+        "value": "game_running"
+      }
+    },
+    {
+      "id": "set_quit_requested",
+      "plugin": "value.set_if",
+      "inputs": {
+        "condition": "q3.menu_quit_pressed"
+      },
+      "parameters": {
+        "value": true
+      },
+      "outputs": {
+        "value": "q3.quit_requested"
+      }
+    },
+    {
+      "id": "compute_movement_active",
+      "plugin": "bool.not",
+      "inputs": {
+        "value": "q3.menu_open"
+      },
+      "outputs": {
+        "value": "movement_active"
+      }
+    },
+    {
+      "id": "update_mouse_grab",
+      "plugin": "input.mouse.grab",
+      "inputs": {
+        "enabled": "movement_active"
+      }
+    }
+  ]
+}

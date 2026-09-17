@@ -1,0 +1,409 @@
+{
+  "name": "BL4 Kairos",
+  "active": true,
+  "settings": {
+    "executionTimeout": 0
+  },
+  "variables": {
+    "window_width": {
+      "name": "window_width",
+      "type": "number",
+      "defaultValue": 1280
+    },
+    "window_height": {
+      "name": "window_height",
+      "type": "number",
+      "defaultValue": 960
+    },
+    "window_title": {
+      "name": "window_title",
+      "type": "string",
+      "defaultValue": "Borderlands 4 - Kairos (bl4x baked slice)"
+    },
+    "renderer_type": {
+      "name": "renderer_type",
+      "type": "string",
+      "defaultValue": "auto"
+    },
+    "present_mode": {
+      "name": "present_mode",
+      "type": "string",
+      "defaultValue": "mailbox"
+    },
+    "shader_model_vert_path": {
+      "name": "shader_model_vert_path",
+      "type": "string",
+      "defaultValue": "packages/bl4/shaders/spirv/bl4_model.vert.spv"
+    },
+    "shader_model_frag_path": {
+      "name": "shader_model_frag_path",
+      "type": "string",
+      "defaultValue": "packages/bl4/shaders/spirv/bl4_model.frag.spv"
+    },
+    "shader_sky_vert_path": {
+      "name": "shader_sky_vert_path",
+      "type": "string",
+      "defaultValue": "packages/gta5/shaders/spirv/gta5_sky.vert.spv"
+    },
+    "shader_sky_frag_path": {
+      "name": "shader_sky_frag_path",
+      "type": "string",
+      "defaultValue": "packages/gta5/shaders/spirv/gta5_sky.frag.spv"
+    },
+    "shader_postfx_vert_path": {
+      "name": "shader_postfx_vert_path",
+      "type": "string",
+      "defaultValue": "packages/seed/shaders/spirv/postfx_fullscreen.vert.spv"
+    },
+    "shader_composite_frag_path": {
+      "name": "shader_composite_frag_path",
+      "type": "string",
+      "defaultValue": "packages/gta5/shaders/spirv/gta5_composite.frag.spv"
+    },
+    "placeholder_texture_path": {
+      "name": "placeholder_texture_path",
+      "type": "string",
+      "defaultValue": "packages/bl4/assets/bl4_placeholder.png"
+    }
+  },
+  "nodes": [
+    {
+      "id": "sdl_init",
+      "type": "sdl.init",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "id": "sdl_window",
+      "type": "sdl.window.create",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "id": "gpu_init_viewport",
+      "type": "graphics.gpu.init_viewport",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {
+        "present_mode": "auto",
+        "inputs": { "width": "window_width", "height": "window_height" },
+        "outputs": { "viewport_config": "viewport_config" }
+      }
+    },
+    {
+      "id": "gpu_init_renderer",
+      "type": "graphics.gpu.init_renderer",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {
+        "inputs": { "renderer_type": "renderer_type" },
+        "outputs": { "selected_renderer": "selected_renderer" }
+      }
+    },
+    {
+      "id": "gpu_init",
+      "type": "graphics.gpu.init",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {
+        "inputs": { "viewport_config": "viewport_config", "selected_renderer": "selected_renderer" },
+        "outputs": { "gpu_handle": "gpu_handle" }
+      }
+    },
+    {
+      "id": "compile_model_vert",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {
+        "stage": "vertex",
+        "output_key": "bl4_model_vertex_shader",
+        "num_uniform_buffers": 1,
+        "num_samplers": 0
+      },
+      "inputs": { "shader_path": "shader_model_vert_path" }
+    },
+    {
+      "id": "compile_model_frag",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {
+        "stage": "fragment",
+        "output_key": "bl4_model_fragment_shader",
+        "num_uniform_buffers": 1,
+        "num_samplers": 1
+      },
+      "inputs": { "shader_path": "shader_model_frag_path" }
+    },
+    {
+      "id": "create_model_pipeline",
+      "type": "graphics.gpu.pipeline.create",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {
+        "vertex_shader_key": "bl4_model_vertex_shader",
+        "fragment_shader_key": "bl4_model_fragment_shader",
+        "vertex_format": "position_uv_lmuv_normal",
+        "pipeline_key": "gpu_pipeline_bl4_model",
+        "color_format": "rgba16_float"
+      }
+    },
+    {
+      "id": "compile_sky_vert",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {
+        "stage": "vertex",
+        "output_key": "gta5_sky_vertex_shader",
+        "num_uniform_buffers": 0,
+        "num_samplers": 0
+      },
+      "inputs": { "shader_path": "shader_sky_vert_path" }
+    },
+    {
+      "id": "compile_sky_frag",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {
+        "stage": "fragment",
+        "output_key": "gta5_sky_fragment_shader",
+        "num_uniform_buffers": 1,
+        "num_samplers": 0
+      },
+      "inputs": { "shader_path": "shader_sky_frag_path" }
+    },
+    {
+      "id": "create_sky_pipeline",
+      "type": "graphics.gpu.pipeline.create",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {
+        "vertex_shader_key": "gta5_sky_vertex_shader",
+        "fragment_shader_key": "gta5_sky_fragment_shader",
+        "vertex_format": "none",
+        "pipeline_key": "gpu_pipeline_gta5_sky",
+        "color_format": "rgba16_float",
+        "depth_test": 1,
+        "depth_write": 0,
+        "has_depth": 1,
+        "cull_mode": "none"
+      },
+      "comment": "The GTA V package's procedural sky, reused as is: it only needs the camera and the sun."
+    },
+    {
+      "id": "postfx_setup",
+      "type": "postfx.setup",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "id": "compile_postfx_vert",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {
+        "stage": "vertex",
+        "output_key": "postfx_vertex_shader",
+        "num_uniform_buffers": 0,
+        "num_samplers": 0
+      },
+      "inputs": { "shader_path": "shader_postfx_vert_path" }
+    },
+    {
+      "id": "compile_composite_frag",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {
+        "stage": "fragment",
+        "output_key": "bl4_composite_fragment_shader",
+        "num_uniform_buffers": 0,
+        "num_samplers": 3
+      },
+      "inputs": { "shader_path": "shader_composite_frag_path" }
+    },
+    {
+      "id": "create_composite_pipeline",
+      "type": "graphics.gpu.pipeline.create",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {
+        "vertex_shader_key": "postfx_vertex_shader",
+        "fragment_shader_key": "bl4_composite_fragment_shader",
+        "vertex_format": "none",
+        "pipeline_key": "postfx_composite_pipeline",
+        "depth_test": 0,
+        "depth_write": 0,
+        "has_depth": 0,
+        "cull_mode": "none"
+      }
+    },
+    {
+      "id": "placeholder_texture",
+      "type": "texture.load",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {
+        "inputs": { "image_path": "placeholder_texture_path" },
+        "outputs": { "texture": "bl4_placeholder" }
+      },
+      "comment": "One flat texture for every mesh: bl4x doesn't resolve UMaterialInstance -> texture parameters yet."
+    },
+    {
+      "id": "physics_world",
+      "type": "physics.world.create",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": { "force_update_all_aabbs": 0 }
+    },
+    {
+      "id": "player",
+      "type": "physics.body.add",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {
+        "name": "player",
+        "shape": "capsule",
+        "mass": 80,
+        "pos_x": -1252.95,
+        "pos_y": 150.0,
+        "pos_z": -2350.35,
+        "radius": 0.3,
+        "height": 1.0,
+        "lock_rotation": 1,
+        "is_player": 1
+      },
+      "comment": "x, z must match the spawn point below (unlike fs2024, whose local coordinate system happens to put its spawn near the origin, BL4's placements use absolute world-scale coordinates) so the warm-up bl4.tiles.resolve/load centres on the right tiles before the first frame, rather than loading empty space around (0, 0)."
+    },
+    {
+      "id": "player_sync_init",
+      "type": "q3.player.sync",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "comment": "Seeds q3.ps from the body's position, so the warm-up resolve below has somewhere to centre on."
+    },
+    {
+      "id": "tiles_resolve_init",
+      "type": "bl4.tiles.resolve",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {
+        "map_root": "${env:BL4_MAP_DIR}",
+        "tile_size": 64.0,
+        "load_radius_tiles": 3,
+        "evict_radius_tiles": 4,
+        "max_loads_per_call": 8
+      },
+      "comment": "Configures the streamer once; every later bl4.tiles.resolve call reuses these settings. map_root comes straight from BL4_MAP_DIR (see packages/bl4/README.md), the same way quake3's pk3_path parameter reads QUAKE3_PAK0."
+    },
+    {
+      "id": "tiles_load_init",
+      "type": "bl4.tiles.load",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": { "force": 1 },
+      "comment": "Loads the whole warm-up radius synchronously, so the ground under and around the spawn point exists before the first frame draws."
+    },
+    {
+      "id": "camera_setup",
+      "type": "camera.setup",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": { "outputs": { "camera_state": "camera.state" } }
+    },
+    {
+      "id": "spawn",
+      "type": "bl4.player.spawn",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {
+        "x": -1252.95,
+        "y": 121.2,
+        "z": -2350.35,
+        "heading": 0.0
+      },
+      "comment": "From bl4x's world.json spawn point for the baked test region (one World_P cell)."
+    },
+    {
+      "id": "lighting",
+      "type": "lighting.setup",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {
+        "light_dir_x": -0.35,
+        "light_dir_y": -0.8,
+        "light_dir_z": -0.45,
+        "light_intensity": 2.6,
+        "ambient_r": 0.5,
+        "ambient_g": 0.46,
+        "ambient_b": 0.4,
+        "ambient_intensity": 0.9,
+        "exposure": 0.42
+      },
+      "comment": "A harsh midday sun -- Kairos is a desert moon."
+    },
+    {
+      "id": "init_game_running",
+      "type": "value.literal",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": { "value": true, "outputs": { "value": "game_running" } }
+    },
+    {
+      "id": "game_loop",
+      "type": "control.loop.while",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {
+        "condition_key": "game_running",
+        "package": "bl4",
+        "workflow": "bl4_frame"
+      }
+    },
+    {
+      "id": "tiles_free",
+      "type": "bl4.tiles.free",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "comment": "Before system.exit, while the device and the physics world still exist."
+    },
+    {
+      "id": "exit",
+      "type": "system.exit",
+      "typeVersion": 1,
+      "position": [0, 0]
+    }
+  ],
+  "connections": {
+    "sdl_init": { "main": { "0": [{ "node": "sdl_window", "type": "main", "index": 0 }] } },
+    "sdl_window": { "main": { "0": [{ "node": "gpu_init_viewport", "type": "main", "index": 0 }] } },
+    "gpu_init_viewport": { "main": { "0": [{ "node": "gpu_init_renderer", "type": "main", "index": 0 }] } },
+    "gpu_init_renderer": { "main": { "0": [{ "node": "gpu_init", "type": "main", "index": 0 }] } },
+    "gpu_init": { "main": { "0": [{ "node": "compile_model_vert", "type": "main", "index": 0 }] } },
+    "compile_model_vert": { "main": { "0": [{ "node": "compile_model_frag", "type": "main", "index": 0 }] } },
+    "compile_model_frag": { "main": { "0": [{ "node": "create_model_pipeline", "type": "main", "index": 0 }] } },
+    "create_model_pipeline": { "main": { "0": [{ "node": "compile_sky_vert", "type": "main", "index": 0 }] } },
+    "compile_sky_vert": { "main": { "0": [{ "node": "compile_sky_frag", "type": "main", "index": 0 }] } },
+    "compile_sky_frag": { "main": { "0": [{ "node": "create_sky_pipeline", "type": "main", "index": 0 }] } },
+    "create_sky_pipeline": { "main": { "0": [{ "node": "postfx_setup", "type": "main", "index": 0 }] } },
+    "postfx_setup": { "main": { "0": [{ "node": "compile_postfx_vert", "type": "main", "index": 0 }] } },
+    "compile_postfx_vert": { "main": { "0": [{ "node": "compile_composite_frag", "type": "main", "index": 0 }] } },
+    "compile_composite_frag": { "main": { "0": [{ "node": "create_composite_pipeline", "type": "main", "index": 0 }] } },
+    "create_composite_pipeline": { "main": { "0": [{ "node": "placeholder_texture", "type": "main", "index": 0 }] } },
+    "placeholder_texture": { "main": { "0": [{ "node": "physics_world", "type": "main", "index": 0 }] } },
+    "physics_world": { "main": { "0": [{ "node": "player", "type": "main", "index": 0 }] } },
+    "player": { "main": { "0": [{ "node": "player_sync_init", "type": "main", "index": 0 }] } },
+    "player_sync_init": { "main": { "0": [{ "node": "tiles_resolve_init", "type": "main", "index": 0 }] } },
+    "tiles_resolve_init": { "main": { "0": [{ "node": "tiles_load_init", "type": "main", "index": 0 }] } },
+    "tiles_load_init": { "main": { "0": [{ "node": "camera_setup", "type": "main", "index": 0 }] } },
+    "camera_setup": { "main": { "0": [{ "node": "spawn", "type": "main", "index": 0 }] } },
+    "spawn": { "main": { "0": [{ "node": "lighting", "type": "main", "index": 0 }] } },
+    "lighting": { "main": { "0": [{ "node": "init_game_running", "type": "main", "index": 0 }] } },
+    "init_game_running": { "main": { "0": [{ "node": "game_loop", "type": "main", "index": 0 }] } },
+    "game_loop": { "main": { "0": [{ "node": "tiles_free", "type": "main", "index": 0 }] } },
+    "tiles_free": { "main": { "0": [{ "node": "exit", "type": "main", "index": 0 }] } }
+  }
+}
