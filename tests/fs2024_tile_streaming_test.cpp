@@ -2,9 +2,9 @@
 // what to load/evict, and multi-tile height lookup. No GPU device is
 // needed since resolve/height-lookup never touch a tile's GPU handles.
 
-#include "services/interfaces/workflow/fs2024/fs2024_tile_key.hpp"
-#include "services/interfaces/workflow/fs2024/fs2024_tile_lookup.hpp"
-#include "services/interfaces/workflow/fs2024/fs2024_tiles_resolve.hpp"
+#include "services/interfaces/workflow/fs2024/tiles/fs2024_tile_key.hpp"
+#include "services/interfaces/workflow/fs2024/tiles/fs2024_tile_lookup.hpp"
+#include "services/interfaces/workflow/fs2024/tiles/fs2024_tiles_resolve.hpp"
 
 #include <gtest/gtest.h>
 

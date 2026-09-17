@@ -3,10 +3,10 @@
 // drawn triangles, Fs2024HeightAt and Bullet's heightfield must agree
 // on which way each cell is split, or the player floats or sinks.
 
-#include "services/interfaces/workflow/fs2024/fs2024_heightfield.hpp"
-#include "services/interfaces/workflow/fs2024/fs2024_player_place.hpp"
-#include "services/interfaces/workflow/fs2024/fs2024_terrain_collision.hpp"
-#include "services/interfaces/workflow/fs2024/fs2024_terrain_mesh.hpp"
+#include "services/interfaces/workflow/fs2024/terrain/fs2024_heightfield.hpp"
+#include "services/interfaces/workflow/fs2024/player/fs2024_player_place.hpp"
+#include "services/interfaces/workflow/fs2024/terrain/fs2024_terrain_collision.hpp"
+#include "services/interfaces/workflow/fs2024/terrain/fs2024_terrain_mesh.hpp"
 #include "services/interfaces/workflow/quake3/pmove/q3_wish_dir.hpp"
 
 #include <gtest/gtest.h>

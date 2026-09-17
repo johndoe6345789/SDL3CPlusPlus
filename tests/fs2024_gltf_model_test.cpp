@@ -8,7 +8,7 @@
 // mesh's entire geometry, so every material overlapped the same full
 // shape instead of just its own slice.
 
-#include "services/interfaces/workflow/fs2024/prepare/fs2024_gltf_model.hpp"
+#include "services/interfaces/workflow/fs2024/prepare/gltf/fs2024_gltf_model.hpp"
 
 #include <gtest/gtest.h>
 

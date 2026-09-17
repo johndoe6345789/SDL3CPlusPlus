@@ -1,7 +1,7 @@
 #pragma once
 
-#include "services/interfaces/workflow/fs2024/fs2024_polygon.hpp"
-#include "services/interfaces/workflow/fs2024/prepare/fs2024_ground_image.hpp"
+#include "services/interfaces/workflow/fs2024/building/fs2024_polygon.hpp"
+#include "services/interfaces/workflow/fs2024/prepare/texture/fs2024_ground_image.hpp"
 
 #include <optional>
 #include <string>

@@ -1,10 +1,10 @@
 #include "services/impl/workflow/registrar/workflow_registrar_categories.hpp"
 
-#include "services/interfaces/workflow/fs2024/fs2024_player_steps.hpp"
-#include "services/interfaces/workflow/fs2024/fs2024_terrain_draw_step.hpp"
-#include "services/interfaces/workflow/fs2024/fs2024_tiles_evict_step.hpp"
-#include "services/interfaces/workflow/fs2024/fs2024_tiles_load_step.hpp"
-#include "services/interfaces/workflow/fs2024/fs2024_tiles_resolve_step.hpp"
+#include "services/interfaces/workflow/fs2024/player/fs2024_player_steps.hpp"
+#include "services/interfaces/workflow/fs2024/terrain/fs2024_terrain_draw_step.hpp"
+#include "services/interfaces/workflow/fs2024/tiles/fs2024_tiles_evict_step.hpp"
+#include "services/interfaces/workflow/fs2024/tiles/fs2024_tiles_load_step.hpp"
+#include "services/interfaces/workflow/fs2024/tiles/fs2024_tiles_resolve_step.hpp"
 
 #include <memory>
 

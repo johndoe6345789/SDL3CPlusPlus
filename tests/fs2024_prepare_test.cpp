@@ -4,12 +4,12 @@
 // triangulation/extrusion.
 
 #include "services/interfaces/workflow/fs2024/prepare/fs2024_grid_layout.hpp"
-#include "services/interfaces/workflow/fs2024/prepare/fs2024_landmark_catalog.hpp"
-#include "services/interfaces/workflow/fs2024/prepare/fs2024_landmark_placement.hpp"
+#include "services/interfaces/workflow/fs2024/prepare/landmark/fs2024_landmark_catalog.hpp"
+#include "services/interfaces/workflow/fs2024/prepare/landmark/fs2024_landmark_placement.hpp"
 #include "services/interfaces/workflow/fs2024/prepare/fs2024_local_frame.hpp"
 #include "services/interfaces/workflow/fs2024/prepare/fs2024_prepare_args.hpp"
-#include "services/interfaces/workflow/fs2024/fs2024_building_mesh.hpp"
-#include "services/interfaces/workflow/fs2024/fs2024_polygon.hpp"
+#include "services/interfaces/workflow/fs2024/building/fs2024_building_mesh.hpp"
+#include "services/interfaces/workflow/fs2024/building/fs2024_polygon.hpp"
 
 #include <gtest/gtest.h>
 

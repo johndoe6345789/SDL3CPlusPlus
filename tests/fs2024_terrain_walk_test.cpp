@@ -4,7 +4,7 @@
 // them there on the flat, and carries them up a hillside.
 
 #include "q3_test_walk.hpp"
-#include "services/interfaces/workflow/fs2024/fs2024_terrain_collision.hpp"
+#include "services/interfaces/workflow/fs2024/terrain/fs2024_terrain_collision.hpp"
 
 #include <gtest/gtest.h>
 
