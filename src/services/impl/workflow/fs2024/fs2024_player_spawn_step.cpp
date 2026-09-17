@@ -2,6 +2,7 @@
 
 #include "services/interfaces/workflow/fs2024/fs2024_player_place.hpp"
 #include "services/interfaces/workflow/fs2024/fs2024_step_params.hpp"
+#include "services/interfaces/workflow/fs2024/fs2024_tile_lookup.hpp"
 
 #include <utility>
 
@@ -9,7 +10,7 @@ namespace sdl3cpp::services::impl {
 
 WorkflowFs2024PlayerSpawnStep::WorkflowFs2024PlayerSpawnStep(
     std::shared_ptr<ILogger> logger,
-    std::shared_ptr<Fs2024TerrainState> state)
+    std::shared_ptr<Fs2024TileStreamState> state)
     : logger_(std::move(logger)), state_(std::move(state)) {}
 
 std::string WorkflowFs2024PlayerSpawnStep::GetPluginId() const {
@@ -18,15 +19,19 @@ std::string WorkflowFs2024PlayerSpawnStep::GetPluginId() const {
 
 void WorkflowFs2024PlayerSpawnStep::Execute(
     const WorkflowStepDefinition& step, WorkflowContext& context) {
-    if (!state_->loaded) {
-        if (logger_) logger_->Warn("fs2024.player.spawn: no terrain yet");
-        return;
-    }
     const float x = Fs2024NumberOr(step, "x", 0.f);
     const float z = Fs2024NumberOr(step, "z", 0.f);
     const float heading = Fs2024NumberOr(step, "heading", 0.f);
-    const glm::vec3 origin = Fs2024StandingOrigin(
-        state_->field, x, z, Fs2024NumberOr(step, "clearance", 0.5f));
+
+    const Fs2024Heightfield* field = Fs2024FindTileField(*state_, x, z);
+    glm::vec3 origin{x, 0.f, z};
+    if (field) {
+        origin = Fs2024StandingOrigin(
+            *field, x, z, Fs2024NumberOr(step, "clearance", 0.5f));
+    } else if (logger_) {
+        logger_->Warn("fs2024.player.spawn: spawn tile not loaded; "
+                      "run fs2024.tiles.load (force) first");
+    }
 
     const auto name = context.GetString("physics_player_body", "");
     Fs2024MoveBody(name.empty() ? nullptr

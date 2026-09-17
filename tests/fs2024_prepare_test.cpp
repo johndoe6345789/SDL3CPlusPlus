@@ -1,0 +1,139 @@
+// The fs2024 prepare tool's pure-logic pieces: argument parsing (a
+// real bug was found here -- an inverted XOR check accepted neither
+// mode and rejected either valid one), grid alignment, and polygon
+// triangulation/extrusion.
+
+#include "services/interfaces/workflow/fs2024/prepare/fs2024_grid_layout.hpp"
+#include "services/interfaces/workflow/fs2024/prepare/fs2024_prepare_args.hpp"
+#include "services/interfaces/workflow/fs2024/fs2024_building_mesh.hpp"
+#include "services/interfaces/workflow/fs2024/fs2024_polygon.hpp"
+
+#include <gtest/gtest.h>
+
+#include <cmath>
+#include <cstring>
+#include <vector>
+
+namespace tools = sdl3cpp::tools::fs2024;
+namespace impl = sdl3cpp::services::impl;
+
+namespace {
+
+/// argv-style helper: `args` are string literals, argv[0] is a dummy
+/// program name as real argv always has.
+tools::PrepareArgs Parse(std::vector<const char*> args) {
+    std::vector<char*> argv{const_cast<char*>("fs2024_prepare")};
+    for (const char* a : args) argv.push_back(const_cast<char*>(a));
+    return tools::ParsePrepareArgs(static_cast<int>(argv.size()),
+                                   argv.data());
+}
+
+}  // namespace
+
+TEST(Fs2024PrepareArgs, AcceptsAirportModeAlone) {
+    const auto args = Parse({"--icao", "LOWI", "--dem", "d.tif", "--out",
+                             "o"});
+    EXPECT_EQ(args.icao, "LOWI");
+    EXPECT_FALSE(args.hasLatLon);
+}
+
+TEST(Fs2024PrepareArgs, AcceptsRoadModeAlone) {
+    const auto args =
+        Parse({"--lat", "51.5", "--lon", "-0.1", "--osm-json", "o.json",
+              "--dem", "d.tif", "--out", "o"});
+    EXPECT_TRUE(args.hasLatLon);
+    EXPECT_DOUBLE_EQ(args.lat, 51.5);
+}
+
+TEST(Fs2024PrepareArgs, RejectsNeitherModeSelected) {
+    EXPECT_THROW(Parse({"--dem", "d.tif", "--out", "o"}), std::runtime_error);
+}
+
+TEST(Fs2024PrepareArgs, RejectsBothModesSelected) {
+    EXPECT_THROW(Parse({"--icao", "LOWI", "--lat", "51.5", "--lon", "-0.1",
+                       "--osm-json", "o.json", "--dem", "d.tif", "--out",
+                       "o"}),
+                std::runtime_error);
+}
+
+TEST(Fs2024PrepareArgs, RoadModeWithoutOsmJsonIsRejected) {
+    EXPECT_THROW(Parse({"--lat", "51.5", "--lon", "-0.1", "--dem", "d.tif",
+                       "--out", "o"}),
+                std::runtime_error);
+}
+
+TEST(Fs2024GridLayout, CorrectsATileSizeThatDoesNotDivideSpacing) {
+    // 1000 / 16 = 62.5: rounds to 63 cells (C++'s round-half-away-from-
+    // zero), a 1008 m true pitch -- not Python's 992, and that is fine;
+    // what must hold is internal consistency, checked below.
+    const auto grid = tools::ComputeGridLayout(4000.f, 1000.f, 16.f);
+    EXPECT_NEAR(std::fmod(grid.originX / grid.tileSize + 1000.f, 1.f), 0.f,
+               1e-4f);
+    EXPECT_FLOAT_EQ((grid.cells - 1) * 16.f, grid.extent);
+}
+
+TEST(Fs2024GridLayout, NeverBakesFewerThanTheMinimumRadius) {
+    const auto grid = tools::ComputeGridLayout(10.f, 1000.f, 16.f, 3);
+    const int tilesPerSide =
+        static_cast<int>(std::lround(grid.extent / grid.tileSize));
+    EXPECT_EQ(tilesPerSide, 2 * 3 + 1);
+}
+
+TEST(Fs2024Polygon, TriangulatesASquareIntoTwoTriangles) {
+    const std::vector<impl::Point2> square{
+        {0.f, 0.f}, {1.f, 0.f}, {1.f, 1.f}, {0.f, 1.f}};
+    const auto triangles = impl::TriangulatePolygon(square);
+    EXPECT_EQ(triangles.size(), 6u);  // 2 triangles * 3 indices
+}
+
+TEST(Fs2024Polygon, DropsAClosedRingsDuplicateFirstLastPoint) {
+    const std::vector<impl::Point2> ring{
+        {0.f, 0.f}, {1.f, 0.f}, {1.f, 1.f}, {0.f, 1.f}, {0.f, 0.f}};
+    EXPECT_EQ(impl::TriangulatePolygon(ring).size(), 6u);
+}
+
+TEST(Fs2024Polygon, TooFewPointsProducesNoTriangles) {
+    EXPECT_TRUE(
+        impl::TriangulatePolygon({{0.f, 0.f}, {1.f, 0.f}}).empty());
+}
+
+TEST(Fs2024BuildingMesh, ProducesWallsAndARoofForASquareFootprint) {
+    const std::vector<impl::Point2> square{
+        {0.f, 0.f}, {10.f, 0.f}, {10.f, 10.f}, {0.f, 10.f}};
+    std::vector<impl::BspRenderVertex> vertices;
+    std::vector<std::uint32_t> indices;
+    impl::AppendBuildingMesh(square, 9.f, vertices, indices);
+
+    // 4 walls * 4 verts + 4 roof verts; 4 walls * 2 tris + 2 roof tris.
+    EXPECT_EQ(vertices.size(), 20u);
+    EXPECT_EQ(indices.size(), (4u * 2u + 2u) * 3u);
+    for (std::uint32_t index : indices) ASSERT_LT(index, vertices.size());
+}
+
+TEST(Fs2024BuildingMesh, RoofSitsAtTheGivenHeightFacingUp) {
+    const std::vector<impl::Point2> square{
+        {0.f, 0.f}, {10.f, 0.f}, {10.f, 10.f}, {0.f, 10.f}};
+    std::vector<impl::BspRenderVertex> vertices;
+    std::vector<std::uint32_t> indices;
+    impl::AppendBuildingMesh(square, 9.f, vertices, indices);
+
+    int roofVertices = 0;
+    for (const auto& v : vertices) {
+        if (v.ny > 0.5f) {
+            EXPECT_FLOAT_EQ(v.y, 9.f);
+            ++roofVertices;
+        }
+    }
+    EXPECT_EQ(roofVertices, 4);
+}
+
+TEST(Fs2024BuildingMesh, NoHeightOrTooFewPointsProducesNothing) {
+    std::vector<impl::BspRenderVertex> vertices;
+    std::vector<std::uint32_t> indices;
+    impl::AppendBuildingMesh({{0.f, 0.f}, {1.f, 0.f}, {1.f, 1.f}}, 0.f,
+                            vertices, indices);
+    EXPECT_TRUE(vertices.empty());
+    impl::AppendBuildingMesh({{0.f, 0.f}, {1.f, 0.f}}, 9.f, vertices,
+                            indices);
+    EXPECT_TRUE(vertices.empty());
+}

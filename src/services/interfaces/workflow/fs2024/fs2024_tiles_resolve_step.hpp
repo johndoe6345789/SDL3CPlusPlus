@@ -10,24 +10,21 @@
 namespace sdl3cpp::services::impl {
 
 /**
- * Plugin ID: fs2024.terrain.draw
+ * Plugin ID: fs2024.tiles.resolve
  *
- * Draws every resident tile's ground blocks that reach into the view,
- * each with its own ground texture, and its own runway overlay when
- * it is an airport tile one crosses.
+ * Reads player position from q3.ps and updates the state's wanted
+ * tile lists. Runs after movement in the frame, as gta5.tiles.resolve
+ * does, so it centres on the origin this frame produced.
  *
- * Parameters: pipeline_key (default gpu_pipeline_fs2024_terrain),
- *             fog_density (per metre).
- * Reads:  gpu_render_pass, gpu_command_buffer, render.view_matrix,
- *         render.proj_matrix, render.camera_pos, render.frag_uniforms,
- *         gta5.sky.horizon, frame_skip
+ * Parameters: tiles_root (required, once), tile_size, load_radius_tiles,
+ *             evict_radius_tiles, max_loads_per_call (all read once).
+ * Reads: q3.ps
  */
-class WorkflowFs2024TerrainDrawStep final : public IWorkflowStep {
+class WorkflowFs2024TilesResolveStep final : public IWorkflowStep {
 public:
-    WorkflowFs2024TerrainDrawStep(
+    WorkflowFs2024TilesResolveStep(
         std::shared_ptr<ILogger> logger,
         std::shared_ptr<Fs2024TileStreamState> state);
-
     std::string GetPluginId() const override;
     void Execute(const WorkflowStepDefinition& step,
                  WorkflowContext& context) override;
@@ -35,7 +32,6 @@ public:
 private:
     std::shared_ptr<ILogger> logger_;
     std::shared_ptr<Fs2024TileStreamState> state_;
-    bool warned_ = false;
 };
 
 }  // namespace sdl3cpp::services::impl

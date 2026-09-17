@@ -140,20 +140,19 @@ TEST(Fs2024Player, HeadingBecomesTheYawPmoveWalksAlong) {
     }
 }
 
-TEST(Fs2024Player, GuardReturnsASunkOrStrayPlayer) {
+TEST(Fs2024Player, GuardReturnsASunkPlayerButLeavesAStandingOneAlone) {
     const impl::Fs2024Heightfield field = Saddle();
     impl::Q3PlayerState player;
     player.origin = {0.f, -5.f, 0.f};
     player.velocity = {1.f, -20.f, 1.f};
-    ASSERT_TRUE(impl::Fs2024KeepOnGround(field, player, 1.f));
+    ASSERT_TRUE(impl::Fs2024KeepOnGround(field, player));
     EXPECT_NEAR(player.origin.y + player.mins.y, 0.05f, 1e-4f);
     EXPECT_FLOAT_EQ(player.velocity.y, 0.f);
 
     // Standing properly on the ground is left alone.
-    EXPECT_FALSE(impl::Fs2024KeepOnGround(field, player, 1.f));
-
-    player.origin.x = 40.f;
-    ASSERT_TRUE(impl::Fs2024KeepOnGround(field, player, 1.f));
-    EXPECT_FLOAT_EQ(player.origin.x, 9.f);
-    EXPECT_FLOAT_EQ(player.velocity.x, 0.f);
+    EXPECT_FALSE(impl::Fs2024KeepOnGround(field, player));
 }
+
+// Finding *which* tile's field to pass in here is the tile map's job,
+// not this one's -- see fs2024_tile_streaming_test.cpp's
+// Fs2024TileLookup tests.

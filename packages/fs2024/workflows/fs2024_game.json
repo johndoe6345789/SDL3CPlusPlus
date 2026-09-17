@@ -18,7 +18,7 @@
     "window_title": {
       "name": "window_title",
       "type": "string",
-      "defaultValue": "FS2024 - Innsbruck (LOWI)"
+      "defaultValue": "FS2024 - Westminster, London"
     },
     "renderer_type": {
       "name": "renderer_type",
@@ -60,10 +60,10 @@
       "type": "string",
       "defaultValue": "packages/gta5/shaders/msl/gta5_composite.frag.metal"
     },
-    "ground_map_path": {
-      "name": "ground_map_path",
+    "building_texture_path": {
+      "name": "building_texture_path",
       "type": "string",
-      "defaultValue": "D:/fs2024/lowi/ground.jpg"
+      "defaultValue": "packages/fs2024/assets/building_flat.png"
     }
   },
   "nodes": [
@@ -313,7 +313,7 @@
       }
     },
     {
-      "id": "ground_map",
+      "id": "building_texture",
       "type": "texture.load",
       "typeVersion": 1,
       "position": [
@@ -322,13 +322,13 @@
       ],
       "parameters": {
         "inputs": {
-          "image_path": "ground_map_path"
+          "image_path": "building_texture_path"
         },
         "outputs": {
-          "texture": "ground_map"
+          "texture": "fs2024_building"
         }
       },
-      "comment": "8192 x 8192 colour map baked by python/fs2024/bake_terrain.py: land cover guessed from height and slope, with the airport's runway and aprons from its FS2024 BGL painted over it."
+      "comment": "A flat 2x2 colour, shared by every tile's buildings: they are massing, not textured models."
     },
     {
       "id": "physics_world",
@@ -362,21 +362,47 @@
         "lock_rotation": 1,
         "is_player": 1
       },
-      "comment": "Placed properly by spawn below, once the ground is loaded."
+      "comment": "Placed properly by spawn below, once the spawn tile is loaded; x, z only matter here so the warm-up streaming below centres on the right tile."
     },
     {
-      "id": "terrain_load",
-      "type": "fs2024.terrain.load",
+      "id": "player_sync_init",
+      "type": "q3.player.sync",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "comment": "Seeds q3.ps from the body's position, so the warm-up resolve below has somewhere to centre on."
+    },
+    {
+      "id": "tiles_resolve_init",
+      "type": "fs2024.tiles.resolve",
       "typeVersion": 1,
       "position": [
         0,
         0
       ],
       "parameters": {
-        "file_path": "D:/fs2024/lowi/terrain.fst",
-        "cells_per_chunk": 64
+        "tiles_root": "D:/fs2024/westminster",
+        "tile_size": 1008.0,
+        "load_radius_tiles": 2,
+        "evict_radius_tiles": 3,
+        "max_loads_per_call": 6
       },
-      "comment": "16 x 16 km around LOWI at 16 m: Copernicus GLO-30 heights, levelled to the runway under the airport. Engine origin is the airport reference point at its elevation (576.8 m); x east, z south."
+      "comment": "Configures the streamer once; every later fs2024.tiles.resolve call reuses these settings."
+    },
+    {
+      "id": "tiles_load_init",
+      "type": "fs2024.tiles.load",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "force": 1
+      },
+      "comment": "Loads the whole warm-up radius synchronously, so the ground under and around the spawn point exists before the first frame draws or the player can fall through it."
     },
     {
       "id": "camera_setup",
@@ -401,12 +427,12 @@
         0
       ],
       "parameters": {
-        "x": 303.15,
-        "z": -527.73,
-        "heading": 261.0,
+        "x": 0.0,
+        "z": 0.0,
+        "heading": 274.2689514160156,
         "clearance": 0.3
       },
-      "comment": "Runway 26 threshold, lined up to walk down the runway towards the city. From airport.json's spawn."
+      "comment": "On Bridge Street, from world.json's spawn."
     },
     {
       "id": "lighting",
@@ -427,7 +453,7 @@
         "ambient_intensity": 0.9,
         "exposure": 0.42
       },
-      "comment": "A mid-morning sun from the south-east, as the valley gets it."
+      "comment": "A mid-morning sun from the south-east."
     },
     {
       "id": "init_game_running",
@@ -459,8 +485,8 @@
       }
     },
     {
-      "id": "terrain_free",
-      "type": "fs2024.terrain.free",
+      "id": "tiles_free",
+      "type": "fs2024.tiles.free",
       "typeVersion": 1,
       "position": [
         0,
@@ -637,14 +663,14 @@
       "main": {
         "0": [
           {
-            "node": "ground_map",
+            "node": "building_texture",
             "type": "main",
             "index": 0
           }
         ]
       }
     },
-    "ground_map": {
+    "building_texture": {
       "main": {
         "0": [
           {
@@ -670,14 +696,36 @@
       "main": {
         "0": [
           {
-            "node": "terrain_load",
+            "node": "player_sync_init",
             "type": "main",
             "index": 0
           }
         ]
       }
     },
-    "terrain_load": {
+    "player_sync_init": {
+      "main": {
+        "0": [
+          {
+            "node": "tiles_resolve_init",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "tiles_resolve_init": {
+      "main": {
+        "0": [
+          {
+            "node": "tiles_load_init",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "tiles_load_init": {
       "main": {
         "0": [
           {
@@ -736,14 +784,14 @@
       "main": {
         "0": [
           {
-            "node": "terrain_free",
+            "node": "tiles_free",
             "type": "main",
             "index": 0
           }
         ]
       }
     },
-    "terrain_free": {
+    "tiles_free": {
       "main": {
         "0": [
           {

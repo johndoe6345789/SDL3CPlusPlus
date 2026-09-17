@@ -1093,19 +1093,25 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/world/gta5_water_step.cpp
         src/services/impl/workflow/gta5/world/gta5_water_uniforms.cpp
         src/services/impl/workflow/gta5/world/gta5_water_upload.cpp
+        src/services/impl/workflow/fs2024/fs2024_building_mesh.cpp
         src/services/impl/workflow/fs2024/fs2024_frustum.cpp
         src/services/impl/workflow/fs2024/fs2024_ground_guard_step.cpp
         src/services/impl/workflow/fs2024/fs2024_heightfield.cpp
         src/services/impl/workflow/fs2024/fs2024_player_place.cpp
         src/services/impl/workflow/fs2024/fs2024_player_spawn_step.cpp
+        src/services/impl/workflow/fs2024/fs2024_polygon.cpp
         src/services/impl/workflow/fs2024/fs2024_step_params.cpp
         src/services/impl/workflow/fs2024/fs2024_terrain_collision.cpp
         src/services/impl/workflow/fs2024/fs2024_terrain_draw_step.cpp
-        src/services/impl/workflow/fs2024/fs2024_terrain_free_step.cpp
-        src/services/impl/workflow/fs2024/fs2024_terrain_load_step.cpp
         src/services/impl/workflow/fs2024/fs2024_terrain_mesh.cpp
         src/services/impl/workflow/fs2024/fs2024_terrain_uniforms.cpp
         src/services/impl/workflow/fs2024/fs2024_terrain_upload.cpp
+        src/services/impl/workflow/fs2024/fs2024_tile_key.cpp
+        src/services/impl/workflow/fs2024/fs2024_tile_lookup.cpp
+        src/services/impl/workflow/fs2024/fs2024_tiles_evict_step.cpp
+        src/services/impl/workflow/fs2024/fs2024_tiles_load_step.cpp
+        src/services/impl/workflow/fs2024/fs2024_tiles_resolve.cpp
+        src/services/impl/workflow/fs2024/fs2024_tiles_resolve_step.cpp
         src/services/impl/workflow/workflow_definition_parser_includes.cpp
         src/services/impl/workflow/workflow_definition_parser_include_path.cpp
         src/services/impl/workflow/workflow_definition_parser_expand_include.cpp
@@ -1174,6 +1180,36 @@ if(BUILD_SDL3_APP)
         ffmpeg::avutil
     )
 endif()
+    add_executable(fs2024_prepare
+        src/services/impl/workflow/fs2024/prepare/fs2024_bgl_airport.cpp
+        src/services/impl/workflow/fs2024/prepare/fs2024_dem_tile.cpp
+        src/services/impl/workflow/fs2024/prepare/fs2024_grid_layout.cpp
+        src/services/impl/workflow/fs2024/prepare/fs2024_ground_cover.cpp
+        src/services/impl/workflow/fs2024/prepare/fs2024_ground_image.cpp
+        src/services/impl/workflow/fs2024/prepare/fs2024_inflate.cpp
+        src/services/impl/workflow/fs2024/prepare/fs2024_local_frame.cpp
+        src/services/impl/workflow/fs2024/prepare/fs2024_nearest_road.cpp
+        src/services/impl/workflow/fs2024/prepare/fs2024_osm_json.cpp
+        src/services/impl/workflow/fs2024/prepare/fs2024_pavement_shapes.cpp
+        src/services/impl/workflow/fs2024/prepare/fs2024_prepare_args.cpp
+        src/services/impl/workflow/fs2024/prepare/fs2024_prepare_buildings.cpp
+        src/services/impl/workflow/fs2024/prepare/fs2024_prepare_main.cpp
+        src/services/impl/workflow/fs2024/prepare/fs2024_tiff_ifd.cpp
+        src/services/impl/workflow/fs2024/prepare/fs2024_tiff_predictor.cpp
+        src/services/impl/workflow/fs2024/prepare/fs2024_tile_writer.cpp
+        src/services/impl/workflow/fs2024/fs2024_polygon.cpp
+        src/services/impl/workflow/fs2024/fs2024_building_mesh.cpp
+        src/services/impl/workflow/fs2024/fs2024_tile_key.cpp
+    )
+    target_include_directories(fs2024_prepare PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/src"
+    )
+    target_link_libraries(fs2024_prepare PRIVATE
+        nlohmann_json::nlohmann_json
+        glm::glm
+        stb::stb
+        ZLIB::ZLIB
+    )
 
 # ============================================================================
 # TEST TARGETS
@@ -1641,6 +1677,23 @@ target_link_libraries(fs2024_terrain_walk_test PRIVATE
 )
 add_test(NAME fs2024_terrain_walk_test COMMAND fs2024_terrain_walk_test)
 
+add_executable(fs2024_tile_streaming_test)
+target_sources(fs2024_tile_streaming_test PRIVATE tests/fs2024_tile_streaming_test.cpp)
+target_sources(fs2024_tile_streaming_test PRIVATE src/services/impl/workflow/fs2024/fs2024_tile_key.cpp)
+target_sources(fs2024_tile_streaming_test PRIVATE src/services/impl/workflow/fs2024/fs2024_tiles_resolve.cpp)
+target_sources(fs2024_tile_streaming_test PRIVATE src/services/impl/workflow/fs2024/fs2024_tile_lookup.cpp)
+target_sources(fs2024_tile_streaming_test PRIVATE src/services/impl/workflow/fs2024/fs2024_heightfield.cpp)
+target_include_directories(fs2024_tile_streaming_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(fs2024_tile_streaming_test PRIVATE
+    GTest::gtest_main
+    glm::glm
+    Bullet::Bullet
+    ${SDL_TARGET}
+)
+add_test(NAME fs2024_tile_streaming_test COMMAND fs2024_tile_streaming_test)
+
 add_executable(video_encoder_test)
 target_sources(video_encoder_test PRIVATE tests/video_encoder_test.cpp)
 target_sources(video_encoder_test PRIVATE tests/video_encoder_audio_test.cpp)
@@ -1700,6 +1753,21 @@ target_link_libraries(gta5_climb_test PRIVATE
     glm::glm
 )
 add_test(NAME gta5_climb_test COMMAND gta5_climb_test)
+
+add_executable(fs2024_prepare_test)
+target_sources(fs2024_prepare_test PRIVATE tests/fs2024_prepare_test.cpp)
+target_sources(fs2024_prepare_test PRIVATE src/services/impl/workflow/fs2024/prepare/fs2024_grid_layout.cpp)
+target_sources(fs2024_prepare_test PRIVATE src/services/impl/workflow/fs2024/prepare/fs2024_prepare_args.cpp)
+target_sources(fs2024_prepare_test PRIVATE src/services/impl/workflow/fs2024/fs2024_polygon.cpp)
+target_sources(fs2024_prepare_test PRIVATE src/services/impl/workflow/fs2024/fs2024_building_mesh.cpp)
+target_include_directories(fs2024_prepare_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(fs2024_prepare_test PRIVATE
+    GTest::gtest_main
+    glm::glm
+)
+add_test(NAME fs2024_prepare_test COMMAND fs2024_prepare_test)
 
 # ============================================================================
 # FILE COPYING

@@ -3,8 +3,6 @@
 #include "services/interfaces/workflow/fs2024/fs2024_step_params.hpp"
 #include "services/interfaces/workflow/rendering/rendering_types.hpp"
 
-#include <cmath>
-
 namespace sdl3cpp::services::impl {
 namespace {
 
@@ -38,18 +36,8 @@ Fs2024TerrainFragmentUniforms BuildFs2024TerrainFragmentUniforms(
         "gta5.sky.horizon", glm::vec3(uniforms.fog));
     uniforms.fog = glm::vec4(
         horizon, Fs2024NumberOr(step, "fog_density", uniforms.fog.w));
-
-    const float length = Fs2024NumberOr(step, "runway_length", 0.f);
-    const float heading =
-        Fs2024NumberOr(step, "runway_heading", 0.f) * 3.14159265f / 180.f;
-    uniforms.runway = glm::vec4(Fs2024NumberOr(step, "runway_x", 0.f),
-                                Fs2024NumberOr(step, "runway_z", 0.f),
-                                0.5f * length,
-                                0.5f * Fs2024NumberOr(step, "runway_width",
-                                                      45.f));
-    // Compass heading to engine x (east), z (south).
-    uniforms.runwayAxis =
-        glm::vec4(std::sin(heading), -std::cos(heading), 0.f, 0.f);
+    // runway/runwayAxis are per-tile (an airport tile's own runway, if
+    // it has one) and are filled in by the draw step, not read here.
     return uniforms;
 }
 

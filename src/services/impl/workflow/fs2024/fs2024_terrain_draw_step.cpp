@@ -4,13 +4,57 @@
 #include "services/interfaces/workflow/fs2024/fs2024_step_params.hpp"
 #include "services/interfaces/workflow/fs2024/fs2024_terrain_uniforms.hpp"
 
+#include <string>
 #include <utility>
 
 namespace sdl3cpp::services::impl {
+namespace {
+
+void DrawChunk(SDL_GPURenderPass* pass, const Fs2024TerrainChunkGpu& chunk,
+              const Fs2024Frustum& frustum) {
+    if (!Fs2024BoxVisible(frustum, chunk.min, chunk.max)) return;
+    SDL_GPUBufferBinding vb{};
+    vb.buffer = chunk.vertexBuffer;
+    SDL_BindGPUVertexBuffers(pass, 0, &vb, 1);
+    SDL_GPUBufferBinding ib{};
+    ib.buffer = chunk.indexBuffer;
+    SDL_BindGPUIndexBuffer(pass, &ib, SDL_GPU_INDEXELEMENTSIZE_32BIT);
+    SDL_DrawGPUIndexedPrimitives(pass, chunk.indexCount, 1, 0, 0, 0);
+}
+
+/// Falls back to whichever tile has no texture of its own: a plain
+/// grey rather than a missing-sampler no-op draw. Buildings draw
+/// through the same pipeline with the shared plain texture `building`
+/// and no runway overlay -- they are massing, not an airport surface.
+void DrawOneTile(SDL_GPURenderPass* pass, SDL_GPUCommandBuffer* cmd,
+                 const Fs2024LoadedTile& tile, const Fs2024Frustum& frustum,
+                 Fs2024TerrainFragmentUniforms fragment,
+                 SDL_GPUTextureSamplerBinding building) {
+    if (tile.groundTexture && tile.groundSampler) {
+        fragment.runway = tile.runway;
+        fragment.runwayAxis = tile.runwayAxis;
+        SDL_PushGPUFragmentUniformData(cmd, 0, &fragment, sizeof(fragment));
+        SDL_GPUTextureSamplerBinding ground{tile.groundTexture,
+                                            tile.groundSampler};
+        SDL_BindGPUFragmentSamplers(pass, 0, &ground, 1);
+        for (const Fs2024TerrainChunkGpu& chunk : tile.terrain.chunks) {
+            DrawChunk(pass, chunk, frustum);
+        }
+    }
+
+    if (tile.buildingChunk.indexCount > 0 && building.texture) {
+        fragment.runway = glm::vec4(0.f);
+        SDL_PushGPUFragmentUniformData(cmd, 0, &fragment, sizeof(fragment));
+        SDL_BindGPUFragmentSamplers(pass, 0, &building, 1);
+        DrawChunk(pass, tile.buildingChunk, frustum);
+    }
+}
+
+}  // namespace
 
 WorkflowFs2024TerrainDrawStep::WorkflowFs2024TerrainDrawStep(
     std::shared_ptr<ILogger> logger,
-    std::shared_ptr<Fs2024TerrainState> state)
+    std::shared_ptr<Fs2024TileStreamState> state)
     : logger_(std::move(logger)), state_(std::move(state)) {}
 
 std::string WorkflowFs2024TerrainDrawStep::GetPluginId() const {
@@ -19,21 +63,17 @@ std::string WorkflowFs2024TerrainDrawStep::GetPluginId() const {
 
 void WorkflowFs2024TerrainDrawStep::Execute(
     const WorkflowStepDefinition& step, WorkflowContext& context) {
-    if (context.GetBool("frame_skip", false) || !state_->loaded) return;
+    if (context.GetBool("frame_skip", false)) return;
     auto* pass = context.Get<SDL_GPURenderPass*>("gpu_render_pass", nullptr);
     auto* cmd =
         context.Get<SDL_GPUCommandBuffer*>("gpu_command_buffer", nullptr);
     auto* pipeline = context.Get<SDL_GPUGraphicsPipeline*>(
         Fs2024StringOr(step, "pipeline_key", "gpu_pipeline_fs2024_terrain"),
         nullptr);
-    const std::string texture = Fs2024StringOr(step, "texture", "ground_map");
-    SDL_GPUTextureSamplerBinding map{};
-    map.texture = context.Get<SDL_GPUTexture*>(texture + "_gpu", nullptr);
-    map.sampler = context.Get<SDL_GPUSampler*>(texture + "_sampler", nullptr);
-    if (!pass || !cmd || !pipeline || !map.texture || !map.sampler) {
-        if (logger_ && !warned_ && pass) {
-            logger_->Warn("fs2024.terrain.draw: missing pipeline or '" +
-                          texture + "' texture; ground not drawn");
+    if (!pass || !cmd || !pipeline || state_->resident.empty()) {
+        if (logger_ && !warned_ && pass && !pipeline) {
+            logger_->Warn("fs2024.terrain.draw: no pipeline; ground not "
+                          "drawn");
             warned_ = true;
         }
         return;
@@ -44,21 +84,17 @@ void WorkflowFs2024TerrainDrawStep::Execute(
     const Fs2024TerrainFragmentUniforms fragment =
         BuildFs2024TerrainFragmentUniforms(step, context);
     const Fs2024Frustum frustum = MakeFs2024Frustum(vertex.viewProj);
+    const std::string buildingKey =
+        Fs2024StringOr(step, "building_texture", "fs2024_building");
+    SDL_GPUTextureSamplerBinding building{
+        context.Get<SDL_GPUTexture*>(buildingKey + "_gpu", nullptr),
+        context.Get<SDL_GPUSampler*>(buildingKey + "_sampler", nullptr)};
 
     SDL_BindGPUGraphicsPipeline(pass, pipeline);
     SDL_PushGPUVertexUniformData(cmd, 0, &vertex, sizeof(vertex));
-    SDL_PushGPUFragmentUniformData(cmd, 0, &fragment, sizeof(fragment));
-    SDL_BindGPUFragmentSamplers(pass, 0, &map, 1);
 
-    for (const Fs2024TerrainChunkGpu& chunk : state_->chunks) {
-        if (!Fs2024BoxVisible(frustum, chunk.min, chunk.max)) continue;
-        SDL_GPUBufferBinding vb{};
-        vb.buffer = chunk.vertexBuffer;
-        SDL_BindGPUVertexBuffers(pass, 0, &vb, 1);
-        SDL_GPUBufferBinding ib{};
-        ib.buffer = chunk.indexBuffer;
-        SDL_BindGPUIndexBuffer(pass, &ib, SDL_GPU_INDEXELEMENTSIZE_32BIT);
-        SDL_DrawGPUIndexedPrimitives(pass, chunk.indexCount, 1, 0, 0, 0);
+    for (const auto& [key, tile] : state_->resident) {
+        DrawOneTile(pass, cmd, tile, frustum, fragment, building);
     }
 }
 

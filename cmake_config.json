@@ -143,7 +143,7 @@
         "src/services/impl/workflow/compute/*.cpp",
         "src/services/impl/workflow/quake3/**/*.cpp",
         "src/services/impl/workflow/gta5/**/*.cpp",
-        "src/services/impl/workflow/fs2024/**/*.cpp",
+        "src/services/impl/workflow/fs2024/*.cpp",
         "src/services/impl/workflow/workflow_definition_parser_includes.cpp",
         "src/services/impl/workflow/workflow_definition_parser_include_path.cpp",
         "src/services/impl/workflow/workflow_definition_parser_expand_include.cpp",
@@ -214,6 +214,26 @@
       "compile_definitions": [],
       "name": "sdl3_app",
       "enabled_when": "BUILD_SDL3_APP"
+    },
+    {
+      "type": "executable",
+      "name": "fs2024_prepare",
+      "sources": [
+        "src/services/impl/workflow/fs2024/prepare/*.cpp",
+        "src/services/impl/workflow/fs2024/fs2024_polygon.cpp",
+        "src/services/impl/workflow/fs2024/fs2024_building_mesh.cpp",
+        "src/services/impl/workflow/fs2024/fs2024_tile_key.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "nlohmann_json::nlohmann_json",
+        "glm::glm",
+        "stb::stb",
+        "ZLIB::ZLIB"
+      ],
+      "compile_definitions": []
     }
   ],
   "test_targets": [
@@ -729,6 +749,25 @@
       ]
     },
     {
+      "name": "fs2024_tile_streaming_test",
+      "sources": [
+        "tests/fs2024_tile_streaming_test.cpp",
+        "src/services/impl/workflow/fs2024/fs2024_tile_key.cpp",
+        "src/services/impl/workflow/fs2024/fs2024_tiles_resolve.cpp",
+        "src/services/impl/workflow/fs2024/fs2024_tile_lookup.cpp",
+        "src/services/impl/workflow/fs2024/fs2024_heightfield.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main",
+        "glm::glm",
+        "Bullet::Bullet",
+        "${SDL_TARGET}"
+      ]
+    },
+    {
       "name": "video_encoder_test",
       "sources": [
         "tests/video_encoder_test.cpp",
@@ -791,6 +830,23 @@
       "link_libraries": [
         "GTest::gtest_main",
         "Bullet::Bullet",
+        "glm::glm"
+      ]
+    },
+    {
+      "name": "fs2024_prepare_test",
+      "sources": [
+        "tests/fs2024_prepare_test.cpp",
+        "src/services/impl/workflow/fs2024/prepare/fs2024_grid_layout.cpp",
+        "src/services/impl/workflow/fs2024/prepare/fs2024_prepare_args.cpp",
+        "src/services/impl/workflow/fs2024/fs2024_polygon.cpp",
+        "src/services/impl/workflow/fs2024/fs2024_building_mesh.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main",
         "glm::glm"
       ]
     }

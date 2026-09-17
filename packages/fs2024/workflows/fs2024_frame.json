@@ -1,6 +1,6 @@
 {
   "name": "FS2024 Frame",
-  "description": "Input, Quake 3 movement over the baked ground, then sky, ground and the composite.",
+  "description": "Input, Quake 3 movement over the streamed ground, then streaming, sky, ground and the composite.",
   "steps": [
     {
       "id": "input_group",
@@ -15,6 +15,19 @@
       "parameters": {
         "path": "packages/fs2024/workflows/fs2024_physics.json"
       }
+    },
+    {
+      "id": "tiles_resolve",
+      "plugin": "fs2024.tiles.resolve",
+      "comment": "Runs after movement, so it centres on the origin this frame produced rather than the last one's."
+    },
+    {
+      "id": "tiles_load",
+      "plugin": "fs2024.tiles.load"
+    },
+    {
+      "id": "tiles_evict",
+      "plugin": "fs2024.tiles.evict"
     },
     {
       "id": "render_prepare",
@@ -45,15 +58,9 @@
       "id": "terrain_draw",
       "plugin": "fs2024.terrain.draw",
       "parameters": {
-        "texture": "ground_map",
-        "fog_density": 7e-05,
-        "runway_x": -646.11,
-        "runway_z": -376.95,
-        "runway_heading": 260.975,
-        "runway_length": 2002.318603515625,
-        "runway_width": 45.099998474121094
+        "fog_density": 7e-05
       },
-      "comment": "The runway's markings are drawn by the shader, sharp at any range; the ground map has only its asphalt. From airport.json's runway."
+      "comment": "Draws every streamed-in tile with its own ground texture; an airport tile's runway markings are drawn sharp by the shader from that tile's own roads.json."
     },
     {
       "id": "frame_end",

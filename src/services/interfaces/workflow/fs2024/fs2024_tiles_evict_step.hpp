@@ -10,19 +10,16 @@
 namespace sdl3cpp::services::impl {
 
 /**
- * Plugin ID: fs2024.player.spawn
+ * Plugin ID: fs2024.tiles.evict
  *
- * Stands the player body on the loaded ground at (x, z), facing a
- * compass heading. Run at init, after the spawn tile has been force
- * loaded and the player's physics.body.add, so the drop is measured
- * from the real ground rather than guessed in the workflow.
+ * Releases every tile on `state.pendingEvict`: its GPU texture, mesh
+ * buffers and collision body, then drops it from `state.resident`.
  *
- * Parameters: x, z (metres), heading (degrees), clearance (metres).
- * Writes: camera_yaw, q3.ps (when it already exists)
+ * Reads: gpu_device, physics_world
  */
-class WorkflowFs2024PlayerSpawnStep final : public IWorkflowStep {
+class WorkflowFs2024TilesEvictStep final : public IWorkflowStep {
 public:
-    WorkflowFs2024PlayerSpawnStep(
+    WorkflowFs2024TilesEvictStep(
         std::shared_ptr<ILogger> logger,
         std::shared_ptr<Fs2024TileStreamState> state);
     std::string GetPluginId() const override;
@@ -35,15 +32,14 @@ private:
 };
 
 /**
- * Plugin ID: fs2024.player.ground_guard
+ * Plugin ID: fs2024.tiles.free
  *
- * After the pmove slide (and free flight), keeps q3.ps from sinking
- * through the ground of whichever tile it is over. Does nothing while
- * that tile has not streamed in yet.
+ * Evicts every resident tile unconditionally. Run once before
+ * system.exit, while the device and physics world still exist.
  */
-class WorkflowFs2024GroundGuardStep final : public IWorkflowStep {
+class WorkflowFs2024TilesFreeStep final : public IWorkflowStep {
 public:
-    WorkflowFs2024GroundGuardStep(
+    WorkflowFs2024TilesFreeStep(
         std::shared_ptr<ILogger> logger,
         std::shared_ptr<Fs2024TileStreamState> state);
     std::string GetPluginId() const override;
@@ -53,7 +49,6 @@ public:
 private:
     std::shared_ptr<ILogger> logger_;
     std::shared_ptr<Fs2024TileStreamState> state_;
-    int rescues_ = 0;
 };
 
 }  // namespace sdl3cpp::services::impl

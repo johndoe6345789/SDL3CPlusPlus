@@ -1,6 +1,6 @@
 {
   "name": "FS2024 Physics",
-  "description": "Quake 3 pmove (q3.pm.*) over the baked heightfield, with GTA V's walking tune.",
+  "description": "Quake 3 pmove (q3.pm.*) over the streamed heightfield, with GTA V's walking tune.",
   "rationale": "FS2024 works in metres and the q3.pm.* constants already are metres, so the chain runs unchanged. The traces sweep a Bullet heightfield rather than brushes.",
   "steps": [
     {
@@ -55,15 +55,12 @@
         "ramp_seconds": 2.5,
         "max_speed": 250.0
       },
-      "comment": "Borrowed from gta5: Y toggles free flight, W held ramps up to 250 m/s. For looking round the valley."
+      "comment": "Borrowed from gta5: Y toggles free flight, W held ramps up to 250 m/s."
     },
     {
       "id": "ground_guard",
       "plugin": "fs2024.player.ground_guard",
-      "parameters": {
-        "margin": 32.0
-      },
-      "comment": "After flight too: the baked field ends in a cliff to nothing; keep the player on it and above it."
+      "comment": "After flight too: does nothing for a moment while a tile is still streaming in, and rescues a sunk player once it has."
     },
     {
       "id": "physics_step",
