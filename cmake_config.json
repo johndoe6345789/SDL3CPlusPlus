@@ -97,7 +97,8 @@
         "src/services/impl/workflow/compute/*.cpp",
         "src/services/impl/workflow/quake3/**/*.cpp",
         "src/services/impl/workflow/gta5/**/*.cpp",
-        "src/services/impl/workflow/fs2024/*.cpp"
+        "src/services/impl/workflow/fs2024/*.cpp",
+        "src/services/impl/workflow/bl4/*.cpp"
       ],
       "include_directories": [
         "src"
@@ -748,6 +749,9 @@
         "tests/fs2024_prepare_test.cpp",
         "src/services/impl/workflow/fs2024/prepare/fs2024_grid_layout.cpp",
         "src/services/impl/workflow/fs2024/prepare/fs2024_prepare_args.cpp",
+        "src/services/impl/workflow/fs2024/prepare/fs2024_landmark_catalog.cpp",
+        "src/services/impl/workflow/fs2024/prepare/fs2024_landmark_placement.cpp",
+        "src/services/impl/workflow/fs2024/prepare/fs2024_local_frame.cpp",
         "src/services/impl/workflow/fs2024/fs2024_polygon.cpp",
         "src/services/impl/workflow/fs2024/fs2024_building_mesh.cpp"
       ],
@@ -756,7 +760,26 @@
       ],
       "link_libraries": [
         "GTest::gtest_main",
-        "glm::glm"
+        "glm::glm",
+        "nlohmann_json::nlohmann_json"
+      ]
+    },
+    {
+      "name": "fs2024_gltf_model_test",
+      "sources": [
+        "tests/fs2024_gltf_model_test.cpp",
+        "src/services/impl/workflow/fs2024/prepare/fs2024_gltf_model.cpp",
+        "src/services/impl/workflow/fs2024/prepare/fs2024_gltf_accessor.cpp",
+        "src/services/impl/workflow/fs2024/prepare/fs2024_gltf_scene.cpp",
+        "src/services/impl/workflow/fs2024/prepare/fs2024_riff_chunk.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main",
+        "glm::glm",
+        "nlohmann_json::nlohmann_json"
       ]
     }
   ],

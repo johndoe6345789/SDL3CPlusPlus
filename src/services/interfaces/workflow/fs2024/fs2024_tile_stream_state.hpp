@@ -1,5 +1,7 @@
 #pragma once
 
+#include "services/interfaces/workflow/fs2024/fs2024_landmark_instance.hpp"
+#include "services/interfaces/workflow/fs2024/fs2024_landmark_kit_gpu.hpp"
 #include "services/interfaces/workflow/fs2024/fs2024_terrain_state.hpp"
 #include "services/interfaces/workflow/fs2024/fs2024_tile_key.hpp"
 
@@ -26,6 +28,9 @@ struct Fs2024LoadedTile {
     /// vertex format terrain uses, so the same pipeline draws both);
     /// indexCount 0 means the tile baked none.
     Fs2024TerrainChunkGpu buildingChunk;
+    /// This tile's share of `landmarks.json`, if it baked one; look up
+    /// each instance's GPU kit in Fs2024TileStreamState::landmarkKits.
+    std::vector<Fs2024LandmarkInstance> landmarks;
 };
 
 /// Everything fs2024.tiles.* shares: which tiles are resident, and the
@@ -44,6 +49,11 @@ struct Fs2024TileStreamState {
     /// area. Left unwanted so resolve does not queue them every call.
     std::unordered_set<Fs2024TileKey> missing;
     bool configured = false;
+
+    /// Every landmark model loaded so far, by its own GXML name --
+    /// shared across every tile/instance that references it, loaded
+    /// once on first reference and released only at fs2024.tiles.free.
+    std::unordered_map<std::string, Fs2024LandmarkKitGpu> landmarkKits;
 };
 
 }  // namespace sdl3cpp::services::impl

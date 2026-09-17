@@ -236,6 +236,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/parser/workflow_parameter_value_parser.cpp
         src/services/impl/workflow/registrar/workflow_registrar.cpp
         src/services/impl/workflow/registrar/workflow_registrar_audio.cpp
+        src/services/impl/workflow/registrar/workflow_registrar_bl4.cpp
         src/services/impl/workflow/registrar/workflow_registrar_camera.cpp
         src/services/impl/workflow/registrar/workflow_registrar_camera_service.cpp
         src/services/impl/workflow/registrar/workflow_registrar_control.cpp
@@ -1142,6 +1143,8 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/fs2024/fs2024_frustum.cpp
         src/services/impl/workflow/fs2024/fs2024_ground_guard_step.cpp
         src/services/impl/workflow/fs2024/fs2024_heightfield.cpp
+        src/services/impl/workflow/fs2024/fs2024_landmark_kit.cpp
+        src/services/impl/workflow/fs2024/fs2024_landmark_load.cpp
         src/services/impl/workflow/fs2024/fs2024_player_place.cpp
         src/services/impl/workflow/fs2024/fs2024_player_spawn_step.cpp
         src/services/impl/workflow/fs2024/fs2024_polygon.cpp
@@ -1157,6 +1160,19 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/fs2024/fs2024_tiles_load_step.cpp
         src/services/impl/workflow/fs2024/fs2024_tiles_resolve.cpp
         src/services/impl/workflow/fs2024/fs2024_tiles_resolve_step.cpp
+        src/services/impl/workflow/bl4/bl4_collision_body.cpp
+        src/services/impl/workflow/bl4/bl4_collision_shape.cpp
+        src/services/impl/workflow/bl4/bl4_mesh_extract.cpp
+        src/services/impl/workflow/bl4/bl4_model_draw_step.cpp
+        src/services/impl/workflow/bl4/bl4_model_uniforms.cpp
+        src/services/impl/workflow/bl4/bl4_placement_parse.cpp
+        src/services/impl/workflow/bl4/bl4_player_spawn_step.cpp
+        src/services/impl/workflow/bl4/bl4_step_params.cpp
+        src/services/impl/workflow/bl4/bl4_tile_key.cpp
+        src/services/impl/workflow/bl4/bl4_tiles_evict_step.cpp
+        src/services/impl/workflow/bl4/bl4_tiles_load_step.cpp
+        src/services/impl/workflow/bl4/bl4_tiles_resolve.cpp
+        src/services/impl/workflow/bl4/bl4_tiles_resolve_step.cpp
     )
     target_include_directories(sdl3_app PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}/src"
@@ -1181,12 +1197,23 @@ if(BUILD_SDL3_APP)
     )
 endif()
     add_executable(fs2024_prepare
+        src/services/impl/workflow/fs2024/prepare/fs2024_bc_decode.cpp
         src/services/impl/workflow/fs2024/prepare/fs2024_bgl_airport.cpp
+        src/services/impl/workflow/fs2024/prepare/fs2024_bgl_model_library.cpp
+        src/services/impl/workflow/fs2024/prepare/fs2024_bgl_model_name.cpp
+        src/services/impl/workflow/fs2024/prepare/fs2024_dds_texture.cpp
         src/services/impl/workflow/fs2024/prepare/fs2024_dem_tile.cpp
+        src/services/impl/workflow/fs2024/prepare/fs2024_gltf_accessor.cpp
+        src/services/impl/workflow/fs2024/prepare/fs2024_gltf_model.cpp
+        src/services/impl/workflow/fs2024/prepare/fs2024_gltf_scene.cpp
         src/services/impl/workflow/fs2024/prepare/fs2024_grid_layout.cpp
         src/services/impl/workflow/fs2024/prepare/fs2024_ground_cover.cpp
         src/services/impl/workflow/fs2024/prepare/fs2024_ground_image.cpp
         src/services/impl/workflow/fs2024/prepare/fs2024_inflate.cpp
+        src/services/impl/workflow/fs2024/prepare/fs2024_landmark_catalog.cpp
+        src/services/impl/workflow/fs2024/prepare/fs2024_landmark_extract.cpp
+        src/services/impl/workflow/fs2024/prepare/fs2024_landmark_placement.cpp
+        src/services/impl/workflow/fs2024/prepare/fs2024_landmark_tile_write.cpp
         src/services/impl/workflow/fs2024/prepare/fs2024_local_frame.cpp
         src/services/impl/workflow/fs2024/prepare/fs2024_nearest_road.cpp
         src/services/impl/workflow/fs2024/prepare/fs2024_osm_json.cpp
@@ -1194,6 +1221,7 @@ endif()
         src/services/impl/workflow/fs2024/prepare/fs2024_prepare_args.cpp
         src/services/impl/workflow/fs2024/prepare/fs2024_prepare_buildings.cpp
         src/services/impl/workflow/fs2024/prepare/fs2024_prepare_main.cpp
+        src/services/impl/workflow/fs2024/prepare/fs2024_riff_chunk.cpp
         src/services/impl/workflow/fs2024/prepare/fs2024_tiff_ifd.cpp
         src/services/impl/workflow/fs2024/prepare/fs2024_tiff_predictor.cpp
         src/services/impl/workflow/fs2024/prepare/fs2024_tile_writer.cpp
@@ -1758,6 +1786,9 @@ add_executable(fs2024_prepare_test)
 target_sources(fs2024_prepare_test PRIVATE tests/fs2024_prepare_test.cpp)
 target_sources(fs2024_prepare_test PRIVATE src/services/impl/workflow/fs2024/prepare/fs2024_grid_layout.cpp)
 target_sources(fs2024_prepare_test PRIVATE src/services/impl/workflow/fs2024/prepare/fs2024_prepare_args.cpp)
+target_sources(fs2024_prepare_test PRIVATE src/services/impl/workflow/fs2024/prepare/fs2024_landmark_catalog.cpp)
+target_sources(fs2024_prepare_test PRIVATE src/services/impl/workflow/fs2024/prepare/fs2024_landmark_placement.cpp)
+target_sources(fs2024_prepare_test PRIVATE src/services/impl/workflow/fs2024/prepare/fs2024_local_frame.cpp)
 target_sources(fs2024_prepare_test PRIVATE src/services/impl/workflow/fs2024/fs2024_polygon.cpp)
 target_sources(fs2024_prepare_test PRIVATE src/services/impl/workflow/fs2024/fs2024_building_mesh.cpp)
 target_include_directories(fs2024_prepare_test PRIVATE
@@ -1766,8 +1797,25 @@ target_include_directories(fs2024_prepare_test PRIVATE
 target_link_libraries(fs2024_prepare_test PRIVATE
     GTest::gtest_main
     glm::glm
+    nlohmann_json::nlohmann_json
 )
 add_test(NAME fs2024_prepare_test COMMAND fs2024_prepare_test)
+
+add_executable(fs2024_gltf_model_test)
+target_sources(fs2024_gltf_model_test PRIVATE tests/fs2024_gltf_model_test.cpp)
+target_sources(fs2024_gltf_model_test PRIVATE src/services/impl/workflow/fs2024/prepare/fs2024_gltf_model.cpp)
+target_sources(fs2024_gltf_model_test PRIVATE src/services/impl/workflow/fs2024/prepare/fs2024_gltf_accessor.cpp)
+target_sources(fs2024_gltf_model_test PRIVATE src/services/impl/workflow/fs2024/prepare/fs2024_gltf_scene.cpp)
+target_sources(fs2024_gltf_model_test PRIVATE src/services/impl/workflow/fs2024/prepare/fs2024_riff_chunk.cpp)
+target_include_directories(fs2024_gltf_model_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(fs2024_gltf_model_test PRIVATE
+    GTest::gtest_main
+    glm::glm
+    nlohmann_json::nlohmann_json
+)
+add_test(NAME fs2024_gltf_model_test COMMAND fs2024_gltf_model_test)
 
 # ============================================================================
 # FILE COPYING

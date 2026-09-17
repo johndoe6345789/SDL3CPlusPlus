@@ -1,6 +1,7 @@
 #include "services/interfaces/workflow/fs2024/fs2024_tiles_load_step.hpp"
 
 #include "services/interfaces/workflow/fs2024/fs2024_building_mesh.hpp"
+#include "services/interfaces/workflow/fs2024/fs2024_landmark_load.hpp"
 #include "services/interfaces/workflow/fs2024/fs2024_step_params.hpp"
 #include "services/interfaces/workflow/fs2024/fs2024_terrain_upload.hpp"
 #include "services/interfaces/workflow/graphics/texture_gpu_upload.hpp"
@@ -90,12 +91,28 @@ void LoadTileBuildings(SDL_GPUDevice* device, const std::string& dir,
     tile.buildingChunk.max = max;
 }
 
+/// Loads a tile's own landmark instances and, for any model not
+/// already in the shared cache, its GPU kit -- shared, global data
+/// loaded once regardless of how many tiles/instances reference it.
+void LoadTileLandmarks(SDL_GPUDevice* device, const std::string& dir,
+                      Fs2024TileStreamState& state,
+                      Fs2024LoadedTile& tile) {
+    tile.landmarks = ReadTileLandmarks(dir);
+    for (const Fs2024LandmarkInstance& instance : tile.landmarks) {
+        if (state.landmarkKits.contains(instance.model)) continue;
+        state.landmarkKits[instance.model] = LoadFs2024LandmarkKitGpu(
+            device, state.tilesRoot, instance.model, instance.x, instance.z,
+            instance.headingDegrees);
+    }
+}
+
 /// Everything one tile needs. Throws on a missing/unreadable
 /// terrain.fst; a missing ground.jpg or roads.json is tolerated (a
 /// plain-coloured tile beats no ground at all).
 Fs2024LoadedTile LoadOneTile(SDL_GPUDevice* device,
                             btDiscreteDynamicsWorld* world,
-                            const std::string& dir) {
+                            const std::string& dir,
+                            Fs2024TileStreamState& state) {
     Fs2024LoadedTile tile;
     tile.terrain.field = ReadFs2024Heightfield(dir + "/terrain.fst");
     UploadFs2024TerrainChunks(device, tile.terrain, 64);
@@ -112,6 +129,11 @@ Fs2024LoadedTile LoadOneTile(SDL_GPUDevice* device,
         LoadTileBuildings(device, dir, tile);
     } catch (const std::exception&) {
         // No buildings: fine, most tiles worldwide will have none baked.
+    }
+    try {
+        LoadTileLandmarks(device, dir, state, tile);
+    } catch (const std::exception&) {
+        // No landmarks: the common case, everywhere but a few spots.
     }
     return tile;
 }
@@ -145,7 +167,8 @@ void WorkflowFs2024TilesLoadStep::Execute(const WorkflowStepDefinition& step,
         const std::string dir =
             Fs2024TileDirectory(state_->tilesRoot, key);
         try {
-            state_->resident.emplace(key, LoadOneTile(device, world, dir));
+            state_->resident.emplace(
+                key, LoadOneTile(device, world, dir, *state_));
         } catch (const std::exception& error) {
             state_->missing.insert(key);
             if (logger_) {

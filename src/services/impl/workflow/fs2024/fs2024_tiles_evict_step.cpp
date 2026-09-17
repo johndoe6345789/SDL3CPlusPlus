@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/fs2024/fs2024_tiles_evict_step.hpp"
 
+#include "services/interfaces/workflow/fs2024/fs2024_landmark_load.hpp"
 #include "services/interfaces/workflow/fs2024/fs2024_terrain_upload.hpp"
 
 #include <utility>
@@ -74,6 +75,10 @@ void WorkflowFs2024TilesFreeStep::Execute(const WorkflowStepDefinition&,
     state_->pendingLoad.clear();
     state_->pendingEvict.clear();
     state_->missing.clear();
+    for (auto& [model, kit] : state_->landmarkKits) {
+        ReleaseFs2024LandmarkKitGpu(device, kit);
+    }
+    state_->landmarkKits.clear();
     if (logger_) {
         logger_->Info("fs2024.tiles.free: released " +
                       std::to_string(count) + " tiles");

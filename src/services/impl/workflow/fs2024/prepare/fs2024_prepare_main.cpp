@@ -8,6 +8,10 @@
 #include "services/interfaces/workflow/fs2024/prepare/fs2024_dem_tile.hpp"
 #include "services/interfaces/workflow/fs2024/prepare/fs2024_grid_layout.hpp"
 #include "services/interfaces/workflow/fs2024/prepare/fs2024_ground_cover.hpp"
+#include "services/interfaces/workflow/fs2024/prepare/fs2024_landmark_catalog.hpp"
+#include "services/interfaces/workflow/fs2024/prepare/fs2024_landmark_extract.hpp"
+#include "services/interfaces/workflow/fs2024/prepare/fs2024_landmark_placement.hpp"
+#include "services/interfaces/workflow/fs2024/prepare/fs2024_landmark_tile_write.hpp"
 #include "services/interfaces/workflow/fs2024/prepare/fs2024_local_frame.hpp"
 #include "services/interfaces/workflow/fs2024/prepare/fs2024_nearest_road.hpp"
 #include "services/interfaces/workflow/fs2024/prepare/fs2024_osm_json.hpp"
@@ -34,6 +38,7 @@ struct Setup {
     LocalFrame frame;
     std::vector<Shape> shapes;
     std::vector<BuildingFootprint> buildings;
+    std::vector<OsmWay> rawBuildings;  ///< kept for landmark name-matching
     std::optional<RunwayInfo> runway;
     std::optional<float> flattenTarget;  ///< absolute altitude; road mode
                                         ///< fills this in once sampled
@@ -85,6 +90,7 @@ Setup SetupRoad(const PrepareArgs& args) {
     Setup setup{LocalFrame(nearest->lon, nearest->lat, 0.f)};
     setup.shapes = RoadShapes(osm.roads, setup.frame);
     setup.buildings = ConvertBuildings(osm.buildings, setup.frame);
+    setup.rawBuildings = osm.buildings;
     setup.spawnHeading = nearest->headingDegrees;
     setup.spawnLabel = nearest->road->name.empty() ? nearest->road->type
                                                    : nearest->road->name;
@@ -177,6 +183,23 @@ int main(int argc, char** argv) {
             args.out, engineHeights, grid.cells, args.spacing, grid.originX,
             grid.originZ, grid.tileSize, cellsPerTile, image, setup.buildings,
             setup.runway);
+
+        const auto catalog = ReadLandmarkCatalog(args.landmarkCatalog);
+        if (!catalog.empty()) {
+            const auto instances =
+                MatchLandmarks(setup.rawBuildings, catalog, setup.frame);
+            for (const LandmarkCatalogEntry& entry : catalog) {
+                const bool matched =
+                    std::any_of(instances.begin(), instances.end(),
+                               [&](const LandmarkInstance& instance) {
+                                   return instance.model == entry.model;
+                               });
+                if (matched) ExtractLandmarkKit(entry, args.out);
+            }
+            WriteLandmarkInstances(args.out, instances, grid.tileSize);
+            std::printf("%zu of %zu landmarks matched\n", instances.size(),
+                       catalog.size());
+        }
 
         const int atZero =
             static_cast<int>(std::lround(-grid.originX / args.spacing));

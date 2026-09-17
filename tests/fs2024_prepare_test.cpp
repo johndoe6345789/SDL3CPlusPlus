@@ -4,6 +4,9 @@
 // triangulation/extrusion.
 
 #include "services/interfaces/workflow/fs2024/prepare/fs2024_grid_layout.hpp"
+#include "services/interfaces/workflow/fs2024/prepare/fs2024_landmark_catalog.hpp"
+#include "services/interfaces/workflow/fs2024/prepare/fs2024_landmark_placement.hpp"
+#include "services/interfaces/workflow/fs2024/prepare/fs2024_local_frame.hpp"
 #include "services/interfaces/workflow/fs2024/prepare/fs2024_prepare_args.hpp"
 #include "services/interfaces/workflow/fs2024/fs2024_building_mesh.hpp"
 #include "services/interfaces/workflow/fs2024/fs2024_polygon.hpp"
@@ -12,6 +15,8 @@
 
 #include <cmath>
 #include <cstring>
+#include <filesystem>
+#include <fstream>
 #include <vector>
 
 namespace tools = sdl3cpp::tools::fs2024;
@@ -136,4 +141,75 @@ TEST(Fs2024BuildingMesh, NoHeightOrTooFewPointsProducesNothing) {
     impl::AppendBuildingMesh({{0.f, 0.f}, {1.f, 0.f}}, 9.f, vertices,
                             indices);
     EXPECT_TRUE(vertices.empty());
+}
+
+namespace {
+
+std::filesystem::path WriteTempFile(const std::string& name,
+                                    const std::string& contents) {
+    const auto path = std::filesystem::temp_directory_path() / name;
+    std::ofstream(path) << contents;
+    return path;
+}
+
+}  // namespace
+
+TEST(Fs2024LandmarkCatalog, MissingPathIsEmptyNotAnError) {
+    EXPECT_TRUE(tools::ReadLandmarkCatalog("").empty());
+    EXPECT_TRUE(
+        tools::ReadLandmarkCatalog("no_such_file_at_all.json").empty());
+}
+
+TEST(Fs2024LandmarkCatalog, ParsesAllFieldsOfEachEntry) {
+    const auto path = WriteTempFile(
+        "fs2024_landmark_catalog_test.json",
+        R"({"landmarks": [{"match": "Elizabeth Tower", )"
+        R"("bgl": "poi.bgl", "texturesDir": "tex", )"
+        R"("model": "WestminsterPalace", "headingDegrees": 12.5}]})");
+    const auto entries = tools::ReadLandmarkCatalog(path.string());
+    ASSERT_EQ(entries.size(), 1u);
+    EXPECT_EQ(entries[0].match, "Elizabeth Tower");
+    EXPECT_EQ(entries[0].bglPath, "poi.bgl");
+    EXPECT_EQ(entries[0].texturesDir, "tex");
+    EXPECT_EQ(entries[0].model, "WestminsterPalace");
+    EXPECT_FLOAT_EQ(entries[0].headingDegrees, 12.5f);
+    std::filesystem::remove(path);
+}
+
+TEST(Fs2024LandmarkCatalog, EntryMissingMatchOrModelIsSkipped) {
+    const auto path = WriteTempFile(
+        "fs2024_landmark_catalog_test_skip.json",
+        R"({"landmarks": [{"bgl": "poi.bgl", "model": "X"}, )"
+        R"({"match": "Y", "bgl": "poi.bgl"}]})");
+    EXPECT_TRUE(tools::ReadLandmarkCatalog(path.string()).empty());
+    std::filesystem::remove(path);
+}
+
+TEST(Fs2024LandmarkPlacement, MatchesCaseInsensitiveSubstringAndCentres) {
+    // A frame centred exactly on the square's own centroid: the match
+    // should land back on (0, 0) in engine space.
+    const tools::LocalFrame frame(-0.1246, 51.5007, 0.f);
+    const tools::OsmWay tower{
+        "Elizabeth Tower", "yes", 0.f,
+        {{-0.1247, 51.5006}, {-0.1245, 51.5006}, {-0.1245, 51.5008},
+        {-0.1247, 51.5008}}};
+    const std::vector<tools::LandmarkCatalogEntry> catalog{
+        {"elizabeth tower", "poi.bgl", "tex", "WestminsterPalace", 45.f}};
+
+    const auto instances = tools::MatchLandmarks({tower}, catalog, frame);
+    ASSERT_EQ(instances.size(), 1u);
+    EXPECT_EQ(instances[0].model, "WestminsterPalace");
+    EXPECT_FLOAT_EQ(instances[0].headingDegrees, 45.f);
+    EXPECT_NEAR(instances[0].x, 0.f, 1.f);
+    EXPECT_NEAR(instances[0].z, 0.f, 1.f);
+}
+
+TEST(Fs2024LandmarkPlacement, NoMatchingNameProducesNoInstance) {
+    const tools::LocalFrame frame(0.0, 0.0, 0.f);
+    const tools::OsmWay other{
+        "Some Other Building", "yes", 0.f,
+        {{0.0, 0.0}, {0.001, 0.0}, {0.001, 0.001}}};
+    const std::vector<tools::LandmarkCatalogEntry> catalog{
+        {"elizabeth tower", "poi.bgl", "tex", "WestminsterPalace", 0.f}};
+    EXPECT_TRUE(tools::MatchLandmarks({other}, catalog, frame).empty());
 }

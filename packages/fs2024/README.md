@@ -3,8 +3,9 @@
 Walk a real place with Quake 3's player kinematics, its ground and
 buildings streamed in around you as you move. Defaults to a road at
 Westminster, London (Bridge Street, by Big Ben); an airport such as
-Innsbruck (LOWI) works too. There are no aircraft, and buildings are
-flat-shaded massing, not textured models.
+Innsbruck (LOWI) works too. There are no aircraft; most buildings are
+flat-shaded massing, not textured models -- a handful of named
+landmarks (see `--landmark-catalog` below) are real, textured meshes.
 
 ## What FS2024 does and does not give you
 
@@ -15,8 +16,10 @@ What is on disk, and what this package uses:
 | File | What it is | Used |
 |---|---|---|
 | `scenery/**/<icao>.bgl` | classic BGL: the airport record `0x113`, runways `0xCE`, aprons `0xD0` | yes, for an airport: position, elevation, runway, aprons |
-| `*.gltf.fsc`, `*.bin.fsc` | zlib-compressed glTF, with `EXT_meshopt_compression` and `ASOBO_*` extensions | not yet (real building models) |
-| `*.ktx2` | plain KTX2, BC-compressed, no supercompression | not yet (real building models) |
+| `scenery/**/*.bgl` `ModelData` (`0x2B`) section | a GUID-keyed directory of `RIFF ... GLTF` blobs, each a named model's `GXML` (name, LOD list) plus one standard binary glTF per LOD | yes, for a landmark named in `--landmark-catalog` (`fs-base/scenery/Global/Asobo_POI/Asobo_POI.BGL` holds hundreds, worldwide) |
+| `*.dds` (referenced by a model's own glTF via `MSFT_texture_dds`) | classic DDS, BC1/BC3 seen so far (BC5 normal maps are not decoded -- this engine's fs2024 shader has no normal mapping) | yes, for a landmark's own textures |
+| `*.gltf.fsc`, `*.bin.fsc` | zlib-compressed glTF, with `EXT_meshopt_compression` and `ASOBO_*` extensions | not found in this install; may not exist in this game version |
+| `*.ktx2` | plain KTX2, BC-compressed, no supercompression | not found in this install |
 | `*.ktx2p` | "KTX2PACKED" | no; not decoded |
 | `*.fsarchive` | about half say `"scheme":"notEncrypted"`; the rest are encrypted | no |
 | `cgl/**/sai*.cgl` | airport-local data, format unknown | no |
@@ -203,17 +206,86 @@ glslc -fshader-stage=frag shaders/spirv/fs2024_terrain.frag.glsl -o shaders/spir
 glslc -fshader-stage=vert shaders/spirv/fs2024_terrain.vert.glsl -o shaders/spirv/fs2024_terrain.vert.spv
 ```
 
+## Real landmarks: `--landmark-catalog`
+
+A handful of real-world landmarks -- Big Ben, Tower Bridge, and
+hundreds more -- turn out to already be ordinary meshes and textures
+in FS2024's own data, not the `.fsc`/meshopt/ktx2 format earlier notes
+here expected: `fs-base/scenery/Global/Asobo_POI/Asobo_POI.BGL` is a
+classic BGL `ModelData` (`0x2B`) section -- the same section type as
+`asobo-modellib-buildings`' generic prop kit -- holding hundreds of
+named, RIFF-wrapped, standard binary glTF models with plain DXT1/DXT5
+(BC1/BC3) textures. `fs2024_prepare` can substitute one of these for
+an OSM building's flat massing:
+
+```bash
+fs2024_prepare ... --landmark-catalog D:/fs2024/landmark_catalog.json
+```
+
+```json
+{
+  "landmarks": [
+    { "match": "Elizabeth Tower",
+      "bgl": "<FS2024 install>/fs-base/scenery/Global/Asobo_POI/Asobo_POI.BGL",
+      "texturesDir": "<FS2024 install>/fs-base/scenery/Global/Asobo_POI/TEXTURE",
+      "model": "WestminsterPalace",
+      "headingDegrees": 0.0 }
+  ]
+}
+```
+
+Two real gotchas in FS2024's own glTF, found only by looking at a
+screenshot of the result -- neither is flagged by any
+`extensionsUsed`/`extensionsRequired` entry, so nothing in the file
+itself says to expect them: NORMAL/TANGENT/TEXCOORD accessors are
+signed-normalised BYTE/SHORT (`max(v / 127.0, -1.0)` etc, exactly
+[`KHR_mesh_quantization`](https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_mesh_quantization/README.md)'s
+formula) without ever declaring `"normalized": true`, which the core
+spec requires for that to be valid glTF; and a mesh's primitives share
+one `"indices"` accessor rather than each having its own, with a
+`StartIndex`/`PrimitiveCount` (index elements/triangles) in each
+primitive's own `extras.ASOBO_primitive` naming its slice. Reading
+that shared accessor whole, as ordinary glTF would, drew every
+primitive with the entire mesh's geometry -- every material
+overlapping the same full shape, one indistinguishable dark mass.
+`fs2024_gltf_model_test`'s `SlicesEachPrimitivesOwnRangeOfASharedIndexAccessor`
+is the regression test.
+
+`match` is a case-insensitive substring of an OSM building's own
+`name` tag; `model` is the name the model's own `GXML` chunk gives it
+(not always the same as the OSM name -- "Elizabeth Tower" is the
+whole `WestminsterPalace` model, since FS2024 modelled the tower and
+the rest of the Palace of Westminster as one landmark). Placement is
+the matched building's OSM centroid; `headingDegrees` is a plain
+manual value; a footprint this irregular has no reliable automatic
+orientation, so, like the runway markings, this is tuned by eye
+in-game rather than computed. The extracted model is real-world
+scale already -- no resizing to fit the OSM footprint.
+
+A matched landmark is extracted once into `<out>/landmarks/<model>.lmk`
+(that LOD's mesh, grouped by material -- FS2024's own node hierarchy,
+translation/rotation/scale and all, composed in at extraction time)
+plus `<out>/landmarks/textures/*.png` (its DDS textures, decoded once),
+and referenced by each tile it falls in via `landmarks.json`. Both are
+shared, global data: baking the same place again, or a second tile
+that happened to reference the same landmark, does not repeat the
+extraction. `fs2024.tiles.load` uploads a referenced model's kit once,
+the first tile that needs it; `fs2024.terrain.draw` draws it through
+the same pipeline as everything else, one draw call per material.
+
 ## Next
 
-1. Real building models. Inflate the `.fsc` files, decode the meshopt
-   buffers (meshoptimizer), and load the `.ktx2` textures, in place of
-   flat-shaded massing. Placements are in the BGL model library
-   (`<icao>_modellib.bgl` for an airport; a worldwide equivalent is
-   not yet identified).
-2. A coarser outer ring of tiles at a lower level of detail, the way
+1. A coarser outer ring of tiles at a lower level of detail, the way
    gta5's LOD bands work, so a baked area does not just stop.
-3. Real imagery or land cover from an open source, in place of the
+2. Real imagery or land cover from an open source, in place of the
    height and slope guess.
-4. More than one road class drawn differently (a residential street
+3. More than one road class drawn differently (a residential street
    need not look like a primary road), and drawing a worldwide tile's
    roads with any sharpness, the way an airport's runway already is.
+4. More than one instance of the same landmark model: right now a
+   model's extracted kit bakes in whichever instance's placement
+   loads it first, since placement is applied to the mesh once at
+   load time rather than through a per-instance model matrix (this
+   engine's fs2024 shader takes none -- ground and OSM buildings are
+   baked in world space too). Fine while every catalog only ever
+   places each landmark once.

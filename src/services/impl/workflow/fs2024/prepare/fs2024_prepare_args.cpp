@@ -8,7 +8,8 @@ namespace {
 const char* kUsage =
     "usage: fs2024_prepare --out DIR --dem FILE.tif "
     "(--icao ICAO [--bgl FILE.bgl] | --lat N --lon N --osm-json FILE.json) "
-    "[--tile-size M] [--extent M] [--spacing M] [--texture-per-tile PX]";
+    "[--tile-size M] [--extent M] [--spacing M] [--texture-per-tile PX] "
+    "[--landmark-catalog FILE.json]";
 
 std::string Next(int argc, char** argv, int& i) {
     if (i + 1 >= argc) throw std::runtime_error(kUsage);
@@ -38,6 +39,8 @@ PrepareArgs ParsePrepareArgs(int argc, char** argv) {
             args.spacing = std::stof(Next(argc, argv, i));
         else if (flag == "--texture-per-tile")
             args.texturePerTile = std::stoi(Next(argc, argv, i));
+        else if (flag == "--landmark-catalog")
+            args.landmarkCatalog = Next(argc, argv, i);
         else throw std::runtime_error(kUsage);
     }
     if (args.dem.empty() || args.out.empty()) throw std::runtime_error(kUsage);

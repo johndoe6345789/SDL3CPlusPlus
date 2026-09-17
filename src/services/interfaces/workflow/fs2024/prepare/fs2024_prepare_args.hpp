@@ -16,6 +16,7 @@ struct PrepareArgs {
     float extent = 4000.f;
     float spacing = 16.f;
     int texturePerTile = 512;
+    std::string landmarkCatalog;  ///< optional; see fs2024_landmark_catalog.hpp
 };
 
 /// Parses argv into `PrepareArgs`. Throws std::runtime_error (with a
