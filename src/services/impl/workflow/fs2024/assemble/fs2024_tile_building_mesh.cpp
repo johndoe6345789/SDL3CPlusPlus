@@ -21,6 +21,26 @@ void Raise(std::vector<BspRenderVertex>& vertices, std::size_t from,
     for (std::size_t i = from; i < vertices.size(); ++i) vertices[i].y += by;
 }
 
+/// The roof's own colour rides in the (otherwise unused) lightmap uv:
+/// 15 bits of 5-bit channels in lm_u -- exact in a float -- and 1 in
+/// lm_v to say there is one. fs2024_terrain.frag unpacks it.
+/// A flat roof no data set coloured is bitumen grey, not the pitched
+/// roof's clay tile (a stand-in: FS2024 itself does not say).
+void Tint(std::vector<BspRenderVertex>& vertices, std::size_t from,
+          const Fs2024BuildingPlan& plan) {
+    const bool flat = plan.roof == RoofShape::Flat;
+    if (!plan.hasRoofColour && !flat) return;
+    const int grey = 12;
+    const float packed = static_cast<float>(
+        plan.hasRoofColour
+            ? plan.roofRed | plan.roofGreen << 5 | plan.roofBlue << 10
+            : grey | grey << 5 | grey << 10);
+    for (std::size_t i = from; i < vertices.size(); ++i) {
+        vertices[i].lm_u = packed;
+        vertices[i].lm_v = 1.f;
+    }
+}
+
 }  // namespace
 
 Fs2024BuildingMeshCpu MeshFs2024TileBuildings(
@@ -37,6 +57,7 @@ Fs2024BuildingMeshCpu MeshFs2024TileBuildings(
         const float ground = GroundUnder(plan.footprint, field);
         Raise(mesh.wallVertices, walls, ground);
         Raise(mesh.roofVertices, roofs, ground);
+        Tint(mesh.roofVertices, roofs, plan);
     }
     return mesh;
 }

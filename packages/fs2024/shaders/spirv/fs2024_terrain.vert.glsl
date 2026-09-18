@@ -26,6 +26,7 @@ layout(location = 0) out vec2 v_uv;
 layout(location = 1) out vec3 v_normal;
 layout(location = 2) out vec3 v_worldPos;
 layout(location = 3) out vec3 v_cameraPos;
+layout(location = 4) out vec2 v_tint;  // a roof's packed colour, see frag
 
 void main() {
     vec3 world = (u_model * vec4(a_position, 1.0)).xyz + u_originOffset.xyz;
@@ -34,4 +35,5 @@ void main() {
     v_normal = mat3(u_model) * a_normal;
     v_worldPos = world;
     v_cameraPos = u_cameraPos.xyz;
+    v_tint = a_lmuv;
 }

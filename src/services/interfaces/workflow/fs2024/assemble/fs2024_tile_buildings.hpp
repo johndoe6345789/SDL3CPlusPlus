@@ -15,15 +15,20 @@ struct Fs2024BuildingPlan {
     RoofShape roof = RoofShape::Flat;
     float roofRise = 0.f;
     bool roofSurveyed = false;      ///< a data set said what the roof is
+    /// The roof's colour as FS2024 sampled it from imagery (bldn), 0..31
+    /// a channel; hasRoofColour false when no data set has one.
+    std::uint8_t roofRed = 0, roofGreen = 0, roofBlue = 0;
+    bool hasRoofColour = false;
 };
 
 /// Every building FS2024 stores for one level-14 tile, from its own two
 /// data sets as ReadTile returns them (surveyed `bldo` first, then the
 /// imagery-derived `bldn`). The surveyed set wins on outline and
 /// storeys; where the imagery set has the same building (within a few
-/// metres) and the surveyed one never recorded a roof, it lends its
-/// roof. Only buildings whose centre is inside this tile are kept, so
-/// one straddling an edge is raised once, not by both neighbours.
+/// metres) it lends the roof's colour, and its shape when the surveyed
+/// one never recorded a roof. Only buildings whose centre is inside
+/// this tile are kept, so one straddling an edge is raised once, not by
+/// both neighbours.
 std::vector<Fs2024BuildingPlan> PlanFs2024TileBuildings(
     const std::vector<sdl3cpp::fs2024::BldTile>& tiles, float tileSize);
 

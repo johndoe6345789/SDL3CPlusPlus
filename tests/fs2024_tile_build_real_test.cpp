@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <filesystem>
+#include <set>
 
 namespace impl = sdl3cpp::services::impl;
 
@@ -65,3 +66,22 @@ TEST(Fs2024TileBuildReal, WestminsterBuildingsStandOnTheGround) {
     }
 }
 
+
+TEST(Fs2024TileBuildReal, RoofsKeepTheColoursFs2024SampledFromImagery) {
+    if (!std::filesystem::exists(kCglRoot)) GTEST_SKIP() << "no FS2024";
+    sdl3cpp::fs2024::BldLibrary library(kCglRoot);
+    const auto plans = impl::PlanFs2024TileBuildings(
+        library.ReadTile(Westminster()), 1522.6f);
+    std::size_t coloured = 0;
+    std::set<int> colours;
+    for (const auto& plan : plans) {
+        if (!plan.hasRoofColour) continue;
+        ++coloured;
+        colours.insert(plan.roofRed | plan.roofGreen << 5 |
+                       plan.roofBlue << 10);
+    }
+    // Imagery lends a colour wherever it saw the same building: 36% of
+    // Westminster's.
+    EXPECT_GT(coloured * 4, plans.size());
+    EXPECT_GT(colours.size(), 50u);         // and they are not all alike
+}

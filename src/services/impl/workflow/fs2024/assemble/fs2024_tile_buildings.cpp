@@ -11,6 +11,15 @@ constexpr float kGridPerTile = 16384.f;
 constexpr float kMetresPerLevel = 3.f;
 constexpr std::uint8_t kDefaultLevels = 2;
 
+void LendColour(const sdl3cpp::fs2024::BldBuilding& source,
+                Fs2024BuildingPlan& plan) {
+    if (plan.hasRoofColour || !source.hasRoofColour) return;
+    plan.roofRed = source.red;
+    plan.roofGreen = source.green;
+    plan.roofBlue = source.blue;
+    plan.hasRoofColour = true;
+}
+
 Fs2024BuildingPlan Plan(const sdl3cpp::fs2024::BldBuilding& source,
                         std::vector<Point2> ring) {
     Fs2024BuildingPlan plan;
@@ -21,6 +30,7 @@ Fs2024BuildingPlan Plan(const sdl3cpp::fs2024::BldBuilding& source,
     plan.roofSurveyed = source.hasRoofType;
     plan.roofRise = sdl3cpp::fs2024::BldRoofRise(
         plan.roof, ComputeOrientedBox(plan.footprint).halfWidth);
+    LendColour(source, plan);
     return plan;
 }
 
@@ -49,8 +59,12 @@ std::vector<Fs2024BuildingPlan> PlanFs2024TileBuildings(
                 set == 0 ? nullptr : Fs2024PlanStandingAt(plans, centre);
             if (!already) {
                 plans.push_back(Plan(source, std::move(ring)));
-            } else if (!already->roofSurveyed && source.hasRoofType) {
-                const Fs2024BuildingPlan lent = Plan(source, already->footprint);
+                continue;
+            }
+            LendColour(source, *already);
+            if (!already->roofSurveyed && source.hasRoofType) {
+                const Fs2024BuildingPlan lent =
+                    Plan(source, already->footprint);
                 already->roof = lent.roof;
                 already->roofRise = lent.roofRise;
                 already->roofSurveyed = true;

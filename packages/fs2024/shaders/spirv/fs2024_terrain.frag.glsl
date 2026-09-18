@@ -1,4 +1,5 @@
 #version 450
+#extension GL_GOOGLE_include_directive : require
 
 // FS2024 ground shading: the baked ground map, lit by one sun and a sky
 // term, with ground-level detail, the runway's markings and distance fog.
@@ -24,8 +25,10 @@ layout(location = 0) in vec2 v_uv;
 layout(location = 1) in vec3 v_normal;
 layout(location = 2) in vec3 v_worldPos;
 layout(location = 3) in vec3 v_cameraPos;
+layout(location = 4) in vec2 v_tint;  // x: 5-bit rgb packed, y: 1 = tinted
 layout(location = 0) out vec4 o_color;
 
+#include "include/fs2024_roof_tint.glsl"
 #include "include/fs2024_runway.glsl"
 
 // Hoskins' hash without sine: sin() loses precision at world-scale
@@ -60,6 +63,8 @@ void main() {
     float grain = valueNoise(v_worldPos.xz * 6.0);
     runway *= mix(1.0, 0.88 + 0.24 * grain, nearby);
     albedo = mix(albedo, runway, inside);
+
+    albedo = roofColour(albedo, v_tint);
 
     vec3 n = normalize(v_normal);
     float sun = max(dot(n, -normalize(u_sunDir.xyz)), 0.0);
