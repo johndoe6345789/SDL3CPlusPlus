@@ -10,18 +10,18 @@
       }
     },
     {
+      "id": "world_rebase",
+      "plugin": "fs2024.world.rebase",
+      "comment": "Before physics, so this frame's movement, camera and streaming all run in the re-based space.",
+      "parameters": {
+        "radius_metres": 40000.0
+      }
+    },
+    {
       "id": "physics_group",
       "plugin": "workflow.include",
       "parameters": {
         "path": "packages/fs2024/workflows/fs2024_physics.json"
-      }
-    },
-    {
-      "id": "world_rebase",
-      "plugin": "fs2024.world.rebase",
-      "comment": "Re-centres engine space on the player past 40 km, so a flight of any length keeps FS2024's own scale and full float precision; resident tiles are rebuilt in the new space.",
-      "parameters": {
-        "radius_metres": 40000.0
       }
     },
     {

@@ -6,11 +6,12 @@ namespace {
 /// The kit's bounds, placed and moved with its tile.
 bool Visible(const Fs2024Frustum& frustum, const Fs2024LandmarkKitGpu& kit,
              const glm::mat4& model, const glm::vec3& offset) {
+    const Fs2024LandmarkBounds& box = kit.bounds;
     glm::vec3 lo(1e30f), hi(-1e30f);
     for (int corner = 0; corner < 8; ++corner) {
-        const glm::vec3 local((corner & 1) ? kit.max.x : kit.min.x,
-                              (corner & 2) ? kit.max.y : kit.min.y,
-                              (corner & 4) ? kit.max.z : kit.min.z);
+        const glm::vec3 local((corner & 1) ? box.max.x : box.min.x,
+                              (corner & 2) ? box.max.y : box.min.y,
+                              (corner & 4) ? box.max.z : box.min.z);
         const glm::vec3 placed(model * glm::vec4(local, 1.f));
         lo = glm::min(lo, placed);
         hi = glm::max(hi, placed);

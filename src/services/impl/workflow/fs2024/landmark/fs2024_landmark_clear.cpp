@@ -1,6 +1,6 @@
 #include "services/interfaces/workflow/fs2024/landmark/fs2024_landmark_clear.hpp"
 
-#include "services/interfaces/workflow/fs2024/build/fs2024_building_spot.hpp"
+#include "services/interfaces/workflow/fs2024/assemble/fs2024_building_spot.hpp"
 
 #include <algorithm>
 
@@ -9,12 +9,12 @@ namespace {
 
 constexpr float kClearsBelowMetres = 6.f;
 
-bool Under(const Fs2024LandmarkInstance& instance,
-           const Fs2024LandmarkKitGpu& kit, const Point2& centre) {
-    const glm::vec4 local = glm::inverse(instance.model) *
-                            glm::vec4(centre.x, 0.f, centre.y, 1.f);
-    return local.x >= kit.min.x && local.x <= kit.max.x &&
-           local.z >= kit.min.z && local.z <= kit.max.z;
+bool Under(const glm::mat4& inverse, const Fs2024LandmarkBounds& bounds,
+           const Point2& centre) {
+    const glm::vec4 local =
+        inverse * glm::vec4(centre.x, 0.f, centre.y, 1.f);
+    return local.x >= bounds.min.x && local.x <= bounds.max.x &&
+           local.z >= bounds.min.z && local.z <= bounds.max.z;
 }
 
 }  // namespace
@@ -22,19 +22,18 @@ bool Under(const Fs2024LandmarkInstance& instance,
 void DropFs2024BuildingsUnderLandmarks(
     std::vector<Fs2024BuildingPlan>& plans,
     const std::vector<Fs2024LandmarkInstance>& instances,
-    const Fs2024LandmarkKits& kits) {
+    const Fs2024LandmarkBoundsMap& bounds) {
     for (const Fs2024LandmarkInstance& instance : instances) {
-        const auto kit = kits.find(instance.entry.name);
-        if (kit == kits.end()) continue;
-        if (kit->second.max.y - kit->second.min.y < kClearsBelowMetres) {
-            continue;
-        }
+        const auto found = bounds.find(instance.entry.name);
+        if (found == bounds.end()) continue;
+        const Fs2024LandmarkBounds& box = found->second;
+        if (box.max.y - box.min.y < kClearsBelowMetres) continue;
+        const glm::mat4 inverse = glm::inverse(instance.model);
         plans.erase(std::remove_if(plans.begin(), plans.end(),
                                    [&](const Fs2024BuildingPlan& plan) {
-                                       return Under(
-                                           instance, kit->second,
-                                           Fs2024FootprintCentre(
-                                               plan.footprint));
+                                       return Under(inverse, box,
+                                                    Fs2024FootprintCentre(
+                                                        plan.footprint));
                                    }),
                     plans.end());
     }

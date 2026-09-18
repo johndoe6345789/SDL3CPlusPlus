@@ -6,6 +6,7 @@
 #include <cstring>
 #include <fstream>
 #include <stdexcept>
+#include <string>
 
 namespace sdl3cpp::fs2024 {
 namespace {
@@ -56,15 +57,6 @@ const CglTileEntry* FindCglTile(const CglContainer& container,
         container.tiles.begin(), container.tiles.end(), key,
         [](const CglTileEntry& tile, std::uint32_t k) { return tile.key < k; });
     return it != container.tiles.end() && it->key == key ? &*it : nullptr;
-}
-
-std::vector<std::uint8_t> ReadCglTile(const CglContainer& container,
-                                      const CglTileEntry& tile) {
-    std::ifstream in(container.path, std::ios::binary);
-    auto packed = ReadBytes(in, tile.offset, tile.compressedSize);
-    if (tile.compressedSize == tile.uncompressedSize) return packed;
-    return DecodeLzmaRaw(packed.data(), packed.size(), container.dataProps,
-                         tile.uncompressedSize);
 }
 
 }  // namespace sdl3cpp::fs2024

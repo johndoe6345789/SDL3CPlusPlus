@@ -26,21 +26,16 @@ std::uint32_t KeyBelowContainer(const std::string& quadKey) {
 BldLibrary::BldLibrary(std::string cglRoot) : cglRoot_(std::move(cglRoot)) {}
 BldLibrary::~BldLibrary() = default;
 
-const CglContainer* BldLibrary::Container(const std::string& baseKey,
-                                         const std::string& kind) {
-    const std::string cacheKey = kind + baseKey;
-    const auto found = containers_.find(cacheKey);
-    if (found != containers_.end()) return found->second.get();
-
+std::shared_ptr<const CglContainer> BldLibrary::Container(
+    const std::string& baseKey, const std::string& kind) {
     const std::string path = cglRoot_ + "/CGL/" + baseKey.substr(0, 3) + "/" +
                             kind + baseKey.substr(3, 3) + ".cgl";
-    std::unique_ptr<CglContainer> container;
-    if (std::filesystem::exists(path)) {
-        container = std::make_unique<CglContainer>(ReadCglContainer(path));
-    }
-    const CglContainer* raw = container.get();
-    containers_.emplace(cacheKey, std::move(container));
-    return raw;
+    return containers_.Get(kind + baseKey, [&] {
+        return std::filesystem::exists(path)
+                   ? std::make_shared<const CglContainer>(
+                         ReadCglContainer(path))
+                   : nullptr;
+    });
 }
 
 std::vector<BldTile> BldLibrary::ReadTile(const QuadTile& tile) {
@@ -50,7 +45,7 @@ std::vector<BldTile> BldLibrary::ReadTile(const QuadTile& tile) {
 
     std::vector<BldTile> decoded;
     for (const char* kind : {"bldo", "bldn"}) {
-        const CglContainer* container = Container(baseKey, kind);
+        const auto container = Container(baseKey, kind);
         if (!container) continue;
         const CglTileEntry* entry =
             FindCglTile(*container, KeyBelowContainer(quadKey));

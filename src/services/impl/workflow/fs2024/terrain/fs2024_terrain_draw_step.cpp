@@ -4,6 +4,7 @@
 #include "services/interfaces/workflow/fs2024/fs2024_step_params.hpp"
 #include "services/interfaces/workflow/fs2024/terrain/fs2024_draw_landmarks.hpp"
 #include "services/interfaces/workflow/fs2024/terrain/fs2024_draw_tile.hpp"
+#include "services/interfaces/workflow/fs2024/tiles/fs2024_drawn_tiles.hpp"
 
 #include <string>
 #include <utility>
@@ -59,21 +60,21 @@ void WorkflowFs2024TerrainDrawStep::Execute(
             kClassMapSize);
     SDL_PushGPUFragmentUniformData(cmd, 0, &groundUniforms,
                                    sizeof(groundUniforms));
-    for (const auto& [key, tile] : state_->resident) {
+    ForEachDrawnFs2024Tile(*state_, [&](const Fs2024LoadedTile& tile) {
         DrawFs2024TileGround(pass, cmd, tile, *state_->world, vertex, frustum);
-    }
+    });
 
     SDL_BindGPUGraphicsPipeline(pass, terrain);
     const auto wall = Fs2024ContextTexture(
         context, Fs2024StringOr(step, "building_texture", "fs2024_building"));
     const auto roof = Fs2024ContextTexture(
         context, Fs2024StringOr(step, "roof_texture", "fs2024_roof"));
-    for (const auto& [key, tile] : state_->resident) {
+    ForEachDrawnFs2024Tile(*state_, [&](const Fs2024LoadedTile& tile) {
         DrawFs2024TileBuildings(pass, cmd, tile, vertex, lighting, frustum,
                                 wall, roof);
         DrawFs2024TileLandmarks(pass, cmd, tile, state_->landmarkKits, vertex,
                                 lighting, frustum, wall);
-    }
+    });
 }
 
 }  // namespace sdl3cpp::services::impl

@@ -4,6 +4,7 @@
 #include "services/interfaces/workflow/fs2024/landmark/fs2024_landmark_kit_gpu.hpp"
 #include "services/interfaces/workflow/fs2024/terrain/fs2024_terrain_state.hpp"
 #include "services/interfaces/workflow/fs2024/tiles/fs2024_tile_key.hpp"
+#include "services/interfaces/workflow/fs2024/tiles/fs2024_tile_lod.hpp"
 
 #include <glm/glm.hpp>
 
@@ -16,46 +17,47 @@
 namespace sdl3cpp::services::impl {
 
 struct Fs2024World;
+class Fs2024LoadPool;
 
-/// One resident tile, built from FS2024's own data for one level-14
-/// quad tile. Its meshes are in the tile's own local space (origin at
-/// its north-west corner) and drawn at `offset`, so a long flight never
-/// loses float precision; its heightfield's origin is set to `offset`,
-/// so collision and ground lookups work in engine space as before.
+/// One resident tile, built from FS2024's own data for one quad tile at
+/// any streamed level. Its meshes are in the tile's own local space
+/// (origin at its north-west corner) and drawn at `offset`, so a long
+/// flight never loses float precision; its heightfield's origin is set
+/// to `offset`, so collision and ground lookups work in engine space.
 struct Fs2024LoadedTile {
     Fs2024TerrainState terrain;
     glm::vec3 offset{0.f};  ///< engine position of the tile's local origin
     /// The tile's land classes, one texel per ~24 m (R8, nearest).
     SDL_GPUTexture* classMap = nullptr;
     SDL_GPUSampler* classSampler = nullptr;
-    glm::vec4 runway{0.f};      ///< z <= 0 (half-length) means none
-    glm::vec4 runwayAxis{0.f};
-    /// This tile's buildings, walls and roofs already meshed (same
-    /// vertex format terrain uses, so the same pipeline draws both);
-    /// indexCount 0 means the tile baked none.
+    /// Its buildings' walls and, apart for their own texture, roofs;
+    /// indexCount 0 when it has none.
     Fs2024TerrainChunkGpu buildingChunk;
-    /// The same buildings' roofs, drawn separately with their own real
-    /// roof-tile texture rather than the walls' brick.
     Fs2024TerrainChunkGpu buildingRoofChunk;
     /// The landmarks FS2024 stands in this tile; look up each one's
     /// GPU kit in Fs2024TileStreamState::landmarkKits.
     std::vector<Fs2024LandmarkInstance> landmarks;
 };
 
-/// Everything fs2024.tiles.* shares: which tiles are resident, and the
-/// streaming radii read once from the package's terrain_root config.
+/// Everything fs2024.tiles.* shares: which tiles are resident, which
+/// drawn, which on their way, and how far each detail level reaches.
 struct Fs2024TileStreamState {
-    std::string tilesRoot;
-    float tileSize = 1000.f;
-    int loadRadiusTiles = 2;
-    int evictRadiusTiles = 3;
-    int maxLoadsPerCall = 4;
+    float tileSize = 1000.f;  ///< the finest level's width
+    Fs2024LodConfig lod;
+    float leadSeconds = 1.5f;  ///< stream ahead of the player's travel
+    float finishBudgetMs = 4.f;  ///< main-thread upload time per frame
 
+    /// The detail wanted now: the leaves of the latest LOD cut.
+    std::unordered_set<Fs2024TileKey> wanted;
     std::unordered_map<Fs2024TileKey, Fs2024LoadedTile> resident;
+    /// Resident tiles to draw this frame: never two over one patch.
+    std::unordered_set<Fs2024TileKey> drawn;
     std::vector<Fs2024TileKey> pendingLoad;
     std::vector<Fs2024TileKey> pendingEvict;
-    /// Tiles a load attempt found no files for -- outside the baked
-    /// area. Left unwanted so resolve does not queue them every call.
+    /// Queued on, or being built by, the loader threads.
+    std::unordered_set<Fs2024TileKey> loading;
+    /// Tiles whose build failed. Left unwanted so resolve does not
+    /// queue them every call.
     std::unordered_set<Fs2024TileKey> missing;
     bool configured = false;
 
@@ -70,6 +72,9 @@ struct Fs2024TileStreamState {
     /// deleter is fixed where the world is made, and code that never
     /// opens one never has to link it.
     std::shared_ptr<Fs2024World> world;
+    /// The loader threads, which read `world`: declared after it, so
+    /// they are joined before it goes.
+    std::shared_ptr<Fs2024LoadPool> pool;
 };
 
 }  // namespace sdl3cpp::services::impl

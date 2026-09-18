@@ -3,6 +3,7 @@
 // under them.
 
 #include "services/interfaces/workflow/fs2024/landmark/fs2024_landmark_clear.hpp"
+#include "services/interfaces/workflow/fs2024/landmark/fs2024_tile_landmarks.hpp"
 #include "services/interfaces/workflow/fs2024/world/fs2024_world.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -49,10 +50,10 @@ TEST(Fs2024TileLandmarks, TwoPlacementsOfOneModelStandApart) {
 
     const float size = world.origin.TileSize();
     s::Fs2024TileKey key{quad.x - world.origin.tileX,
-                         quad.y - world.origin.tileY};
-    const glm::vec3 offset(key.x * size, 0.f, key.z * size);
+                         quad.y - world.origin.tileY, 14};
+    const glm::vec3 offset = s::Fs2024TileCorner(key, size);
     const auto instances = s::PlaceFs2024TileLandmarks(
-        world, quad.x, quad.y, offset, FlatGround(size, 12.f));
+        world, key, FlatGround(size, 12.f));
     ASSERT_EQ(instances.size(), 2u);
     EXPECT_EQ(instances[0].entry.name, instances[1].entry.name);
 
@@ -72,17 +73,45 @@ TEST(Fs2024TileLandmarks, TwoPlacementsOfOneModelStandApart) {
                 1.f, 1e-4f);
 }
 
+TEST(Fs2024TileLandmarks, ACoarseTileStandsEveryLandmarkInside) {
+    s::Fs2024World world;
+    world.origin = s::MakeFs2024GeoOrigin(51.5, -0.12);
+    const float size = world.origin.TileSize();
+    // Two spots in two level-14 quads of the origin's own level-11 tile.
+    const glm::vec2 spots[2] = {{1.5f * size, 1.5f * size},
+                                {5.5f * size, 3.5f * size}};
+    std::vector<f::LandmarkPlacement> placements;
+    for (const glm::vec2& spot : spots) {
+        double lat = 0.0, lon = 0.0;
+        s::Fs2024LatLonOfEngine(world.origin, spot.x, spot.y, lat, lon);
+        placements.push_back(At(lat, lon, 0.f));
+    }
+    s::BucketFs2024Landmarks(world, placements);
+    ASSERT_EQ(world.landmarks.size(), 2u);
+
+    const s::Fs2024TileKey key{0, 0, 11};
+    const auto instances = s::PlaceFs2024TileLandmarks(
+        world, key, FlatGround(s::Fs2024TileSpan(11, size), 0.f));
+    ASSERT_EQ(instances.size(), 2u);
+    for (const auto& instance : instances) {
+        const glm::vec3 at(instance.model[3]);
+        const bool first =
+            glm::distance(glm::vec2(at.x, at.z), spots[0]) < 0.1f;
+        const bool second =
+            glm::distance(glm::vec2(at.x, at.z), spots[1]) < 0.1f;
+        EXPECT_TRUE(first || second) << at.x << ", " << at.z;
+    }
+}
+
 TEST(Fs2024TileLandmarks, ClearsBuildingsUnderATallLandmarkOnly) {
     s::Fs2024LandmarkInstance palace, pontoon;
     palace.entry.name = "Palace";
     pontoon.entry.name = "Pontoon";
     palace.model = glm::translate(glm::mat4(1.f), glm::vec3(100, 0, 100));
     pontoon.model = glm::translate(glm::mat4(1.f), glm::vec3(400, 0, 400));
-    s::Fs2024LandmarkKits kits;
-    kits["Palace"].min = glm::vec3(-50, 0, -20);
-    kits["Palace"].max = glm::vec3(50, 90, 20);
-    kits["Pontoon"].min = glm::vec3(-50, 0, -50);
-    kits["Pontoon"].max = glm::vec3(50, 2, 50);
+    s::Fs2024LandmarkBoundsMap kits;
+    kits["Palace"] = {glm::vec3(-50, 0, -20), glm::vec3(50, 90, 20)};
+    kits["Pontoon"] = {glm::vec3(-50, 0, -50), glm::vec3(50, 2, 50)};
 
     std::vector<s::Fs2024BuildingPlan> plans = {
         Square(120, 110), Square(100, 150), Square(400, 400)};

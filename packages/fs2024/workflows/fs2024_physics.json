@@ -58,6 +58,15 @@
       "comment": "Borrowed from gta5: Y toggles free flight, W held ramps up to 250 m/s."
     },
     {
+      "id": "player_cruise",
+      "plugin": "fs2024.player.cruise",
+      "parameters": {
+        "speed": "${env:FS2024_CRUISE_SPEED}",
+        "height": "${env:FS2024_CRUISE_HEIGHT}"
+      },
+      "comment": "Hands-off flight along the spawn heading for recording streaming; off unless FS2024_CRUISE_SPEED is set."
+    },
+    {
       "id": "ground_guard",
       "plugin": "fs2024.player.ground_guard",
       "comment": "After flight too: does nothing for a moment while a tile is still streaming in, and rescues a sunk player once it has."
@@ -86,7 +95,7 @@
         "eye_height": 1.4,
         "fov": 75.0,
         "near": 0.25,
-        "far": 20000.0
+        "far": 40000.0
       }
     }
   ]

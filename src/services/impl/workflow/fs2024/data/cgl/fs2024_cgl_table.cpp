@@ -22,15 +22,17 @@ private:
 };
 
 /// Compressed sizes: < 0x4000 adds, 0x4000..0x7fff subtracts
-/// (0x8000 - v), 0x8000..0xfeff adds (v - 0x8000) * 65536 plus the
-/// next word, and 0xff00.. subtracts whole 65536s the same way.
+/// (0x8000 - v) -- 0x4000 itself is -16384, not +16384: read the other
+/// way it sends every later size in a big file 32 KB too high --
+/// 0x8000..0xfeff adds (v - 0x8000) * 65536 plus the next word, and
+/// 0xff00.. subtracts whole 65536s the same way.
 std::int64_t NextCompressed(WordCursor& cursor, std::int64_t last) {
     const std::int64_t v = cursor.Next();
     if (v >= 0xff00) {
         return last - 0x10000 * (0x10000 - v) + cursor.Next();
     }
     if (v >= 0x8000) return last + 0x10000 * (v - 0x8000) + cursor.Next();
-    if (v > 0x4000) return last - (0x8000 - v);
+    if (v >= 0x4000) return last - (0x8000 - v);
     return last + v;
 }
 

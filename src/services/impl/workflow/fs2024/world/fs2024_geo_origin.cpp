@@ -23,10 +23,13 @@ double LatOfV(double v) {
 }  // namespace
 
 Fs2024GeoOrigin MakeFs2024GeoOrigin(double lat, double lon) {
+    constexpr int kAlign = 1 << (kFs2024TileLevel - kFs2024CoarsestLevel);
     Fs2024GeoOrigin origin;
-    origin.tileX = static_cast<int>(std::floor(MercatorU(lon) * kTiles));
-    origin.tileY = static_cast<int>(std::floor(MercatorV(lat) * kTiles));
-    const double centreLat = LatOfV((origin.tileY + 0.5) / kTiles);
+    origin.tileX = static_cast<int>(std::floor(MercatorU(lon) * kTiles)) &
+                   ~(kAlign - 1);
+    origin.tileY = static_cast<int>(std::floor(MercatorV(lat) * kTiles)) &
+                   ~(kAlign - 1);
+    const double centreLat = LatOfV((origin.tileY + kAlign / 2.0) / kTiles);
     origin.metresPerUnit = kEquatorMetres * std::cos(centreLat * kPi / 180.0);
     return origin;
 }
@@ -55,8 +58,9 @@ void Fs2024LatLonOfEngine(const Fs2024GeoOrigin& origin, float x, float z,
 
 void Fs2024QuadOfKey(const Fs2024GeoOrigin& origin, const Fs2024TileKey& key,
                      int& quadX, int& quadY) {
-    quadX = origin.tileX + key.x;
-    quadY = origin.tileY + key.z;
+    const int shift = kFs2024TileLevel - key.level;
+    quadX = (origin.tileX >> shift) + key.x;
+    quadY = (origin.tileY >> shift) + key.z;
 }
 
 }  // namespace sdl3cpp::services::impl

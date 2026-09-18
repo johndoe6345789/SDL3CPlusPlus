@@ -12,13 +12,15 @@ namespace sdl3cpp::services::impl {
 /**
  * Plugin ID: fs2024.tiles.resolve
  *
- * Reads player position from q3.ps and updates the state's wanted
- * tile lists. Runs after movement in the frame, as gta5.tiles.resolve
- * does, so it centres on the origin this frame produced.
+ * Cuts the world into tiles of the right detail around the camera,
+ * led along the player's travel, and updates what to load, draw and
+ * evict. Runs after movement in the frame, as gta5.tiles.resolve does,
+ * so it centres on the position this frame produced.
  *
- * Parameters: tiles_root (required, once), tile_size, load_radius_tiles,
- *             evict_radius_tiles, max_loads_per_call (all read once).
- * Reads: q3.ps
+ * Parameters (read once): root_radius (coarsest tiles out, default 2),
+ *             split (default 1), lead_seconds (default 1.5),
+ *             finish_budget_ms (main-thread uploads a frame, default 4).
+ * Reads: q3.ps, render.camera_pos
  */
 class WorkflowFs2024TilesResolveStep final : public IWorkflowStep {
 public:

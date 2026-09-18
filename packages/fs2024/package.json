@@ -37,6 +37,22 @@
       "required": false,
       "default": "274",
       "help": "Compass degrees the player faces at spawn."
+    },
+    {
+      "env": "FS2024_CRUISE_SPEED",
+      "label": "Cruise speed",
+      "kind": "text",
+      "required": false,
+      "default": "",
+      "help": "Metres a second. When set, the player flies straight along the spawn heading on its own -- a hands-off route over streaming scenery."
+    },
+    {
+      "env": "FS2024_CRUISE_HEIGHT",
+      "label": "Cruise height",
+      "kind": "text",
+      "required": false,
+      "default": "300",
+      "help": "Metres above the ground the cruise holds."
     }
   ],
   "defaultWorkflow": "workflows/fs2024_game.json",

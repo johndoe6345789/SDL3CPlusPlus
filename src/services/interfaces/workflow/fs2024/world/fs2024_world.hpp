@@ -1,10 +1,11 @@
 #pragma once
 
-#include "services/interfaces/workflow/fs2024/build/fs2024_class_sampler.hpp"
-#include "services/interfaces/workflow/fs2024/build/fs2024_dem_sampler.hpp"
+#include "services/interfaces/workflow/fs2024/assemble/fs2024_class_sampler.hpp"
+#include "services/interfaces/workflow/fs2024/assemble/fs2024_dem_sampler.hpp"
 #include "services/interfaces/workflow/fs2024/data/cgl/fs2024_bld_library.hpp"
 #include "services/interfaces/workflow/fs2024/data/landmark/fs2024_landmark_index.hpp"
 #include "services/interfaces/workflow/fs2024/data/material/fs2024_ground_materials.hpp"
+#include "services/interfaces/workflow/fs2024/landmark/fs2024_landmark_book.hpp"
 #include "services/interfaces/workflow/fs2024/world/fs2024_geo_origin.hpp"
 
 #include <SDL3/SDL_gpu.h>
@@ -62,6 +63,8 @@ struct Fs2024World {
     std::unordered_map<std::uint64_t,
                        std::vector<sdl3cpp::fs2024::LandmarkPlacement>>
         landmarks;
+    /// What the loader threads know of each landmark model.
+    Fs2024LandmarkBook landmarkBook;
 };
 
 /// A level-14 quad tile's key in Fs2024World::landmarks.

@@ -150,3 +150,21 @@ TEST(Fs2024DemReal, MatchesCopernicusTerrain) {
         EXPECT_LT(std::sqrt(sum / n), region.maxRms) << region.name;
     }
 }
+
+TEST(Fs2024DemReal, EveryTileOfLondonsFileDecodes) {
+    // Most of a dem file's tiles record no unpacked size of their own;
+    // they are LZMA-packed all the same, and must not be read as-is.
+    const auto quad = f::TileAtLatLon(51.5, -0.12, 6);
+    const std::string key = f::QuadKeyOf(quad);
+    const std::string path = std::string(kCgl) + key.substr(0, 3) + "/dem" +
+                             key.substr(3, 3) + ".cgl";
+    if (!std::filesystem::exists(path)) GTEST_SKIP() << "no FS2024";
+    const auto cgl = f::ReadCglContainer(path);
+    ASSERT_GT(cgl.tiles.size(), 300u);
+    for (const auto& entry : cgl.tiles) {
+        const auto blob = f::ReadCglTile(cgl, entry);
+        const auto dem = f::DecodeFs2024DemTile(blob);
+        EXPECT_EQ(dem.width, 257) << std::hex << entry.key;
+        EXPECT_EQ(dem.height, 257) << std::hex << entry.key;
+    }
+}

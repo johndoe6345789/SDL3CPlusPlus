@@ -2,6 +2,7 @@
 
 #include "services/interfaces/workflow/fs2024/data/cgl/fs2024_bld_tile.hpp"
 #include "services/interfaces/workflow/fs2024/data/cgl/fs2024_quadkey.hpp"
+#include "services/interfaces/workflow/fs2024/data/fs2024_shared_cache.hpp"
 
 #include <map>
 #include <memory>
@@ -18,6 +19,7 @@ struct CglContainer;
 /// (with storey counts); `bldn` holds the ones derived from imagery
 /// (with a sampled roof colour but no storeys). Containers are opened
 /// once and kept -- a single London file is 130 MB of index and data.
+/// Safe to share between loader threads.
 class BldLibrary {
 public:
     /// `cglRoot` is the folder holding `CGL/` (fs-base-cgl).
@@ -29,11 +31,11 @@ public:
     std::vector<BldTile> ReadTile(const QuadTile& tile);
 
 private:
-    const CglContainer* Container(const std::string& baseKey,
-                                 const std::string& kind);
+    std::shared_ptr<const CglContainer> Container(const std::string& baseKey,
+                                                  const std::string& kind);
 
     std::string cglRoot_;
-    std::map<std::string, std::unique_ptr<CglContainer>> containers_;
+    SharedCache<std::string, CglContainer> containers_;
 };
 
 }  // namespace sdl3cpp::fs2024

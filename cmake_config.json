@@ -100,7 +100,7 @@
         "src/services/impl/workflow/fs2024/building/*.cpp",
         "src/services/impl/workflow/fs2024/landmark/*.cpp",
         "src/services/impl/workflow/fs2024/world/*.cpp",
-        "src/services/impl/workflow/fs2024/build/*.cpp",
+        "src/services/impl/workflow/fs2024/assemble/*.cpp",
         "src/services/impl/workflow/fs2024/player/*.cpp",
         "src/services/impl/workflow/fs2024/data/*.cpp",
         "src/services/impl/workflow/fs2024/data/bgl/*.cpp",
@@ -693,6 +693,11 @@
         "src/services/impl/workflow/fs2024/tiles/fs2024_tile_key.cpp",
         "src/services/impl/workflow/fs2024/tiles/fs2024_tiles_resolve.cpp",
         "src/services/impl/workflow/fs2024/tiles/fs2024_tile_lookup.cpp",
+        "src/services/impl/workflow/fs2024/tiles/fs2024_tile_lod.cpp",
+        "src/services/impl/workflow/fs2024/tiles/fs2024_tile_plan.cpp",
+        "src/services/impl/workflow/fs2024/tiles/fs2024_load_pool.cpp",
+        "src/services/impl/workflow/fs2024/tiles/fs2024_load_pool_queue.cpp",
+        "tests/fs2024_load_pool_test.cpp",
         "src/services/impl/workflow/fs2024/terrain/fs2024_heightfield.cpp"
       ],
       "include_directories": [
@@ -805,7 +810,7 @@
         "src/services/impl/workflow/fs2024/landmark/fs2024_landmark_instances.cpp",
         "src/services/impl/workflow/fs2024/landmark/fs2024_landmark_place.cpp",
         "src/services/impl/workflow/fs2024/world/fs2024_world_landmarks.cpp",
-        "src/services/impl/workflow/fs2024/build/*.cpp",
+        "src/services/impl/workflow/fs2024/assemble/*.cpp",
         "src/services/impl/workflow/fs2024/world/fs2024_geo_origin.cpp",
         "src/services/impl/workflow/fs2024/tiles/fs2024_tile_key.cpp",
         "src/services/impl/workflow/fs2024/terrain/fs2024_heightfield.cpp",
@@ -817,6 +822,7 @@
         "src/services/impl/workflow/fs2024/data/cgl/fs2024_bld_roof.cpp",
         "src/services/impl/workflow/fs2024/data/cgl/fs2024_bld_tile.cpp",
         "src/services/impl/workflow/fs2024/data/cgl/fs2024_cgl_container.cpp",
+        "src/services/impl/workflow/fs2024/data/cgl/fs2024_cgl_tile_read.cpp",
         "src/services/impl/workflow/fs2024/data/cgl/fs2024_cgl_table.cpp",
         "src/services/impl/workflow/fs2024/data/cgl/fs2024_lcg_tile.cpp",
         "src/services/impl/workflow/fs2024/data/cgl/fs2024_lzma_raw.cpp",
@@ -871,6 +877,7 @@
         "tests/fs2024_lcg_real_test.cpp",
         "src/services/impl/workflow/fs2024/data/cgl/fs2024_lcg_tile.cpp",
         "src/services/impl/workflow/fs2024/data/cgl/fs2024_cgl_container.cpp",
+        "src/services/impl/workflow/fs2024/data/cgl/fs2024_cgl_tile_read.cpp",
         "src/services/impl/workflow/fs2024/data/cgl/fs2024_cgl_table.cpp",
         "src/services/impl/workflow/fs2024/data/cgl/fs2024_lzma_raw.cpp"
       ],
@@ -924,6 +931,7 @@
         "tests/fs2024_dem_calibration_test.cpp",
         "src/services/impl/workflow/fs2024/data/dem/*.cpp",
         "src/services/impl/workflow/fs2024/data/cgl/fs2024_cgl_container.cpp",
+        "src/services/impl/workflow/fs2024/data/cgl/fs2024_cgl_tile_read.cpp",
         "src/services/impl/workflow/fs2024/data/cgl/fs2024_cgl_table.cpp",
         "src/services/impl/workflow/fs2024/data/cgl/fs2024_lzma_raw.cpp",
         "src/services/impl/workflow/fs2024/data/cgl/fs2024_quadkey.cpp"
@@ -948,6 +956,7 @@
         "src/services/impl/workflow/fs2024/data/cgl/fs2024_bld_colour.cpp",
         "src/services/impl/workflow/fs2024/data/cgl/fs2024_bld_cursor.cpp",
         "src/services/impl/workflow/fs2024/data/cgl/fs2024_cgl_container.cpp",
+        "src/services/impl/workflow/fs2024/data/cgl/fs2024_cgl_tile_read.cpp",
         "src/services/impl/workflow/fs2024/data/cgl/fs2024_cgl_table.cpp",
         "src/services/impl/workflow/fs2024/data/cgl/fs2024_lzma_raw.cpp",
         "src/services/impl/workflow/fs2024/data/cgl/fs2024_quadkey.cpp"
@@ -965,7 +974,9 @@
       "sources": [
         "tests/fs2024_cgl_table_test.cpp",
         "tests/fs2024_cgl_container_test.cpp",
+        "tests/fs2024_cgl_real_test.cpp",
         "src/services/impl/workflow/fs2024/data/cgl/fs2024_cgl_container.cpp",
+        "src/services/impl/workflow/fs2024/data/cgl/fs2024_cgl_tile_read.cpp",
         "src/services/impl/workflow/fs2024/data/cgl/fs2024_cgl_table.cpp",
         "src/services/impl/workflow/fs2024/data/cgl/fs2024_lzma_raw.cpp"
       ],

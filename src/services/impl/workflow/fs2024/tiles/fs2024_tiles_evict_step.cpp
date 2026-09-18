@@ -55,13 +55,8 @@ void WorkflowFs2024TilesFreeStep::Execute(const WorkflowStepDefinition&,
     auto* world =
         context.Get<btDiscreteDynamicsWorld*>("physics_world", nullptr);
     const std::size_t count = state_->resident.size();
-    for (auto& [key, tile] : state_->resident) {
-        ReleaseFs2024Tile(device, world, tile);
-    }
-    state_->resident.clear();
-    state_->pendingLoad.clear();
-    state_->pendingEvict.clear();
-    state_->missing.clear();
+    ReleaseAllFs2024Tiles(device, world, *state_);
+    state_->pool.reset();  // joins the loaders, which read the world
     ReleaseUnusedFs2024LandmarkKits(device, *state_);  // now every kit
     if (state_->world && device) {
         SDL_ReleaseGPUTexture(device, state_->world->materialArray);

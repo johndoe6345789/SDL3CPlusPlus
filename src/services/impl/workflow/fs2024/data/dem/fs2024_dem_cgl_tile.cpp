@@ -2,8 +2,11 @@
 
 #include <JXRGlue.h>
 
+#include <algorithm>
+#include <cstdio>
 #include <cstring>
 #include <stdexcept>
+#include <string>
 
 namespace sdl3cpp::fs2024 {
 namespace {
@@ -31,7 +34,14 @@ void Check(ERR err, const char* what) {
 
 Fs2024DemSamples DecodeFs2024DemTile(const std::vector<std::uint8_t>& payload) {
     if (payload.size() < kPrefixBytes + 4 || payload[0] != kPrefixMark) {
-        throw std::runtime_error("DEM tile: unknown framing");
+        char head[64] = {};
+        for (std::size_t i = 0; i < std::min<std::size_t>(payload.size(), 20);
+             ++i) {
+            std::snprintf(head + i * 3, 4, "%02x ", payload[i]);
+        }
+        throw std::runtime_error("DEM tile: unknown framing (" +
+                                 std::to_string(payload.size()) +
+                                 " bytes: " + head + ")");
     }
     std::uint32_t length = 0;
     std::memcpy(&length, payload.data() + kPrefixBytes, 4);
