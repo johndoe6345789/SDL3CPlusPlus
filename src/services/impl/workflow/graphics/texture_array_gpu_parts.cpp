@@ -17,12 +17,12 @@ std::size_t TextureArrayMipBytes(const TextureArrayBlocksView& view,
 SDL_GPUTexture* CreateTextureArray(SDL_GPUDevice* device,
                                    const TextureArrayBlocksView& view) {
     if (!SDL_GPUTextureSupportsFormat(device, view.format,
-                                      SDL_GPU_TEXTURETYPE_2D_ARRAY,
+                                      view.type,
                                       SDL_GPU_TEXTUREUSAGE_SAMPLER)) {
         throw std::runtime_error("texture array: format not supported");
     }
     SDL_GPUTextureCreateInfo info{};
-    info.type = SDL_GPU_TEXTURETYPE_2D_ARRAY;
+    info.type = view.type;
     info.format = view.format;
     info.usage = SDL_GPU_TEXTUREUSAGE_SAMPLER;
     info.width = view.width;
@@ -39,7 +39,8 @@ SDL_GPUTransferBuffer* StageTextureArray(SDL_GPUDevice* device,
     SDL_GPUTransferBufferCreateInfo info{};
     info.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD;
     info.size = static_cast<Uint32>(view.size);
-    SDL_GPUTransferBuffer* transfer = SDL_CreateGPUTransferBuffer(device, &info);
+    SDL_GPUTransferBuffer* transfer =
+        SDL_CreateGPUTransferBuffer(device, &info);
     void* mapped =
         transfer ? SDL_MapGPUTransferBuffer(device, transfer, false) : nullptr;
     if (!mapped) {

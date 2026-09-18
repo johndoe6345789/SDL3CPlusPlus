@@ -800,6 +800,11 @@
       "name": "fs2024_tile_build_test",
       "sources": [
         "tests/fs2024_tile_build_real_test.cpp",
+        "tests/fs2024_tile_landmarks_test.cpp",
+        "src/services/impl/workflow/fs2024/landmark/fs2024_landmark_clear.cpp",
+        "src/services/impl/workflow/fs2024/landmark/fs2024_landmark_instances.cpp",
+        "src/services/impl/workflow/fs2024/landmark/fs2024_landmark_place.cpp",
+        "src/services/impl/workflow/fs2024/world/fs2024_world_landmarks.cpp",
         "src/services/impl/workflow/fs2024/build/*.cpp",
         "src/services/impl/workflow/fs2024/world/fs2024_geo_origin.cpp",
         "src/services/impl/workflow/fs2024/tiles/fs2024_tile_key.cpp",
@@ -823,6 +828,7 @@
         "src"
       ],
       "link_libraries": [
+        "${SDL_TARGET}",
         "GTest::gtest_main",
         "glm::glm",
         "LibLZMA::LibLZMA",
@@ -875,6 +881,40 @@
         "GTest::gtest_main",
         "LibLZMA::LibLZMA",
         "WebP::webpdecoder"
+      ]
+    },
+    {
+      "name": "fs2024_landmark_place_test",
+      "sources": [
+        "tests/fs2024_landmark_place_real_test.cpp",
+        "src/services/impl/workflow/fs2024/landmark/fs2024_landmark_place.cpp",
+        "src/services/impl/workflow/fs2024/data/texture/fs2024_dds_blocks.cpp",
+        "src/services/impl/workflow/fs2024/data/gltf/*.cpp",
+        "src/services/impl/workflow/fs2024/data/bgl/*.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main",
+        "glm::glm",
+        "nlohmann_json::nlohmann_json"
+      ]
+    },
+    {
+      "name": "fs2024_landmark_index_test",
+      "sources": [
+        "tests/fs2024_landmark_index_real_test.cpp",
+        "src/services/impl/workflow/fs2024/data/landmark/fs2024_landmark_index.cpp",
+        "src/services/impl/workflow/fs2024/data/bgl/*.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main",
+        "glm::glm",
+        "nlohmann_json::nlohmann_json"
       ]
     },
     {
@@ -972,9 +1012,7 @@
       "name": "fs2024_gltf_model_test",
       "sources": [
         "tests/fs2024_gltf_model_test.cpp",
-        "src/services/impl/workflow/fs2024/data/gltf/fs2024_gltf_model.cpp",
-        "src/services/impl/workflow/fs2024/data/gltf/fs2024_gltf_accessor.cpp",
-        "src/services/impl/workflow/fs2024/data/gltf/fs2024_gltf_scene.cpp",
+        "src/services/impl/workflow/fs2024/data/gltf/*.cpp",
         "src/services/impl/workflow/fs2024/data/bgl/fs2024_riff_chunk.cpp"
       ],
       "include_directories": [

@@ -1,17 +1,18 @@
 #pragma once
 
-#include <string>
+#include "services/interfaces/workflow/fs2024/data/bgl/fs2024_bgl_model_library.hpp"
+
+#include <glm/glm.hpp>
 
 namespace sdl3cpp::services::impl {
 
-/// One placed landmark: a tile's own share of `landmarks.json`, kept
-/// as plain data (its GPU mesh/textures are shared, global data --
-/// see Fs2024LandmarkKitGpu -- not owned per tile the way a tile's
-/// own ground/buildings are).
+/// One landmark standing in a tile, where FS2024 itself places it. Its
+/// mesh is shared by every instance of the model (see
+/// Fs2024TileStreamState::landmarkKits, keyed by `entry.name`); only
+/// the placement is per instance.
 struct Fs2024LandmarkInstance {
-    std::string model;
-    float x = 0.f, z = 0.f;
-    float headingDegrees = 0.f;
+    sdl3cpp::fs2024::ModelLibraryEntry entry;
+    glm::mat4 model{1.f};  ///< the model's own space to tile space
 };
 
 }  // namespace sdl3cpp::services::impl

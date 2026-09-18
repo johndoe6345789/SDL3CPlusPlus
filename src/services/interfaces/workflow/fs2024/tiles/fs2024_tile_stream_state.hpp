@@ -37,8 +37,8 @@ struct Fs2024LoadedTile {
     /// The same buildings' roofs, drawn separately with their own real
     /// roof-tile texture rather than the walls' brick.
     Fs2024TerrainChunkGpu buildingRoofChunk;
-    /// This tile's share of `landmarks.json`, if it baked one; look up
-    /// each instance's GPU kit in Fs2024TileStreamState::landmarkKits.
+    /// The landmarks FS2024 stands in this tile; look up each one's
+    /// GPU kit in Fs2024TileStreamState::landmarkKits.
     std::vector<Fs2024LandmarkInstance> landmarks;
 };
 
@@ -59,9 +59,9 @@ struct Fs2024TileStreamState {
     std::unordered_set<Fs2024TileKey> missing;
     bool configured = false;
 
-    /// Every landmark model loaded so far, by its own GXML name --
-    /// shared across every tile/instance that references it, loaded
-    /// once on first reference and released only at fs2024.tiles.free.
+    /// Every landmark model a resident tile stands, by its own GXML
+    /// name: loaded on first use, released once no resident tile uses
+    /// it.
     std::unordered_map<std::string, Fs2024LandmarkKitGpu> landmarkKits;
 
     /// FS2024's own world, once fs2024.world.open has opened it. Every

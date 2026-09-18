@@ -12,6 +12,7 @@ struct Fs2024TerrainVertexUniforms {
     glm::mat4 viewProj{1.f};
     glm::vec4 cameraPos{0.f};
     glm::vec4 originOffset{0.f};  ///< xyz: the tile's local origin
+    glm::mat4 model{1.f};  ///< a landmark's placement; identity for tiles
 };
 
 /// Matches FragmentUniforms in fs2024_terrain.frag. Colours are linear.

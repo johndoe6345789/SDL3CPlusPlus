@@ -1,7 +1,7 @@
 #include "services/interfaces/workflow/fs2024/tiles/fs2024_tiles_evict_step.hpp"
 
 #include "services/interfaces/workflow/fs2024/world/fs2024_world.hpp"
-#include "services/interfaces/workflow/fs2024/landmark/fs2024_landmark_load.hpp"
+#include "services/interfaces/workflow/fs2024/landmark/fs2024_tile_landmarks.hpp"
 #include "services/interfaces/workflow/fs2024/tiles/fs2024_tile_release.hpp"
 
 #include <utility>
@@ -30,6 +30,7 @@ void WorkflowFs2024TilesEvictStep::Execute(const WorkflowStepDefinition&,
         ReleaseFs2024Tile(device, world, it->second);
         state_->resident.erase(it);
     }
+    ReleaseUnusedFs2024LandmarkKits(device, *state_);
     if (logger_ && !state_->pendingEvict.empty()) {
         logger_->Trace("fs2024.tiles.evict: released " +
                        std::to_string(state_->pendingEvict.size()) +
@@ -61,10 +62,7 @@ void WorkflowFs2024TilesFreeStep::Execute(const WorkflowStepDefinition&,
     state_->pendingLoad.clear();
     state_->pendingEvict.clear();
     state_->missing.clear();
-    for (auto& [model, kit] : state_->landmarkKits) {
-        ReleaseFs2024LandmarkKitGpu(device, kit);
-    }
-    state_->landmarkKits.clear();
+    ReleaseUnusedFs2024LandmarkKits(device, *state_);  // now every kit
     if (state_->world && device) {
         SDL_ReleaseGPUTexture(device, state_->world->materialArray);
         SDL_ReleaseGPUSampler(device, state_->world->materialSampler);

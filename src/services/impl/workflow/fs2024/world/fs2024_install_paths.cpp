@@ -24,6 +24,16 @@ Fs2024InstallPaths ResolveFs2024InstallPaths(const std::string& installRoot) {
                      "/bf-texture-synth-lib/TexSynthLibs/BFTexSynthLib",
                  "ground materials");
     paths.pggRoot = Required(installRoot + "/bf-pgg/PGG", "building data");
+    const std::string poi =
+        installRoot + "/fs-base/scenery/Global/Asobo_POI";
+    const std::string scenery =
+        installRoot + "/fs-base-genericairports/scenery";
+    if (std::filesystem::exists(poi + "/Asobo_POI.BGL") &&
+        std::filesystem::exists(scenery)) {
+        paths.landmarkLibrary = poi + "/Asobo_POI.BGL";
+        paths.landmarkTextures = poi + "/TEXTURE";
+        paths.landmarkScenery = scenery;
+    }
     return paths;
 }
 

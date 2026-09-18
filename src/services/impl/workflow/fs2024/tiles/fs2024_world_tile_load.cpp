@@ -3,6 +3,7 @@
 #include "services/interfaces/workflow/fs2024/world/fs2024_world.hpp"
 #include "services/interfaces/workflow/fs2024/build/fs2024_tile_building_mesh.hpp"
 #include "services/interfaces/workflow/fs2024/build/fs2024_tile_ground.hpp"
+#include "services/interfaces/workflow/fs2024/landmark/fs2024_landmark_clear.hpp"
 #include "services/interfaces/workflow/fs2024/terrain/fs2024_class_map_upload.hpp"
 #include "services/interfaces/workflow/fs2024/terrain/fs2024_terrain_upload.hpp"
 #include "services/interfaces/workflow/rendering/bsp_geometry_upload.hpp"
@@ -36,7 +37,8 @@ void UploadChunk(SDL_GPUDevice* device,
 Fs2024LoadedTile LoadFs2024WorldTile(SDL_GPUDevice* device,
                                      btDiscreteDynamicsWorld* physics,
                                      Fs2024World& world,
-                                     const Fs2024TileKey& key) {
+                                     const Fs2024TileKey& key,
+                                     Fs2024LandmarkKits& kits) {
     const float tileSize = world.origin.TileSize();
     int quadX = 0, quadY = 0;
     Fs2024QuadOfKey(world.origin, key, quadX, quadY);
@@ -45,18 +47,21 @@ Fs2024LoadedTile LoadFs2024WorldTile(SDL_GPUDevice* device,
     tile.offset = glm::vec3(key.x * tileSize, 0.f, key.z * tileSize);
     tile.terrain.field = BuildFs2024TileHeights(*world.dem, quadX, quadY,
                                                 tileSize, kGroundCells);
-    const auto plans = PlanFs2024TileBuildings(
+    tile.landmarks = PlaceFs2024TileLandmarks(
+        world, quadX, quadY, tile.offset, tile.terrain.field);
+    EnsureFs2024LandmarkKits(device, world, tile.landmarks, kits);
+    auto plans = PlanFs2024TileBuildings(
         world.buildings->ReadTile(
             sdl3cpp::fs2024::QuadTile{quadX, quadY, kFs2024TileLevel}),
         tileSize);
+    DropFs2024BuildingsUnderLandmarks(plans, tile.landmarks, kits);
     const auto mesh = MeshFs2024TileBuildings(plans, tile.terrain.field);
     UploadChunk(device, mesh.wallVertices, mesh.wallIndices,
                 tile.buildingChunk);
     UploadChunk(device, mesh.roofVertices, mesh.roofIndices,
                 tile.buildingRoofChunk);
 
-    // Meshes stay tile-local; collision and ground lookups work in
-    // engine space, so the field moves to the tile's offset after.
+    // Meshes stay tile-local; collision works in engine space.
     UploadFs2024TerrainChunks(device, tile.terrain, kGroundCells);
     tile.terrain.field.origin = glm::vec2(tile.offset.x, tile.offset.z);
     tile.terrain.collision = AddFs2024TerrainCollision(physics,

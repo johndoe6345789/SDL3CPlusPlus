@@ -34,7 +34,8 @@ void WorkflowFs2024TilesLoadStep::Execute(const WorkflowStepDefinition& step,
         const Fs2024TileKey key = state_->pendingLoad[i];
         try {
             state_->resident.emplace(
-                key, LoadFs2024WorldTile(device, physics, *state_->world, key));
+                key, LoadFs2024WorldTile(device, physics, *state_->world, key,
+                                         state_->landmarkKits));
         } catch (const std::exception& error) {
             state_->missing.insert(key);
             if (logger_) {

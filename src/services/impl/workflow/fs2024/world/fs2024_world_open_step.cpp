@@ -45,6 +45,11 @@ void WorkflowFs2024WorldOpenStep::Execute(const WorkflowStepDefinition& step,
     world->classes = std::make_unique<Fs2024ClassSampler>(world->paths.cglRoot);
     world->buildings =
         std::make_unique<sdl3cpp::fs2024::BldLibrary>(world->paths.cglRoot);
+    if (!world->paths.landmarkLibrary.empty()) {
+        BucketFs2024Landmarks(*world, sdl3cpp::fs2024::BuildLandmarkIndex(
+                                          world->paths.landmarkLibrary,
+                                          world->paths.landmarkScenery));
+    }
 
     const int climate =
         static_cast<int>(Fs2024NumberOr(step, "climate", 2.f));
@@ -56,7 +61,9 @@ void WorkflowFs2024WorldOpenStep::Execute(const WorkflowStepDefinition& step,
         logger_->Info("fs2024.world.open: " + world->paths.cglRoot +
                       ", origin tile (" + std::to_string(world->origin.tileX) +
                       ", " + std::to_string(world->origin.tileY) +
-                      "), tiles " + std::to_string(state_->tileSize) + " m");
+                      "), tiles " + std::to_string(state_->tileSize) +
+                      " m, landmarks in " +
+                      std::to_string(world->landmarks.size()) + " tiles");
     }
     state_->world = std::move(world);
 }

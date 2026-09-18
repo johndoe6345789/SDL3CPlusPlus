@@ -29,6 +29,12 @@ void PushOffset(SDL_GPUCommandBuffer* cmd, Fs2024TerrainVertexUniforms vertex,
 
 }  // namespace
 
+SDL_GPUTextureSamplerBinding Fs2024ContextTexture(
+    const WorkflowContext& context, const std::string& key) {
+    return {context.Get<SDL_GPUTexture*>(key + "_gpu", nullptr),
+            context.Get<SDL_GPUSampler*>(key + "_sampler", nullptr)};
+}
+
 void DrawFs2024TileGround(SDL_GPURenderPass* pass, SDL_GPUCommandBuffer* cmd,
                           const Fs2024LoadedTile& tile,
                           const Fs2024World& world,

@@ -2,6 +2,7 @@
 
 #include "services/interfaces/workflow/fs2024/world/fs2024_world.hpp"
 #include "services/interfaces/workflow/fs2024/fs2024_step_params.hpp"
+#include "services/interfaces/workflow/fs2024/terrain/fs2024_draw_landmarks.hpp"
 #include "services/interfaces/workflow/fs2024/terrain/fs2024_draw_tile.hpp"
 
 #include <string>
@@ -11,12 +12,6 @@ namespace sdl3cpp::services::impl {
 namespace {
 
 constexpr int kClassMapSize = 64;
-
-SDL_GPUTextureSamplerBinding Binding(const WorkflowContext& context,
-                                     const std::string& key) {
-    return {context.Get<SDL_GPUTexture*>(key + "_gpu", nullptr),
-            context.Get<SDL_GPUSampler*>(key + "_sampler", nullptr)};
-}
 
 }  // namespace
 
@@ -39,13 +34,13 @@ void WorkflowFs2024TerrainDrawStep::Execute(
         Fs2024StringOr(step, "pipeline_key", "gpu_pipeline_fs2024_terrain"),
         nullptr);
     auto* ground = context.Get<SDL_GPUGraphicsPipeline*>(
-        Fs2024StringOr(step, "ground_pipeline_key", "gpu_pipeline_fs2024_ground"),
+        Fs2024StringOr(step, "ground_pipeline_key",
+                       "gpu_pipeline_fs2024_ground"),
         nullptr);
     if (!pass || !cmd || !state_->world || state_->resident.empty()) return;
     if (!terrain || !ground) {
-        if (logger_ && !warned_) {
+        if (logger_ && !std::exchange(warned_, true)) {
             logger_->Warn("fs2024.terrain.draw: missing a pipeline");
-            warned_ = true;
         }
         return;
     }
@@ -69,13 +64,15 @@ void WorkflowFs2024TerrainDrawStep::Execute(
     }
 
     SDL_BindGPUGraphicsPipeline(pass, terrain);
-    const auto wall = Binding(
+    const auto wall = Fs2024ContextTexture(
         context, Fs2024StringOr(step, "building_texture", "fs2024_building"));
-    const auto roof =
-        Binding(context, Fs2024StringOr(step, "roof_texture", "fs2024_roof"));
+    const auto roof = Fs2024ContextTexture(
+        context, Fs2024StringOr(step, "roof_texture", "fs2024_roof"));
     for (const auto& [key, tile] : state_->resident) {
         DrawFs2024TileBuildings(pass, cmd, tile, vertex, lighting, frustum,
                                 wall, roof);
+        DrawFs2024TileLandmarks(pass, cmd, tile, state_->landmarkKits, vertex,
+                                lighting, frustum, wall);
     }
 }
 

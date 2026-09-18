@@ -4,7 +4,7 @@
 
 namespace sdl3cpp::services::impl {
 
-/// The empty SDL_GPU_TEXTURETYPE_2D_ARRAY texture `view` describes.
+/// The empty texture `view` describes.
 /// Throws when the device cannot sample the format or creation fails.
 SDL_GPUTexture* CreateTextureArray(SDL_GPUDevice* device,
                                    const TextureArrayBlocksView& view);

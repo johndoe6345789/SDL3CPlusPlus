@@ -29,4 +29,20 @@ struct GltfLod {
 /// result) into its LODs, in the order its `GXML` chunk lists them.
 std::vector<GltfLod> ParseModelRiff(const std::vector<std::uint8_t>& riff);
 
+/// One LOD's name and size, enough to choose between them without
+/// decoding any: FS2024's own LOD0 of Westminster Bridge alone decodes
+/// to hundreds of megabytes of vertices.
+struct GltfLodInfo {
+    std::string modelFile;
+    float minSize = 0.f;
+    std::size_t bytes = 0;  ///< its binary glTF, a proxy for its detail
+};
+
+std::vector<GltfLodInfo> ListModelRiffLods(
+    const std::vector<std::uint8_t>& riff);
+
+/// Decodes only LOD `index`.
+GltfLod ParseModelRiffLod(const std::vector<std::uint8_t>& riff,
+                          std::size_t index);
+
 }  // namespace sdl3cpp::fs2024
