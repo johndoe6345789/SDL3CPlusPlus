@@ -110,6 +110,7 @@
         "src/services/impl/workflow/fs2024/data/landmark/*.cpp",
         "src/services/impl/workflow/fs2024/data/material/*.cpp",
         "src/services/impl/workflow/fs2024/data/texture/*.cpp",
+        "src/services/impl/workflow/fs2024/data/vec/*.cpp",
         "src/services/impl/workflow/bl4/*.cpp"
       ],
       "include_directories": [
@@ -156,6 +157,7 @@
         "src/services/impl/workflow/fs2024/data/landmark/*.cpp",
         "src/services/impl/workflow/fs2024/data/material/*.cpp",
         "src/services/impl/workflow/fs2024/data/texture/*.cpp",
+        "src/services/impl/workflow/fs2024/data/vec/*.cpp",
         "src/services/impl/workflow/fs2024/building/*.cpp",
         "src/services/impl/workflow/fs2024/tiles/fs2024_tile_key.cpp"
       ],
@@ -806,6 +808,8 @@
       "sources": [
         "tests/fs2024_tile_build_real_test.cpp",
         "tests/fs2024_tile_landmarks_test.cpp",
+        "tests/fs2024_vec_build_test.cpp",
+        "src/services/impl/workflow/fs2024/data/vec/*.cpp",
         "src/services/impl/workflow/fs2024/landmark/fs2024_landmark_clear.cpp",
         "src/services/impl/workflow/fs2024/landmark/fs2024_landmark_instances.cpp",
         "src/services/impl/workflow/fs2024/landmark/fs2024_landmark_place.cpp",
@@ -888,6 +892,25 @@
         "GTest::gtest_main",
         "LibLZMA::LibLZMA",
         "WebP::webpdecoder"
+      ]
+    },
+    {
+      "name": "fs2024_vec_test",
+      "sources": [
+        "tests/fs2024_vec_real_test.cpp",
+        "src/services/impl/workflow/fs2024/data/vec/*.cpp",
+        "src/services/impl/workflow/fs2024/data/cgl/fs2024_cgl_container.cpp",
+        "src/services/impl/workflow/fs2024/data/cgl/fs2024_cgl_tile_read.cpp",
+        "src/services/impl/workflow/fs2024/data/cgl/fs2024_cgl_table.cpp",
+        "src/services/impl/workflow/fs2024/data/cgl/fs2024_lzma_raw.cpp",
+        "src/services/impl/workflow/fs2024/data/cgl/fs2024_quadkey.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main",
+        "LibLZMA::LibLZMA"
       ]
     },
     {

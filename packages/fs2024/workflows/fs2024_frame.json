@@ -82,6 +82,11 @@
       "comment": "Draws every streamed-in tile with its own ground texture; an airport tile's runway markings are drawn sharp by the shader from that tile's own roads.json."
     },
     {
+      "id": "vectors_draw",
+      "plugin": "fs2024.vectors.draw",
+      "comment": "FS2024's own roads and water, over the ground just drawn."
+    },
+    {
       "id": "frame_end",
       "plugin": "frame.gpu.end_scene"
     },

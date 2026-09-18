@@ -48,12 +48,14 @@ std::int64_t NextUncompressed(WordCursor& cursor, std::int64_t base) {
 
 std::vector<CglTileEntry> ParseCglTable(
     const std::vector<std::uint16_t>& words, std::size_t count,
-    std::uint64_t dataStart) {
+    std::uint64_t dataStart, bool wideKeys) {
     WordCursor cursor(words);
     std::vector<CglTileEntry> tiles(count);
     std::uint32_t key = 0;
     for (CglTileEntry& tile : tiles) {
-        key += static_cast<std::uint32_t>(cursor.Next());
+        std::uint32_t delta = static_cast<std::uint32_t>(cursor.Next());
+        if (wideKeys) delta |= static_cast<std::uint32_t>(cursor.Next()) << 16;
+        key += delta;
         tile.key = key;
     }
     std::int64_t last = 0;

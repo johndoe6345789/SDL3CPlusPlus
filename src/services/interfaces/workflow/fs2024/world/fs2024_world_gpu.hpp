@@ -13,6 +13,10 @@ namespace sdl3cpp::services::impl {
 void UploadFs2024GroundMaterials(SDL_GPUDevice* device, Fs2024World& world,
                                  int climate);
 
+/// Uploads FS2024's own asphalt as the world's road texture, compressed
+/// as the game ships it. Leaves it null when the file is missing.
+void UploadFs2024RoadTexture(SDL_GPUDevice* device, Fs2024World& world);
+
 /// Bakes the building kit from FS2024's generator data and publishes it
 /// under the keys fs2024.terrain.draw reads (`fs2024_building_gpu`,
 /// `fs2024_building_sampler`, `fs2024_roof_gpu`, `fs2024_roof_sampler`).

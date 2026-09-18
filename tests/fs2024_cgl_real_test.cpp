@@ -16,7 +16,9 @@ TEST(Fs2024CglReal, EveryTableAddsUpToItsFile) {
     const std::string root = "D:/Games/Official/Steam/fs-base-cgl/CGL/";
     const char* files[] = {"031/bldo311.cgl", "031/bldn311.cgl",
                            "031/dem311.cgl",  "031/lcg311.cgl",
-                           "120/bldo221.cgl", "120/dem221.cgl"};
+                           "031/vec313.cgl",  "031/vecn313.cgl",
+                           "120/bldo221.cgl", "120/dem221.cgl",
+                           "120/vec221.cgl"};
     if (!std::filesystem::exists(root)) GTEST_SKIP() << "no FS2024";
     for (const char* name : files) {
         const std::string path = root + name;
@@ -27,7 +29,7 @@ TEST(Fs2024CglReal, EveryTableAddsUpToItsFile) {
         const f::CglContainer cgl = f::ReadCglContainer(path);
         ASSERT_FALSE(cgl.tiles.empty()) << name;
         // The tiles run on without gaps to the end of the file, bar the
-        // 154-byte trailer every bld file carries.
+        // 154-byte trailer bld and vec files carry (an ODbL notice).
         const f::CglTileEntry& last = cgl.tiles.back();
         const std::uint64_t end = last.offset + last.compressedSize;
         const std::uint64_t size = std::filesystem::file_size(path);

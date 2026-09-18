@@ -45,6 +45,8 @@ void WorkflowFs2024WorldOpenStep::Execute(const WorkflowStepDefinition& step,
     world->classes = std::make_unique<Fs2024ClassSampler>(world->paths.cglRoot);
     world->buildings =
         std::make_unique<sdl3cpp::fs2024::BldLibrary>(world->paths.cglRoot);
+    world->vectors =
+        std::make_unique<sdl3cpp::fs2024::VecLibrary>(world->paths.cglRoot);
     if (!world->paths.landmarkLibrary.empty()) {
         BucketFs2024Landmarks(*world, sdl3cpp::fs2024::BuildLandmarkIndex(
                                           world->paths.landmarkLibrary,
@@ -54,6 +56,7 @@ void WorkflowFs2024WorldOpenStep::Execute(const WorkflowStepDefinition& step,
     const int climate =
         static_cast<int>(Fs2024NumberOr(step, "climate", 2.f));
     UploadFs2024GroundMaterials(device, *world, climate);
+    UploadFs2024RoadTexture(device, *world);
     PublishFs2024BuildingKit(device, *world, context);
 
     state_->tileSize = world->origin.TileSize();

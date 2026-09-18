@@ -35,9 +35,11 @@ std::vector<std::uint8_t> ReadCglTile(const CglContainer& container,
         // file's tiles record no size of their own and are packed all
         // the same, with LZMA's standard lc 3 / lp 0 / pb 2 rather than
         // the header's props. A range-coded stream always begins with a
-        // zero byte, which no format stored here (JPEG XR framing,
-        // WebP, bld) does.
-        if (packed.empty() || packed[0] != 0) return packed;
+        // zero byte, which a dem tile's own framing never does (vector
+        // tiles, stored as-is, often do).
+        if (!container.sizelessPacked || packed.empty() || packed[0] != 0) {
+            return packed;
+        }
         return DecodeLzmaRawAll(packed.data(), packed.size(),
                                 kSizelessProps);
     }

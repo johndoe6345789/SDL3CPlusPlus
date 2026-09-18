@@ -14,10 +14,12 @@ void ReleaseFs2024Tile(SDL_GPUDevice* device, btDiscreteDynamicsWorld* world,
     if (device) {
         SDL_ReleaseGPUTexture(device, tile.classMap);
         SDL_ReleaseGPUSampler(device, tile.classSampler);
-        SDL_ReleaseGPUBuffer(device, tile.buildingChunk.vertexBuffer);
-        SDL_ReleaseGPUBuffer(device, tile.buildingChunk.indexBuffer);
-        SDL_ReleaseGPUBuffer(device, tile.buildingRoofChunk.vertexBuffer);
-        SDL_ReleaseGPUBuffer(device, tile.buildingRoofChunk.indexBuffer);
+        for (const Fs2024TerrainChunkGpu* chunk :
+             {&tile.buildingChunk, &tile.buildingRoofChunk, &tile.waterChunk,
+              &tile.roadChunk}) {
+            SDL_ReleaseGPUBuffer(device, chunk->vertexBuffer);
+            SDL_ReleaseGPUBuffer(device, chunk->indexBuffer);
+        }
     }
 }
 

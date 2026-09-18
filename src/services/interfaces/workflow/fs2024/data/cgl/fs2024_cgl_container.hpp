@@ -16,6 +16,9 @@ namespace sdl3cpp::fs2024 {
 struct CglContainer {
     std::string path;
     std::uint8_t dataProps = 0;  ///< LZMA lc/lp/pb byte of the tiles
+    /// The elevation layer's tables record no unpacked size for most
+    /// tiles: equal sizes there do not mean stored as-is.
+    bool sizelessPacked = false;
     std::vector<CglTileEntry> tiles;  ///< sorted by `key`
 };
 

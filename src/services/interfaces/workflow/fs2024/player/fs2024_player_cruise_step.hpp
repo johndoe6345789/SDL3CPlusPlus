@@ -20,8 +20,10 @@ namespace sdl3cpp::services::impl {
  * keys need the window focused). Does nothing while speed is 0 or
  * empty, so it can sit in the physics workflow unused.
  *
- * Parameters: speed (m/s), height (metres, default 300).
- * Reads: physics_dt. Writes: q3.ps, q3.player_pos
+ * Parameters: speed (m/s), height (metres, default 300), turn (the
+ *             camera's yaw rate, degrees a second -- turning in place
+ *             when speed is 0).
+ * Reads: physics_dt. Writes: q3.ps, q3.player_pos, camera_yaw
  */
 class WorkflowFs2024PlayerCruiseStep final : public IWorkflowStep {
 public:

@@ -3,6 +3,7 @@
 #include "services/interfaces/workflow/fs2024/player/fs2024_player_cruise_step.hpp"
 #include "services/interfaces/workflow/fs2024/player/fs2024_player_steps.hpp"
 #include "services/interfaces/workflow/fs2024/terrain/fs2024_terrain_draw_step.hpp"
+#include "services/interfaces/workflow/fs2024/terrain/fs2024_vectors_draw_step.hpp"
 #include "services/interfaces/workflow/fs2024/tiles/fs2024_tiles_evict_step.hpp"
 #include "services/interfaces/workflow/fs2024/tiles/fs2024_tiles_load_step.hpp"
 #include "services/interfaces/workflow/fs2024/tiles/fs2024_tiles_resolve_step.hpp"
@@ -39,7 +40,9 @@ int RegisterFs2024Steps(std::shared_ptr<IWorkflowStepRegistry> registry,
         std::make_shared<WorkflowFs2024GroundGuardStep>(logger, state));
     registry->RegisterStep(
         std::make_shared<WorkflowFs2024PlayerCruiseStep>(logger, state));
-    return 10;
+    registry->RegisterStep(
+        std::make_shared<WorkflowFs2024VectorsDrawStep>(logger, state));
+    return 11;
 }
 
 }  // namespace sdl3cpp::services::impl::registrar_detail

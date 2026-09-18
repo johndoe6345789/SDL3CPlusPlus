@@ -1,5 +1,7 @@
 #include "services/interfaces/workflow/fs2024/tiles/fs2024_tile_prepare.hpp"
 
+#include "services/interfaces/workflow/fs2024/assemble/fs2024_road_build.hpp"
+#include "services/interfaces/workflow/fs2024/assemble/fs2024_sea_build.hpp"
 #include "services/interfaces/workflow/fs2024/assemble/fs2024_tile_ground.hpp"
 #include "services/interfaces/workflow/fs2024/landmark/fs2024_tile_landmarks.hpp"
 #include "services/interfaces/workflow/fs2024/terrain/fs2024_terrain_skirt.hpp"
@@ -29,12 +31,23 @@ Fs2024PreparedTile PrepareFs2024Tile(Fs2024World& world,
 
     tile.field = BuildFs2024TileHeights(*world.dem, quadX, quadY, key.level,
                                         span, cells);
-    tile.ground = BuildFs2024TerrainChunk(tile.field, 0, 0, cells);
-    AppendFs2024TerrainSkirt(tile.ground, cells + 1, cells + 1,
-                             std::max(20.f, span / 32.f));
     tile.classes = BuildFs2024TileClasses(*world.classes, quadX, quadY,
                                           key.level, kClassTexels);
     tile.classSize = kClassTexels;
+    // Water and roads from the vector layer, on the two finest levels.
+    Fs2024TileShapes shapes;
+    if (world.vectors && key.level > kFs2024FinestLevel - kBuildingLevels) {
+        shapes = GatherFs2024TileShapes(*world.vectors, quadX, quadY,
+                                        key.level, world.origin.TileSize());
+    }
+    const Fs2024WaterBuild water = BuildFs2024Water(shapes.water, tile.field);
+    tile.water = water.mesh;
+    AddFs2024OpenWater(shapes, tile.field, tile.water);
+    tile.roads = BuildFs2024Roads(shapes.roads, shapes.water, water.levels,
+                                  tile.field);
+    tile.ground = BuildFs2024TerrainChunk(tile.field, 0, 0, cells);
+    AppendFs2024TerrainSkirt(tile.ground, cells + 1, cells + 1,
+                             std::max(20.f, span / 32.f));
 
     tile.landmarks = PlaceFs2024TileLandmarks(world, key, tile.field);
     const Fs2024LandmarkBoundsMap bounds =

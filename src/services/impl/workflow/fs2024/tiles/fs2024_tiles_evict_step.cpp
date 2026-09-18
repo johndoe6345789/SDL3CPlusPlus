@@ -61,6 +61,8 @@ void WorkflowFs2024TilesFreeStep::Execute(const WorkflowStepDefinition&,
     if (state_->world && device) {
         SDL_ReleaseGPUTexture(device, state_->world->materialArray);
         SDL_ReleaseGPUSampler(device, state_->world->materialSampler);
+        SDL_ReleaseGPUTexture(device, state_->world->roadTexture);
+        SDL_ReleaseGPUSampler(device, state_->world->roadSampler);
     }
     state_->world.reset();
     if (logger_) {

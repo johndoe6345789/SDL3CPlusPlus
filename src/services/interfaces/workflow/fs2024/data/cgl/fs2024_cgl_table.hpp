@@ -15,13 +15,14 @@ struct CglTileEntry {
     std::uint32_t uncompressedSize = 0;
 };
 
-/// Decodes a CGL's (already decompressed) data header: `count` u16
-/// key deltas, then delta-coded compressed sizes, then uncompressed
+/// Decodes a CGL's (already decompressed) data header: `count` key
+/// deltas -- u16, or u32 in the vector layer's version-21 containers
+/// (`wideKeys`) -- then delta-coded compressed sizes, then uncompressed
 /// sizes coded relative to each compressed size -- see the escape
 /// rules in the .cpp. `dataStart` is where the first tile stream
 /// begins (the tile streams follow each other with no gaps).
 std::vector<CglTileEntry> ParseCglTable(
     const std::vector<std::uint16_t>& words, std::size_t count,
-    std::uint64_t dataStart);
+    std::uint64_t dataStart, bool wideKeys = false);
 
 }  // namespace sdl3cpp::fs2024

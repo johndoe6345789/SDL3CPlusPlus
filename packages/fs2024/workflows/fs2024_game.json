@@ -64,6 +64,16 @@
       "name": "shader_ground_frag_path",
       "type": "string",
       "defaultValue": "packages/fs2024/shaders/msl/fs2024_ground.frag.metal"
+    },
+    "shader_water_vert_path": {
+      "name": "shader_water_vert_path",
+      "type": "string",
+      "defaultValue": "packages/fs2024/shaders/msl/fs2024_water.vert.metal"
+    },
+    "shader_water_frag_path": {
+      "name": "shader_water_frag_path",
+      "type": "string",
+      "defaultValue": "packages/gta5/shaders/msl/gta5_water.frag.metal"
     }
   },
   "nodes": [
@@ -188,8 +198,10 @@
         "fragment_shader_key": "fs2024_terrain_fragment_shader",
         "vertex_format": "position_uv_lmuv_normal",
         "pipeline_key": "gpu_pipeline_fs2024_terrain",
-        "color_format": "rgba16_float"
-      }
+        "color_format": "rgba16_float",
+        "release_shaders": 0
+      },
+      "comment": "Keeps its shaders: the road pipeline, created later, shares them and releases them."
     },
     {
       "id": "compile_sky_vert",
@@ -365,6 +377,81 @@
         "color_format": "rgba16_float"
       },
       "comment": "FS2024's own ground: each tile's land-class map picks surfaces out of the game's own material array."
+    },
+    {
+      "id": "compile_water_vert",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "stage": "vertex",
+        "output_key": "fs2024_water_vertex_shader",
+        "num_uniform_buffers": 1,
+        "num_samplers": 0
+      },
+      "inputs": {
+        "shader_path": "shader_water_vert_path"
+      }
+    },
+    {
+      "id": "compile_water_frag",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "stage": "fragment",
+        "output_key": "fs2024_water_fragment_shader",
+        "num_uniform_buffers": 1,
+        "num_samplers": 1
+      },
+      "inputs": {
+        "shader_path": "shader_water_frag_path"
+      }
+    },
+    {
+      "id": "create_water_pipeline",
+      "type": "graphics.gpu.pipeline.create",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "vertex_shader_key": "fs2024_water_vertex_shader",
+        "fragment_shader_key": "fs2024_water_fragment_shader",
+        "vertex_format": "position_uv_lmuv_normal",
+        "pipeline_key": "gpu_pipeline_fs2024_water",
+        "color_format": "rgba16_float",
+        "alpha_blend": 1,
+        "depth_write": 0,
+        "cull_mode": "none"
+      },
+      "comment": "FS2024's own water, shaded as gta5 shades its own: the sky mirrored by Fresnel over a swell, the sun's glint, the haze."
+    },
+    {
+      "id": "create_road_pipeline",
+      "type": "graphics.gpu.pipeline.create",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "vertex_shader_key": "fs2024_terrain_vertex_shader",
+        "fragment_shader_key": "fs2024_terrain_fragment_shader",
+        "vertex_format": "position_uv_lmuv_normal",
+        "pipeline_key": "gpu_pipeline_fs2024_road",
+        "color_format": "rgba16_float",
+        "cull_mode": "none",
+        "depth_bias": -1.0
+      },
+      "comment": "Roads: the terrain shaders, nudged a hair toward the eye. No slope-scaled bias: at grazing angles it pulled distant roads through the buildings in front of them."
     },
     {
       "id": "world_open",
@@ -887,7 +974,7 @@
       "main": {
         "0": [
           {
-            "node": "world_open",
+            "node": "compile_water_vert",
             "type": "main",
             "index": 0
           }
@@ -899,6 +986,50 @@
         "0": [
           {
             "node": "physics_world",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "compile_water_vert": {
+      "main": {
+        "0": [
+          {
+            "node": "compile_water_frag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "compile_water_frag": {
+      "main": {
+        "0": [
+          {
+            "node": "create_water_pipeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "create_water_pipeline": {
+      "main": {
+        "0": [
+          {
+            "node": "create_road_pipeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "create_road_pipeline": {
+      "main": {
+        "0": [
+          {
+            "node": "world_open",
             "type": "main",
             "index": 0
           }

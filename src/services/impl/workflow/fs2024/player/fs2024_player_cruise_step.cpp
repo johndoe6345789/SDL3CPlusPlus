@@ -23,7 +23,11 @@ std::string WorkflowFs2024PlayerCruiseStep::GetPluginId() const {
 void WorkflowFs2024PlayerCruiseStep::Execute(
     const WorkflowStepDefinition& step, WorkflowContext& context) {
     const float speed = Fs2024NumberOr(step, "speed", 0.f);
-    if (speed <= 0.f || !state_->world || !context.Contains("q3.ps")) return;
+    const float turn = Fs2024NumberOr(step, "turn", 0.f);
+    if ((speed <= 0.f && turn == 0.f) || !state_->world ||
+        !context.Contains("q3.ps")) {
+        return;
+    }
     auto ps = context.Get<Q3PlayerState>("q3.ps", Q3PlayerState{});
     // Undo this frame's walk: the route alone moves the player, and a
     // re-base (a jump of tens of kilometres) starts it again from there.
@@ -32,6 +36,9 @@ void WorkflowFs2024PlayerCruiseStep::Execute(
 
     const float dt =
         std::clamp(context.Get<float>("physics_dt", 1.f / 60.f), 0.f, 0.1f);
+    // Looking around as it goes, the way a player would.
+    context.Set<float>("camera_yaw", context.Get<float>("camera_yaw", 0.f) +
+                                         glm::radians(turn) * dt);
     const float heading = glm::radians(state_->world->spawnHeading);
     const glm::vec3 along(std::sin(heading), 0.f, -std::cos(heading));
     at_ += along * speed * dt;

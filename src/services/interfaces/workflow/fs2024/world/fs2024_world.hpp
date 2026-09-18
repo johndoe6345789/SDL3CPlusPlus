@@ -5,6 +5,7 @@
 #include "services/interfaces/workflow/fs2024/data/cgl/fs2024_bld_library.hpp"
 #include "services/interfaces/workflow/fs2024/data/landmark/fs2024_landmark_index.hpp"
 #include "services/interfaces/workflow/fs2024/data/material/fs2024_ground_materials.hpp"
+#include "services/interfaces/workflow/fs2024/data/vec/fs2024_vec_library.hpp"
 #include "services/interfaces/workflow/fs2024/landmark/fs2024_landmark_book.hpp"
 #include "services/interfaces/workflow/fs2024/world/fs2024_geo_origin.hpp"
 
@@ -38,8 +39,7 @@ struct Fs2024InstallPaths {
 /// missing.
 Fs2024InstallPaths ResolveFs2024InstallPaths(const std::string& installRoot);
 
-/// How many land classes the ground shader's material table covers.
-constexpr int kFs2024LandClasses = 16;
+constexpr int kFs2024LandClasses = 16;  ///< the ground shader's table
 
 /// The world the streaming tiles are cut from: where engine space sits
 /// on the Earth, and FS2024's own data behind every tile -- opened once
@@ -51,13 +51,15 @@ struct Fs2024World {
     std::unique_ptr<Fs2024DemSampler> dem;
     std::unique_ptr<Fs2024ClassSampler> classes;
     std::unique_ptr<sdl3cpp::fs2024::BldLibrary> buildings;
+    std::unique_ptr<sdl3cpp::fs2024::VecLibrary> vectors;  ///< roads, water
     sdl3cpp::fs2024::Fs2024GroundMaterials materials;
-    /// FS2024's ground material array on the GPU, as-is: 653 layers of
-    /// 256 x 256 BC1 sRGB (autogen/array_low.dds).
+    /// FS2024's ground materials as-is (653 BC1 layers, array_low.dds).
     SDL_GPUTexture* materialArray = nullptr;
     SDL_GPUSampler* materialSampler = nullptr;
     /// Per land class: x = first layer, y = layer count.
     std::array<glm::vec4, kFs2024LandClasses> materialTable{};
+    SDL_GPUTexture* roadTexture = nullptr;  ///< FS2024's ROAD_ASPHALT00
+    SDL_GPUSampler* roadSampler = nullptr;
     /// Every landmark FS2024 places, by the level-14 quad it stands in
     /// (Fs2024QuadId).
     std::unordered_map<std::uint64_t,

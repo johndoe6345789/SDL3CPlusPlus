@@ -62,7 +62,8 @@
       "plugin": "fs2024.player.cruise",
       "parameters": {
         "speed": "${env:FS2024_CRUISE_SPEED}",
-        "height": "${env:FS2024_CRUISE_HEIGHT}"
+        "height": "${env:FS2024_CRUISE_HEIGHT}",
+        "turn": "${env:FS2024_CRUISE_TURN}"
       },
       "comment": "Hands-off flight along the spawn heading for recording streaming; off unless FS2024_CRUISE_SPEED is set."
     },
@@ -94,7 +95,7 @@
         "sensitivity": 0.003,
         "eye_height": 1.4,
         "fov": 75.0,
-        "near": 0.25,
+        "near": 0.5,
         "far": 40000.0
       }
     }

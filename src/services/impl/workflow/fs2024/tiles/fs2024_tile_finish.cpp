@@ -42,6 +42,10 @@ Fs2024LoadedTile FinishFs2024Tile(SDL_GPUDevice* device,
                 prepared.buildings.wallIndices, tile.buildingChunk);
     UploadChunk(device, prepared.buildings.roofVertices,
                 prepared.buildings.roofIndices, tile.buildingRoofChunk);
+    UploadChunk(device, prepared.water.vertices, prepared.water.indices,
+                tile.waterChunk);
+    UploadChunk(device, prepared.roads.vertices, prepared.roads.indices,
+                tile.roadChunk);
 
     // Meshes stay tile-local; collision works in engine space.
     tile.terrain.field = std::move(prepared.field);

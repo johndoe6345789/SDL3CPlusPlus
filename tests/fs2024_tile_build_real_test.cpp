@@ -64,3 +64,4 @@ TEST(Fs2024TileBuildReal, WestminsterBuildingsStandOnTheGround) {
         ASSERT_GE(vertex.y, field.minHeight - 0.01f);
     }
 }
+

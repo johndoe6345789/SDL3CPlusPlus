@@ -30,10 +30,10 @@ struct Fs2024LoadedTile {
     /// The tile's land classes, one texel per ~24 m (R8, nearest).
     SDL_GPUTexture* classMap = nullptr;
     SDL_GPUSampler* classSampler = nullptr;
-    /// Its buildings' walls and, apart for their own texture, roofs;
-    /// indexCount 0 when it has none.
-    Fs2024TerrainChunkGpu buildingChunk;
-    Fs2024TerrainChunkGpu buildingRoofChunk;
+    /// Its buildings' walls and roofs (apart, for their own textures),
+    /// water and roads; indexCount 0 when it has none of one.
+    Fs2024TerrainChunkGpu buildingChunk, buildingRoofChunk;
+    Fs2024TerrainChunkGpu waterChunk, roadChunk;
     /// The landmarks FS2024 stands in this tile; look up each one's
     /// GPU kit in Fs2024TileStreamState::landmarkKits.
     std::vector<Fs2024LandmarkInstance> landmarks;

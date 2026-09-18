@@ -20,6 +20,8 @@ struct Fs2024PreparedTile {
     std::string error;  ///< why it could not be built; empty when it was
     Fs2024Heightfield field;  ///< in the tile's own space
     Fs2024TerrainChunkMesh ground;
+    Fs2024TerrainChunkMesh water;  ///< FS2024's own, flat on the carved ground
+    Fs2024TerrainChunkMesh roads;
     std::vector<std::uint8_t> classes;  ///< classSize x classSize
     int classSize = 0;
     Fs2024BuildingMeshCpu buildings;
