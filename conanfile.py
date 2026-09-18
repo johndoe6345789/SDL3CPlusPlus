@@ -28,6 +28,9 @@ class SDL3CppConan(ConanFile):
         "ffmpeg/8.0.1",
         "cairo/1.18.0",
         "libzip/1.10.1",
+        "xz_utils/5.8.3",
+        "jxrlib/cci.20170615",
+        "libwebp/1.6.0",
         "stb/cci.20230920",
         "gtest/1.17.0",
         "spdlog/1.15.1"

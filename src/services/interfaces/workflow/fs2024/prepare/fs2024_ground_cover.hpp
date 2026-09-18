@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace sdl3cpp::tools::fs2024 {
+namespace sdl3cpp::fs2024 {
 
 /// Land cover guessed from height and slope, in the absence of real
 /// imagery: meadow low down, forest where it steepens, rock and snow
@@ -25,4 +25,4 @@ std::vector<float> ComputeSlopeDegrees(const std::vector<float>& heights,
 void FlattenTowards(std::vector<float>& heights, int cells,
                    const std::vector<std::uint8_t>& mask, float target);
 
-}  // namespace sdl3cpp::tools::fs2024
+}  // namespace sdl3cpp::fs2024

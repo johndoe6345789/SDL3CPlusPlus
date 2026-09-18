@@ -4,16 +4,19 @@
 // own -- fetch both inputs once with curl, the same boundary gta5
 // draws around RPF7 extraction (see packages/fs2024/README.md).
 
-#include "services/interfaces/workflow/fs2024/prepare/bgl/fs2024_bgl_airport.hpp"
-#include "services/interfaces/workflow/fs2024/prepare/texture/fs2024_building_kit_extract.hpp"
-#include "services/interfaces/workflow/fs2024/prepare/dem/fs2024_dem_tile.hpp"
+#include "services/interfaces/workflow/fs2024/data/bgl/fs2024_bgl_airport.hpp"
+#include "services/interfaces/workflow/fs2024/prepare/cgl/fs2024_bld_buildings.hpp"
+#include "services/interfaces/workflow/fs2024/data/texture/fs2024_pgg_kit_extract.hpp"
+#include "services/interfaces/workflow/fs2024/data/dem/fs2024_dem_tile.hpp"
 #include "services/interfaces/workflow/fs2024/prepare/fs2024_grid_layout.hpp"
 #include "services/interfaces/workflow/fs2024/prepare/fs2024_ground_cover.hpp"
-#include "services/interfaces/workflow/fs2024/prepare/landmark/fs2024_landmark_catalog.hpp"
-#include "services/interfaces/workflow/fs2024/prepare/landmark/fs2024_landmark_extract.hpp"
+#include "services/interfaces/workflow/fs2024/data/landmark/fs2024_landmark_bounds.hpp"
+#include "services/interfaces/workflow/fs2024/prepare/landmark/fs2024_landmark_clear.hpp"
+#include "services/interfaces/workflow/fs2024/data/landmark/fs2024_landmark_catalog.hpp"
+#include "services/interfaces/workflow/fs2024/data/landmark/fs2024_landmark_extract.hpp"
 #include "services/interfaces/workflow/fs2024/prepare/landmark/fs2024_landmark_placement.hpp"
 #include "services/interfaces/workflow/fs2024/prepare/landmark/fs2024_landmark_tile_write.hpp"
-#include "services/interfaces/workflow/fs2024/prepare/fs2024_local_frame.hpp"
+#include "services/interfaces/workflow/fs2024/data/fs2024_local_frame.hpp"
 #include "services/interfaces/workflow/fs2024/prepare/osm/fs2024_nearest_road.hpp"
 #include "services/interfaces/workflow/fs2024/prepare/osm/fs2024_osm_json.hpp"
 #include "services/interfaces/workflow/fs2024/prepare/osm/fs2024_pavement_shapes.hpp"
@@ -31,7 +34,8 @@
 #include <stdexcept>
 #include <string>
 
-using namespace sdl3cpp::tools::fs2024;
+using namespace sdl3cpp::fs2024;
+using sdl3cpp::services::impl::RoofShape;
 
 namespace {
 
@@ -77,6 +81,15 @@ Setup SetupAirport(const PrepareArgs& args) {
     return setup;
 }
 
+/// No OSM at all: spawns exactly at the given point with a manual
+/// heading, no road to snap to and no OSM box massing -- DEM terrain
+/// and whichever real FS2024 landmarks the catalog places here.
+Setup SetupPoint(const PrepareArgs& args) {
+    Setup setup{LocalFrame(args.lon, args.lat, 0.f)};
+    setup.spawnHeading = args.heading;
+    return setup;
+}
+
 Setup SetupRoad(const PrepareArgs& args) {
     std::printf("(%.5f, %.5f): reading OpenStreetMap data...\n", args.lat,
                args.lon);
@@ -103,8 +116,38 @@ Setup SetupRoad(const PrepareArgs& args) {
 int main(int argc, char** argv) {
     try {
         const PrepareArgs args = ParsePrepareArgs(argc, argv);
-        Setup setup = args.icao.empty() ? SetupRoad(args)
-                                        : SetupAirport(args);
+        Setup setup = !args.icao.empty() ? SetupAirport(args)
+                    : args.osmJson.empty() ? SetupPoint(args)
+                                          : SetupRoad(args);
+
+        // FS2024's own building library, when the game's CGL folder
+        // was given: its real footprints replace whatever the OSM
+        // pass massed, since these are the very outlines, storeys and
+        // roof shapes the simulator itself builds the city from.
+        if (!args.cglRoot.empty()) {
+            setup.buildings =
+                ReadFs2024Buildings(args.cglRoot, setup.frame, args.extent);
+            std::printf("%zu buildings from FS2024's own data\n",
+                       setup.buildings.size());
+            int flat = 0, gabled = 0, hipped = 0, pyramid = 0;
+            float tallest = 0.f, total = 0.f;
+            for (const BuildingFootprint& building : setup.buildings) {
+                switch (building.roof) {
+                    case RoofShape::Gabled: ++gabled; break;
+                    case RoofShape::Hipped: ++hipped; break;
+                    case RoofShape::Pyramidal: ++pyramid; break;
+                    default: ++flat; break;
+                }
+                tallest = std::max(tallest, building.height);
+                total += building.height;
+            }
+            std::printf("  roofs: %d flat, %d gabled, %d hipped, %d pyramid;"
+                       " mean %.1f m, tallest %.0f m\n", flat, gabled,
+                       hipped, pyramid,
+                       total / std::max<std::size_t>(
+                                   1, setup.buildings.size()),
+                       tallest);
+        }
 
         const GridLayout grid =
             ComputeGridLayout(args.extent, args.tileSize, args.spacing);
@@ -133,12 +176,58 @@ int main(int argc, char** argv) {
             setup.frame.SetAltitude(*setup.flattenTarget);
         }
 
+        // Matched early so a landmark's own footprint can flatten the
+        // ground under it too -- without OSM, a real landmark is the
+        // only shape a bake has to flatten around at all, and a real
+        // DEM's own small rises and dips (a few real metres, nothing
+        // like a hill) read as an odd bump under a building otherwise.
+        const auto catalog = ReadLandmarkCatalog(args.landmarkCatalog);
+        const auto landmarks =
+            MatchLandmarks(setup.rawBuildings, catalog, setup.frame);
+
+        // Each landmark's models come out first, because how much
+        // ground one covers is only knowable from its own geometry --
+        // and that decides both what to flatten and which generated
+        // buildings to drop. FS2024's footprint library holds the
+        // Palace of Westminster as plain outlines too, and extruding
+        // those leaves brick boxes standing inside the real model.
+        std::vector<float> landmarkRadius(landmarks.size(), 0.f);
+        for (std::size_t i = 0; i < landmarks.size(); ++i) {
+            for (const LandmarkCatalogEntry& entry : catalog) {
+                if (entry.model != landmarks[i].model) continue;
+                ExtractLandmarkKit(entry, args.out);
+            }
+            landmarkRadius[i] =
+                ReadLandmarkRadius(args.out, landmarks[i].model);
+        }
+        const std::size_t beforeClear = setup.buildings.size();
+        DropBuildingsUnderLandmarks(landmarks, landmarkRadius,
+                                   setup.buildings);
+        for (std::size_t i = 0; i < landmarks.size(); ++i) {
+            std::printf("landmark %s: %.0f m across\n",
+                       landmarks[i].model.c_str(), landmarkRadius[i] * 2.f);
+        }
+        std::printf("%zu buildings dropped under landmarks\n",
+                   beforeClear - setup.buildings.size());
+
         std::vector<std::uint8_t> mask(absolute.size(), 0);
         {
             GroundImage maskImage(grid.cells, grid.cells, grid.originX,
                                  grid.originZ, args.spacing);
             for (const Shape& shape : setup.shapes) {
                 maskImage.FillPolygon(shape.polygon, {255, 255, 255});
+            }
+            constexpr int kCircleSides = 24;
+            for (std::size_t i = 0; i < landmarks.size(); ++i) {
+                const float radius = landmarkRadius[i];
+                if (radius <= 0.f) continue;
+                std::vector<std::pair<float, float>> circle;
+                for (int side = 0; side < kCircleSides; ++side) {
+                    const float a = side * 2.f * 3.14159265f / kCircleSides;
+                    circle.push_back({landmarks[i].x + radius * std::cos(a),
+                                     landmarks[i].z + radius * std::sin(a)});
+                }
+                maskImage.FillPolygon(circle, {255, 255, 255});
             }
             for (int row = 0; row < grid.cells; ++row) {
                 for (int col = 0; col < grid.cells; ++col) {
@@ -185,24 +274,13 @@ int main(int argc, char** argv) {
             grid.originZ, grid.tileSize, cellsPerTile, image, setup.buildings,
             setup.runway);
 
-        if (!args.wallTexture.empty() && !args.roofTexture.empty()) {
-            ExtractBuildingKit(args.wallTexture, args.roofTexture, args.out);
+        if (!args.pggTextures.empty()) {
+            ExtractPggBuildingKit(args.pggTextures, args.out);
         }
 
-        const auto catalog = ReadLandmarkCatalog(args.landmarkCatalog);
         if (!catalog.empty()) {
-            const auto instances =
-                MatchLandmarks(setup.rawBuildings, catalog, setup.frame);
-            for (const LandmarkCatalogEntry& entry : catalog) {
-                const bool matched =
-                    std::any_of(instances.begin(), instances.end(),
-                               [&](const LandmarkInstance& instance) {
-                                   return instance.model == entry.model;
-                               });
-                if (matched) ExtractLandmarkKit(entry, args.out);
-            }
-            WriteLandmarkInstances(args.out, instances, grid.tileSize);
-            std::printf("%zu of %zu landmarks matched\n", instances.size(),
+            WriteLandmarkInstances(args.out, landmarks, grid.tileSize);
+            std::printf("%zu of %zu landmarks matched\n", landmarks.size(),
                        catalog.size());
         }
 

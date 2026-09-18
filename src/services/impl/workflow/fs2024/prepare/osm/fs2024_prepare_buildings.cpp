@@ -1,6 +1,6 @@
 #include "services/interfaces/workflow/fs2024/prepare/osm/fs2024_prepare_buildings.hpp"
 
-namespace sdl3cpp::tools::fs2024 {
+namespace sdl3cpp::fs2024 {
 
 std::vector<BuildingFootprint> ConvertBuildings(
     const std::vector<OsmWay>& buildings, const LocalFrame& frame) {
@@ -20,4 +20,4 @@ std::vector<BuildingFootprint> ConvertBuildings(
     return out;
 }
 
-}  // namespace sdl3cpp::tools::fs2024
+}  // namespace sdl3cpp::fs2024

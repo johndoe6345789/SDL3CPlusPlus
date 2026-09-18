@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace sdl3cpp::tools::fs2024 {
+namespace sdl3cpp::fs2024 {
 namespace {
 
 constexpr std::array<std::uint8_t, 3> kAsphalt{52, 52, 55};
@@ -87,4 +87,4 @@ std::vector<Shape> AirportShapes(const Airport& airport,
     return shapes;
 }
 
-}  // namespace sdl3cpp::tools::fs2024
+}  // namespace sdl3cpp::fs2024

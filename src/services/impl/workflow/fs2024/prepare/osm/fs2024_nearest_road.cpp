@@ -5,7 +5,7 @@
 #include <cmath>
 #include <utility>
 
-namespace sdl3cpp::tools::fs2024 {
+namespace sdl3cpp::fs2024 {
 namespace {
 
 // Best (most road-like) first, matching python/fs2024/osm_roads.py's
@@ -66,4 +66,4 @@ std::optional<NearestRoad> FindNearestRoad(double lat, double lon,
     return best;
 }
 
-}  // namespace sdl3cpp::tools::fs2024
+}  // namespace sdl3cpp::fs2024

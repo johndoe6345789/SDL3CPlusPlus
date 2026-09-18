@@ -4,7 +4,7 @@
 #include <utility>
 #include <vector>
 
-namespace sdl3cpp::tools::fs2024 {
+namespace sdl3cpp::fs2024 {
 
 struct OsmWay {
     std::string name;
@@ -25,4 +25,4 @@ struct OsmData {
 /// else building:levels * 3 m, else a flat default (see the .cpp).
 OsmData ReadOsmData(const std::string& path);
 
-}  // namespace sdl3cpp::tools::fs2024
+}  // namespace sdl3cpp::fs2024

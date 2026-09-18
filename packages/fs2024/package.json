@@ -4,56 +4,80 @@
   "id": "fs2024",
   "type": "game",
   "category": "demo",
-  "description": "Walk a real-world road or airport, streamed in as you move, with Quake 3 player kinematics -- defaults to a road at Westminster, London",
-
+  "description": "Walk or fly 10 km of central London built from Flight Simulator 2024's own data: its building footprints, storeys and roof shapes, its facade and roof textures, and its real landmark models -- with Quake 3 player kinematics",
+  "launch_options": [
+    {
+      "env": "FS2024_INSTALL_DIR",
+      "label": "FS2024 packages folder",
+      "kind": "directory",
+      "required": true,
+      "default": "D:/Games/Official/Steam",
+      "help": "The folder holding FS2024's installed packages (fs-base-cgl, bf-texture-synth-lib, bf-pgg). Every tile is read from here at runtime."
+    },
+    {
+      "env": "FS2024_SPAWN_LAT",
+      "label": "Spawn latitude",
+      "kind": "text",
+      "required": false,
+      "default": "51.5007",
+      "help": "Degrees north. Anywhere on Earth: the world streams from FS2024's own data around it."
+    },
+    {
+      "env": "FS2024_SPAWN_LON",
+      "label": "Spawn longitude",
+      "kind": "text",
+      "required": false,
+      "default": "-0.1246",
+      "help": "Degrees east."
+    },
+    {
+      "env": "FS2024_SPAWN_HEADING",
+      "label": "Spawn heading",
+      "kind": "text",
+      "required": false,
+      "default": "274",
+      "help": "Compass degrees the player faces at spawn."
+    }
+  ],
   "defaultWorkflow": "workflows/fs2024_game.json",
-
   "workflows": [
     "workflows/fs2024_frame.json",
     "workflows/fs2024_input.json",
     "workflows/fs2024_physics.json"
   ],
-
   "scene": [],
-
   "shaders": [],
-
   "assets": [],
-
   "world_specifications": {
     "unit_scale": {
       "units_per_meter": 1,
       "explanation": "FS2024 and the q3.pm.* constants are both metres, so nothing is rescaled."
     },
-
     "axis_convention": {
       "source": "WGS84 longitude/latitude, metres above sea level",
       "engine": "Y-up, x east, z south",
       "mapping": "A local tangent frame on the spawn point: x = east metres, y = altitude - spawn elevation, z = -(north metres)",
       "critical": "Applied once, by python/fs2024/bake_terrain.py. The engine only ever sees engine-space heights."
     },
-
     "world_bounds_metres": {
       "min": null,
       "max": null,
       "note": "Unbounded: fs2024.tiles.resolve/load/evict stream a grid of tiles keyed by floor(x / tile_size), floor(z / tile_size) around the player, the same idea worldwide-scale terrain streaming always is. Only tiles baked to disk actually exist; a player who reaches an unbaked tile is remembered as 'missing' and simply has no ground there."
     },
-
     "player": {
       "kinematics": "quake3",
       "explanation": "The ioq3 pmove chain (q3.pm.*) unchanged, with the gta5 package's walking tune. Its traces sweep whichever tile's Bullet heightfield the player is currently over."
     }
   },
-
   "asset_pipeline": {
     "status": "requires_local_bake",
     "reason": "FS2024 streams its world elevation and land cover at runtime rather than storing it, so the ground is baked offline from a public DEM (Copernicus GLO-30). An airport's runway and aprons come from its own scenery BGL; anywhere else, the nearest real road comes from OpenStreetMap. See README.md.",
     "expected_input": "<out>/world.json plus <out>/tiles/<tx>_<tz>/{terrain.fst,ground.jpg,roads.json}, written by python -m python.fs2024.bake_terrain"
   },
-
   "bundled": false,
-
-  "dependencies": ["gta5", "seed"],
-
+  "dependencies": [
+    "gta5",
+    "seed"
+  ],
   "notes": "Borrows gta5.sky.draw with the gta5 sky and composite shaders, gta5.gamepad, gta5.player.fly, and seed's postfx_fullscreen vertex shader."
 }

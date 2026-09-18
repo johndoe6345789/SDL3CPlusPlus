@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/fs2024/player/fs2024_player_steps.hpp"
 
+#include "services/interfaces/workflow/fs2024/world/fs2024_world.hpp"
 #include "services/interfaces/workflow/fs2024/player/fs2024_player_place.hpp"
 #include "services/interfaces/workflow/fs2024/fs2024_step_params.hpp"
 #include "services/interfaces/workflow/fs2024/tiles/fs2024_tile_lookup.hpp"
@@ -19,9 +20,12 @@ std::string WorkflowFs2024PlayerSpawnStep::GetPluginId() const {
 
 void WorkflowFs2024PlayerSpawnStep::Execute(
     const WorkflowStepDefinition& step, WorkflowContext& context) {
-    const float x = Fs2024NumberOr(step, "x", 0.f);
-    const float z = Fs2024NumberOr(step, "z", 0.f);
-    const float heading = Fs2024NumberOr(step, "heading", 0.f);
+    // An opened world places the spawn itself, from its own lat/lon.
+    const Fs2024World* world = state_->world.get();
+    const float x = world ? world->spawnX : Fs2024NumberOr(step, "x", 0.f);
+    const float z = world ? world->spawnZ : Fs2024NumberOr(step, "z", 0.f);
+    const float heading = world ? world->spawnHeading
+                                : Fs2024NumberOr(step, "heading", 0.f);
 
     const Fs2024Heightfield* field = Fs2024FindTileField(*state_, x, z);
     glm::vec3 origin{x, 0.f, z};
@@ -45,7 +49,11 @@ void WorkflowFs2024PlayerSpawnStep::Execute(
         context.Set("q3.ps", moved);
     }
     context.Set<float>("camera_yaw", Fs2024YawForHeading(heading));
-    context.Set<float>("camera_pitch", 0.f);
+    // A spawn can look down as well as along: an aerial view over a
+    // city wants a pitch, a walk along a street does not.
+    context.Set<float>("camera_pitch",
+                      Fs2024NumberOr(step, "pitch", 0.f) * 3.14159265f /
+                          180.f);
 
     if (logger_) {
         logger_->Info("fs2024.player.spawn: (" + std::to_string(origin.x) +

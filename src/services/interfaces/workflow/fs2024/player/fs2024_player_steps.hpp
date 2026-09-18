@@ -17,7 +17,8 @@ namespace sdl3cpp::services::impl {
  * loaded and the player's physics.body.add, so the drop is measured
  * from the real ground rather than guessed in the workflow.
  *
- * Parameters: x, z (metres), heading (degrees), clearance (metres).
+ * Parameters: x, z (metres), heading and pitch (degrees, pitch
+ * negative to look down), clearance (metres).
  * Writes: camera_yaw, q3.ps (when it already exists)
  */
 class WorkflowFs2024PlayerSpawnStep final : public IWorkflowStep {

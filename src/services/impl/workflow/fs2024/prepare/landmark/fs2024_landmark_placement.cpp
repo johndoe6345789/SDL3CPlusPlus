@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cctype>
 
-namespace sdl3cpp::tools::fs2024 {
+namespace sdl3cpp::fs2024 {
 namespace {
 
 std::string Lower(const std::string& text) {
@@ -31,19 +31,27 @@ std::vector<LandmarkInstance> MatchLandmarks(
     const LocalFrame& frame) {
     std::vector<LandmarkInstance> instances;
     for (const LandmarkCatalogEntry& entry : catalog) {
+        LandmarkInstance instance;
+        instance.model = entry.model;
+        instance.headingDegrees = entry.headingDegrees;
+
+        if (entry.hasLatLon) {
+            // A plain real-world coordinate, no OSM involved at all --
+            // the only option when this bake has no OSM data to match
+            // against in the first place.
+            frame.ToEngine(entry.lon, entry.lat, instance.x, instance.z);
+            instances.push_back(instance);
+            continue;
+        }
+
         const OsmWay* building = FindByName(buildings, entry.match);
         if (!building || building->points.empty()) continue;
-
         double lonSum = 0.0, latSum = 0.0;
         for (const auto& [lon, lat] : building->points) {
             lonSum += lon;
             latSum += lat;
         }
         const double count = static_cast<double>(building->points.size());
-
-        LandmarkInstance instance;
-        instance.model = entry.model;
-        instance.headingDegrees = entry.headingDegrees;
         frame.ToEngine(lonSum / count, latSum / count, instance.x,
                       instance.z);
         instances.push_back(instance);
@@ -51,4 +59,4 @@ std::vector<LandmarkInstance> MatchLandmarks(
     return instances;
 }
 
-}  // namespace sdl3cpp::tools::fs2024
+}  // namespace sdl3cpp::fs2024

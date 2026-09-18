@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/fs2024/tiles/fs2024_tiles_resolve_step.hpp"
 
+#include "services/interfaces/workflow/fs2024/world/fs2024_world.hpp"
 #include "services/interfaces/workflow/fs2024/fs2024_step_params.hpp"
 #include "services/interfaces/workflow/fs2024/tiles/fs2024_tiles_resolve.hpp"
 #include "services/interfaces/workflow/quake3/pmove/q3_pm_types.hpp"
@@ -20,8 +21,9 @@ std::string WorkflowFs2024TilesResolveStep::GetPluginId() const {
 void WorkflowFs2024TilesResolveStep::Execute(
     const WorkflowStepDefinition& step, WorkflowContext& context) {
     if (!state_->configured) {
-        state_->tilesRoot = Fs2024StringOr(step, "tiles_root", "");
-        state_->tileSize = Fs2024NumberOr(step, "tile_size", 1000.f);
+        // Tile size is FS2024's own level-14 cut, fixed by where
+        // fs2024.world.open put engine space on the Earth.
+        if (state_->world) state_->tileSize = state_->world->origin.TileSize();
         state_->loadRadiusTiles = static_cast<int>(
             Fs2024NumberOr(step, "load_radius_tiles", 2.f));
         state_->evictRadiusTiles = static_cast<int>(
@@ -30,8 +32,7 @@ void WorkflowFs2024TilesResolveStep::Execute(
             Fs2024NumberOr(step, "max_loads_per_call", 4.f));
         state_->configured = true;
         if (logger_) {
-            logger_->Info("fs2024.tiles.resolve: streaming '" +
-                          state_->tilesRoot + "', " +
+            logger_->Info("fs2024.tiles.resolve: " +
                           std::to_string(state_->tileSize) +
                           " m tiles, load radius " +
                           std::to_string(state_->loadRadiusTiles) +

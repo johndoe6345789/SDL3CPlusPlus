@@ -9,7 +9,7 @@
 #include <filesystem>
 #include <fstream>
 
-namespace sdl3cpp::tools::fs2024 {
+namespace sdl3cpp::fs2024 {
 namespace {
 
 namespace fs = std::filesystem;
@@ -95,13 +95,16 @@ bool BuildingOverlapsTile(const BuildingFootprint& building,
 void WriteBuildings(const fs::path& path,
                    const std::vector<const BuildingFootprint*>& buildings) {
     std::ofstream out(path, std::ios::binary);
-    out.write("FSB1", 4);
+    out.write("FSB2", 4);
     const auto count = static_cast<std::uint32_t>(buildings.size());
     out.write(reinterpret_cast<const char*>(&count), 4);
     for (const BuildingFootprint* b : buildings) {
         const auto points = static_cast<std::uint32_t>(b->footprint.size());
         out.write(reinterpret_cast<const char*>(&points), 4);
         out.write(reinterpret_cast<const char*>(&b->height), 4);
+        const auto roof = static_cast<std::uint32_t>(b->roof);
+        out.write(reinterpret_cast<const char*>(&roof), 4);
+        out.write(reinterpret_cast<const char*>(&b->roofRise), 4);
         for (const Point2& p : b->footprint) {
             out.write(reinterpret_cast<const char*>(&p.x), 4);
             out.write(reinterpret_cast<const char*>(&p.y), 4);
@@ -170,4 +173,4 @@ int WriteTiles(const std::string& outDir, const std::vector<float>& heights,
     return written;
 }
 
-}  // namespace sdl3cpp::tools::fs2024
+}  // namespace sdl3cpp::fs2024

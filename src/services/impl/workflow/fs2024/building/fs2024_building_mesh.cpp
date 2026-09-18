@@ -1,5 +1,7 @@
 #include "services/interfaces/workflow/fs2024/building/fs2024_building_mesh.hpp"
 
+#include "services/interfaces/workflow/fs2024/building/fs2024_roof_mesh.hpp"
+
 #include <algorithm>
 #include <cmath>
 
@@ -9,8 +11,9 @@ namespace {
 // How many metres of wall/roof one full texture tile covers -- fixed,
 // since a flat extrusion has no natural unit (a real building's own
 // storey height/brick coursing) to derive it from.
-constexpr float kWallTextureMetres = 4.f;
-constexpr float kRoofTextureMetres = 8.f;
+constexpr float kWallTextureMetres = 4.f;   ///< one window bay
+constexpr float kStoreyTextureMetres = 3.f;  ///< one storey
+constexpr float kRoofTextureMetres = 4.f;   ///< FS2024's own tile size
 
 BspRenderVertex Vertex(float x, float y, float z, float nx, float ny,
                       float nz, float u, float v) {
@@ -41,7 +44,7 @@ void AppendWall(const Point2& a, const Point2& b, float height,
     if (length < 1e-4f) return;  // a duplicated node; no wall to build
     const float nx = -dz / length, nz = dx / length;
     const float u = length / kWallTextureMetres;
-    const float v = height / kWallTextureMetres;
+    const float v = height / kStoreyTextureMetres;
 
     const auto base = static_cast<std::uint32_t>(vertices.size());
     vertices.push_back(Vertex(a.x, 0.f, a.y, nx, 0.f, nz, 0.f, 0.f));
@@ -53,23 +56,10 @@ void AppendWall(const Point2& a, const Point2& b, float height,
     }
 }
 
-void AppendRoof(const std::vector<Point2>& footprint, float height,
-               std::vector<BspRenderVertex>& vertices,
-               std::vector<std::uint32_t>& indices) {
-    const auto triangles = TriangulatePolygon(footprint);
-    const auto base = static_cast<std::uint32_t>(vertices.size());
-    for (const Point2& p : footprint) {
-        vertices.push_back(Vertex(p.x, height, p.y, 0.f, 1.f, 0.f,
-                                  p.x / kRoofTextureMetres,
-                                  p.y / kRoofTextureMetres));
-    }
-    for (std::uint32_t index : triangles) indices.push_back(base + index);
-}
-
 }  // namespace
 
 void AppendBuildingMesh(const std::vector<Point2>& rawFootprint,
-                       float height,
+                       float height, RoofShape roof, float roofRise,
                        std::vector<BspRenderVertex>& wallVertices,
                        std::vector<std::uint32_t>& wallIndices,
                        std::vector<BspRenderVertex>& roofVertices,
@@ -81,7 +71,8 @@ void AppendBuildingMesh(const std::vector<Point2>& rawFootprint,
         AppendWall(footprint[i], footprint[(i + 1) % footprint.size()],
                   height, wallVertices, wallIndices);
     }
-    AppendRoof(footprint, height, roofVertices, roofIndices);
+    AppendRoofMesh(footprint, height, roof, roofRise, kRoofTextureMetres,
+                  roofVertices, roofIndices);
 }
 
 }  // namespace sdl3cpp::services::impl

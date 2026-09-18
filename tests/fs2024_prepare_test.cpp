@@ -4,9 +4,9 @@
 // triangulation/extrusion.
 
 #include "services/interfaces/workflow/fs2024/prepare/fs2024_grid_layout.hpp"
-#include "services/interfaces/workflow/fs2024/prepare/landmark/fs2024_landmark_catalog.hpp"
+#include "services/interfaces/workflow/fs2024/data/landmark/fs2024_landmark_catalog.hpp"
 #include "services/interfaces/workflow/fs2024/prepare/landmark/fs2024_landmark_placement.hpp"
-#include "services/interfaces/workflow/fs2024/prepare/fs2024_local_frame.hpp"
+#include "services/interfaces/workflow/fs2024/data/fs2024_local_frame.hpp"
 #include "services/interfaces/workflow/fs2024/prepare/fs2024_prepare_args.hpp"
 #include "services/interfaces/workflow/fs2024/building/fs2024_building_mesh.hpp"
 #include "services/interfaces/workflow/fs2024/building/fs2024_polygon.hpp"
@@ -20,7 +20,7 @@
 #include <fstream>
 #include <vector>
 
-namespace tools = sdl3cpp::tools::fs2024;
+namespace tools = sdl3cpp::fs2024;
 namespace impl = sdl3cpp::services::impl;
 
 namespace {
@@ -62,10 +62,15 @@ TEST(Fs2024PrepareArgs, RejectsBothModesSelected) {
                 std::runtime_error);
 }
 
-TEST(Fs2024PrepareArgs, RoadModeWithoutOsmJsonIsRejected) {
-    EXPECT_THROW(Parse({"--lat", "51.5", "--lon", "-0.1", "--dem", "d.tif",
-                       "--out", "o"}),
-                std::runtime_error);
+TEST(Fs2024PrepareArgs, LatLonModeWithoutOsmJsonIsAPlainPointSpawn) {
+    // No OSM at all: real FS2024 landmarks and DEM terrain only, spawning
+    // exactly at the given point with a manual heading -- no road to
+    // snap to, no OSM box massing.
+    const auto args = Parse({"--lat", "51.5", "--lon", "-0.1", "--heading",
+                             "90", "--dem", "d.tif", "--out", "o"});
+    EXPECT_TRUE(args.hasLatLon);
+    EXPECT_TRUE(args.osmJson.empty());
+    EXPECT_FLOAT_EQ(args.heading, 90.f);
 }
 
 TEST(Fs2024GridLayout, CorrectsATileSizeThatDoesNotDivideSpacing) {
@@ -108,8 +113,9 @@ TEST(Fs2024BuildingMesh, ProducesWallsAndARoofForASquareFootprint) {
         {0.f, 0.f}, {10.f, 0.f}, {10.f, 10.f}, {0.f, 10.f}};
     std::vector<impl::BspRenderVertex> wallVertices, roofVertices;
     std::vector<std::uint32_t> wallIndices, roofIndices;
-    impl::AppendBuildingMesh(square, 9.f, wallVertices, wallIndices,
-                            roofVertices, roofIndices);
+    impl::AppendBuildingMesh(square, 9.f, impl::RoofShape::Flat, 0.f,
+                            wallVertices, wallIndices, roofVertices,
+                            roofIndices);
 
     EXPECT_EQ(wallVertices.size(), 16u);  // 4 walls * 4 verts
     EXPECT_EQ(wallIndices.size(), 4u * 2u * 3u);  // 4 walls * 2 tris
@@ -128,8 +134,9 @@ TEST(Fs2024BuildingMesh, RoofSitsAtTheGivenHeightFacingUp) {
         {0.f, 0.f}, {10.f, 0.f}, {10.f, 10.f}, {0.f, 10.f}};
     std::vector<impl::BspRenderVertex> wallVertices, roofVertices;
     std::vector<std::uint32_t> wallIndices, roofIndices;
-    impl::AppendBuildingMesh(square, 9.f, wallVertices, wallIndices,
-                            roofVertices, roofIndices);
+    impl::AppendBuildingMesh(square, 9.f, impl::RoofShape::Flat, 0.f,
+                            wallVertices, wallIndices, roofVertices,
+                            roofIndices);
 
     ASSERT_EQ(roofVertices.size(), 4u);
     for (const auto& v : roofVertices) {
@@ -139,15 +146,17 @@ TEST(Fs2024BuildingMesh, RoofSitsAtTheGivenHeightFacingUp) {
 }
 
 TEST(Fs2024BuildingMesh, WallAndRoofUvsTileByWorldDistance) {
-    // A wall 8 m long and 4 m tall, and a roof whose footprint corner
-    // sits 8 m out -- both should read as exactly 2 texture tiles at
-    // this engine's fixed 4 m/8 m wall/roof tile size.
+    // A wall 8 m long and one 3 m storey tall, and a roof whose
+    // footprint corner sits 8 m out. The facade texture is one 4 m
+    // window bay by one 3 m storey, and FS2024's own roof tile is 4 m,
+    // so the wall reads 2 bays by 1 storey and the roof 2 tiles.
     const std::vector<impl::Point2> square{
         {0.f, 0.f}, {8.f, 0.f}, {8.f, 8.f}, {0.f, 8.f}};
     std::vector<impl::BspRenderVertex> wallVertices, roofVertices;
     std::vector<std::uint32_t> wallIndices, roofIndices;
-    impl::AppendBuildingMesh(square, 4.f, wallVertices, wallIndices,
-                            roofVertices, roofIndices);
+    impl::AppendBuildingMesh(square, 3.f, impl::RoofShape::Flat, 0.f,
+                            wallVertices, wallIndices, roofVertices,
+                            roofIndices);
 
     ASSERT_EQ(wallVertices.size(), 16u);
     EXPECT_FLOAT_EQ(wallVertices[0].u, 0.f);
@@ -162,19 +171,20 @@ TEST(Fs2024BuildingMesh, WallAndRoofUvsTileByWorldDistance) {
         maxU = std::max(maxU, v.u);
         maxV = std::max(maxV, v.v);
     }
-    EXPECT_FLOAT_EQ(maxU, 1.f);
-    EXPECT_FLOAT_EQ(maxV, 1.f);
+    EXPECT_FLOAT_EQ(maxU, 2.f);
+    EXPECT_FLOAT_EQ(maxV, 2.f);
 }
 
 TEST(Fs2024BuildingMesh, NoHeightOrTooFewPointsProducesNothing) {
     std::vector<impl::BspRenderVertex> wallVertices, roofVertices;
     std::vector<std::uint32_t> wallIndices, roofIndices;
     impl::AppendBuildingMesh({{0.f, 0.f}, {1.f, 0.f}, {1.f, 1.f}}, 0.f,
-                            wallVertices, wallIndices, roofVertices,
-                            roofIndices);
+                            impl::RoofShape::Flat, 0.f, wallVertices,
+                            wallIndices, roofVertices, roofIndices);
     EXPECT_TRUE(wallVertices.empty());
     EXPECT_TRUE(roofVertices.empty());
-    impl::AppendBuildingMesh({{0.f, 0.f}, {1.f, 0.f}}, 9.f, wallVertices,
+    impl::AppendBuildingMesh({{0.f, 0.f}, {1.f, 0.f}}, 9.f,
+                            impl::RoofShape::Flat, 0.f, wallVertices,
                             wallIndices, roofVertices, roofIndices);
     EXPECT_TRUE(wallVertices.empty());
     EXPECT_TRUE(roofVertices.empty());
@@ -230,8 +240,13 @@ TEST(Fs2024LandmarkPlacement, MatchesCaseInsensitiveSubstringAndCentres) {
         "Elizabeth Tower", "yes", 0.f,
         {{-0.1247, 51.5006}, {-0.1245, 51.5006}, {-0.1245, 51.5008},
         {-0.1247, 51.5008}}};
-    const std::vector<tools::LandmarkCatalogEntry> catalog{
-        {"elizabeth tower", "poi.bgl", "tex", "WestminsterPalace", 45.f}};
+    tools::LandmarkCatalogEntry entry;
+    entry.match = "elizabeth tower";
+    entry.bglPath = "poi.bgl";
+    entry.texturesDir = "tex";
+    entry.model = "WestminsterPalace";
+    entry.headingDegrees = 45.f;
+    const std::vector<tools::LandmarkCatalogEntry> catalog{entry};
 
     const auto instances = tools::MatchLandmarks({tower}, catalog, frame);
     ASSERT_EQ(instances.size(), 1u);
@@ -241,12 +256,35 @@ TEST(Fs2024LandmarkPlacement, MatchesCaseInsensitiveSubstringAndCentres) {
     EXPECT_NEAR(instances[0].z, 0.f, 1.f);
 }
 
+TEST(Fs2024LandmarkPlacement, LatLonEntryPlacesDirectlyWithNoOsmNeeded) {
+    // No OSM buildings at all -- a bake with no --osm-json still places
+    // a landmark given directly by coordinate.
+    const tools::LocalFrame frame(-0.0754, 51.5055, 0.f);
+    tools::LandmarkCatalogEntry entry;
+    entry.hasLatLon = true;
+    entry.lat = 51.5055;
+    entry.lon = -0.0754;
+    entry.model = "TowerBridge";
+    entry.headingDegrees = 30.f;
+    const std::vector<tools::LandmarkCatalogEntry> catalog{entry};
+
+    const auto instances = tools::MatchLandmarks({}, catalog, frame);
+    ASSERT_EQ(instances.size(), 1u);
+    EXPECT_EQ(instances[0].model, "TowerBridge");
+    EXPECT_NEAR(instances[0].x, 0.f, 1.f);
+    EXPECT_NEAR(instances[0].z, 0.f, 1.f);
+}
+
 TEST(Fs2024LandmarkPlacement, NoMatchingNameProducesNoInstance) {
     const tools::LocalFrame frame(0.0, 0.0, 0.f);
     const tools::OsmWay other{
         "Some Other Building", "yes", 0.f,
         {{0.0, 0.0}, {0.001, 0.0}, {0.001, 0.001}}};
-    const std::vector<tools::LandmarkCatalogEntry> catalog{
-        {"elizabeth tower", "poi.bgl", "tex", "WestminsterPalace", 0.f}};
+    tools::LandmarkCatalogEntry entry;
+    entry.match = "elizabeth tower";
+    entry.bglPath = "poi.bgl";
+    entry.texturesDir = "tex";
+    entry.model = "WestminsterPalace";
+    const std::vector<tools::LandmarkCatalogEntry> catalog{entry};
     EXPECT_TRUE(tools::MatchLandmarks({other}, catalog, frame).empty());
 }

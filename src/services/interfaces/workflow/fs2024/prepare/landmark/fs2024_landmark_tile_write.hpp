@@ -4,7 +4,7 @@
 
 #include <string>
 
-namespace sdl3cpp::tools::fs2024 {
+namespace sdl3cpp::fs2024 {
 
 /// Writes each instance's `landmarks.json` into whichever tile
 /// directory under `outDir` its (x, z) falls in (creating the
@@ -17,4 +17,4 @@ void WriteLandmarkInstances(const std::string& outDir,
                            const std::vector<LandmarkInstance>& instances,
                            float tileSize);
 
-}  // namespace sdl3cpp::tools::fs2024
+}  // namespace sdl3cpp::fs2024

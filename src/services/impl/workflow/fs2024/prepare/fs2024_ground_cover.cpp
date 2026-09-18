@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace sdl3cpp::tools::fs2024 {
+namespace sdl3cpp::fs2024 {
 namespace {
 
 using Colour = std::array<float, 3>;
@@ -132,4 +132,4 @@ void FlattenTowards(std::vector<float>& heights, int cells,
     }
 }
 
-}  // namespace sdl3cpp::tools::fs2024
+}  // namespace sdl3cpp::fs2024

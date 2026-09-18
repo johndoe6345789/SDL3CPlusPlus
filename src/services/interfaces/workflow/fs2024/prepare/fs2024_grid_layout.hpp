@@ -1,6 +1,6 @@
 #pragma once
 
-namespace sdl3cpp::tools::fs2024 {
+namespace sdl3cpp::fs2024 {
 
 /// The exact, key-aligned grid a bake actually lays out (see the
 /// Python original this replaces, python/fs2024/tiling.py's own
@@ -21,4 +21,4 @@ struct GridLayout {
 GridLayout ComputeGridLayout(float extent, float requestedTileSize,
                              float spacing, int minRadiusTiles = 3);
 
-}  // namespace sdl3cpp::tools::fs2024
+}  // namespace sdl3cpp::fs2024

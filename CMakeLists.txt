@@ -112,6 +112,12 @@ find_package(GTest CONFIG REQUIRED)
 
 find_package(ZLIB CONFIG REQUIRED)
 
+find_package(LibLZMA CONFIG REQUIRED)
+
+find_package(jxrlib CONFIG REQUIRED)
+
+find_package(WebP CONFIG REQUIRED)
+
 find_package(ffmpeg CONFIG REQUIRED)
 
 
@@ -179,13 +185,13 @@ if(BUILD_SDL3_APP)
         src/services/impl/diagnostics/logger_service_config.cpp
         src/services/impl/diagnostics/logger_service_log.cpp
         src/services/impl/diagnostics/logger_service_trace_variable.cpp
-        src/services/impl/app/cli_env_override.cpp
         src/services/impl/app/app_cli_args.cpp
-        src/services/impl/app/app_require_package.cpp
-        src/services/impl/app/app_logger_init.cpp
-        src/services/impl/app/app_workflow_runtime.cpp
-        src/services/impl/app/app_package_config.cpp
         src/services/impl/app/app_context_populate.cpp
+        src/services/impl/app/app_logger_init.cpp
+        src/services/impl/app/app_package_config.cpp
+        src/services/impl/app/app_require_package.cpp
+        src/services/impl/app/app_workflow_runtime.cpp
+        src/services/impl/app/cli_env_override.cpp
         src/services/impl/workflow/bootstrap/graphics_init_device_helpers.cpp
         src/services/impl/workflow/bootstrap/package_root_resolver.cpp
         src/services/impl/workflow/bootstrap/package_shader_load.cpp
@@ -632,6 +638,8 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/graphics/shader_compile_params.cpp
         src/services/impl/workflow/graphics/shader_format_detection.cpp
         src/services/impl/workflow/graphics/shader_gpu_compile.cpp
+        src/services/impl/workflow/graphics/texture_array_gpu_parts.cpp
+        src/services/impl/workflow/graphics/texture_array_gpu_upload.cpp
         src/services/impl/workflow/graphics/texture_gpu_transfer.cpp
         src/services/impl/workflow/graphics/texture_gpu_upload.cpp
         src/services/impl/workflow/graphics/texture_image_io.cpp
@@ -1142,11 +1150,16 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/fs2024/fs2024_step_params.cpp
         src/services/impl/workflow/fs2024/tiles/fs2024_tile_key.cpp
         src/services/impl/workflow/fs2024/tiles/fs2024_tile_lookup.cpp
+        src/services/impl/workflow/fs2024/tiles/fs2024_tile_release.cpp
         src/services/impl/workflow/fs2024/tiles/fs2024_tiles_evict_step.cpp
         src/services/impl/workflow/fs2024/tiles/fs2024_tiles_load_step.cpp
         src/services/impl/workflow/fs2024/tiles/fs2024_tiles_resolve.cpp
         src/services/impl/workflow/fs2024/tiles/fs2024_tiles_resolve_step.cpp
+        src/services/impl/workflow/fs2024/tiles/fs2024_world_tile_load.cpp
+        src/services/impl/workflow/fs2024/terrain/fs2024_class_map_upload.cpp
+        src/services/impl/workflow/fs2024/terrain/fs2024_draw_tile.cpp
         src/services/impl/workflow/fs2024/terrain/fs2024_frustum.cpp
+        src/services/impl/workflow/fs2024/terrain/fs2024_ground_uniforms.cpp
         src/services/impl/workflow/fs2024/terrain/fs2024_heightfield.cpp
         src/services/impl/workflow/fs2024/terrain/fs2024_terrain_collision.cpp
         src/services/impl/workflow/fs2024/terrain/fs2024_terrain_draw_step.cpp
@@ -1154,12 +1167,63 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/fs2024/terrain/fs2024_terrain_uniforms.cpp
         src/services/impl/workflow/fs2024/terrain/fs2024_terrain_upload.cpp
         src/services/impl/workflow/fs2024/building/fs2024_building_mesh.cpp
+        src/services/impl/workflow/fs2024/building/fs2024_convex_hull.cpp
+        src/services/impl/workflow/fs2024/building/fs2024_oriented_box.cpp
         src/services/impl/workflow/fs2024/building/fs2024_polygon.cpp
+        src/services/impl/workflow/fs2024/building/fs2024_roof_mesh.cpp
+        src/services/impl/workflow/fs2024/building/fs2024_roof_pitched.cpp
         src/services/impl/workflow/fs2024/landmark/fs2024_landmark_kit.cpp
         src/services/impl/workflow/fs2024/landmark/fs2024_landmark_load.cpp
+        src/services/impl/workflow/fs2024/world/fs2024_geo_origin.cpp
+        src/services/impl/workflow/fs2024/world/fs2024_install_paths.cpp
+        src/services/impl/workflow/fs2024/world/fs2024_world_gpu.cpp
+        src/services/impl/workflow/fs2024/world/fs2024_world_open_step.cpp
+        src/services/impl/workflow/fs2024/world/fs2024_world_rebase.cpp
+        src/services/impl/workflow/fs2024/world/fs2024_world_rebase_step.cpp
         src/services/impl/workflow/fs2024/player/fs2024_ground_guard_step.cpp
         src/services/impl/workflow/fs2024/player/fs2024_player_place.cpp
         src/services/impl/workflow/fs2024/player/fs2024_player_spawn_step.cpp
+        src/services/impl/workflow/fs2024/data/fs2024_local_frame.cpp
+        src/services/impl/workflow/fs2024/data/bgl/fs2024_bgl_airport.cpp
+        src/services/impl/workflow/fs2024/data/bgl/fs2024_bgl_model_library.cpp
+        src/services/impl/workflow/fs2024/data/bgl/fs2024_bgl_model_name.cpp
+        src/services/impl/workflow/fs2024/data/bgl/fs2024_riff_chunk.cpp
+        src/services/impl/workflow/fs2024/data/cgl/fs2024_bld_colour.cpp
+        src/services/impl/workflow/fs2024/data/cgl/fs2024_bld_columns.cpp
+        src/services/impl/workflow/fs2024/data/cgl/fs2024_bld_cursor.cpp
+        src/services/impl/workflow/fs2024/data/cgl/fs2024_bld_library.cpp
+        src/services/impl/workflow/fs2024/data/cgl/fs2024_bld_roof.cpp
+        src/services/impl/workflow/fs2024/data/cgl/fs2024_bld_tile.cpp
+        src/services/impl/workflow/fs2024/data/cgl/fs2024_cgl_container.cpp
+        src/services/impl/workflow/fs2024/data/cgl/fs2024_cgl_table.cpp
+        src/services/impl/workflow/fs2024/data/cgl/fs2024_lcg_tile.cpp
+        src/services/impl/workflow/fs2024/data/cgl/fs2024_lzma_raw.cpp
+        src/services/impl/workflow/fs2024/data/cgl/fs2024_quadkey.cpp
+        src/services/impl/workflow/fs2024/data/dem/fs2024_dem_calibration.cpp
+        src/services/impl/workflow/fs2024/data/dem/fs2024_dem_cgl_tile.cpp
+        src/services/impl/workflow/fs2024/data/dem/fs2024_dem_tile.cpp
+        src/services/impl/workflow/fs2024/data/dem/fs2024_inflate.cpp
+        src/services/impl/workflow/fs2024/data/dem/fs2024_tiff_ifd.cpp
+        src/services/impl/workflow/fs2024/data/dem/fs2024_tiff_predictor.cpp
+        src/services/impl/workflow/fs2024/data/gltf/fs2024_gltf_accessor.cpp
+        src/services/impl/workflow/fs2024/data/gltf/fs2024_gltf_model.cpp
+        src/services/impl/workflow/fs2024/data/gltf/fs2024_gltf_scene.cpp
+        src/services/impl/workflow/fs2024/data/landmark/fs2024_landmark_bounds.cpp
+        src/services/impl/workflow/fs2024/data/landmark/fs2024_landmark_catalog.cpp
+        src/services/impl/workflow/fs2024/data/landmark/fs2024_landmark_extract.cpp
+        src/services/impl/workflow/fs2024/data/material/fs2024_ground_materials.cpp
+        src/services/impl/workflow/fs2024/data/texture/fs2024_bc7_bits.cpp
+        src/services/impl/workflow/fs2024/data/texture/fs2024_bc7_decode.cpp
+        src/services/impl/workflow/fs2024/data/texture/fs2024_bc7_tables.cpp
+        src/services/impl/workflow/fs2024/data/texture/fs2024_bc_decode.cpp
+        src/services/impl/workflow/fs2024/data/texture/fs2024_dds_array.cpp
+        src/services/impl/workflow/fs2024/data/texture/fs2024_dds_array_blocks.cpp
+        src/services/impl/workflow/fs2024/data/texture/fs2024_dds_array_info.cpp
+        src/services/impl/workflow/fs2024/data/texture/fs2024_dds_texture.cpp
+        src/services/impl/workflow/fs2024/data/texture/fs2024_facade_bake.cpp
+        src/services/impl/workflow/fs2024/data/texture/fs2024_ground_image.cpp
+        src/services/impl/workflow/fs2024/data/texture/fs2024_pgg_assets.cpp
+        src/services/impl/workflow/fs2024/data/texture/fs2024_pgg_kit_extract.cpp
         src/services/impl/workflow/bl4/bl4_collision_body.cpp
         src/services/impl/workflow/bl4/bl4_collision_shape.cpp
         src/services/impl/workflow/bl4/bl4_mesh_extract.cpp
@@ -1194,40 +1258,74 @@ if(BUILD_SDL3_APP)
         ffmpeg::swscale
         ffmpeg::swresample
         ffmpeg::avutil
+        LibLZMA::LibLZMA
+        jxrlib::jxrlib
+        WebP::webpdecoder
     )
 endif()
     add_executable(fs2024_prepare
         src/services/impl/workflow/fs2024/prepare/fs2024_grid_layout.cpp
         src/services/impl/workflow/fs2024/prepare/fs2024_ground_cover.cpp
-        src/services/impl/workflow/fs2024/prepare/fs2024_local_frame.cpp
         src/services/impl/workflow/fs2024/prepare/fs2024_prepare_args.cpp
         src/services/impl/workflow/fs2024/prepare/fs2024_prepare_main.cpp
         src/services/impl/workflow/fs2024/prepare/fs2024_tile_writer.cpp
-        src/services/impl/workflow/fs2024/prepare/bgl/fs2024_bgl_airport.cpp
-        src/services/impl/workflow/fs2024/prepare/bgl/fs2024_bgl_model_library.cpp
-        src/services/impl/workflow/fs2024/prepare/bgl/fs2024_bgl_model_name.cpp
-        src/services/impl/workflow/fs2024/prepare/bgl/fs2024_riff_chunk.cpp
-        src/services/impl/workflow/fs2024/prepare/gltf/fs2024_gltf_accessor.cpp
-        src/services/impl/workflow/fs2024/prepare/gltf/fs2024_gltf_model.cpp
-        src/services/impl/workflow/fs2024/prepare/gltf/fs2024_gltf_scene.cpp
-        src/services/impl/workflow/fs2024/prepare/dem/fs2024_dem_tile.cpp
-        src/services/impl/workflow/fs2024/prepare/dem/fs2024_inflate.cpp
-        src/services/impl/workflow/fs2024/prepare/dem/fs2024_tiff_ifd.cpp
-        src/services/impl/workflow/fs2024/prepare/dem/fs2024_tiff_predictor.cpp
-        src/services/impl/workflow/fs2024/prepare/landmark/fs2024_landmark_catalog.cpp
-        src/services/impl/workflow/fs2024/prepare/landmark/fs2024_landmark_extract.cpp
+        src/services/impl/workflow/fs2024/prepare/cgl/fs2024_bld_buildings.cpp
+        src/services/impl/workflow/fs2024/prepare/cgl/fs2024_bld_convert.cpp
+        src/services/impl/workflow/fs2024/prepare/cgl/fs2024_bld_merge.cpp
+        src/services/impl/workflow/fs2024/prepare/landmark/fs2024_landmark_clear.cpp
         src/services/impl/workflow/fs2024/prepare/landmark/fs2024_landmark_placement.cpp
         src/services/impl/workflow/fs2024/prepare/landmark/fs2024_landmark_tile_write.cpp
         src/services/impl/workflow/fs2024/prepare/osm/fs2024_nearest_road.cpp
         src/services/impl/workflow/fs2024/prepare/osm/fs2024_osm_json.cpp
         src/services/impl/workflow/fs2024/prepare/osm/fs2024_pavement_shapes.cpp
         src/services/impl/workflow/fs2024/prepare/osm/fs2024_prepare_buildings.cpp
-        src/services/impl/workflow/fs2024/prepare/texture/fs2024_bc_decode.cpp
-        src/services/impl/workflow/fs2024/prepare/texture/fs2024_building_kit_extract.cpp
-        src/services/impl/workflow/fs2024/prepare/texture/fs2024_dds_texture.cpp
-        src/services/impl/workflow/fs2024/prepare/texture/fs2024_ground_image.cpp
-        src/services/impl/workflow/fs2024/building/fs2024_polygon.cpp
+        src/services/impl/workflow/fs2024/data/fs2024_local_frame.cpp
+        src/services/impl/workflow/fs2024/data/bgl/fs2024_bgl_airport.cpp
+        src/services/impl/workflow/fs2024/data/bgl/fs2024_bgl_model_library.cpp
+        src/services/impl/workflow/fs2024/data/bgl/fs2024_bgl_model_name.cpp
+        src/services/impl/workflow/fs2024/data/bgl/fs2024_riff_chunk.cpp
+        src/services/impl/workflow/fs2024/data/cgl/fs2024_bld_colour.cpp
+        src/services/impl/workflow/fs2024/data/cgl/fs2024_bld_columns.cpp
+        src/services/impl/workflow/fs2024/data/cgl/fs2024_bld_cursor.cpp
+        src/services/impl/workflow/fs2024/data/cgl/fs2024_bld_library.cpp
+        src/services/impl/workflow/fs2024/data/cgl/fs2024_bld_roof.cpp
+        src/services/impl/workflow/fs2024/data/cgl/fs2024_bld_tile.cpp
+        src/services/impl/workflow/fs2024/data/cgl/fs2024_cgl_container.cpp
+        src/services/impl/workflow/fs2024/data/cgl/fs2024_cgl_table.cpp
+        src/services/impl/workflow/fs2024/data/cgl/fs2024_lcg_tile.cpp
+        src/services/impl/workflow/fs2024/data/cgl/fs2024_lzma_raw.cpp
+        src/services/impl/workflow/fs2024/data/cgl/fs2024_quadkey.cpp
+        src/services/impl/workflow/fs2024/data/dem/fs2024_dem_calibration.cpp
+        src/services/impl/workflow/fs2024/data/dem/fs2024_dem_cgl_tile.cpp
+        src/services/impl/workflow/fs2024/data/dem/fs2024_dem_tile.cpp
+        src/services/impl/workflow/fs2024/data/dem/fs2024_inflate.cpp
+        src/services/impl/workflow/fs2024/data/dem/fs2024_tiff_ifd.cpp
+        src/services/impl/workflow/fs2024/data/dem/fs2024_tiff_predictor.cpp
+        src/services/impl/workflow/fs2024/data/gltf/fs2024_gltf_accessor.cpp
+        src/services/impl/workflow/fs2024/data/gltf/fs2024_gltf_model.cpp
+        src/services/impl/workflow/fs2024/data/gltf/fs2024_gltf_scene.cpp
+        src/services/impl/workflow/fs2024/data/landmark/fs2024_landmark_bounds.cpp
+        src/services/impl/workflow/fs2024/data/landmark/fs2024_landmark_catalog.cpp
+        src/services/impl/workflow/fs2024/data/landmark/fs2024_landmark_extract.cpp
+        src/services/impl/workflow/fs2024/data/material/fs2024_ground_materials.cpp
+        src/services/impl/workflow/fs2024/data/texture/fs2024_bc7_bits.cpp
+        src/services/impl/workflow/fs2024/data/texture/fs2024_bc7_decode.cpp
+        src/services/impl/workflow/fs2024/data/texture/fs2024_bc7_tables.cpp
+        src/services/impl/workflow/fs2024/data/texture/fs2024_bc_decode.cpp
+        src/services/impl/workflow/fs2024/data/texture/fs2024_dds_array.cpp
+        src/services/impl/workflow/fs2024/data/texture/fs2024_dds_array_blocks.cpp
+        src/services/impl/workflow/fs2024/data/texture/fs2024_dds_array_info.cpp
+        src/services/impl/workflow/fs2024/data/texture/fs2024_dds_texture.cpp
+        src/services/impl/workflow/fs2024/data/texture/fs2024_facade_bake.cpp
+        src/services/impl/workflow/fs2024/data/texture/fs2024_ground_image.cpp
+        src/services/impl/workflow/fs2024/data/texture/fs2024_pgg_assets.cpp
+        src/services/impl/workflow/fs2024/data/texture/fs2024_pgg_kit_extract.cpp
         src/services/impl/workflow/fs2024/building/fs2024_building_mesh.cpp
+        src/services/impl/workflow/fs2024/building/fs2024_convex_hull.cpp
+        src/services/impl/workflow/fs2024/building/fs2024_oriented_box.cpp
+        src/services/impl/workflow/fs2024/building/fs2024_polygon.cpp
+        src/services/impl/workflow/fs2024/building/fs2024_roof_mesh.cpp
+        src/services/impl/workflow/fs2024/building/fs2024_roof_pitched.cpp
         src/services/impl/workflow/fs2024/tiles/fs2024_tile_key.cpp
     )
     target_include_directories(fs2024_prepare PRIVATE
@@ -1238,6 +1336,9 @@ endif()
         glm::glm
         stb::stb
         ZLIB::ZLIB
+        LibLZMA::LibLZMA
+        jxrlib::jxrlib
+        WebP::webpdecoder
     )
 
 # ============================================================================
@@ -1787,11 +1888,15 @@ add_executable(fs2024_prepare_test)
 target_sources(fs2024_prepare_test PRIVATE tests/fs2024_prepare_test.cpp)
 target_sources(fs2024_prepare_test PRIVATE src/services/impl/workflow/fs2024/prepare/fs2024_grid_layout.cpp)
 target_sources(fs2024_prepare_test PRIVATE src/services/impl/workflow/fs2024/prepare/fs2024_prepare_args.cpp)
-target_sources(fs2024_prepare_test PRIVATE src/services/impl/workflow/fs2024/prepare/landmark/fs2024_landmark_catalog.cpp)
+target_sources(fs2024_prepare_test PRIVATE src/services/impl/workflow/fs2024/data/landmark/fs2024_landmark_catalog.cpp)
 target_sources(fs2024_prepare_test PRIVATE src/services/impl/workflow/fs2024/prepare/landmark/fs2024_landmark_placement.cpp)
-target_sources(fs2024_prepare_test PRIVATE src/services/impl/workflow/fs2024/prepare/fs2024_local_frame.cpp)
+target_sources(fs2024_prepare_test PRIVATE src/services/impl/workflow/fs2024/data/fs2024_local_frame.cpp)
 target_sources(fs2024_prepare_test PRIVATE src/services/impl/workflow/fs2024/building/fs2024_polygon.cpp)
 target_sources(fs2024_prepare_test PRIVATE src/services/impl/workflow/fs2024/building/fs2024_building_mesh.cpp)
+target_sources(fs2024_prepare_test PRIVATE src/services/impl/workflow/fs2024/building/fs2024_roof_mesh.cpp)
+target_sources(fs2024_prepare_test PRIVATE src/services/impl/workflow/fs2024/building/fs2024_roof_pitched.cpp)
+target_sources(fs2024_prepare_test PRIVATE src/services/impl/workflow/fs2024/building/fs2024_oriented_box.cpp)
+target_sources(fs2024_prepare_test PRIVATE src/services/impl/workflow/fs2024/building/fs2024_convex_hull.cpp)
 target_include_directories(fs2024_prepare_test PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )
@@ -1802,12 +1907,177 @@ target_link_libraries(fs2024_prepare_test PRIVATE
 )
 add_test(NAME fs2024_prepare_test COMMAND fs2024_prepare_test)
 
+add_executable(fs2024_tile_build_test)
+target_sources(fs2024_tile_build_test PRIVATE tests/fs2024_tile_build_real_test.cpp)
+target_sources(fs2024_tile_build_test PRIVATE src/services/impl/workflow/fs2024/world/fs2024_geo_origin.cpp)
+target_sources(fs2024_tile_build_test PRIVATE src/services/impl/workflow/fs2024/tiles/fs2024_tile_key.cpp)
+target_sources(fs2024_tile_build_test PRIVATE src/services/impl/workflow/fs2024/terrain/fs2024_heightfield.cpp)
+target_sources(fs2024_tile_build_test PRIVATE src/services/impl/workflow/fs2024/building/fs2024_building_mesh.cpp)
+target_sources(fs2024_tile_build_test PRIVATE src/services/impl/workflow/fs2024/building/fs2024_convex_hull.cpp)
+target_sources(fs2024_tile_build_test PRIVATE src/services/impl/workflow/fs2024/building/fs2024_oriented_box.cpp)
+target_sources(fs2024_tile_build_test PRIVATE src/services/impl/workflow/fs2024/building/fs2024_polygon.cpp)
+target_sources(fs2024_tile_build_test PRIVATE src/services/impl/workflow/fs2024/building/fs2024_roof_mesh.cpp)
+target_sources(fs2024_tile_build_test PRIVATE src/services/impl/workflow/fs2024/building/fs2024_roof_pitched.cpp)
+target_sources(fs2024_tile_build_test PRIVATE src/services/impl/workflow/fs2024/data/cgl/fs2024_bld_colour.cpp)
+target_sources(fs2024_tile_build_test PRIVATE src/services/impl/workflow/fs2024/data/cgl/fs2024_bld_columns.cpp)
+target_sources(fs2024_tile_build_test PRIVATE src/services/impl/workflow/fs2024/data/cgl/fs2024_bld_cursor.cpp)
+target_sources(fs2024_tile_build_test PRIVATE src/services/impl/workflow/fs2024/data/cgl/fs2024_bld_library.cpp)
+target_sources(fs2024_tile_build_test PRIVATE src/services/impl/workflow/fs2024/data/cgl/fs2024_bld_roof.cpp)
+target_sources(fs2024_tile_build_test PRIVATE src/services/impl/workflow/fs2024/data/cgl/fs2024_bld_tile.cpp)
+target_sources(fs2024_tile_build_test PRIVATE src/services/impl/workflow/fs2024/data/cgl/fs2024_cgl_container.cpp)
+target_sources(fs2024_tile_build_test PRIVATE src/services/impl/workflow/fs2024/data/cgl/fs2024_cgl_table.cpp)
+target_sources(fs2024_tile_build_test PRIVATE src/services/impl/workflow/fs2024/data/cgl/fs2024_lcg_tile.cpp)
+target_sources(fs2024_tile_build_test PRIVATE src/services/impl/workflow/fs2024/data/cgl/fs2024_lzma_raw.cpp)
+target_sources(fs2024_tile_build_test PRIVATE src/services/impl/workflow/fs2024/data/cgl/fs2024_quadkey.cpp)
+target_sources(fs2024_tile_build_test PRIVATE src/services/impl/workflow/fs2024/data/dem/fs2024_dem_calibration.cpp)
+target_sources(fs2024_tile_build_test PRIVATE src/services/impl/workflow/fs2024/data/dem/fs2024_dem_cgl_tile.cpp)
+target_include_directories(fs2024_tile_build_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(fs2024_tile_build_test PRIVATE
+    GTest::gtest_main
+    glm::glm
+    LibLZMA::LibLZMA
+    jxrlib::jxrlib
+    WebP::webpdecoder
+)
+add_test(NAME fs2024_tile_build_test COMMAND fs2024_tile_build_test)
+
+add_executable(fs2024_geo_origin_test)
+target_sources(fs2024_geo_origin_test PRIVATE tests/fs2024_geo_origin_test.cpp)
+target_sources(fs2024_geo_origin_test PRIVATE src/services/impl/workflow/fs2024/world/fs2024_geo_origin.cpp)
+target_sources(fs2024_geo_origin_test PRIVATE src/services/impl/workflow/fs2024/world/fs2024_world_rebase.cpp)
+target_sources(fs2024_geo_origin_test PRIVATE src/services/impl/workflow/fs2024/tiles/fs2024_tile_key.cpp)
+target_include_directories(fs2024_geo_origin_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(fs2024_geo_origin_test PRIVATE
+    GTest::gtest_main
+    glm::glm
+)
+add_test(NAME fs2024_geo_origin_test COMMAND fs2024_geo_origin_test)
+
+add_executable(fs2024_ground_materials_test)
+target_sources(fs2024_ground_materials_test PRIVATE tests/fs2024_ground_materials_test.cpp)
+target_sources(fs2024_ground_materials_test PRIVATE src/services/impl/workflow/fs2024/data/material/fs2024_ground_materials.cpp)
+target_include_directories(fs2024_ground_materials_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(fs2024_ground_materials_test PRIVATE
+    GTest::gtest_main
+)
+add_test(NAME fs2024_ground_materials_test COMMAND fs2024_ground_materials_test)
+
+add_executable(fs2024_lcg_test)
+target_sources(fs2024_lcg_test PRIVATE tests/fs2024_lcg_real_test.cpp)
+target_sources(fs2024_lcg_test PRIVATE src/services/impl/workflow/fs2024/data/cgl/fs2024_lcg_tile.cpp)
+target_sources(fs2024_lcg_test PRIVATE src/services/impl/workflow/fs2024/data/cgl/fs2024_cgl_container.cpp)
+target_sources(fs2024_lcg_test PRIVATE src/services/impl/workflow/fs2024/data/cgl/fs2024_cgl_table.cpp)
+target_sources(fs2024_lcg_test PRIVATE src/services/impl/workflow/fs2024/data/cgl/fs2024_lzma_raw.cpp)
+target_include_directories(fs2024_lcg_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(fs2024_lcg_test PRIVATE
+    GTest::gtest_main
+    LibLZMA::LibLZMA
+    WebP::webpdecoder
+)
+add_test(NAME fs2024_lcg_test COMMAND fs2024_lcg_test)
+
+add_executable(fs2024_dem_test)
+target_sources(fs2024_dem_test PRIVATE tests/fs2024_dem_real_test.cpp)
+target_sources(fs2024_dem_test PRIVATE tests/fs2024_dem_calibration_test.cpp)
+target_sources(fs2024_dem_test PRIVATE src/services/impl/workflow/fs2024/data/dem/fs2024_dem_calibration.cpp)
+target_sources(fs2024_dem_test PRIVATE src/services/impl/workflow/fs2024/data/dem/fs2024_dem_cgl_tile.cpp)
+target_sources(fs2024_dem_test PRIVATE src/services/impl/workflow/fs2024/data/dem/fs2024_dem_tile.cpp)
+target_sources(fs2024_dem_test PRIVATE src/services/impl/workflow/fs2024/data/dem/fs2024_inflate.cpp)
+target_sources(fs2024_dem_test PRIVATE src/services/impl/workflow/fs2024/data/dem/fs2024_tiff_ifd.cpp)
+target_sources(fs2024_dem_test PRIVATE src/services/impl/workflow/fs2024/data/dem/fs2024_tiff_predictor.cpp)
+target_sources(fs2024_dem_test PRIVATE src/services/impl/workflow/fs2024/data/cgl/fs2024_cgl_container.cpp)
+target_sources(fs2024_dem_test PRIVATE src/services/impl/workflow/fs2024/data/cgl/fs2024_cgl_table.cpp)
+target_sources(fs2024_dem_test PRIVATE src/services/impl/workflow/fs2024/data/cgl/fs2024_lzma_raw.cpp)
+target_sources(fs2024_dem_test PRIVATE src/services/impl/workflow/fs2024/data/cgl/fs2024_quadkey.cpp)
+target_include_directories(fs2024_dem_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(fs2024_dem_test PRIVATE
+    GTest::gtest_main
+    LibLZMA::LibLZMA
+    ZLIB::ZLIB
+    jxrlib::jxrlib
+)
+add_test(NAME fs2024_dem_test COMMAND fs2024_dem_test)
+
+add_executable(fs2024_bld_test)
+target_sources(fs2024_bld_test PRIVATE tests/fs2024_bld_tile_test.cpp)
+target_sources(fs2024_bld_test PRIVATE tests/fs2024_bld_real_test.cpp)
+target_sources(fs2024_bld_test PRIVATE src/services/impl/workflow/fs2024/data/cgl/fs2024_bld_tile.cpp)
+target_sources(fs2024_bld_test PRIVATE src/services/impl/workflow/fs2024/data/cgl/fs2024_bld_columns.cpp)
+target_sources(fs2024_bld_test PRIVATE src/services/impl/workflow/fs2024/data/cgl/fs2024_bld_colour.cpp)
+target_sources(fs2024_bld_test PRIVATE src/services/impl/workflow/fs2024/data/cgl/fs2024_bld_cursor.cpp)
+target_sources(fs2024_bld_test PRIVATE src/services/impl/workflow/fs2024/data/cgl/fs2024_cgl_container.cpp)
+target_sources(fs2024_bld_test PRIVATE src/services/impl/workflow/fs2024/data/cgl/fs2024_cgl_table.cpp)
+target_sources(fs2024_bld_test PRIVATE src/services/impl/workflow/fs2024/data/cgl/fs2024_lzma_raw.cpp)
+target_sources(fs2024_bld_test PRIVATE src/services/impl/workflow/fs2024/data/cgl/fs2024_quadkey.cpp)
+target_include_directories(fs2024_bld_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(fs2024_bld_test PRIVATE
+    GTest::gtest_main
+    LibLZMA::LibLZMA
+)
+add_test(NAME fs2024_bld_test COMMAND fs2024_bld_test)
+
+add_executable(fs2024_cgl_test)
+target_sources(fs2024_cgl_test PRIVATE tests/fs2024_cgl_table_test.cpp)
+target_sources(fs2024_cgl_test PRIVATE tests/fs2024_cgl_container_test.cpp)
+target_sources(fs2024_cgl_test PRIVATE src/services/impl/workflow/fs2024/data/cgl/fs2024_cgl_container.cpp)
+target_sources(fs2024_cgl_test PRIVATE src/services/impl/workflow/fs2024/data/cgl/fs2024_cgl_table.cpp)
+target_sources(fs2024_cgl_test PRIVATE src/services/impl/workflow/fs2024/data/cgl/fs2024_lzma_raw.cpp)
+target_include_directories(fs2024_cgl_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(fs2024_cgl_test PRIVATE
+    GTest::gtest_main
+    LibLZMA::LibLZMA
+)
+add_test(NAME fs2024_cgl_test COMMAND fs2024_cgl_test)
+
+add_executable(fs2024_bc7_decode_test)
+target_sources(fs2024_bc7_decode_test PRIVATE tests/fs2024_bc7_decode_test.cpp)
+target_sources(fs2024_bc7_decode_test PRIVATE src/services/impl/workflow/fs2024/data/texture/fs2024_bc7_bits.cpp)
+target_sources(fs2024_bc7_decode_test PRIVATE src/services/impl/workflow/fs2024/data/texture/fs2024_bc7_decode.cpp)
+target_sources(fs2024_bc7_decode_test PRIVATE src/services/impl/workflow/fs2024/data/texture/fs2024_bc7_tables.cpp)
+target_include_directories(fs2024_bc7_decode_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(fs2024_bc7_decode_test PRIVATE
+    GTest::gtest_main
+)
+add_test(NAME fs2024_bc7_decode_test COMMAND fs2024_bc7_decode_test)
+
+add_executable(fs2024_roof_mesh_test)
+target_sources(fs2024_roof_mesh_test PRIVATE tests/fs2024_roof_mesh_test.cpp)
+target_sources(fs2024_roof_mesh_test PRIVATE src/services/impl/workflow/fs2024/building/fs2024_roof_mesh.cpp)
+target_sources(fs2024_roof_mesh_test PRIVATE src/services/impl/workflow/fs2024/building/fs2024_roof_pitched.cpp)
+target_sources(fs2024_roof_mesh_test PRIVATE src/services/impl/workflow/fs2024/building/fs2024_oriented_box.cpp)
+target_sources(fs2024_roof_mesh_test PRIVATE src/services/impl/workflow/fs2024/building/fs2024_convex_hull.cpp)
+target_sources(fs2024_roof_mesh_test PRIVATE src/services/impl/workflow/fs2024/building/fs2024_polygon.cpp)
+target_include_directories(fs2024_roof_mesh_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(fs2024_roof_mesh_test PRIVATE
+    GTest::gtest_main
+    glm::glm
+)
+add_test(NAME fs2024_roof_mesh_test COMMAND fs2024_roof_mesh_test)
+
 add_executable(fs2024_gltf_model_test)
 target_sources(fs2024_gltf_model_test PRIVATE tests/fs2024_gltf_model_test.cpp)
-target_sources(fs2024_gltf_model_test PRIVATE src/services/impl/workflow/fs2024/prepare/gltf/fs2024_gltf_model.cpp)
-target_sources(fs2024_gltf_model_test PRIVATE src/services/impl/workflow/fs2024/prepare/gltf/fs2024_gltf_accessor.cpp)
-target_sources(fs2024_gltf_model_test PRIVATE src/services/impl/workflow/fs2024/prepare/gltf/fs2024_gltf_scene.cpp)
-target_sources(fs2024_gltf_model_test PRIVATE src/services/impl/workflow/fs2024/prepare/bgl/fs2024_riff_chunk.cpp)
+target_sources(fs2024_gltf_model_test PRIVATE src/services/impl/workflow/fs2024/data/gltf/fs2024_gltf_model.cpp)
+target_sources(fs2024_gltf_model_test PRIVATE src/services/impl/workflow/fs2024/data/gltf/fs2024_gltf_accessor.cpp)
+target_sources(fs2024_gltf_model_test PRIVATE src/services/impl/workflow/fs2024/data/gltf/fs2024_gltf_scene.cpp)
+target_sources(fs2024_gltf_model_test PRIVATE src/services/impl/workflow/fs2024/data/bgl/fs2024_riff_chunk.cpp)
 target_include_directories(fs2024_gltf_model_test PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )

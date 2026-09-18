@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace sdl3cpp::tools::fs2024 {
+namespace sdl3cpp::fs2024 {
 
 GridLayout ComputeGridLayout(float extent, float requestedTileSize,
                              float spacing, int minRadiusTiles) {
@@ -25,4 +25,4 @@ GridLayout ComputeGridLayout(float extent, float requestedTileSize,
     return layout;
 }
 
-}  // namespace sdl3cpp::tools::fs2024
+}  // namespace sdl3cpp::fs2024

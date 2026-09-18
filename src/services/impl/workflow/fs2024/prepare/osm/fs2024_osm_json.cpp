@@ -5,7 +5,7 @@
 #include <cstdlib>
 #include <fstream>
 
-namespace sdl3cpp::tools::fs2024 {
+namespace sdl3cpp::fs2024 {
 namespace {
 
 // A generic building with no better information: about three storeys,
@@ -70,4 +70,4 @@ OsmData ReadOsmData(const std::string& path) {
     return data;
 }
 
-}  // namespace sdl3cpp::tools::fs2024
+}  // namespace sdl3cpp::fs2024

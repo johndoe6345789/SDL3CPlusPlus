@@ -1,13 +1,13 @@
 #pragma once
 
-#include "services/interfaces/workflow/fs2024/prepare/landmark/fs2024_landmark_catalog.hpp"
-#include "services/interfaces/workflow/fs2024/prepare/fs2024_local_frame.hpp"
+#include "services/interfaces/workflow/fs2024/data/landmark/fs2024_landmark_catalog.hpp"
+#include "services/interfaces/workflow/fs2024/data/fs2024_local_frame.hpp"
 #include "services/interfaces/workflow/fs2024/prepare/osm/fs2024_osm_json.hpp"
 
 #include <string>
 #include <vector>
 
-namespace sdl3cpp::tools::fs2024 {
+namespace sdl3cpp::fs2024 {
 
 /// A landmark's placement in engine space: its OSM footprint's own
 /// centroid (the mean of its points -- a real landmark's footprint is
@@ -27,4 +27,4 @@ std::vector<LandmarkInstance> MatchLandmarks(
     const std::vector<LandmarkCatalogEntry>& catalog,
     const LocalFrame& frame);
 
-}  // namespace sdl3cpp::tools::fs2024
+}  // namespace sdl3cpp::fs2024

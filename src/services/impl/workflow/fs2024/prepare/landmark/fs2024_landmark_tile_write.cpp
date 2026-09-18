@@ -7,7 +7,7 @@
 #include <nlohmann/json.hpp>
 #include <unordered_map>
 
-namespace sdl3cpp::tools::fs2024 {
+namespace sdl3cpp::fs2024 {
 
 void WriteLandmarkInstances(const std::string& outDir,
                            const std::vector<LandmarkInstance>& instances,
@@ -34,4 +34,4 @@ void WriteLandmarkInstances(const std::string& outDir,
     }
 }
 
-}  // namespace sdl3cpp::tools::fs2024
+}  // namespace sdl3cpp::fs2024

@@ -7,6 +7,7 @@
 
 #include <glm/glm.hpp>
 
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -14,14 +15,19 @@
 
 namespace sdl3cpp::services::impl {
 
-/// One resident tile: its ground (heightfield, GPU mesh, collision --
-/// Fs2024TerrainState already models exactly one tile's worth of
-/// those), plus its own ground texture and, for an airport tile that
-/// overlaps it, the runway to draw analytically over that texture.
+struct Fs2024World;
+
+/// One resident tile, built from FS2024's own data for one level-14
+/// quad tile. Its meshes are in the tile's own local space (origin at
+/// its north-west corner) and drawn at `offset`, so a long flight never
+/// loses float precision; its heightfield's origin is set to `offset`,
+/// so collision and ground lookups work in engine space as before.
 struct Fs2024LoadedTile {
     Fs2024TerrainState terrain;
-    SDL_GPUTexture* groundTexture = nullptr;
-    SDL_GPUSampler* groundSampler = nullptr;
+    glm::vec3 offset{0.f};  ///< engine position of the tile's local origin
+    /// The tile's land classes, one texel per ~24 m (R8, nearest).
+    SDL_GPUTexture* classMap = nullptr;
+    SDL_GPUSampler* classSampler = nullptr;
     glm::vec4 runway{0.f};      ///< z <= 0 (half-length) means none
     glm::vec4 runwayAxis{0.f};
     /// This tile's buildings, walls and roofs already meshed (same
@@ -57,6 +63,13 @@ struct Fs2024TileStreamState {
     /// shared across every tile/instance that references it, loaded
     /// once on first reference and released only at fs2024.tiles.free.
     std::unordered_map<std::string, Fs2024LandmarkKitGpu> landmarkKits;
+
+    /// FS2024's own world, once fs2024.world.open has opened it. Every
+    /// tile is built from it; nothing streams until it is open. Shared
+    /// rather than unique so this header needs only a declaration: the
+    /// deleter is fixed where the world is made, and code that never
+    /// opens one never has to link it.
+    std::shared_ptr<Fs2024World> world;
 };
 
 }  // namespace sdl3cpp::services::impl

@@ -60,15 +60,10 @@
       "type": "string",
       "defaultValue": "packages/gta5/shaders/msl/gta5_composite.frag.metal"
     },
-    "building_texture_path": {
-      "name": "building_texture_path",
+    "shader_ground_frag_path": {
+      "name": "shader_ground_frag_path",
       "type": "string",
-      "defaultValue": "D:/fs2024/westminster/building_kit/wall.png"
-    },
-    "roof_texture_path": {
-      "name": "roof_texture_path",
-      "type": "string",
-      "defaultValue": "D:/fs2024/westminster/building_kit/roof.png"
+      "defaultValue": "packages/fs2024/shaders/msl/fs2024_ground.frag.metal"
     }
   },
   "nodes": [
@@ -318,40 +313,75 @@
       }
     },
     {
-      "id": "building_texture",
-      "type": "texture.load",
+      "id": "compile_ground_vert",
+      "type": "graphics.gpu.shader.compile",
       "typeVersion": 1,
       "position": [
         0,
         0
       ],
       "parameters": {
-        "inputs": {
-          "image_path": "building_texture_path"
-        },
-        "outputs": {
-          "texture": "fs2024_building"
-        }
+        "stage": "vertex",
+        "output_key": "fs2024_ground_vertex_shader",
+        "num_uniform_buffers": 1,
+        "num_samplers": 0
       },
-      "comment": "FS2024's own generic wall brick, shared by every tile's OSM buildings citywide -- the footprints are real (OpenStreetMap), the walls are real FS2024 texture data, extracted once by fs2024_prepare's --wall-texture."
+      "inputs": {
+        "shader_path": "shader_terrain_vert_path"
+      },
+      "comment": "The terrain vertex shader again, compiled separately: the terrain pipeline releases its own copy once it is built."
     },
     {
-      "id": "roof_texture",
-      "type": "texture.load",
+      "id": "compile_ground_frag",
+      "type": "graphics.gpu.shader.compile",
       "typeVersion": 1,
       "position": [
         0,
         0
       ],
       "parameters": {
-        "inputs": {
-          "image_path": "roof_texture_path"
-        },
-        "outputs": {
-          "texture": "fs2024_roof"
-        }
+        "stage": "fragment",
+        "output_key": "fs2024_ground_fragment_shader",
+        "num_uniform_buffers": 1,
+        "num_samplers": 2
       },
-      "comment": "FS2024's own generic roof tile, drawn over every building's flat roof separately from its walls."
+      "inputs": {
+        "shader_path": "shader_ground_frag_path"
+      }
+    },
+    {
+      "id": "create_ground_pipeline",
+      "type": "graphics.gpu.pipeline.create",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "vertex_shader_key": "fs2024_ground_vertex_shader",
+        "fragment_shader_key": "fs2024_ground_fragment_shader",
+        "vertex_format": "position_uv_lmuv_normal",
+        "pipeline_key": "gpu_pipeline_fs2024_ground",
+        "color_format": "rgba16_float"
+      },
+      "comment": "FS2024's own ground: each tile's land-class map picks surfaces out of the game's own material array."
+    },
+    {
+      "id": "world_open",
+      "type": "fs2024.world.open",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "install_root": "${env:FS2024_INSTALL_DIR}",
+        "spawn_lat": "${env:FS2024_SPAWN_LAT}",
+        "spawn_lon": "${env:FS2024_SPAWN_LON}",
+        "spawn_heading": "${env:FS2024_SPAWN_HEADING}",
+        "climate": 2
+      },
+      "comment": "Opens FS2024's own installed world data and puts engine space on the Earth at the spawn point: every tile after this is cut from the game's files, anywhere on the planet. Also uploads the game's ground material array and bakes the building kit from its generator data."
     },
     {
       "id": "physics_world",
@@ -406,13 +436,11 @@
         0
       ],
       "parameters": {
-        "tiles_root": "D:/fs2024/westminster",
-        "tile_size": 1008.0,
         "load_radius_tiles": 2,
         "evict_radius_tiles": 3,
-        "max_loads_per_call": 6
+        "max_loads_per_call": 2
       },
-      "comment": "Configures the streamer once; every later fs2024.tiles.resolve call reuses these settings."
+      "comment": "Configures the streamer once. Tiles are FS2024's own level-14 quad tiles, sized by fs2024.world.open."
     },
     {
       "id": "tiles_load_init",
@@ -450,12 +478,9 @@
         0
       ],
       "parameters": {
-        "x": 0.0,
-        "z": 0.0,
-        "heading": 274.2689514160156,
         "clearance": 0.3
       },
-      "comment": "On Bridge Street, from world.json's spawn."
+      "comment": "Stands the player on FS2024's own ground at the spawn point fs2024.world.open placed."
     },
     {
       "id": "lighting",
@@ -516,6 +541,16 @@
         0
       ],
       "comment": "Before system.exit, while the device and the physics world still exist."
+    },
+    {
+      "id": "video_record_stop",
+      "type": "video.record.stop",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        0
+      ],
+      "comment": "Finishes a recording once the loop stops: waits for the last frame downloads and writes the file's trailer, without which the video will not play. Needs the GPU device, so it must come before system.exit."
     },
     {
       "id": "exit",
@@ -686,29 +721,7 @@
       "main": {
         "0": [
           {
-            "node": "building_texture",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      }
-    },
-    "building_texture": {
-      "main": {
-        "0": [
-          {
-            "node": "roof_texture",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      }
-    },
-    "roof_texture": {
-      "main": {
-        "0": [
-          {
-            "node": "physics_world",
+            "node": "compile_ground_vert",
             "type": "main",
             "index": 0
           }
@@ -829,7 +842,62 @@
       "main": {
         "0": [
           {
+            "node": "video_record_stop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "video_record_stop": {
+      "main": {
+        "0": [
+          {
             "node": "exit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "compile_ground_vert": {
+      "main": {
+        "0": [
+          {
+            "node": "compile_ground_frag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "compile_ground_frag": {
+      "main": {
+        "0": [
+          {
+            "node": "create_ground_pipeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "create_ground_pipeline": {
+      "main": {
+        "0": [
+          {
+            "node": "world_open",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "world_open": {
+      "main": {
+        "0": [
+          {
+            "node": "physics_world",
             "type": "main",
             "index": 0
           }

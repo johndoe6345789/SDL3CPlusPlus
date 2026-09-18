@@ -11,6 +11,7 @@ namespace sdl3cpp::services::impl {
 struct Fs2024TerrainVertexUniforms {
     glm::mat4 viewProj{1.f};
     glm::vec4 cameraPos{0.f};
+    glm::vec4 originOffset{0.f};  ///< xyz: the tile's local origin
 };
 
 /// Matches FragmentUniforms in fs2024_terrain.frag. Colours are linear.

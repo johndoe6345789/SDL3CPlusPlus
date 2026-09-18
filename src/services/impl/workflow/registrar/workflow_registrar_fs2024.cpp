@@ -5,6 +5,8 @@
 #include "services/interfaces/workflow/fs2024/tiles/fs2024_tiles_evict_step.hpp"
 #include "services/interfaces/workflow/fs2024/tiles/fs2024_tiles_load_step.hpp"
 #include "services/interfaces/workflow/fs2024/tiles/fs2024_tiles_resolve_step.hpp"
+#include "services/interfaces/workflow/fs2024/world/fs2024_world_open_step.hpp"
+#include "services/interfaces/workflow/fs2024/world/fs2024_world_rebase_step.hpp"
 
 #include <memory>
 
@@ -16,6 +18,10 @@ int RegisterFs2024Steps(std::shared_ptr<IWorkflowStepRegistry> registry,
     // Every resident tile shared by every fs2024 step; far too large
     // for the context, and Bullet reads its heights in place.
     auto state = std::make_shared<Fs2024TileStreamState>();
+    registry->RegisterStep(
+        std::make_shared<WorkflowFs2024WorldOpenStep>(logger, state));
+    registry->RegisterStep(
+        std::make_shared<WorkflowFs2024WorldRebaseStep>(logger, state));
     registry->RegisterStep(
         std::make_shared<WorkflowFs2024TilesResolveStep>(logger, state));
     registry->RegisterStep(
@@ -30,7 +36,7 @@ int RegisterFs2024Steps(std::shared_ptr<IWorkflowStepRegistry> registry,
         std::make_shared<WorkflowFs2024PlayerSpawnStep>(logger, state));
     registry->RegisterStep(
         std::make_shared<WorkflowFs2024GroundGuardStep>(logger, state));
-    return 7;
+    return 9;
 }
 
 }  // namespace sdl3cpp::services::impl::registrar_detail

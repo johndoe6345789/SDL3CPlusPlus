@@ -1,28 +1,12 @@
 #include "services/interfaces/workflow/fs2024/tiles/fs2024_tiles_evict_step.hpp"
 
+#include "services/interfaces/workflow/fs2024/world/fs2024_world.hpp"
 #include "services/interfaces/workflow/fs2024/landmark/fs2024_landmark_load.hpp"
-#include "services/interfaces/workflow/fs2024/terrain/fs2024_terrain_upload.hpp"
+#include "services/interfaces/workflow/fs2024/tiles/fs2024_tile_release.hpp"
 
 #include <utility>
 
 namespace sdl3cpp::services::impl {
-namespace {
-
-void ReleaseTile(SDL_GPUDevice* device, btDiscreteDynamicsWorld* world,
-                 Fs2024LoadedTile& tile) {
-    ReleaseFs2024TerrainChunks(device, tile.terrain);
-    RemoveFs2024TerrainCollision(world, tile.terrain.collision);
-    if (device) {
-        SDL_ReleaseGPUTexture(device, tile.groundTexture);
-        SDL_ReleaseGPUSampler(device, tile.groundSampler);
-        SDL_ReleaseGPUBuffer(device, tile.buildingChunk.vertexBuffer);
-        SDL_ReleaseGPUBuffer(device, tile.buildingChunk.indexBuffer);
-        SDL_ReleaseGPUBuffer(device, tile.buildingRoofChunk.vertexBuffer);
-        SDL_ReleaseGPUBuffer(device, tile.buildingRoofChunk.indexBuffer);
-    }
-}
-
-}  // namespace
 
 WorkflowFs2024TilesEvictStep::WorkflowFs2024TilesEvictStep(
     std::shared_ptr<ILogger> logger,
@@ -43,7 +27,7 @@ void WorkflowFs2024TilesEvictStep::Execute(const WorkflowStepDefinition&,
     for (const Fs2024TileKey& key : state_->pendingEvict) {
         const auto it = state_->resident.find(key);
         if (it == state_->resident.end()) continue;
-        ReleaseTile(device, world, it->second);
+        ReleaseFs2024Tile(device, world, it->second);
         state_->resident.erase(it);
     }
     if (logger_ && !state_->pendingEvict.empty()) {
@@ -71,7 +55,7 @@ void WorkflowFs2024TilesFreeStep::Execute(const WorkflowStepDefinition&,
         context.Get<btDiscreteDynamicsWorld*>("physics_world", nullptr);
     const std::size_t count = state_->resident.size();
     for (auto& [key, tile] : state_->resident) {
-        ReleaseTile(device, world, tile);
+        ReleaseFs2024Tile(device, world, tile);
     }
     state_->resident.clear();
     state_->pendingLoad.clear();
@@ -81,6 +65,11 @@ void WorkflowFs2024TilesFreeStep::Execute(const WorkflowStepDefinition&,
         ReleaseFs2024LandmarkKitGpu(device, kit);
     }
     state_->landmarkKits.clear();
+    if (state_->world && device) {
+        SDL_ReleaseGPUTexture(device, state_->world->materialArray);
+        SDL_ReleaseGPUSampler(device, state_->world->materialSampler);
+    }
+    state_->world.reset();
     if (logger_) {
         logger_->Info("fs2024.tiles.free: released " +
                       std::to_string(count) + " tiles");

@@ -1,11 +1,11 @@
 #pragma once
 
-#include "services/interfaces/workflow/fs2024/prepare/fs2024_local_frame.hpp"
+#include "services/interfaces/workflow/fs2024/data/fs2024_local_frame.hpp"
 #include "services/interfaces/workflow/fs2024/prepare/osm/fs2024_osm_json.hpp"
 
 #include <optional>
 
-namespace sdl3cpp::tools::fs2024 {
+namespace sdl3cpp::fs2024 {
 
 struct NearestRoad {
     const OsmWay* road = nullptr;
@@ -21,4 +21,4 @@ struct NearestRoad {
 std::optional<NearestRoad> FindNearestRoad(double lat, double lon,
                                            const std::vector<OsmWay>& roads);
 
-}  // namespace sdl3cpp::tools::fs2024
+}  // namespace sdl3cpp::fs2024

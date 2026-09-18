@@ -17,10 +17,12 @@ namespace sdl3cpp::services::impl {
  * it is an airport tile one crosses.
  *
  * Parameters: pipeline_key (default gpu_pipeline_fs2024_terrain),
- *             fog_density (per metre).
- * Reads:  gpu_render_pass, gpu_command_buffer, render.view_matrix,
- *         render.proj_matrix, render.camera_pos, render.frag_uniforms,
- *         gta5.sky.horizon, frame_skip
+ *             ground_pipeline_key (default gpu_pipeline_fs2024_ground),
+ *             building_texture / roof_texture (context keys, defaults
+ *             fs2024_building / fs2024_roof), material_repeat_metres,
+ *             sun/fog parameters as BuildFs2024TerrainFragmentUniforms.
+ * Draws every resident tile's ground with FS2024's own materials by
+ * land class, then its buildings, each tile at its own origin offset.
  */
 class WorkflowFs2024TerrainDrawStep final : public IWorkflowStep {
 public:

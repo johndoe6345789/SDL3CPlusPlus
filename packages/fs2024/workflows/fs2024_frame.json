@@ -17,6 +17,14 @@
       }
     },
     {
+      "id": "world_rebase",
+      "plugin": "fs2024.world.rebase",
+      "comment": "Re-centres engine space on the player past 40 km, so a flight of any length keeps FS2024's own scale and full float precision; resident tiles are rebuilt in the new space.",
+      "parameters": {
+        "radius_metres": 40000.0
+      }
+    },
+    {
       "id": "tiles_resolve",
       "plugin": "fs2024.tiles.resolve",
       "comment": "Runs after movement, so it centres on the origin this frame produced rather than the last one's."
@@ -40,6 +48,17 @@
         "render_scale": 1.5
       },
       "comment": "HDR target, supersampled; the composite resolves it and sharpens."
+    },
+    {
+      "id": "video_record_begin",
+      "plugin": "video.record.begin",
+      "comment": "Records the window to H.264 when SDL3CPP_RECORD (or output_path) names a .mp4/.mkv; otherwise does nothing. Everything drawn after this goes into a texture video.record.end reads back.",
+      "parameters": {
+        "output_path": "",
+        "fps": 30,
+        "start_after": 0,
+        "seconds": 0
+      }
     },
     {
       "id": "sky_draw",
@@ -85,6 +104,52 @@
     {
       "id": "overlay_draw",
       "plugin": "postfx.overlay_fps_draw"
+    },
+    {
+      "id": "shot_threshold",
+      "plugin": "value.literal",
+      "comment": "Frame to grab an in-engine screenshot on (about two seconds in, once tiles have streamed). Nothing is written unless FS2024_SHOT names a file.",
+      "parameters": {
+        "value": 120.0
+      },
+      "outputs": {
+        "value": "fs2024_shot_frame"
+      }
+    },
+    {
+      "id": "shot_due",
+      "plugin": "compare.gte",
+      "inputs": {
+        "left": "loop.iteration",
+        "right": "fs2024_shot_frame"
+      },
+      "outputs": {
+        "value": "fs2024_shot_due"
+      }
+    },
+    {
+      "id": "shot_path",
+      "plugin": "value.set_if",
+      "inputs": {
+        "condition": "fs2024_shot_due"
+      },
+      "parameters": {
+        "value": ""
+      },
+      "outputs": {
+        "value": "gpu_screenshot_output_path"
+      },
+      "comment": "Where to save one frame. Empty (the default) writes nothing; put a path here to have the engine save the frame it drew itself -- a swapchain read-back, so it never captures anything else that happens to be on screen."
+    },
+    {
+      "id": "gpu_screenshot_capture",
+      "plugin": "gpu.screenshot_capture",
+      "comment": "Saves the frame the engine just drew when a path was set this frame (a swapchain read-back, not a desktop grab); silent otherwise."
+    },
+    {
+      "id": "video_record_end",
+      "plugin": "video.record.end",
+      "comment": "Puts the recorded frame on screen and queues its download. Last thing before the submit: nothing may draw to the swapchain after it."
     },
     {
       "id": "command_buffer_submit",
