@@ -2,6 +2,8 @@
 #include "services/interfaces/workflow_context.hpp"
 #include "services/interfaces/workflow_step_definition.hpp"
 #include <SDL3/SDL.h>
+
+#include <cstdlib>
 #include <utility>
 
 namespace sdl3cpp::services::impl {
@@ -37,10 +39,6 @@ void WorkflowSdlWindowCreateStep::Execute(const WorkflowStepDefinition& step, Wo
             }
             window = SDL_CreateWindow(title.c_str(), width, height, 0);
         }
-        if (window) {
-            // Make window visible for rendering
-            SDL_ShowWindow(window);
-        }
         if (!window) {
             if (logger_) {
                 logger_->Error("WorkflowSdlWindowCreateStep::Execute: SDL_CreateWindow failed");
@@ -53,9 +51,23 @@ void WorkflowSdlWindowCreateStep::Execute(const WorkflowStepDefinition& step, Wo
         context.Set<SDL_Window*>("sdl_window", window);
         context.Set("window_created", true);
 
-        // Focus window and capture mouse for FPS controls
-        SDL_RaiseWindow(window);
-        SDL_SetWindowRelativeMouseMode(window, true);
+        // SDL3CPP_HEADLESS: for automated/dev runs (screenshot or video
+        // capture of the engine's own frames) that must never disturb
+        // someone else's desktop. A fully hidden window has no valid
+        // swapchain on this backend (every frame comes back skipped), so
+        // it is shown but moved far off any real monitor, and never
+        // raised or given the mouse.
+        if (std::getenv("SDL3CPP_HEADLESS")) {
+            SDL_SetWindowPosition(window, -32000, -32000);
+            SDL_ShowWindow(window);
+            if (logger_) {
+                logger_->Info("WorkflowSdlWindowCreateStep: SDL3CPP_HEADLESS set, window moved off-screen");
+            }
+        } else {
+            SDL_ShowWindow(window);
+            SDL_RaiseWindow(window);
+            SDL_SetWindowRelativeMouseMode(window, true);
+        }
 
         if (logger_) {
             logger_->Info("WorkflowSdlWindowCreateStep: Window created (" + std::to_string(width) + "x" +

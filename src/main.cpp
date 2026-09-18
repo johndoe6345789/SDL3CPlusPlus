@@ -34,13 +34,14 @@ int main(int argc, char** argv) {
             app::CreateAppLogger(options.projectRoot, options.traceEnabled);
         app::WorkflowRuntime runtime = app::BuildWorkflowRuntime(logger);
 
-        // Create context with CLI arguments.
         WorkflowContext appContext;
         appContext.Set("game_package", options.gamePackage);
         appContext.Set("bootstrap_package", options.bootstrapPackage);
         appContext.Set("project_root", options.projectRoot.string());
         appContext.Set("max_frames", 600.0);
 
+        app::ApplyLaunchOptionDefaults(options.projectRoot,
+                                       options.gamePackage, logger);
         std::string defaultWorkflow = app::LoadDefaultWorkflowPath(
             options.projectRoot, options.gamePackage, logger);
         std::string shaderDir = app::DetermineShaderBackend(
@@ -57,7 +58,6 @@ int main(int argc, char** argv) {
             logger->Error("Workflow not found: " + mainWorkflowPath.string());
             return EXIT_FAILURE;
         }
-
         logger->Info("Loading workflow: " + mainWorkflowPath.string());
         sdl3cpp::services::impl::WorkflowDefinitionParser parser(logger);
         auto mainWorkflow         = parser.ParseFile(mainWorkflowPath);

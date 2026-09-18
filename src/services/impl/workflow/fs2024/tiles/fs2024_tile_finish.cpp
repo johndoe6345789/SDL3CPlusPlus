@@ -1,6 +1,7 @@
 #include "services/interfaces/workflow/fs2024/tiles/fs2024_tile_finish.hpp"
 
 #include "services/interfaces/workflow/fs2024/terrain/fs2024_class_map_upload.hpp"
+#include "services/interfaces/workflow/fs2024/terrain/fs2024_vegetation_gpu.hpp"
 #include "services/interfaces/workflow/fs2024/world/fs2024_world.hpp"
 #include "services/interfaces/workflow/rendering/bsp_geometry_upload.hpp"
 
@@ -31,7 +32,8 @@ Fs2024LoadedTile FinishFs2024Tile(SDL_GPUDevice* device,
                                   btDiscreteDynamicsWorld* physics,
                                   Fs2024World& world,
                                   Fs2024PreparedTile& prepared,
-                                  Fs2024LandmarkKits& kits) {
+                                  Fs2024LandmarkKits& kits,
+                                  Fs2024VegSpeciesTextures& vegSpecies) {
     Fs2024LoadedTile tile;
     tile.offset = Fs2024TileCorner(prepared.key, world.origin.TileSize());
     Fs2024TerrainChunkGpu ground;
@@ -61,6 +63,8 @@ Fs2024LoadedTile FinishFs2024Tile(SDL_GPUDevice* device,
 
     AdoptFs2024TileKits(device, world, prepared, kits);
     tile.landmarks = std::move(prepared.landmarks);
+    tile.vegetationChunks =
+        FinishFs2024TileVegetation(device, prepared, vegSpecies);
     return tile;
 }
 

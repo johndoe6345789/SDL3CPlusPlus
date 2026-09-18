@@ -35,6 +35,7 @@ PACKAGE_ALLOWED_KEYS = {
     "dependencies",
     "bundled",
     "notes",
+    "launch_options",
 }
 
 logger = logging.getLogger("package_lint")

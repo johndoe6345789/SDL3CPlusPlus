@@ -1,6 +1,7 @@
 #pragma once
 
 #include "services/interfaces/workflow/fs2024/landmark/fs2024_tile_landmarks.hpp"
+#include "services/interfaces/workflow/fs2024/terrain/fs2024_vegetation_gpu.hpp"
 #include "services/interfaces/workflow/fs2024/tiles/fs2024_prepared_tile.hpp"
 #include "services/interfaces/workflow/fs2024/tiles/fs2024_tile_stream_state.hpp"
 
@@ -17,7 +18,8 @@ Fs2024LoadedTile FinishFs2024Tile(SDL_GPUDevice* device,
                                   btDiscreteDynamicsWorld* physics,
                                   Fs2024World& world,
                                   Fs2024PreparedTile& prepared,
-                                  Fs2024LandmarkKits& kits);
+                                  Fs2024LandmarkKits& kits,
+                                  Fs2024VegSpeciesTextures& vegSpecies);
 
 /// Puts on the GPU every landmark model the tile stands that `kits` does
 /// not hold: the ones its loader decoded, and -- should a kit have been

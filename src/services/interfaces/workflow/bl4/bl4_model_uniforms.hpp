@@ -7,10 +7,10 @@
 
 namespace sdl3cpp::services::impl {
 
-/// Matches VertexUniforms in bl4_model.vert.
+/// Matches VertexUniforms in bl4_model.vert. The model matrix is not
+/// here: each instance reads its own from the batch's storage buffer.
 struct Bl4ModelVertexUniforms {
     glm::mat4 viewProj{1.f};
-    glm::mat4 model{1.f};
 };
 
 /// Matches FragmentUniforms in bl4_model.frag. Colours are linear.
@@ -20,8 +20,7 @@ struct Bl4ModelFragmentUniforms {
     glm::vec4 ambient{0.4f, 0.45f, 0.55f, 1.f};
 };
 
-/// viewProj from render.view_matrix/render.proj_matrix; model is filled
-/// in per instance by the draw step.
+/// viewProj from render.view_matrix/render.proj_matrix.
 glm::mat4 BuildBl4ViewProj(const WorkflowContext& context);
 
 /// Sun and ambient from lighting.setup (render.frag_uniforms).

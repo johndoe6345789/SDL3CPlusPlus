@@ -18,10 +18,10 @@ void WorkflowBl4TilesResolveStep::Execute(const WorkflowStepDefinition& step,
                                           WorkflowContext& context) {
     if (!state_->configured) {
         state_->mapRoot = Bl4StringOr(step, "map_root", "");
-        state_->tileSize = Bl4NumberOr(step, "tile_size", 64.f);
-        state_->loadRadiusTiles = static_cast<int>(Bl4NumberOr(step, "load_radius_tiles", 2.f));
-        state_->evictRadiusTiles = static_cast<int>(Bl4NumberOr(step, "evict_radius_tiles", 3.f));
-        state_->maxLoadsPerCall = static_cast<int>(Bl4NumberOr(step, "max_loads_per_call", 4.f));
+        state_->tileSize = Bl4NumberOrEnv(step, "tile_size", 64.f);
+        state_->loadRadiusTiles = static_cast<int>(Bl4NumberOrEnv(step, "load_radius_tiles", 2.f));
+        state_->evictRadiusTiles = static_cast<int>(Bl4NumberOrEnv(step, "evict_radius_tiles", 3.f));
+        state_->maxLoadsPerCall = static_cast<int>(Bl4NumberOrEnv(step, "max_loads_per_call", 4.f));
         state_->configured = true;
         if (logger_) {
             logger_->Info("bl4.tiles.resolve: streaming '" + state_->mapRoot + "', " +

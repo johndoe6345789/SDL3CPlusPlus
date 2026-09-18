@@ -70,6 +70,13 @@ std::string LoadDefaultWorkflowPath(const std::filesystem::path& projectRoot,
                                     const std::string& gamePackage,
                                     const std::shared_ptr<ILogger>& logger);
 
+/// @brief Export each "launch_options" default from the game's
+/// package.json whose variable is unset or empty, so ${env:NAME} in its
+/// workflows resolves the same with or without the launcher.
+void ApplyLaunchOptionDefaults(const std::filesystem::path& projectRoot,
+                               const std::string& gamePackage,
+                               const std::shared_ptr<ILogger>& logger);
+
 /// @brief Determine the shader source subdirectory ("msl" or "spirv") from
 /// the bootstrap package's configured renderer; "msl" (Mac) is the default.
 std::string DetermineShaderBackend(const std::filesystem::path& projectRoot,

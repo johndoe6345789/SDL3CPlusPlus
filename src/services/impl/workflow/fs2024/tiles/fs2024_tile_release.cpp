@@ -20,6 +20,10 @@ void ReleaseFs2024Tile(SDL_GPUDevice* device, btDiscreteDynamicsWorld* world,
             SDL_ReleaseGPUBuffer(device, chunk->vertexBuffer);
             SDL_ReleaseGPUBuffer(device, chunk->indexBuffer);
         }
+        for (const Fs2024VegetationChunkGpu& chunk : tile.vegetationChunks) {
+            SDL_ReleaseGPUBuffer(device, chunk.vertexBuffer);
+            SDL_ReleaseGPUBuffer(device, chunk.indexBuffer);
+        }
     }
 }
 

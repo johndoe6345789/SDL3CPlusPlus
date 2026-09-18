@@ -1,6 +1,7 @@
 #pragma once
 
 #include "services/interfaces/workflow/fs2024/assemble/fs2024_tile_building_mesh.hpp"
+#include "services/interfaces/workflow/fs2024/assemble/fs2024_vegetation_build.hpp"
 #include "services/interfaces/workflow/fs2024/landmark/fs2024_landmark_instance.hpp"
 #include "services/interfaces/workflow/fs2024/landmark/fs2024_landmark_mesh.hpp"
 #include "services/interfaces/workflow/fs2024/terrain/fs2024_terrain_mesh.hpp"
@@ -29,6 +30,7 @@ struct Fs2024PreparedTile {
     /// Models this tile stands that were not on the GPU when it was
     /// built, decoded and ready to upload.
     std::vector<std::shared_ptr<const Fs2024LandmarkMesh>> models;
+    std::vector<Fs2024VegetationGroupCpu> vegetation;
 };
 
 }  // namespace sdl3cpp::services::impl

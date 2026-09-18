@@ -123,9 +123,13 @@ of tiles at each bake's edge silently had no ground.
 test.
 
 A different place just needs its own DEM tile and OSM fetch, baked
-into a new `--out`; then update `D:/fs2024/probe/gen_workflows.py`'s
-`DATA` path (or wherever `tiles_root` is set in
-`workflows/fs2024_game.json`) and regenerate. That generator is a
+into a new `--out`; then point `FS2024_DATA_DIR` at it -- in the
+launcher, with `--env FS2024_DATA_DIR=<out>`, or by changing the
+`launch_options` default in `package.json` (`D:/fs2024/westminster`).
+The workflows read `tiles_root` and the building kit textures from
+that variable, so nothing needs regenerating. To regenerate anyway,
+point `D:/fs2024/probe/gen_workflows.py`'s `DATA` at the bake it reads
+`world.json` from. That generator is a
 plain script, not part of the engine's own C++ -- it only writes the
 package's own workflow JSON, the same role `generate_cmake.py` plays
 for `CMakeLists.txt`, not a reader of any game data format.

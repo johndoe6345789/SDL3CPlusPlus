@@ -14,8 +14,9 @@ baked to disk.
   packages, unversioned properties, Nanite mesh clusters and Virtual
   Textures, and walks a World_P cell's actor tree into world-space mesh
   placements -- see its own README for the (considerable) format detail.
-- **This package** only reads bl4x's *output*: OBJ meshes and JSON
-  placement lists. It has no BL4-specific parsing at all.
+- **This package** only reads bl4x's *output*: OBJ meshes (+ `.mtl`),
+  TGA base-colour maps and JSON placement lists. It has no BL4-specific
+  parsing at all.
 
 ## Finding a region worth baking
 
@@ -67,19 +68,37 @@ directly):
 <out_dir>/tiles/<tx>_<tz>/placements.json  { tile:[x,z], tile_size, placements:[
                                               {archetype, model, position[3],
                                                rotation[4] (xyzw), scale[3]}, ...] }
-<out_dir>/models/<name>.obj                one mesh, position+normal+uv+faces
+<out_dir>/models/<name>.obj                one mesh, position+normal+uv+faces,
+                                           one `usemtl` group per material slot
+<out_dir>/models/<name>.mtl                map_Kd ../textures/<tex>.tga per slot
+<out_dir>/textures/<tex>.tga               base-colour map, RGBA8, <= 1024 px
 ```
 
+The `.mtl` is only written for slots whose material instance chain
+(`TextureParameterValues`, then `Parent`, up to 8 hops) binds a texture
+that looks like a colour map -- a `BaseColor`/`Albedo`/`Diffuse`
+parameter, else a `_D`/`_BC` texture name. On the default test region
+that's 102 of 114 materials; the rest are emissive/light-fixture
+materials or foliage that only binds a packed "Composite" map, and draw
+with `assets/bl4_placeholder.png`.
+
 A single richly-populated World_P cell bakes to roughly a 2x2 grid of
-64 m tiles (~128x128 m), which is what the default `map_root` in
-`workflows/bl4_game.json` points at. Baking more cells (or a lower
-`tile_size`) grows the streamed area; nothing else needs to change.
+64 m tiles (~128x128 m). Baking more cells (or a lower `tile_size`) grows
+the streamed area; nothing else needs to change -- tiles are keyed by
+world position, so a spawn point stays put whichever set of cells was
+baked.
+
+`bake-all` does the whole map (all 16,863 World_P cells, ~2.25M
+placements) into the same layout. Both commands are resumable: a mesh or
+texture whose file already exists is not decoded again, so an
+interrupted run continues where it stopped.
 
 ## Running it
 
 The map root isn't checked into this repo (BL4's assets aren't either --
 see the boundary note below). Point `BL4_MAP_DIR` at wherever you baked
-to and launch with the `bl4` package:
+to -- it defaults to `D:/BL4Export/bake_town` (`launch_options` in
+`package.json`), and the launcher has a folder picker for it:
 
 ```
 python python/dev_commands.py all --run --game bl4 --env BL4_MAP_DIR=D:/bl4x/out
@@ -88,6 +107,32 @@ python python/dev_commands.py all --run --game bl4 --env BL4_MAP_DIR=D:/bl4x/out
 `workflows/bl4_game.json`'s `bl4.tiles.resolve` init node reads
 `${env:BL4_MAP_DIR}` (see `ExpandEnvPlaceholders` in
 `workflow_parameter_value_parser.cpp`) as its `map_root` parameter.
+
+## Falling through the world
+
+The baked ground has holes, and not all of them are bugs. The city in
+the middle of the map is built around a designed bottomless shaft,
+which the game guards with kill volumes rather than a floor.
+`bl4.player.respawn` does what Borderlands does: it remembers the last
+walkable ground you stood on and puts you back there after a fall of
+more than `fall_distance` (60 m), or below `kill_y` (-1000 m). Only a
+real fall (downward velocity) triggers it, so free flight, the spawn
+hold and the orbit camera never do.
+
+What bl4x now fills rather than leaves:
+
+- **Water.** The terrain is cut away wherever water sits. Custom water
+  bodies bake their `WaterMeshOverride` swim plane; lakes, whose surface
+  the game builds at runtime, are triangulated from their spline
+  outline. Both are drawn with one flat water colour.
+- **Spline meshes.** Roads, pipes and river pieces are short meshes UE
+  bends along a spline; bl4x bends each one itself (the Hermite and
+  slice frame `USplineMeshComponent::CalcSliceTransform` uses). Placed
+  unbent they came out tens of kilometres across.
+
+`D:\BL4Export\coverage.py` maps what is left: every upward-facing
+triangle rasterized onto a grid, flood-filled from the border, so any
+enclosed empty cell is a place you would fall through.
 
 ## Engine-space conversion
 
@@ -99,18 +144,25 @@ of bl4x re-maps axes or units.** See `package.json`'s
 
 ## Scope of this first slice
 
-- **No textures yet.** bl4x doesn't resolve `UMaterialInstance` ->
-  texture-parameter references (a whole separate subsystem: material
-  graphs, not just meshes/textures in isolation), so every mesh here
-  draws with one placeholder texture (`assets/bl4_placeholder.png`) and
-  flat sun/ambient shading (`shaders/spirv/bl4_model.frag`). Geometry,
-  collision and streaming are otherwise the real thing -- see bl4x's own
-  README for exactly how much of BL4's Nanite/Virtual Texture pipeline
-  is decoded already.
-- **No per-instance frustum culling or GPU instancing.** Every resident
-  tile's every instance draws with its own draw call
-  (`bl4_model_draw_step.cpp`). Fine at a few hundred instances (one
-  test region); worth revisiting before streaming a much larger area.
+- **Base colour only.** BL4's materials are layered graphs
+  (`MaterialLayers`/`Blends`: colourisation tint, grime, wear, detail
+  and normal maps); only the base-colour map survives, lit by one sun
+  and a sky term (`shaders/spirv/bl4_model.frag`). So surfaces BL4 tints
+  at runtime (e.g. the paved road) come out paler than in game. Each
+  texture is loaded once and ref-counted across submeshes
+  (`bl4_texture_cache.cpp`), so evicting a region frees its textures too.
+- **Culled and instanced, but not batched further.** `bl4.models.draw`
+  culls every resident instance against the view frustum and against
+  `size_ratio` (drop anything whose bounding sphere is under that
+  fraction of its distance -- BL4's kit is full of bolts and cables that
+  cover no pixel at 200 m), then groups what survives by archetype into
+  one storage buffer of model matrices and issues one instanced draw per
+  archetype submesh (`bl4_instance_batch_*.cpp`, the same shape as
+  `packages/gta5`'s cull/batch steps). Drawing one call per placement
+  instead ran the full map at 4 FPS with the GPU at 14% -- entirely CPU
+  submission cost. Still missing: merging submeshes that share a texture
+  across archetypes, and any LOD scheme (BL4's own HLOD proxies are
+  skipped, see below).
 - **No ground_guard.** Unlike fs2024's heightfield, BL4 mesh collision
   is arbitrary triangle geometry (`btBvhTriangleMeshShape`, same as
   `packages/gta5`), which has no cheap analytic height query to sanity-

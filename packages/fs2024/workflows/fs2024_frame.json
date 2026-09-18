@@ -87,6 +87,11 @@
       "comment": "FS2024's own roads and water, over the ground just drawn."
     },
     {
+      "id": "vegetation_draw",
+      "plugin": "fs2024.vegetation.draw",
+      "comment": "FS2024's own trees and shrubs, over the ground, roads and water just drawn."
+    },
+    {
       "id": "frame_end",
       "plugin": "frame.gpu.end_scene"
     },

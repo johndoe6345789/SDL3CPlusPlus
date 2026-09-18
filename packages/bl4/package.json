@@ -6,6 +6,12 @@
   "category": "demo",
   "description": "Walk a slice of Borderlands 4's open world, baked offline by bl4x, with Quake 3 player kinematics",
 
+  "launch_options": [
+    {"env": "BL4_MAP_DIR", "label": "Baked map folder", "kind": "directory",
+     "required": true, "default": "D:/BL4Export/bake_town",
+     "help": "`bl4x bake` output: world.json, tiles/, models/."}
+  ],
+
   "defaultWorkflow": "workflows/bl4_game.json",
 
   "workflows": [

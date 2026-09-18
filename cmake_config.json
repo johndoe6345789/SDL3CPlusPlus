@@ -111,6 +111,7 @@
         "src/services/impl/workflow/fs2024/data/material/*.cpp",
         "src/services/impl/workflow/fs2024/data/texture/*.cpp",
         "src/services/impl/workflow/fs2024/data/vec/*.cpp",
+        "src/services/impl/workflow/fs2024/data/vegetation/*.cpp",
         "src/services/impl/workflow/bl4/*.cpp"
       ],
       "include_directories": [
@@ -892,6 +893,35 @@
         "GTest::gtest_main",
         "LibLZMA::LibLZMA",
         "WebP::webpdecoder"
+      ]
+    },
+    {
+      "name": "fs2024_vegetation_build_test",
+      "sources": [
+        "tests/fs2024_vegetation_build_test.cpp",
+        "src/services/impl/workflow/fs2024/assemble/fs2024_vegetation_*.cpp",
+        "src/services/impl/workflow/fs2024/data/vegetation/*.cpp",
+        "src/services/impl/workflow/fs2024/terrain/fs2024_heightfield.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main",
+        "glm::glm"
+      ]
+    },
+    {
+      "name": "fs2024_vegetation_test",
+      "sources": [
+        "tests/fs2024_vegetation_real_test.cpp",
+        "src/services/impl/workflow/fs2024/data/vegetation/*.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main"
       ]
     },
     {

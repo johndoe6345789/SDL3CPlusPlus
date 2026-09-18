@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
+#include <cstdint>
 #include <string>
 
 namespace sdl3cpp::services::impl {
@@ -17,5 +18,10 @@ struct Bl4Placement {
     glm::quat rotation{1.f, 0.f, 0.f, 0.f};  // (w, x, y, z)
     glm::vec3 scale{1.f};
 };
+
+/// Identifies one placement across the tiles that list it: its model
+/// and its transform, quantised to a millimetre so the same instance
+/// read twice hashes the same.
+std::uint64_t Bl4PlacementIdentity(const Bl4Placement& placement);
 
 }  // namespace sdl3cpp::services::impl

@@ -23,6 +23,8 @@ namespace sdl3cpp::services::impl {
  * Parameters: force (bool, default false) -- ignore the per-call budget
  *             and drain the whole pending list; used once at init so
  *             the spawn point's ground exists before the first frame.
+ *             max_tiles (default 0 = no cap) -- an upper bound on the
+ *             tiles one call loads, whichever budget applies.
  * Reads: gpu_device, physics_world
  */
 class WorkflowBl4TilesLoadStep final : public IWorkflowStep {

@@ -25,6 +25,32 @@ On macOS the build is unsigned, so clear the download quarantine first with
 The launcher needs Python 3 and PyQt6; it installs PyQt6 into a `.venv-gui`
 beside itself when the system Python does not already have it.
 
+Selecting a game shows the options it takes above PLAY - a data folder picker
+for `gta5`, `fs2024` and `bl4`, a pak0.pk3 picker, map list and spawn position
+for `quake3` - and nothing for games that need none. Required options are
+marked `*`, a path that is not on disk is outlined in red and blocks PLAY, and
+values are remembered per game. A package declares these in its
+`package.json`:
+
+```json
+"launch_options": [
+  {"env": "BL4_MAP_DIR", "label": "Baked map folder", "kind": "directory",
+   "required": true, "default": "D:/BL4Export/bake_town",
+   "help": "`bl4x bake` output"}
+]
+```
+
+`default` pre-fills the field, and `sdl3_app` itself exports it at
+startup for any variable still unset, so a game started without the
+launcher reads the same paths. Clearing a field falls back to the default,
+or to what Steam detection found.
+
+Each entry becomes the environment variable its workflows read through
+`${env:NAME}`. `kind` is `text`, `number`, `directory`, `file` (with an
+optional `file_filter`) or `choice` (values from a launcher provider named by
+`choices_from`, such as `quake3_maps`). A `${env:NAME}` a package uses without
+declaring still gets a plain text box.
+
 ### Prerequisites
 
 - C++20 compiler (MSVC, Clang, or GCC)

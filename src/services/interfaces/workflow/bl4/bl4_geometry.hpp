@@ -11,12 +11,17 @@
 namespace sdl3cpp::services::impl {
 
 /// One assimp mesh's worth of an archetype's geometry: its own GPU
-/// vertex/index buffers (bl4x writes one OBJ "g" group per material
-/// index -- see Bl4MeshData).
+/// vertex/index buffers and base-colour map (bl4x writes one OBJ group
+/// per material slot -- see Bl4MeshData).
 struct Bl4SubMesh {
     SDL_GPUBuffer* vertexBuffer = nullptr;
     SDL_GPUBuffer* indexBuffer = nullptr;
     std::uint32_t indexCount = 0;
+    /// Key into Bl4TileStreamState::textureCache; empty, with a null
+    /// texture, when the material had no map (drawn with the placeholder).
+    std::string texturePath;
+    SDL_GPUTexture* texture = nullptr;
+    SDL_GPUSampler* sampler = nullptr;
 };
 
 /// An archetype's mesh, uploaded once and drawn many times. references
@@ -35,6 +40,9 @@ struct Bl4Geometry {
     std::vector<int> collisionIndices;
     btTriangleIndexVertexArray* collisionMesh = nullptr;
     btBvhTriangleMeshShape* collisionShape = nullptr;
+    /// Model-space bounding sphere, for the draw step's culling.
+    glm::vec3 boundsCenter{0.f};
+    float boundsRadius = -1.f;
 };
 
 /// One placed copy of an archetype.
@@ -44,6 +52,10 @@ struct Bl4Instance {
     btRigidBody* body = nullptr;
     /// Its own scaled wrapper of the shared shape, off unit scale only.
     btCollisionShape* scaledShape = nullptr;
+    /// This placement's bounding sphere in world space, so culling costs
+    /// no matrix work per frame.
+    glm::vec3 boundsCenter{0.f};
+    float boundsRadius = -1.f;
 };
 
 }  // namespace sdl3cpp::services::impl

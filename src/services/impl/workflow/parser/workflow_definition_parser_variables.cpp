@@ -1,4 +1,5 @@
 #include "services/interfaces/workflow/parser/workflow_definition_parser.hpp"
+#include "services/interfaces/workflow/parser/workflow_parameter_value_parser.hpp"
 
 #include <rapidjson/document.h>
 
@@ -38,7 +39,8 @@ void WorkflowDefinitionParser::ParseVariables(
         if (varDef.HasMember("defaultValue")) {
             // Store defaultValue as string representation
             if (varDef["defaultValue"].IsString()) {
-                var.defaultValue = varDef["defaultValue"].GetString();
+                var.defaultValue = ExpandEnvPlaceholders(
+                    varDef["defaultValue"].GetString());
             } else if (varDef["defaultValue"].IsNumber()) {
                 // Check if it's an integer to avoid .000000 suffix
                 if (varDef["defaultValue"].IsInt() || varDef["defaultValue"].IsInt64()) {

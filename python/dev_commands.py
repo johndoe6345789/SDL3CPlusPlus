@@ -33,7 +33,6 @@ from __future__ import annotations
 import argparse
 import os
 import platform
-import re
 import subprocess
 import sys
 from pathlib import Path
@@ -739,14 +738,8 @@ def _package_required_env(package_dir: Path) -> list[str]:
     Workflows substitute these at run time, so a package that names one will
     not start correctly until it is exported (or passed via --env).
     """
-    pattern = re.compile(r"\$\{env:([A-Za-z_][A-Za-z0-9_]*)\}")
-    found: set[str] = set()
-    for json_file in package_dir.rglob("*.json"):
-        try:
-            found.update(pattern.findall(json_file.read_text(encoding="utf-8")))
-        except OSError:
-            continue
-    return sorted(found)
+    from launch_options.spec import referenced_env
+    return referenced_env(package_dir)
 
 
 def demos(args: argparse.Namespace) -> None:
@@ -897,6 +890,17 @@ def gui(args: argparse.Namespace) -> None:
 
     import platform_target
     from cmake_presets import resolve_binary_dir, resolve_configure_preset
+    from launch_options.panel import LaunchOptionsPanel
+
+    def quake3_maps(env: dict[str, str]) -> list[str]:
+        """Map names from the pak0.pk3 the options point at."""
+        pak_path = env.get("QUAKE3_PAK0") or _resolve_pak0()
+        if not pak_path or not Path(pak_path).is_file():
+            return []
+        try:
+            return list_pk3_maps(pak_path)
+        except SystemExit:
+            return []
 
     class BuildSettingsDialog(QDialog):
         """Dialog for configuring build settings"""
@@ -943,6 +947,7 @@ def gui(args: argparse.Namespace) -> None:
             self.process = None
             self.current_game = None
             self.current_bootloader = None
+            self._detected: dict[str, str] | None = None
 
             # Build settings
             self.preset = "default"
@@ -1197,20 +1202,10 @@ def gui(args: argparse.Namespace) -> None:
             self.game_description.setStyleSheet("color: #8f98a0; font-size: 11pt;")
             detail_layout.addWidget(self.game_description)
 
-            # Map picker. Only meaningful for packages that read QUAKE3_MAP, so
-            # it stays hidden until such a package is selected.
-            self.map_row = QWidget()
-            map_row_layout = QHBoxLayout(self.map_row)
-            map_row_layout.setContentsMargins(0, 0, 0, 0)
-            self.map_label = QLabel("MAP")
-            self.map_label.setStyleSheet("color: #8f98a0; font-weight: bold; font-size: 9pt;")
-            map_row_layout.addWidget(self.map_label)
-            self.map_combo = QComboBox()
-            self.map_combo.setMinimumWidth(200)
-            map_row_layout.addWidget(self.map_combo)
-            map_row_layout.addStretch()
-            self.map_row.setVisible(False)
-            detail_layout.addWidget(self.map_row)
+            # Per-game options (folders, files, maps, numbers), built
+            # from the selected package's "launch_options" declarations.
+            self.options_panel = LaunchOptionsPanel(
+                {"quake3_maps": quake3_maps})
 
             # Package selection lists side by side
             packages_row = QHBoxLayout()
@@ -1254,12 +1249,19 @@ def gui(args: argparse.Namespace) -> None:
                 self.bootloader_list.setCurrentRow(0)
             self.bootloader_list.currentItemChanged.connect(self.on_bootloader_selected)
             bootloader_column.addWidget(self.bootloader_list)
+            bootloader_column.addStretch(1)
             packages_row.addLayout(bootloader_column)
 
             # Only the bootloader is chosen here. Which game runs is the
             # LIBRARY selection on the left; a second list of the same
             # packages here looked like a choice but drove nothing.
-            packages_row.addStretch(1)
+            # The selected game's options fill the space to the right.
+            options_column = QVBoxLayout()
+            options_column.addSpacing(20)
+            options_column.addWidget(self.options_panel)
+            options_column.addStretch(1)
+            packages_row.addSpacing(24)
+            packages_row.addLayout(options_column, 1)
 
             detail_layout.addLayout(packages_row)
 
@@ -1513,12 +1515,15 @@ def gui(args: argparse.Namespace) -> None:
                 self.current_game = game
                 self.game_title.setText(game["name"])
                 self.game_description.setText(game["description"])
-                self._refresh_map_choices(game)
+                self.options_panel.set_package(
+                    game["id"], Path(game["package_dir"]),
+                    self._detected_env())
                 self.play_btn.setEnabled(True)
             else:
                 self.current_game = None
                 self.game_title.setText("Select a game")
                 self.game_description.setText("")
+                self.options_panel.setVisible(False)
                 self.play_btn.setEnabled(False)
 
         def copy_console(self):
@@ -1532,41 +1537,25 @@ def gui(args: argparse.Namespace) -> None:
                 # If no selection, copy all text
                 clipboard.setText(self.console.toPlainText())
 
-        def _refresh_map_choices(self, game: dict) -> None:
-            """Show a map dropdown when the selected package reads QUAKE3_MAP.
-
-            Map names come from pak0.pk3 itself, so the list always matches the
-            data actually installed rather than a hardcoded set.
-            """
-            package_dir = Path(game.get("package_dir", ""))
-            needs_map = "QUAKE3_MAP" in _package_required_env(package_dir)
-            self.map_combo.clear()
-            if not needs_map:
-                self.map_row.setVisible(False)
-                return
-
-            pak_path = _resolve_pak0()
-            if not pak_path or not Path(pak_path).is_file():
-                self.map_row.setVisible(False)
-                self.log("Map list unavailable: pak0.pk3 not found "
-                         "(set QUAKE3_PAK0 or install via Steam).")
-                return
-            try:
-                names = list_pk3_maps(pak_path)
-            except SystemExit as exc:
-                self.map_row.setVisible(False)
-                self.log(f"Map list unavailable: {exc}")
-                return
-
-            self.map_combo.addItems(names)
-            default_index = self.map_combo.findText("q3dm1")
-            if default_index >= 0:
-                self.map_combo.setCurrentIndex(default_index)
-            self.map_row.setVisible(True)
+        def _detected_env(self) -> dict[str, str]:
+            """Game data found in Steam libraries, looked up once."""
+            if self._detected is None:
+                try:
+                    from steam_detector import detect_and_export
+                    self._detected = detect_and_export()
+                except Exception as exc:
+                    self.log(f"[steam_detector] skipped: {exc}")
+                    self._detected = {}
+            return self._detected
 
         def play_game(self):
             """Launch the selected game with chosen bootloader and game package"""
             if not self.current_game:
+                return
+
+            missing = self.options_panel.missing()
+            if missing:
+                self.log(f"❌ Fill in: {', '.join(missing)}")
                 return
 
             binary = self._find_binary()
@@ -1593,17 +1582,9 @@ def gui(args: argparse.Namespace) -> None:
 
             # Packages read owned game data through ${env:...}; the
             # command line runner does this too, so the GUI matches.
-            game_data: dict[str, str] = {}
-            try:
-                from steam_detector import detect_and_export
-                game_data = detect_and_export()
-            except Exception as exc:
-                self.log(f"[steam_detector] skipped: {exc}")
-            selected_map = (self.map_combo.currentText()
-                            if self.map_row.isVisible() else "")
-            if selected_map:
-                game_data = dict(game_data)
-                game_data["QUAKE3_MAP"] = selected_map
+            # Whatever was typed into the options wins over detection.
+            game_data = {**self._detected_env(),
+                         **self.options_panel.values()}
             for key, value in game_data.items():
                 self.log(f"{key}={value}")
 

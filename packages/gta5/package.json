@@ -6,6 +6,13 @@
   "category": "demo",
   "description": "Streamed Los Santos / Blaine County map with Quake 3 player kinematics",
 
+  "launch_options": [
+    {"env": "GTA5_DATA_DIR", "label": "GTAUtil extract folder",
+     "kind": "directory", "required": true,
+     "default": "D:/gtautil-2.2.13",
+     "help": "Holds levels/, models/, data/, textures/, extract_*."}
+  ],
+
   "defaultWorkflow": "workflows/gta5_game.json",
 
   "workflows": [

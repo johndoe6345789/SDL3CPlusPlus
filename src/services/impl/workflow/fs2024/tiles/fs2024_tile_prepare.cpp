@@ -3,6 +3,7 @@
 #include "services/interfaces/workflow/fs2024/assemble/fs2024_road_build.hpp"
 #include "services/interfaces/workflow/fs2024/assemble/fs2024_sea_build.hpp"
 #include "services/interfaces/workflow/fs2024/assemble/fs2024_tile_ground.hpp"
+#include "services/interfaces/workflow/fs2024/assemble/fs2024_vegetation_build.hpp"
 #include "services/interfaces/workflow/fs2024/landmark/fs2024_tile_landmarks.hpp"
 #include "services/interfaces/workflow/fs2024/terrain/fs2024_terrain_skirt.hpp"
 #include "services/interfaces/workflow/fs2024/world/fs2024_world.hpp"
@@ -54,6 +55,20 @@ Fs2024PreparedTile PrepareFs2024Tile(Fs2024World& world,
         PrepareFs2024TileLandmarks(world, tile);
     if (key.level > kFs2024FinestLevel - kBuildingLevels) {
         tile.buildings = PrepareFs2024TileBuildings(world, tile, bounds);
+    }
+    if (world.vegetation &&
+        key.level > kFs2024FinestLevel - kBuildingLevels) {
+        const glm::vec3 corner = Fs2024TileCorner(key, world.origin.TileSize());
+        double lat = 0.0, lon = 0.0;
+        Fs2024LatLonOfEngine(world.origin, corner.x + span * 0.5f,
+                            corner.z + span * 0.5f, lat, lon);
+        const std::uint64_t seed =
+            (static_cast<std::uint64_t>(static_cast<std::uint32_t>(quadX))
+             << 32) ^
+            static_cast<std::uint32_t>(quadY);
+        tile.vegetation = BuildFs2024Vegetation(*world.vegetation,
+                                                tile.classes, tile.classSize,
+                                                tile.field, span, lat, seed);
     }
     return tile;
 }

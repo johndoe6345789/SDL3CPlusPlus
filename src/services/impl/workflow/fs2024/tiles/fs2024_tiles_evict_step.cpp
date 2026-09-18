@@ -2,6 +2,7 @@
 
 #include "services/interfaces/workflow/fs2024/world/fs2024_world.hpp"
 #include "services/interfaces/workflow/fs2024/landmark/fs2024_tile_landmarks.hpp"
+#include "services/interfaces/workflow/fs2024/terrain/fs2024_vegetation_gpu.hpp"
 #include "services/interfaces/workflow/fs2024/tiles/fs2024_tile_release.hpp"
 
 #include <utility>
@@ -31,6 +32,7 @@ void WorkflowFs2024TilesEvictStep::Execute(const WorkflowStepDefinition&,
         state_->resident.erase(it);
     }
     ReleaseUnusedFs2024LandmarkKits(device, *state_);
+    ReleaseUnusedFs2024Vegetation(device, *state_);
     if (logger_ && !state_->pendingEvict.empty()) {
         logger_->Trace("fs2024.tiles.evict: released " +
                        std::to_string(state_->pendingEvict.size()) +
@@ -58,6 +60,7 @@ void WorkflowFs2024TilesFreeStep::Execute(const WorkflowStepDefinition&,
     ReleaseAllFs2024Tiles(device, world, *state_);
     state_->pool.reset();  // joins the loaders, which read the world
     ReleaseUnusedFs2024LandmarkKits(device, *state_);  // now every kit
+    ReleaseUnusedFs2024Vegetation(device, *state_);  // now every species
     if (state_->world && device) {
         SDL_ReleaseGPUTexture(device, state_->world->materialArray);
         SDL_ReleaseGPUSampler(device, state_->world->materialSampler);

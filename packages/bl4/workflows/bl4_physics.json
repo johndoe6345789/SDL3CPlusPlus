@@ -74,6 +74,44 @@
       "plugin": "physics.sync_transforms"
     },
     {
+      "id": "player_hold",
+      "plugin": "bl4.player.hold",
+      "parameters": {
+        "give_up_seconds": 180
+      },
+      "comment": "Pins the player at the spawn point until the tiles around it are resident, so nobody falls through a world that has not arrived yet (borrowed from gta5.player.hold). bl4.loading.text shows the percentage while it waits."
+    },
+    {
+      "id": "player_respawn",
+      "plugin": "bl4.player.respawn",
+      "parameters": {
+        "fall_distance": 60,
+        "kill_y": -1000,
+        "report_seconds": 0,
+        "report_seconds_env": "${env:BL4_RESPAWN_REPORT}"
+      },
+      "comment": "Borderlands-style fall recovery: more than 60 m below the last walkable ground (or below y=-1000) puts the player back on it. The city's central pit is bottomless by design, and bl4x cannot fill every hole in the ground."
+    },
+    {
+      "id": "camera_orbit",
+      "plugin": "bl4.camera.orbit",
+      "parameters": {
+        "radius": 0,
+        "radius_env": "${env:BL4_ORBIT_RADIUS}",
+        "height": 2000,
+        "height_env": "${env:BL4_ORBIT_HEIGHT}",
+        "centre_x": 0,
+        "centre_x_env": "${env:BL4_ORBIT_CENTRE_X}",
+        "centre_y": 300,
+        "centre_y_env": "${env:BL4_ORBIT_CENTRE_Y}",
+        "centre_z": -400,
+        "centre_z_env": "${env:BL4_ORBIT_CENTRE_Z}",
+        "seconds_per_orbit": 90,
+        "seconds_per_orbit_env": "${env:BL4_ORBIT_SECONDS}"
+      },
+      "comment": "Scripted flyover camera, off unless BL4_ORBIT_RADIUS is set: circles the map looking at its centre. The default centre is the middle of the baked map's extent (x -3.9..3.9 km, z -4.1..3.4 km)."
+    },
+    {
       "id": "camera_update",
       "plugin": "camera.fps.update",
       "parameters": {

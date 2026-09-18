@@ -6,6 +6,7 @@
 #include "services/interfaces/workflow/fs2024/data/landmark/fs2024_landmark_index.hpp"
 #include "services/interfaces/workflow/fs2024/data/material/fs2024_ground_materials.hpp"
 #include "services/interfaces/workflow/fs2024/data/vec/fs2024_vec_library.hpp"
+#include "services/interfaces/workflow/fs2024/data/vegetation/fs2024_vegetation_library.hpp"
 #include "services/interfaces/workflow/fs2024/landmark/fs2024_landmark_book.hpp"
 #include "services/interfaces/workflow/fs2024/world/fs2024_geo_origin.hpp"
 
@@ -32,6 +33,10 @@ struct Fs2024InstallPaths {
     std::string landmarkTextures;
     /// The worldwide object grid whose placements say where they stand.
     std::string landmarkScenery;
+    /// FS2024's own vegetation species/biome data and its material
+    /// library; empty when the install has none.
+    std::string vegetationRoot;
+    std::string vegetationMaterialRoot;
 };
 
 /// The paths under an install root (the folder holding FS2024's
@@ -52,6 +57,7 @@ struct Fs2024World {
     std::unique_ptr<Fs2024ClassSampler> classes;
     std::unique_ptr<sdl3cpp::fs2024::BldLibrary> buildings;
     std::unique_ptr<sdl3cpp::fs2024::VecLibrary> vectors;  ///< roads, water
+    std::unique_ptr<sdl3cpp::fs2024::VegetationLibrary> vegetation;
     sdl3cpp::fs2024::Fs2024GroundMaterials materials;
     /// FS2024's ground materials as-is (653 BC1 layers, array_low.dds).
     SDL_GPUTexture* materialArray = nullptr;

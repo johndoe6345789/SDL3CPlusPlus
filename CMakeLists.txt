@@ -187,6 +187,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/diagnostics/logger_service_trace_variable.cpp
         src/services/impl/app/app_cli_args.cpp
         src/services/impl/app/app_context_populate.cpp
+        src/services/impl/app/app_launch_defaults.cpp
         src/services/impl/app/app_logger_init.cpp
         src/services/impl/app/app_package_config.cpp
         src/services/impl/app/app_require_package.cpp
@@ -1179,6 +1180,9 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/fs2024/terrain/fs2024_terrain_uniforms.cpp
         src/services/impl/workflow/fs2024/terrain/fs2024_terrain_upload.cpp
         src/services/impl/workflow/fs2024/terrain/fs2024_vectors_draw_step.cpp
+        src/services/impl/workflow/fs2024/terrain/fs2024_vegetation_draw_step.cpp
+        src/services/impl/workflow/fs2024/terrain/fs2024_vegetation_evict.cpp
+        src/services/impl/workflow/fs2024/terrain/fs2024_vegetation_gpu.cpp
         src/services/impl/workflow/fs2024/building/fs2024_building_mesh.cpp
         src/services/impl/workflow/fs2024/building/fs2024_convex_hull.cpp
         src/services/impl/workflow/fs2024/building/fs2024_oriented_box.cpp
@@ -1213,6 +1217,12 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/fs2024/assemble/fs2024_tile_buildings.cpp
         src/services/impl/workflow/fs2024/assemble/fs2024_tile_ground.cpp
         src/services/impl/workflow/fs2024/assemble/fs2024_vec_shapes.cpp
+        src/services/impl/workflow/fs2024/assemble/fs2024_vegetation_build.cpp
+        src/services/impl/workflow/fs2024/assemble/fs2024_vegetation_hash.cpp
+        src/services/impl/workflow/fs2024/assemble/fs2024_vegetation_pick.cpp
+        src/services/impl/workflow/fs2024/assemble/fs2024_vegetation_place_helpers.cpp
+        src/services/impl/workflow/fs2024/assemble/fs2024_vegetation_place_one.cpp
+        src/services/impl/workflow/fs2024/assemble/fs2024_vegetation_quad.cpp
         src/services/impl/workflow/fs2024/assemble/fs2024_water_build.cpp
         src/services/impl/workflow/fs2024/player/fs2024_ground_guard_step.cpp
         src/services/impl/workflow/fs2024/player/fs2024_player_cruise_step.cpp
@@ -1272,14 +1282,30 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/fs2024/data/vec/fs2024_vec_library.cpp
         src/services/impl/workflow/fs2024/data/vec/fs2024_vec_sections.cpp
         src/services/impl/workflow/fs2024/data/vec/fs2024_vec_tile.cpp
+        src/services/impl/workflow/fs2024/data/vegetation/fs2024_vegetation_biomes.cpp
+        src/services/impl/workflow/fs2024/data/vegetation/fs2024_vegetation_library.cpp
+        src/services/impl/workflow/fs2024/data/vegetation/fs2024_vegetation_species.cpp
+        src/services/impl/workflow/fs2024/data/vegetation/fs2024_vegetation_xml.cpp
+        src/services/impl/workflow/bl4/bl4_binary_mesh.cpp
+        src/services/impl/workflow/bl4/bl4_camera_orbit_step.cpp
         src/services/impl/workflow/bl4/bl4_collision_body.cpp
         src/services/impl/workflow/bl4/bl4_collision_shape.cpp
+        src/services/impl/workflow/bl4/bl4_frustum.cpp
+        src/services/impl/workflow/bl4/bl4_instance_batch_build.cpp
+        src/services/impl/workflow/bl4/bl4_instance_batch_upload.cpp
+        src/services/impl/workflow/bl4/bl4_load_progress.cpp
+        src/services/impl/workflow/bl4/bl4_loading_text_step.cpp
         src/services/impl/workflow/bl4/bl4_mesh_extract.cpp
         src/services/impl/workflow/bl4/bl4_model_draw_step.cpp
         src/services/impl/workflow/bl4/bl4_model_uniforms.cpp
+        src/services/impl/workflow/bl4/bl4_placement_identity.cpp
         src/services/impl/workflow/bl4/bl4_placement_parse.cpp
+        src/services/impl/workflow/bl4/bl4_player_hold_step.cpp
+        src/services/impl/workflow/bl4/bl4_player_pin.cpp
+        src/services/impl/workflow/bl4/bl4_player_respawn_step.cpp
         src/services/impl/workflow/bl4/bl4_player_spawn_step.cpp
         src/services/impl/workflow/bl4/bl4_step_params.cpp
+        src/services/impl/workflow/bl4/bl4_texture_cache.cpp
         src/services/impl/workflow/bl4/bl4_tile_key.cpp
         src/services/impl/workflow/bl4/bl4_tiles_evict_step.cpp
         src/services/impl/workflow/bl4/bl4_tiles_load_step.cpp
@@ -1998,6 +2024,12 @@ target_sources(fs2024_tile_build_test PRIVATE src/services/impl/workflow/fs2024/
 target_sources(fs2024_tile_build_test PRIVATE src/services/impl/workflow/fs2024/assemble/fs2024_tile_buildings.cpp)
 target_sources(fs2024_tile_build_test PRIVATE src/services/impl/workflow/fs2024/assemble/fs2024_tile_ground.cpp)
 target_sources(fs2024_tile_build_test PRIVATE src/services/impl/workflow/fs2024/assemble/fs2024_vec_shapes.cpp)
+target_sources(fs2024_tile_build_test PRIVATE src/services/impl/workflow/fs2024/assemble/fs2024_vegetation_build.cpp)
+target_sources(fs2024_tile_build_test PRIVATE src/services/impl/workflow/fs2024/assemble/fs2024_vegetation_hash.cpp)
+target_sources(fs2024_tile_build_test PRIVATE src/services/impl/workflow/fs2024/assemble/fs2024_vegetation_pick.cpp)
+target_sources(fs2024_tile_build_test PRIVATE src/services/impl/workflow/fs2024/assemble/fs2024_vegetation_place_helpers.cpp)
+target_sources(fs2024_tile_build_test PRIVATE src/services/impl/workflow/fs2024/assemble/fs2024_vegetation_place_one.cpp)
+target_sources(fs2024_tile_build_test PRIVATE src/services/impl/workflow/fs2024/assemble/fs2024_vegetation_quad.cpp)
 target_sources(fs2024_tile_build_test PRIVATE src/services/impl/workflow/fs2024/assemble/fs2024_water_build.cpp)
 target_sources(fs2024_tile_build_test PRIVATE src/services/impl/workflow/fs2024/world/fs2024_geo_origin.cpp)
 target_sources(fs2024_tile_build_test PRIVATE src/services/impl/workflow/fs2024/tiles/fs2024_tile_key.cpp)
@@ -2076,6 +2108,42 @@ target_link_libraries(fs2024_lcg_test PRIVATE
     WebP::webpdecoder
 )
 add_test(NAME fs2024_lcg_test COMMAND fs2024_lcg_test)
+
+add_executable(fs2024_vegetation_build_test)
+target_sources(fs2024_vegetation_build_test PRIVATE tests/fs2024_vegetation_build_test.cpp)
+target_sources(fs2024_vegetation_build_test PRIVATE src/services/impl/workflow/fs2024/assemble/fs2024_vegetation_build.cpp)
+target_sources(fs2024_vegetation_build_test PRIVATE src/services/impl/workflow/fs2024/assemble/fs2024_vegetation_hash.cpp)
+target_sources(fs2024_vegetation_build_test PRIVATE src/services/impl/workflow/fs2024/assemble/fs2024_vegetation_pick.cpp)
+target_sources(fs2024_vegetation_build_test PRIVATE src/services/impl/workflow/fs2024/assemble/fs2024_vegetation_place_helpers.cpp)
+target_sources(fs2024_vegetation_build_test PRIVATE src/services/impl/workflow/fs2024/assemble/fs2024_vegetation_place_one.cpp)
+target_sources(fs2024_vegetation_build_test PRIVATE src/services/impl/workflow/fs2024/assemble/fs2024_vegetation_quad.cpp)
+target_sources(fs2024_vegetation_build_test PRIVATE src/services/impl/workflow/fs2024/data/vegetation/fs2024_vegetation_biomes.cpp)
+target_sources(fs2024_vegetation_build_test PRIVATE src/services/impl/workflow/fs2024/data/vegetation/fs2024_vegetation_library.cpp)
+target_sources(fs2024_vegetation_build_test PRIVATE src/services/impl/workflow/fs2024/data/vegetation/fs2024_vegetation_species.cpp)
+target_sources(fs2024_vegetation_build_test PRIVATE src/services/impl/workflow/fs2024/data/vegetation/fs2024_vegetation_xml.cpp)
+target_sources(fs2024_vegetation_build_test PRIVATE src/services/impl/workflow/fs2024/terrain/fs2024_heightfield.cpp)
+target_include_directories(fs2024_vegetation_build_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(fs2024_vegetation_build_test PRIVATE
+    GTest::gtest_main
+    glm::glm
+)
+add_test(NAME fs2024_vegetation_build_test COMMAND fs2024_vegetation_build_test)
+
+add_executable(fs2024_vegetation_test)
+target_sources(fs2024_vegetation_test PRIVATE tests/fs2024_vegetation_real_test.cpp)
+target_sources(fs2024_vegetation_test PRIVATE src/services/impl/workflow/fs2024/data/vegetation/fs2024_vegetation_biomes.cpp)
+target_sources(fs2024_vegetation_test PRIVATE src/services/impl/workflow/fs2024/data/vegetation/fs2024_vegetation_library.cpp)
+target_sources(fs2024_vegetation_test PRIVATE src/services/impl/workflow/fs2024/data/vegetation/fs2024_vegetation_species.cpp)
+target_sources(fs2024_vegetation_test PRIVATE src/services/impl/workflow/fs2024/data/vegetation/fs2024_vegetation_xml.cpp)
+target_include_directories(fs2024_vegetation_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(fs2024_vegetation_test PRIVATE
+    GTest::gtest_main
+)
+add_test(NAME fs2024_vegetation_test COMMAND fs2024_vegetation_test)
 
 add_executable(fs2024_vec_test)
 target_sources(fs2024_vec_test PRIVATE tests/fs2024_vec_real_test.cpp)

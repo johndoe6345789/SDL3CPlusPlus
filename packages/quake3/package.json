@@ -6,6 +6,23 @@
   "category": "demo",
   "description": "Quake 3 BSP map viewer with FPS controls",
 
+  "launch_options": [
+    {"env": "QUAKE3_PAK0", "label": "pak0.pk3", "kind": "file",
+     "file_filter": "Quake 3 archives (*.pk3)",
+     "help": "baseq3/pak0.pk3; found via Steam when left empty."},
+    {"env": "QUAKE3_MAP", "label": "Map", "kind": "choice",
+     "choices_from": "quake3_maps", "default": "q3dm7",
+     "help": "BSP to load from pak0.pk3."},
+    {"env": "QUAKE3_SPAWN_X", "label": "Spawn X", "kind": "number",
+     "help": "Quake 3 map units; empty uses the map's spawn."},
+    {"env": "QUAKE3_SPAWN_Y", "label": "Spawn Y", "kind": "number",
+     "help": "Start position in Quake 3 map units."},
+    {"env": "QUAKE3_SPAWN_Z", "label": "Spawn Z", "kind": "number",
+     "help": "Start position in Quake 3 map units."},
+    {"env": "QUAKE3_SPAWN_ANGLE", "label": "Spawn angle", "kind": "number",
+     "help": "Facing in degrees; needs a spawn position."}
+  ],
+
   "defaultWorkflow": "workflows/q3_game.json",
 
   "workflows": [

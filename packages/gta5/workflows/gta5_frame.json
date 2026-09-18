@@ -36,7 +36,7 @@
       "plugin": "gta5.player.hold",
       "comment": "Pins the player at the spawn point until the ground under them has streamed in -- read on demand, that takes seconds, and unheld the player falls through the empty world. After the physics group, so it overrides this frame's movement; before streaming, so streaming centres on the spawn point.",
       "parameters": {
-        "roads_dir": "D:/gtautil-2.2.13/levels/gta5/paths.rpf"
+        "roads_dir": "${env:GTA5_DATA_DIR}/levels/gta5/paths.rpf"
       }
     },
     {
@@ -44,7 +44,7 @@
       "plugin": "gta5.shop",
       "comment": "E at an LS Customs or an Ammu-Nation opens its menu: any car from data/garage.json parked on the nearest road, a respray, weapons from data/weapons.json, ammunition and armour. After the physics, as the hold is, since it keeps the player at the counter.",
       "parameters": {
-        "roads_dir": "D:/gtautil-2.2.13/levels/gta5/paths.rpf"
+        "roads_dir": "${env:GTA5_DATA_DIR}/levels/gta5/paths.rpf"
       }
     },
     {
@@ -95,7 +95,7 @@
       "id": "traffic",
       "plugin": "gta5.traffic",
       "parameters": {
-        "roads_dir": "D:/gtautil-2.2.13/levels/gta5/paths.rpf",
+        "roads_dir": "${env:GTA5_DATA_DIR}/levels/gta5/paths.rpf",
         "cars": 40,
         "cycle": 20.0,
         "amber": 3.0,
@@ -130,9 +130,9 @@
       "id": "player_character",
       "plugin": "gta5.player.character",
       "parameters": {
-        "ped_dir": "D:/gtautil-2.2.13/models/cdimages/componentpeds_a_m_y.rpf",
+        "ped_dir": "${env:GTA5_DATA_DIR}/models/cdimages/componentpeds_a_m_y.rpf",
         "ped": "a_m_y_hipster_01",
-        "weapons_dir": "D:/gtautil-2.2.13/models/cdimages/weapons.rpf"
+        "weapons_dir": "${env:GTA5_DATA_DIR}/models/cdimages/weapons.rpf"
       }
     },
     {
@@ -160,7 +160,7 @@
       "plugin": "gta5.water.map",
       "comment": "What fills the water: water.xml's surface heights as a grid the shaders read, and how deep the camera is.",
       "parameters": {
-        "water_file": "D:/gtautil-2.2.13/extract_common/data/levels/gta5/water.xml"
+        "water_file": "${env:GTA5_DATA_DIR}/extract_common/data/levels/gta5/water.xml"
       }
     },
     {
@@ -168,8 +168,8 @@
       "plugin": "gta5.sound",
       "comment": "Footsteps, strokes and splashes, the engine of the car last driven, and the lapping shore. dir holds GTA's own sounds as WAVs, exported from its AWC banks, in steps/, strokes/, splash/, engine/ and water/; any folder left empty plays a synthesised stand-in. wet_steps/ holds GTA's wet_feet_heel layer, played for footfalls in shallow water; without it, those use steps/. ambience/ holds GTA's ambient zones and rules (ambience.json) and their one-shots: birds, distant traffic, the city. After water_map, which says how deep the camera is.",
       "parameters": {
-        "dir": "D:/gtautil-2.2.13/extract_audio/wav",
-        "water_file": "D:/gtautil-2.2.13/extract_common/data/levels/gta5/water.xml",
+        "dir": "${env:GTA5_DATA_DIR}/extract_audio/wav",
+        "water_file": "${env:GTA5_DATA_DIR}/extract_common/data/levels/gta5/water.xml",
         "volume": 1.0
       }
     },
@@ -178,7 +178,7 @@
       "plugin": "gta5.radio",
       "comment": "Into a car, a random station, tuned in mid-song. dir holds a folder of WAVs per station, exported from GTA's RADIO_* banks (x64/audio/sfx); names maps folder names to station names. With nothing exported, stand-in stations play.",
       "parameters": {
-        "dir": "D:/gtautil-2.2.13/extract_audio/wav/radio",
+        "dir": "${env:GTA5_DATA_DIR}/extract_audio/wav/radio",
         "names": "packages/gta5/data/radio_stations.json",
         "volume": 0.5
       }
@@ -188,7 +188,7 @@
       "plugin": "gta5.effects.prepare",
       "comment": "Carries the effects forward and stages their quads before the cull submits them: a copy cannot be made once the render pass is open. decals_file is GTA own bullet marks.",
       "parameters": {
-        "decals_file": "D:/gtautil-2.2.13/textures/fxdecal.ytd"
+        "decals_file": "${env:GTA5_DATA_DIR}/textures/fxdecal.ytd"
       }
     },
     {
@@ -214,7 +214,7 @@
       "plugin": "gta5.reflection.draw",
       "comment": "What the sea mirrors: the sky and the reflection and water proxies seen from the camera reflected in sea level.",
       "parameters": {
-        "water_file": "D:/gtautil-2.2.13/extract_common/data/levels/gta5/water.xml",
+        "water_file": "${env:GTA5_DATA_DIR}/extract_common/data/levels/gta5/water.xml",
         "size_ratio": 0.015
       }
     },
@@ -279,7 +279,7 @@
       "plugin": "gta5.water.draw",
       "comment": "GTA V's sea, lakes and rivers from water.xml (extracted from common.rpf with GTAUtil).",
       "parameters": {
-        "water_file": "D:/gtautil-2.2.13/extract_common/data/levels/gta5/water.xml"
+        "water_file": "${env:GTA5_DATA_DIR}/extract_common/data/levels/gta5/water.xml"
       }
     },
     {
@@ -287,7 +287,7 @@
       "plugin": "gta5.lights.draw",
       "comment": "GTA's distant lights at night: far-off street lamps and lit windows from lodlights.rpf.",
       "parameters": {
-        "lights_dir": "D:/gtautil-2.2.13/levels/gta5/lodlights.rpf",
+        "lights_dir": "${env:GTA5_DATA_DIR}/levels/gta5/lodlights.rpf",
         "size": 0.0022,
         "fade_from": 40.0,
         "fade_to": 120.0
@@ -329,7 +329,7 @@
       "plugin": "gta5.hud",
       "comment": "The heads-up display: a radar from GTA's own minimap tiles with health and armour under it, the weapon and its ammunition while they matter, and while driving a speedometer and tachometer. Over the finished frame; the Tab map, after it, covers it.",
       "parameters": {
-        "minimap_dir": "D:/gtautil-2.2.13/data/cdimages/scaleform_generic.rpf"
+        "minimap_dir": "${env:GTA5_DATA_DIR}/data/cdimages/scaleform_generic.rpf"
       }
     },
     {
@@ -337,7 +337,7 @@
       "plugin": "gta5.map.draw",
       "comment": "Tab: GTA's pause-map art full screen, with an arrow where the player is. The rectangle is the world the six minimap tiles cover, in metres, GTA's y north.",
       "parameters": {
-        "minimap_dir": "D:/gtautil-2.2.13/data/cdimages/scaleform_generic.rpf",
+        "minimap_dir": "${env:GTA5_DATA_DIR}/data/cdimages/scaleform_generic.rpf",
         "map_min_x": -4140,
         "map_max_y": 8400,
         "map_width": 9000,

@@ -71,76 +71,119 @@
       "id": "sdl_init",
       "type": "sdl.init",
       "typeVersion": 1,
-      "position": [0, 0]
+      "position": [
+        0,
+        0
+      ]
     },
     {
       "id": "sdl_window",
       "type": "sdl.window.create",
       "typeVersion": 1,
-      "position": [0, 0]
+      "position": [
+        0,
+        0
+      ]
     },
     {
       "id": "gpu_init_viewport",
       "type": "graphics.gpu.init_viewport",
       "typeVersion": 1,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "parameters": {
         "present_mode": "auto",
-        "inputs": { "width": "window_width", "height": "window_height" },
-        "outputs": { "viewport_config": "viewport_config" }
+        "inputs": {
+          "width": "window_width",
+          "height": "window_height"
+        },
+        "outputs": {
+          "viewport_config": "viewport_config"
+        }
       }
     },
     {
       "id": "gpu_init_renderer",
       "type": "graphics.gpu.init_renderer",
       "typeVersion": 1,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "parameters": {
-        "inputs": { "renderer_type": "renderer_type" },
-        "outputs": { "selected_renderer": "selected_renderer" }
+        "inputs": {
+          "renderer_type": "renderer_type"
+        },
+        "outputs": {
+          "selected_renderer": "selected_renderer"
+        }
       }
     },
     {
       "id": "gpu_init",
       "type": "graphics.gpu.init",
       "typeVersion": 1,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "parameters": {
-        "inputs": { "viewport_config": "viewport_config", "selected_renderer": "selected_renderer" },
-        "outputs": { "gpu_handle": "gpu_handle" }
+        "inputs": {
+          "viewport_config": "viewport_config",
+          "selected_renderer": "selected_renderer"
+        },
+        "outputs": {
+          "gpu_handle": "gpu_handle"
+        }
       }
     },
     {
       "id": "compile_model_vert",
       "type": "graphics.gpu.shader.compile",
       "typeVersion": 1,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "parameters": {
         "stage": "vertex",
         "output_key": "bl4_model_vertex_shader",
         "num_uniform_buffers": 1,
-        "num_samplers": 0
+        "num_samplers": 0,
+        "num_storage_buffers": 1
       },
-      "inputs": { "shader_path": "shader_model_vert_path" }
+      "inputs": {
+        "shader_path": "shader_model_vert_path"
+      }
     },
     {
       "id": "compile_model_frag",
       "type": "graphics.gpu.shader.compile",
       "typeVersion": 1,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "parameters": {
         "stage": "fragment",
         "output_key": "bl4_model_fragment_shader",
         "num_uniform_buffers": 1,
         "num_samplers": 1
       },
-      "inputs": { "shader_path": "shader_model_frag_path" }
+      "inputs": {
+        "shader_path": "shader_model_frag_path"
+      }
     },
     {
       "id": "create_model_pipeline",
       "type": "graphics.gpu.pipeline.create",
       "typeVersion": 1,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "parameters": {
         "vertex_shader_key": "bl4_model_vertex_shader",
         "fragment_shader_key": "bl4_model_fragment_shader",
@@ -153,33 +196,46 @@
       "id": "compile_sky_vert",
       "type": "graphics.gpu.shader.compile",
       "typeVersion": 1,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "parameters": {
         "stage": "vertex",
         "output_key": "gta5_sky_vertex_shader",
         "num_uniform_buffers": 0,
         "num_samplers": 0
       },
-      "inputs": { "shader_path": "shader_sky_vert_path" }
+      "inputs": {
+        "shader_path": "shader_sky_vert_path"
+      }
     },
     {
       "id": "compile_sky_frag",
       "type": "graphics.gpu.shader.compile",
       "typeVersion": 1,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "parameters": {
         "stage": "fragment",
         "output_key": "gta5_sky_fragment_shader",
         "num_uniform_buffers": 1,
         "num_samplers": 0
       },
-      "inputs": { "shader_path": "shader_sky_frag_path" }
+      "inputs": {
+        "shader_path": "shader_sky_frag_path"
+      }
     },
     {
       "id": "create_sky_pipeline",
       "type": "graphics.gpu.pipeline.create",
       "typeVersion": 1,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "parameters": {
         "vertex_shader_key": "gta5_sky_vertex_shader",
         "fragment_shader_key": "gta5_sky_fragment_shader",
@@ -197,39 +253,55 @@
       "id": "postfx_setup",
       "type": "postfx.setup",
       "typeVersion": 1,
-      "position": [0, 0]
+      "position": [
+        0,
+        0
+      ]
     },
     {
       "id": "compile_postfx_vert",
       "type": "graphics.gpu.shader.compile",
       "typeVersion": 1,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "parameters": {
         "stage": "vertex",
         "output_key": "postfx_vertex_shader",
         "num_uniform_buffers": 0,
         "num_samplers": 0
       },
-      "inputs": { "shader_path": "shader_postfx_vert_path" }
+      "inputs": {
+        "shader_path": "shader_postfx_vert_path"
+      }
     },
     {
       "id": "compile_composite_frag",
       "type": "graphics.gpu.shader.compile",
       "typeVersion": 1,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "parameters": {
         "stage": "fragment",
         "output_key": "bl4_composite_fragment_shader",
         "num_uniform_buffers": 0,
         "num_samplers": 3
       },
-      "inputs": { "shader_path": "shader_composite_frag_path" }
+      "inputs": {
+        "shader_path": "shader_composite_frag_path"
+      }
     },
     {
       "id": "create_composite_pipeline",
       "type": "graphics.gpu.pipeline.create",
       "typeVersion": 1,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "parameters": {
         "vertex_shader_key": "postfx_vertex_shader",
         "fragment_shader_key": "bl4_composite_fragment_shader",
@@ -245,32 +317,47 @@
       "id": "placeholder_texture",
       "type": "texture.load",
       "typeVersion": 1,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "parameters": {
-        "inputs": { "image_path": "placeholder_texture_path" },
-        "outputs": { "texture": "bl4_placeholder" }
+        "inputs": {
+          "image_path": "placeholder_texture_path"
+        },
+        "outputs": {
+          "texture": "bl4_placeholder"
+        }
       },
-      "comment": "One flat texture for every mesh: bl4x doesn't resolve UMaterialInstance -> texture parameters yet."
+      "comment": "Fallback for submeshes whose material bl4x found no base-colour map for; the rest bind their own textures/<name>.tga (see bl4_texture_cache)."
     },
     {
       "id": "physics_world",
       "type": "physics.world.create",
       "typeVersion": 1,
-      "position": [0, 0],
-      "parameters": { "force_update_all_aabbs": 0 }
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "force_update_all_aabbs": 0
+      }
     },
     {
       "id": "player",
       "type": "physics.body.add",
       "typeVersion": 1,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "parameters": {
         "name": "player",
         "shape": "capsule",
         "mass": 80,
-        "pos_x": 234.0,
+        "pos_x": 245.3,
         "pos_y": 150.0,
-        "pos_z": 431.0,
+        "pos_z": 431.4,
         "radius": 0.3,
         "height": 1.0,
         "lock_rotation": 1,
@@ -282,56 +369,91 @@
       "id": "player_sync_init",
       "type": "q3.player.sync",
       "typeVersion": 1,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "comment": "Seeds q3.ps from the body's position, so the warm-up resolve below has somewhere to centre on."
     },
     {
       "id": "tiles_resolve_init",
       "type": "bl4.tiles.resolve",
       "typeVersion": 1,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "parameters": {
         "map_root": "${env:BL4_MAP_DIR}",
         "tile_size": 64.0,
         "load_radius_tiles": 3,
         "evict_radius_tiles": 4,
-        "max_loads_per_call": 8
+        "max_loads_per_call": 2,
+        "tile_size_env": "${env:BL4_TILE_SIZE}",
+        "load_radius_tiles_env": "${env:BL4_LOAD_RADIUS}",
+        "evict_radius_tiles_env": "${env:BL4_EVICT_RADIUS}",
+        "max_loads_per_call_env": "${env:BL4_MAX_LOADS}"
       },
-      "comment": "Configures the streamer once; every later bl4.tiles.resolve call reuses these settings. map_root comes straight from BL4_MAP_DIR (see packages/bl4/README.md), the same way quake3's pk3_path parameter reads QUAKE3_PAK0."
+      "comment": "Streams bl4x's baked tiles from BL4_MAP_DIR. Each number here has a BL4_* environment override (see Bl4NumberOrEnv): the detail bake wants 64 m tiles close in, the HLOD overview bake 512 m tiles far out, and neither needs its own workflow."
     },
     {
       "id": "tiles_load_init",
       "type": "bl4.tiles.load",
       "typeVersion": 1,
-      "position": [0, 0],
-      "parameters": { "force": 1 },
-      "comment": "Loads the whole warm-up radius synchronously, so the ground under and around the spawn point exists before the first frame draws."
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "force": 1,
+        "max_tiles": 9
+      },
+      "comment": "Loads the 9 tiles nearest the spawn synchronously (bl4.tiles.resolve queues nearest first), so the ground under the player exists before the first frame; the rest of the radius streams in during play. Loading all 49 took 58 s on the full-map bake."
     },
     {
       "id": "camera_setup",
       "type": "camera.setup",
       "typeVersion": 1,
-      "position": [0, 0],
-      "parameters": { "outputs": { "camera_state": "camera.state" } }
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "outputs": {
+          "camera_state": "camera.state"
+        }
+      }
     },
     {
       "id": "spawn",
       "type": "bl4.player.spawn",
       "typeVersion": 1,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "parameters": {
-        "x": 234.0,
-        "y": 121.5,
-        "z": 431.0,
-        "heading": 200.0
+        "x": 245.3,
+        "y": 150.0,
+        "z": 431.4,
+        "heading": 218.0,
+        "pitch": -45.0,
+        "x_env": "${env:BL4_SPAWN_X}",
+        "y_env": "${env:BL4_SPAWN_Y}",
+        "z_env": "${env:BL4_SPAWN_Z}",
+        "heading_env": "${env:BL4_SPAWN_HEADING}",
+        "pitch_env": "${env:BL4_SPAWN_PITCH}"
       },
-      "comment": "On SM_Road_Paved_1000_A (234.158, 430.636), 3-5m from the nearest walls -- close enough to read as 'on the road, next to the buildings' without being inside a wall's own mesh volume. Found via `bl4x find-cells` and baked from two World_P cells centred there."
+      "comment": "Dropped from 30 m above the centre of a 20 m paved road segment (road surface at y=120.35), looking down at the walled outpost to the north-west. There is no baked terrain (landscape isn't exported yet), so the landing point has to be inside a mesh's world-space footprint, not just near a placement's pivot. Found via `bl4x find-cells` and baked from two World_P cells centred there."
     },
     {
       "id": "lighting",
       "type": "lighting.setup",
       "typeVersion": 1,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "parameters": {
         "light_dir_x": -0.35,
         "light_dir_y": -0.8,
@@ -349,14 +471,25 @@
       "id": "init_game_running",
       "type": "value.literal",
       "typeVersion": 1,
-      "position": [0, 0],
-      "parameters": { "value": true, "outputs": { "value": "game_running" } }
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "value": true,
+        "outputs": {
+          "value": "game_running"
+        }
+      }
     },
     {
       "id": "game_loop",
       "type": "control.loop.while",
       "typeVersion": 1,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "parameters": {
         "condition_key": "game_running",
         "package": "bl4",
@@ -364,46 +497,343 @@
       }
     },
     {
+      "id": "video_record_stop",
+      "type": "video.record.stop",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "comment": "Finishes a recording once the loop stops: waits for the last downloads and writes the file's trailer, without which it will not play. Needs the GPU device, so before system.exit."
+    },
+    {
       "id": "tiles_free",
       "type": "bl4.tiles.free",
       "typeVersion": 1,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "comment": "Before system.exit, while the device and the physics world still exist."
     },
     {
       "id": "exit",
       "type": "system.exit",
       "typeVersion": 1,
-      "position": [0, 0]
+      "position": [
+        0,
+        0
+      ]
     }
   ],
   "connections": {
-    "sdl_init": { "main": { "0": [{ "node": "sdl_window", "type": "main", "index": 0 }] } },
-    "sdl_window": { "main": { "0": [{ "node": "gpu_init_viewport", "type": "main", "index": 0 }] } },
-    "gpu_init_viewport": { "main": { "0": [{ "node": "gpu_init_renderer", "type": "main", "index": 0 }] } },
-    "gpu_init_renderer": { "main": { "0": [{ "node": "gpu_init", "type": "main", "index": 0 }] } },
-    "gpu_init": { "main": { "0": [{ "node": "compile_model_vert", "type": "main", "index": 0 }] } },
-    "compile_model_vert": { "main": { "0": [{ "node": "compile_model_frag", "type": "main", "index": 0 }] } },
-    "compile_model_frag": { "main": { "0": [{ "node": "create_model_pipeline", "type": "main", "index": 0 }] } },
-    "create_model_pipeline": { "main": { "0": [{ "node": "compile_sky_vert", "type": "main", "index": 0 }] } },
-    "compile_sky_vert": { "main": { "0": [{ "node": "compile_sky_frag", "type": "main", "index": 0 }] } },
-    "compile_sky_frag": { "main": { "0": [{ "node": "create_sky_pipeline", "type": "main", "index": 0 }] } },
-    "create_sky_pipeline": { "main": { "0": [{ "node": "postfx_setup", "type": "main", "index": 0 }] } },
-    "postfx_setup": { "main": { "0": [{ "node": "compile_postfx_vert", "type": "main", "index": 0 }] } },
-    "compile_postfx_vert": { "main": { "0": [{ "node": "compile_composite_frag", "type": "main", "index": 0 }] } },
-    "compile_composite_frag": { "main": { "0": [{ "node": "create_composite_pipeline", "type": "main", "index": 0 }] } },
-    "create_composite_pipeline": { "main": { "0": [{ "node": "placeholder_texture", "type": "main", "index": 0 }] } },
-    "placeholder_texture": { "main": { "0": [{ "node": "physics_world", "type": "main", "index": 0 }] } },
-    "physics_world": { "main": { "0": [{ "node": "player", "type": "main", "index": 0 }] } },
-    "player": { "main": { "0": [{ "node": "player_sync_init", "type": "main", "index": 0 }] } },
-    "player_sync_init": { "main": { "0": [{ "node": "tiles_resolve_init", "type": "main", "index": 0 }] } },
-    "tiles_resolve_init": { "main": { "0": [{ "node": "tiles_load_init", "type": "main", "index": 0 }] } },
-    "tiles_load_init": { "main": { "0": [{ "node": "camera_setup", "type": "main", "index": 0 }] } },
-    "camera_setup": { "main": { "0": [{ "node": "spawn", "type": "main", "index": 0 }] } },
-    "spawn": { "main": { "0": [{ "node": "lighting", "type": "main", "index": 0 }] } },
-    "lighting": { "main": { "0": [{ "node": "init_game_running", "type": "main", "index": 0 }] } },
-    "init_game_running": { "main": { "0": [{ "node": "game_loop", "type": "main", "index": 0 }] } },
-    "game_loop": { "main": { "0": [{ "node": "tiles_free", "type": "main", "index": 0 }] } },
-    "tiles_free": { "main": { "0": [{ "node": "exit", "type": "main", "index": 0 }] } }
+    "sdl_init": {
+      "main": {
+        "0": [
+          {
+            "node": "sdl_window",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "sdl_window": {
+      "main": {
+        "0": [
+          {
+            "node": "gpu_init_viewport",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "gpu_init_viewport": {
+      "main": {
+        "0": [
+          {
+            "node": "gpu_init_renderer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "gpu_init_renderer": {
+      "main": {
+        "0": [
+          {
+            "node": "gpu_init",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "gpu_init": {
+      "main": {
+        "0": [
+          {
+            "node": "compile_model_vert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "compile_model_vert": {
+      "main": {
+        "0": [
+          {
+            "node": "compile_model_frag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "compile_model_frag": {
+      "main": {
+        "0": [
+          {
+            "node": "create_model_pipeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "create_model_pipeline": {
+      "main": {
+        "0": [
+          {
+            "node": "compile_sky_vert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "compile_sky_vert": {
+      "main": {
+        "0": [
+          {
+            "node": "compile_sky_frag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "compile_sky_frag": {
+      "main": {
+        "0": [
+          {
+            "node": "create_sky_pipeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "create_sky_pipeline": {
+      "main": {
+        "0": [
+          {
+            "node": "postfx_setup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "postfx_setup": {
+      "main": {
+        "0": [
+          {
+            "node": "compile_postfx_vert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "compile_postfx_vert": {
+      "main": {
+        "0": [
+          {
+            "node": "compile_composite_frag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "compile_composite_frag": {
+      "main": {
+        "0": [
+          {
+            "node": "create_composite_pipeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "create_composite_pipeline": {
+      "main": {
+        "0": [
+          {
+            "node": "placeholder_texture",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "placeholder_texture": {
+      "main": {
+        "0": [
+          {
+            "node": "physics_world",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "physics_world": {
+      "main": {
+        "0": [
+          {
+            "node": "player",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "player": {
+      "main": {
+        "0": [
+          {
+            "node": "player_sync_init",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "player_sync_init": {
+      "main": {
+        "0": [
+          {
+            "node": "tiles_resolve_init",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "tiles_resolve_init": {
+      "main": {
+        "0": [
+          {
+            "node": "tiles_load_init",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "tiles_load_init": {
+      "main": {
+        "0": [
+          {
+            "node": "camera_setup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "camera_setup": {
+      "main": {
+        "0": [
+          {
+            "node": "spawn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "spawn": {
+      "main": {
+        "0": [
+          {
+            "node": "lighting",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "lighting": {
+      "main": {
+        "0": [
+          {
+            "node": "init_game_running",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "init_game_running": {
+      "main": {
+        "0": [
+          {
+            "node": "game_loop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "game_loop": {
+      "main": {
+        "0": [
+          {
+            "node": "video_record_stop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "tiles_free": {
+      "main": {
+        "0": [
+          {
+            "node": "exit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "video_record_stop": {
+      "main": {
+        "0": [
+          {
+            "node": "tiles_free",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    }
   }
 }

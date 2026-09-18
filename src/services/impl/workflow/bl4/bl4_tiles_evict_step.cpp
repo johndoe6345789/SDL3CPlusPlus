@@ -21,6 +21,9 @@ void ReleaseInstance(SDL_GPUDevice* device, btDiscreteDynamicsWorld* world,
             SDL_ReleaseGPUBuffer(device, sub.indexBuffer);
         }
     }
+    for (const Bl4SubMesh& sub : geometry->subMeshes) {
+        ReleaseBl4Texture(state.textureCache, sub.texturePath, device);
+    }
     ReleaseBl4CollisionShape(*geometry);
     state.geometryCache.erase(geometry->modelPath);
 }
@@ -28,6 +31,8 @@ void ReleaseInstance(SDL_GPUDevice* device, btDiscreteDynamicsWorld* world,
 void ReleaseTile(SDL_GPUDevice* device, btDiscreteDynamicsWorld* world,
                  Bl4TileStreamState& state, Bl4LoadedTile& tile) {
     for (Bl4Instance& instance : tile.instances) ReleaseInstance(device, world, state, instance);
+    for (std::uint64_t identity : tile.owned) state.liveInstances.erase(identity);
+    tile.owned.clear();
 }
 
 }  // namespace
@@ -72,6 +77,9 @@ void WorkflowBl4TilesFreeStep::Execute(const WorkflowStepDefinition&, WorkflowCo
     state_->pendingLoad.clear();
     state_->pendingEvict.clear();
     state_->missing.clear();
+    state_->liveInstances.clear();
+    state_->textureCache.clear();  // only failed-load entries remain
+    ReleaseBl4InstanceBatch(device, state_->batch);
     if (logger_) logger_->Info("bl4.tiles.free: released " + std::to_string(count) + " tiles");
 }
 

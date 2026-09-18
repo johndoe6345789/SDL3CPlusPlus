@@ -58,7 +58,7 @@
       "id": "player_swim",
       "plugin": "gta5.player.swim",
       "parameters": {
-        "water_file": "D:/gtautil-2.2.13/extract_common/data/levels/gta5/water.xml",
+        "water_file": "${env:GTA5_DATA_DIR}/extract_common/data/levels/gta5/water.xml",
         "speed": 3.0
       }
     },

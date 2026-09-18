@@ -74,6 +74,16 @@
       "name": "shader_water_frag_path",
       "type": "string",
       "defaultValue": "packages/gta5/shaders/msl/gta5_water.frag.metal"
+    },
+    "shader_vegetation_vert_path": {
+      "name": "shader_vegetation_vert_path",
+      "type": "string",
+      "defaultValue": "packages/fs2024/shaders/msl/fs2024_vegetation.vert.metal"
+    },
+    "shader_vegetation_frag_path": {
+      "name": "shader_vegetation_frag_path",
+      "type": "string",
+      "defaultValue": "packages/fs2024/shaders/msl/fs2024_vegetation.frag.metal"
     }
   },
   "nodes": [
@@ -452,6 +462,60 @@
         "depth_bias": -1.0
       },
       "comment": "Roads: the terrain shaders, nudged a hair toward the eye. No slope-scaled bias: at grazing angles it pulled distant roads through the buildings in front of them."
+    },
+    {
+      "id": "compile_vegetation_vert",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "stage": "vertex",
+        "output_key": "fs2024_vegetation_vertex_shader",
+        "num_uniform_buffers": 1,
+        "num_samplers": 0
+      },
+      "inputs": {
+        "shader_path": "shader_vegetation_vert_path"
+      }
+    },
+    {
+      "id": "compile_vegetation_frag",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "stage": "fragment",
+        "output_key": "fs2024_vegetation_fragment_shader",
+        "num_uniform_buffers": 1,
+        "num_samplers": 1
+      },
+      "inputs": {
+        "shader_path": "shader_vegetation_frag_path"
+      }
+    },
+    {
+      "id": "create_vegetation_pipeline",
+      "type": "graphics.gpu.pipeline.create",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "vertex_shader_key": "fs2024_vegetation_vertex_shader",
+        "fragment_shader_key": "fs2024_vegetation_fragment_shader",
+        "vertex_format": "position_uv_lmuv_normal",
+        "pipeline_key": "gpu_pipeline_fs2024_vegetation",
+        "color_format": "rgba16_float",
+        "cull_mode": "none"
+      },
+      "comment": "FS2024's own trees and shrubs: crossed billboards, alpha-cut in the fragment shader against a sampler2DArray of the standing species' own imposter atlas."
     },
     {
       "id": "world_open",
@@ -1026,6 +1090,39 @@
       }
     },
     "create_road_pipeline": {
+      "main": {
+        "0": [
+          {
+            "node": "compile_vegetation_vert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "compile_vegetation_vert": {
+      "main": {
+        "0": [
+          {
+            "node": "compile_vegetation_frag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "compile_vegetation_frag": {
+      "main": {
+        "0": [
+          {
+            "node": "create_vegetation_pipeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "create_vegetation_pipeline": {
       "main": {
         "0": [
           {

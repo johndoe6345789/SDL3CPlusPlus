@@ -3,6 +3,7 @@
 #include "services/interfaces/workflow/fs2024/landmark/fs2024_landmark_instance.hpp"
 #include "services/interfaces/workflow/fs2024/landmark/fs2024_landmark_kit_gpu.hpp"
 #include "services/interfaces/workflow/fs2024/terrain/fs2024_terrain_state.hpp"
+#include "services/interfaces/workflow/fs2024/terrain/fs2024_vegetation_kit_gpu.hpp"
 #include "services/interfaces/workflow/fs2024/tiles/fs2024_tile_key.hpp"
 #include "services/interfaces/workflow/fs2024/tiles/fs2024_tile_lod.hpp"
 
@@ -37,6 +38,9 @@ struct Fs2024LoadedTile {
     /// The landmarks FS2024 stands in this tile; look up each one's
     /// GPU kit in Fs2024TileStreamState::landmarkKits.
     std::vector<Fs2024LandmarkInstance> landmarks;
+    /// This tile's own trees and shrubs, one chunk per species; look up
+    /// each one's texture in Fs2024TileStreamState::vegetationSpecies.
+    std::vector<Fs2024VegetationChunkGpu> vegetationChunks;
 };
 
 /// Everything fs2024.tiles.* shares: which tiles are resident, which
@@ -65,6 +69,11 @@ struct Fs2024TileStreamState {
     /// name: loaded on first use, released once no resident tile uses
     /// it.
     std::unordered_map<std::string, Fs2024LandmarkKitGpu> landmarkKits;
+
+    /// Every vegetation species a resident tile stands, by its own
+    /// name: loaded on first use, released once no resident tile uses
+    /// it (see fs2024_vegetation_gpu.hpp).
+    std::unordered_map<std::string, Fs2024VegSpeciesGpu> vegetationSpecies;
 
     /// FS2024's own world, once fs2024.world.open has opened it. Every
     /// tile is built from it; nothing streams until it is open. Shared

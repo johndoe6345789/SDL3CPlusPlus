@@ -34,6 +34,15 @@ Fs2024InstallPaths ResolveFs2024InstallPaths(const std::string& installRoot) {
         paths.landmarkTextures = poi + "/TEXTURE";
         paths.landmarkScenery = scenery;
     }
+    const std::string vegetation = installRoot + "/fs-base/vegetation";
+    const std::string vegetationLib =
+        installRoot +
+        "/fs-base-vegetation-material-lib/MaterialLibs/Vegetation_MaterialLib";
+    if (std::filesystem::exists(vegetation) &&
+        std::filesystem::exists(vegetationLib)) {
+        paths.vegetationRoot = vegetation;
+        paths.vegetationMaterialRoot = vegetationLib;
+    }
     return paths;
 }
 

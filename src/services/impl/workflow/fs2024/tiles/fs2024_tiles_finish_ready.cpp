@@ -48,7 +48,8 @@ void FinishFs2024ReadyTiles(Fs2024TileStreamState& state,
         const Clock::time_point start = Clock::now();
         state.resident.emplace(
             tile.key, FinishFs2024Tile(device, physics, *state.world, tile,
-                                       state.landmarkKits));
+                                       state.landmarkKits,
+                                       state.vegetationSpecies));
         ++stats.finished;
         stats.worstMs = std::max(stats.worstMs, MsSince(start));
     }

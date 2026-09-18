@@ -42,6 +42,17 @@
       "comment": "HDR target, supersampled; the composite resolves it and sharpens."
     },
     {
+      "id": "video_record_begin",
+      "plugin": "video.record.begin",
+      "comment": "Records the window to H.264 when SDL3CPP_RECORD (or output_path) names a .mp4/.mkv; otherwise does nothing. Everything after this draws into a texture video.record.end reads back. See video_recorder_settings.hpp for the SDL3CPP_RECORD_* overrides.",
+      "parameters": {
+        "output_path": "",
+        "fps": 30,
+        "start_after": 0,
+        "seconds": 0
+      }
+    },
+    {
       "id": "sky_draw",
       "plugin": "gta5.sky.draw",
       "parameters": {
@@ -80,8 +91,18 @@
       "plugin": "postfx.overlay_fps_upload_text"
     },
     {
+      "id": "loading_text",
+      "plugin": "bl4.loading.text",
+      "comment": "What bl4.player.hold is waiting on, in the overlay. After overlay_text so it wins while loading, and silent afterwards so the FPS counter comes back."
+    },
+    {
       "id": "overlay_draw",
       "plugin": "postfx.overlay_fps_draw"
+    },
+    {
+      "id": "video_record_end",
+      "plugin": "video.record.end",
+      "comment": "Puts the recorded frame on screen and queues its download. Last before the submit: nothing may draw to the swapchain after it."
     },
     {
       "id": "command_buffer_submit",

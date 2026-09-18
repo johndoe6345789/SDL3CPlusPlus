@@ -12,12 +12,14 @@ namespace sdl3cpp::services::impl {
 /**
  * Plugin ID: bl4.models.draw
  *
- * Draws every resident tile's instances, one draw call per submesh per
- * instance (no instancing/culling yet -- see packages/bl4/README.md for
- * the scope this first slice covers).
+ * Culls every resident tile's instances to the view, then draws them
+ * instanced: one call per archetype submesh, however many copies are
+ * visible (see Bl4InstanceBatch).
  *
  * Parameters: pipeline_key (default gpu_pipeline_bl4_model), texture_key
- *             (default bl4_placeholder).
+ *             (default bl4_placeholder), size_ratio (default 0.004 --
+ *             cull an instance whose bounding sphere is smaller than
+ *             this fraction of its distance from the camera).
  * Reads: gpu_render_pass, gpu_command_buffer, render.view_matrix,
  *        render.proj_matrix, render.frag_uniforms, frame_skip
  */

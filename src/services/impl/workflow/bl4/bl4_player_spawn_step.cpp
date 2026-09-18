@@ -34,9 +34,9 @@ std::string WorkflowBl4PlayerSpawnStep::GetPluginId() const { return "bl4.player
 
 void WorkflowBl4PlayerSpawnStep::Execute(const WorkflowStepDefinition& step,
                                         WorkflowContext& context) {
-    const glm::vec3 origin{Bl4NumberOr(step, "x", 0.f), Bl4NumberOr(step, "y", 0.f),
-                           Bl4NumberOr(step, "z", 0.f)};
-    const float heading = Bl4NumberOr(step, "heading", 0.f);
+    const glm::vec3 origin{Bl4NumberOrEnv(step, "x", 0.f), Bl4NumberOrEnv(step, "y", 0.f),
+                           Bl4NumberOrEnv(step, "z", 0.f)};
+    const float heading = Bl4NumberOrEnv(step, "heading", 0.f);
 
     const auto name = context.GetString("physics_player_body", "");
     Bl4MoveBody(name.empty() ? nullptr : context.Get<btRigidBody*>("physics_body_" + name, nullptr),
@@ -47,8 +47,9 @@ void WorkflowBl4PlayerSpawnStep::Execute(const WorkflowStepDefinition& step,
         moved.velocity = glm::vec3(0.f);
         context.Set("q3.ps", moved);
     }
+    context.Set<glm::vec3>("bl4.spawn_origin", origin);  // bl4.player.respawn's fallback
     context.Set<float>("camera_yaw", Bl4YawForHeading(heading));
-    context.Set<float>("camera_pitch", 0.f);
+    context.Set<float>("camera_pitch", Bl4NumberOrEnv(step, "pitch", 0.f) * 3.14159265f / 180.f);
 
     if (logger_) {
         logger_->Info("bl4.player.spawn: (" + std::to_string(origin.x) + ", " +

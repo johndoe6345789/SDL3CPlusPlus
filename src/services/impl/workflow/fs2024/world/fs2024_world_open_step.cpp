@@ -52,6 +52,13 @@ void WorkflowFs2024WorldOpenStep::Execute(const WorkflowStepDefinition& step,
                                           world->paths.landmarkLibrary,
                                           world->paths.landmarkScenery));
     }
+    if (!world->paths.vegetationRoot.empty()) {
+        world->vegetation =
+            std::make_unique<sdl3cpp::fs2024::VegetationLibrary>(
+                sdl3cpp::fs2024::ReadVegetationLibrary(
+                    world->paths.vegetationRoot,
+                    world->paths.vegetationMaterialRoot));
+    }
 
     const int climate =
         static_cast<int>(Fs2024NumberOr(step, "climate", 2.f));

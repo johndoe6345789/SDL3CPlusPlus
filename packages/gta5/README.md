@@ -18,11 +18,14 @@ the package was built against an extract made with GTAUtil. Everything
 past that line is here. An extracted `.ymap`, `.ydr`, `.ydd`, `.yft` or
 `.ytd` is a plain RSC7 resource: a 16-byte header, then raw deflate.
 
-Point `map_dir` at the extracted `levels/gta5` folder, on the
-`assets_index` node in `workflows/gta5_game.json`, and run:
+Every path the workflows read -- `levels/gta5`, `models/`, `data/`,
+`textures/`, `extract_common/`, `extract_audio/` -- hangs off one
+folder, `GTA5_DATA_DIR`, which defaults to `D:/gtautil-2.2.13` (the
+`launch_options` entry in `package.json`). Pick another in the
+launcher, or pass it on the command line:
 
 ```bash
-python python/dev_commands.py run --game gta5
+python python/dev_commands.py run --game gta5   --env GTA5_DATA_DIR=E:/gtautil
 ```
 
 The extract is G9 -- resource versions 159 for `.ydr`/`.ydd`, 171 for
