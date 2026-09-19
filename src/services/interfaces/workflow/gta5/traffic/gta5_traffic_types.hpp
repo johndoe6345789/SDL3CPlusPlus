@@ -32,6 +32,8 @@ struct Gta5TrafficCar {
     std::uint32_t from{0};   // the node it left
     std::uint32_t to{0};     // the node it is making for
     float want{9.f};         // what it would do with a clear road
+    float follow{6.f};       // metres it stops behind what is ahead
+    float nerve{1.f};        // above 1 takes bends faster
     float lane{2.2f};        // metres right of the centre line
     float stuck{0.f};        // seconds it has been going nowhere
 };

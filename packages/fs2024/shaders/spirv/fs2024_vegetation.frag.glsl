@@ -24,7 +24,7 @@ layout(location = 0) out vec4 o_color;
 
 void main() {
     vec4 tex = texture(species_map, vec3(v_uv, v_layer));
-    if (tex.a < 0.5) discard;
+    if (tex.a < 0.35) discard;
     vec3 albedo = pow(tex.rgb, vec3(2.2));
 
     // Both faces of a crossed quad get the sun: a real tree scatters

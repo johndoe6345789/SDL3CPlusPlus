@@ -63,16 +63,4 @@ void WorkflowFs2024TilesLoadStep::Execute(const WorkflowStepDefinition& step,
     ReportStats();
 }
 
-void WorkflowFs2024TilesLoadStep::ReportStats() {
-    const auto now = std::chrono::steady_clock::now();
-    if (!logger_ || now - lastReport_ < std::chrono::seconds(5)) return;
-    lastReport_ = now;
-    logger_->Info("fs2024.tiles: " + std::to_string(state_->resident.size()) +
-                  " resident, " + std::to_string(state_->drawn.size()) +
-                  " drawn, " + std::to_string(state_->loading.size()) +
-                  " loading; finished " + std::to_string(stats_.finished) +
-                  ", slowest " + std::to_string(stats_.worstMs) + " ms");
-    stats_ = {};
-}
-
 }  // namespace sdl3cpp::services::impl

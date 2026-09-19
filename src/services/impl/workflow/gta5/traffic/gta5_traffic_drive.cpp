@@ -1,3 +1,4 @@
+#include "services/interfaces/workflow/gta5/traffic/gta5_traffic_ai.hpp"
 #include "services/interfaces/workflow/gta5/traffic/gta5_traffic_path.hpp"
 
 #include <algorithm>
@@ -34,19 +35,14 @@ void DriveGta5Traffic(Gta5Traffic& traffic, const Gta5Roads& roads,
         const glm::vec3 aim = Gta5TrafficAim(roads, car, at, speed);
         const float wanted = std::atan2(aim.x - at.x, aim.z - at.z);
         const float off = std::remainder(wanted - facing, 2.f * kPi);
-        float want = Gta5TrafficWant(traffic, state, roads, car, at, facing);
-        // Slow into a bend rather than understeering through it.
-        want *= std::max(0.4f, 1.f - std::fabs(off) * 0.6f);
-        // A softer hand the faster it goes, and damped by how fast it
-        // is already turning, or it weaves down a straight road.
         const btVector3& turning = car.car.chassis->getAngularVelocity();
-        const float gain = 1.6f / (1.f + speed * 0.12f);
-        const float steer =
-            std::clamp(off * gain - turning.y() * 0.25f, -1.f, 1.f);
-        const float pedal = std::clamp((want - speed) * 0.5f, -1.f, 1.f);
-        const float brake = (want < 0.5f && speed > 0.6f) ? 0.8f
-                            : (pedal < -0.4f ? 0.35f : 0.f);
-        DriveGta5Vehicle(car.car, std::max(0.f, pedal), steer, brake, dt);
+        Gta5DriverSense sense =
+            Gta5SenseDriver(traffic, state, roads, car, at, facing);
+        sense.speed = speed;
+        sense.off = off;
+        sense.turning = turning.y();
+        const Gta5DriverAction act = Gta5DecideDrive(sense);
+        DriveGta5Vehicle(car.car, act.throttle, act.steer, act.brake, dt);
         // Past the node it was making for: take the next road on.
         const glm::vec3 node = roads.nodes[car.to].at;
         if (glm::distance(glm::vec2(at.x, at.z),
@@ -55,7 +51,8 @@ void DriveGta5Traffic(Gta5Traffic& traffic, const Gta5Roads& roads,
             car.from = car.to;
             car.to = next;
         }
-        car.stuck = speed < 0.4f && want > 1.f ? car.stuck + dt : 0.f;
+        car.stuck =
+            speed < 0.4f && act.throttle > 0.2f ? car.stuck + dt : 0.f;
     }
 }
 

@@ -32,14 +32,6 @@ std::uint32_t Gta5TrafficRoll();
 glm::vec3 Gta5TrafficAim(const Gta5Roads& roads, const Gta5TrafficCar& car,
                          const glm::vec3& at, float speed);
 
-/// How fast a car should be going: what it would like, held down for
-/// whatever is in front -- other traffic or one of the player's own
-/// cars -- and for a light standing against it.
-float Gta5TrafficWant(const Gta5Traffic& traffic,
-                      const Gta5StreamState& state, const Gta5Roads& roads,
-                      const Gta5TrafficCar& car, const glm::vec3& at,
-                      float facing);
-
 /// Hang one crossing's lamps on the map's own traffic light props,
 /// if any have streamed in near it. One crossing a frame, so a
 /// district arriving costs nothing.

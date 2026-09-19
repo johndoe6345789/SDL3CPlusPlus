@@ -51,6 +51,10 @@ void KeepGta5Traffic(Gta5Traffic& traffic, const Gta5Roads& roads,
     car.from = from;
     car.to = to;
     car.want = 7.5f + static_cast<float>(from % 7u) * 0.6f;
+    // Its own temperament: how close it tailgates, how boldly it
+    // corners. Both feed the net as inputs, so one net drives them all.
+    car.follow = 3.f + static_cast<float>(Gta5TrafficRoll() % 8u);
+    car.nerve = 0.7f + static_cast<float>(Gta5TrafficRoll() % 10u) * 0.1f;
     // A different car each time, and a colour to go with it: one model
     // in one paint reads as a fleet, not as traffic.
     const Gta5TrafficModel& kind =

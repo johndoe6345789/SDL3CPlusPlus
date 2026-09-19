@@ -623,6 +623,24 @@
       ]
     },
     {
+      "name": "gta5_traffic_net_test",
+      "sources": [
+        "tests/gta5_traffic_net_test.cpp",
+        "src/services/impl/workflow/gta5/traffic/gta5_traffic_baseline.cpp",
+        "src/services/impl/workflow/gta5/traffic/gta5_traffic_net.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main",
+        "glm::glm",
+        "Bullet::Bullet",
+        "${SDL_TARGET}",
+        "assimp::assimp"
+      ]
+    },
+    {
       "name": "gta5_traffic_aim_test",
       "sources": [
         "tests/gta5_traffic_aim_test.cpp",

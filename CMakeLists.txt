@@ -1085,17 +1085,20 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/stream/gta5_wanted_tiles.cpp
         src/services/impl/workflow/gta5/stream/gta5_world_config_load.cpp
         src/services/impl/workflow/gta5/traffic/gta5_traffic_aim.cpp
+        src/services/impl/workflow/gta5/traffic/gta5_traffic_baseline.cpp
+        src/services/impl/workflow/gta5/traffic/gta5_traffic_decide.cpp
         src/services/impl/workflow/gta5/traffic/gta5_traffic_drive.cpp
         src/services/impl/workflow/gta5/traffic/gta5_traffic_junctions.cpp
         src/services/impl/workflow/gta5/traffic/gta5_traffic_lamps.cpp
         src/services/impl/workflow/gta5/traffic/gta5_traffic_lights.cpp
         src/services/impl/workflow/gta5/traffic/gta5_traffic_load.cpp
+        src/services/impl/workflow/gta5/traffic/gta5_traffic_net.cpp
         src/services/impl/workflow/gta5/traffic/gta5_traffic_path.cpp
+        src/services/impl/workflow/gta5/traffic/gta5_traffic_sense.cpp
         src/services/impl/workflow/gta5/traffic/gta5_traffic_show.cpp
         src/services/impl/workflow/gta5/traffic/gta5_traffic_spawn.cpp
         src/services/impl/workflow/gta5/traffic/gta5_traffic_spot.cpp
         src/services/impl/workflow/gta5/traffic/gta5_traffic_step.cpp
-        src/services/impl/workflow/gta5/traffic/gta5_traffic_want.cpp
         src/services/impl/workflow/gta5/vehicle/gta5_fragment_axles.cpp
         src/services/impl/workflow/gta5/vehicle/gta5_garage_load.cpp
         src/services/impl/workflow/gta5/vehicle/gta5_vehicle.cpp
@@ -1163,6 +1166,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/fs2024/tiles/fs2024_tile_shift.cpp
         src/services/impl/workflow/fs2024/tiles/fs2024_tiles_evict_step.cpp
         src/services/impl/workflow/fs2024/tiles/fs2024_tiles_finish_ready.cpp
+        src/services/impl/workflow/fs2024/tiles/fs2024_tiles_load_report.cpp
         src/services/impl/workflow/fs2024/tiles/fs2024_tiles_load_step.cpp
         src/services/impl/workflow/fs2024/tiles/fs2024_tiles_resolve.cpp
         src/services/impl/workflow/fs2024/tiles/fs2024_tiles_resolve_step.cpp
@@ -1832,6 +1836,22 @@ target_link_libraries(gta5_vehicle_seat_test PRIVATE
     GTest::gtest_main
 )
 add_test(NAME gta5_vehicle_seat_test COMMAND gta5_vehicle_seat_test)
+
+add_executable(gta5_traffic_net_test)
+target_sources(gta5_traffic_net_test PRIVATE tests/gta5_traffic_net_test.cpp)
+target_sources(gta5_traffic_net_test PRIVATE src/services/impl/workflow/gta5/traffic/gta5_traffic_baseline.cpp)
+target_sources(gta5_traffic_net_test PRIVATE src/services/impl/workflow/gta5/traffic/gta5_traffic_net.cpp)
+target_include_directories(gta5_traffic_net_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(gta5_traffic_net_test PRIVATE
+    GTest::gtest_main
+    glm::glm
+    Bullet::Bullet
+    ${SDL_TARGET}
+    assimp::assimp
+)
+add_test(NAME gta5_traffic_net_test COMMAND gta5_traffic_net_test)
 
 add_executable(gta5_traffic_aim_test)
 target_sources(gta5_traffic_aim_test PRIVATE tests/gta5_traffic_aim_test.cpp)
