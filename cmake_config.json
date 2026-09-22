@@ -94,6 +94,11 @@
         "src/services/impl/workflow/compute/*.cpp",
         "src/services/impl/workflow/quake3/**/*.cpp",
         "src/services/impl/workflow/gta5/**/*.cpp",
+        "src/services/impl/workflow/stunts/*.cpp",
+        "src/services/impl/workflow/stunts/data/*.cpp",
+        "src/services/impl/workflow/stunts/world/*.cpp",
+        "src/services/impl/workflow/stunts/player/*.cpp",
+        "src/services/impl/workflow/stunts/render/*.cpp",
         "src/services/impl/workflow/fs2024/*.cpp",
         "src/services/impl/workflow/fs2024/tiles/*.cpp",
         "src/services/impl/workflow/fs2024/terrain/*.cpp",
@@ -1096,6 +1101,116 @@
         "tests/fs2024_gltf_model_test.cpp",
         "src/services/impl/workflow/fs2024/data/gltf/*.cpp",
         "src/services/impl/workflow/fs2024/data/bgl/fs2024_riff_chunk.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main",
+        "glm::glm",
+        "nlohmann_json::nlohmann_json"
+      ]
+    },
+    {
+      "name": "stunts_car_physics_test",
+      "sources": [
+        "tests/stunts_car_physics_test.cpp",
+        "src/services/impl/workflow/stunts/player/stunts_car_physics.cpp",
+        "src/services/impl/workflow/stunts/player/stunts_car_step.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main",
+        "glm::glm"
+      ]
+    },
+    {
+      "name": "stunts_track_mesh_test",
+      "sources": [
+        "tests/stunts_track_mesh_test.cpp",
+        "src/services/impl/workflow/stunts/world/stunts_track_mesh.cpp",
+        "src/services/impl/workflow/stunts/world/stunts_mesh_build.cpp",
+        "src/services/impl/workflow/stunts/world/stunts_mesh_corner.cpp",
+        "src/services/impl/workflow/stunts/data/stunts_track.cpp",
+        "src/services/impl/workflow/stunts/data/stunts_container.cpp",
+        "src/services/impl/workflow/stunts/data/stunts_huffman.cpp",
+        "src/services/impl/workflow/stunts/data/stunts_rle.cpp",
+        "src/services/impl/workflow/stunts/data/stunts_rle_sequence.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main",
+        "glm::glm",
+        "${SDL_TARGET}"
+      ]
+    },
+    {
+      "name": "stunts_huffman_test",
+      "sources": [
+        "tests/stunts_huffman_test.cpp",
+        "src/services/impl/workflow/stunts/data/stunts_huffman.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main"
+      ]
+    },
+    {
+      "name": "stunts_rle_test",
+      "sources": [
+        "tests/stunts_rle_test.cpp",
+        "src/services/impl/workflow/stunts/data/stunts_rle.cpp",
+        "src/services/impl/workflow/stunts/data/stunts_rle_sequence.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main"
+      ]
+    },
+    {
+      "name": "stunts_container_real_test",
+      "sources": [
+        "tests/stunts_container_real_test.cpp",
+        "src/services/impl/workflow/stunts/data/stunts_container.cpp",
+        "src/services/impl/workflow/stunts/data/stunts_huffman.cpp",
+        "src/services/impl/workflow/stunts/data/stunts_rle.cpp",
+        "src/services/impl/workflow/stunts/data/stunts_rle_sequence.cpp",
+        "src/services/impl/workflow/stunts/data/stunts_resource.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main"
+      ]
+    },
+    {
+      "name": "stunts_shape_test",
+      "sources": [
+        "tests/stunts_shape_test.cpp",
+        "src/services/impl/workflow/stunts/data/stunts_shape.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main",
+        "glm::glm"
+      ]
+    },
+    {
+      "name": "stunts_material_test",
+      "sources": [
+        "tests/stunts_material_test.cpp",
+        "src/services/impl/workflow/stunts/data/stunts_material.cpp"
       ],
       "include_directories": [
         "src"

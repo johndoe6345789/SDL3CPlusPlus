@@ -1,0 +1,469 @@
+{
+  "name": "Stunts",
+  "active": true,
+  "settings": {
+    "executionTimeout": 0
+  },
+  "variables": {
+    "window_width": {
+      "name": "window_width",
+      "type": "number",
+      "defaultValue": 1280
+    },
+    "window_height": {
+      "name": "window_height",
+      "type": "number",
+      "defaultValue": 960
+    },
+    "window_title": {
+      "name": "window_title",
+      "type": "string",
+      "defaultValue": "Stunts"
+    },
+    "renderer_type": {
+      "name": "renderer_type",
+      "type": "string",
+      "defaultValue": "auto"
+    },
+    "shader_textured_vert_path": {
+      "name": "shader_textured_vert_path",
+      "type": "string",
+      "defaultValue": "packages/seed/shaders/msl/textured.vert.metal"
+    },
+    "shader_textured_frag_path": {
+      "name": "shader_textured_frag_path",
+      "type": "string",
+      "defaultValue": "packages/seed/shaders/msl/textured.frag.metal"
+    },
+    "tex_road_path": {
+      "name": "tex_road_path",
+      "type": "string",
+      "defaultValue": "packages/stunts/assets/stunts_road.png"
+    },
+    "tex_ground_path": {
+      "name": "tex_ground_path",
+      "type": "string",
+      "defaultValue": "packages/stunts/assets/stunts_grass.png"
+    },
+    "tex_palette_path": {
+      "name": "tex_palette_path",
+      "type": "string",
+      "defaultValue": "packages/stunts/assets/stunts_palette.png"
+    }
+  },
+  "nodes": [
+    {
+      "id": "sdl_init",
+      "type": "sdl.init",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "sdl_window",
+      "type": "sdl.window.create",
+      "typeVersion": 1,
+      "position": [
+        200,
+        0
+      ]
+    },
+    {
+      "id": "gpu_init_viewport",
+      "type": "graphics.gpu.init_viewport",
+      "typeVersion": 1,
+      "position": [
+        400,
+        0
+      ],
+      "parameters": {
+        "present_mode": "auto",
+        "inputs": {
+          "width": "window_width",
+          "height": "window_height"
+        },
+        "outputs": {
+          "viewport_config": "viewport_config"
+        }
+      }
+    },
+    {
+      "id": "gpu_init_renderer",
+      "type": "graphics.gpu.init_renderer",
+      "typeVersion": 1,
+      "position": [
+        600,
+        0
+      ],
+      "parameters": {
+        "inputs": {
+          "renderer_type": "renderer_type"
+        },
+        "outputs": {
+          "selected_renderer": "selected_renderer"
+        }
+      }
+    },
+    {
+      "id": "gpu_init",
+      "type": "graphics.gpu.init",
+      "typeVersion": 1,
+      "position": [
+        800,
+        0
+      ],
+      "parameters": {
+        "inputs": {
+          "viewport_config": "viewport_config",
+          "selected_renderer": "selected_renderer"
+        },
+        "outputs": {
+          "gpu_handle": "gpu_handle"
+        }
+      }
+    },
+    {
+      "id": "compile_tex_vert",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        0
+      ],
+      "parameters": {
+        "stage": "vertex",
+        "output_key": "textured_vertex_shader",
+        "num_uniform_buffers": 1,
+        "num_samplers": 0
+      },
+      "inputs": {
+        "shader_path": "shader_textured_vert_path"
+      }
+    },
+    {
+      "id": "compile_tex_frag",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        0
+      ],
+      "parameters": {
+        "stage": "fragment",
+        "output_key": "textured_fragment_shader",
+        "num_uniform_buffers": 1,
+        "num_samplers": 2
+      },
+      "inputs": {
+        "shader_path": "shader_textured_frag_path"
+      }
+    },
+    {
+      "id": "create_tex_pipeline",
+      "type": "graphics.gpu.pipeline.create",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        0
+      ],
+      "parameters": {
+        "vertex_shader_key": "textured_vertex_shader",
+        "fragment_shader_key": "textured_fragment_shader",
+        "vertex_format": "position_uv",
+        "pipeline_key": "gpu_pipeline_textured"
+      }
+    },
+    {
+      "id": "tex_road",
+      "type": "texture.load",
+      "typeVersion": 1,
+      "position": [
+        1300,
+        0
+      ],
+      "parameters": {
+        "inputs": {
+          "image_path": "tex_road_path"
+        },
+        "outputs": {
+          "texture": "road_texture"
+        }
+      }
+    },
+    {
+      "id": "tex_ground",
+      "type": "texture.load",
+      "typeVersion": 1,
+      "position": [
+        1400,
+        0
+      ],
+      "parameters": {
+        "inputs": {
+          "image_path": "tex_ground_path"
+        },
+        "outputs": {
+          "texture": "ground_texture"
+        }
+      }
+    },
+    {
+      "id": "tex_palette",
+      "type": "texture.load",
+      "typeVersion": 1,
+      "position": [
+        1500,
+        0
+      ],
+      "parameters": {
+        "inputs": {
+          "image_path": "tex_palette_path"
+        },
+        "outputs": {
+          "texture": "stunts_palette"
+        }
+      }
+    },
+    {
+      "id": "camera_setup",
+      "type": "camera.setup",
+      "typeVersion": 1,
+      "position": [
+        0,
+        200
+      ],
+      "parameters": {
+        "outputs": {
+          "camera_state": "camera.state"
+        }
+      }
+    },
+    {
+      "id": "lighting",
+      "type": "lighting.setup",
+      "typeVersion": 1,
+      "position": [
+        200,
+        200
+      ],
+      "parameters": {
+        "light_dir_x": -0.4,
+        "light_dir_y": -0.85,
+        "light_dir_z": -0.35,
+        "light_intensity": 2.2,
+        "ambient_r": 0.35,
+        "ambient_g": 0.38,
+        "ambient_b": 0.42,
+        "ambient_intensity": 1.4,
+        "exposure": 1.0
+      }
+    },
+    {
+      "id": "init_outer_running",
+      "type": "value.literal",
+      "typeVersion": 1,
+      "position": [
+        400,
+        200
+      ],
+      "parameters": {
+        "value": true,
+        "outputs": {
+          "value": "outer_running"
+        }
+      }
+    },
+    {
+      "id": "outer_loop",
+      "type": "control.loop.while",
+      "typeVersion": 1,
+      "position": [
+        600,
+        200
+      ],
+      "parameters": {
+        "condition_key": "outer_running",
+        "package": "stunts",
+        "workflow": "stunts_session"
+      }
+    },
+    {
+      "id": "exit",
+      "type": "system.exit",
+      "typeVersion": 1,
+      "position": [
+        800,
+        200
+      ]
+    }
+  ],
+  "connections": {
+    "sdl_init": {
+      "main": {
+        "0": [
+          {
+            "node": "sdl_window",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "sdl_window": {
+      "main": {
+        "0": [
+          {
+            "node": "gpu_init_viewport",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "gpu_init_viewport": {
+      "main": {
+        "0": [
+          {
+            "node": "gpu_init_renderer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "gpu_init_renderer": {
+      "main": {
+        "0": [
+          {
+            "node": "gpu_init",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "gpu_init": {
+      "main": {
+        "0": [
+          {
+            "node": "compile_tex_vert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "compile_tex_vert": {
+      "main": {
+        "0": [
+          {
+            "node": "compile_tex_frag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "compile_tex_frag": {
+      "main": {
+        "0": [
+          {
+            "node": "create_tex_pipeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "create_tex_pipeline": {
+      "main": {
+        "0": [
+          {
+            "node": "tex_road",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "tex_road": {
+      "main": {
+        "0": [
+          {
+            "node": "tex_ground",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "tex_ground": {
+      "main": {
+        "0": [
+          {
+            "node": "tex_palette",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "camera_setup": {
+      "main": {
+        "0": [
+          {
+            "node": "lighting",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "lighting": {
+      "main": {
+        "0": [
+          {
+            "node": "init_outer_running",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "init_outer_running": {
+      "main": {
+        "0": [
+          {
+            "node": "outer_loop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "outer_loop": {
+      "main": {
+        "0": [
+          {
+            "node": "exit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "tex_palette": {
+      "main": {
+        "0": [
+          {
+            "node": "camera_setup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    }
+  }
+}

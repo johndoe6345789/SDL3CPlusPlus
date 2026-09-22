@@ -270,6 +270,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/registrar/workflow_registrar_rendering_q3pmove.cpp
         src/services/impl/workflow/registrar/workflow_registrar_scene.cpp
         src/services/impl/workflow/registrar/workflow_registrar_shader.cpp
+        src/services/impl/workflow/registrar/workflow_registrar_stunts.cpp
         src/services/impl/workflow/registrar/workflow_registrar_system_data.cpp
         src/services/impl/workflow/shader/shader_compile_build_map.cpp
         src/services/impl/workflow/shader/shader_compile_debug_marker.cpp
@@ -1151,6 +1152,40 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/world/gta5_water_step.cpp
         src/services/impl/workflow/gta5/world/gta5_water_uniforms.cpp
         src/services/impl/workflow/gta5/world/gta5_water_upload.cpp
+        src/services/impl/workflow/stunts/stunts_step_params.cpp
+        src/services/impl/workflow/stunts/data/stunts_car.cpp
+        src/services/impl/workflow/stunts/data/stunts_car_body.cpp
+        src/services/impl/workflow/stunts/data/stunts_container.cpp
+        src/services/impl/workflow/stunts/data/stunts_huffman.cpp
+        src/services/impl/workflow/stunts/data/stunts_install.cpp
+        src/services/impl/workflow/stunts/data/stunts_material.cpp
+        src/services/impl/workflow/stunts/data/stunts_resource.cpp
+        src/services/impl/workflow/stunts/data/stunts_rle.cpp
+        src/services/impl/workflow/stunts/data/stunts_rle_sequence.cpp
+        src/services/impl/workflow/stunts/data/stunts_shape.cpp
+        src/services/impl/workflow/stunts/data/stunts_shape_archive.cpp
+        src/services/impl/workflow/stunts/data/stunts_shape_mesh.cpp
+        src/services/impl/workflow/stunts/data/stunts_tile_table.cpp
+        src/services/impl/workflow/stunts/data/stunts_track.cpp
+        src/services/impl/workflow/stunts/data/stunts_wheel_mesh.cpp
+        src/services/impl/workflow/stunts/world/stunts_mesh_build.cpp
+        src/services/impl/workflow/stunts/world/stunts_mesh_corner.cpp
+        src/services/impl/workflow/stunts/world/stunts_start_line.cpp
+        src/services/impl/workflow/stunts/world/stunts_track_mesh.cpp
+        src/services/impl/workflow/stunts/world/stunts_world_load_step.cpp
+        src/services/impl/workflow/stunts/world/stunts_world_upload.cpp
+        src/services/impl/workflow/stunts/player/stunts_car_drive_step.cpp
+        src/services/impl/workflow/stunts/player/stunts_car_physics.cpp
+        src/services/impl/workflow/stunts/player/stunts_car_step.cpp
+        src/services/impl/workflow/stunts/player/stunts_lap_timer_step.cpp
+        src/services/impl/workflow/stunts/player/stunts_road_query.cpp
+        src/services/impl/workflow/stunts/render/stunts_car_draw_step.cpp
+        src/services/impl/workflow/stunts/render/stunts_chase_cam_step.cpp
+        src/services/impl/workflow/stunts/render/stunts_dash_step.cpp
+        src/services/impl/workflow/stunts/render/stunts_dashboard_draw.cpp
+        src/services/impl/workflow/stunts/render/stunts_dashboard_mesh.cpp
+        src/services/impl/workflow/stunts/render/stunts_dashboard_primitives.cpp
+        src/services/impl/workflow/stunts/render/stunts_track_draw_step.cpp
         src/services/impl/workflow/fs2024/fs2024_step_params.cpp
         src/services/impl/workflow/fs2024/tiles/fs2024_load_pool.cpp
         src/services/impl/workflow/fs2024/tiles/fs2024_load_pool_queue.cpp
@@ -2341,6 +2376,102 @@ target_link_libraries(fs2024_gltf_model_test PRIVATE
     nlohmann_json::nlohmann_json
 )
 add_test(NAME fs2024_gltf_model_test COMMAND fs2024_gltf_model_test)
+
+add_executable(stunts_car_physics_test)
+target_sources(stunts_car_physics_test PRIVATE tests/stunts_car_physics_test.cpp)
+target_sources(stunts_car_physics_test PRIVATE src/services/impl/workflow/stunts/player/stunts_car_physics.cpp)
+target_sources(stunts_car_physics_test PRIVATE src/services/impl/workflow/stunts/player/stunts_car_step.cpp)
+target_include_directories(stunts_car_physics_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(stunts_car_physics_test PRIVATE
+    GTest::gtest_main
+    glm::glm
+)
+add_test(NAME stunts_car_physics_test COMMAND stunts_car_physics_test)
+
+add_executable(stunts_track_mesh_test)
+target_sources(stunts_track_mesh_test PRIVATE tests/stunts_track_mesh_test.cpp)
+target_sources(stunts_track_mesh_test PRIVATE src/services/impl/workflow/stunts/world/stunts_track_mesh.cpp)
+target_sources(stunts_track_mesh_test PRIVATE src/services/impl/workflow/stunts/world/stunts_mesh_build.cpp)
+target_sources(stunts_track_mesh_test PRIVATE src/services/impl/workflow/stunts/world/stunts_mesh_corner.cpp)
+target_sources(stunts_track_mesh_test PRIVATE src/services/impl/workflow/stunts/data/stunts_track.cpp)
+target_sources(stunts_track_mesh_test PRIVATE src/services/impl/workflow/stunts/data/stunts_container.cpp)
+target_sources(stunts_track_mesh_test PRIVATE src/services/impl/workflow/stunts/data/stunts_huffman.cpp)
+target_sources(stunts_track_mesh_test PRIVATE src/services/impl/workflow/stunts/data/stunts_rle.cpp)
+target_sources(stunts_track_mesh_test PRIVATE src/services/impl/workflow/stunts/data/stunts_rle_sequence.cpp)
+target_include_directories(stunts_track_mesh_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(stunts_track_mesh_test PRIVATE
+    GTest::gtest_main
+    glm::glm
+    ${SDL_TARGET}
+)
+add_test(NAME stunts_track_mesh_test COMMAND stunts_track_mesh_test)
+
+add_executable(stunts_huffman_test)
+target_sources(stunts_huffman_test PRIVATE tests/stunts_huffman_test.cpp)
+target_sources(stunts_huffman_test PRIVATE src/services/impl/workflow/stunts/data/stunts_huffman.cpp)
+target_include_directories(stunts_huffman_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(stunts_huffman_test PRIVATE
+    GTest::gtest_main
+)
+add_test(NAME stunts_huffman_test COMMAND stunts_huffman_test)
+
+add_executable(stunts_rle_test)
+target_sources(stunts_rle_test PRIVATE tests/stunts_rle_test.cpp)
+target_sources(stunts_rle_test PRIVATE src/services/impl/workflow/stunts/data/stunts_rle.cpp)
+target_sources(stunts_rle_test PRIVATE src/services/impl/workflow/stunts/data/stunts_rle_sequence.cpp)
+target_include_directories(stunts_rle_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(stunts_rle_test PRIVATE
+    GTest::gtest_main
+)
+add_test(NAME stunts_rle_test COMMAND stunts_rle_test)
+
+add_executable(stunts_container_real_test)
+target_sources(stunts_container_real_test PRIVATE tests/stunts_container_real_test.cpp)
+target_sources(stunts_container_real_test PRIVATE src/services/impl/workflow/stunts/data/stunts_container.cpp)
+target_sources(stunts_container_real_test PRIVATE src/services/impl/workflow/stunts/data/stunts_huffman.cpp)
+target_sources(stunts_container_real_test PRIVATE src/services/impl/workflow/stunts/data/stunts_rle.cpp)
+target_sources(stunts_container_real_test PRIVATE src/services/impl/workflow/stunts/data/stunts_rle_sequence.cpp)
+target_sources(stunts_container_real_test PRIVATE src/services/impl/workflow/stunts/data/stunts_resource.cpp)
+target_include_directories(stunts_container_real_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(stunts_container_real_test PRIVATE
+    GTest::gtest_main
+)
+add_test(NAME stunts_container_real_test COMMAND stunts_container_real_test)
+
+add_executable(stunts_shape_test)
+target_sources(stunts_shape_test PRIVATE tests/stunts_shape_test.cpp)
+target_sources(stunts_shape_test PRIVATE src/services/impl/workflow/stunts/data/stunts_shape.cpp)
+target_include_directories(stunts_shape_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(stunts_shape_test PRIVATE
+    GTest::gtest_main
+    glm::glm
+)
+add_test(NAME stunts_shape_test COMMAND stunts_shape_test)
+
+add_executable(stunts_material_test)
+target_sources(stunts_material_test PRIVATE tests/stunts_material_test.cpp)
+target_sources(stunts_material_test PRIVATE src/services/impl/workflow/stunts/data/stunts_material.cpp)
+target_include_directories(stunts_material_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(stunts_material_test PRIVATE
+    GTest::gtest_main
+    glm::glm
+    nlohmann_json::nlohmann_json
+)
+add_test(NAME stunts_material_test COMMAND stunts_material_test)
 
 # ============================================================================
 # FILE COPYING

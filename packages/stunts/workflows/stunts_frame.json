@@ -1,0 +1,119 @@
+{
+  "name": "Stunts Frame Tick",
+  "description": "One frame: input, driving, lap timing, then the track.",
+  "steps": [
+    {
+      "id": "frame_delta",
+      "plugin": "time.frame_delta"
+    },
+    {
+      "id": "input_poll",
+      "plugin": "input.poll"
+    },
+    {
+      "id": "keyboard_poll",
+      "plugin": "input.keyboard.poll"
+    },
+    {
+      "id": "drive_axes",
+      "plugin": "input.axis.combine",
+      "parameters": {
+        "config_path": "packages/stunts/config/input_aggregation.json"
+      }
+    },
+    {
+      "id": "drive_buttons",
+      "plugin": "input.button.combine",
+      "parameters": {
+        "config_path": "packages/stunts/config/input_aggregation.json"
+      }
+    },
+    {
+      "id": "stop_game_loop",
+      "plugin": "value.set_if",
+      "inputs": {
+        "condition": "stunts.quit_pressed"
+      },
+      "parameters": {
+        "value": false
+      },
+      "outputs": {
+        "value": "game_running"
+      }
+    },
+    {
+      "id": "stop_outer_loop",
+      "plugin": "value.set_if",
+      "inputs": {
+        "condition": "stunts.quit_pressed"
+      },
+      "parameters": {
+        "value": false
+      },
+      "outputs": {
+        "value": "outer_running"
+      }
+    },
+    {
+      "id": "drive",
+      "plugin": "stunts.car.drive"
+    },
+    {
+      "id": "lap_timer",
+      "plugin": "stunts.lap.timer"
+    },
+    {
+      "id": "chase_camera",
+      "plugin": "stunts.camera.chase"
+    },
+    {
+      "id": "render_prepare",
+      "plugin": "render.prepare"
+    },
+    {
+      "id": "frame_begin",
+      "plugin": "frame.gpu.begin",
+      "parameters": {
+        "clear_r": 0.42,
+        "clear_g": 0.62,
+        "clear_b": 0.86
+      }
+    },
+    {
+      "id": "draw_track",
+      "plugin": "stunts.track.draw"
+    },
+    {
+      "id": "draw_car",
+      "plugin": "stunts.car.draw"
+    },
+    {
+      "id": "draw_dashboard",
+      "plugin": "stunts.dashboard.draw"
+    },
+    {
+      "id": "end_scene",
+      "plugin": "frame.gpu.end_scene"
+    },
+    {
+      "id": "overlay_fps_init",
+      "plugin": "overlay.fps_init"
+    },
+    {
+      "id": "overlay_fps_upload_quad",
+      "plugin": "overlay.fps_upload_quad"
+    },
+    {
+      "id": "overlay_fps_upload_text",
+      "plugin": "overlay.fps_upload_text"
+    },
+    {
+      "id": "overlay_fps_draw",
+      "plugin": "overlay.fps_draw"
+    },
+    {
+      "id": "submit",
+      "plugin": "gpu.command_buffer_submit"
+    }
+  ]
+}

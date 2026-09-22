@@ -1,0 +1,35 @@
+{
+  "name": "Stunts Track Session",
+  "description": "Loads one track and car from the install, then drives it.",
+  "nodes": [
+    { "id": "load_world", "type": "stunts.world.load", "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {
+        "game_dir": "${env:STUNTS_DIR}",
+        "track": "${env:STUNTS_TRACK}",
+        "car": "${env:STUNTS_CAR}",
+        "tile_table": "packages/stunts/assets/stunts_tiles.json",
+        "tile_size": 24,
+        "road_width": 8 } },
+    { "id": "set_running", "type": "value.literal", "typeVersion": 1,
+      "position": [200, 0],
+      "parameters": { "value": true,
+                      "outputs": { "value": "game_running" } } },
+    { "id": "game_loop", "type": "control.loop.while", "typeVersion": 1,
+      "position": [400, 0],
+      "parameters": { "condition_key": "game_running",
+                      "package": "stunts", "workflow": "stunts_frame" } },
+    { "id": "stop_outer", "type": "value.literal", "typeVersion": 1,
+      "position": [600, 0],
+      "parameters": { "value": false,
+                      "outputs": { "value": "outer_running" } } }
+  ],
+  "connections": {
+    "load_world":  { "main": { "0": [{ "node": "set_running",
+                                       "type": "main", "index": 0 }] } },
+    "set_running": { "main": { "0": [{ "node": "game_loop",
+                                       "type": "main", "index": 0 }] } },
+    "game_loop":   { "main": { "0": [{ "node": "stop_outer",
+                                       "type": "main", "index": 0 }] } }
+  }
+}

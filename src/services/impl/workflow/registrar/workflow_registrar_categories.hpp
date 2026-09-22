@@ -60,6 +60,9 @@ int RegisterFs2024Steps(std::shared_ptr<IWorkflowStepRegistry> registry,
 int RegisterBl4Steps(std::shared_ptr<IWorkflowStepRegistry> registry,
                      std::shared_ptr<ILogger> logger);
 
+int RegisterStuntsSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
+                        std::shared_ptr<ILogger> logger);
+
 int RegisterGraphicsMiscSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
                               std::shared_ptr<ILogger> logger);
 

@@ -1,0 +1,541 @@
+{
+  "comment": "Derived from 41 tracks by make_tile_table.py",
+  "grid": 30,
+  "tiles": {
+    "1": {
+      "kind": "straight",
+      "links": "NS",
+      "samples": 16
+    },
+    "10": {
+      "kind": "corner",
+      "links": "NE",
+      "samples": 28
+    },
+    "100": {
+      "kind": "straight",
+      "links": "EW",
+      "samples": 28
+    },
+    "101": {
+      "kind": "junction",
+      "links": "NESW",
+      "samples": 17
+    },
+    "102": {
+      "kind": "junction",
+      "links": "NESW",
+      "samples": 29
+    },
+    "105": {
+      "kind": "corner",
+      "links": "NE",
+      "samples": 57
+    },
+    "106": {
+      "kind": "junction",
+      "links": "NEW",
+      "samples": 53
+    },
+    "107": {
+      "kind": "junction",
+      "links": "NES",
+      "samples": 50
+    },
+    "108": {
+      "kind": "corner",
+      "links": "NE",
+      "samples": 47
+    },
+    "109": {
+      "kind": "straight",
+      "links": "NS",
+      "samples": 13
+    },
+    "11": {
+      "kind": "junction",
+      "links": "NEW",
+      "samples": 29
+    },
+    "111": {
+      "kind": "straight",
+      "links": "NS",
+      "samples": 9
+    },
+    "113": {
+      "kind": "straight",
+      "links": "NS",
+      "samples": 9
+    },
+    "115": {
+      "kind": "straight",
+      "links": "NS",
+      "samples": 205
+    },
+    "116": {
+      "kind": "straight",
+      "links": "EW",
+      "samples": 67
+    },
+    "12": {
+      "kind": "junction",
+      "links": "NES",
+      "samples": 29
+    },
+    "122": {
+      "kind": "junction",
+      "links": "NEW",
+      "samples": 8
+    },
+    "13": {
+      "kind": "corner",
+      "links": "NE",
+      "samples": 30
+    },
+    "138": {
+      "kind": "junction",
+      "links": "NESW",
+      "samples": 15
+    },
+    "14": {
+      "kind": "straight",
+      "links": "NS",
+      "samples": 26
+    },
+    "15": {
+      "kind": "straight",
+      "links": "EW",
+      "samples": 24
+    },
+    "151": {
+      "kind": "junction",
+      "links": "NESW",
+      "samples": 246
+    },
+    "152": {
+      "kind": "junction",
+      "links": "NESW",
+      "samples": 286
+    },
+    "153": {
+      "kind": "junction",
+      "links": "NSW",
+      "samples": 358
+    },
+    "154": {
+      "kind": "junction",
+      "links": "NES",
+      "samples": 37
+    },
+    "155": {
+      "kind": "corner",
+      "links": "ES",
+      "samples": 11
+    },
+    "156": {
+      "kind": "junction",
+      "links": "NESW",
+      "samples": 10
+    },
+    "158": {
+      "kind": "junction",
+      "links": "NES",
+      "samples": 12
+    },
+    "163": {
+      "kind": "junction",
+      "links": "NES",
+      "samples": 258
+    },
+    "164": {
+      "kind": "junction",
+      "links": "NESW",
+      "samples": 223
+    },
+    "165": {
+      "kind": "junction",
+      "links": "NEW",
+      "samples": 245
+    },
+    "166": {
+      "kind": "junction",
+      "links": "NEW",
+      "samples": 212
+    },
+    "167": {
+      "kind": "straight",
+      "links": "NS",
+      "samples": 54
+    },
+    "169": {
+      "kind": "junction",
+      "links": "NES",
+      "samples": 50
+    },
+    "17": {
+      "kind": "junction",
+      "links": "NSW",
+      "samples": 10
+    },
+    "170": {
+      "kind": "straight",
+      "links": "EW",
+      "samples": 50
+    },
+    "175": {
+      "kind": "junction",
+      "links": "NES",
+      "samples": 22
+    },
+    "176": {
+      "kind": "straight",
+      "links": "NS",
+      "samples": 8
+    },
+    "178": {
+      "kind": "junction",
+      "links": "NESW",
+      "samples": 21
+    },
+    "18": {
+      "kind": "corner",
+      "links": "ES",
+      "samples": 11
+    },
+    "180": {
+      "kind": "straight",
+      "links": "EW",
+      "samples": 11
+    },
+    "24": {
+      "kind": "straight",
+      "links": "NS",
+      "samples": 122
+    },
+    "25": {
+      "kind": "straight",
+      "links": "EW",
+      "samples": 138
+    },
+    "253": {
+      "kind": "corner",
+      "links": "SW",
+      "samples": 673
+    },
+    "254": {
+      "kind": "corner",
+      "links": "ES",
+      "samples": 746
+    },
+    "255": {
+      "kind": "corner",
+      "links": "NW",
+      "samples": 738
+    },
+    "26": {
+      "kind": "corner",
+      "links": "NE",
+      "samples": 35
+    },
+    "27": {
+      "kind": "corner",
+      "links": "NW",
+      "samples": 39
+    },
+    "28": {
+      "kind": "corner",
+      "links": "ES",
+      "samples": 47
+    },
+    "29": {
+      "kind": "corner",
+      "links": "SW",
+      "samples": 40
+    },
+    "34": {
+      "kind": "straight",
+      "links": "NS",
+      "samples": 163
+    },
+    "35": {
+      "kind": "straight",
+      "links": "EW",
+      "samples": 271
+    },
+    "36": {
+      "kind": "straight",
+      "links": "EW",
+      "samples": 55
+    },
+    "37": {
+      "kind": "straight",
+      "links": "EW",
+      "samples": 54
+    },
+    "38": {
+      "kind": "straight",
+      "links": "NS",
+      "samples": 60
+    },
+    "39": {
+      "kind": "straight",
+      "links": "NS",
+      "samples": 55
+    },
+    "4": {
+      "kind": "straight",
+      "links": "NS",
+      "samples": 671
+    },
+    "40": {
+      "kind": "straight",
+      "links": "NS",
+      "samples": 73
+    },
+    "41": {
+      "kind": "straight",
+      "links": "EW",
+      "samples": 59
+    },
+    "42": {
+      "kind": "straight",
+      "links": "NS",
+      "samples": 59
+    },
+    "43": {
+      "kind": "straight",
+      "links": "EW",
+      "samples": 50
+    },
+    "44": {
+      "kind": "straight",
+      "links": "NS",
+      "samples": 59
+    },
+    "45": {
+      "kind": "straight",
+      "links": "EW",
+      "samples": 66
+    },
+    "46": {
+      "kind": "straight",
+      "links": "NS",
+      "samples": 53
+    },
+    "47": {
+      "kind": "straight",
+      "links": "EW",
+      "samples": 64
+    },
+    "48": {
+      "kind": "straight",
+      "links": "NS",
+      "samples": 164
+    },
+    "49": {
+      "kind": "straight",
+      "links": "NS",
+      "samples": 186
+    },
+    "5": {
+      "kind": "straight",
+      "links": "EW",
+      "samples": 730
+    },
+    "50": {
+      "kind": "straight",
+      "links": "EW",
+      "samples": 198
+    },
+    "51": {
+      "kind": "straight",
+      "links": "EW",
+      "samples": 203
+    },
+    "52": {
+      "kind": "corner",
+      "links": "NE",
+      "samples": 73
+    },
+    "53": {
+      "kind": "junction",
+      "links": "NEW",
+      "samples": 67
+    },
+    "54": {
+      "kind": "junction",
+      "links": "NES",
+      "samples": 53
+    },
+    "55": {
+      "kind": "corner",
+      "links": "NE",
+      "samples": 69
+    },
+    "56": {
+      "kind": "straight",
+      "links": "EW",
+      "samples": 278
+    },
+    "57": {
+      "kind": "straight",
+      "links": "EW",
+      "samples": 276
+    },
+    "58": {
+      "kind": "straight",
+      "links": "NS",
+      "samples": 289
+    },
+    "59": {
+      "kind": "straight",
+      "links": "NS",
+      "samples": 278
+    },
+    "6": {
+      "kind": "corner",
+      "links": "NE",
+      "samples": 82
+    },
+    "60": {
+      "kind": "corner",
+      "links": "NE",
+      "samples": 9
+    },
+    "61": {
+      "kind": "corner",
+      "links": "NE",
+      "samples": 16
+    },
+    "64": {
+      "kind": "straight",
+      "links": "NS",
+      "samples": 37
+    },
+    "65": {
+      "kind": "straight",
+      "links": "EW",
+      "samples": 31
+    },
+    "66": {
+      "kind": "straight",
+      "links": "NS",
+      "samples": 111
+    },
+    "67": {
+      "kind": "straight",
+      "links": "EW",
+      "samples": 106
+    },
+    "68": {
+      "kind": "straight",
+      "links": "NS",
+      "samples": 14
+    },
+    "69": {
+      "kind": "straight",
+      "links": "EW",
+      "samples": 43
+    },
+    "7": {
+      "kind": "corner",
+      "links": "NW",
+      "samples": 104
+    },
+    "70": {
+      "kind": "straight",
+      "links": "NS",
+      "samples": 32
+    },
+    "71": {
+      "kind": "straight",
+      "links": "NS",
+      "samples": 32
+    },
+    "72": {
+      "kind": "straight",
+      "links": "EW",
+      "samples": 32
+    },
+    "73": {
+      "kind": "straight",
+      "links": "EW",
+      "samples": 32
+    },
+    "74": {
+      "kind": "junction",
+      "links": "NESW",
+      "samples": 80
+    },
+    "75": {
+      "kind": "junction",
+      "links": "NESW",
+      "samples": 46
+    },
+    "77": {
+      "kind": "junction",
+      "links": "NESW",
+      "samples": 47
+    },
+    "78": {
+      "kind": "junction",
+      "links": "NESW",
+      "samples": 8
+    },
+    "8": {
+      "kind": "corner",
+      "links": "ES",
+      "samples": 114
+    },
+    "83": {
+      "kind": "straight",
+      "links": "NS",
+      "samples": 27
+    },
+    "84": {
+      "kind": "junction",
+      "links": "ESW",
+      "samples": 49
+    },
+    "85": {
+      "kind": "straight",
+      "links": "NS",
+      "samples": 36
+    },
+    "86": {
+      "kind": "straight",
+      "links": "EW",
+      "samples": 34
+    },
+    "9": {
+      "kind": "corner",
+      "links": "SW",
+      "samples": 80
+    },
+    "95": {
+      "kind": "straight",
+      "links": "EW",
+      "samples": 20
+    },
+    "96": {
+      "kind": "straight",
+      "links": "EW",
+      "samples": 22
+    },
+    "97": {
+      "kind": "junction",
+      "links": "NSW",
+      "samples": 11
+    },
+    "98": {
+      "kind": "straight",
+      "links": "NS",
+      "samples": 13
+    },
+    "99": {
+      "kind": "straight",
+      "links": "NS",
+      "samples": 14
+    }
+  }
+}

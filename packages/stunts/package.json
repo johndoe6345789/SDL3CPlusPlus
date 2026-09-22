@@ -1,0 +1,71 @@
+{
+  "name": "Stunts Support",
+  "version": "1.0.0",
+  "id": "stunts",
+  "type": "game",
+  "category": "demo",
+  "description": "Drives the tracks and cars of a Stunts install, read straight from the game's own files",
+
+  "launch_options": [
+    {"env": "STUNTS_DIR", "label": "Stunts directory", "kind": "directory",
+     "help": "The folder holding STUNTS.EXE and its .TRK files."},
+    {"env": "STUNTS_TRACK", "label": "Track", "kind": "text",
+     "default": "DEFAULT.TRK",
+     "help": "Any .TRK in that folder; case does not matter."},
+    {"env": "STUNTS_CAR", "label": "Car", "kind": "text",
+     "default": "CARANSX.RES",
+     "help": "Any CAR*.RES in that folder; its own engine figures drive."}
+  ],
+
+  "defaultWorkflow": "workflows/stunts_game.json",
+
+  "workflows": [
+    "workflows/stunts_game.json",
+    "workflows/stunts_session.json",
+    "workflows/stunts_frame.json"
+  ],
+
+  "assets": [
+    "assets/stunts_tiles.json"
+  ],
+
+  "config": [
+    "config/input_aggregation.json"
+  ],
+
+  "scene": [],
+  "shaders": [],
+
+  "stunts_specifications": {
+    "grid": {
+      "cells": "30 x 30",
+      "explanation": "Every track is a 1802-byte file: a 30x30 grid of road tile ids, the same grid of terrain ids, then a horizon byte and a flags byte."
+    },
+    "scale": {
+      "metres_per_cell": 24,
+      "road_width_metres": 8,
+      "explanation": "The files carry no unit, so a cell is given a size that makes a stock lap run to about the length the game's own lap times imply."
+    },
+    "tile_table": {
+      "source": "assets/stunts_tiles.json",
+      "explanation": "Tile ids are opaque. tools/make_tile_table.py derives what each id connects to from which neighbours are occupied wherever it appears, across every track in an install."
+    },
+    "cars": {
+      "source": "CAR*.RES, resource 'simd'",
+      "fields": "gear count, performance index, idle rpm, peak-power rpm, red line, rev limit",
+      "explanation": "Cross-checked against the showroom text in the same archive, which quotes each car's real power and top speed."
+    }
+  },
+
+  "import_notes": "This package reads an existing Stunts installation at run time and ships none of its data. Point STUNTS_DIR at your own copy.",
+
+  "bundled": true,
+
+  "dependencies": [
+    {
+      "name": "asset_loader",
+      "version": ">=1.0.0",
+      "usage": "texture_loading"
+    }
+  ]
+}
