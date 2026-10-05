@@ -218,6 +218,32 @@ the game has reached its menu:
 The result is `D:\racer_asm\swep1rcr_memory.bin`. Disassemble from its
 `.text` section, which is at 0x401000 in memory.
 
+## Verified functions in the unpacked image
+
+Checked against a memory dump taken from the running game. The dump is
+about 99.7% valid code. Listings stay outside the repo, because they are
+the game's code.
+
+| address  | role                                                            |
+|----------|-----------------------------------------------------------------|
+| 0x42D600 | `block_slot(index)`: the cache slot for each block, 0-3 only    |
+| 0x42D680 | `get_block(index)`: opens a block file once, with `rb`          |
+| 0x49F1E0 | `fsopen_rb(path, mode)`: a wrapper passing `_SH_DENYNO` (0x40)  |
+| 0x4475F0 | membership test in global table A (count at 0x50C628)           |
+| 0x447630 | membership test in global table B (count at 0x50C62C)           |
+| 0x446FC0 | `load_spline(index)`: header, offset table, read, byte-swap     |
+
+Block indices, verified from the jump table: 0 is `out_modelblock.bin`, 1
+is `out_spriteblock.bin`, 2 is `out_splineblock.bin` and 3 is
+`out_textureblock.bin`. Any other index uses a path the caller supplies.
+If the open fails, the game hangs in a loop at 0x42D6DA.
+
+The spline loader reads the 32-bit count, allocates, reads the entry, and
+byte-swaps its header and records in place from big-endian to
+little-endian. Its buffer layout confirms the 16-byte header and the
+84-byte record used by the decoder above.
+
+
 ## Generated assets
 
 Written to `D:
