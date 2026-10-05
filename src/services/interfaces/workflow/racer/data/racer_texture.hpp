@@ -6,21 +6,34 @@
 
 namespace sdl3cpp::services::impl {
 
-/// A decoded Episode I Racer texture: 64x64 RGBA8, row-major.
+/// Pixel formats named by a model's material (`MaterialTexture` +0x0C).
+/// The texture block itself stores no format or size.
+enum class RacerTextureFormat : std::uint16_t {
+    Rgba32 = 0x0003,
+    Indexed4 = 0x0200,       ///< 4-bit indices into an ARGB1555 palette.
+    Indexed8 = 0x0201,       ///< 8-bit indices into an ARGB1555 palette.
+    Intensity4 = 0x0400,     ///< 4-bit grey, alpha equal to grey.
+    Intensity8 = 0x0401,     ///< 8-bit grey, alpha equal to grey.
+};
+
+/// A decoded texture: RGBA8, row-major, top row first.
 struct RacerTexture {
-    std::uint32_t blockIndex = 0;
-    int width = 64;
-    int height = 64;
+    int width = 0;
+    int height = 0;
     std::vector<std::uint8_t> rgba;
 };
 
-/// Sixteen RGB565 colours from a 32-byte palette entry.
-std::array<std::uint8_t, 16 * 4> DecodeRacerPalette(const std::uint8_t* raw);
+/// Sixteen or 256 big-endian ARGB1555 colours: red bits 11-15, green
+/// 6-10, blue 1-5, alpha bit 0. `count` entries are read.
+std::vector<std::array<std::uint8_t, 4>> DecodeRacerPalette(
+    const std::vector<std::uint8_t>& raw, std::size_t count);
 
-/// Each 64x64 texture (2048 bytes, two 4-bit indices per byte, high nibble
-/// first) is paired with the nearest 32-byte palette before it in block
-/// order. Textures with no palette before them are skipped.
-std::vector<RacerTexture> DecodeRacerTextures(
-    const std::vector<std::uint8_t>& block);
+/// Decodes one texture. Indexed formats need `palette`; the others
+/// ignore it. Pixels missing from a short buffer come out magenta, so
+/// a size mismatch is visible rather than silent.
+RacerTexture DecodeRacerTexture(const std::vector<std::uint8_t>& pixels,
+                                const std::vector<std::uint8_t>& palette,
+                                RacerTextureFormat format, int width,
+                                int height);
 
 }  // namespace sdl3cpp::services::impl

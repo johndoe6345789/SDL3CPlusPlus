@@ -1,0 +1,59 @@
+#include "services/interfaces/workflow/racer/render/racer_scene_draw_step.hpp"
+
+#include "services/interfaces/workflow/racer/racer_step_params.hpp"
+#include "services/interfaces/workflow/racer/render/racer_model_draw.hpp"
+
+#include <utility>
+
+namespace sdl3cpp::services::impl {
+WorkflowRacerSceneDrawStep::WorkflowRacerSceneDrawStep(
+    std::shared_ptr<ILogger> logger, std::shared_ptr<RacerWorldState> state)
+    : logger_(std::move(logger)), state_(std::move(state)) {}
+
+std::string WorkflowRacerSceneDrawStep::GetPluginId() const {
+    return "racer.scene.draw";
+}
+
+void WorkflowRacerSceneDrawStep::Execute(const WorkflowStepDefinition& step,
+                                         WorkflowContext& context) {
+    if (context.GetBool("frame_skip", false) || !state_->loaded) return;
+    auto* pass = context.Get<SDL_GPURenderPass*>("gpu_render_pass", nullptr);
+    auto* cmd =
+        context.Get<SDL_GPUCommandBuffer*>("gpu_command_buffer", nullptr);
+    auto* opaque =
+        context.Get<SDL_GPUGraphicsPipeline*>("gpu_pipeline_racer", nullptr);
+    auto* blend = context.Get<SDL_GPUGraphicsPipeline*>(
+        "gpu_pipeline_racer_blend", nullptr);
+    if (!pass || !cmd || !opaque) return;
+    const glm::mat4 view =
+        context.Get<glm::mat4>("render.view_matrix", glm::mat4(1.f));
+    const glm::mat4 proj =
+        context.Get<glm::mat4>("render.proj_matrix", glm::mat4(1.f));
+    RacerDrawPass d{pass, cmd, {proj * view, glm::mat4(1.f)}};
+    const glm::vec3 eye =
+        context.Get<glm::vec3>("render.camera_pos", glm::vec3(0.f));
+    const RacerFragmentUniforms fragment{
+        {RacerFloatParam(step, "fog_r", 0.78f),
+         RacerFloatParam(step, "fog_g", 0.70f),
+         RacerFloatParam(step, "fog_b", 0.58f),
+         RacerFloatParam(step, "fog_start", 350.f)},
+        {RacerFloatParam(step, "fog_end", 2200.f), 0.5f, 0.f, 0.f},
+        {eye, 1.f}};
+    const glm::mat4 pod = RacerPodMatrix(*state_);
+    int drawn = 0;
+    for (int blended = 0; blended < 2; ++blended) {
+        SDL_GPUGraphicsPipeline* pipeline = blended ? blend : opaque;
+        if (!pipeline) continue;
+        SDL_BindGPUGraphicsPipeline(pass, pipeline);
+        SDL_PushGPUFragmentUniformData(cmd, 0, &fragment, sizeof(fragment));
+        drawn += DrawRacerModel(d, state_->trackModel, glm::mat4(1.f), blended);
+        drawn += DrawRacerModel(d, state_->podModel, pod, blended);
+    }
+    if (!traced_ && logger_) {
+        traced_ = true;
+        logger_->Info("racer.scene.draw: first frame, " +
+                      std::to_string(drawn) + " draws");
+    }
+}
+
+}  // namespace sdl3cpp::services::impl

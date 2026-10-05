@@ -1,65 +1,71 @@
 #include "services/interfaces/workflow/racer/data/racer_texture.hpp"
 
-#include "services/interfaces/workflow/racer/data/racer_block_table.hpp"
-
-#include <optional>
-#include <utility>
-
 namespace sdl3cpp::services::impl {
 namespace {
 
-constexpr std::size_t kPaletteBytes = 32;
-constexpr std::size_t kTextureBytes = 2048;
+using Rgba = std::array<std::uint8_t, 4>;
+constexpr Rgba kMissing{255, 0, 255, 255};
 
-std::uint8_t Expand5(std::uint32_t v) {
-    return static_cast<std::uint8_t>((v * 255) / 31);
+/// High nibble first, as the N64 stores 4-bit texels.
+int Nibble(const std::vector<std::uint8_t>& pixels, std::size_t index) {
+    const std::size_t byte = index / 2;
+    if (byte >= pixels.size()) return -1;
+    return index % 2 == 0 ? pixels[byte] >> 4 : pixels[byte] & 15;
+}
+
+Rgba Texel(const std::vector<std::uint8_t>& pixels,
+           const std::vector<Rgba>& palette, RacerTextureFormat format,
+           std::size_t index) {
+    switch (format) {
+    case RacerTextureFormat::Indexed4: {
+        const int i = Nibble(pixels, index);
+        return i >= 0 && i < static_cast<int>(palette.size()) ? palette[i]
+                                                              : kMissing;
+    }
+    case RacerTextureFormat::Indexed8:
+        if (index >= pixels.size() || pixels[index] >= palette.size()) {
+            return kMissing;
+        }
+        return palette[pixels[index]];
+    case RacerTextureFormat::Intensity4: {
+        const int i = Nibble(pixels, index);
+        if (i < 0) return kMissing;
+        const auto v = static_cast<std::uint8_t>(i * 17);
+        return {v, v, v, v};
+    }
+    case RacerTextureFormat::Intensity8: {
+        if (index >= pixels.size()) return kMissing;
+        const std::uint8_t v = pixels[index];
+        return {v, v, v, v};
+    }
+    case RacerTextureFormat::Rgba32:
+        if (4 * index + 3 >= pixels.size()) return kMissing;
+        return {pixels[4 * index], pixels[4 * index + 1],
+                pixels[4 * index + 2], pixels[4 * index + 3]};
+    }
+    return kMissing;
 }
 
 }  // namespace
 
-std::array<std::uint8_t, 16 * 4> DecodeRacerPalette(const std::uint8_t* raw) {
-    // ARGB1555, big-endian: red bits 11-15, green 6-10, blue 1-5, and
-    // alpha in bit 0. Layout per the swe1r-tools texture extractor.
-    std::array<std::uint8_t, 16 * 4> out{};
-    for (std::size_t i = 0; i < 16; ++i) {
-        const std::uint32_t value = (raw[2 * i] << 8) | raw[2 * i + 1];
-        out[4 * i + 0] = Expand5((value >> 11) & 31);
-        out[4 * i + 1] = Expand5((value >> 6) & 31);
-        out[4 * i + 2] = Expand5((value >> 1) & 31);
-        out[4 * i + 3] = (value & 1) ? 255 : 0;
+RacerTexture DecodeRacerTexture(const std::vector<std::uint8_t>& pixels,
+                                const std::vector<std::uint8_t>& palette,
+                                RacerTextureFormat format, int width,
+                                int height) {
+    RacerTexture texture;
+    if (width <= 0 || height <= 0) return texture;
+    const std::size_t entries =
+        format == RacerTextureFormat::Indexed8 ? 256 : 16;
+    const auto colours = DecodeRacerPalette(palette, entries);
+    texture.width = width;
+    texture.height = height;
+    const std::size_t count = static_cast<std::size_t>(width) * height;
+    texture.rgba.resize(4 * count);
+    for (std::size_t i = 0; i < count; ++i) {
+        const Rgba c = Texel(pixels, colours, format, i);
+        for (std::size_t k = 0; k < 4; ++k) texture.rgba[4 * i + k] = c[k];
     }
-    return out;
-}
-
-std::vector<RacerTexture> DecodeRacerTextures(
-    const std::vector<std::uint8_t>& block) {
-    std::vector<RacerTexture> textures;
-    std::optional<std::array<std::uint8_t, 64>> palette;
-    for (const RacerBlockEntry& entry : ReadRacerBlockTable(block)) {
-        const std::size_t size = entry.end - entry.start;
-        if (size == kPaletteBytes) {
-            palette = DecodeRacerPalette(&block[entry.start]);
-            continue;
-        }
-        if (size != kTextureBytes || !palette) continue;
-
-        RacerTexture texture;
-        texture.blockIndex = entry.index;
-        texture.rgba.resize(64 * 64 * 4);
-        for (std::size_t i = 0; i < kTextureBytes; ++i) {
-            const std::uint8_t byte = block[entry.start + i];
-            for (std::size_t nibble = 0; nibble < 2; ++nibble) {
-                const std::uint8_t index =
-                    nibble == 0 ? byte >> 4 : byte & 15;
-                const std::size_t pixel = 2 * i + nibble;
-                for (std::size_t c = 0; c < 4; ++c) {
-                    texture.rgba[4 * pixel + c] = (*palette)[4 * index + c];
-                }
-            }
-        }
-        textures.push_back(std::move(texture));
-    }
-    return textures;
+    return texture;
 }
 
 }  // namespace sdl3cpp::services::impl

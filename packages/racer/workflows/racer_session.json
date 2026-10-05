@@ -1,0 +1,102 @@
+{
+  "name": "Racer Session",
+  "description": "Loads one track and pod from the install, then races it.",
+  "nodes": [
+    {
+      "id": "load_world",
+      "type": "racer.world.load",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "racer_dir": "${env:RACER_DIR}",
+        "track": "${env:RACER_TRACK}",
+        "racer": "${env:RACER_POD}",
+        "track_table": "packages/racer/assets/racer_tracks.json",
+        "texture_scale": 4,
+        "laps": 3
+      }
+    },
+    {
+      "id": "set_running",
+      "type": "value.literal",
+      "typeVersion": 1,
+      "position": [
+        200,
+        0
+      ],
+      "parameters": {
+        "value": true,
+        "outputs": {
+          "value": "game_running"
+        }
+      }
+    },
+    {
+      "id": "game_loop",
+      "type": "control.loop.while",
+      "typeVersion": 1,
+      "position": [
+        400,
+        0
+      ],
+      "parameters": {
+        "condition_key": "game_running",
+        "package": "racer",
+        "workflow": "racer_frame"
+      }
+    },
+    {
+      "id": "stop_outer",
+      "type": "value.literal",
+      "typeVersion": 1,
+      "position": [
+        600,
+        0
+      ],
+      "parameters": {
+        "value": false,
+        "outputs": {
+          "value": "outer_running"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "load_world": {
+      "main": {
+        "0": [
+          {
+            "node": "set_running",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "set_running": {
+      "main": {
+        "0": [
+          {
+            "node": "game_loop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "game_loop": {
+      "main": {
+        "0": [
+          {
+            "node": "stop_outer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    }
+  }
+}

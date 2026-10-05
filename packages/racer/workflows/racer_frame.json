@@ -1,0 +1,111 @@
+{
+  "name": "Racer Frame Tick",
+  "description": "One frame: input, pod physics, lap timing, camera, then the scene and HUD.",
+  "steps": [
+    {
+      "id": "frame_delta",
+      "plugin": "time.frame_delta"
+    },
+    {
+      "id": "input_poll",
+      "plugin": "input.poll"
+    },
+    {
+      "id": "keyboard_poll",
+      "plugin": "input.keyboard.poll"
+    },
+    {
+      "id": "drive_axes",
+      "plugin": "input.axis.combine",
+      "parameters": {
+        "config_path": "packages/racer/config/input_aggregation.json"
+      }
+    },
+    {
+      "id": "drive_buttons",
+      "plugin": "input.button.combine",
+      "parameters": {
+        "config_path": "packages/racer/config/input_aggregation.json"
+      }
+    },
+    {
+      "id": "stop_game_loop",
+      "plugin": "value.set_if",
+      "inputs": {
+        "condition": "racer.quit_pressed"
+      },
+      "parameters": {
+        "value": false
+      },
+      "outputs": {
+        "value": "game_running"
+      }
+    },
+    {
+      "id": "stop_outer_loop",
+      "plugin": "value.set_if",
+      "inputs": {
+        "condition": "racer.quit_pressed"
+      },
+      "parameters": {
+        "value": false
+      },
+      "outputs": {
+        "value": "outer_running"
+      }
+    },
+    {
+      "id": "drive",
+      "plugin": "racer.pod.drive"
+    },
+    {
+      "id": "lap_timer",
+      "plugin": "racer.lap.timer"
+    },
+    {
+      "id": "chase_camera",
+      "plugin": "racer.camera.chase"
+    },
+    {
+      "id": "render_prepare",
+      "plugin": "render.prepare"
+    },
+    {
+      "id": "frame_begin",
+      "plugin": "frame.gpu.begin",
+      "parameters": {
+        "clear_r": 0.78,
+        "clear_g": 0.7,
+        "clear_b": 0.58
+      }
+    },
+    {
+      "id": "draw_scene",
+      "plugin": "racer.scene.draw"
+    },
+    {
+      "id": "end_scene",
+      "plugin": "frame.gpu.end_scene"
+    },
+    {
+      "id": "overlay_fps_init",
+      "plugin": "overlay.fps_init"
+    },
+    {
+      "id": "overlay_fps_upload_quad",
+      "plugin": "overlay.fps_upload_quad"
+    },
+    {
+      "id": "hud_text",
+      "plugin": "racer.hud.text"
+    },
+    {
+      "id": "overlay_fps_draw",
+      "plugin": "overlay.fps_draw"
+    },
+    {
+      "id": "submit",
+      "plugin": "gpu.command_buffer_submit"
+    }
+  ]
+}

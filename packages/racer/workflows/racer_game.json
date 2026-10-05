@@ -1,0 +1,402 @@
+{
+  "name": "Star Wars Episode I Racer",
+  "active": true,
+  "settings": {
+    "executionTimeout": 0
+  },
+  "variables": {
+    "window_width": {
+      "name": "window_width",
+      "type": "number",
+      "defaultValue": 1920
+    },
+    "window_height": {
+      "name": "window_height",
+      "type": "number",
+      "defaultValue": 1080
+    },
+    "window_title": {
+      "name": "window_title",
+      "type": "string",
+      "defaultValue": "Star Wars Episode I Racer"
+    },
+    "renderer_type": {
+      "name": "renderer_type",
+      "type": "string",
+      "defaultValue": "auto"
+    },
+    "shader_racer_vert_path": {
+      "name": "shader_racer_vert_path",
+      "type": "string",
+      "defaultValue": "packages/racer/shaders/spirv/racer_model.vert.spv"
+    },
+    "shader_racer_frag_path": {
+      "name": "shader_racer_frag_path",
+      "type": "string",
+      "defaultValue": "packages/racer/shaders/spirv/racer_model.frag.spv"
+    }
+  },
+  "nodes": [
+    {
+      "id": "sdl_init",
+      "type": "sdl.init",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "sdl_window",
+      "type": "sdl.window.create",
+      "typeVersion": 1,
+      "position": [
+        200,
+        0
+      ]
+    },
+    {
+      "id": "gpu_init_viewport",
+      "type": "graphics.gpu.init_viewport",
+      "typeVersion": 1,
+      "position": [
+        400,
+        0
+      ],
+      "parameters": {
+        "present_mode": "auto",
+        "inputs": {
+          "width": "window_width",
+          "height": "window_height"
+        },
+        "outputs": {
+          "viewport_config": "viewport_config"
+        }
+      }
+    },
+    {
+      "id": "gpu_init_renderer",
+      "type": "graphics.gpu.init_renderer",
+      "typeVersion": 1,
+      "position": [
+        600,
+        0
+      ],
+      "parameters": {
+        "inputs": {
+          "renderer_type": "renderer_type"
+        },
+        "outputs": {
+          "selected_renderer": "selected_renderer"
+        }
+      }
+    },
+    {
+      "id": "gpu_init",
+      "type": "graphics.gpu.init",
+      "typeVersion": 1,
+      "position": [
+        800,
+        0
+      ],
+      "parameters": {
+        "inputs": {
+          "viewport_config": "viewport_config",
+          "selected_renderer": "selected_renderer"
+        },
+        "outputs": {
+          "gpu_handle": "gpu_handle"
+        }
+      }
+    },
+    {
+      "id": "compile_racer_vert",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        0
+      ],
+      "parameters": {
+        "stage": "vertex",
+        "output_key": "racer_vertex_shader",
+        "num_uniform_buffers": 1,
+        "num_samplers": 0
+      },
+      "inputs": {
+        "shader_path": "shader_racer_vert_path"
+      }
+    },
+    {
+      "id": "compile_racer_frag",
+      "type": "graphics.gpu.shader.compile",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        0
+      ],
+      "parameters": {
+        "stage": "fragment",
+        "output_key": "racer_fragment_shader",
+        "num_uniform_buffers": 1,
+        "num_samplers": 1
+      },
+      "inputs": {
+        "shader_path": "shader_racer_frag_path"
+      }
+    },
+    {
+      "id": "create_racer_pipeline",
+      "type": "graphics.gpu.pipeline.create",
+      "typeVersion": 1,
+      "position": [
+        1400,
+        0
+      ],
+      "parameters": {
+        "vertex_shader_key": "racer_vertex_shader",
+        "fragment_shader_key": "racer_fragment_shader",
+        "vertex_format": "position_uv_lmuv_normal",
+        "pipeline_key": "gpu_pipeline_racer",
+        "cull_mode": "none",
+        "release_shaders": 0
+      }
+    },
+    {
+      "id": "create_racer_blend_pipeline",
+      "type": "graphics.gpu.pipeline.create",
+      "typeVersion": 1,
+      "position": [
+        1600,
+        0
+      ],
+      "parameters": {
+        "vertex_shader_key": "racer_vertex_shader",
+        "fragment_shader_key": "racer_fragment_shader",
+        "vertex_format": "position_uv_lmuv_normal",
+        "pipeline_key": "gpu_pipeline_racer_blend",
+        "cull_mode": "none",
+        "alpha_blend": 1,
+        "depth_write": 0,
+        "release_shaders": 1
+      }
+    },
+    {
+      "id": "camera_setup",
+      "type": "camera.setup",
+      "typeVersion": 1,
+      "position": [
+        1800,
+        0
+      ],
+      "parameters": {
+        "outputs": {
+          "camera_state": "camera.state"
+        }
+      }
+    },
+    {
+      "id": "lighting",
+      "type": "lighting.setup",
+      "typeVersion": 1,
+      "position": [
+        2000,
+        0
+      ],
+      "parameters": {
+        "light_dir_x": -0.4,
+        "light_dir_y": -0.85,
+        "light_dir_z": -0.35,
+        "light_intensity": 2.2,
+        "ambient_r": 0.35,
+        "ambient_g": 0.38,
+        "ambient_b": 0.42,
+        "ambient_intensity": 1.4,
+        "exposure": 1.0
+      }
+    },
+    {
+      "id": "init_outer_running",
+      "type": "value.literal",
+      "typeVersion": 1,
+      "position": [
+        2200,
+        0
+      ],
+      "parameters": {
+        "value": true,
+        "outputs": {
+          "value": "outer_running"
+        }
+      }
+    },
+    {
+      "id": "outer_loop",
+      "type": "control.loop.while",
+      "typeVersion": 1,
+      "position": [
+        2400,
+        0
+      ],
+      "parameters": {
+        "condition_key": "outer_running",
+        "package": "racer",
+        "workflow": "racer_session"
+      }
+    },
+    {
+      "id": "exit",
+      "type": "system.exit",
+      "typeVersion": 1,
+      "position": [
+        2600,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "sdl_init": {
+      "main": {
+        "0": [
+          {
+            "node": "sdl_window",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "sdl_window": {
+      "main": {
+        "0": [
+          {
+            "node": "gpu_init_viewport",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "gpu_init_viewport": {
+      "main": {
+        "0": [
+          {
+            "node": "gpu_init_renderer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "gpu_init_renderer": {
+      "main": {
+        "0": [
+          {
+            "node": "gpu_init",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "gpu_init": {
+      "main": {
+        "0": [
+          {
+            "node": "compile_racer_vert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "compile_racer_vert": {
+      "main": {
+        "0": [
+          {
+            "node": "compile_racer_frag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "compile_racer_frag": {
+      "main": {
+        "0": [
+          {
+            "node": "create_racer_pipeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "create_racer_pipeline": {
+      "main": {
+        "0": [
+          {
+            "node": "create_racer_blend_pipeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "create_racer_blend_pipeline": {
+      "main": {
+        "0": [
+          {
+            "node": "camera_setup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "camera_setup": {
+      "main": {
+        "0": [
+          {
+            "node": "lighting",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "lighting": {
+      "main": {
+        "0": [
+          {
+            "node": "init_outer_running",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "init_outer_running": {
+      "main": {
+        "0": [
+          {
+            "node": "outer_loop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "outer_loop": {
+      "main": {
+        "0": [
+          {
+            "node": "exit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    }
+  }
+}

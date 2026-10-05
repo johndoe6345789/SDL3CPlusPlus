@@ -1,0 +1,40 @@
+#pragma once
+
+#include "services/interfaces/workflow/racer/world/racer_world_state.hpp"
+
+namespace sdl3cpp::services::impl {
+
+/// The vertex the racer shaders read (`position_uv_lmuv_normal`, 40
+/// bytes): position, uv, then (alpha, unused) in the lightmap slot and
+/// the N64 vertex colour in the normal slot.
+struct RacerGpuVertex {
+    float x, y, z;
+    float u, v;
+    float alpha, unused;
+    float r, g, b;
+};
+
+/// Copies `bytes` into a new vertex buffer. Null on failure.
+SDL_GPUBuffer* UploadRacerVertexBuffer(SDL_GPUDevice* device,
+                                       const std::vector<RacerGpuVertex>& v);
+
+/// The texture for a material: decoded, upscaled by the state's
+/// `textureScale` (Scale2x passes), mipmapped, and cached by material.
+RacerGpuTexture AcquireRacerTexture(SDL_GPUDevice* device,
+                                    RacerWorldState& state,
+                                    const RacerMaterialRef& material);
+
+/// Uploads one RGBA image, upscaled by `scale` (a power of two, or 1),
+/// with a full mip chain and an anisotropic repeating sampler.
+RacerGpuTexture UploadRacerTexture(SDL_GPUDevice* device, RacerTexture t,
+                                   int scale);
+
+/// Uploads every batch of a model, converted to engine space. When
+/// `ground` is given, its walkable triangles are added to it as well.
+RacerGpuModel UploadRacerModel(SDL_GPUDevice* device, RacerWorldState& state,
+                               const RacerModel& model, RacerGround* ground);
+
+/// Releases every GPU object the state owns.
+void ReleaseRacerWorld(SDL_GPUDevice* device, RacerWorldState& state);
+
+}  // namespace sdl3cpp::services::impl

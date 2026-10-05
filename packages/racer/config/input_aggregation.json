@@ -1,0 +1,57 @@
+{
+  "description": "Episode I Racer controls. Throttle and steering are the two axes racer.pod.drive reads; boost and repair are held buttons, as in the original. Key names are SDL scancode names.",
+  "inputBindings": {
+    "axes": {
+      "move_forward": {
+        "sources": [
+          {"type": "key", "key": "Up", "scale": 1.0},
+          {"type": "key", "key": "W", "scale": 1.0},
+          {"type": "key", "key": "Down", "scale": -1.0},
+          {"type": "key", "key": "S", "scale": -1.0},
+          {"type": "gamepad_axis", "axis": "trigger_right", "scale": 1.0,
+           "deadzone": 0.05},
+          {"type": "gamepad_axis", "axis": "trigger_left", "scale": -1.0,
+           "deadzone": 0.05},
+          {"type": "gamepad_axis", "axis": "left_y", "scale": -1.0,
+           "deadzone": 0.2}
+        ],
+        "outputs": ["input.move_forward"]
+      },
+      "move_right": {
+        "sources": [
+          {"type": "key", "key": "Right", "scale": 1.0},
+          {"type": "key", "key": "D", "scale": 1.0},
+          {"type": "key", "key": "Left", "scale": -1.0},
+          {"type": "key", "key": "A", "scale": -1.0},
+          {"type": "gamepad_axis", "axis": "left_x", "scale": 1.0,
+           "deadzone": 0.15}
+        ],
+        "outputs": ["input.move_right"]
+      }
+    },
+    "buttons": {
+      "quit": {
+        "sources": [
+          {"type": "key", "key": "Escape"},
+          {"type": "gamepad_button", "button": "start"}
+        ],
+        "outputs": ["racer.quit_pressed"]
+      },
+      "boost": {
+        "sources": [
+          {"type": "key", "key": "Space"},
+          {"type": "key", "key": "Left Shift"},
+          {"type": "gamepad_button", "button": "a"}
+        ],
+        "outputs": ["racer.boost_pressed"]
+      },
+      "repair": {
+        "sources": [
+          {"type": "key", "key": "R"},
+          {"type": "gamepad_button", "button": "x"}
+        ],
+        "outputs": ["racer.repair_pressed"]
+      }
+    }
+  }
+}

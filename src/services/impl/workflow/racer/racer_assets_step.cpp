@@ -29,6 +29,8 @@ void WorkflowRacerAssetsStep::Execute(const WorkflowStepDefinition& step,
     options.outDir =
         RacerStringParam(step, "out_dir", nullptr, "racer_generated");
     options.scale = RacerIntParam(step, "scale", 4);
+    options.trackTable = RacerStringParam(step, "track_table", nullptr,
+                                          options.trackTable);
     options.audioRate =
         static_cast<std::uint32_t>(RacerIntParam(step, "audio_rate", 44100));
     if (options.racerDir.empty()) {
@@ -49,10 +51,12 @@ void WorkflowRacerAssetsStep::Execute(const WorkflowStepDefinition& step,
     const int images = ExportRacerImages(options, logger_);
     const int audio = ExportRacerAudio(options, logger_);
     const int tracks = ExportRacerTracks(options, logger_);
+    const int models = ExportRacerModels(options, logger_);
     context.Set("racer.texture_count", textures);
     context.Set("racer.image_count", images);
     context.Set("racer.audio_count", audio);
     context.Set("racer.track_count", tracks);
+    context.Set("racer.model_count", models);
 }
 
 }  // namespace sdl3cpp::services::impl

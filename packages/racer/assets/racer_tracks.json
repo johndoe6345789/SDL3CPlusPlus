@@ -1,0 +1,282 @@
+{
+ "description": "Each track's model-block and spline-block index in the PC release. Model ids from swe1r-assets (MIT) Track.csv; spline ids matched by name from its SplineBlockItem.csv. Every main loop was checked to close. Racer pod models (Podd) from its Racer.csv.",
+ "tracks": [
+  {
+   "id": 0,
+   "name": "The Boonta Training Course",
+   "planet": "Tatooine",
+   "model": 115,
+   "spline": 74
+  },
+  {
+   "id": 1,
+   "name": "The Boonta Classic",
+   "planet": "Tatooine",
+   "model": 1,
+   "spline": 10
+  },
+  {
+   "id": 2,
+   "name": "Beedo's Wild Ride",
+   "planet": "Ando Prime",
+   "model": 130,
+   "spline": 11
+  },
+  {
+   "id": 3,
+   "name": "Howler Gorge",
+   "planet": "Ando Prime",
+   "model": 131,
+   "spline": 13
+  },
+  {
+   "id": 4,
+   "name": "Andobi Mountain Run",
+   "planet": "Ando Prime",
+   "model": 132,
+   "spline": 14
+  },
+  {
+   "id": 5,
+   "name": "Ando Prime Centrum",
+   "planet": "Ando Prime",
+   "model": 128,
+   "spline": 6
+  },
+  {
+   "id": 6,
+   "name": "Aquilaris Classic",
+   "planet": "Aquilaris",
+   "model": 133,
+   "spline": 16
+  },
+  {
+   "id": 7,
+   "name": "Sunken City",
+   "planet": "Aquilaris",
+   "model": 134,
+   "spline": 18
+  },
+  {
+   "id": 8,
+   "name": "Bumpy's Breakers",
+   "planet": "Aquilaris",
+   "model": 135,
+   "spline": 28
+  },
+  {
+   "id": 9,
+   "name": "Scrapper's Run",
+   "planet": "Ord Ibanna",
+   "model": 136,
+   "spline": 29
+  },
+  {
+   "id": 10,
+   "name": "Dethro's Revenge",
+   "planet": "Ord Ibanna",
+   "model": 137,
+   "spline": 32
+  },
+  {
+   "id": 11,
+   "name": "Abyss",
+   "planet": "Ord Ibanna",
+   "model": 138,
+   "spline": 33
+  },
+  {
+   "id": 12,
+   "name": "Baroo Coast",
+   "planet": "Baroonda",
+   "model": 139,
+   "spline": 0
+  },
+  {
+   "id": 13,
+   "name": "Grabvine Gateway",
+   "planet": "Baroonda",
+   "model": 140,
+   "spline": 1
+  },
+  {
+   "id": 14,
+   "name": "Fire Mountain Rally",
+   "planet": "Baroonda",
+   "model": 141,
+   "spline": 51
+  },
+  {
+   "id": 15,
+   "name": "Inferno",
+   "planet": "Baroonda",
+   "model": 129,
+   "spline": 50
+  },
+  {
+   "id": 16,
+   "name": "Mon Gazza Speedway",
+   "planet": "Mon Gazza",
+   "model": 142,
+   "spline": 2
+  },
+  {
+   "id": 17,
+   "name": "Spice Mine Run",
+   "planet": "Mon Gazza",
+   "model": 143,
+   "spline": 53
+  },
+  {
+   "id": 18,
+   "name": "Zugga Challenge",
+   "planet": "Mon Gazza",
+   "model": 144,
+   "spline": 54
+  },
+  {
+   "id": 19,
+   "name": "Vengeance",
+   "planet": "Oovo IV",
+   "model": 145,
+   "spline": 3
+  },
+  {
+   "id": 20,
+   "name": "Executioner",
+   "planet": "Oovo IV",
+   "model": 148,
+   "spline": 4
+  },
+  {
+   "id": 21,
+   "name": "The Gauntlet",
+   "planet": "Oovo IV",
+   "model": 231,
+   "spline": 5
+  },
+  {
+   "id": 22,
+   "name": "Malastare 100",
+   "planet": "Malastare",
+   "model": 232,
+   "spline": 7
+  },
+  {
+   "id": 23,
+   "name": "Dug Derby",
+   "planet": "Malastare",
+   "model": 233,
+   "spline": 8
+  },
+  {
+   "id": 24,
+   "name": "Sebulba's Legacy",
+   "planet": "Malastare",
+   "model": 315,
+   "spline": 9
+  }
+ ],
+ "racers": [
+  {
+   "name": "Anakin Skywalker",
+   "podd": 2
+  },
+  {
+   "name": "Teemto Pagalies",
+   "podd": 4
+  },
+  {
+   "name": "Sebulba",
+   "podd": 6
+  },
+  {
+   "name": "Ratts Tyerell",
+   "podd": 8
+  },
+  {
+   "name": "Aldar Beedo",
+   "podd": 9
+  },
+  {
+   "name": "Mawhonic",
+   "podd": 12
+  },
+  {
+   "name": "Ark \"Bumpy\" Roose",
+   "podd": 14
+  },
+  {
+   "name": "Mars Guo",
+   "podd": 16
+  },
+  {
+   "name": "Wan Sandage",
+   "podd": 17
+  },
+  {
+   "name": "Ebe E. Endocott",
+   "podd": 20
+  },
+  {
+   "name": "Dud Bolt",
+   "podd": 22
+  },
+  {
+   "name": "Gasgano",
+   "podd": 24
+  },
+  {
+   "name": "Clegg Holdfast",
+   "podd": 26
+  },
+  {
+   "name": "Elan Mak",
+   "podd": 28
+  },
+  {
+   "name": "Neva Kee",
+   "podd": 30
+  },
+  {
+   "name": "Bozziee Baranta",
+   "podd": 32
+  },
+  {
+   "name": "Boles Roor",
+   "podd": 34
+  },
+  {
+   "name": "Ody Mandrell",
+   "podd": 36
+  },
+  {
+   "name": "Fud Sang",
+   "podd": 38
+  },
+  {
+   "name": "Ben Quadinaros",
+   "podd": 40
+  },
+  {
+   "name": "Slide Paramita",
+   "podd": 42
+  },
+  {
+   "name": "Toy Dampner",
+   "podd": 44
+  },
+  {
+   "name": "Bullseye Navior",
+   "podd": 46
+  },
+  {
+   "name": "Jinn Reeso",
+   "podd": 299
+  },
+  {
+   "name": "Cy Yunga",
+   "podd": 301
+  }
+ ]
+}

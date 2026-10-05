@@ -1,27 +1,51 @@
 {
   "name": "Star Wars Episode I Racer",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "id": "racer",
   "type": "game",
   "category": "demo",
-  "description": "Faithful recreation of Star Wars Episode I Racer, with its assets decoded and upscaled from the install",
-  "status": "prototype",
+  "description": "Episode I Racer rebuilt on the engine: every track and pod decoded from the game's own data, textures upscaled 4x, raced with new pod physics",
+  "status": "playable prototype",
   "launch_options": [
     {
       "env": "RACER_DIR",
       "label": "Install directory",
       "kind": "directory",
       "help": "The folder holding SWEP1RCR.EXE and data/."
+    },
+    {
+      "env": "RACER_TRACK",
+      "label": "Track",
+      "kind": "text",
+      "default": "1",
+      "help": "0-24 or part of a name, e.g. 'Boonta Classic', 'Inferno'."
+    },
+    {
+      "env": "RACER_POD",
+      "label": "Racer",
+      "kind": "text",
+      "default": "Anakin",
+      "help": "Part of a racer's name, e.g. 'Sebulba'."
     }
   ],
-  "defaultWorkflow": "workflows/racer_assets.json",
+  "defaultWorkflow": "workflows/racer_game.json",
   "workflows": [
+    "workflows/racer_game.json",
+    "workflows/racer_session.json",
+    "workflows/racer_frame.json",
     "workflows/racer_assets.json"
   ],
-  "assets": [],
-  "config": [],
+  "assets": [
+    "assets/racer_tracks.json"
+  ],
+  "config": [
+    "config/input_aggregation.json"
+  ],
   "scene": [],
-  "shaders": [],
+  "shaders": [
+    "shaders/spirv/racer_model.vert.spv",
+    "shaders/spirv/racer_model.frag.spv"
+  ],
   "import_notes": "Reads an existing Episode I Racer install at run time and ships none of its data. Point RACER_DIR at your own copy.",
   "bundled": false
 }

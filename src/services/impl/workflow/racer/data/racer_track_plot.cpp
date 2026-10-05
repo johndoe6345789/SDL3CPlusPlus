@@ -1,83 +1,69 @@
 #include "services/interfaces/workflow/racer/data/racer_track_plot.hpp"
 
 #include <algorithm>
-#include <cmath>
+#include <array>
 #include <cstddef>
-#include <utility>
 
 namespace sdl3cpp::services::impl {
 namespace {
 
-struct Bounds {
-    float minX = 0.0f, maxX = 0.0f, minZ = 0.0f, maxZ = 0.0f;
+using Colour = std::array<std::uint8_t, 3>;
+constexpr Colour kMain{255, 255, 255};
+constexpr Colour kBranch{255, 150, 40};
+constexpr int kSteps = 24;
+
+struct Canvas {
+    std::vector<std::uint8_t>& rgba;
+    int size;
+    float minX, minY, scale;
+
+    void Plot(const RacerVec3& p, const Colour& c) {
+        const int x = static_cast<int>(8 + (p.x - minX) * scale);
+        const int y = static_cast<int>(8 + (p.y - minY) * scale);
+        if (x < 0 || y < 0 || x >= size || y >= size) return;
+        const std::size_t at = 4 * (static_cast<std::size_t>(y) * size + x);
+        rgba[at] = c[0];
+        rgba[at + 1] = c[1];
+        rgba[at + 2] = c[2];
+        rgba[at + 3] = 255;
+    }
 };
 
-Bounds FindBounds(const std::vector<RacerSplineRecord>& records) {
-    Bounds bounds;
-    bool first = true;
-    for (const auto& record : records) {
-        for (const auto& p : record.points) {
-            if (first) {
-                bounds = {p.x, p.x, p.z, p.z};
-                first = false;
-                continue;
-            }
-            bounds.minX = std::min(bounds.minX, p.x);
-            bounds.maxX = std::max(bounds.maxX, p.x);
-            bounds.minZ = std::min(bounds.minZ, p.z);
-            bounds.maxZ = std::max(bounds.maxZ, p.z);
-        }
-    }
-    return bounds;
-}
-
-void Put(std::vector<std::uint8_t>& rgba, int size, int x, int y,
-         const std::uint8_t* colour) {
-    if (x < 0 || y < 0 || x >= size || y >= size) return;
-    const std::size_t at = 4 * (static_cast<std::size_t>(y) * size + x);
-    rgba[at] = colour[0];
-    rgba[at + 1] = colour[1];
-    rgba[at + 2] = colour[2];
-    rgba[at + 3] = 255;
-}
-
-// Plain DDA line; enough for a diagnostic picture.
-void Line(std::vector<std::uint8_t>& rgba, int size, float x0, float y0,
-          float x1, float y1, const std::uint8_t* colour) {
-    const int steps = static_cast<int>(
-        std::max(std::fabs(x1 - x0), std::fabs(y1 - y0)) + 1.0f);
-    for (int s = 0; s <= steps; ++s) {
-        const float t = static_cast<float>(s) / steps;
-        Put(rgba, size, static_cast<int>(x0 + (x1 - x0) * t),
-            static_cast<int>(y0 + (y1 - y0) * t), colour);
+void Curve(Canvas& canvas, const RacerSplineSegment& from,
+           const RacerSplineSegment& to, const Colour& colour) {
+    for (int s = 0; s <= kSteps * 8; ++s) {
+        canvas.Plot(RacerSplinePoint(from, to, s / (kSteps * 8.f)), colour);
     }
 }
 
 }  // namespace
 
 std::vector<std::uint8_t> PlotRacerTrack(
-    const std::vector<RacerSplineRecord>& records, int size) {
+    const std::vector<RacerSplineSegment>& segments, int size) {
     std::vector<std::uint8_t> rgba(
         4 * static_cast<std::size_t>(size) * size, 0);
-    if (records.size() < 2 || size < 2) return rgba;
+    if (segments.size() < 2 || size < 32) return rgba;
+    float minX = segments[0].knot.x, maxX = minX;
+    float minY = segments[0].knot.y, maxY = minY;
+    for (const auto& s : segments) {
+        minX = std::min(minX, s.knot.x);
+        maxX = std::max(maxX, s.knot.x);
+        minY = std::min(minY, s.knot.y);
+        maxY = std::max(maxY, s.knot.y);
+    }
+    const float span = std::max({maxX - minX, maxY - minY, 1.f});
+    Canvas canvas{rgba, size, minX, minY, (size - 16) / span};
 
-    const Bounds b = FindBounds(records);
-    const float span = std::max({b.maxX - b.minX, b.maxZ - b.minZ, 1.0f});
-    const float scale = (size - 16) / span;
-    auto toPixel = [&](const RacerVec3& p) {
-        return std::pair<float, float>{8 + (p.x - b.minX) * scale,
-                                       8 + (p.z - b.minZ) * scale};
-    };
-    const std::uint8_t colours[3][3] = {
-        {255, 90, 90}, {90, 255, 90}, {90, 160, 255}};
-
-    for (std::size_t lane = 0; lane < 3; ++lane) {
-        for (std::size_t i = 0; i < records.size(); ++i) {
-            const std::size_t next = (i + 1) % records.size();
-            const auto from = toPixel(records[i].points[lane]);
-            const auto to = toPixel(records[next].points[lane]);
-            Line(rgba, size, from.first, from.second, to.first, to.second,
-                 colours[lane]);
+    const auto main = RacerSplineMainLoop(segments);
+    const int count = static_cast<int>(segments.size());
+    for (int i = 0; i < count; ++i) {
+        for (int k = 0; k < segments[i].successorCount && k < 2; ++k) {
+            const int to = segments[i].successors[k];
+            if (to < 0 || to >= count) continue;
+            const bool onMain =
+                k == 0 && std::find(main.begin(), main.end(), i) != main.end();
+            Curve(canvas, segments[i], segments[to],
+                  onMain ? kMain : kBranch);
         }
     }
     return rgba;

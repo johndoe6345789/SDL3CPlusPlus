@@ -1191,17 +1191,44 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/racer/racer_step_params.cpp
         src/services/impl/workflow/racer/data/racer_asset_export.cpp
         src/services/impl/workflow/racer/data/racer_asset_io.cpp
+        src/services/impl/workflow/racer/data/racer_asset_library.cpp
         src/services/impl/workflow/racer/data/racer_audio_export.cpp
-        src/services/impl/workflow/racer/data/racer_block_table.cpp
+        src/services/impl/workflow/racer/data/racer_block.cpp
+        src/services/impl/workflow/racer/data/racer_image_export.cpp
+        src/services/impl/workflow/racer/data/racer_model.cpp
+        src/services/impl/workflow/racer/data/racer_model_material.cpp
+        src/services/impl/workflow/racer/data/racer_model_mesh.cpp
+        src/services/impl/workflow/racer/data/racer_model_nodes.cpp
+        src/services/impl/workflow/racer/data/racer_model_vertex.cpp
+        src/services/impl/workflow/racer/data/racer_obj_export.cpp
+        src/services/impl/workflow/racer/data/racer_palette.cpp
         src/services/impl/workflow/racer/data/racer_spline.cpp
         src/services/impl/workflow/racer/data/racer_texture.cpp
+        src/services/impl/workflow/racer/data/racer_texture_mirror.cpp
         src/services/impl/workflow/racer/data/racer_texture_sheet.cpp
         src/services/impl/workflow/racer/data/racer_track_export.cpp
         src/services/impl/workflow/racer/data/racer_track_plot.cpp
+        src/services/impl/workflow/racer/data/racer_track_table.cpp
         src/services/impl/workflow/racer/data/racer_upscale.cpp
         src/services/impl/workflow/racer/data/racer_wav.cpp
         src/services/impl/workflow/racer/data/racer_wav_resample.cpp
         src/services/impl/workflow/racer/data/racer_wav_write.cpp
+        src/services/impl/workflow/racer/world/racer_ground.cpp
+        src/services/impl/workflow/racer/world/racer_model_upload.cpp
+        src/services/impl/workflow/racer/world/racer_texture_cache.cpp
+        src/services/impl/workflow/racer/world/racer_vertex_buffer.cpp
+        src/services/impl/workflow/racer/world/racer_world_build.cpp
+        src/services/impl/workflow/racer/world/racer_world_load_step.cpp
+        src/services/impl/workflow/racer/player/racer_lap_progress.cpp
+        src/services/impl/workflow/racer/player/racer_lap_timer_step.cpp
+        src/services/impl/workflow/racer/player/racer_pod_drive_step.cpp
+        src/services/impl/workflow/racer/player/racer_pod_engines.cpp
+        src/services/impl/workflow/racer/player/racer_pod_physics.cpp
+        src/services/impl/workflow/racer/render/racer_chase_cam_step.cpp
+        src/services/impl/workflow/racer/render/racer_hud_format.cpp
+        src/services/impl/workflow/racer/render/racer_hud_step.cpp
+        src/services/impl/workflow/racer/render/racer_model_draw.cpp
+        src/services/impl/workflow/racer/render/racer_scene_draw_step.cpp
         src/services/impl/workflow/fs2024/fs2024_step_params.cpp
         src/services/impl/workflow/fs2024/tiles/fs2024_load_pool.cpp
         src/services/impl/workflow/fs2024/tiles/fs2024_load_pool_queue.cpp
@@ -2426,28 +2453,47 @@ target_link_libraries(stunts_track_mesh_test PRIVATE
 )
 add_test(NAME stunts_track_mesh_test COMMAND stunts_track_mesh_test)
 
-add_executable(racer_block_table_test)
-target_sources(racer_block_table_test PRIVATE tests/racer_block_table_test.cpp)
-target_sources(racer_block_table_test PRIVATE src/services/impl/workflow/racer/data/racer_block_table.cpp)
-target_include_directories(racer_block_table_test PRIVATE
-    "${CMAKE_CURRENT_SOURCE_DIR}/src"
-)
-target_link_libraries(racer_block_table_test PRIVATE
-    GTest::gtest_main
-)
-add_test(NAME racer_block_table_test COMMAND racer_block_table_test)
-
 add_executable(racer_texture_test)
 target_sources(racer_texture_test PRIVATE tests/racer_texture_test.cpp)
-target_sources(racer_texture_test PRIVATE src/services/impl/workflow/racer/data/racer_block_table.cpp)
 target_sources(racer_texture_test PRIVATE src/services/impl/workflow/racer/data/racer_texture.cpp)
+target_sources(racer_texture_test PRIVATE src/services/impl/workflow/racer/data/racer_palette.cpp)
+target_sources(racer_texture_test PRIVATE src/services/impl/workflow/racer/data/racer_texture_mirror.cpp)
 target_include_directories(racer_texture_test PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )
 target_link_libraries(racer_texture_test PRIVATE
     GTest::gtest_main
+    glm::glm
 )
 add_test(NAME racer_texture_test COMMAND racer_texture_test)
+
+add_executable(racer_model_test)
+target_sources(racer_model_test PRIVATE tests/racer_model_test.cpp)
+target_sources(racer_model_test PRIVATE src/services/impl/workflow/racer/data/racer_model.cpp)
+target_sources(racer_model_test PRIVATE src/services/impl/workflow/racer/data/racer_model_nodes.cpp)
+target_sources(racer_model_test PRIVATE src/services/impl/workflow/racer/data/racer_model_mesh.cpp)
+target_sources(racer_model_test PRIVATE src/services/impl/workflow/racer/data/racer_model_vertex.cpp)
+target_sources(racer_model_test PRIVATE src/services/impl/workflow/racer/data/racer_model_material.cpp)
+target_include_directories(racer_model_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(racer_model_test PRIVATE
+    GTest::gtest_main
+    glm::glm
+)
+add_test(NAME racer_model_test COMMAND racer_model_test)
+
+add_executable(racer_block_test)
+target_sources(racer_block_test PRIVATE tests/racer_block_test.cpp)
+target_sources(racer_block_test PRIVATE src/services/impl/workflow/racer/data/racer_block.cpp)
+target_include_directories(racer_block_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(racer_block_test PRIVATE
+    GTest::gtest_main
+    glm::glm
+)
+add_test(NAME racer_block_test COMMAND racer_block_test)
 
 add_executable(racer_upscale_test)
 target_sources(racer_upscale_test PRIVATE tests/racer_upscale_test.cpp)
@@ -2481,8 +2527,48 @@ target_include_directories(racer_spline_test PRIVATE
 )
 target_link_libraries(racer_spline_test PRIVATE
     GTest::gtest_main
+    glm::glm
 )
 add_test(NAME racer_spline_test COMMAND racer_spline_test)
+
+add_executable(racer_pod_physics_test)
+target_sources(racer_pod_physics_test PRIVATE tests/racer_pod_physics_test.cpp)
+target_sources(racer_pod_physics_test PRIVATE src/services/impl/workflow/racer/player/racer_pod_physics.cpp)
+target_sources(racer_pod_physics_test PRIVATE src/services/impl/workflow/racer/player/racer_pod_engines.cpp)
+target_include_directories(racer_pod_physics_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(racer_pod_physics_test PRIVATE
+    GTest::gtest_main
+    glm::glm
+)
+add_test(NAME racer_pod_physics_test COMMAND racer_pod_physics_test)
+
+add_executable(racer_ground_test)
+target_sources(racer_ground_test PRIVATE tests/racer_ground_test.cpp)
+target_sources(racer_ground_test PRIVATE src/services/impl/workflow/racer/world/racer_ground.cpp)
+target_include_directories(racer_ground_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(racer_ground_test PRIVATE
+    GTest::gtest_main
+    glm::glm
+)
+add_test(NAME racer_ground_test COMMAND racer_ground_test)
+
+add_executable(racer_lap_test)
+target_sources(racer_lap_test PRIVATE tests/racer_lap_test.cpp)
+target_sources(racer_lap_test PRIVATE src/services/impl/workflow/racer/player/racer_lap_progress.cpp)
+target_sources(racer_lap_test PRIVATE src/services/impl/workflow/racer/render/racer_hud_format.cpp)
+target_include_directories(racer_lap_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(racer_lap_test PRIVATE
+    GTest::gtest_main
+    glm::glm
+    ${SDL_TARGET}
+)
+add_test(NAME racer_lap_test COMMAND racer_lap_test)
 
 add_executable(stunts_huffman_test)
 target_sources(stunts_huffman_test PRIVATE tests/stunts_huffman_test.cpp)

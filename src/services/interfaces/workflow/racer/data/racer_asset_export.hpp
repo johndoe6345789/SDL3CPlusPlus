@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace sdl3cpp::services::impl {
@@ -23,6 +24,7 @@ struct RacerExportOptions {
     std::filesystem::path outDir;
     int scale = 4;
     std::uint32_t audioRate = 44100;
+    std::string trackTable = "packages/racer/assets/racer_tracks.json";
 };
 
 /// Decodes lev01's texture block and writes each texture upscaled.
@@ -37,7 +39,12 @@ int ExportRacerImages(const RacerExportOptions& options,
 int ExportRacerAudio(const RacerExportOptions& options,
                      const std::shared_ptr<ILogger>& logger);
 
-/// Plots every track-length spline in lev01 as a top-down PNG.
+/// Writes each track's geometry as Wavefront OBJ with an MTL whose maps
+/// are the upscaled textures, for viewing in any modelling tool.
+int ExportRacerModels(const RacerExportOptions& options,
+                      const std::shared_ptr<ILogger>& logger);
+
+/// Plots every track's spline as a top-down PNG.
 int ExportRacerTracks(const RacerExportOptions& options,
                       const std::shared_ptr<ILogger>& logger);
 

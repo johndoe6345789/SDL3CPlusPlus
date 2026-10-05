@@ -1,51 +1,77 @@
 #include "services/interfaces/workflow/racer/data/racer_spline.hpp"
 
-#include <cstring>
+#include "services/interfaces/workflow/racer/data/racer_big_endian.hpp"
 
 namespace sdl3cpp::services::impl {
 namespace {
 
-std::uint32_t ReadBe32(const std::uint8_t* at) {
-    return (static_cast<std::uint32_t>(at[0]) << 24) |
-           (static_cast<std::uint32_t>(at[1]) << 16) |
-           (static_cast<std::uint32_t>(at[2]) << 8) |
-           static_cast<std::uint32_t>(at[3]);
+RacerVec3 ReadVec(const RacerBigEndianReader& r, std::size_t at) {
+    return {r.F32(at), r.F32(at + 4), r.F32(at + 8)};
 }
 
-float ReadBeFloat(const std::uint8_t* at) {
-    const std::uint32_t bits = ReadBe32(at);
-    float value = 0.0f;
-    std::memcpy(&value, &bits, sizeof(value));
-    return value;
-}
-
-RacerVec3 ReadPoint(const std::uint8_t* at) {
-    // Stored as x, z, then height.
-    return {ReadBeFloat(at), ReadBeFloat(at + 8), ReadBeFloat(at + 4)};
+std::int16_t Link(const RacerBigEndianReader& r, std::size_t at, int slot,
+                  int count) {
+    return slot < count ? r.I16(at) : static_cast<std::int16_t>(-1);
 }
 
 }  // namespace
 
-std::vector<RacerSplineRecord> ReadRacerSpline(const std::uint8_t* data,
-                                               std::size_t size) {
-    if (size < 8) return {};
-    const std::size_t count = ReadBe32(data + 4);
-    if (size < count * kRacerSplineRecordBytes) return {};
+std::vector<RacerSplineSegment> ReadRacerSpline(
+    const std::vector<std::uint8_t>& item) {
+    const RacerBigEndianReader r(item);
+    if (!r.Has(0, kRacerSplineHeaderBytes)) return {};
+    const std::int32_t count = r.I32(4);
+    const std::size_t bytes = kRacerSplineSegmentBytes * count;
+    if (count <= 0 || !r.Has(kRacerSplineHeaderBytes, bytes)) return {};
 
-    std::vector<RacerSplineRecord> records;
-    records.reserve(count);
-    for (std::size_t i = 0; i < count; ++i) {
-        const std::uint8_t* base = data + i * kRacerSplineRecordBytes;
-        RacerSplineRecord record;
-        record.id = ReadBe32(base + 20) >> 16;
-        record.prevId = ReadBe32(base + 24) >> 16;
-        // Words 8-10, 14-16 and 17-19 hold three points (word 13 is 1.0).
-        record.points[0] = ReadPoint(base + 32);
-        record.points[1] = ReadPoint(base + 56);
-        record.points[2] = ReadPoint(base + 68);
-        records.push_back(record);
+    std::vector<RacerSplineSegment> segments(count);
+    for (std::int32_t i = 0; i < count; ++i) {
+        const std::size_t at =
+            kRacerSplineHeaderBytes + kRacerSplineSegmentBytes * i;
+        RacerSplineSegment& s = segments[i];
+        // Counts at +0/+2; successor ids at +4 and +10, predecessor ids
+        // at +8 and +6. Slots beyond a count hold leftover bytes.
+        s.predecessorCount = r.U16(at);
+        s.successorCount = r.U16(at + 2);
+        s.successors = {Link(r, at + 4, 0, s.successorCount),
+                        Link(r, at + 10, 1, s.successorCount)};
+        s.predecessors = {Link(r, at + 8, 0, s.predecessorCount),
+                          Link(r, at + 6, 1, s.predecessorCount)};
+        s.knot = ReadVec(r, at + 0x10);
+        s.controlBefore = ReadVec(r, at + 0x28);
+        s.controlAfter = ReadVec(r, at + 0x34);
     }
-    return records;
+    return segments;
+}
+
+std::vector<int> RacerSplineMainLoop(
+    const std::vector<RacerSplineSegment>& segments) {
+    const int count = static_cast<int>(segments.size());
+    std::vector<int> loop;
+    std::vector<bool> seen(segments.size(), false);
+    for (int at = 0; at >= 0 && at < count && !seen[at];) {
+        seen[at] = true;
+        loop.push_back(at);
+        at = segments[at].successors[0];
+        if (at == 0) return loop;
+    }
+    return {};
+}
+
+RacerVec3 RacerSplinePoint(const RacerSplineSegment& from,
+                           const RacerSplineSegment& to, float t) {
+    const float u = 1.f - t;
+    const float a = u * u * u, b = 3 * u * u * t, c = 3 * u * t * t,
+                d = t * t * t;
+    auto mix = [&](float p0, float p1, float p2, float p3) {
+        return a * p0 + b * p1 + c * p2 + d * p3;
+    };
+    return {mix(from.knot.x, from.controlAfter.x, to.controlBefore.x,
+                to.knot.x),
+            mix(from.knot.y, from.controlAfter.y, to.controlBefore.y,
+                to.knot.y),
+            mix(from.knot.z, from.controlAfter.z, to.controlBefore.z,
+                to.knot.z)};
 }
 
 }  // namespace sdl3cpp::services::impl

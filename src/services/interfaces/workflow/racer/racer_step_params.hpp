@@ -16,4 +16,8 @@ std::string RacerStringParam(const WorkflowStepDefinition& step,
 int RacerIntParam(const WorkflowStepDefinition& step,
                   const std::string& name, int fallback);
 
+/// A numeric parameter as float, else `fallback`.
+float RacerFloatParam(const WorkflowStepDefinition& step,
+                      const std::string& name, float fallback);
+
 }  // namespace sdl3cpp::services::impl
