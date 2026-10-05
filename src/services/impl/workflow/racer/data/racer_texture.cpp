@@ -15,20 +15,18 @@ std::uint8_t Expand5(std::uint32_t v) {
     return static_cast<std::uint8_t>((v * 255) / 31);
 }
 
-std::uint8_t Expand6(std::uint32_t v) {
-    return static_cast<std::uint8_t>((v * 255) / 63);
-}
-
 }  // namespace
 
 std::array<std::uint8_t, 16 * 4> DecodeRacerPalette(const std::uint8_t* raw) {
+    // ARGB1555, big-endian: red bits 11-15, green 6-10, blue 1-5, and
+    // alpha in bit 0. Layout per the swe1r-tools texture extractor.
     std::array<std::uint8_t, 16 * 4> out{};
     for (std::size_t i = 0; i < 16; ++i) {
         const std::uint32_t value = (raw[2 * i] << 8) | raw[2 * i + 1];
-        out[4 * i + 0] = Expand5(value >> 11);
-        out[4 * i + 1] = Expand6((value >> 5) & 63);
-        out[4 * i + 2] = Expand5(value & 31);
-        out[4 * i + 3] = 255;
+        out[4 * i + 0] = Expand5((value >> 11) & 31);
+        out[4 * i + 1] = Expand5((value >> 6) & 31);
+        out[4 * i + 2] = Expand5((value >> 1) & 31);
+        out[4 * i + 3] = (value & 1) ? 255 : 0;
     }
     return out;
 }

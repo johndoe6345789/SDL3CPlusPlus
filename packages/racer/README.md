@@ -115,18 +115,48 @@ confirmed. About 51 entries have 20 or more records and plot as circuits
 have straight lines across the interior, which suggests the ring order
 does not always follow array order, not yet checked.
 
-## Texture pairing: unresolved
+## Texture pairing and palettes
 
-Two pairing rules were tested by eye on the full texture sheet:
+Palettes are **ARGB1555**, big-endian, 16 entries per 32-byte palette:
+red in bits 11-15, green 6-10, blue 1-5, alpha in bit 0. An earlier
+version of this decoder read them as RGB565, which made most textures
+look purple and yellow. With ARGB1555 the full texture sheet reads as
+natural sand, stone, metal, grass and sky palettes.
 
-- palette before the texture (current code): first textures look coherent,
-  many later ones are dominated by one blue-and-yellow palette;
-- palette after the texture: more varied in places, but the same
-  blue-and-yellow tone recurs.
+The pairing rule (each texture takes the nearest palette before it in
+block order) now looks right across the sheet. The palette-after rule has
+not been tested under the corrected format.
 
-Neither is confirmed. The tones may be real art, which would mean the
-rule is right. A reference is needed to decide. The contact sheet is at
-`racer_generated/textures/sheet.png`.
+Texture dimensions are not stored in the block. The community tools take
+them from XML; the 2048-byte entries are 64x64 at 4 bits per pixel, which
+matches the sizes seen here.
+
+References for the formats (facts only, no code copied):
+
+- [OpenSWE1R swe1r-tools](https://github.com/OpenSWE1R/swe1r-tools): texture
+  and spline extractors, GPL-2.0-or-later. The source of the ARGB1555 layout
+  and the 4-bit index packing.
+- [OpenSWE1R swe1r-re](https://github.com/OpenSWE1R/swe1r-re): reverse
+  engineering notes for the game.
+- [tim-tim707 SW_RACER_RE](https://github.com/tim-tim707/SW_RACER_RE): a
+  decompilation project. It reads the same four blocks.
+
+## Models: N64 display lists
+
+The community notes that some model data is N64 display lists in the
+F3DEX2 (GBI) form, and that the blocks are shared with the Nintendo 64
+version. That fits the `Part` chunks here, and gives a route to the vertex
+layout: N64 `Vtx` records are 16 bytes (three s16 positions, a u16 flag,
+two s16 texture coordinates, four colour or normal bytes). Not yet checked
+against a `Part` chunk.
+
+## Spline record: disagreement
+
+[swe1r-tools](https://github.com/OpenSWE1R/swe1r-tools) places the position
+at bytes 16-27 and a normal at 28-39. The plots in this package show
+readable float triples at bytes 32-43 and 56-67 and 68-79, and a closed
+track when plotted from there. The community layout may mislabel the
+fields. The float reading is what the plots use.
 
 ## Generated assets
 
