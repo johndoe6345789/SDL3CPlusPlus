@@ -4,7 +4,7 @@ A modernisation of *Star Wars Episode I Racer* (LucasArts, 1999). The
 package ships no game data. It reads an existing install, decodes what it
 needs, and writes upscaled or rebuilt assets to `packages/racer/generated/`.
 
-Status: **format survey.** Block tables, model chunk tags, and texture
+Status: **first prototype** (asset pipeline runs end to end). Format survey. Block tables, model chunk tags, and texture
 format (4-bit indexed, RGB565 palettes) are mapped. The palette pairing
 is unverified, and the vertex layout is not yet known.
 UI images and audio have a first modernised pass.
@@ -98,6 +98,13 @@ acer_generated\` by the tools below, outside the repo:
 - `wavs_44k/`: 2479 WAVs resampled from 11.025/22.05 kHz to 44.1 kHz.
 
 ## Tools
+
+Prototype: one command runs the whole pipeline into a single folder:
+
+    python packages/racer/tools/racer_prototype.py "<game>/data" <out_dir>
+
+It writes `blocks/`, `textures/`, `images_x4/` and `wavs_44k/` (about
+two minutes on a desktop).
 
     python packages/racer/tools/racer_extract.py \
         "<game>/data/lev01" <out_dir>
