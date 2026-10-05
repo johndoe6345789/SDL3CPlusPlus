@@ -5,7 +5,8 @@ package ships no game data. It reads an existing install, decodes what it
 needs, and writes upscaled or rebuilt assets to `packages/racer/generated/`.
 
 Status: **format survey.** Block tables, model chunk tags, and texture
-entry sizes are mapped; the texture palette and vertex layout are not.
+format (4-bit indexed, RGB565 palettes) are mapped. The palette pairing
+is unverified, and the vertex layout is not yet known.
 UI images and audio have a first modernised pass.
 
 ## Install layout (`<game>/data`)
@@ -77,15 +78,23 @@ The texture block has no tags. Entry sizes give the format:
 | 32                 | 759   | small 4-bit tile or palette                 |
 
 A 4-bit greyscale render of the 2048-byte entries shows clear shapes
-(hooks, rings, bands), while RGB565 renders are noise. So they are
-indexed, but the palette is not located yet. The palette is the
-open question for texture decoding.
+(hooks, rings, bands), so they are indexed pixels.
+
+Palettes: the 32-byte entries are 16 big-endian RGB565 colours. Decoded,
+they give plausible sand, grass, sky and metal tones. In file order each
+2048-byte texture sits directly beside a 32-byte palette (345 and 332
+adjacent pairs), so the decoder pairs each texture with the nearest
+palette before it. The pairing is a heuristic and not yet verified
+against a known image. `tools/racer_textures.py` writes 350 PNGs; most
+look coherent (spirals, stripes, sand), a few may use the wrong palette.
 
 ## Generated assets
 
-Written to `D:acer_generated\` by the tools below, outside the repo:
+Written to `D:
+acer_generated\` by the tools below, outside the repo:
 
 - `images_x4b/`: the 92 UI TGAs upscaled 4x (Lanczos) to PNG.
+- `textures/`: 350 decoded 64x64 textures as PNG (see above).
 - `wavs_44k/`: 2479 WAVs resampled from 11.025/22.05 kHz to 44.1 kHz.
 
 ## Tools
@@ -98,14 +107,15 @@ Dumps each block entry to `<out_dir>/<block>/<index>_<tag>.bin` and writes
 
 Also:
 
+    python packages/racer/tools/racer_textures.py "<game>/data/lev01" <out>
     python packages/racer/tools/racer_upscale.py "<game>/data/images" <out> 4
     python packages/racer/tools/racer_resample.py "<game>/data/wavs" <out>
 
 ## Next steps
 
 1. Pin down the `Part` vertex layout and the `Modl` offset table.
-2. Find the texture palette (search the block for 16- or 32-bit colour
-   runs near each texture entry).
+2. Verify the texture-to-palette pairing, for example with the
+   sprite block, which may reference textures by index.
 3. Build the game workflow once models and textures render in the
    engine.
 
