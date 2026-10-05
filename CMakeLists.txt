@@ -260,6 +260,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/registrar/workflow_registrar_model.cpp
         src/services/impl/workflow/registrar/workflow_registrar_particle_string_value_vfx.cpp
         src/services/impl/workflow/registrar/workflow_registrar_physics.cpp
+        src/services/impl/workflow/registrar/workflow_registrar_racer.cpp
         src/services/impl/workflow/registrar/workflow_registrar_rendering_bsp.cpp
         src/services/impl/workflow/registrar/workflow_registrar_rendering_core.cpp
         src/services/impl/workflow/registrar/workflow_registrar_rendering_overlay.cpp
@@ -1186,6 +1187,17 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/stunts/render/stunts_dashboard_mesh.cpp
         src/services/impl/workflow/stunts/render/stunts_dashboard_primitives.cpp
         src/services/impl/workflow/stunts/render/stunts_track_draw_step.cpp
+        src/services/impl/workflow/racer/racer_assets_step.cpp
+        src/services/impl/workflow/racer/racer_step_params.cpp
+        src/services/impl/workflow/racer/data/racer_asset_export.cpp
+        src/services/impl/workflow/racer/data/racer_asset_io.cpp
+        src/services/impl/workflow/racer/data/racer_audio_export.cpp
+        src/services/impl/workflow/racer/data/racer_block_table.cpp
+        src/services/impl/workflow/racer/data/racer_texture.cpp
+        src/services/impl/workflow/racer/data/racer_upscale.cpp
+        src/services/impl/workflow/racer/data/racer_wav.cpp
+        src/services/impl/workflow/racer/data/racer_wav_resample.cpp
+        src/services/impl/workflow/racer/data/racer_wav_write.cpp
         src/services/impl/workflow/fs2024/fs2024_step_params.cpp
         src/services/impl/workflow/fs2024/tiles/fs2024_load_pool.cpp
         src/services/impl/workflow/fs2024/tiles/fs2024_load_pool_queue.cpp
@@ -2409,6 +2421,53 @@ target_link_libraries(stunts_track_mesh_test PRIVATE
     ${SDL_TARGET}
 )
 add_test(NAME stunts_track_mesh_test COMMAND stunts_track_mesh_test)
+
+add_executable(racer_block_table_test)
+target_sources(racer_block_table_test PRIVATE tests/racer_block_table_test.cpp)
+target_sources(racer_block_table_test PRIVATE src/services/impl/workflow/racer/data/racer_block_table.cpp)
+target_include_directories(racer_block_table_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(racer_block_table_test PRIVATE
+    GTest::gtest_main
+)
+add_test(NAME racer_block_table_test COMMAND racer_block_table_test)
+
+add_executable(racer_texture_test)
+target_sources(racer_texture_test PRIVATE tests/racer_texture_test.cpp)
+target_sources(racer_texture_test PRIVATE src/services/impl/workflow/racer/data/racer_block_table.cpp)
+target_sources(racer_texture_test PRIVATE src/services/impl/workflow/racer/data/racer_texture.cpp)
+target_include_directories(racer_texture_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(racer_texture_test PRIVATE
+    GTest::gtest_main
+)
+add_test(NAME racer_texture_test COMMAND racer_texture_test)
+
+add_executable(racer_upscale_test)
+target_sources(racer_upscale_test PRIVATE tests/racer_upscale_test.cpp)
+target_sources(racer_upscale_test PRIVATE src/services/impl/workflow/racer/data/racer_upscale.cpp)
+target_include_directories(racer_upscale_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(racer_upscale_test PRIVATE
+    GTest::gtest_main
+)
+add_test(NAME racer_upscale_test COMMAND racer_upscale_test)
+
+add_executable(racer_wav_test)
+target_sources(racer_wav_test PRIVATE tests/racer_wav_test.cpp)
+target_sources(racer_wav_test PRIVATE src/services/impl/workflow/racer/data/racer_wav.cpp)
+target_sources(racer_wav_test PRIVATE src/services/impl/workflow/racer/data/racer_wav_write.cpp)
+target_sources(racer_wav_test PRIVATE src/services/impl/workflow/racer/data/racer_wav_resample.cpp)
+target_include_directories(racer_wav_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(racer_wav_test PRIVATE
+    GTest::gtest_main
+)
+add_test(NAME racer_wav_test COMMAND racer_wav_test)
 
 add_executable(stunts_huffman_test)
 target_sources(stunts_huffman_test PRIVATE tests/stunts_huffman_test.cpp)

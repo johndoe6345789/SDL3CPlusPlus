@@ -40,6 +40,7 @@ void WorkflowRegistrar::RegisterSteps(
     count += RegisterGta5StreamingSteps(registry, logger_);
     count += RegisterFs2024Steps(registry, logger_);
     count += RegisterStuntsSteps(registry, logger_);
+    count += RegisterRacerSteps(registry, logger_);
     count += RegisterBl4Steps(registry, logger_);
     count += RegisterGraphicsMiscSteps(registry, logger_);
     count += RegisterCameraSteps(registry, logger_);

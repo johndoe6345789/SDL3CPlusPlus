@@ -4,7 +4,8 @@ A modernisation of *Star Wars Episode I Racer* (LucasArts, 1999). The
 package ships no game data. It reads an existing install, decodes what it
 needs, and writes upscaled or rebuilt assets to `packages/racer/generated/`.
 
-Status: **first prototype** (asset pipeline runs end to end). Format survey. Block tables, model chunk tags, and texture
+Status: **prototype.** The asset pipeline is C++ and runs end to end. No
+game loop or rendering exists yet. Format survey below. Block tables, model chunk tags, and texture
 format (4-bit indexed, RGB565 palettes) are mapped. The palette pairing
 is unverified, and the vertex layout is not yet known.
 UI images and audio have a first modernised pass.
@@ -85,7 +86,7 @@ they give plausible sand, grass, sky and metal tones. In file order each
 2048-byte texture sits directly beside a 32-byte palette (345 and 332
 adjacent pairs), so the decoder pairs each texture with the nearest
 palette before it. The pairing is a heuristic and not yet verified
-against a known image. `tools/racer_textures.py` writes 350 PNGs; most
+against a known image. the `racer.assets.build` step writes 350 PNGs; most
 look coherent (spirals, stripes, sand), a few may use the wrong palette.
 
 ## Generated assets
@@ -93,33 +94,29 @@ look coherent (spirals, stripes, sand), a few may use the wrong palette.
 Written to `D:
 acer_generated\` by the tools below, outside the repo:
 
-- `images_x4b/`: the 92 UI TGAs upscaled 4x (Lanczos) to PNG.
-- `textures/`: 350 decoded 64x64 textures as PNG (see above).
-- `wavs_44k/`: 2479 WAVs resampled from 11.025/22.05 kHz to 44.1 kHz.
 
-## Tools
+- `textures/`: 350 decoded textures, scaled 4x with Scale2x.
+- `images/`: the 92 UI TGAs scaled 4x with Scale2x.
+- `wavs/`: 2479 WAVs resampled from 11.025/22.05 kHz to 44.1 kHz.
 
-Prototype: one command runs the whole pipeline into a single folder:
+## Running the asset build (C++)
 
-    python packages/racer/tools/racer_prototype.py "<game>/data" <out_dir>
+The asset pipeline is a workflow step, `racer.assets.build`, in
+`src/services/impl/workflow/racer/`. It runs against the install and
+writes to `racer_generated/` under the working directory:
 
-It writes `blocks/`, `textures/`, `images_x4/` and `wavs_44k/` (about
-two minutes on a desktop).
+    RACER_DIR="<game>/data/.." SDL3CPP_HEADLESS=1       ./sdl3_app --bootstrap bootstrap_windows --game racer
 
-    python packages/racer/tools/racer_extract.py \
-        "<game>/data/lev01" <out_dir>
+It decodes the textures, upscales the UI images, and resamples the
+sounds to 44.1 kHz. About 11 seconds on a desktop, 588 MB of output.
+Parameters are in `workflows/racer_assets.json` (`scale`, `audio_rate`).
 
-Dumps each block entry to `<out_dir>/<block>/<index>_<tag>.bin` and writes
-`index.json` beside them. Stdlib only.
-
-Also:
-
-    python packages/racer/tools/racer_textures.py "<game>/data/lev01" <out>
-    python packages/racer/tools/racer_upscale.py "<game>/data/images" <out> 4
-    python packages/racer/tools/racer_resample.py "<game>/data/wavs" <out>
+Unit tests: `racer_block_table_test`, `racer_texture_test`,
+`racer_upscale_test` and `racer_wav_test`, all gtest.
 
 ## Next steps
 
+0. Build a game workflow that draws the decoded textures and models.
 1. Pin down the `Part` vertex layout and the `Modl` offset table.
 2. Verify the texture-to-palette pairing, for example with the
    sprite block, which may reference textures by index.

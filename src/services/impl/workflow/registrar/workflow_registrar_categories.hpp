@@ -63,6 +63,9 @@ int RegisterBl4Steps(std::shared_ptr<IWorkflowStepRegistry> registry,
 int RegisterStuntsSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
                         std::shared_ptr<ILogger> logger);
 
+int RegisterRacerSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
+                       std::shared_ptr<ILogger> logger);
+
 int RegisterGraphicsMiscSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
                               std::shared_ptr<ILogger> logger);
 

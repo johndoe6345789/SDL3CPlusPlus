@@ -1,0 +1,14 @@
+{
+  "name": "Racer Asset Build",
+  "description": "Decodes and upscales the Episode I Racer assets from the install.",
+  "nodes": [
+    { "id": "build_assets", "type": "racer.assets.build", "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {
+        "racer_dir": "${env:RACER_DIR}",
+        "out_dir": "racer_generated",
+        "scale": 4,
+        "audio_rate": 44100 } }
+  ],
+  "connections": {}
+}

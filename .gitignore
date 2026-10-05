@@ -69,3 +69,6 @@ _build/
 # public repo. tools/make_test_tiles.py regenerates the stand-in city in
 # seconds, so nothing is lost by keeping all of it out.
 packages/gta5/assets/
+
+# Episode I Racer asset build output
+racer_generated/
