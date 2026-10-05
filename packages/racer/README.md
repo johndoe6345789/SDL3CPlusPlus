@@ -158,6 +158,38 @@ readable float triples at bytes 32-43 and 56-67 and 68-79, and a closed
 track when plotted from there. The community layout may mislabel the
 fields. The float reading is what the plots use.
 
+## Confirmed against the reverse-engineering notes
+
+The OpenSWE1R `swep1rcr.exe` notes (see
+[the folder](https://github.com/OpenSWE1R/swe1r-re/tree/master/swep1rcr.exe))
+name the chunk tags `Comp`, `Data`, `Anim`, `AltN`, `Modl`, `Trak`,
+`Podd`, `Part`, `Scen`, `MAlt` and `Pupp`, and say the data is
+byte-swapped on load. Counted in the model block here:
+
+| tag    | entries containing it | note                                        |
+|--------|-----------------------|---------------------------------------------|
+| `HEnd` | 162                   | the 162 untagged entries start with this     |
+| `Part` | 58                    |                                             |
+| `Anim` | 64                    |                                             |
+| `AltN` | 47                    | alternates                                  |
+| `Pupp` | 30                    |                                             |
+| `MAlt` | 24                    |                                             |
+| `Podd` | 24                    |                                             |
+| `Trak` | 22                    |                                             |
+| `Data` | 13                    | see below                                   |
+| `Scen` | 6                     |                                             |
+| `Modl` | 4                     |                                             |
+| `Comp` | 0                     | no compressed entries in this install       |
+
+`Data` chunks hold `LStr` records: the tag, then three big-endian floats,
+16 bytes each. Three checked chunks all keep that stride, with 28, 6 and
+22 records. The points run along the track, so these look like polylines.
+The axis order is not yet known (height or z).
+
+The spline loader in those notes reads about 42 bytes per entry. That
+matches 42 big-endian 16-bit fields, consistent with the 84-byte record
+above.
+
 ## Generated assets
 
 Written to `D:
