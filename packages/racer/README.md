@@ -213,9 +213,9 @@ unpack, reads 0x400000 to the end of `.data`, and terminates only the process
 it started. It is not in the repo. Run it from an elevated terminal, after
 the game has reached its menu:
 
-    python D:acer_asm\dump_running.py 25
+    python D:\racer_asm\dump_running.py 25
 
-The result is `D:acer_asm\swep1rcr_memory.bin`. Disassemble from its
+The result is `D:\racer_asm\swep1rcr_memory.bin`. Disassemble from its
 `.text` section, which is at 0x401000 in memory.
 
 ## Generated assets
