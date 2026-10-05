@@ -1,0 +1,16 @@
+{
+  "name": "Star Wars Episode I Racer Support",
+  "version": "0.1.0",
+  "id": "racer",
+  "type": "game",
+  "category": "demo",
+  "description": "Modernised Star Wars Episode I Racer, built from the game's own data files",
+  "status": "scaffold",
+  "import_notes": "Reads an existing Episode I Racer install at run time and ships none of its data. Point RACER_DIR at your own copy.",
+  "bundled": false,
+  "workflows": [],
+  "assets": [],
+  "config": [],
+  "scene": [],
+  "shaders": []
+}
