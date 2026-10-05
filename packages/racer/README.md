@@ -232,6 +232,9 @@ the game's code.
 | 0x4475F0 | membership test in global table A (count at 0x50C628)           |
 | 0x447630 | membership test in global table B (count at 0x50C62C)           |
 | 0x446FC0 | `load_spline(index)`: header, offset table, read, byte-swap     |
+| 0x42D640 | `read_block(index, offset, buffer, size)`: seek then fread      |
+| 0x448780 | `load_model(index)`: count, 12-byte entry, size limit, swap     |
+| 0x4485D0 | `parse_model(buffer)`: swaps the header, walks offset lists     |
 
 Block indices, verified from the jump table: 0 is `out_modelblock.bin`, 1
 is `out_spriteblock.bin`, 2 is `out_splineblock.bin` and 3 is
@@ -243,6 +246,38 @@ byte-swaps its header and records in place from big-endian to
 little-endian. Its buffer layout confirms the 16-byte header and the
 84-byte record used by the decoder above.
 
+
+## Spline rings and lanes
+
+Following the `prev` links (each record's predecessor index) gives a single
+loop through every record in only 15 of the 91 entries. Those include the
+clean circuits (entries 0, 1, 2, 3, 7 and 8), and in those the array order
+is the track order. In the other entries some records have two successors
+(duplicate predecessors), so the links branch or split into several pieces.
+Those entries plot with straight joins between pieces, which is why some
+plots show lines across the interior. Splitting them correctly needs more
+analysis, not a different plotting order.
+
+Lane roles are still unknown. The `LStr` points in the model block sit
+150-550 units from the nearest spline point in any lane, so they do not
+come from the same track as these splines. That test cannot decide between
+the left, centre and right lanes.
+
+## Model loading
+
+`load_model` reads the model block's count, then a 12-byte entry for the
+requested model. It swaps the three words, takes `start` and `end` from
+them, and rejects any size above 0x25800 (about 150 KB). It reads the
+chunk, swaps it as 32-bit words from big-endian to little-endian, and
+allocates an 8-byte-aligned buffer.
+
+`parse_model` swaps the first dword and walks a list of dwords after the
+header. A value of 0xFFFFFFFF ends the list, 0 is skipped, and any other
+value is passed to `parse_malt`. The chunk tags are compared in a switch
+over `Modl`, `Trak`, `Podd`, `Part`, `Scen`, `MAlt` and `Pupp`. Unknown
+tags go to an error routine at 0x426910. The `Part` vertex layout is still
+unknown. The `Part` header holds a table of offsets to sub-blocks, which
+is where the next analysis should start.
 
 ## Generated assets
 
