@@ -190,6 +190,34 @@ The spline loader in those notes reads about 42 bytes per entry. That
 matches 42 big-endian 16-bit fields, consistent with the 84-byte record
 above.
 
+## Executable analysis: packed on disk
+
+`SWEP1RCR.EXE` cannot be disassembled from the file as shipped:
+
+- `.text` is 698 KB with Shannon entropy 8.00, which is effectively random.
+  It has no standard function prologues (`55 8b ec` or `55 89 e5` never
+  appear), and a linear sweep decodes junk from the first byte.
+- The entry point lies in a `.bind` section (entropy 7.96). That is a
+  protector stub, which decrypts the code at run time.
+- The OpenSWE1R function addresses (`sub_448780` and others) are only valid
+  for the unpacked image in memory.
+
+The route is to read the unpacked image from a running process. Launching
+the game from an unelevated shell fails with `WinError 740` (requires
+elevation). The embedded manifest does not request elevation, so the cause
+is probably the protector or a compatibility setting. The process must be
+started from an elevated (administrator) shell.
+
+Reading the image is a small script that starts the game, waits for the
+unpack, reads 0x400000 to the end of `.data`, and terminates only the process
+it started. It is not in the repo. Run it from an elevated terminal, after
+the game has reached its menu:
+
+    python D:acer_asm\dump_running.py 25
+
+The result is `D:acer_asm\swep1rcr_memory.bin`. Disassemble from its
+`.text` section, which is at 0x401000 in memory.
+
 ## Generated assets
 
 Written to `D:
