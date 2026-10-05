@@ -48,9 +48,11 @@ void WorkflowRacerAssetsStep::Execute(const WorkflowStepDefinition& step,
     const int textures = ExportRacerTextures(options, logger_);
     const int images = ExportRacerImages(options, logger_);
     const int audio = ExportRacerAudio(options, logger_);
+    const int tracks = ExportRacerTracks(options, logger_);
     context.Set("racer.texture_count", textures);
     context.Set("racer.image_count", images);
     context.Set("racer.audio_count", audio);
+    context.Set("racer.track_count", tracks);
 }
 
 }  // namespace sdl3cpp::services::impl

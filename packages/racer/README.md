@@ -89,13 +89,54 @@ palette before it. The pairing is a heuristic and not yet verified
 against a known image. the `racer.assets.build` step writes 350 PNGs; most
 look coherent (spirals, stripes, sand), a few may use the wrong palette.
 
+## Track splines (`out_splineblock.bin`)
+
+Verified by plotting. Each entry is a 16-byte header plus `count` records
+of 84 bytes. The header's second word is the record count; the first word
+is a pointer, purpose unknown. Records are big-endian:
+
+| word  | meaning                                                      |
+|-------|--------------------------------------------------------------|
+| 0-2   | `0xffffffff` sentinels (record 0 holds the header instead)   |
+| 3     | flags (`0xffff0000` or a pointer in record 0)                |
+| 4     | `0x00010001`                                                 |
+| 5     | high 16 bits: this record's 1-based id, wrapping to 0        |
+| 6     | high 16 bits: the previous record's id (a ring)              |
+| 8-10  | point 0 as x, z, height                                      |
+| 13    | `1.0`                                                        |
+| 14-16 | point 1 as x, z, height                                      |
+| 17-19 | point 2 as x, z, height                                      |
+
+Plotted top-down, entry 0 is a closed circuit with a hairpin and a
+chicane, drawn as three parallel rows (lane 0 red, lane 1 green, lane 2
+blue). Which row is the left edge, centre line or right edge is not yet
+confirmed. About 51 entries have 20 or more records and plot as circuits
+(`racer.assets.build` writes them to `racer_generated/tracks/`). Some plots
+have straight lines across the interior, which suggests the ring order
+does not always follow array order, not yet checked.
+
+## Texture pairing: unresolved
+
+Two pairing rules were tested by eye on the full texture sheet:
+
+- palette before the texture (current code): first textures look coherent,
+  many later ones are dominated by one blue-and-yellow palette;
+- palette after the texture: more varied in places, but the same
+  blue-and-yellow tone recurs.
+
+Neither is confirmed. The tones may be real art, which would mean the
+rule is right. A reference is needed to decide. The contact sheet is at
+`racer_generated/textures/sheet.png`.
+
 ## Generated assets
 
 Written to `D:
 acer_generated\` by the tools below, outside the repo:
 
 
-- `textures/`: 350 decoded textures, scaled 4x with Scale2x.
+- `textures/`: 350 decoded textures, scaled 4x with Scale2x, and
+  `sheet.png`, all textures side by side.
+- `tracks/`: top-down plots of the circuit splines.
 - `images/`: the 92 UI TGAs scaled 4x with Scale2x.
 - `wavs/`: 2479 WAVs resampled from 11.025/22.05 kHz to 44.1 kHz.
 
@@ -116,7 +157,7 @@ Unit tests: `racer_block_table_test`, `racer_texture_test`,
 
 ## Next steps
 
-0. Build a game workflow that draws the decoded textures and models.
+0. Build a game workflow that draws the track and textures in 3D.
 1. Pin down the `Part` vertex layout and the `Modl` offset table.
 2. Verify the texture-to-palette pairing, for example with the
    sprite block, which may reference textures by index.

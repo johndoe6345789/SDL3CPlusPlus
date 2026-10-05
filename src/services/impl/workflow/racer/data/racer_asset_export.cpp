@@ -26,7 +26,10 @@ int ExportRacerTextures(const RacerExportOptions& options,
         return 0;
     }
     int written = 0;
-    for (const RacerTexture& texture : DecodeRacerTextures(*block)) {
+    const auto textures = DecodeRacerTextures(*block);
+    WriteRacerTextureSheet(textures, options.outDir / "textures" /
+                                         "sheet.png");
+    for (const RacerTexture& texture : textures) {
         const int size = options.scale < 2 ? 1 : options.scale;
         const int width = texture.width * size;
         const int height = texture.height * size;

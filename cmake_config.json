@@ -1206,6 +1206,19 @@
       ]
     },
     {
+      "name": "racer_spline_test",
+      "sources": [
+        "tests/racer_spline_test.cpp",
+        "src/services/impl/workflow/racer/data/racer_spline.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main"
+      ]
+    },
+    {
       "name": "stunts_huffman_test",
       "sources": [
         "tests/stunts_huffman_test.cpp",

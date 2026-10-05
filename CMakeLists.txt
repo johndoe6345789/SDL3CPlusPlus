@@ -1193,7 +1193,11 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/racer/data/racer_asset_io.cpp
         src/services/impl/workflow/racer/data/racer_audio_export.cpp
         src/services/impl/workflow/racer/data/racer_block_table.cpp
+        src/services/impl/workflow/racer/data/racer_spline.cpp
         src/services/impl/workflow/racer/data/racer_texture.cpp
+        src/services/impl/workflow/racer/data/racer_texture_sheet.cpp
+        src/services/impl/workflow/racer/data/racer_track_export.cpp
+        src/services/impl/workflow/racer/data/racer_track_plot.cpp
         src/services/impl/workflow/racer/data/racer_upscale.cpp
         src/services/impl/workflow/racer/data/racer_wav.cpp
         src/services/impl/workflow/racer/data/racer_wav_resample.cpp
@@ -2468,6 +2472,17 @@ target_link_libraries(racer_wav_test PRIVATE
     GTest::gtest_main
 )
 add_test(NAME racer_wav_test COMMAND racer_wav_test)
+
+add_executable(racer_spline_test)
+target_sources(racer_spline_test PRIVATE tests/racer_spline_test.cpp)
+target_sources(racer_spline_test PRIVATE src/services/impl/workflow/racer/data/racer_spline.cpp)
+target_include_directories(racer_spline_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(racer_spline_test PRIVATE
+    GTest::gtest_main
+)
+add_test(NAME racer_spline_test COMMAND racer_spline_test)
 
 add_executable(stunts_huffman_test)
 target_sources(stunts_huffman_test PRIVATE tests/stunts_huffman_test.cpp)

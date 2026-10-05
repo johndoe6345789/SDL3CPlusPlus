@@ -1,10 +1,12 @@
 #pragma once
 
 #include "services/interfaces/i_logger.hpp"
+#include "services/interfaces/workflow/racer/data/racer_texture.hpp"
 
 #include <cstdint>
 #include <filesystem>
 #include <memory>
+#include <vector>
 
 namespace sdl3cpp::services::impl {
 
@@ -34,5 +36,13 @@ int ExportRacerImages(const RacerExportOptions& options,
 /// Resamples every WAV under data/wavs to the target rate.
 int ExportRacerAudio(const RacerExportOptions& options,
                      const std::shared_ptr<ILogger>& logger);
+
+/// Plots every track-length spline in lev01 as a top-down PNG.
+int ExportRacerTracks(const RacerExportOptions& options,
+                      const std::shared_ptr<ILogger>& logger);
+
+/// Writes every texture side by side in one PNG, for a quick visual check.
+bool WriteRacerTextureSheet(const std::vector<RacerTexture>& textures,
+                            const std::filesystem::path& path);
 
 }  // namespace sdl3cpp::services::impl

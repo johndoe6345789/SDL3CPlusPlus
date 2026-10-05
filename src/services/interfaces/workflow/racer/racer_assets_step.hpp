@@ -13,13 +13,14 @@ namespace sdl3cpp::services::impl {
  *
  * Reads an install of Star Wars Episode I Racer and writes modernised
  * copies of its assets: textures decoded from the lev01 block and
- * upscaled, UI TGAs upscaled to PNG, and sounds resampled to 44.1 kHz.
+ * upscaled, UI TGAs upscaled to PNG, sounds resampled to 44.1 kHz, and
+ * track splines plotted top-down.
  * The install is only read; output goes to `out_dir`.
  *
  * Parameters: `racer_dir` (or env RACER_DIR), `out_dir` (default
  * `racer_generated`), `scale` (power of two, default 4), `audio_rate`
- * (default 44100). Publishes racer.texture_count, racer.image_count and
- * racer.audio_count.
+ * (default 44100). Publishes racer.texture_count, racer.image_count,
+ * racer.audio_count and racer.track_count.
  */
 class WorkflowRacerAssetsStep final : public IWorkflowStep {
 public:
