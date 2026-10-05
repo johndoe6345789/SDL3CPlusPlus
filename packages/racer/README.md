@@ -4,8 +4,9 @@ A modernisation of *Star Wars Episode I Racer* (LucasArts, 1999). The
 package ships no game data. It reads an existing install, decodes what it
 needs, and writes upscaled or rebuilt assets to `packages/racer/generated/`.
 
-Status: **scaffold and format survey.** The block tables are decoded;
-model, spline, sprite and texture payloads are not yet.
+Status: **format survey.** Block tables, model chunk tags, and texture
+entry sizes are mapped; the texture palette and vertex layout are not.
+UI images and audio have a first modernised pass.
 
 ## Install layout (`<game>/data`)
 
@@ -42,6 +43,51 @@ Model entries carry four-character ASCII tags at their start:
 
 The remaining 162 model entries have no tag; they are not yet understood.
 
+
+## Model chunks (`Modl`, `Part`)
+
+Model entries are a sequence of tagged chunks. Each starts with a four
+character tag and a big-endian `u32` that looks like the chunk's header
+length, then words that point at sub-chunks by offset from the start of
+the entry. Sentinel values `0xffffffff` mark unused slots. Chunks seen:
+
+| tag    | role (tentative)                                             |
+|--------|--------------------------------------------------------------|
+| `Modl` | model header: a table of offsets to its parts                |
+| `Part` | one mesh part: vertex-like floats and an `HEnd` terminator   |
+| `Anim` | animation keyframe block, inside `Modl` and `Part`           |
+| `Cnfj` | config block, seen twice inside `Part`                       |
+| `HEnd` | end-of-header marker, four bytes, no payload                 |
+
+Confirmed: `HEnd` closes each header, and `Anim` offsets point inside
+their own entry. Not confirmed: the exact field meaning of each word,
+and the vertex layout. Floats such as `0x3f800000` (1.0) appear in
+`Part` bodies, which points at position or matrix data.
+
+## Texture entries
+
+The texture block has no tags. Entry sizes give the format:
+
+| entry size (bytes) | count | reading                                     |
+|--------------------|-------|---------------------------------------------|
+| 2048               | 351   | 64x64, 4 bits per pixel (palette index)     |
+| 512                | 128   | 32x32, 4 bits per pixel                     |
+| 1024               | 290   | 32x32, 8 bits per pixel                     |
+| 256                | 20    | 16x16, 8 bits per pixel                     |
+| 32                 | 759   | small 4-bit tile or palette                 |
+
+A 4-bit greyscale render of the 2048-byte entries shows clear shapes
+(hooks, rings, bands), while RGB565 renders are noise. So they are
+indexed, but the palette is not located yet. The palette is the
+open question for texture decoding.
+
+## Generated assets
+
+Written to `D:acer_generated\` by the tools below, outside the repo:
+
+- `images_x4b/`: the 92 UI TGAs upscaled 4x (Lanczos) to PNG.
+- `wavs_44k/`: 2479 WAVs resampled from 11.025/22.05 kHz to 44.1 kHz.
+
 ## Tools
 
     python packages/racer/tools/racer_extract.py \
@@ -50,15 +96,17 @@ The remaining 162 model entries have no tag; they are not yet understood.
 Dumps each block entry to `<out_dir>/<block>/<index>_<tag>.bin` and writes
 `index.json` beside them. Stdlib only.
 
+Also:
+
+    python packages/racer/tools/racer_upscale.py "<game>/data/images" <out> 4
+    python packages/racer/tools/racer_resample.py "<game>/data/wavs" <out>
+
 ## Next steps
 
-1. Identify the header of the tagged model chunks (`Modl`, `Part`).
-2. Decode the texture entries (the header fields at the start of each
-   entry, then palette or pixel layout).
-3. Convert the `images/*.TGA` UI set and `wavs/` audio as a first
-   modernisation pass (upscale and resample), which needs no reverse
-   engineering.
-4. Build the game workflow once models and textures render in the
+1. Pin down the `Part` vertex layout and the `Modl` offset table.
+2. Find the texture palette (search the block for 16- or 32-bit colour
+   runs near each texture entry).
+3. Build the game workflow once models and textures render in the
    engine.
 
 ## Upgrade rules
