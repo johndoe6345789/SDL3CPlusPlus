@@ -1287,8 +1287,10 @@
       "name": "racer_lap_test",
       "sources": [
         "tests/racer_lap_test.cpp",
+        "tests/racer_banner_test.cpp",
         "src/services/impl/workflow/racer/player/racer_lap_progress.cpp",
-        "src/services/impl/workflow/racer/render/racer_hud_format.cpp"
+        "src/services/impl/workflow/racer/render/racer_hud_format.cpp",
+        "src/services/impl/workflow/racer/render/racer_hud_banner.cpp"
       ],
       "include_directories": [
         "src"

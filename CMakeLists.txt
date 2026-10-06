@@ -1253,7 +1253,9 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/racer/player/racer_traffic.cpp
         src/services/impl/workflow/racer/render/racer_camera_math.cpp
         src/services/impl/workflow/racer/render/racer_chase_cam_step.cpp
+        src/services/impl/workflow/racer/render/racer_hud_banner.cpp
         src/services/impl/workflow/racer/render/racer_hud_format.cpp
+        src/services/impl/workflow/racer/render/racer_hud_layout.cpp
         src/services/impl/workflow/racer/render/racer_hud_step.cpp
         src/services/impl/workflow/racer/render/racer_image_panel.cpp
         src/services/impl/workflow/racer/render/racer_model_draw.cpp
@@ -2615,8 +2617,10 @@ add_test(NAME racer_ground_test COMMAND racer_ground_test)
 
 add_executable(racer_lap_test)
 target_sources(racer_lap_test PRIVATE tests/racer_lap_test.cpp)
+target_sources(racer_lap_test PRIVATE tests/racer_banner_test.cpp)
 target_sources(racer_lap_test PRIVATE src/services/impl/workflow/racer/player/racer_lap_progress.cpp)
 target_sources(racer_lap_test PRIVATE src/services/impl/workflow/racer/render/racer_hud_format.cpp)
+target_sources(racer_lap_test PRIVATE src/services/impl/workflow/racer/render/racer_hud_banner.cpp)
 target_include_directories(racer_lap_test PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )

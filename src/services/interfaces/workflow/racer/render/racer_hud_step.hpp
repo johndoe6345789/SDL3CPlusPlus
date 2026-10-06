@@ -7,20 +7,42 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace sdl3cpp::services::impl {
 
-/// The HUD lines for a race state: the countdown, then lap, times, speed
-/// and engine heat, then the result. Pure, so it is testable.
+/// HUD: five lines of SDL's 8 px font at 3x, top right. Banner: up to
+/// twelve characters at 14x, upper middle.
+inline constexpr int kHudWidth = 320;
+inline constexpr int kHudHeight = 54;
+inline constexpr float kHudScale = 3.f;
+inline constexpr float kHudMargin = 24.f;
+inline constexpr int kBannerWidth = 96;
+inline constexpr int kBannerHeight = 10;
+inline constexpr float kBannerScale = 14.f;
+
+/// The HUD lines for a race state: position and lap, times, speed,
+/// engine heat, and each engine's health. Pure, so it is testable.
 std::string FormatRacerHud(const RacerRaceState& race,
                            const RacerPodState& pod);
+
+/// The big centred banner for a race state, or nothing: the countdown,
+/// GO!, FINAL LAP as the last lap starts, and FINISHED.
+std::string FormatRacerBanner(const RacerRaceState& race);
+
+/// Where the HUD and the banner go on a frame of the given size.
+RacerScreenRect RacerHudRect(float frameWidth, float frameHeight);
+RacerScreenRect RacerBannerRect(float frameWidth, float frameHeight);
+
+/// The HUD text as panel lines, one per newline-separated line.
+std::vector<RacerPanelLine> RacerHudLines(const std::string& text);
 
 /**
  * Plugin ID: racer.hud.text
  *
- * Draws FormatRacerHud's four lines in the top-right corner, at three
- * times the size of the engine's FPS overlay, whose pipeline it borrows
- * (run overlay.fps_init first). Run after frame.gpu.end_scene.
+ * Draws the HUD in the top-right corner and the race banner in the upper
+ * middle, borrowing the engine's text-overlay pipeline (run
+ * overlay.fps_init first). Only while racing; after frame.gpu.end_scene.
  */
 class WorkflowRacerHudStep final : public IWorkflowStep {
 public:
@@ -36,6 +58,8 @@ private:
     std::shared_ptr<RacerWorldState> state_;
     std::string shown_;
     RacerPanel hud_;
+    RacerPanel banner_;
+    std::string bannerShown_;
 };
 
 }  // namespace sdl3cpp::services::impl

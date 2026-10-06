@@ -38,10 +38,6 @@ std::string Place(const RacerRaceState& race) {
 std::string FormatRacerHud(const RacerRaceState& race,
                            const RacerPodState& pod) {
     const std::string newline(1, '\n');
-    if (race.countdown > 0.f) {
-        const int second = static_cast<int>(std::ceil(race.countdown));
-        return newline + "         " + std::to_string(second);
-    }
     const std::string lap = race.finished
                                 ? std::string("FINISHED")
                                 : "LAP " + std::to_string(race.lap) + "/" +
