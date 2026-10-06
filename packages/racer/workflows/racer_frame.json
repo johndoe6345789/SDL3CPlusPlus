@@ -70,6 +70,13 @@
       "plugin": "racer.opponents.fly"
     },
     {
+      "id": "audio",
+      "plugin": "racer.audio.update",
+      "parameters": {
+        "racer_dir": "${env:RACER_DIR}"
+      }
+    },
+    {
       "id": "chase_camera",
       "plugin": "racer.camera.chase",
       "parameters": {

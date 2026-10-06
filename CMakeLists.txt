@@ -1246,6 +1246,10 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/racer/render/racer_hud_step.cpp
         src/services/impl/workflow/racer/render/racer_model_draw.cpp
         src/services/impl/workflow/racer/render/racer_scene_draw_step.cpp
+        src/services/impl/workflow/racer/audio/racer_audio_clip.cpp
+        src/services/impl/workflow/racer/audio/racer_audio_mixer.cpp
+        src/services/impl/workflow/racer/audio/racer_audio_open.cpp
+        src/services/impl/workflow/racer/audio/racer_audio_step.cpp
         src/services/impl/workflow/fs2024/fs2024_step_params.cpp
         src/services/impl/workflow/fs2024/tiles/fs2024_load_pool.cpp
         src/services/impl/workflow/fs2024/tiles/fs2024_load_pool_queue.cpp

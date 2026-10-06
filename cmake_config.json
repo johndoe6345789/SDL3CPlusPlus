@@ -104,6 +104,7 @@
         "src/services/impl/workflow/racer/world/*.cpp",
         "src/services/impl/workflow/racer/player/*.cpp",
         "src/services/impl/workflow/racer/render/*.cpp",
+        "src/services/impl/workflow/racer/audio/*.cpp",
         "src/services/impl/workflow/fs2024/*.cpp",
         "src/services/impl/workflow/fs2024/tiles/*.cpp",
         "src/services/impl/workflow/fs2024/terrain/*.cpp",
