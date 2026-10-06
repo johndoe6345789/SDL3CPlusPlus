@@ -48,7 +48,7 @@ RacerPodInput RacerAutopilot(const RacerPodState& pod,
         145.f * std::clamp(1.25f - 1.4f * bend, 0.25f, 1.f);
     input.throttle = pod.speed > wantedSpeed + 8.f ? -0.6f : 1.f;
     input.boost = bend < 0.15f && pod.heat < 0.6f;
-    input.repair = pod.damage > 0.5f && pod.heat < 0.2f;
+    input.repair = RacerPodDamage(pod) > 0.5f && pod.heat < 0.2f;
     return input;
 }
 

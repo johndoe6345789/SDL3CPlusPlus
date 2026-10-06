@@ -21,7 +21,8 @@ namespace sdl3cpp::services::impl {
  * not "0", RacerAutopilot drives instead of the player.
  *
  * Publishes racer.pod_pos, racer.pod_heading, racer.speed (km/h as the
- * game shows it), racer.heat, racer.damage and racer.boosting.
+ * game shows it), racer.heat, racer.damage (and _left, _right) and
+ * racer.boosting.
  */
 class WorkflowRacerPodDriveStep final : public IWorkflowStep {
 public:

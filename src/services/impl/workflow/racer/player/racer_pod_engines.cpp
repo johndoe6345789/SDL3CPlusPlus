@@ -25,7 +25,9 @@ void UpdateRacerPodEngines(RacerPodState& pod, const RacerPodInput& in,
         if (pod.heat >= 1.f) {
             pod.heat = 1.f;
             pod.overheatTimer = kOverheatSeconds;
-            pod.damage = std::min(1.f, pod.damage + 0.35f);
+            // An engine fire hurts both engines, one a little more.
+            pod.engineDamage[0] = std::min(1.f, pod.engineDamage[0] + 0.35f);
+            pod.engineDamage[1] = std::min(1.f, pod.engineDamage[1] + 0.3f);
             pod.boosting = false;
         }
     } else {
@@ -35,7 +37,9 @@ void UpdateRacerPodEngines(RacerPodState& pod, const RacerPodInput& in,
     pod.heat = std::min(
         1.f, pod.heat + RacerSurfaceEffectFor(pod.surface).heatPerSecond * dt);
     if (in.repair) {
-        pod.damage = std::max(0.f, pod.damage - spec.repairRate * dt);
+        for (float& damage : pod.engineDamage) {
+            damage = std::max(0.f, damage - spec.repairRate * dt);
+        }
     }
 }
 
@@ -43,7 +47,7 @@ float RacerPodTargetSpeed(const RacerPodState& pod,
                           const RacerPodInput& in,
                           const RacerPodSpec& spec) {
     float top = pod.boosting ? spec.boostSpeed : spec.topSpeed;
-    top *= 1.f - 0.4f * pod.damage;
+    top *= 1.f - 0.4f * RacerPodDamage(pod);
     top *= RacerSurfaceEffectFor(pod.surface).topSpeed;
     if (in.repair) top *= 0.6f;  // repairing costs speed
     return top * std::clamp(in.throttle, 0.f, 1.f);

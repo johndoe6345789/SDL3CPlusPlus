@@ -8,9 +8,9 @@
 
 namespace sdl3cpp::services::impl {
 
-/// HUD texture size: four lines of SDL's 8 px debug font, shown at 3x.
+/// HUD texture size: five lines of SDL's 8 px debug font, shown at 3x.
 inline constexpr int kRacerHudWidth = 320;
-inline constexpr int kRacerHudHeight = 44;
+inline constexpr int kRacerHudHeight = 54;
 inline constexpr int kRacerHudScale = 3;
 
 /// The racer's own HUD texture, text surface and screen quad. Drawn

@@ -20,6 +20,12 @@ std::string HeatBar(float heat) {
     return std::string(filled, '#') + std::string(10 - filled, '-');
 }
 
+/// An engine's health as a short bar: '=' per fifth left.
+std::string Health(float damage) {
+    const int left = static_cast<int>(std::lround((1.f - damage) * 5.f));
+    return "[" + std::string(left, '=') + std::string(5 - left, ' ') + "]";
+}
+
 /// "POS 3/8  " once the field has been ranked, else nothing.
 std::string Place(const RacerRaceState& race) {
     if (race.position <= 0 || race.entrants <= 1) return "";
@@ -48,7 +54,8 @@ std::string FormatRacerHud(const RacerRaceState& race,
     else if (pod.boosting) engines += " BOOST";
     return Place(race) + lap + newline + "TIME " + Clock(race.raceTime) +
            "  BEST " + Clock(race.bestLap) + newline + speed + newline +
-           engines;
+           engines + newline + "ENGINES " + Health(pod.engineDamage[0]) +
+           " " + Health(pod.engineDamage[1]);
 }
 
 }  // namespace sdl3cpp::services::impl

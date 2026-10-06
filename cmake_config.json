@@ -1252,6 +1252,7 @@
       "name": "racer_pod_physics_test",
       "sources": [
         "tests/racer_pod_physics_test.cpp",
+        "tests/racer_pod_surface_test.cpp",
         "src/services/impl/workflow/racer/player/racer_pod_physics.cpp",
         "src/services/impl/workflow/racer/player/racer_pod_engines.cpp",
         "src/services/impl/workflow/racer/player/racer_pod_collision.cpp",

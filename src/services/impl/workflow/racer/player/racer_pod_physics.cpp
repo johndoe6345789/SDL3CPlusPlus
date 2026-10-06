@@ -6,6 +6,16 @@
 #include <cmath>
 
 namespace sdl3cpp::services::impl {
+namespace {
+
+constexpr float kDamagePull = 0.6f;  // rad/s at full pace
+
+}  // namespace
+
+float RacerPodDamage(const RacerPodState& pod) {
+    return 0.5f * (pod.engineDamage[0] + pod.engineDamage[1]);
+}
+
 glm::vec3 RacerPodForward(float heading) {
     return {std::sin(heading), 0.f, -std::cos(heading)};
 }
@@ -31,6 +41,9 @@ void StepRacerPod(RacerPodState& pod, const RacerPodInput& in,
     const float grip = (1.f - (1.f - spec.turnAtTopSpeed) * pace) *
                        RacerSurfaceEffectFor(pod.surface).grip;
     pod.heading += in.steer * spec.turnRate * grip * dt;
+    // A weaker left engine pulls the nose left, and the other way round.
+    const float pull = pod.engineDamage[1] - pod.engineDamage[0];
+    pod.heading += kDamagePull * pull * pace * dt;
 
     glm::vec3 next = pod.position;
     const float ceiling = pod.position.y + spec.stepHeight;

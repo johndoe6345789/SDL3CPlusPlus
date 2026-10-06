@@ -12,7 +12,9 @@ void PublishRacerPod(WorkflowContext& context,
     context.Set("racer.pod_heading", pod.heading);
     context.Set("racer.speed", pod.speed * 3.6f);
     context.Set("racer.heat", pod.heat);
-    context.Set("racer.damage", pod.damage);
+    context.Set("racer.damage", RacerPodDamage(pod));
+    context.Set("racer.damage_left", pod.engineDamage[0]);
+    context.Set("racer.damage_right", pod.engineDamage[1]);
     context.Set("racer.boosting", pod.boosting);
 }
 

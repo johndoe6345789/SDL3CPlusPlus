@@ -2569,6 +2569,7 @@ add_test(NAME racer_spline_test COMMAND racer_spline_test)
 
 add_executable(racer_pod_physics_test)
 target_sources(racer_pod_physics_test PRIVATE tests/racer_pod_physics_test.cpp)
+target_sources(racer_pod_physics_test PRIVATE tests/racer_pod_surface_test.cpp)
 target_sources(racer_pod_physics_test PRIVATE src/services/impl/workflow/racer/player/racer_pod_physics.cpp)
 target_sources(racer_pod_physics_test PRIVATE src/services/impl/workflow/racer/player/racer_pod_engines.cpp)
 target_sources(racer_pod_physics_test PRIVATE src/services/impl/workflow/racer/player/racer_pod_collision.cpp)

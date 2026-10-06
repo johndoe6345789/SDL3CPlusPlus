@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/racer/player/racer_pod_physics.hpp"
 
+#include <algorithm>
 #include <cmath>
 
 namespace sdl3cpp::services::impl {
@@ -7,6 +8,7 @@ namespace {
 
 /// Something within this height above a gap is a wall, not a drop.
 constexpr float kWallHeight = 12.f;
+constexpr float kScrapeDamage = 0.6f;  // per second at 100 m/s
 
 /// Blocked: a wall stands in the way, or there is no floor at `at`
 /// under the step height but something just above it (a ledge).
@@ -36,9 +38,15 @@ bool MoveRacerPodAlongSurface(RacerPodState& pod, const RacerPodSpec& spec,
         }
         next = pod.position + step;
         if (angle != 0.f) {
-            // Scraping the wall: lose speed, and turn to run along it.
+            // Scraping the wall: lose speed, turn to run along it, and
+            // scuff the engine on the wall's side (turning right to get
+            // clear means the wall was on the left).
             pod.speed *= 1.f - 0.08f * std::fabs(angle);
             pod.heading += 0.5f * angle;
+            const int side = angle > 0.f ? 0 : 1;
+            const float hit = kScrapeDamage * std::fabs(pod.speed) / 100.f;
+            pod.engineDamage[side] =
+                std::min(1.f, pod.engineDamage[side] + hit * dt);
         }
         return true;
     }

@@ -21,7 +21,7 @@ TEST(RacerPodPhysics, BoostOverheatsAndDamagesEngines) {
     input.throttle = 1.f;
     input.boost = true;
     const RacerPodState pod = Fly(input, 12.f, Surface(&Flat));
-    EXPECT_GT(pod.damage, 0.f);
+    EXPECT_GT(RacerPodDamage(pod), 0.f);
 }
 
 TEST(RacerPodPhysics, BoostIsFasterThanTopSpeedBeforeOverheating) {
@@ -56,15 +56,4 @@ TEST(RacerPodPhysics, WallTriangleStopsThePod) {
     input.throttle = 1.f;
     const RacerPodState pod = Fly(input, 5.f, Surface(&Flat, &WallAt30));
     EXPECT_GT(pod.position.z, -30.f);
-}
-
-TEST(RacerPodPhysics, SpeedStripsRaiseAndSandLowersTopSpeed) {
-    RacerPodState pod;
-    RacerPodInput input;
-    input.throttle = 1.f;
-    const RacerPodSpec spec;
-    pod.surface = 0x4;  // Fast
-    EXPECT_GT(RacerPodTargetSpeed(pod, input, spec), spec.topSpeed);
-    pod.surface = 0x8;  // Slow
-    EXPECT_LT(RacerPodTargetSpeed(pod, input, spec), spec.topSpeed);
 }
