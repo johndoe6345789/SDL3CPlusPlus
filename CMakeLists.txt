@@ -1267,6 +1267,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/racer/render/racer_screen_prepare.cpp
         src/services/impl/workflow/racer/render/racer_screen_step.cpp
         src/services/impl/workflow/racer/audio/racer_audio_clip.cpp
+        src/services/impl/workflow/racer/audio/racer_audio_menu.cpp
         src/services/impl/workflow/racer/audio/racer_audio_mixer.cpp
         src/services/impl/workflow/racer/audio/racer_audio_open.cpp
         src/services/impl/workflow/racer/audio/racer_audio_step.cpp

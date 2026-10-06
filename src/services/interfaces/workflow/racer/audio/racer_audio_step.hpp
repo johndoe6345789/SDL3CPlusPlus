@@ -13,9 +13,9 @@ namespace sdl3cpp::services::impl {
  * Plugin ID: racer.audio.update
  *
  * Plays Anakin's theme on the title screens and the race's music and pod
- * sounds while racing, through RacerAudioMixer. Silent when paused, when
- * SDL3CPP_HEADLESS or RACER_MUTE is set (dev runs must not make noise),
- * or without an audio device.
+ * sounds while racing, through RacerAudioMixer. Frozen while paused;
+ * silent when SDL3CPP_HEADLESS or RACER_MUTE is set (dev runs must not
+ * make noise), or without an audio device.
  */
 class WorkflowRacerAudioStep final : public IWorkflowStep {
 public:

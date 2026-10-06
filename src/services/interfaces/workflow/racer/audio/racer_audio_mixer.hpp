@@ -10,7 +10,8 @@ namespace sdl3cpp::services::impl {
 
 /// The race's sound: planet music, the player's engine note (pitched by
 /// speed and boost), and one-shots for the countdown, the start, wall
-/// scrapes and engine fires. All from the install's own WAVs.
+/// scrapes and engine fires. In menu mode: the title music and the
+/// cursor, select and coin sounds. All from the install's own WAVs.
 class RacerAudioMixer {
 public:
     RacerAudioMixer() = default;
@@ -19,10 +20,12 @@ public:
     ~RacerAudioMixer();
 
     /// Opens the streams. False (and silent) without an audio device.
-    /// `musicOnly` plays just the music (the title screens use "Menu").
+    /// `menu` opens the title screens' sounds instead of the race's.
     bool Open(const std::filesystem::path& racerDir,
-              const std::string& planet, bool musicOnly = false);
+              const std::string& planet, bool menu = false);
     void Update(const RacerWorldState& state);
+    /// Freezes every stream (pause) or lets them run on.
+    void SetPaused(bool paused);
     bool IsOpen() const { return open_; }
     int LoadedClips() const {
         int loaded = 0;
@@ -32,6 +35,12 @@ public:
 
 private:
     enum Voice { kMusic, kEngine, kBeep, kGo, kScrape, kFire, kVoices };
+    // Menu mode reuses the one-shot voices for its own sounds.
+    static constexpr int kMove = kBeep;
+    static constexpr int kSelect = kGo;
+    static constexpr int kCoin = kScrape;
+
+    void UpdateMenu(const RacerFlow& flow);
 
     std::array<RacerAudioClip, kVoices> clips_{};
     std::array<SDL_AudioStream*, kVoices> streams_{};
@@ -40,7 +49,10 @@ private:
     bool wasBlocked_ = false;
     bool wasOnFire_ = false;
     bool open_ = false;
-    bool musicOnly_ = false;
+    bool menu_ = false;
+    bool paused_ = false;
+    std::array<int, 7> menuCursor_{};   ///< phase, rows and choices
+    int menuTruguts_ = -1;
 };
 
 }  // namespace sdl3cpp::services::impl

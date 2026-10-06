@@ -34,13 +34,13 @@ std::string WorkflowRacerAudioStep::GetPluginId() const {
 void WorkflowRacerAudioStep::Execute(const WorkflowStepDefinition& step,
                                      WorkflowContext&) {
     // What should play: Anakin's theme on the title screens, the race's
-    // music and pod sounds while racing, nothing when paused.
+    // music and pod sounds while racing (frozen while paused).
     const RacerPhase phase = state_->flow.phase;
     std::string wanted;
     if (phase == RacerPhase::Menu || phase == RacerPhase::Shop ||
         phase == RacerPhase::Loading) {
         wanted = "menu";
-    } else if (state_->loaded && phase != RacerPhase::Paused) {
+    } else if (state_->loaded) {
         wanted = "race " + std::to_string(state_->track.id);
     }
     if (wanted != playing_) {
@@ -60,7 +60,9 @@ void WorkflowRacerAudioStep::Execute(const WorkflowStepDefinition& step,
             }
         }
     }
-    if (mixer_) mixer_->Update(*state_);
+    if (!mixer_) return;
+    mixer_->SetPaused(phase == RacerPhase::Paused);
+    mixer_->Update(*state_);
 }
 
 }  // namespace sdl3cpp::services::impl
