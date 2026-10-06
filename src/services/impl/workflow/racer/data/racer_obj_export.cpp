@@ -67,6 +67,13 @@ int ExportRacerModels(const RacerExportOptions& options,
                           ("track_" + std::to_string(track.id) + ".obj");
         if (model.valid && WriteObj(model, path)) ++written;
     }
+    for (std::size_t i = 0; i < table.racers.size(); ++i) {
+        const RacerModel pod = LoadRacerModel(
+            library, table.racers[i].podd, RacerModelScope::FirstLodOnly);
+        const auto path = options.outDir / "models" /
+                          ("pod_" + std::to_string(i) + ".obj");
+        if (pod.valid && WriteObj(pod, path)) ++written;
+    }
     return written;
 }
 

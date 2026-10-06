@@ -56,7 +56,10 @@
     },
     {
       "id": "drive",
-      "plugin": "racer.pod.drive"
+      "plugin": "racer.pod.drive",
+      "parameters": {
+        "autopilot": "${env:RACER_AUTOPILOT}"
+      }
     },
     {
       "id": "lap_timer",
@@ -64,7 +67,14 @@
     },
     {
       "id": "chase_camera",
-      "plugin": "racer.camera.chase"
+      "plugin": "racer.camera.chase",
+      "parameters": {
+        "distance": 20.0,
+        "height": 6.0,
+        "lead": 25.0,
+        "fov": 70.0,
+        "far": 6000.0
+      }
     },
     {
       "id": "render_prepare",
@@ -102,6 +112,57 @@
     {
       "id": "overlay_fps_draw",
       "plugin": "overlay.fps_draw"
+    },
+    {
+      "id": "shot_frame",
+      "plugin": "value.literal",
+      "comment": "Frame to save a screenshot on (about three seconds in). Nothing is written unless RACER_SHOT names a file.",
+      "parameters": {
+        "value": 180.0
+      },
+      "outputs": {
+        "value": "racer_shot_frame"
+      }
+    },
+    {
+      "id": "shot_due",
+      "plugin": "compare.gte",
+      "inputs": {
+        "left": "loop.iteration",
+        "right": "racer_shot_frame"
+      },
+      "outputs": {
+        "value": "racer_shot_due"
+      }
+    },
+    {
+      "id": "shot_path",
+      "plugin": "value.set_if",
+      "inputs": {
+        "condition": "racer_shot_due"
+      },
+      "parameters": {
+        "value": "${env:RACER_SHOT}"
+      },
+      "outputs": {
+        "value": "gpu_screenshot_output_path"
+      }
+    },
+    {
+      "id": "no_postfx",
+      "plugin": "value.literal",
+      "comment": "This package draws straight to the swapchain with no postfx composite, so the capture step's swapchain read-back is the right one.",
+      "parameters": {
+        "value": "missing"
+      },
+      "outputs": {
+        "value": "postfx_composite_state"
+      }
+    },
+    {
+      "id": "gpu_screenshot_capture",
+      "plugin": "gpu.screenshot_capture",
+      "comment": "A swapchain read-back of the frame the engine drew; silent when no path is set."
     },
     {
       "id": "submit",

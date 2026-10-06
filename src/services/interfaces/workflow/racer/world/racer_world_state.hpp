@@ -4,6 +4,7 @@
 #include "services/interfaces/workflow/racer/data/racer_spline.hpp"
 #include "services/interfaces/workflow/racer/data/racer_track_table.hpp"
 #include "services/interfaces/workflow/racer/player/racer_pod_physics.hpp"
+#include "services/interfaces/workflow/racer/player/racer_race_state.hpp"
 #include "services/interfaces/workflow/racer/world/racer_ground.hpp"
 
 #include <SDL3/SDL_gpu.h>
@@ -14,6 +15,9 @@
 #include <vector>
 
 namespace sdl3cpp::services::impl {
+
+/// Points sampled along each lap segment's Bezier curve.
+constexpr int kRacerLapSamples = 8;
 
 /// Game units to engine units. The game is z-up in units of about 5 cm
 /// (a pod is ~120 units long), the engine y-up in metres-ish.
@@ -43,18 +47,6 @@ struct RacerGpuTexture {
     SDL_GPUSampler* sampler = nullptr;
 };
 
-/// Lap progress for the player's pod.
-struct RacerRaceState {
-    int lapsTotal = 3;
-    int lap = 1;                 ///< 1-based; lapsTotal + 1 once finished
-    int segment = -1;            ///< nearest lap point, -1 before start
-    float raceTime = 0.f;
-    float lapTime = 0.f;
-    float bestLap = 0.f;         ///< 0 until a lap is completed
-    float countdown = 3.f;       ///< seconds before the start
-    bool finished = false;
-};
-
 /// Everything the racer.* steps share for one loaded race.
 struct RacerWorldState {
     RacerAssetLibrary library;
@@ -66,7 +58,7 @@ struct RacerWorldState {
     RacerGpuTexture white;   ///< for meshes shaded by vertex colour only
     std::vector<RacerSplineSegment> spline;
     std::vector<int> lap;              ///< main-loop segment order
-    std::vector<glm::vec3> lapPoints;  ///< lap knots in engine space
+    std::vector<glm::vec3> lapPoints;  ///< dense lap polyline, engine space
     RacerGround ground;
     RacerPodSpec podSpec;
     RacerPodState pod;

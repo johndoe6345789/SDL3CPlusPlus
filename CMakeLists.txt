@@ -1196,6 +1196,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/racer/data/racer_block.cpp
         src/services/impl/workflow/racer/data/racer_image_export.cpp
         src/services/impl/workflow/racer/data/racer_model.cpp
+        src/services/impl/workflow/racer/data/racer_model_collision.cpp
         src/services/impl/workflow/racer/data/racer_model_material.cpp
         src/services/impl/workflow/racer/data/racer_model_mesh.cpp
         src/services/impl/workflow/racer/data/racer_model_nodes.cpp
@@ -1217,13 +1218,20 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/racer/world/racer_model_upload.cpp
         src/services/impl/workflow/racer/world/racer_texture_cache.cpp
         src/services/impl/workflow/racer/world/racer_vertex_buffer.cpp
+        src/services/impl/workflow/racer/world/racer_walls.cpp
         src/services/impl/workflow/racer/world/racer_world_build.cpp
+        src/services/impl/workflow/racer/world/racer_world_lap.cpp
         src/services/impl/workflow/racer/world/racer_world_load_step.cpp
+        src/services/impl/workflow/racer/player/racer_autopilot.cpp
         src/services/impl/workflow/racer/player/racer_lap_progress.cpp
         src/services/impl/workflow/racer/player/racer_lap_timer_step.cpp
+        src/services/impl/workflow/racer/player/racer_pod_collision.cpp
         src/services/impl/workflow/racer/player/racer_pod_drive_step.cpp
         src/services/impl/workflow/racer/player/racer_pod_engines.cpp
+        src/services/impl/workflow/racer/player/racer_pod_input.cpp
         src/services/impl/workflow/racer/player/racer_pod_physics.cpp
+        src/services/impl/workflow/racer/player/racer_pod_recovery.cpp
+        src/services/impl/workflow/racer/player/racer_pod_report.cpp
         src/services/impl/workflow/racer/render/racer_chase_cam_step.cpp
         src/services/impl/workflow/racer/render/racer_hud_format.cpp
         src/services/impl/workflow/racer/render/racer_hud_step.cpp
@@ -2474,6 +2482,7 @@ target_sources(racer_model_test PRIVATE src/services/impl/workflow/racer/data/ra
 target_sources(racer_model_test PRIVATE src/services/impl/workflow/racer/data/racer_model_mesh.cpp)
 target_sources(racer_model_test PRIVATE src/services/impl/workflow/racer/data/racer_model_vertex.cpp)
 target_sources(racer_model_test PRIVATE src/services/impl/workflow/racer/data/racer_model_material.cpp)
+target_sources(racer_model_test PRIVATE src/services/impl/workflow/racer/data/racer_model_collision.cpp)
 target_include_directories(racer_model_test PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )
@@ -2535,6 +2544,7 @@ add_executable(racer_pod_physics_test)
 target_sources(racer_pod_physics_test PRIVATE tests/racer_pod_physics_test.cpp)
 target_sources(racer_pod_physics_test PRIVATE src/services/impl/workflow/racer/player/racer_pod_physics.cpp)
 target_sources(racer_pod_physics_test PRIVATE src/services/impl/workflow/racer/player/racer_pod_engines.cpp)
+target_sources(racer_pod_physics_test PRIVATE src/services/impl/workflow/racer/player/racer_pod_collision.cpp)
 target_include_directories(racer_pod_physics_test PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )
@@ -2547,6 +2557,7 @@ add_test(NAME racer_pod_physics_test COMMAND racer_pod_physics_test)
 add_executable(racer_ground_test)
 target_sources(racer_ground_test PRIVATE tests/racer_ground_test.cpp)
 target_sources(racer_ground_test PRIVATE src/services/impl/workflow/racer/world/racer_ground.cpp)
+target_sources(racer_ground_test PRIVATE src/services/impl/workflow/racer/world/racer_walls.cpp)
 target_include_directories(racer_ground_test PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )

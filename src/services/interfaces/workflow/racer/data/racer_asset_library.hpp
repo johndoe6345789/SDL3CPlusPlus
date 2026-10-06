@@ -25,7 +25,8 @@ struct RacerAssetLibrary {
 RacerAssetLibrary OpenRacerAssetLibrary(const std::filesystem::path& dir);
 
 /// The model at `index`, flattened. Empty if the index or data is bad.
-RacerModel LoadRacerModel(const RacerAssetLibrary& library, int index);
+RacerModel LoadRacerModel(const RacerAssetLibrary& library, int index,
+                          RacerModelScope scope = RacerModelScope::Everything);
 
 /// The spline item at `index` as raw bytes.
 std::vector<std::uint8_t> RacerSplineBytes(const RacerAssetLibrary& library,

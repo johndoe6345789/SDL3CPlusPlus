@@ -40,13 +40,29 @@ struct RacerModelBatch {
 struct RacerModel {
     std::uint32_t tag = 0;   ///< 'Trak', 'Podd', 'Part', ... big-endian.
     std::vector<RacerModelBatch> batches;
+    /// The invisible collision surface pods ride on and bounce off:
+    /// x, y, z per corner, three corners per triangle, game space.
+    std::vector<float> collision;
     int meshCount = 0;
     int triangleCount = 0;
     bool valid = false;
 };
 
+/// What to keep while walking a model's node tree.
+enum class RacerModelScope {
+    /// Every reachable mesh, with every node transform applied. Right
+    /// for tracks and scenery.
+    Everything,
+    /// Only meshes under the first LOD selector, with transforms from
+    /// that selector down. Pods keep their real geometry there; around
+    /// it sit shadow quads and afterburner cones, and above it a scale
+    /// and mirror, that the game rewrites every frame.
+    FirstLodOnly,
+};
+
 /// Parses the data part of a model block item (see the racer README for
 /// the layout). Pointers inside the item are offsets from its start.
-RacerModel ParseRacerModel(const std::vector<std::uint8_t>& data);
+RacerModel ParseRacerModel(const std::vector<std::uint8_t>& data,
+                           RacerModelScope scope = RacerModelScope::Everything);
 
 }  // namespace sdl3cpp::services::impl

@@ -27,6 +27,7 @@ void AppendMesh(ModelWalk& walk, std::uint32_t offset,
                 const glm::mat4& transform) {
     const RacerBigEndianReader& r = walk.reader;
     if (!walk.IsPointer(offset, kMeshBytes)) return;
+    AppendCollision(walk, offset, transform);
     const std::uint32_t commands = r.U32(offset + 0x30);
     const std::uint32_t vertices = r.U32(offset + 0x34);
     const std::int32_t count = r.I16(offset + 0x3A);

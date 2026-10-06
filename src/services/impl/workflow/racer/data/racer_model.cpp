@@ -13,8 +13,10 @@ bool RacerMaterialRef::operator==(const RacerMaterialRef& other) const {
            doubleHeight == other.doubleHeight;
 }
 
-RacerModel ParseRacerModel(const std::vector<std::uint8_t>& data) {
+RacerModel ParseRacerModel(const std::vector<std::uint8_t>& data,
+                           RacerModelScope scope) {
     ModelWalk walk(data);
+    walk.scope = scope;
     if (!walk.reader.Has(0, 8)) return {};
     walk.model.tag = walk.reader.U32(0);
 

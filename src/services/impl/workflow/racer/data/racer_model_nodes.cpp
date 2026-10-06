@@ -3,15 +3,6 @@
 namespace sdl3cpp::services::impl::racer_model_detail {
 namespace {
 
-// Node kinds, from the flags word at +0x00 of every node.
-constexpr std::uint32_t kMeshGroup = 0x3064;
-constexpr std::uint32_t kBasic = 0x5064;
-constexpr std::uint32_t kSelector = 0x5065;
-constexpr std::uint32_t kLodSelector = 0x5066;
-constexpr std::uint32_t kTransformed = 0xD064;
-constexpr std::uint32_t kTransformedPivot = 0xD065;
-constexpr std::uint32_t kTransformedComputed = 0xD066;
-
 constexpr int kMaxDepth = 64;
 // flags, flags1, flags2, flags3 (s16) + light (s16), flags5, child
 // count, child pointer array: 0x1C bytes before the kind's own fields.
@@ -50,6 +41,12 @@ void WalkNode(ModelWalk& walk, std::uint32_t offset,
 
     const std::uint32_t flags = r.U32(offset);
     glm::mat4 transform = parent;
+    const bool lodOnly = walk.scope == RacerModelScope::FirstLodOnly;
+    bool enteredLod = false;
+    if (lodOnly && flags == kLodSelector && !walk.insideLod) {
+        walk.insideLod = enteredLod = true;
+        transform = glm::mat4(1.f);  // drop the runtime scale above it
+    }
     if (flags == kTransformed || flags == kTransformedPivot) {
         transform = parent * ReadTransform(r, offset);
     } else if (flags != kMeshGroup && flags != kBasic &&
@@ -68,11 +65,12 @@ void WalkNode(ModelWalk& walk, std::uint32_t offset,
         const std::uint32_t child = r.U32(children + 4u * i);
         if (child == 0 || !VisitChild(r, offset, flags, i)) continue;
         if (flags == kMeshGroup) {
-            AppendMesh(walk, child, transform);
+            if (!lodOnly || walk.insideLod) AppendMesh(walk, child, transform);
         } else {
             WalkNode(walk, child, transform, depth + 1);
         }
     }
+    if (enteredLod) walk.insideLod = false;
 }
 
 }  // namespace sdl3cpp::services::impl::racer_model_detail

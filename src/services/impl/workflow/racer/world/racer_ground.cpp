@@ -6,6 +6,8 @@
 namespace sdl3cpp::services::impl {
 namespace {
 
+constexpr float kRideableCosine = 0.26f;
+
 long long CellKey(int cx, int cz) {
     return (static_cast<long long>(cx) << 32) ^
            static_cast<unsigned int>(cz);
@@ -29,14 +31,22 @@ std::optional<float> HeightOn(const glm::vec3& a, const glm::vec3& b,
 
 }  // namespace
 
+long long RacerGroundCell(const RacerGround& ground, float x, float z) {
+    return CellKey(CellOf(x, ground.cellSize), CellOf(z, ground.cellSize));
+}
+
 void AddRacerGroundTriangle(RacerGround& ground, const glm::vec3& a,
                             const glm::vec3& b, const glm::vec3& c) {
     const glm::vec3 n = glm::cross(b - a, c - a);
     const float length = glm::length(n);
-    // Only surfaces a pod can ride on: walls are handled by step height.
-    if (length < 1e-6f || std::fabs(n.y) / length < 0.5f) return;
-    const int index = static_cast<int>(ground.triangles.size() / 3);
-    ground.triangles.insert(ground.triangles.end(), {a, b, c});
+    // A pod rides surfaces up to ~75 degrees: the game's banked turns
+    // are steeper than 60. Anything steeper is a wall.
+    if (length < 1e-6f) return;
+    const bool wall = std::fabs(n.y) / length < kRideableCosine;
+    auto& corners = wall ? ground.walls : ground.triangles;
+    auto& cells = wall ? ground.wallCells : ground.cells;
+    const int index = static_cast<int>(corners.size() / 3);
+    corners.insert(corners.end(), {a, b, c});
     const float s = ground.cellSize;
     const int x0 = CellOf(std::min({a.x, b.x, c.x}), s);
     const int x1 = CellOf(std::max({a.x, b.x, c.x}), s);
@@ -44,15 +54,14 @@ void AddRacerGroundTriangle(RacerGround& ground, const glm::vec3& a,
     const int z1 = CellOf(std::max({a.z, b.z, c.z}), s);
     for (int cx = x0; cx <= x1; ++cx) {
         for (int cz = z0; cz <= z1; ++cz) {
-            ground.cells[CellKey(cx, cz)].push_back(index);
+            cells[CellKey(cx, cz)].push_back(index);
         }
     }
 }
 
 std::optional<float> RacerGroundHeight(const RacerGround& ground, float x,
                                        float z, float ceiling) {
-    const auto it = ground.cells.find(CellKey(CellOf(x, ground.cellSize),
-                                              CellOf(z, ground.cellSize)));
+    const auto it = ground.cells.find(RacerGroundCell(ground, x, z));
     if (it == ground.cells.end()) return std::nullopt;
     std::optional<float> best;
     for (int t : it->second) {

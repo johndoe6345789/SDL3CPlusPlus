@@ -4,20 +4,13 @@
 #include <cmath>
 
 namespace sdl3cpp::services::impl {
-namespace {
-
-/// Something within this height above a gap is a wall, not a drop.
-constexpr float kWallHeight = 12.f;
-
-}  // namespace
-
 glm::vec3 RacerPodForward(float heading) {
     return {std::sin(heading), 0.f, -std::cos(heading)};
 }
 
 void StepRacerPod(RacerPodState& pod, const RacerPodInput& in,
-                  const RacerPodSpec& spec, float dt, RacerGroundProbe probe,
-                  const void* ground) {
+                  const RacerPodSpec& spec, float dt,
+                  const RacerSurface& surface) {
     if (dt <= 0.f) return;
     UpdateRacerPodEngines(pod, in, spec, dt);
     const float target = RacerPodTargetSpeed(pod, in, spec);
@@ -31,23 +24,19 @@ void StepRacerPod(RacerPodState& pod, const RacerPodInput& in,
     } else {
         pod.speed = std::max(target, pod.speed - pod.speed * spec.drag * dt);
     }
-    // Pods turn tighter when slow; at full tilt the turn rate halves.
-    const float grip = 1.f - 0.5f * std::min(1.f, pod.speed / spec.topSpeed);
+    // Pods turn tighter when slow, keeping a share of it at top speed.
+    const float pace = std::min(1.f, std::fabs(pod.speed) / spec.topSpeed);
+    const float grip = 1.f - (1.f - spec.turnAtTopSpeed) * pace;
     pod.heading += in.steer * spec.turnRate * grip * dt;
 
-    const glm::vec3 step = RacerPodForward(pod.heading) * pod.speed * dt;
-    glm::vec3 next = pod.position + step;
+    glm::vec3 next = pod.position;
     const float ceiling = pod.position.y + spec.stepHeight;
-    // No floor ahead but something just above it: the pod has met a
-    // wall or a ledge, so it stops and loses half its speed.
-    if (!probe(ground, next.x, next.z, ceiling) &&
-        probe(ground, next.x, next.z, ceiling + kWallHeight)) {
-        next = pod.position;
-        pod.speed *= 0.5f;
-    }
+    pod.blocked =
+        !MoveRacerPodAlongSurface(pod, spec, dt, surface, next);
     pod.verticalSpeed -= spec.gravity * dt;
     next.y = pod.position.y + pod.verticalSpeed * dt;
-    const auto floor = probe(ground, next.x, next.z, ceiling);
+    const auto floor =
+        surface.height(surface.context, next.x, next.z, ceiling);
     pod.grounded = floor && next.y <= *floor + spec.hoverHeight;
     if (pod.grounded) {
         next.y = *floor + spec.hoverHeight;

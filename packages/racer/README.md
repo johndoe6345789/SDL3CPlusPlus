@@ -1,194 +1,129 @@
 # Star Wars Episode I Racer (2026 update)
 
-A modernisation of *Star Wars Episode I Racer* (LucasArts, 1999). The
-package ships no game data. It reads an existing install, decodes what it
-needs, and writes upscaled or rebuilt assets to `packages/racer/generated/`.
+*Star Wars Episode I Racer* (LucasArts, 1999) rebuilt on this engine. Every
+track and pod is decoded from the game's own data at run time, its textures
+upscaled 4x, and raced with new pod physics. **No game data ships here**:
+point `RACER_DIR` at your own install.
 
-Status: **prototype.** The asset pipeline is C++ and runs end to end. No
-game loop or rendering exists yet. Format survey below. Block tables, model chunk tags, and texture
-format (4-bit indexed, RGB565 palettes) are mapped. The palette pairing
-is unverified, and the vertex layout is not yet known.
-UI images and audio have a first modernised pass.
+    RACER_DIR="D:/SteamLibrary/steamapps/common/Star Wars Episode I Racer"       ./sdl3_app --bootstrap bootstrap_windows --game racer
 
-## Install layout (`<game>/data`)
+| variable          | meaning                                                     |
+|-------------------|-------------------------------------------------------------|
+| `RACER_DIR`       | the install (holds `SWEP1RCR.EXE` and `data/`)               |
+| `RACER_TRACK`     | `0`-`24` or part of a name (`Inferno`); default Boonta Classic |
+| `RACER_POD`       | part of a racer's name (`Sebulba`); default Anakin            |
+| `RACER_EXPORT`    | a folder: also export textures, OBJ models, UI art, audio    |
+| `RACER_SHOT`      | a file: save a screenshot about three seconds in             |
+| `RACER_AUTOPILOT` | `1`: the pod drives itself (headless checks, demo)           |
 
-| path                    | contents                                              |
-|-------------------------|-------------------------------------------------------|
-| `lev01/out_modelblock.bin`   | 323 entries, tagged chunks (see below)           |
-| `lev01/out_splineblock.bin`  | 91 entries, track splines (no tags)              |
-| `lev01/out_spriteblock.bin`  | 179 entries, sprites (no tags)                   |
-| `lev01/out_textureblock.bin` | 1648 entries, texture data (no tags)             |
-| `images/*.TGA`          | 92 UI textures, uncompressed truecolour TGA           |
-| `wavs/22K`, `wavs/11K`  | ~2400 WAV sound effects and voice lines               |
-| `wavs/Music`            | music loops                                           |
-| `anims/*.znm`           | zlib-wrapped cutscene/planet animation scripts        |
-| `bundle*.fcr`           | Smush/FCR bundles (DirectShow filter graph, not assets) |
+Controls: Up/W or right trigger throttle, Down/S or left trigger brake,
+Left/Right/A/D or left stick steer, Space/Left Shift or (A) boost, R or (X)
+repair, Escape or Start quits. Boost needs near-top speed and heats the
+engines; at full heat they catch fire, cut out for three seconds and take
+damage, which lowers top speed until repaired (repairing costs speed).
 
-## Block tables
+## Status
 
-Each `out_*block.bin` starts with a big-endian `u32` count `N`, then `N`
-big-endian `u32` offsets. Entry `i` runs from its offset to the next
-larger offset (or end of file). Texture offsets are not ascending, so
-ends are taken from the sorted offset set.
+Working: all 25 tracks and 25 pods decode; the track draws with textures
+upscaled 4x (Scale2x) and mipmapped, baked N64 vertex colours and distance
+fog at 1920x1080; the pod hovers on the real track surface, stops at walls,
+falls into gaps and respawns on the lap; laps are timed with a countdown;
+HUD shows lap, time, best lap, speed and engine heat.
 
-Model entries carry four-character ASCII tags at their start:
+Not done yet: opponents (the autopilot is the starting point), animated
+parts (engine flames, the shadow, energy binder), the skybox and other
+`Scen` scenery models, menus and the pod shop, sound in the race, splitting
+damage per engine, and track triggers (boost pads, hazards).
 
-| tag    | count | guess                                   |
-|--------|-------|-----------------------------------------|
-| `Part` | 57    | model part (mesh piece)                 |
-| `Pupp` | 29    | pod or puppet animation/rig             |
-| `MAlt` | 23    | model alternate / LOD                   |
-| `Podd` | 23    | racing pod                              |
-| `Trak` | 21    | track geometry                          |
-| `Scen` | 5     | scenery                                 |
-| `Modl` | 3     | top-level model header                  |
+## Data formats
 
-The remaining 162 model entries have no tag; they are not yet understood.
+All four `data/lev01/out_*block.bin` files are big-endian (the PC port
+byte-swaps on load). Layouts below were checked against a retail install;
+the model, material and spline layouts follow
+[swe1r-assets](https://github.com/akopetsch/swe1r-assets) (MIT), whose
+metadata also names the track and pod model ids in `assets/racer_tracks.json`.
 
+### Block tables
 
-## Model chunks (`Modl`, `Part`)
+`u32 count`, then `count x parts` u32 offsets, then a u32 total size. A
+part runs to the next non-zero offset; offset 0 means the part is absent.
 
-Model entries are a sequence of tagged chunks. Each starts with a four
-character tag and a big-endian `u32` that looks like the chunk's header
-length, then words that point at sub-chunks by offset from the start of
-the entry. Sentinel values `0xffffffff` mark unused slots. Chunks seen:
+| block    | parts per item            | items |
+|----------|---------------------------|-------|
+| model    | relocation mask, data     | 323   |
+| texture  | pixels, palette           | 1648  |
+| spline   | one                       | 91    |
+| sprite   | one                       | 179   |
 
-| tag    | role (tentative)                                             |
-|--------|--------------------------------------------------------------|
-| `Modl` | model header: a table of offsets to its parts                |
-| `Part` | one mesh part: vertex-like floats and an `HEnd` terminator   |
-| `Anim` | animation keyframe block, inside `Modl` and `Part`           |
-| `Cnfj` | config block, seen twice inside `Part`                       |
-| `HEnd` | end-of-header marker, four bytes, no payload                 |
+The mask has one bit per data word marking pointers the game relocates;
+pointers in the data are offsets from the data part's start.
 
-Confirmed: `HEnd` closes each header, and `Anim` offsets point inside
-their own entry. Not confirmed: the exact field meaning of each word,
-and the vertex layout. Floats such as `0x3f800000` (1.0) appear in
-`Part` bodies, which points at position or matrix data.
+### Models
 
-## Texture entries
+A data part starts with a tag (`Trak`, `Podd`, `Part`, `Scen`, `MAlt`,
+`Pupp`, `Modl`), then node pointers until `0xFFFFFFFF` (negative words are
+placeholders), then optional `Data`, `Anim` and `AltN` sections, then
+`HEnd`.
 
-The texture block has no tags. Entry sizes give the format:
+Every node starts with a 0x1C-byte header: kind (`u32`), two flag words,
+two `s16`, a flag word, child count (+0x14) and a pointer to an array of
+child pointers (+0x18). Kinds:
 
-| entry size (bytes) | count | reading                                     |
-|--------------------|-------|---------------------------------------------|
-| 2048               | 351   | 64x64, 4 bits per pixel (palette index)     |
-| 512                | 128   | 32x32, 4 bits per pixel                     |
-| 1024               | 290   | 32x32, 8 bits per pixel                     |
-| 256                | 20    | 16x16, 8 bits per pixel                     |
-| 32                 | 759   | small 4-bit tile or palette                 |
+| kind     | node                 | own fields after the header           |
+|----------|----------------------|---------------------------------------|
+| `0x3064` | mesh group           | bounding box; children are meshes      |
+| `0x5064` | group                | -                                     |
+| `0x5065` | selector             | `s32` choice: -1 all, -2 none, else one |
+| `0x5066` | LOD selector         | 8 distances; child 0 is most detailed  |
+| `0xD064` | transform            | 3x4 matrix: right, forward, up, offset |
+| `0xD065` | transform with pivot | matrix, then a pivot                   |
+| `0xD066` | computed transform   | set by the game at run time            |
 
-A 4-bit greyscale render of the 2048-byte entries shows clear shapes
-(hooks, rings, bands), so they are indexed pixels.
+A mesh (0x40 bytes) points to its material (+0x00), display list (+0x30)
+and vertices (+0x34), with the vertex count at +0x3A. Vertices are N64
+`Vtx`: `s16 x, y, z`, flags, `s16 s, t`, then RGBA (baked lighting).
+Display lists are F3DEX2: `gSPVertex` (0x01) loads vertices into a 64-slot
+cache, `gSP1Triangle` (0x05) and `gSP2Triangles` (0x06) index the cache,
+`0xDF` ends the list. Texture coordinates span the image at 4096 units.
 
-Palettes: the 32-byte entries are 16 big-endian RGB565 colours. Decoded,
-they give plausible sand, grass, sky and metal tones. In file order each
-2048-byte texture sits directly beside a 32-byte palette (345 and 332
-adjacent pairs), so the decoder pairs each texture with the nearest
-palette before it. The pairing is a heuristic and not yet verified
-against a known image. the `racer.assets.build` step writes 350 PNGs; most
-look coherent (spirals, stripes, sand), a few may use the wrong palette.
+A material points at a 0x40-byte texture descriptor: format at +0x0C, width
+and height at +0x10/+0x12, six child pointers at +0x1C (byte 3 of a child:
+`0x10` double width, `0x01` double height, meaning the image is mirrored),
+and the texture-block index in the low 24 bits of +0x38 (top byte `0x0A`).
 
-## Track splines (`out_splineblock.bin`)
+Pods keep their real geometry under the first LOD selector. Around it the
+`Podd` model holds shadow quads and afterburner cones in other units, and
+above it a 0.02 scale and an x-mirror the game rewrites each frame, so the
+pod is drawn from the LOD down.
 
-Verified by plotting. Each entry is a 16-byte header plus `count` records
-of 84 bytes. The header's second word is the record count; the first word
-is a pointer, purpose unknown. Records are big-endian:
+### Textures
 
-| word  | meaning                                                      |
-|-------|--------------------------------------------------------------|
-| 0-2   | `0xffffffff` sentinels (record 0 holds the header instead)   |
-| 3     | flags (`0xffff0000` or a pointer in record 0)                |
-| 4     | `0x00010001`                                                 |
-| 5     | high 16 bits: this record's 1-based id, wrapping to 0        |
-| 6     | high 16 bits: the previous record's id (a ring)              |
-| 8-10  | point 0 as x, z, height                                      |
-| 13    | `1.0`                                                        |
-| 14-16 | point 1 as x, z, height                                      |
-| 17-19 | point 2 as x, z, height                                      |
+The texture block stores no format or size; only a material can decode a
+texture. Formats: `0x0003` RGBA32, `0x0200` 4-bit and `0x0201` 8-bit
+indices into an ARGB1555 palette (red bits 11-15, green 6-10, blue 1-5,
+alpha bit 0), `0x0400` 4-bit and `0x0401` 8-bit intensity (alpha = grey).
+4-bit texels are high nibble first. Every model's materials together
+decode 1,510 distinct textures.
 
-Plotted top-down, entry 0 is a closed circuit with a hairpin and a
-chicane, drawn as three parallel rows (lane 0 red, lane 1 green, lane 2
-blue). Which row is the left edge, centre line or right edge is not yet
-confirmed. About 51 entries have 20 or more records and plot as circuits
-(`racer.assets.build` writes them to `racer_generated/tracks/`). Some plots
-have straight lines across the interior, which suggests the ring order
-does not always follow array order, not yet checked.
+### Splines
 
-## Texture pairing and palettes
+A 16-byte header (segment count at +4), then 84-byte segments: predecessor
+and successor counts (`u16` at +0, +2), successor ids at +4 and +10,
+predecessor ids at +8 and +6, a knot at +0x10, and Bezier control points
+before (+0x28) and after (+0x34) the knot; positions are z-up. Two
+successors mark a fork; alternate routes are stored running back toward
+the fork. Following first successors from segment 0 gives the lap, and it
+closes on all 25 tracks (Boonta Classic: 135 of 180 segments, 86,612
+units round).
 
-Palettes are **ARGB1555**, big-endian, 16 entries per 32-byte palette:
-red in bits 11-15, green 6-10, blue 1-5, alpha in bit 0. An earlier
-version of this decoder read them as RGB565, which made most textures
-look purple and yellow. With ARGB1555 the full texture sheet reads as
-natural sand, stone, metal, grass and sky palettes.
+Units: a game unit is about 5 cm (`kRacerWorldScale` = 0.05); the engine
+is y-up, so a game point (x, y, z) maps to (x, z, -y) x 0.05.
 
-The pairing rule (each texture takes the nearest palette before it in
-block order) now looks right across the sheet. The palette-after rule has
-not been tested under the corrected format.
+### Other data
 
-Texture dimensions are not stored in the block. The community tools take
-them from XML; the 2048-byte entries are 64x64 at 4 bits per pixel, which
-matches the sizes seen here.
-
-References for the formats (facts only, no code copied):
-
-- [OpenSWE1R swe1r-tools](https://github.com/OpenSWE1R/swe1r-tools): texture
-  and spline extractors, GPL-2.0-or-later. The source of the ARGB1555 layout
-  and the 4-bit index packing.
-- [OpenSWE1R swe1r-re](https://github.com/OpenSWE1R/swe1r-re): reverse
-  engineering notes for the game.
-- [tim-tim707 SW_RACER_RE](https://github.com/tim-tim707/SW_RACER_RE): a
-  decompilation project. It reads the same four blocks.
-
-## Models: N64 display lists
-
-The community notes that some model data is N64 display lists in the
-F3DEX2 (GBI) form, and that the blocks are shared with the Nintendo 64
-version. That fits the `Part` chunks here, and gives a route to the vertex
-layout: N64 `Vtx` records are 16 bytes (three s16 positions, a u16 flag,
-two s16 texture coordinates, four colour or normal bytes). Not yet checked
-against a `Part` chunk.
-
-## Spline record: disagreement
-
-[swe1r-tools](https://github.com/OpenSWE1R/swe1r-tools) places the position
-at bytes 16-27 and a normal at 28-39. The plots in this package show
-readable float triples at bytes 32-43 and 56-67 and 68-79, and a closed
-track when plotted from there. The community layout may mislabel the
-fields. The float reading is what the plots use.
-
-## Confirmed against the reverse-engineering notes
-
-The OpenSWE1R `swep1rcr.exe` notes (see
-[the folder](https://github.com/OpenSWE1R/swe1r-re/tree/master/swep1rcr.exe))
-name the chunk tags `Comp`, `Data`, `Anim`, `AltN`, `Modl`, `Trak`,
-`Podd`, `Part`, `Scen`, `MAlt` and `Pupp`, and say the data is
-byte-swapped on load. Counted in the model block here:
-
-| tag    | entries containing it | note                                        |
-|--------|-----------------------|---------------------------------------------|
-| `HEnd` | 162                   | the 162 untagged entries start with this     |
-| `Part` | 58                    |                                             |
-| `Anim` | 64                    |                                             |
-| `AltN` | 47                    | alternates                                  |
-| `Pupp` | 30                    |                                             |
-| `MAlt` | 24                    |                                             |
-| `Podd` | 24                    |                                             |
-| `Trak` | 22                    |                                             |
-| `Data` | 13                    | see below                                   |
-| `Scen` | 6                     |                                             |
-| `Modl` | 4                     |                                             |
-| `Comp` | 0                     | no compressed entries in this install       |
-
-`Data` chunks hold `LStr` records: the tag, then three big-endian floats,
-16 bytes each. Three checked chunks all keep that stride, with 28, 6 and
-22 records. The points run along the track, so these look like polylines.
-The axis order is not yet known (height or z).
-
-The spline loader in those notes reads about 42 bytes per entry. That
-matches 42 big-endian 16-bit fields, consistent with the 84-byte record
-above.
+`images/*.TGA` are plain truecolour TGA; `wavs/` holds 16-bit PCM at
+11.025 and 22.05 kHz. The asset export upscales the former 4x and
+resamples the latter to 44.1 kHz.
 
 ## Executable analysis: packed on disk
 
@@ -246,77 +181,18 @@ byte-swaps its header and records in place from big-endian to
 little-endian. Its buffer layout confirms the 16-byte header and the
 84-byte record used by the decoder above.
 
+## Code map
 
-## Spline rings and lanes
+`src/services/{interfaces,impl}/workflow/racer/`:
 
-Following the `prev` links (each record's predecessor index) gives a single
-loop through every record in only 15 of the 91 entries. Those include the
-clean circuits (entries 0, 1, 2, 3, 7 and 8), and in those the array order
-is the track order. In the other entries some records have two successors
-(duplicate predecessors), so the links branch or split into several pieces.
-Those entries plot with straight joins between pieces, which is why some
-plots show lines across the interior. Splitting them correctly needs more
-analysis, not a different plotting order.
+- `data/`: block reader, model parser (`racer_model_*`), textures,
+  palettes, mirroring, Scale2x upscaler, splines, WAV, track table, and the
+  export passes (PNG, OBJ, plots, audio).
+- `world/`: `racer.world.load`, GPU upload with the upscaled texture
+  cache, and the ground grid used for hovering and walls.
+- `player/`: pod physics (pure, unit-tested), `racer.pod.drive`, the
+  autopilot, lap progress and `racer.lap.timer`.
+- `render/`: `racer.camera.chase`, `racer.scene.draw`, `racer.hud.text`.
 
-Lane roles are still unknown. The `LStr` points in the model block sit
-150-550 units from the nearest spline point in any lane, so they do not
-come from the same track as these splines. That test cannot decide between
-the left, centre and right lanes.
-
-## Model loading
-
-`load_model` reads the model block's count, then a 12-byte entry for the
-requested model. It swaps the three words, takes `start` and `end` from
-them, and rejects any size above 0x25800 (about 150 KB). It reads the
-chunk, swaps it as 32-bit words from big-endian to little-endian, and
-allocates an 8-byte-aligned buffer.
-
-`parse_model` swaps the first dword and walks a list of dwords after the
-header. A value of 0xFFFFFFFF ends the list, 0 is skipped, and any other
-value is passed to `parse_malt`. The chunk tags are compared in a switch
-over `Modl`, `Trak`, `Podd`, `Part`, `Scen`, `MAlt` and `Pupp`. Unknown
-tags go to an error routine at 0x426910. The `Part` vertex layout is still
-unknown. The `Part` header holds a table of offsets to sub-blocks, which
-is where the next analysis should start.
-
-## Generated assets
-
-Written to `D:
-acer_generated\` by the tools below, outside the repo:
-
-
-- `textures/`: 350 decoded textures, scaled 4x with Scale2x, and
-  `sheet.png`, all textures side by side.
-- `tracks/`: top-down plots of the circuit splines.
-- `images/`: the 92 UI TGAs scaled 4x with Scale2x.
-- `wavs/`: 2479 WAVs resampled from 11.025/22.05 kHz to 44.1 kHz.
-
-## Running the asset build (C++)
-
-The asset pipeline is a workflow step, `racer.assets.build`, in
-`src/services/impl/workflow/racer/`. It runs against the install and
-writes to `racer_generated/` under the working directory:
-
-    RACER_DIR="<game>/data/.." SDL3CPP_HEADLESS=1       ./sdl3_app --bootstrap bootstrap_windows --game racer
-
-It decodes the textures, upscales the UI images, and resamples the
-sounds to 44.1 kHz. About 11 seconds on a desktop, 588 MB of output.
-Parameters are in `workflows/racer_assets.json` (`scale`, `audio_rate`).
-
-Unit tests: `racer_block_table_test`, `racer_texture_test`,
-`racer_upscale_test` and `racer_wav_test`, all gtest.
-
-## Next steps
-
-0. Build a game workflow that draws the track and textures in 3D.
-1. Pin down the `Part` vertex layout and the `Modl` offset table.
-2. Verify the texture-to-palette pairing, for example with the
-   sprite block, which may reference textures by index.
-3. Build the game workflow once models and textures render in the
-   engine.
-
-## Upgrade rules
-
-- Keep original data read-only; write only to `generated/`.
-- Trace logging when fixing a parser bug, per AGENTS.md.
-- Keep files under 80 lines and lines under 80 columns.
+Shaders are in `shaders/spirv/` (GLSL source next to the SPIR-V; rebuild
+with `glslc`). Unit tests: `racer_*_test`.

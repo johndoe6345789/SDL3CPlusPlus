@@ -1177,7 +1177,8 @@
         "src/services/impl/workflow/racer/data/racer_model_nodes.cpp",
         "src/services/impl/workflow/racer/data/racer_model_mesh.cpp",
         "src/services/impl/workflow/racer/data/racer_model_vertex.cpp",
-        "src/services/impl/workflow/racer/data/racer_model_material.cpp"
+        "src/services/impl/workflow/racer/data/racer_model_material.cpp",
+        "src/services/impl/workflow/racer/data/racer_model_collision.cpp"
       ],
       "include_directories": [
         "src"
@@ -1248,7 +1249,8 @@
       "sources": [
         "tests/racer_pod_physics_test.cpp",
         "src/services/impl/workflow/racer/player/racer_pod_physics.cpp",
-        "src/services/impl/workflow/racer/player/racer_pod_engines.cpp"
+        "src/services/impl/workflow/racer/player/racer_pod_engines.cpp",
+        "src/services/impl/workflow/racer/player/racer_pod_collision.cpp"
       ],
       "include_directories": [
         "src"
@@ -1262,7 +1264,8 @@
       "name": "racer_ground_test",
       "sources": [
         "tests/racer_ground_test.cpp",
-        "src/services/impl/workflow/racer/world/racer_ground.cpp"
+        "src/services/impl/workflow/racer/world/racer_ground.cpp",
+        "src/services/impl/workflow/racer/world/racer_walls.cpp"
       ],
       "include_directories": [
         "src"

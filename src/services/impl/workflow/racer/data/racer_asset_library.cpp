@@ -23,14 +23,16 @@ RacerAssetLibrary OpenRacerAssetLibrary(const std::filesystem::path& dir) {
     return library;
 }
 
-RacerModel LoadRacerModel(const RacerAssetLibrary& library, int index) {
+RacerModel LoadRacerModel(const RacerAssetLibrary& library, int index,
+                          RacerModelScope scope) {
     if (index < 0 || index >= static_cast<int>(library.models.size())) {
         return {};
     }
     // Part 0 is the relocation mask the game uses to patch pointers;
     // the parser reads offsets directly, so only part 1 is needed.
     const auto& parts = library.models[index];
-    return ParseRacerModel(RacerPartBytes(library.modelBlock, parts[1]));
+    return ParseRacerModel(RacerPartBytes(library.modelBlock, parts[1]),
+                           scope);
 }
 
 std::vector<std::uint8_t> RacerSplineBytes(const RacerAssetLibrary& library,

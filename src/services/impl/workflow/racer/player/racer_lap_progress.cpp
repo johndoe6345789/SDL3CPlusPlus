@@ -5,7 +5,8 @@
 namespace sdl3cpp::services::impl {
 namespace {
 
-constexpr int kSearchWindow = 6;
+// About three spline segments either way (eight samples each).
+constexpr int kSearchWindow = 24;
 
 }  // namespace
 

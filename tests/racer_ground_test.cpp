@@ -31,3 +31,10 @@ TEST(RacerGround, EmptyOutsideAnyTriangle) {
     AddRacerGroundTriangle(ground, {0, 0, 0}, {20, 0, 0}, {0, 0, 20});
     EXPECT_FALSE(RacerGroundHeight(ground, 500.f, 500.f, 10.f).has_value());
 }
+
+TEST(RacerGround, SteepTrianglesBecomeWalls) {
+    RacerGround ground;
+    AddRacerGroundTriangle(ground, {0, -5, 0}, {0, 20, 0}, {0, -5, 20});
+    EXPECT_FALSE(RacerWallBetween(ground, {-2, 1, 2}, {-1, 1, 2}));
+    EXPECT_TRUE(RacerWallBetween(ground, {-1, 1, 2}, {1, 1, 2}));
+}

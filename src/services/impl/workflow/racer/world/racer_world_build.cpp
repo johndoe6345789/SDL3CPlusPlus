@@ -26,7 +26,8 @@ void PlaceRacerPodOnLap(RacerWorldState& state, int index, float speed) {
 bool BuildRacerWorld(SDL_GPUDevice* device, RacerWorldState& state,
                      const std::shared_ptr<ILogger>& logger) {
     const RacerModel track = LoadRacerModel(state.library, state.track.model);
-    const RacerModel pod = LoadRacerModel(state.library, state.racer.podd);
+    const RacerModel pod = LoadRacerModel(state.library, state.racer.podd,
+                                          RacerModelScope::FirstLodOnly);
     state.spline = ReadRacerSpline(
         RacerSplineBytes(state.library, state.track.spline));
     state.lap = RacerSplineMainLoop(state.spline);
@@ -37,18 +38,17 @@ bool BuildRacerWorld(SDL_GPUDevice* device, RacerWorldState& state,
         }
         return false;
     }
-    state.lapPoints.clear();
-    for (int i : state.lap) {
-        const RacerVec3& k = state.spline[i].knot;
-        state.lapPoints.push_back(RacerToEngine(k.x, k.y, k.z));
-    }
+    BuildRacerLapPoints(state);
     RacerTexture white;
     white.width = white.height = 4;
     white.rgba.assign(4 * 4 * 4, 255);
     state.white = UploadRacerTexture(device, white, 1);
-    state.trackModel = UploadRacerModel(device, state, track, &state.ground);
+    const bool collision = BuildRacerCollisionGround(state, track);
+    state.trackModel = UploadRacerModel(device, state, track,
+                                        collision ? nullptr : &state.ground);
     state.podModel = UploadRacerModel(device, state, pod, nullptr);
     PlaceRacerPodOnLap(state, 0, 0.f);
+    TraceModelExtent(logger, "pod", pod);
     if (logger) {
         logger->Info("racer.world.load: " + state.track.name + ", " +
                      std::to_string(track.triangleCount) + " triangles in " +
@@ -56,7 +56,11 @@ bool BuildRacerWorld(SDL_GPUDevice* device, RacerWorldState& state,
                      " batches, " + std::to_string(state.textures.size()) +
                      " textures at " + std::to_string(state.textureScale) +
                      "x, lap of " + std::to_string(state.lap.size()) +
-                     " segments; pod " + state.racer.name + " (" +
+                     " segments, " +
+                     std::to_string(state.ground.triangles.size() / 3) +
+                     " floor and " +
+                     std::to_string(state.ground.walls.size() / 3) +
+                     " wall triangles; pod " + state.racer.name + " (" +
                      std::to_string(pod.triangleCount) + " triangles)");
     }
     return true;

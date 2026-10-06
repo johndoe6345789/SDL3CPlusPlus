@@ -17,6 +17,9 @@ struct ModelWalk {
 
     RacerBigEndianReader reader;
     RacerModel model;
+    RacerModelScope scope = RacerModelScope::Everything;
+    bool insideLod = false;   ///< the walk is below the first LOD
+
     /// Nodes may be shared (instanced) under several parents, so they
     /// are not de-duplicated; this budget stops a malformed cycle.
     int nodeBudget = 200000;
@@ -26,6 +29,15 @@ struct ModelWalk {
         return offset != 0 && offset % 4 == 0 && reader.Has(offset, bytes);
     }
 };
+
+// Node kinds, from the flags word at +0x00 of every node.
+constexpr std::uint32_t kMeshGroup = 0x3064;
+constexpr std::uint32_t kBasic = 0x5064;
+constexpr std::uint32_t kSelector = 0x5065;
+constexpr std::uint32_t kLodSelector = 0x5066;
+constexpr std::uint32_t kTransformed = 0xD064;
+constexpr std::uint32_t kTransformedPivot = 0xD065;
+constexpr std::uint32_t kTransformedComputed = 0xD066;
 
 constexpr int kVertexSlots = 64;  // the F3DEX2 vertex cache
 
@@ -51,6 +63,11 @@ void WalkNode(ModelWalk& walk, std::uint32_t offset,
 
 void AppendMesh(ModelWalk& walk, std::uint32_t offset,
                 const glm::mat4& transform);
+
+/// Appends a mesh's collision triangles (its separate s16 vertex list:
+/// triangles, quads, or strips per its primitive type) to the model.
+void AppendCollision(ModelWalk& walk, std::uint32_t mesh,
+                     const glm::mat4& transform);
 
 RacerMaterialRef ReadMaterial(const ModelWalk& walk, std::uint32_t offset);
 

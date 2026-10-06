@@ -26,6 +26,14 @@ void WorkflowRacerAssetsStep::Execute(const WorkflowStepDefinition& step,
                                       WorkflowContext& context) {
     RacerExportOptions options;
     options.racerDir = RacerStringParam(step, "racer_dir", "RACER_DIR", "");
+    // An out_dir parameter that is present but empty (an unset
+    // ${env:RACER_EXPORT}) turns the export off.
+    const auto outParam = step.parameters.find("out_dir");
+    if (outParam != step.parameters.end() &&
+        outParam->second.stringValue.empty()) {
+        if (logger_) logger_->Trace("racer.assets.build: no out_dir, skipped");
+        return;
+    }
     options.outDir =
         RacerStringParam(step, "out_dir", nullptr, "racer_generated");
     options.scale = RacerIntParam(step, "scale", 4);

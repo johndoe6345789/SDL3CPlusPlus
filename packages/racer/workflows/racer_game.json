@@ -216,11 +216,26 @@
       }
     },
     {
+      "id": "export_assets",
+      "type": "racer.assets.build",
+      "typeVersion": 1,
+      "position": [
+        2200,
+        0
+      ],
+      "parameters": {
+        "racer_dir": "${env:RACER_DIR}",
+        "out_dir": "${env:RACER_EXPORT}",
+        "scale": 4,
+        "audio_rate": 44100
+      }
+    },
+    {
       "id": "init_outer_running",
       "type": "value.literal",
       "typeVersion": 1,
       "position": [
-        2200,
+        2400,
         0
       ],
       "parameters": {
@@ -235,7 +250,7 @@
       "type": "control.loop.while",
       "typeVersion": 1,
       "position": [
-        2400,
+        2600,
         0
       ],
       "parameters": {
@@ -249,7 +264,7 @@
       "type": "system.exit",
       "typeVersion": 1,
       "position": [
-        2600,
+        2800,
         0
       ]
     }
@@ -366,6 +381,17 @@
       }
     },
     "lighting": {
+      "main": {
+        "0": [
+          {
+            "node": "export_assets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      }
+    },
+    "export_assets": {
       "main": {
         "0": [
           {
