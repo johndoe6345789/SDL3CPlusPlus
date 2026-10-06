@@ -1306,7 +1306,8 @@
         "src/services/impl/workflow/racer/player/racer_pod_physics.cpp",
         "src/services/impl/workflow/racer/player/racer_pod_engines.cpp",
         "src/services/impl/workflow/racer/player/racer_pod_collision.cpp",
-        "src/services/impl/workflow/racer/player/racer_surface_effects.cpp"
+        "src/services/impl/workflow/racer/player/racer_surface_effects.cpp",
+        "src/services/impl/workflow/racer/player/racer_traffic.cpp"
       ],
       "include_directories": [
         "src"

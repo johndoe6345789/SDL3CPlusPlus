@@ -4,6 +4,7 @@
 #include "services/interfaces/workflow/racer/player/racer_lap_progress.hpp"
 #include "services/interfaces/workflow/racer/player/racer_pod_recovery.hpp"
 #include "services/interfaces/workflow/racer/player/racer_pod_report.hpp"
+#include "services/interfaces/workflow/racer/player/racer_traffic.hpp"
 #include "services/interfaces/workflow/racer/world/racer_world_build.hpp"
 
 #include <algorithm>
@@ -24,6 +25,11 @@ void FlyRacerOpponent(RacerWorldState& state, RacerOpponent& opponent,
         // The autopilot plans for a stock pod; a slower pod eases off.
         input.throttle *= std::min(1.f, opponent.spec.topSpeed /
                                             state.podSpec.topSpeed + 0.05f);
+        std::vector<const RacerPodState*> others{&state.pod};
+        for (const RacerOpponent& rival : state.opponents) {
+            others.push_back(&rival.pod);
+        }
+        AvoidRacerTraffic(opponent.pod, others, input);
     }
     StepRacerPod(opponent.pod, input, opponent.spec, dt,
                  RacerGroundSurface(state.ground));

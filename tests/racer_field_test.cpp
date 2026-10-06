@@ -1,4 +1,5 @@
 #include "services/interfaces/workflow/racer/player/racer_field_rules.hpp"
+#include "services/interfaces/workflow/racer/player/racer_traffic.hpp"
 
 #include <gtest/gtest.h>
 
@@ -38,4 +39,19 @@ TEST(RacerField, OverlappingPodsArePushedApart) {
     b.position = {1.f, 0.f, 0.f};
     for (int frame = 0; frame < 30; ++frame) SeparateRacerPods({&a, &b});
     EXPECT_GE(b.position.x - a.position.x, 7.9f);
+}
+
+TEST(RacerField, AiSteersRoundAPodAheadAndLiftsOff) {
+    RacerPodState me;
+    me.speed = 100.f;
+    RacerPodState slow;
+    slow.position = {2.f, 0.f, -12.f};  // ahead (heading 0 is -z), right
+    slow.speed = 40.f;
+    RacerPodInput input;
+    input.throttle = 1.f;
+    input.boost = true;
+    AvoidRacerTraffic(me, {&slow}, input);
+    EXPECT_LT(input.steer, 0.f);  // away to the left
+    EXPECT_LE(input.throttle, 0.4f);
+    EXPECT_FALSE(input.boost);
 }

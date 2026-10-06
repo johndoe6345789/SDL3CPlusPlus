@@ -1248,6 +1248,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/racer/player/racer_pod_recovery.cpp
         src/services/impl/workflow/racer/player/racer_pod_report.cpp
         src/services/impl/workflow/racer/player/racer_surface_effects.cpp
+        src/services/impl/workflow/racer/player/racer_traffic.cpp
         src/services/impl/workflow/racer/render/racer_camera_math.cpp
         src/services/impl/workflow/racer/render/racer_chase_cam_step.cpp
         src/services/impl/workflow/racer/render/racer_hud_format.cpp
@@ -2618,6 +2619,7 @@ target_sources(racer_field_test PRIVATE src/services/impl/workflow/racer/player/
 target_sources(racer_field_test PRIVATE src/services/impl/workflow/racer/player/racer_pod_engines.cpp)
 target_sources(racer_field_test PRIVATE src/services/impl/workflow/racer/player/racer_pod_collision.cpp)
 target_sources(racer_field_test PRIVATE src/services/impl/workflow/racer/player/racer_surface_effects.cpp)
+target_sources(racer_field_test PRIVATE src/services/impl/workflow/racer/player/racer_traffic.cpp)
 target_include_directories(racer_field_test PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )
