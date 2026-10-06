@@ -48,6 +48,15 @@ TEST(RacerTexture, ShortBufferShowsMagenta) {
     EXPECT_EQ(t.rgba[2], 255);
 }
 
+TEST(RacerTexture, ShortTextureRepeatsItsRows) {
+    // Two texels of data for a 4x1 image: the row repeats, no magenta.
+    const auto t = DecodeRacerTexture({10, 20}, {},
+                                      RacerTextureFormat::Intensity8, 4, 1);
+    ASSERT_EQ(t.rgba.size(), 16u);
+    EXPECT_EQ(t.rgba[8], 10);
+    EXPECT_EQ(t.rgba[12], 20);
+}
+
 TEST(RacerTexture, MirrorReflectsTheRightHalf) {
     RacerTexture t;
     t.width = 2;

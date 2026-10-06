@@ -1206,6 +1206,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/racer/data/racer_palette.cpp
         src/services/impl/workflow/racer/data/racer_pod_layout.cpp
         src/services/impl/workflow/racer/data/racer_spline.cpp
+        src/services/impl/workflow/racer/data/racer_texel.cpp
         src/services/impl/workflow/racer/data/racer_texture.cpp
         src/services/impl/workflow/racer/data/racer_texture_mirror.cpp
         src/services/impl/workflow/racer/data/racer_texture_sheet.cpp
@@ -2481,6 +2482,7 @@ target_sources(racer_texture_test PRIVATE tests/racer_texture_test.cpp)
 target_sources(racer_texture_test PRIVATE src/services/impl/workflow/racer/data/racer_texture.cpp)
 target_sources(racer_texture_test PRIVATE src/services/impl/workflow/racer/data/racer_palette.cpp)
 target_sources(racer_texture_test PRIVATE src/services/impl/workflow/racer/data/racer_texture_mirror.cpp)
+target_sources(racer_texture_test PRIVATE src/services/impl/workflow/racer/data/racer_texel.cpp)
 target_include_directories(racer_texture_test PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )

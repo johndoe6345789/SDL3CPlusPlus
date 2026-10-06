@@ -1160,7 +1160,8 @@
         "tests/racer_texture_test.cpp",
         "src/services/impl/workflow/racer/data/racer_texture.cpp",
         "src/services/impl/workflow/racer/data/racer_palette.cpp",
-        "src/services/impl/workflow/racer/data/racer_texture_mirror.cpp"
+        "src/services/impl/workflow/racer/data/racer_texture_mirror.cpp",
+        "src/services/impl/workflow/racer/data/racer_texel.cpp"
       ],
       "include_directories": [
         "src"

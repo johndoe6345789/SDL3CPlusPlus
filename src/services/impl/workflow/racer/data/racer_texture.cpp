@@ -1,53 +1,8 @@
 #include "services/interfaces/workflow/racer/data/racer_texture.hpp"
 
+#include "racer_texel.hpp"
+
 namespace sdl3cpp::services::impl {
-namespace {
-
-using Rgba = std::array<std::uint8_t, 4>;
-constexpr Rgba kMissing{255, 0, 255, 255};
-
-/// High nibble first, as the N64 stores 4-bit texels.
-int Nibble(const std::vector<std::uint8_t>& pixels, std::size_t index) {
-    const std::size_t byte = index / 2;
-    if (byte >= pixels.size()) return -1;
-    return index % 2 == 0 ? pixels[byte] >> 4 : pixels[byte] & 15;
-}
-
-Rgba Texel(const std::vector<std::uint8_t>& pixels,
-           const std::vector<Rgba>& palette, RacerTextureFormat format,
-           std::size_t index) {
-    switch (format) {
-    case RacerTextureFormat::Indexed4: {
-        const int i = Nibble(pixels, index);
-        return i >= 0 && i < static_cast<int>(palette.size()) ? palette[i]
-                                                              : kMissing;
-    }
-    case RacerTextureFormat::Indexed8:
-        if (index >= pixels.size() || pixels[index] >= palette.size()) {
-            return kMissing;
-        }
-        return palette[pixels[index]];
-    case RacerTextureFormat::Intensity4: {
-        const int i = Nibble(pixels, index);
-        if (i < 0) return kMissing;
-        const auto v = static_cast<std::uint8_t>(i * 17);
-        return {v, v, v, v};
-    }
-    case RacerTextureFormat::Intensity8: {
-        if (index >= pixels.size()) return kMissing;
-        const std::uint8_t v = pixels[index];
-        return {v, v, v, v};
-    }
-    case RacerTextureFormat::Rgba32:
-        if (4 * index + 3 >= pixels.size()) return kMissing;
-        return {pixels[4 * index], pixels[4 * index + 1],
-                pixels[4 * index + 2], pixels[4 * index + 3]};
-    }
-    return kMissing;
-}
-
-}  // namespace
-
 RacerTexture DecodeRacerTexture(const std::vector<std::uint8_t>& pixels,
                                 const std::vector<std::uint8_t>& palette,
                                 RacerTextureFormat format, int width,
@@ -61,8 +16,13 @@ RacerTexture DecodeRacerTexture(const std::vector<std::uint8_t>& pixels,
     texture.height = height;
     const std::size_t count = static_cast<std::size_t>(width) * height;
     texture.rgba.resize(4 * count);
+    // A few textures hold fewer bytes than their size needs; their
+    // missing rows repeat the rows present (hardware read on into
+    // whatever followed), so only an empty texture shows magenta.
+    const std::size_t present = RacerTexelsIn(pixels.size(), format);
     for (std::size_t i = 0; i < count; ++i) {
-        const Rgba c = Texel(pixels, colours, format, i);
+        const std::size_t source = present > 0 ? i % present : i;
+        const auto c = RacerTexel(pixels, colours, format, source);
         for (std::size_t k = 0; k < 4; ++k) texture.rgba[4 * i + k] = c[k];
     }
     return texture;
