@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -22,6 +24,8 @@ struct RacerPodInfo {
 
 struct RacerTrackTable {
     std::vector<RacerTrackInfo> tracks;
+    /// Fog colour per planet name, rgb 0..1.
+    std::map<std::string, std::array<float, 3>> fog;
     std::vector<RacerPodInfo> racers;
     bool loaded = false;
 };

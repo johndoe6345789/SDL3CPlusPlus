@@ -35,6 +35,8 @@ struct RacerWorldState {
     RacerPodInfo racer;            ///< who is flying, and their pod model
     RacerGpuModel trackModel;
     RacerGpuModel podModel;
+    RacerGpuModel skyModel;          ///< drawn round the camera
+    glm::vec3 fogColour{0.78f, 0.70f, 0.58f};
     std::map<std::uint64_t, RacerGpuTexture> textures;
     RacerGpuTexture white;   ///< for meshes shaded by vertex colour only
     std::vector<RacerSplineSegment> spline;

@@ -36,6 +36,13 @@ RacerTrackTable LoadRacerTrackTable(const std::string& path) {
     for (const auto& r : doc.value("racers", nlohmann::json::array())) {
         table.racers.push_back({r.value("name", ""), r.value("podd", -1)});
     }
+    for (const auto& [planet, rgb] :
+         doc.value("planets", nlohmann::json::object()).items()) {
+        if (rgb.is_array() && rgb.size() == 3) {
+            table.fog[planet] = {rgb[0].get<float>(), rgb[1].get<float>(),
+                                 rgb[2].get<float>()};
+        }
+    }
     table.loaded = !table.tracks.empty();
     return table;
 }

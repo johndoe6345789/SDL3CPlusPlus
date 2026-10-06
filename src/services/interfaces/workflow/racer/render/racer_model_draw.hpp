@@ -16,6 +16,11 @@ struct RacerDrawPass {
 int DrawRacerModel(RacerDrawPass& d, const RacerGpuModel& model,
                    const glm::mat4& m, bool blended);
 
+/// Draws the skybox centred on `eye`, before anything else, with the
+/// blended pipeline (no depth writes) so the world draws over it.
+int DrawRacerSky(RacerDrawPass& d, const RacerWorldState& state,
+                 SDL_GPUGraphicsPipeline* blend, const glm::vec3& eye);
+
 /// A pod's model matrix: its position, heading and bank.
 glm::mat4 RacerPodMatrix(const RacerPodState& pod, float roll);
 

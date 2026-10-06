@@ -31,7 +31,10 @@ void PlaceRacerPodOnLap(RacerWorldState& state, int index, float speed) {
 
 bool BuildRacerWorld(SDL_GPUDevice* device, RacerWorldState& state,
                      const std::shared_ptr<ILogger>& logger) {
-    const RacerModel track = LoadRacerModel(state.library, state.track.model);
+    const RacerModel track = LoadRacerModel(
+        state.library, state.track.model, RacerModelScope::TrackWithoutSky);
+    const RacerModel sky = LoadRacerModel(state.library, state.track.model,
+                                          RacerModelScope::SkyOnly);
     const RacerModel pod = LoadRacerModel(state.library, state.racer.podd,
                                           RacerModelScope::PodParts);
     state.spline = ReadRacerSpline(
@@ -54,6 +57,7 @@ bool BuildRacerWorld(SDL_GPUDevice* device, RacerWorldState& state,
                                         collision ? nullptr : &state.ground);
     state.podModel = UploadRacerModel(device, state, pod, nullptr,
                                       RacerVertexShading::Normal);
+    state.skyModel = UploadRacerModel(device, state, sky, nullptr);
     PlaceRacerPodOnLap(state, 0, 0.f);
     TraceModelExtent(logger, "pod", pod);
     if (logger) {

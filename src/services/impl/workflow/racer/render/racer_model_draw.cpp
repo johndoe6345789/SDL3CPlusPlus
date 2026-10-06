@@ -24,6 +24,20 @@ int DrawRacerModel(RacerDrawPass& d, const RacerGpuModel& model,
     return drawn;
 }
 
+int DrawRacerSky(RacerDrawPass& d, const RacerWorldState& state,
+                 SDL_GPUGraphicsPipeline* blend, const glm::vec3& eye) {
+    if (!blend || state.skyModel.batches.empty()) return 0;
+    SDL_BindGPUGraphicsPipeline(d.pass, blend);
+    // No fog on the sky: its fog distances are pushed out of reach.
+    const RacerFragmentUniforms sky{{0.f, 0.f, 0.f, 1e6f},
+                                    {2e6f, 0.5f, 0.f, 0.f},
+                                    {eye, 1.f}};
+    SDL_PushGPUFragmentUniformData(d.cmd, 0, &sky, sizeof(sky));
+    const glm::mat4 at = glm::translate(glm::mat4(1.f), eye);
+    int drawn = DrawRacerModel(d, state.skyModel, at, false);
+    return drawn + DrawRacerModel(d, state.skyModel, at, true);
+}
+
 glm::mat4 RacerPodMatrix(const RacerPodState& pod, float roll) {
     glm::mat4 m = glm::translate(glm::mat4(1.f), pod.position);
     m = glm::rotate(m, -pod.heading, glm::vec3(0.f, 1.f, 0.f));

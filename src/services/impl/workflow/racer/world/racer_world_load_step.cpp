@@ -45,6 +45,11 @@ void WorkflowRacerWorldLoadStep::Execute(const WorkflowStepDefinition& step,
         return;
     }
     state_->track = *track;
+    if (const auto fog = table.fog.find(track->planet);
+        fog != table.fog.end()) {
+        state_->fogColour = {fog->second[0], fog->second[1],
+                             fog->second[2]};
+    }
     state_->racer = *pod;
     state_->textureScale = RacerIntParam(step, "texture_scale", 4);
     state_->race = RacerRaceState{};

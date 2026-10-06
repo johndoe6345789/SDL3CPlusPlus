@@ -63,6 +63,11 @@ enum class RacerModelScope {
     /// spaces the parts from per-racer data not yet decoded, so the
     /// layout here is an approximation.
     PodParts,
+    /// A track without its skybox (header slot 2 of a 'Trak' model).
+    TrackWithoutSky,
+    /// Only a track's skybox: a small dome the game keeps centred on
+    /// the camera.
+    SkyOnly,
 };
 
 /// Parses the data part of a model block item (see the racer README for

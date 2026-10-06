@@ -1,5 +1,5 @@
 {
- "description": "Each track's model-block and spline-block index in the PC release. Model ids from swe1r-assets (MIT) Track.csv; spline ids matched by name from its SplineBlockItem.csv. Every main loop was checked to close. Racer pod models (Podd) from its Racer.csv.",
+ "description": "Each track's model-block and spline-block index in the PC release. Model ids from swe1r-assets (MIT) Track.csv; spline ids matched by name from its SplineBlockItem.csv. Every main loop was checked to close. Racer pod models (Podd) from its Racer.csv. Planet fog colours are chosen to match each world's sky (new, not from the game).",
  "tracks": [
   {
    "id": 0,
@@ -278,5 +278,47 @@
    "name": "Cy Yunga",
    "podd": 301
   }
- ]
+ ],
+ "planets": {
+  "Tatooine": [
+   0.8,
+   0.7,
+   0.55
+  ],
+  "Ando Prime": [
+   0.78,
+   0.84,
+   0.92
+  ],
+  "Aquilaris": [
+   0.55,
+   0.7,
+   0.82
+  ],
+  "Ord Ibanna": [
+   0.62,
+   0.62,
+   0.7
+  ],
+  "Baroonda": [
+   0.58,
+   0.62,
+   0.48
+  ],
+  "Mon Gazza": [
+   0.78,
+   0.62,
+   0.45
+  ],
+  "Oovo IV": [
+   0.1,
+   0.09,
+   0.16
+  ],
+  "Malastare": [
+   0.72,
+   0.66,
+   0.52
+  ]
+ }
 }

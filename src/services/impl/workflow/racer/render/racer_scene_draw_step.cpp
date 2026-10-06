@@ -6,6 +6,11 @@
 #include <utility>
 
 namespace sdl3cpp::services::impl {
+namespace {
+
+constexpr float kHideNearEye = 12.f;
+
+}  // namespace
 WorkflowRacerSceneDrawStep::WorkflowRacerSceneDrawStep(
     std::shared_ptr<ILogger> logger, std::shared_ptr<RacerWorldState> state)
     : logger_(std::move(logger)), state_(std::move(state)) {}
@@ -32,15 +37,13 @@ void WorkflowRacerSceneDrawStep::Execute(const WorkflowStepDefinition& step,
     RacerDrawPass d{pass, cmd, {proj * view, glm::mat4(1.f)}};
     const glm::vec3 eye =
         context.Get<glm::vec3>("render.camera_pos", glm::vec3(0.f));
+    const glm::vec3 fog = state_->fogColour;
     const RacerFragmentUniforms fragment{
-        {RacerFloatParam(step, "fog_r", 0.78f),
-         RacerFloatParam(step, "fog_g", 0.70f),
-         RacerFloatParam(step, "fog_b", 0.58f),
-         RacerFloatParam(step, "fog_start", 350.f)},
+        {fog.r, fog.g, fog.b, RacerFloatParam(step, "fog_start", 350.f)},
         {RacerFloatParam(step, "fog_end", 2200.f), 0.5f, 0.f, 0.f},
         {eye, 1.f}};
     const glm::mat4 pod = RacerPodMatrix(state_->pod, state_->podRoll);
-    int drawn = 0;
+    int drawn = DrawRacerSky(d, *state_, blend, eye);
     for (int blended = 0; blended < 2; ++blended) {
         SDL_GPUGraphicsPipeline* pipeline = blended ? blend : opaque;
         if (!pipeline) continue;
@@ -49,6 +52,11 @@ void WorkflowRacerSceneDrawStep::Execute(const WorkflowStepDefinition& step,
         drawn += DrawRacerModel(d, state_->trackModel, glm::mat4(1.f), blended);
         drawn += DrawRacerModel(d, state_->podModel, pod, blended);
         for (const RacerOpponent& opponent : state_->opponents) {
+            // A rival on top of the camera would fill the screen with
+            // the inside of its engines; it is left out until clear.
+            if (glm::distance(opponent.pod.position, eye) < kHideNearEye) {
+                continue;
+            }
             drawn += DrawRacerModel(
                 d, opponent.model, RacerPodMatrix(opponent.pod, opponent.roll),
                 blended);
