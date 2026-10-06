@@ -25,7 +25,15 @@ std::string WorkflowRacerAudioStep::GetPluginId() const {
 
 void WorkflowRacerAudioStep::Execute(const WorkflowStepDefinition& step,
                                      WorkflowContext&) {
-    if (!state_->loaded) return;
+    // Sound only while racing; leaving the race (pause, the menus) stops
+    // it, and the next race opens it afresh for its planet.
+    const RacerPhase phase = state_->flow.phase;
+    if (!state_->loaded ||
+        (phase != RacerPhase::Racing && phase != RacerPhase::Results)) {
+        mixer_.reset();
+        tried_ = false;
+        return;
+    }
     if (!tried_) {
         tried_ = true;
         // Headless dev runs stay silent unless SDL's dummy driver is

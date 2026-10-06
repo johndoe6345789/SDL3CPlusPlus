@@ -29,10 +29,23 @@
       }
     },
     {
+      "id": "flow",
+      "plugin": "racer.flow"
+    },
+    {
+      "id": "world",
+      "plugin": "racer.world.load",
+      "parameters": {
+        "racer_dir": "${env:RACER_DIR}",
+        "track_table": "packages/racer/assets/racer_tracks.json",
+        "texture_scale": 4
+      }
+    },
+    {
       "id": "stop_game_loop",
       "plugin": "value.set_if",
       "inputs": {
-        "condition": "racer.quit_pressed"
+        "condition": "racer.quit_requested"
       },
       "parameters": {
         "value": false
@@ -45,7 +58,7 @@
       "id": "stop_outer_loop",
       "plugin": "value.set_if",
       "inputs": {
-        "condition": "racer.quit_pressed"
+        "condition": "racer.quit_requested"
       },
       "parameters": {
         "value": false
@@ -115,6 +128,13 @@
     {
       "id": "hud_text",
       "plugin": "racer.hud.text"
+    },
+    {
+      "id": "screen",
+      "plugin": "racer.screen.draw",
+      "parameters": {
+        "racer_dir": "${env:RACER_DIR}"
+      }
     },
     {
       "id": "shot_frame",

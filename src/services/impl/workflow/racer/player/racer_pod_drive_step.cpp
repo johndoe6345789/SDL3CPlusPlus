@@ -26,6 +26,10 @@ std::string WorkflowRacerPodDriveStep::GetPluginId() const {
 void WorkflowRacerPodDriveStep::Execute(const WorkflowStepDefinition& step,
                                         WorkflowContext& context) {
     if (!state_->loaded) return;
+    const RacerPhase phase = state_->flow.phase;
+    if (phase != RacerPhase::Racing && phase != RacerPhase::Results) {
+        return;
+    }
     const float dt = std::min(
         kMaxDt,
         static_cast<float>(context.Get<double>("frame.delta_time", 0.0)));

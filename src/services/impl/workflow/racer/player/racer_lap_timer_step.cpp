@@ -17,6 +17,10 @@ std::string WorkflowRacerLapTimerStep::GetPluginId() const {
 void WorkflowRacerLapTimerStep::Execute(const WorkflowStepDefinition&,
                                         WorkflowContext& context) {
     if (!state_->loaded) return;
+    const RacerPhase phase = state_->flow.phase;
+    if (phase != RacerPhase::Racing && phase != RacerPhase::Results) {
+        return;
+    }
     RacerRaceState& race = state_->race;
     const float dt =
         static_cast<float>(context.Get<double>("frame.delta_time", 0.0));

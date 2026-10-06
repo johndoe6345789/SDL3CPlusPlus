@@ -18,6 +18,10 @@ std::string WorkflowRacerOpponentsStep::GetPluginId() const {
 void WorkflowRacerOpponentsStep::Execute(const WorkflowStepDefinition&,
                                          WorkflowContext& context) {
     if (!state_->loaded) return;
+    const RacerPhase phase = state_->flow.phase;
+    if (phase != RacerPhase::Racing && phase != RacerPhase::Results) {
+        return;
+    }
     const float dt = std::min(
         1.f / 30.f,
         static_cast<float>(context.Get<double>("frame.delta_time", 0.0)));

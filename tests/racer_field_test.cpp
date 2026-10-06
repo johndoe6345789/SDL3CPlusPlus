@@ -55,3 +55,12 @@ TEST(RacerField, AiSteersRoundAPodAheadAndLiftsOff) {
     EXPECT_LE(input.throttle, 0.4f);
     EXPECT_FALSE(input.boost);
 }
+
+TEST(RacerField, FinishersSeparatedByHundredths) {
+    RacerRaceState a;
+    a.finished = true;
+    a.raceTime = 67.98f;
+    RacerRaceState b = a;
+    b.raceTime = 68.04f;
+    EXPECT_GT(RacerRaceProgress(a, 1080), RacerRaceProgress(b, 1080));
+}

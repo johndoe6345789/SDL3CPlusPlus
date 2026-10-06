@@ -3,6 +3,7 @@
 #include "services/interfaces/workflow/racer/data/racer_asset_library.hpp"
 #include "services/interfaces/workflow/racer/data/racer_spline.hpp"
 #include "services/interfaces/workflow/racer/data/racer_track_table.hpp"
+#include "services/interfaces/workflow/racer/flow/racer_flow.hpp"
 #include "services/interfaces/workflow/racer/player/racer_pod_physics.hpp"
 #include "services/interfaces/workflow/racer/player/racer_race_state.hpp"
 #include "services/interfaces/workflow/racer/world/racer_ground.hpp"
@@ -50,6 +51,8 @@ struct RacerWorldState {
     RacerRaceState race;
     float podRoll = 0.f;               ///< visual bank into turns
     std::vector<RacerOpponent> opponents;
+    RacerFlow flow;                    ///< menus; kept across races
+    RacerTrackTable table;
     int textureScale = 4;
     bool loaded = false;
 };

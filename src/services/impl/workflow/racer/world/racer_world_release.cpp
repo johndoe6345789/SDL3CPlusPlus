@@ -32,6 +32,9 @@ void ReleaseRacerWorld(SDL_GPUDevice* device, RacerWorldState& state) {
     state.podRig = RacerPodRig{};
     state.effects = RacerEffectShapes{};
     state.opponents.clear();
+    state.ground = RacerGround{};
+    state.lapPoints.clear();
+    state.race = RacerRaceState{};
     state.textures.clear();
     state.white = RacerGpuTexture{};
     state.loaded = false;

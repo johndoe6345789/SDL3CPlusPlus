@@ -1225,6 +1225,8 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/racer/world/racer_ground_flags.cpp
         src/services/impl/workflow/racer/world/racer_model_upload.cpp
         src/services/impl/workflow/racer/world/racer_pod_rig.cpp
+        src/services/impl/workflow/racer/world/racer_race_load.cpp
+        src/services/impl/workflow/racer/world/racer_race_setup.cpp
         src/services/impl/workflow/racer/world/racer_texture_cache.cpp
         src/services/impl/workflow/racer/world/racer_vertex_buffer.cpp
         src/services/impl/workflow/racer/world/racer_walls.cpp
@@ -1252,16 +1254,29 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/racer/render/racer_camera_math.cpp
         src/services/impl/workflow/racer/render/racer_chase_cam_step.cpp
         src/services/impl/workflow/racer/render/racer_hud_format.cpp
-        src/services/impl/workflow/racer/render/racer_hud_overlay.cpp
         src/services/impl/workflow/racer/render/racer_hud_step.cpp
-        src/services/impl/workflow/racer/render/racer_hud_upload.cpp
+        src/services/impl/workflow/racer/render/racer_image_panel.cpp
         src/services/impl/workflow/racer/render/racer_model_draw.cpp
+        src/services/impl/workflow/racer/render/racer_panel.cpp
+        src/services/impl/workflow/racer/render/racer_panel_rect.cpp
+        src/services/impl/workflow/racer/render/racer_panel_upload.cpp
         src/services/impl/workflow/racer/render/racer_pod_effects_draw.cpp
         src/services/impl/workflow/racer/render/racer_scene_draw_step.cpp
+        src/services/impl/workflow/racer/render/racer_screen_prepare.cpp
+        src/services/impl/workflow/racer/render/racer_screen_step.cpp
         src/services/impl/workflow/racer/audio/racer_audio_clip.cpp
         src/services/impl/workflow/racer/audio/racer_audio_mixer.cpp
         src/services/impl/workflow/racer/audio/racer_audio_open.cpp
         src/services/impl/workflow/racer/audio/racer_audio_step.cpp
+        src/services/impl/workflow/racer/flow/racer_flow_menu.cpp
+        src/services/impl/workflow/racer/flow/racer_flow_race.cpp
+        src/services/impl/workflow/racer/flow/racer_flow_step.cpp
+        src/services/impl/workflow/racer/flow/racer_flow_text_common.cpp
+        src/services/impl/workflow/racer/flow/racer_flow_text_menu.cpp
+        src/services/impl/workflow/racer/flow/racer_flow_text_race.cpp
+        src/services/impl/workflow/racer/flow/racer_flow_text_shop.cpp
+        src/services/impl/workflow/racer/flow/racer_profile.cpp
+        src/services/impl/workflow/racer/flow/racer_upgrades.cpp
         src/services/impl/workflow/fs2024/fs2024_step_params.cpp
         src/services/impl/workflow/fs2024/tiles/fs2024_load_pool.cpp
         src/services/impl/workflow/fs2024/tiles/fs2024_load_pool_queue.cpp
@@ -2629,6 +2644,23 @@ target_link_libraries(racer_field_test PRIVATE
     ${SDL_TARGET}
 )
 add_test(NAME racer_field_test COMMAND racer_field_test)
+
+add_executable(racer_flow_test)
+target_sources(racer_flow_test PRIVATE tests/racer_flow_test.cpp)
+target_sources(racer_flow_test PRIVATE src/services/impl/workflow/racer/flow/racer_flow_menu.cpp)
+target_sources(racer_flow_test PRIVATE src/services/impl/workflow/racer/flow/racer_flow_race.cpp)
+target_sources(racer_flow_test PRIVATE src/services/impl/workflow/racer/flow/racer_upgrades.cpp)
+target_sources(racer_flow_test PRIVATE src/services/impl/workflow/racer/flow/racer_profile.cpp)
+target_include_directories(racer_flow_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(racer_flow_test PRIVATE
+    GTest::gtest_main
+    glm::glm
+    nlohmann_json::nlohmann_json
+    ${SDL_TARGET}
+)
+add_test(NAME racer_flow_test COMMAND racer_flow_test)
 
 add_executable(stunts_huffman_test)
 target_sources(stunts_huffman_test PRIVATE tests/stunts_huffman_test.cpp)

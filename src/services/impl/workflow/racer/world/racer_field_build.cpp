@@ -39,7 +39,8 @@ void BuildRacerField(SDL_GPUDevice* device, RacerWorldState& state,
         RacerOpponent opponent;
         opponent.racer = racer;
         const float pace = PaceFor(static_cast<int>(state.opponents.size()));
-        opponent.spec = state.podSpec;
+        // Stock pods: the shop's upgrades are the player's alone.
+        opponent.spec = RacerPodSpec{};
         opponent.spec.topSpeed *= pace;
         opponent.spec.boostSpeed *= pace;
         opponent.race = state.race;

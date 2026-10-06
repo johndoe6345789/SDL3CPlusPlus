@@ -10,7 +10,9 @@ namespace {
 constexpr float kPodRadius = 4.f;   // half a pod's width
 constexpr float kPodReach = 9.f;    // circle offsets along the pod
 constexpr float kMaxPush = 0.25f;   // metres per contact per frame
-constexpr float kFinishedBonus = 1e7f;
+// Above any racing progress (laps x points), small enough that a float
+// still resolves hundredths of a second when the race time is taken off.
+constexpr float kFinishedBonus = 1e5f;
 
 }  // namespace
 

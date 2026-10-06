@@ -1,6 +1,6 @@
 {
   "name": "Racer Session",
-  "description": "Loads one track and pod from the install, then races it.",
+  "description": "Opens the install, then runs the menus and races frame by frame.",
   "nodes": [
     {
       "id": "load_world",
@@ -12,8 +12,6 @@
       ],
       "parameters": {
         "racer_dir": "${env:RACER_DIR}",
-        "track": "${env:RACER_TRACK}",
-        "racer": "${env:RACER_POD}",
         "track_table": "packages/racer/assets/racer_tracks.json",
         "texture_scale": 4,
         "laps": 3,

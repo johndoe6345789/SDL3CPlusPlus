@@ -2,7 +2,7 @@
 
 #include "services/interfaces/i_logger.hpp"
 #include "services/interfaces/i_workflow_step.hpp"
-#include "services/interfaces/workflow/racer/render/racer_hud_overlay.hpp"
+#include "services/interfaces/workflow/racer/render/racer_panel.hpp"
 #include "services/interfaces/workflow/racer/world/racer_world_state.hpp"
 
 #include <memory>
@@ -35,7 +35,7 @@ private:
     std::shared_ptr<ILogger> logger_;
     std::shared_ptr<RacerWorldState> state_;
     std::string shown_;
-    RacerHudOverlay hud_;
+    RacerPanel hud_;
 };
 
 }  // namespace sdl3cpp::services::impl

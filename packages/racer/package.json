@@ -17,15 +17,13 @@
       "env": "RACER_TRACK",
       "label": "Track",
       "kind": "text",
-      "default": "1",
-      "help": "0-24 or part of a name, e.g. 'Boonta Classic', 'Inferno'."
+      "help": "0-24 or part of a name, e.g. 'Boonta Classic', 'Inferno'. Leave empty to choose in the menu."
     },
     {
       "env": "RACER_POD",
       "label": "Racer",
       "kind": "text",
-      "default": "Anakin",
-      "help": "Part of a racer's name, e.g. 'Sebulba'."
+      "help": "Part of a racer's name, e.g. 'Sebulba'. Leave empty to choose in the menu."
     }
   ],
   "defaultWorkflow": "workflows/racer_game.json",
