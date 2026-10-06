@@ -46,7 +46,8 @@ bool BuildRacerWorld(SDL_GPUDevice* device, RacerWorldState& state,
     const bool collision = BuildRacerCollisionGround(state, track);
     state.trackModel = UploadRacerModel(device, state, track,
                                         collision ? nullptr : &state.ground);
-    state.podModel = UploadRacerModel(device, state, pod, nullptr);
+    state.podModel = UploadRacerModel(device, state, pod, nullptr,
+                                      RacerVertexShading::Normal);
     PlaceRacerPodOnLap(state, 0, 0.f);
     TraceModelExtent(logger, "pod", pod);
     if (logger) {

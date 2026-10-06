@@ -1,6 +1,7 @@
 #include "services/interfaces/workflow/racer/render/racer_chase_cam_step.hpp"
 
 #include "services/interfaces/workflow/racer/racer_step_params.hpp"
+#include "services/interfaces/workflow/racer/render/racer_camera_math.hpp"
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/gtc/matrix_transform.hpp>
@@ -21,12 +22,6 @@ nlohmann::json ToArray(const glm::mat4& matrix) {
     return out;
 }
 
-float AngleDelta(float from, float to) {
-    float delta = std::fmod(to - from + 3.14159265f, 6.28318531f);
-    if (delta < 0.f) delta += 6.28318531f;
-    return delta - 3.14159265f;
-}
-
 }  // namespace
 
 WorkflowRacerChaseCameraStep::WorkflowRacerChaseCameraStep(
@@ -44,7 +39,8 @@ void WorkflowRacerChaseCameraStep::Execute(const WorkflowStepDefinition& step,
     const float dt = std::min(
         0.1f, static_cast<float>(context.Get<double>("frame.delta_time", 0.0)));
     if (!started_) heading_ = pod.heading;
-    heading_ += AngleDelta(heading_, pod.heading) * std::min(1.f, 5.f * dt);
+    heading_ +=
+        RacerAngleDelta(heading_, pod.heading) * std::min(1.f, 5.f * dt);
     const float pace = std::clamp(pod.speed / state_->podSpec.topSpeed, 0.f,
                                   1.5f);
     const float distance =
@@ -55,6 +51,8 @@ void WorkflowRacerChaseCameraStep::Execute(const WorkflowStepDefinition& step,
         pod.position - along * distance + glm::vec3(0.f, height, 0.f);
     eye_ = started_ ? eye_ + (wanted - eye_) * std::min(1.f, 10.f * dt)
                     : wanted;
+    eye_.y =
+        std::max(eye_.y, RacerCameraClearance(*state_, pod.position, eye_));
     started_ = true;
     const glm::vec3 look = pod.position +
                            along * RacerFloatParam(step, "lead", 12.f) +

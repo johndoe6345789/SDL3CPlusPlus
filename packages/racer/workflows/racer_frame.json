@@ -116,9 +116,9 @@
     {
       "id": "shot_frame",
       "plugin": "value.literal",
-      "comment": "Frame to save a screenshot on (about three seconds in). Nothing is written unless RACER_SHOT names a file.",
+      "comment": "Frame to save a screenshot on (about twelve seconds in, mid-race after the countdown). Nothing is written unless RACER_SHOT names a file.",
       "parameters": {
-        "value": 180.0
+        "value": 720.0
       },
       "outputs": {
         "value": "racer_shot_frame"
@@ -126,7 +126,7 @@
     },
     {
       "id": "shot_due",
-      "plugin": "compare.gte",
+      "plugin": "compare.eq",
       "inputs": {
         "left": "loop.iteration",
         "right": "racer_shot_frame"

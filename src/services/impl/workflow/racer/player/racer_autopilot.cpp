@@ -1,5 +1,7 @@
 #include "services/interfaces/workflow/racer/player/racer_autopilot.hpp"
 
+#include "services/interfaces/workflow/racer/render/racer_camera_math.hpp"
+
 #include <algorithm>
 #include <cmath>
 
@@ -10,13 +12,6 @@ namespace {
 constexpr float kLookAheadMetres = 18.f;
 constexpr float kLookAheadSeconds = 0.25f;
 constexpr float kBrakeLookAhead = 45.f;
-constexpr float kPi = 3.14159265f;
-
-float AngleDelta(float from, float to) {
-    float delta = std::fmod(to - from + kPi, 2.f * kPi);
-    if (delta < 0.f) delta += 2.f * kPi;
-    return delta - kPi;
-}
 
 /// Signed turn from the pod's heading to the lap point `distance` metres
 /// ahead of `from` along the lap.
@@ -31,7 +26,7 @@ float TurnTo(const RacerPodState& pod, const std::vector<glm::vec3>& lap,
         index = next;
     }
     const glm::vec3 to = lap[index] - pod.position;
-    return AngleDelta(pod.heading, std::atan2(to.x, -to.z));
+    return RacerAngleDelta(pod.heading, std::atan2(to.x, -to.z));
 }
 
 }  // namespace

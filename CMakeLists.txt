@@ -1222,6 +1222,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/racer/world/racer_world_build.cpp
         src/services/impl/workflow/racer/world/racer_world_lap.cpp
         src/services/impl/workflow/racer/world/racer_world_load_step.cpp
+        src/services/impl/workflow/racer/world/racer_world_release.cpp
         src/services/impl/workflow/racer/player/racer_autopilot.cpp
         src/services/impl/workflow/racer/player/racer_lap_progress.cpp
         src/services/impl/workflow/racer/player/racer_lap_timer_step.cpp
@@ -1232,6 +1233,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/racer/player/racer_pod_physics.cpp
         src/services/impl/workflow/racer/player/racer_pod_recovery.cpp
         src/services/impl/workflow/racer/player/racer_pod_report.cpp
+        src/services/impl/workflow/racer/render/racer_camera_math.cpp
         src/services/impl/workflow/racer/render/racer_chase_cam_step.cpp
         src/services/impl/workflow/racer/render/racer_hud_format.cpp
         src/services/impl/workflow/racer/render/racer_hud_step.cpp

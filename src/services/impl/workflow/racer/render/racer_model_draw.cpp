@@ -28,7 +28,11 @@ glm::mat4 RacerPodMatrix(const RacerWorldState& state) {
     const RacerPodState& pod = state.pod;
     glm::mat4 m = glm::translate(glm::mat4(1.f), pod.position);
     m = glm::rotate(m, -pod.heading, glm::vec3(0.f, 1.f, 0.f));
-    return glm::rotate(m, -state.podRoll, glm::vec3(0.f, 0.f, 1.f));
+    m = glm::rotate(m, -state.podRoll, glm::vec3(0.f, 0.f, 1.f));
+    // The pod's own space has its engines toward -z once converted; the
+    // turn the game applies above the LOD node is not decoded, so the
+    // model is turned here so the engines lead.
+    return glm::rotate(m, 3.14159265f, glm::vec3(0.f, 1.f, 0.f));
 }
 
 }  // namespace sdl3cpp::services::impl

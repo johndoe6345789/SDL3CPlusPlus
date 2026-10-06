@@ -29,10 +29,18 @@ RacerGpuTexture AcquireRacerTexture(SDL_GPUDevice* device,
 RacerGpuTexture UploadRacerTexture(SDL_GPUDevice* device, RacerTexture t,
                                    int scale);
 
+/// How a model's vertex colour bytes are meant.
+enum class RacerVertexShading {
+    Colour,   ///< baked lighting (tracks, scenery)
+    Normal,   ///< signed normals, for models the game lights (pods)
+};
+
 /// Uploads every batch of a model, converted to engine space. When
 /// `ground` is given, its walkable triangles are added to it as well.
 RacerGpuModel UploadRacerModel(SDL_GPUDevice* device, RacerWorldState& state,
-                               const RacerModel& model, RacerGround* ground);
+                               const RacerModel& model, RacerGround* ground,
+                               RacerVertexShading shading =
+                                   RacerVertexShading::Colour);
 
 /// Releases every GPU object the state owns.
 void ReleaseRacerWorld(SDL_GPUDevice* device, RacerWorldState& state);
