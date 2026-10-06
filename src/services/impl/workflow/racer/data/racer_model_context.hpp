@@ -2,6 +2,7 @@
 
 #include "services/interfaces/workflow/racer/data/racer_big_endian.hpp"
 #include "services/interfaces/workflow/racer/data/racer_model.hpp"
+#include "racer_model_nodes.hpp"
 
 #include <glm/glm.hpp>
 
@@ -18,7 +19,8 @@ struct ModelWalk {
     RacerBigEndianReader reader;
     RacerModel model;
     RacerModelScope scope = RacerModelScope::Everything;
-    bool insideLod = false;   ///< the walk is below the first LOD
+    bool insidePart = false;          ///< below a pod part's scale node
+    std::vector<RacerModel> parts;    ///< pod parts, in walk order
 
     /// Nodes may be shared (instanced) under several parents, so they
     /// are not de-duplicated; this budget stops a malformed cycle.
@@ -29,15 +31,6 @@ struct ModelWalk {
         return offset != 0 && offset % 4 == 0 && reader.Has(offset, bytes);
     }
 };
-
-// Node kinds, from the flags word at +0x00 of every node.
-constexpr std::uint32_t kMeshGroup = 0x3064;
-constexpr std::uint32_t kBasic = 0x5064;
-constexpr std::uint32_t kSelector = 0x5065;
-constexpr std::uint32_t kLodSelector = 0x5066;
-constexpr std::uint32_t kTransformed = 0xD064;
-constexpr std::uint32_t kTransformedPivot = 0xD065;
-constexpr std::uint32_t kTransformedComputed = 0xD066;
 
 constexpr int kVertexSlots = 64;  // the F3DEX2 vertex cache
 
@@ -68,6 +61,10 @@ void AppendMesh(ModelWalk& walk, std::uint32_t offset,
 /// triangles, quads, or strips per its primitive type) to the model.
 void AppendCollision(ModelWalk& walk, std::uint32_t mesh,
                      const glm::mat4& transform);
+
+/// Places pod parts (engines side by side, cockpit behind) and merges
+/// them into `model`.
+void LayoutPodParts(std::vector<RacerModel>& parts, RacerModel& model);
 
 RacerMaterialRef ReadMaterial(const ModelWalk& walk, std::uint32_t offset);
 

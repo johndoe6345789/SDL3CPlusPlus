@@ -16,7 +16,7 @@ struct RacerDrawPass {
 int DrawRacerModel(RacerDrawPass& d, const RacerGpuModel& model,
                    const glm::mat4& m, bool blended);
 
-/// The pod's model matrix: its position, heading and bank.
-glm::mat4 RacerPodMatrix(const RacerWorldState& state);
+/// A pod's model matrix: its position, heading and bank.
+glm::mat4 RacerPodMatrix(const RacerPodState& pod, float roll);
 
 }  // namespace sdl3cpp::services::impl

@@ -11,18 +11,20 @@ constexpr float kStallSeconds = 6.f;   // no lap progress this long
 }  // namespace
 
 RacerRecoveryReason UpdateRacerRecovery(RacerRecovery& recovery,
-                                        const RacerWorldState& state,
-                                        float throttle, float dt) {
-    const RacerPodState& pod = state.pod;
-    const bool overVoid = !RacerGroundHeight(state.ground, pod.position.x,
+                                        const RacerPodState& pod,
+                                        const RacerRaceState& race,
+                                        const RacerGround& ground,
+                                        int lapPointCount, float throttle,
+                                        float dt) {
+    const bool overVoid = !RacerGroundHeight(ground, pod.position.x,
                                              pod.position.z, pod.position.y);
     recovery.voidTime =
         (!pod.grounded && overVoid) ? recovery.voidTime + dt : 0.f;
     // Circling against a bank too steep for the height-field physics
     // still moves the pod, so progress along the lap is watched too.
-    const int point = state.race.segment;
-    const int count = static_cast<int>(state.lapPoints.size());
-    const bool racing = state.race.countdown <= 0.f && !state.race.finished;
+    const int point = race.segment;
+    const int count = lapPointCount;
+    const bool racing = race.countdown <= 0.f && !race.finished;
     // Only moving past the furthest point reached counts as progress;
     // circling back and forth over the same few points does not.
     const int gained = count > 0 && recovery.bestPoint >= 0

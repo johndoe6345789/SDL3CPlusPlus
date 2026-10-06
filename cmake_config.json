@@ -1178,7 +1178,9 @@
         "src/services/impl/workflow/racer/data/racer_model_mesh.cpp",
         "src/services/impl/workflow/racer/data/racer_model_vertex.cpp",
         "src/services/impl/workflow/racer/data/racer_model_material.cpp",
-        "src/services/impl/workflow/racer/data/racer_model_collision.cpp"
+        "src/services/impl/workflow/racer/data/racer_model_collision.cpp",
+        "src/services/impl/workflow/racer/data/racer_pod_layout.cpp",
+        "src/services/impl/workflow/racer/data/racer_model_transform.cpp"
       ],
       "include_directories": [
         "src"
@@ -1281,6 +1283,21 @@
         "tests/racer_lap_test.cpp",
         "src/services/impl/workflow/racer/player/racer_lap_progress.cpp",
         "src/services/impl/workflow/racer/render/racer_hud_format.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main",
+        "glm::glm",
+        "${SDL_TARGET}"
+      ]
+    },
+    {
+      "name": "racer_field_test",
+      "sources": [
+        "tests/racer_field_test.cpp",
+        "src/services/impl/workflow/racer/player/racer_field_rules.cpp"
       ],
       "include_directories": [
         "src"

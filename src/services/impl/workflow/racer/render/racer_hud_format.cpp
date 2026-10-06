@@ -20,6 +20,13 @@ std::string HeatBar(float heat) {
     return std::string(filled, '#') + std::string(10 - filled, '-');
 }
 
+/// "POS 3/8  " once the field has been ranked, else nothing.
+std::string Place(const RacerRaceState& race) {
+    if (race.position <= 0 || race.entrants <= 1) return "";
+    return "POS " + std::to_string(race.position) + "/" +
+           std::to_string(race.entrants) + "  ";
+}
+
 }  // namespace
 
 std::string FormatRacerHud(const RacerRaceState& race,
@@ -29,13 +36,14 @@ std::string FormatRacerHud(const RacerRaceState& race,
                             static_cast<int>(std::ceil(race.countdown)));
     }
     if (race.finished) {
-        return "FINISHED " + Clock(race.raceTime) + "  BEST LAP " +
-               Clock(race.bestLap);
+        return Place(race) + "FINISHED " + Clock(race.raceTime) +
+               "  BEST LAP " + Clock(race.bestLap);
     }
     char speed[16];
     std::snprintf(speed, sizeof(speed), "%3d", static_cast<int>(
                                                    pod.speed * 3.6f));
-    std::string line = "LAP " + std::to_string(race.lap) + "/" +
+    std::string line = Place(race) + "LAP " + std::to_string(race.lap) +
+                       "/" +
                        std::to_string(race.lapsTotal) + "  " +
                        Clock(race.raceTime) + "  BEST " +
                        Clock(race.bestLap) + "  " + speed +

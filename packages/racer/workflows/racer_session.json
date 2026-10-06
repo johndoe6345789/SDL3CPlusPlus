@@ -16,7 +16,8 @@
         "racer": "${env:RACER_POD}",
         "track_table": "packages/racer/assets/racer_tracks.json",
         "texture_scale": 4,
-        "laps": 3
+        "laps": 3,
+        "opponents": 7
       }
     },
     {

@@ -1,6 +1,7 @@
 #include "services/impl/workflow/registrar/workflow_registrar_categories.hpp"
 
 #include "services/interfaces/workflow/racer/player/racer_lap_timer_step.hpp"
+#include "services/interfaces/workflow/racer/player/racer_opponents_step.hpp"
 #include "services/interfaces/workflow/racer/player/racer_pod_drive_step.hpp"
 #include "services/interfaces/workflow/racer/racer_assets_step.hpp"
 #include "services/interfaces/workflow/racer/render/racer_chase_cam_step.hpp"
@@ -26,12 +27,14 @@ int RegisterRacerSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
     registry->RegisterStep(
         std::make_shared<WorkflowRacerLapTimerStep>(logger, state));
     registry->RegisterStep(
+        std::make_shared<WorkflowRacerOpponentsStep>(logger, state));
+    registry->RegisterStep(
         std::make_shared<WorkflowRacerChaseCameraStep>(logger, state));
     registry->RegisterStep(
         std::make_shared<WorkflowRacerSceneDrawStep>(logger, state));
     registry->RegisterStep(
         std::make_shared<WorkflowRacerHudStep>(logger, state));
-    return 7;
+    return 8;
 }
 
 }  // namespace sdl3cpp::services::impl::registrar_detail

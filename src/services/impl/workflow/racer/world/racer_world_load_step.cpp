@@ -1,6 +1,7 @@
 #include "services/interfaces/workflow/racer/world/racer_world_load_step.hpp"
 
 #include "services/interfaces/workflow/racer/racer_step_params.hpp"
+#include "services/interfaces/workflow/racer/world/racer_field_build.hpp"
 #include "services/interfaces/workflow/racer/world/racer_world_build.hpp"
 
 #include <utility>
@@ -50,6 +51,10 @@ void WorkflowRacerWorldLoadStep::Execute(const WorkflowStepDefinition& step,
     state_->race.lapsTotal = RacerIntParam(step, "laps", 3);
     auto* device = context.Get<SDL_GPUDevice*>("gpu_device", nullptr);
     state_->loaded = BuildRacerWorld(device, *state_, logger_);
+    if (state_->loaded) {
+        BuildRacerField(device, *state_, table,
+                        RacerIntParam(step, "opponents", 7), logger_);
+    }
     context.Set("racer.track_name", state_->track.name);
     context.Set("racer.pod_name", state_->racer.name);
 }

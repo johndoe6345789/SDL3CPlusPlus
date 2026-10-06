@@ -13,17 +13,6 @@ namespace {
 constexpr float kMaxDt = 1.f / 30.f;   // a long frame must not tunnel
 constexpr float kRespawnSpeedShare = 0.3f;
 
-std::optional<float> Height(const void* ground, float x, float z,
-                            float ceiling) {
-    return RacerGroundHeight(*static_cast<const RacerGround*>(ground), x, z,
-                             ceiling);
-}
-
-bool Wall(const void* ground, const glm::vec3& from, const glm::vec3& to) {
-    return RacerWallBetween(*static_cast<const RacerGround*>(ground), from,
-                            to);
-}
-
 }  // namespace
 
 WorkflowRacerPodDriveStep::WorkflowRacerPodDriveStep(
@@ -42,7 +31,7 @@ void WorkflowRacerPodDriveStep::Execute(const WorkflowStepDefinition& step,
         static_cast<float>(context.Get<double>("frame.delta_time", 0.0)));
     const RacerPodInput input = ReadRacerPodInput(step, context, *state_);
     StepRacerPod(state_->pod, input, state_->podSpec, dt,
-                 RacerSurface{&Height, &Wall, &state_->ground});
+                 RacerGroundSurface(state_->ground));
     // Bank into the turn, easing so the pod does not snap.
     state_->podRoll +=
         (input.steer * 0.45f - state_->podRoll) * std::min(1.f, 6.f * dt);
@@ -50,7 +39,9 @@ void WorkflowRacerPodDriveStep::Execute(const WorkflowStepDefinition& step,
     const bool crawling = input.throttle > 0.5f && pod.speed < 3.f;
     pod.stuckTime = (pod.blocked || crawling) ? pod.stuckTime + dt : 0.f;
     const RacerRecoveryReason reason =
-        UpdateRacerRecovery(recovery_, *state_, input.throttle, dt);
+        UpdateRacerRecovery(recovery_, pod, state_->race, state_->ground,
+                            static_cast<int>(state_->lapPoints.size()),
+                            input.throttle, dt);
     if (reason != RacerRecoveryReason::None) {
         if (logger_) {
             logger_->Trace(std::string("racer.pod.drive: ") +

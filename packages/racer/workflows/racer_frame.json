@@ -66,11 +66,15 @@
       "plugin": "racer.lap.timer"
     },
     {
+      "id": "opponents",
+      "plugin": "racer.opponents.fly"
+    },
+    {
       "id": "chase_camera",
       "plugin": "racer.camera.chase",
       "parameters": {
-        "distance": 20.0,
-        "height": 6.0,
+        "distance": 26.0,
+        "height": 8.0,
         "lead": 25.0,
         "fov": 70.0,
         "far": 6000.0

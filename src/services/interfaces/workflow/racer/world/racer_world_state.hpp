@@ -6,8 +6,8 @@
 #include "services/interfaces/workflow/racer/player/racer_pod_physics.hpp"
 #include "services/interfaces/workflow/racer/player/racer_race_state.hpp"
 #include "services/interfaces/workflow/racer/world/racer_ground.hpp"
+#include "services/interfaces/workflow/racer/world/racer_opponent.hpp"
 
-#include <SDL3/SDL_gpu.h>
 #include <glm/glm.hpp>
 
 #include <cstdint>
@@ -28,25 +28,6 @@ inline glm::vec3 RacerToEngine(float x, float y, float z) {
     return glm::vec3(x, z, -y) * kRacerWorldScale;
 }
 
-/// One uploaded material batch: an unindexed triangle list.
-struct RacerGpuBatch {
-    SDL_GPUBuffer* vertices = nullptr;
-    std::uint32_t vertexCount = 0;
-    SDL_GPUTexture* texture = nullptr;
-    SDL_GPUSampler* sampler = nullptr;
-    bool blended = false;  ///< intensity decals (shadows, glows)
-};
-
-struct RacerGpuModel {
-    std::vector<RacerGpuBatch> batches;
-};
-
-/// A GPU texture made from one material, upscaled once and shared.
-struct RacerGpuTexture {
-    SDL_GPUTexture* texture = nullptr;
-    SDL_GPUSampler* sampler = nullptr;
-};
-
 /// Everything the racer.* steps share for one loaded race.
 struct RacerWorldState {
     RacerAssetLibrary library;
@@ -64,6 +45,7 @@ struct RacerWorldState {
     RacerPodState pod;
     RacerRaceState race;
     float podRoll = 0.f;               ///< visual bank into turns
+    std::vector<RacerOpponent> opponents;
     int textureScale = 4;
     bool loaded = false;
 };

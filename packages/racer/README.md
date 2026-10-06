@@ -16,6 +16,8 @@ point `RACER_DIR` at your own install.
 | `RACER_SHOT`      | a file: save a screenshot about three seconds in             |
 | `RACER_AUTOPILOT` | `1`: the pod drives itself (headless checks, demo)           |
 
+The session workflow sets `opponents` (default 7) and `laps` (default 3).
+
 Controls: Up/W or right trigger throttle, Down/S or left trigger brake,
 Left/Right/A/D or left stick steer, Space/Left Shift or (A) boost, R or (X)
 repair, Escape or Start quits. Boost needs near-top speed and heats the
@@ -26,14 +28,23 @@ damage, which lowers top speed until repaired (repairing costs speed).
 
 Working: all 25 tracks and 25 pods decode; the track draws with textures
 upscaled 4x (Scale2x) and mipmapped, baked N64 vertex colours and distance
-fog at 1920x1080; the pod hovers on the real track surface, stops at walls,
-falls into gaps and respawns on the lap; laps are timed with a countdown;
-HUD shows lap, time, best lap, speed and engine heat.
+fog at 1920x1080. Pods hover on the game's own collision surface, ride
+banks up to ~75 degrees, scrape along walls, fall into gaps and are put
+back on the lap when lost. A field of eight races: seven opponents with
+their own pods fly the lap on the autopilot at varied pace, jostle the
+player, and are ranked. Laps are timed with a countdown; the HUD shows
+position, lap, time, best lap, speed and engine heat.
 
-Not done yet: opponents (the autopilot is the starting point), animated
-parts (engine flames, the shadow, energy binder), the skybox and other
-`Scen` scenery models, menus and the pod shop, sound in the race, splitting
-damage per engine, and track triggers (boost pads, hazards).
+Approximations, flagged in the code: pod parts (engines and cockpit) are
+laid out by a rule, not by the per-racer spacing and cable length the
+game uses; pods are lit once at load rather than per frame; walls are
+tested along the pod's centre line, not its whole width; the physics
+reads the track as a height field, so near-vertical banks act as walls.
+
+Not done yet: the energy binder and cables between parts, engine flames,
+the shadow, the skybox and other `Scen` models, menus and the pod shop,
+race audio, per-engine damage, track triggers (boost pads, hazards), and
+a few pod parts whose texture data runs short (they show magenta).
 
 ## Data formats
 
@@ -91,10 +102,12 @@ and height at +0x10/+0x12, six child pointers at +0x1C (byte 3 of a child:
 `0x10` double width, `0x01` double height, meaning the image is mirrored),
 and the texture-block index in the low 24 bits of +0x38 (top byte `0x0A`).
 
-Pods keep their real geometry under the first LOD selector. Around it the
-`Podd` model holds shadow quads and afterburner cones in other units, and
-above it a 0.02 scale and an x-mirror the game rewrites each frame, so the
-pod is drawn from the LOD down.
+A `Podd` model's root selector holds, besides shadow quads and afterburner
+cones in other units, a list of parts: two engines and a cockpit, each
+under a uniform 0.02 scale the game replaces when it places the part. The
+parts are taken from that scale node down, using the most detailed LOD
+child present (child 0 is empty on some pods), and laid out engines side
+by side ahead of the cockpit.
 
 ### Textures
 

@@ -17,6 +17,9 @@ RacerPodInput ReadRacerPodInput(const WorkflowStepDefinition& step,
                                 const WorkflowContext& context,
                                 const RacerWorldState& state);
 
+/// The track surface as the pod physics sees it.
+RacerSurface RacerGroundSurface(const RacerGround& ground);
+
 /// Publishes the pod's pose, speed (km/h), heat, damage and boost.
 void PublishRacerPod(WorkflowContext& context, const RacerWorldState& state);
 

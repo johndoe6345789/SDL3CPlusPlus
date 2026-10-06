@@ -30,6 +30,9 @@ RacerModel ParseRacerModel(const std::vector<std::uint8_t>& data,
         if (static_cast<std::int32_t>(word) <= 0) continue;
         racer_model_detail::WalkNode(walk, word, identity, 0);
     }
+    if (scope == RacerModelScope::PodParts) {
+        racer_model_detail::LayoutPodParts(walk.parts, walk.model);
+    }
     walk.model.valid = walk.model.meshCount > 0;
     return walk.model;
 }

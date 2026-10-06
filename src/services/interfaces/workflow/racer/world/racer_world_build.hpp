@@ -27,7 +27,12 @@ bool BuildRacerCollisionGround(RacerWorldState& state,
 void TraceModelExtent(const std::shared_ptr<ILogger>& logger,
                       const std::string& what, const RacerModel& model);
 
-/// Puts the pod on lap point `index`, facing the next one, at rest
+/// Puts `pod` on lap point `index` facing the next one, `lateral`
+/// metres to its right, at rest height above the surface there.
+void PlaceRacerPod(const RacerWorldState& state, RacerPodState& pod,
+                   int index, float speed, float lateral);
+
+/// Puts the player's pod on lap point `index`, facing the next one, at rest
 /// height above whatever surface is there.
 void PlaceRacerPodOnLap(RacerWorldState& state, int index, float speed);
 

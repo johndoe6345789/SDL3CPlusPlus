@@ -19,7 +19,8 @@ namespace sdl3cpp::services::impl {
  * Parameters: `racer_dir` (env RACER_DIR), `track` (env RACER_TRACK; an
  * id 0-24 or part of a name, default Boonta Classic), `racer` (env
  * RACER_POD; part of a name, default Anakin), `track_table`,
- * `texture_scale` (power of two, default 4), `laps` (default 3).
+ * `texture_scale` (power of two, default 4), `laps` (default 3),
+ * `opponents` (default 7).
  * Publishes racer.track_name and racer.pod_name.
  */
 class WorkflowRacerWorldLoadStep final : public IWorkflowStep {

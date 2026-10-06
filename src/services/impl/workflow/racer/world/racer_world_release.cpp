@@ -4,7 +4,12 @@ namespace sdl3cpp::services::impl {
 
 void ReleaseRacerWorld(SDL_GPUDevice* device, RacerWorldState& state) {
     if (device) {
-        for (RacerGpuModel* model : {&state.trackModel, &state.podModel}) {
+        std::vector<RacerGpuModel*> models{&state.trackModel,
+                                           &state.podModel};
+        for (RacerOpponent& opponent : state.opponents) {
+            models.push_back(&opponent.model);
+        }
+        for (RacerGpuModel* model : models) {
             for (const RacerGpuBatch& batch : model->batches) {
                 SDL_ReleaseGPUBuffer(device, batch.vertices);
             }
@@ -17,6 +22,7 @@ void ReleaseRacerWorld(SDL_GPUDevice* device, RacerWorldState& state) {
     }
     state.trackModel = RacerGpuModel{};
     state.podModel = RacerGpuModel{};
+    state.opponents.clear();
     state.textures.clear();
     state.white = RacerGpuTexture{};
     state.loaded = false;

@@ -39,7 +39,7 @@ void WorkflowRacerSceneDrawStep::Execute(const WorkflowStepDefinition& step,
          RacerFloatParam(step, "fog_start", 350.f)},
         {RacerFloatParam(step, "fog_end", 2200.f), 0.5f, 0.f, 0.f},
         {eye, 1.f}};
-    const glm::mat4 pod = RacerPodMatrix(*state_);
+    const glm::mat4 pod = RacerPodMatrix(state_->pod, state_->podRoll);
     int drawn = 0;
     for (int blended = 0; blended < 2; ++blended) {
         SDL_GPUGraphicsPipeline* pipeline = blended ? blend : opaque;
@@ -48,6 +48,11 @@ void WorkflowRacerSceneDrawStep::Execute(const WorkflowStepDefinition& step,
         SDL_PushGPUFragmentUniformData(cmd, 0, &fragment, sizeof(fragment));
         drawn += DrawRacerModel(d, state_->trackModel, glm::mat4(1.f), blended);
         drawn += DrawRacerModel(d, state_->podModel, pod, blended);
+        for (const RacerOpponent& opponent : state_->opponents) {
+            drawn += DrawRacerModel(
+                d, opponent.model, RacerPodMatrix(opponent.pod, opponent.roll),
+                blended);
+        }
     }
     if (!traced_ && logger_) {
         traced_ = true;

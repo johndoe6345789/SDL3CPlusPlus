@@ -53,11 +53,13 @@ enum class RacerModelScope {
     /// Every reachable mesh, with every node transform applied. Right
     /// for tracks and scenery.
     Everything,
-    /// Only meshes under the first LOD selector, with transforms from
-    /// that selector down. Pods keep their real geometry there; around
-    /// it sit shadow quads and afterburner cones, and above it a scale
-    /// and mirror, that the game rewrites every frame.
-    FirstLodOnly,
+    /// A pod: only its parts (two engines and a cockpit, each under a
+    /// 0.02 scale node the game replaces at run time), each from that
+    /// node down, laid out engines ahead and cockpit behind. The shadow
+    /// quads and afterburner cones around them are left out. The game
+    /// spaces the parts from per-racer data not yet decoded, so the
+    /// layout here is an approximation.
+    PodParts,
 };
 
 /// Parses the data part of a model block item (see the racer README for
