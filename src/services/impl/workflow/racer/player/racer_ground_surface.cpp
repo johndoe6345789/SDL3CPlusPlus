@@ -14,10 +14,15 @@ bool Wall(const void* ground, const glm::vec3& from, const glm::vec3& to) {
                             to);
 }
 
+std::uint32_t Flags(const void* ground, float x, float z, float ceiling) {
+    return RacerGroundFlags(*static_cast<const RacerGround*>(ground), x, z,
+                            ceiling);
+}
+
 }  // namespace
 
 RacerSurface RacerGroundSurface(const RacerGround& ground) {
-    return RacerSurface{&Height, &Wall, &ground};
+    return RacerSurface{&Height, &Wall, &Flags, &ground};
 }
 
 }  // namespace sdl3cpp::services::impl

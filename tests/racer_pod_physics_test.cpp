@@ -57,3 +57,14 @@ TEST(RacerPodPhysics, WallTriangleStopsThePod) {
     const RacerPodState pod = Fly(input, 5.f, Surface(&Flat, &WallAt30));
     EXPECT_GT(pod.position.z, -30.f);
 }
+
+TEST(RacerPodPhysics, SpeedStripsRaiseAndSandLowersTopSpeed) {
+    RacerPodState pod;
+    RacerPodInput input;
+    input.throttle = 1.f;
+    const RacerPodSpec spec;
+    pod.surface = 0x4;  // Fast
+    EXPECT_GT(RacerPodTargetSpeed(pod, input, spec), spec.topSpeed);
+    pod.surface = 0x8;  // Slow
+    EXPECT_LT(RacerPodTargetSpeed(pod, input, spec), spec.topSpeed);
+}

@@ -1,5 +1,7 @@
 #include "services/interfaces/workflow/racer/player/racer_pod_physics.hpp"
 
+#include "services/interfaces/workflow/racer/player/racer_surface_effects.hpp"
+
 #include <algorithm>
 #include <cmath>
 
@@ -26,7 +28,8 @@ void StepRacerPod(RacerPodState& pod, const RacerPodInput& in,
     }
     // Pods turn tighter when slow, keeping a share of it at top speed.
     const float pace = std::min(1.f, std::fabs(pod.speed) / spec.topSpeed);
-    const float grip = 1.f - (1.f - spec.turnAtTopSpeed) * pace;
+    const float grip = (1.f - (1.f - spec.turnAtTopSpeed) * pace) *
+                       RacerSurfaceEffectFor(pod.surface).grip;
     pod.heading += in.steer * spec.turnRate * grip * dt;
 
     glm::vec3 next = pod.position;
@@ -46,6 +49,10 @@ void StepRacerPod(RacerPodState& pod, const RacerPodInput& in,
         pod.airTime += dt;
     }
     pod.position = next;
+    pod.surface = pod.grounded && surface.flags
+                      ? surface.flags(surface.context, next.x, next.z,
+                                      next.y)
+                      : 0;
 }
 
 }  // namespace sdl3cpp::services::impl

@@ -10,6 +10,8 @@ constexpr std::uint32_t kFaceSizes = 0x24;       // s32 per face (strips)
 constexpr std::uint32_t kCollisionVertices = 0x2C;
 constexpr std::uint32_t kCollisionCount = 0x38;  // s16
 constexpr std::uint32_t kPointBytes = 6;         // s16 x, y, z
+constexpr std::uint32_t kBehaviour = 0x04;        // mesh -> behaviour
+constexpr std::uint32_t kReaction = 0x2C;         // behaviour -> flags
 
 constexpr std::int16_t kTriangles = 3;
 constexpr std::int16_t kQuads = 4;
@@ -20,6 +22,7 @@ struct Collision {
     std::uint32_t points;
     int count;
     const glm::mat4& transform;
+    std::uint32_t flags;
 
     void Corner(int i) {
         const RacerBigEndianReader& r = walk.reader;
@@ -35,6 +38,7 @@ struct Collision {
         Corner(a);
         Corner(b);
         Corner(c);
+        walk.model.collisionFlags.push_back(flags);
     }
 };
 
@@ -49,7 +53,11 @@ void AppendCollision(ModelWalk& walk, std::uint32_t mesh,
     const int faces = r.I16(mesh + kFaceCount);
     const std::int16_t primitive = r.I16(mesh + kPrimitive);
     const std::uint32_t sizes = r.U32(mesh + kFaceSizes);
-    Collision c{walk, points, count, transform};
+    const std::uint32_t behaviour = r.U32(mesh + kBehaviour);
+    const std::uint32_t flags = walk.IsPointer(behaviour, kReaction + 4)
+                                    ? r.U32(behaviour + kReaction)
+                                    : 0;
+    Collision c{walk, points, count, transform, flags};
     int first = 0;
     for (int face = 0; face < faces && first < count; ++face) {
         int corners = primitive;

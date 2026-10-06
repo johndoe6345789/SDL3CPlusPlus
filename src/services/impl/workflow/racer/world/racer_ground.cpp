@@ -36,7 +36,8 @@ long long RacerGroundCell(const RacerGround& ground, float x, float z) {
 }
 
 void AddRacerGroundTriangle(RacerGround& ground, const glm::vec3& a,
-                            const glm::vec3& b, const glm::vec3& c) {
+                            const glm::vec3& b, const glm::vec3& c,
+                            std::uint32_t flags) {
     const glm::vec3 n = glm::cross(b - a, c - a);
     const float length = glm::length(n);
     // A pod rides surfaces up to ~75 degrees: the game's banked turns
@@ -47,6 +48,7 @@ void AddRacerGroundTriangle(RacerGround& ground, const glm::vec3& a,
     auto& cells = wall ? ground.wallCells : ground.cells;
     const int index = static_cast<int>(corners.size() / 3);
     corners.insert(corners.end(), {a, b, c});
+    if (!wall) ground.flags.push_back(flags);
     const float s = ground.cellSize;
     const int x0 = CellOf(std::min({a.x, b.x, c.x}), s);
     const int x1 = CellOf(std::max({a.x, b.x, c.x}), s);

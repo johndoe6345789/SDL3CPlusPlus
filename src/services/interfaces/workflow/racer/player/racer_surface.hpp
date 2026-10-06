@@ -2,6 +2,7 @@
 
 #include <glm/glm.hpp>
 
+#include <cstdint>
 #include <optional>
 
 namespace sdl3cpp::services::impl {
@@ -14,6 +15,9 @@ struct RacerSurface {
                                    float ceiling) = nullptr;
     bool (*wall)(const void* context, const glm::vec3& from,
                  const glm::vec3& to) = nullptr;
+    /// Surface flags under (x, z) below `ceiling` (RacerSurfaceFlag).
+    std::uint32_t (*flags)(const void* context, float x, float z,
+                           float ceiling) = nullptr;
     const void* context = nullptr;
 };
 

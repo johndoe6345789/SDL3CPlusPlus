@@ -1,5 +1,7 @@
 #include "services/interfaces/workflow/racer/player/racer_pod_recovery.hpp"
 
+#include "services/interfaces/workflow/racer/player/racer_surface_effects.hpp"
+
 namespace sdl3cpp::services::impl {
 namespace {
 
@@ -38,7 +40,9 @@ RacerRecoveryReason UpdateRacerRecovery(RacerRecovery& recovery,
     }
     const bool crawling = throttle > 0.5f && pod.speed < 3.f;
     RacerRecoveryReason reason = RacerRecoveryReason::None;
-    if (recovery.voidTime > kVoidSeconds || pod.airTime > kFallSeconds) {
+    const bool fatal = RacerSurfaceEffectFor(pod.surface).fatal;
+    if (fatal || recovery.voidTime > kVoidSeconds ||
+        pod.airTime > kFallSeconds) {
         reason = RacerRecoveryReason::OffCourse;
     } else if (pod.stuckTime > kStuckSeconds && (pod.blocked || crawling)) {
         reason = RacerRecoveryReason::Stuck;

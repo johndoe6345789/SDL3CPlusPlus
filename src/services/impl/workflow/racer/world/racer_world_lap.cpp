@@ -1,5 +1,7 @@
 #include "services/interfaces/workflow/racer/world/racer_world_build.hpp"
 
+#include "services/interfaces/workflow/racer/data/racer_surface_flags.hpp"
+
 #include <string>
 
 namespace sdl3cpp::services::impl {
@@ -21,16 +23,33 @@ void BuildRacerLapPoints(RacerWorldState& state) {
 }
 
 bool BuildRacerCollisionGround(RacerWorldState& state,
-                               const RacerModel& track) {
+                               const RacerModel& track,
+                               const std::shared_ptr<ILogger>& logger) {
     // Pods ride the invisible collision surface the game uses, which
     // includes walls the visible meshes do not have.
     const bool collision = !track.collision.empty();
     for (std::size_t i = 0; collision && i + 8 < track.collision.size();
          i += 9) {
         const float* c = &track.collision[i];
+        const std::size_t triangle = i / 9;
+        const std::uint32_t flags = triangle < track.collisionFlags.size()
+                                        ? track.collisionFlags[triangle]
+                                        : 0;
         AddRacerGroundTriangle(state.ground, RacerToEngine(c[0], c[1], c[2]),
                                RacerToEngine(c[3], c[4], c[5]),
-                               RacerToEngine(c[6], c[7], c[8]));
+                               RacerToEngine(c[6], c[7], c[8]), flags);
+    }
+    if (logger && collision) {
+        int fast = 0, slow = 0, fall = 0;
+        for (std::uint32_t f : state.ground.flags) {
+            fast += HasRacerSurfaceFlag(f, RacerSurfaceFlag::Fast) ? 1 : 0;
+            slow += HasRacerSurfaceFlag(f, RacerSurfaceFlag::Slow) ? 1 : 0;
+            fall += HasRacerSurfaceFlag(f, RacerSurfaceFlag::Fall) ? 1 : 0;
+        }
+        logger->Trace("racer.world.load: floor triangles: " +
+                      std::to_string(fast) + " fast, " +
+                      std::to_string(slow) + " slow, " +
+                      std::to_string(fall) + " fall");
     }
     return collision;
 }

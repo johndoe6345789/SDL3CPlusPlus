@@ -43,6 +43,9 @@ struct RacerModel {
     /// The invisible collision surface pods ride on and bounce off:
     /// x, y, z per corner, three corners per triangle, game space.
     std::vector<float> collision;
+    /// The surface's vehicle-reaction flags, one per collision triangle
+    /// (see RacerSurfaceFlag).
+    std::vector<std::uint32_t> collisionFlags;
     int meshCount = 0;
     int triangleCount = 0;
     bool valid = false;

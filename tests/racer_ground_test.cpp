@@ -38,3 +38,11 @@ TEST(RacerGround, SteepTrianglesBecomeWalls) {
     EXPECT_FALSE(RacerWallBetween(ground, {-2, 1, 2}, {-1, 1, 2}));
     EXPECT_TRUE(RacerWallBetween(ground, {-1, 1, 2}, {1, 1, 2}));
 }
+
+TEST(RacerGround, ReportsTheFlagsOfTheFloorFound) {
+    RacerGround ground;
+    AddRacerGroundTriangle(ground, {0, 0, 0}, {20, 0, 0}, {0, 0, 20}, 0x8);
+    AddRacerGroundTriangle(ground, {0, 5, 0}, {20, 5, 0}, {0, 5, 20}, 0x4);
+    EXPECT_EQ(RacerGroundFlags(ground, 2.f, 2.f, 1.f), 0x8u);
+    EXPECT_EQ(RacerGroundFlags(ground, 2.f, 2.f, 10.f), 0x4u);
+}

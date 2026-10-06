@@ -1254,7 +1254,8 @@
         "tests/racer_pod_physics_test.cpp",
         "src/services/impl/workflow/racer/player/racer_pod_physics.cpp",
         "src/services/impl/workflow/racer/player/racer_pod_engines.cpp",
-        "src/services/impl/workflow/racer/player/racer_pod_collision.cpp"
+        "src/services/impl/workflow/racer/player/racer_pod_collision.cpp",
+        "src/services/impl/workflow/racer/player/racer_surface_effects.cpp"
       ],
       "include_directories": [
         "src"
@@ -1269,7 +1270,8 @@
       "sources": [
         "tests/racer_ground_test.cpp",
         "src/services/impl/workflow/racer/world/racer_ground.cpp",
-        "src/services/impl/workflow/racer/world/racer_walls.cpp"
+        "src/services/impl/workflow/racer/world/racer_walls.cpp",
+        "src/services/impl/workflow/racer/world/racer_ground_flags.cpp"
       ],
       "include_directories": [
         "src"
@@ -1302,7 +1304,8 @@
         "src/services/impl/workflow/racer/player/racer_field_rules.cpp",
         "src/services/impl/workflow/racer/player/racer_pod_physics.cpp",
         "src/services/impl/workflow/racer/player/racer_pod_engines.cpp",
-        "src/services/impl/workflow/racer/player/racer_pod_collision.cpp"
+        "src/services/impl/workflow/racer/player/racer_pod_collision.cpp",
+        "src/services/impl/workflow/racer/player/racer_surface_effects.cpp"
       ],
       "include_directories": [
         "src"

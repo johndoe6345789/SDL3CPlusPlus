@@ -49,7 +49,7 @@ bool BuildRacerWorld(SDL_GPUDevice* device, RacerWorldState& state,
     white.width = white.height = 4;
     white.rgba.assign(4 * 4 * 4, 255);
     state.white = UploadRacerTexture(device, white, 1);
-    const bool collision = BuildRacerCollisionGround(state, track);
+    const bool collision = BuildRacerCollisionGround(state, track, logger);
     state.trackModel = UploadRacerModel(device, state, track,
                                         collision ? nullptr : &state.ground);
     state.podModel = UploadRacerModel(device, state, pod, nullptr,

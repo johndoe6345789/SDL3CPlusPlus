@@ -47,6 +47,7 @@ struct RacerPodState {
     bool blocked = false;   ///< against a wall it cannot slide along
     float airTime = 0.f;
     float stuckTime = 0.f;  ///< seconds blocked or crawling
+    std::uint32_t surface = 0;  ///< RacerSurfaceFlag bits under the pod
 };
 
 /// Boost, heat, overheating and repair for one tick.

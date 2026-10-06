@@ -21,7 +21,8 @@ void BuildRacerLapPoints(RacerWorldState& state);
 /// Adds the track's collision triangles to `state.ground`. False when
 /// the track has none (then its visible triangles are used instead).
 bool BuildRacerCollisionGround(RacerWorldState& state,
-                               const RacerModel& track);
+                               const RacerModel& track,
+                               const std::shared_ptr<ILogger>& logger);
 
 /// Trace: a model's extent in engine units, for checking scale.
 void TraceModelExtent(const std::shared_ptr<ILogger>& logger,
