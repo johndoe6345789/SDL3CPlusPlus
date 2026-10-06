@@ -10,46 +10,83 @@ point `RACER_DIR` at your own install.
 | variable          | meaning                                                     |
 |-------------------|-------------------------------------------------------------|
 | `RACER_DIR`       | the install (holds `SWEP1RCR.EXE` and `data/`)               |
-| `RACER_TRACK`     | `0`-`24` or part of a name (`Inferno`); default Boonta Classic |
-| `RACER_POD`       | part of a racer's name (`Sebulba`); default Anakin            |
+| `RACER_TRACK`     | `0`-`24` or part of a name (`Inferno`): preselects the track |
+| `RACER_POD`       | part of a racer's name (`Sebulba`): preselects the racer     |
+| `RACER_LAPS`      | `1`-`5`: preselects the lap count                            |
+| `RACER_AUTOPILOT` | `1`: skip the menu and let the pod drive itself (demo, tests)|
+| `RACER_PROFILE`   | a file to keep truguts and upgrades in, instead of the user's |
 | `RACER_EXPORT`    | a folder: also export textures, OBJ models, UI art, audio    |
-| `RACER_SHOT`      | a file: save a screenshot about three seconds in             |
-| `RACER_AUTOPILOT` | `1`: the pod drives itself (headless checks, demo)           |
+| `RACER_SHOT`      | a file: save a screenshot about twelve seconds in            |
+| `RACER_MUTE`      | `1`: no sound                                                |
 
-The session workflow sets `opponents` (default 7) and `laps` (default 3).
+Runs with `SDL3CPP_HEADLESS=1` are silent too, unless
+`SDL_AUDIO_DRIVER=dummy` is set (which plays to nowhere, to test audio).
 
-Controls: Up/W or right trigger throttle, Down/S or left trigger brake,
-Left/Right/A/D or left stick steer, Space/Left Shift or (A) boost, R or (X)
-repair, Escape or Start quits. Boost needs near-top speed and heats the
-engines; at full heat they catch fire, cut out for three seconds and take
-damage, which lowers top speed until repaired (repairing costs speed).
+## Playing
+
+The game opens on the title screen (the original splash art) with
+Anakin's theme. Choose the track (all 25), the racer (all 23 pods), laps
+(1-5) and rivals (0-11), visit the pod shop, then start. Each race has a
+loading screen, a countdown, and big banners for GO!, FINAL LAP and
+FINISHED; the results table pays truguts by place (1,500 for a win down
+to 50 for eighth). In the pod shop (the hangar backdrop) truguts buy five
+levels each of traction, turning, acceleration, top speed, air brake,
+cooling and repair, at 250 truguts times the next level. Truguts and
+upgrades are saved in `profile.json` in the user's SDL pref folder
+(`SDL3CPlusPlus/EpisodeIRacer`).
+
+| action         | keyboard                | pad                    |
+|----------------|-------------------------|------------------------|
+| throttle       | Up / W                  | right trigger, stick up |
+| brake          | Down / S                | left trigger, stick down |
+| steer          | Left/Right, A/D         | left stick             |
+| boost          | Space, Left Shift       | (A)                    |
+| repair         | R                       | (X)                    |
+| menu move      | arrows, W/A/S/D         | left stick             |
+| select         | Enter                   | (A)                    |
+| back / pause   | Escape, P               | (B), Start             |
+
+Pause offers resume, restart and quit to the title. Boost needs
+near-top speed and heats the engines; at full heat they catch fire, cut
+out for three seconds and take damage. Each engine is damaged on its own
+(walls hurt the side that hits them), and a hurt engine both lowers top
+speed and pulls the pod toward its side until repaired; repairing costs
+speed.
 
 ## Status
 
-Working: all 25 tracks and 25 pods decode; the track draws with textures
-upscaled 4x (Scale2x) and mipmapped, baked N64 vertex colours and distance
-fog at 1920x1080. Pods hover on the game's own collision surface, ride
-banks up to ~75 degrees, scrape along walls, fall into gaps and are put
-back on the lap when lost. A field of eight races: seven opponents with
-their own pods fly the lap on the autopilot at varied pace, jostle the
-player, and are ranked. Laps are timed with a countdown; a four-line HUD
-shows position, lap, time, best lap, speed and engine heat. Race audio
-comes from the install: planet music, an engine note pitched by speed and
-boost, countdown beeps, the start, wall scrapes and engine fires.
+Working: all 25 tracks and 23 racers' pods decode; the track draws with
+textures upscaled 4x (Scale2x) and mipmapped, baked N64 vertex colours,
+the planet's skybox and per-planet distance fog at 1920x1080. Pods are
+lit, draw with engine flames that grow under boost, the energy binder and
+control cables between their parts, and a ground shadow. Pods hover on
+the game's own collision surface, ride banks up to ~75 degrees, scrape
+along walls and fall into gaps (and are put back on the lap). The track's
+surface flags act: boost strips, slow ground, rough ground, slippery ice
+and water, swamp, lava (heats the engines) and death drops.
+
+A field of up to twelve races: rivals with their own pods fly the lap on
+the autopilot at varied pace, steer round slower pods, jostle the player,
+and are ranked. The HUD shows position, lap, time, best lap, speed,
+engine heat and each engine's health. Audio comes from the install:
+Anakin's theme on the menus, planet music in races, an engine note
+pitched by speed and boost, countdown beeps, the start, wall scrapes and
+engine fires.
 
 Approximations, flagged in the code: pod parts (engines and cockpit) are
 laid out by a rule, not by the per-racer spacing and cable length the
 game uses; pods are lit once at load rather than per frame; walls are
 tested along the pod's centre line, not its whole width; pods collide as
 three circles along their length; the physics reads the track as a height
-field, so near-vertical banks act as walls. The autopilot does not steer
-round other pods, so in traffic it is pushed off course more often
-(about 18 recoveries in 200 s on Boonta Classic, against 8 racing alone).
+field, so near-vertical banks act as walls; the shadow is cut off beyond
+25 m rather than faded. In a full field the autopilot is still pushed off
+course more often than alone (about 15-18 recoveries in 200 s on Boonta
+Classic, against 8 racing alone). The upgrade economy (prices, prizes,
+5% per level) is new, not the original's parts dealers and junkyard.
 
-Not done yet: the energy binder and cables between parts, engine flames,
-the shadow, the skybox and other `Scen` models, menus and the pod shop,
-per-engine damage, track triggers (boost pads, hazards), and
-a few pod parts whose texture data runs short (they show magenta).
+Not done: the original's tournament (circuits and unlocking), Watto's
+shop and the junkyard, track animations and hazards beyond the surface
+flags, the pit droids, voice lines, and the cutscene videos.
 
 ## Data formats
 
@@ -206,11 +243,18 @@ little-endian. Its buffer layout confirms the 16-byte header and the
 - `data/`: block reader, model parser (`racer_model_*`), textures,
   palettes, mirroring, Scale2x upscaler, splines, WAV, track table, and the
   export passes (PNG, OBJ, plots, audio).
-- `world/`: `racer.world.load`, GPU upload with the upscaled texture
-  cache, and the ground grid used for hovering and walls.
-- `player/`: pod physics (pure, unit-tested), `racer.pod.drive`, the
-  autopilot, lap progress and `racer.lap.timer`.
-- `render/`: `racer.camera.chase`, `racer.scene.draw`, `racer.hud.text`.
+- `world/`: `racer.world.load` (loads a race when the menu asks), GPU
+  upload with the upscaled texture cache, the ground grid used for
+  hovering, walls and surface flags, the starting grid, and the pod rig
+  (flames, binders, cables, shadow meshes).
+- `player/`: pod physics (pure, unit-tested), surfaces, `racer.pod.drive`,
+  the autopilot and traffic avoidance, rivals (`racer.opponents.fly`),
+  field rules (contact, ranking), lap progress and `racer.lap.timer`.
+- `flow/`: the title menu, pod shop, loading, pause and results
+  (`racer.flow`), upgrades and the saved profile.
+- `render/`: `racer.camera.chase`, `racer.scene.draw`, `racer.hud.text`
+  (HUD and banners) and `racer.screen.draw` (menu screens).
+- `audio/`: `racer.audio.update` and its mixer.
 
 Shaders are in `shaders/spirv/` (GLSL source next to the SPIR-V; rebuild
 with `glslc`). Unit tests: `racer_*_test`.

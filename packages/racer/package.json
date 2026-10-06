@@ -1,11 +1,11 @@
 {
   "name": "Star Wars Episode I Racer",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "id": "racer",
   "type": "game",
   "category": "demo",
   "description": "Episode I Racer rebuilt on the engine: every track and pod decoded from the game's own data, textures upscaled 4x, raced with new pod physics",
-  "status": "playable prototype",
+  "status": "playable",
   "launch_options": [
     {
       "env": "RACER_DIR",
