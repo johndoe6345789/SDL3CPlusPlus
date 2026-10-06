@@ -7,8 +7,8 @@
 namespace sdl3cpp::services::impl {
 namespace {
 
-constexpr float kPodRadius = 4.f;   // half a pod's width
-constexpr float kPodReach = 9.f;    // circle offsets along the pod
+constexpr float kPodRadius = 2.8f;  // half a pod's width
+constexpr float kPodReach = 6.f;    // circle offsets along the pod
 constexpr float kMaxPush = 0.25f;   // metres per contact per frame
 // Above any racing progress (laps x points), small enough that a float
 // still resolves hundredths of a second when the race time is taken off.

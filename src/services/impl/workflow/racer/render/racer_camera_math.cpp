@@ -24,4 +24,23 @@ float RacerCameraClearance(const RacerWorldState& state,
     return lowest;
 }
 
+glm::vec3 RacerCameraPullIn(const RacerWorldState& state,
+                            const glm::vec3& focus, const glm::vec3& eye,
+                            float nearest) {
+    // Short steps, as the wall grid only looks up the cells at the ends.
+    constexpr int kSteps = 8;
+    for (int k = 0; k < kSteps; ++k) {
+        const glm::vec3 a = focus + (eye - focus) * (k / float(kSteps));
+        const glm::vec3 b = focus + (eye - focus) * ((k + 1) / float(kSteps));
+        if (RacerWallBetween(state.ground, a, b)) {
+            // Stop one step short of the step that hits.
+            const float span = glm::length(eye - focus);
+            const float least = span > 0.f ? nearest / span : 1.f;
+            const float keep = std::max(k - 1, 0) / float(kSteps);
+            return focus + (eye - focus) * std::clamp(keep, least, 1.f);
+        }
+    }
+    return eye;
+}
+
 }  // namespace sdl3cpp::services::impl

@@ -8,8 +8,8 @@
 namespace sdl3cpp::services::impl {
 namespace {
 
-constexpr float kShadowWidth = 11.f;
-constexpr float kShadowLength = 24.f;
+constexpr float kShadowWidth = 6.f;
+constexpr float kShadowLength = 16.f;
 
 int DrawFlames(RacerDrawPass& d, const RacerWorldState& state,
                const RacerPodState& pod, const glm::mat4& at,
@@ -26,8 +26,9 @@ int DrawFlames(RacerDrawPass& d, const RacerWorldState& state,
     int drawn = 0;
     for (const glm::vec3& exhaust : rig.exhausts) {
         glm::mat4 m = glm::translate(at, exhaust);
+        // The cone points along +z; the pod's tail is -z in its model.
         m = glm::scale(m, glm::vec3(rig.exhaustRadius, rig.exhaustRadius,
-                                    length));
+                                    -length));
         drawn += DrawRacerModel(d, flame, m, true);
     }
     return drawn;

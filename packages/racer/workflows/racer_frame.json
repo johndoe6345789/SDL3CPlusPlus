@@ -93,9 +93,9 @@
       "id": "chase_camera",
       "plugin": "racer.camera.chase",
       "parameters": {
-        "distance": 26.0,
-        "height": 8.0,
-        "lead": 25.0,
+        "distance": 10.0,
+        "height": 4.5,
+        "lead": 15.0,
         "fov": 70.0,
         "far": 6000.0
       }

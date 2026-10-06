@@ -54,7 +54,9 @@ bool BuildRacerWorld(SDL_GPUDevice* device, RacerWorldState& state,
                      " floor and " +
                      std::to_string(state.ground.walls.size() / 3) +
                      " wall triangles; pod " + state.racer.name + " (" +
-                     std::to_string(pod.triangleCount) + " triangles)");
+                     std::to_string(pod.triangleCount) +
+                     " triangles, reach " +
+                     std::to_string(state.podRig.reach) + " m)");
     }
     return true;
 }

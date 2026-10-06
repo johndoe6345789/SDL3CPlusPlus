@@ -6,11 +6,11 @@ RacerEffectShapes BuildRacerEffectShapes(SDL_GPUDevice* device,
                                          const RacerGpuTexture& white) {
     RacerEffectShapes shapes;
     shapes.flame = UploadRacerShape(device, white,
-                       RacerConeVertices(12, {1.f, 0.75f, 0.35f, 0.85f},
+                       RacerConeVertices(12, {1.f, 0.85f, 0.55f, 0.55f},
                                          {1.f, 0.3f, 0.05f, 0.f}),
                        true);
     shapes.boostFlame = UploadRacerShape(device, white,
-                            RacerConeVertices(12, {0.85f, 0.95f, 1.f, 0.95f},
+                            RacerConeVertices(12, {0.8f, 0.9f, 1.f, 0.7f},
                                               {0.35f, 0.55f, 1.f, 0.f}),
                             true);
     // A flat unit square on the ground, darkest at its middle.

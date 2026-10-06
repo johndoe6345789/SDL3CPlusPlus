@@ -7,7 +7,7 @@ namespace sdl3cpp::services::impl {
 namespace {
 
 constexpr float kLookAhead = 40.f;   // metres in front that matter
-constexpr float kLane = 7.f;         // half-width counted as "in line"
+constexpr float kLane = 5.5f;        // about a pod width either side
 constexpr float kTooClose = 18.f;
 
 }  // namespace

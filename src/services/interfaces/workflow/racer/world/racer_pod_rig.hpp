@@ -15,6 +15,7 @@ struct RacerPodRig {
     RacerGpuModel binder;            ///< blended: the energy arc
     std::vector<glm::vec3> exhausts;
     float exhaustRadius = 0.5f;
+    float reach = 0.f;   ///< metres from the pod's origin to its far end
 };
 
 /// Shared effect shapes, built once: a unit flame cone pointing along

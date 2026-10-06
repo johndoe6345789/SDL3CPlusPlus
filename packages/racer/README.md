@@ -75,7 +75,8 @@ countdown beeps, the start, wall scrapes and engine fires.
 
 Approximations, flagged in the code: pod parts (engines and cockpit) are
 laid out by a rule, not by the per-racer spacing and cable length the
-game uses; pods are lit once at load rather than per frame; walls are
+game uses, and drawn at a quarter of their raw size (the scale the game
+places them at is not decoded; this gives Anakin's engines about 7 m); pods are lit once at load rather than per frame; walls are
 tested along the pod's centre line, not its whole width; pods collide as
 three circles along their length; the physics reads the track as a height
 field, so near-vertical banks act as walls; the shadow is cut off beyond
@@ -149,7 +150,8 @@ cones in other units, a list of parts: two engines and a cockpit, each
 under a uniform 0.02 scale the game replaces when it places the part. The
 parts are taken from that scale node down, using the most detailed LOD
 child present (child 0 is empty on some pods), and laid out engines side
-by side ahead of the cockpit.
+by side ahead of the cockpit. Parts face game -y (the engines' intakes
+point that way), so the engines go on the -y side.
 
 ### Textures
 

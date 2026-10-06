@@ -14,4 +14,11 @@ float RacerAngleDelta(float from, float to);
 float RacerCameraClearance(const RacerWorldState& state,
                            const glm::vec3& pod, const glm::vec3& eye);
 
+/// The eye moved in toward `focus` to just short of the first wall
+/// between them, so canyon walls rarely hide the pod; `eye` when clear.
+/// Never closer than `nearest`, which keeps it out of the pod itself.
+glm::vec3 RacerCameraPullIn(const RacerWorldState& state,
+                            const glm::vec3& focus, const glm::vec3& eye,
+                            float nearest);
+
 }  // namespace sdl3cpp::services::impl

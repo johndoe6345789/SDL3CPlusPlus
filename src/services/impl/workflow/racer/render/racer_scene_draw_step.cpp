@@ -8,7 +8,7 @@
 namespace sdl3cpp::services::impl {
 namespace {
 
-constexpr float kHideNearEye = 12.f;
+constexpr float kHideNearEye = 8.f;
 
 }  // namespace
 WorkflowRacerSceneDrawStep::WorkflowRacerSceneDrawStep(

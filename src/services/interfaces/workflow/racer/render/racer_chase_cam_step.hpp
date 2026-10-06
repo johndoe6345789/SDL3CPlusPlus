@@ -30,6 +30,8 @@ private:
     std::shared_ptr<RacerWorldState> state_;
     float heading_ = 0.f;
     glm::vec3 eye_{0.f};
+    float eyeY_ = 0.f;   ///< last frame's eye height
+    int traceFrame_ = 0;
     bool started_ = false;
 };
 
