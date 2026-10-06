@@ -69,9 +69,9 @@ A field of up to twelve races: rivals with their own pods fly the lap on
 the autopilot at varied pace, steer round slower pods, jostle the player,
 and are ranked. The HUD shows position, lap, time, best lap, speed,
 engine heat and each engine's health. Audio comes from the install:
-Anakin's theme on the menus, planet music in races, an engine note
-pitched by speed and boost, countdown beeps, the start, wall scrapes and
-engine fires.
+Anakin's theme and select sounds on the menus, planet music in races
+(frozen while paused), an engine note pitched by speed and boost,
+countdown beeps, the start, wall scrapes and engine fires.
 
 Approximations, flagged in the code: pod parts (engines and cockpit) are
 laid out by a rule, not by the per-racer spacing and cable length the
