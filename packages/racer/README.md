@@ -32,18 +32,23 @@ fog at 1920x1080. Pods hover on the game's own collision surface, ride
 banks up to ~75 degrees, scrape along walls, fall into gaps and are put
 back on the lap when lost. A field of eight races: seven opponents with
 their own pods fly the lap on the autopilot at varied pace, jostle the
-player, and are ranked. Laps are timed with a countdown; the HUD shows
-position, lap, time, best lap, speed and engine heat.
+player, and are ranked. Laps are timed with a countdown; a four-line HUD
+shows position, lap, time, best lap, speed and engine heat. Race audio
+comes from the install: planet music, an engine note pitched by speed and
+boost, countdown beeps, the start, wall scrapes and engine fires.
 
 Approximations, flagged in the code: pod parts (engines and cockpit) are
 laid out by a rule, not by the per-racer spacing and cable length the
 game uses; pods are lit once at load rather than per frame; walls are
-tested along the pod's centre line, not its whole width; the physics
-reads the track as a height field, so near-vertical banks act as walls.
+tested along the pod's centre line, not its whole width; pods collide as
+three circles along their length; the physics reads the track as a height
+field, so near-vertical banks act as walls. The autopilot does not steer
+round other pods, so in traffic it is pushed off course more often
+(about 18 recoveries in 200 s on Boonta Classic, against 8 racing alone).
 
 Not done yet: the energy binder and cables between parts, engine flames,
 the shadow, the skybox and other `Scen` models, menus and the pod shop,
-race audio, per-engine damage, track triggers (boost pads, hazards), and
+per-engine damage, track triggers (boost pads, hazards), and
 a few pod parts whose texture data runs short (they show magenta).
 
 ## Data formats

@@ -1298,7 +1298,10 @@
       "name": "racer_field_test",
       "sources": [
         "tests/racer_field_test.cpp",
-        "src/services/impl/workflow/racer/player/racer_field_rules.cpp"
+        "src/services/impl/workflow/racer/player/racer_field_rules.cpp",
+        "src/services/impl/workflow/racer/player/racer_pod_physics.cpp",
+        "src/services/impl/workflow/racer/player/racer_pod_engines.cpp",
+        "src/services/impl/workflow/racer/player/racer_pod_collision.cpp"
       ],
       "include_directories": [
         "src"

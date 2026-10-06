@@ -2,6 +2,7 @@
 
 #include "services/interfaces/i_logger.hpp"
 #include "services/interfaces/i_workflow_step.hpp"
+#include "services/interfaces/workflow/racer/render/racer_hud_overlay.hpp"
 #include "services/interfaces/workflow/racer/world/racer_world_state.hpp"
 
 #include <memory>
@@ -9,7 +10,7 @@
 
 namespace sdl3cpp::services::impl {
 
-/// The HUD line for a race state: the countdown, then lap, times, speed
+/// The HUD lines for a race state: the countdown, then lap, times, speed
 /// and engine heat, then the result. Pure, so it is testable.
 std::string FormatRacerHud(const RacerRaceState& race,
                            const RacerPodState& pod);
@@ -17,14 +18,15 @@ std::string FormatRacerHud(const RacerRaceState& race,
 /**
  * Plugin ID: racer.hud.text
  *
- * Writes FormatRacerHud's line into the text overlay that overlay.fps_*
- * draws (in place of the FPS counter). Run it after
- * overlay.fps_upload_quad and before overlay.fps_draw.
+ * Draws FormatRacerHud's four lines in the top-right corner, at three
+ * times the size of the engine's FPS overlay, whose pipeline it borrows
+ * (run overlay.fps_init first). Run after frame.gpu.end_scene.
  */
 class WorkflowRacerHudStep final : public IWorkflowStep {
 public:
     WorkflowRacerHudStep(std::shared_ptr<ILogger> logger,
                          std::shared_ptr<RacerWorldState> state);
+    ~WorkflowRacerHudStep() override;
     std::string GetPluginId() const override;
     void Execute(const WorkflowStepDefinition& step,
                  WorkflowContext& context) override;
@@ -33,6 +35,7 @@ private:
     std::shared_ptr<ILogger> logger_;
     std::shared_ptr<RacerWorldState> state_;
     std::string shown_;
+    RacerHudOverlay hud_;
 };
 
 }  // namespace sdl3cpp::services::impl

@@ -113,16 +113,8 @@
       "plugin": "overlay.fps_init"
     },
     {
-      "id": "overlay_fps_upload_quad",
-      "plugin": "overlay.fps_upload_quad"
-    },
-    {
       "id": "hud_text",
       "plugin": "racer.hud.text"
-    },
-    {
-      "id": "overlay_fps_draw",
-      "plugin": "overlay.fps_draw"
     },
     {
       "id": "shot_frame",

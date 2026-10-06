@@ -61,5 +61,6 @@ TEST(RacerHud, ShowsLapTimeSpeedAndHeat) {
     EXPECT_NE(hud.find("LAP 1/3"), std::string::npos);
     EXPECT_NE(hud.find("1:15.50"), std::string::npos);
     EXPECT_NE(hud.find("360 KM/H"), std::string::npos);
+    EXPECT_NE(hud.find("TIME 1:15.50"), std::string::npos);
     EXPECT_NE(hud.find("[#####-----]"), std::string::npos);
 }

@@ -36,6 +36,6 @@ TEST(RacerField, OverlappingPodsArePushedApart) {
     RacerPodState a;
     RacerPodState b;
     b.position = {1.f, 0.f, 0.f};
-    SeparateRacerPods({&a, &b});
-    EXPECT_GE(b.position.x - a.position.x, 5.19f);
+    for (int frame = 0; frame < 30; ++frame) SeparateRacerPods({&a, &b});
+    EXPECT_GE(b.position.x - a.position.x, 7.9f);
 }

@@ -31,26 +31,24 @@ std::string Place(const RacerRaceState& race) {
 
 std::string FormatRacerHud(const RacerRaceState& race,
                            const RacerPodState& pod) {
+    const std::string newline(1, '\n');
     if (race.countdown > 0.f) {
-        return "    " + std::to_string(
-                            static_cast<int>(std::ceil(race.countdown)));
+        const int second = static_cast<int>(std::ceil(race.countdown));
+        return newline + "         " + std::to_string(second);
     }
-    if (race.finished) {
-        return Place(race) + "FINISHED " + Clock(race.raceTime) +
-               "  BEST LAP " + Clock(race.bestLap);
-    }
-    char speed[16];
-    std::snprintf(speed, sizeof(speed), "%3d", static_cast<int>(
-                                                   pod.speed * 3.6f));
-    std::string line = Place(race) + "LAP " + std::to_string(race.lap) +
-                       "/" +
-                       std::to_string(race.lapsTotal) + "  " +
-                       Clock(race.raceTime) + "  BEST " +
-                       Clock(race.bestLap) + "  " + speed +
-                       " KM/H  HEAT [" + HeatBar(pod.heat) + "]";
-    if (pod.overheatTimer > 0.f) line += " ENGINE FIRE";
-    else if (pod.boosting) line += " BOOST";
-    return line;
+    const std::string lap = race.finished
+                                ? std::string("FINISHED")
+                                : "LAP " + std::to_string(race.lap) + "/" +
+                                      std::to_string(race.lapsTotal);
+    char speed[24];
+    std::snprintf(speed, sizeof(speed), "%3d KM/H",
+                  static_cast<int>(pod.speed * 3.6f));
+    std::string engines = "HEAT [" + HeatBar(pod.heat) + "]";
+    if (pod.overheatTimer > 0.f) engines += " ENGINE FIRE";
+    else if (pod.boosting) engines += " BOOST";
+    return Place(race) + lap + newline + "TIME " + Clock(race.raceTime) +
+           "  BEST " + Clock(race.bestLap) + newline + speed + newline +
+           engines;
 }
 
 }  // namespace sdl3cpp::services::impl

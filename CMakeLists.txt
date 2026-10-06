@@ -1243,7 +1243,9 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/racer/render/racer_camera_math.cpp
         src/services/impl/workflow/racer/render/racer_chase_cam_step.cpp
         src/services/impl/workflow/racer/render/racer_hud_format.cpp
+        src/services/impl/workflow/racer/render/racer_hud_overlay.cpp
         src/services/impl/workflow/racer/render/racer_hud_step.cpp
+        src/services/impl/workflow/racer/render/racer_hud_upload.cpp
         src/services/impl/workflow/racer/render/racer_model_draw.cpp
         src/services/impl/workflow/racer/render/racer_scene_draw_step.cpp
         src/services/impl/workflow/racer/audio/racer_audio_clip.cpp
@@ -2599,6 +2601,9 @@ add_test(NAME racer_lap_test COMMAND racer_lap_test)
 add_executable(racer_field_test)
 target_sources(racer_field_test PRIVATE tests/racer_field_test.cpp)
 target_sources(racer_field_test PRIVATE src/services/impl/workflow/racer/player/racer_field_rules.cpp)
+target_sources(racer_field_test PRIVATE src/services/impl/workflow/racer/player/racer_pod_physics.cpp)
+target_sources(racer_field_test PRIVATE src/services/impl/workflow/racer/player/racer_pod_engines.cpp)
+target_sources(racer_field_test PRIVATE src/services/impl/workflow/racer/player/racer_pod_collision.cpp)
 target_include_directories(racer_field_test PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )
