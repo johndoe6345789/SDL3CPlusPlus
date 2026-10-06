@@ -4,6 +4,7 @@
 #include "services/interfaces/workflow/racer/player/racer_pod_physics.hpp"
 #include "services/interfaces/workflow/racer/player/racer_race_state.hpp"
 #include "services/interfaces/workflow/racer/world/racer_gpu_types.hpp"
+#include "services/interfaces/workflow/racer/world/racer_pod_rig.hpp"
 
 namespace sdl3cpp::services::impl {
 
@@ -12,6 +13,7 @@ namespace sdl3cpp::services::impl {
 struct RacerOpponent {
     RacerPodInfo racer;
     RacerGpuModel model;
+    RacerPodRig rig;
     RacerPodSpec spec;      ///< the stock spec scaled by their pace
     RacerPodState pod;
     RacerRaceState race;

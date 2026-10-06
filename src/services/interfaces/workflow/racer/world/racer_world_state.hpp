@@ -36,6 +36,8 @@ struct RacerWorldState {
     RacerGpuModel trackModel;
     RacerGpuModel podModel;
     RacerGpuModel skyModel;          ///< drawn round the camera
+    RacerPodRig podRig;              ///< the player's cables and binder
+    RacerEffectShapes effects;       ///< flames and shadows for all
     glm::vec3 fogColour{0.78f, 0.70f, 0.58f};
     std::map<std::uint64_t, RacerGpuTexture> textures;
     RacerGpuTexture white;   ///< for meshes shaded by vertex colour only

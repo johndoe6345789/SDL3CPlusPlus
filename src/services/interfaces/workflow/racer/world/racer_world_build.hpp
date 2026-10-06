@@ -15,6 +15,9 @@ namespace sdl3cpp::services::impl {
 bool BuildRacerWorld(SDL_GPUDevice* device, RacerWorldState& state,
                      const std::shared_ptr<ILogger>& logger);
 
+/// The colour of a racer's energy binder.
+glm::vec3 RacerBinderColour(const std::string& racer);
+
 /// Samples the lap's Bezier curves into `state.lapPoints`.
 void BuildRacerLapPoints(RacerWorldState& state);
 

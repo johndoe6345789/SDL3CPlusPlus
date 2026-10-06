@@ -51,6 +51,9 @@ void WorkflowRacerSceneDrawStep::Execute(const WorkflowStepDefinition& step,
         SDL_PushGPUFragmentUniformData(cmd, 0, &fragment, sizeof(fragment));
         drawn += DrawRacerModel(d, state_->trackModel, glm::mat4(1.f), blended);
         drawn += DrawRacerModel(d, state_->podModel, pod, blended);
+        drawn += DrawRacerPodEffects(d, *state_, state_->pod,
+                                     state_->podRoll, state_->podRig,
+                                     blended);
         for (const RacerOpponent& opponent : state_->opponents) {
             // A rival on top of the camera would fill the screen with
             // the inside of its engines; it is left out until clear.
@@ -60,6 +63,9 @@ void WorkflowRacerSceneDrawStep::Execute(const WorkflowStepDefinition& step,
             drawn += DrawRacerModel(
                 d, opponent.model, RacerPodMatrix(opponent.pod, opponent.roll),
                 blended);
+            drawn += DrawRacerPodEffects(d, *state_, opponent.pod,
+                                         opponent.roll, opponent.rig,
+                                         blended);
         }
     }
     if (!traced_ && logger_) {

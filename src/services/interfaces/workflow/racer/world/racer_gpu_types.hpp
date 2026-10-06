@@ -7,6 +7,16 @@
 
 namespace sdl3cpp::services::impl {
 
+/// The vertex the racer shaders read (`position_uv_lmuv_normal`, 40
+/// bytes): position, uv, then (alpha, unused) in the lightmap slot and
+/// the N64 vertex colour in the normal slot.
+struct RacerGpuVertex {
+    float x, y, z;
+    float u, v;
+    float alpha, unused;
+    float r, g, b;
+};
+
 /// One uploaded material batch: an unindexed triangle list.
 struct RacerGpuBatch {
     SDL_GPUBuffer* vertices = nullptr;

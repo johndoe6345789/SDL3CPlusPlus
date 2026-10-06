@@ -53,12 +53,15 @@ void LayoutPodParts(std::vector<RacerModel>& parts, RacerModel& model) {
         const float side = engines == 1 ? 0.f : (i % 2 == 0 ? -1.f : 1.f);
         const glm::vec3 at(side * 0.8f * width, 0.5f * length, 0.f);
         MoveAndMerge(parts[i], at - b.Centre(), model);
+        model.engineExhausts.push_back({at.x, 0.f, at.z});
     }
+    model.engineRadius = 0.5f * width;
     if (parts.size() > 1) {
         // Cockpit trails the engines by about one engine length of cable.
         const Bounds b = BoundsOf(parts.back());
         const glm::vec3 at(0.f, -length - 0.5f * b.Size().y, 0.f);
         MoveAndMerge(parts.back(), at - b.Centre(), model);
+        model.cockpitFront = {0.f, -length, 0.f};
     }
 }
 

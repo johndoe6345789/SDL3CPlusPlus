@@ -1217,16 +1217,21 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/racer/data/racer_wav.cpp
         src/services/impl/workflow/racer/data/racer_wav_resample.cpp
         src/services/impl/workflow/racer/data/racer_wav_write.cpp
+        src/services/impl/workflow/racer/world/racer_binder_colour.cpp
+        src/services/impl/workflow/racer/world/racer_effect_mesh.cpp
+        src/services/impl/workflow/racer/world/racer_effect_shapes.cpp
         src/services/impl/workflow/racer/world/racer_field_build.cpp
         src/services/impl/workflow/racer/world/racer_ground.cpp
         src/services/impl/workflow/racer/world/racer_ground_flags.cpp
         src/services/impl/workflow/racer/world/racer_model_upload.cpp
+        src/services/impl/workflow/racer/world/racer_pod_rig.cpp
         src/services/impl/workflow/racer/world/racer_texture_cache.cpp
         src/services/impl/workflow/racer/world/racer_vertex_buffer.cpp
         src/services/impl/workflow/racer/world/racer_walls.cpp
         src/services/impl/workflow/racer/world/racer_world_build.cpp
         src/services/impl/workflow/racer/world/racer_world_lap.cpp
         src/services/impl/workflow/racer/world/racer_world_load_step.cpp
+        src/services/impl/workflow/racer/world/racer_world_place.cpp
         src/services/impl/workflow/racer/world/racer_world_release.cpp
         src/services/impl/workflow/racer/player/racer_autopilot.cpp
         src/services/impl/workflow/racer/player/racer_field_rules.cpp
@@ -1250,6 +1255,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/racer/render/racer_hud_step.cpp
         src/services/impl/workflow/racer/render/racer_hud_upload.cpp
         src/services/impl/workflow/racer/render/racer_model_draw.cpp
+        src/services/impl/workflow/racer/render/racer_pod_effects_draw.cpp
         src/services/impl/workflow/racer/render/racer_scene_draw_step.cpp
         src/services/impl/workflow/racer/audio/racer_audio_clip.cpp
         src/services/impl/workflow/racer/audio/racer_audio_mixer.cpp

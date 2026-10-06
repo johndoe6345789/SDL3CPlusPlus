@@ -47,6 +47,8 @@ void BuildRacerField(SDL_GPUDevice* device, RacerWorldState& state,
             state.library, racer.podd, RacerModelScope::PodParts);
         opponent.model = UploadRacerModel(device, state, model, nullptr,
                                           RacerVertexShading::Normal);
+        opponent.rig = BuildRacerPodRig(device, model, state.white,
+                                        RacerBinderColour(racer.name));
         if (logger) {
             logger->Trace("racer.world.load: opponent " + racer.name + ", " +
                           std::to_string(model.triangleCount) + " triangles");

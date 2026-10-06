@@ -21,6 +21,12 @@ int DrawRacerModel(RacerDrawPass& d, const RacerGpuModel& model,
 int DrawRacerSky(RacerDrawPass& d, const RacerWorldState& state,
                  SDL_GPUGraphicsPipeline* blend, const glm::vec3& eye);
 
+/// A pod's cables (opaque pass) or binder, flames and ground shadow
+/// (blended pass).
+int DrawRacerPodEffects(RacerDrawPass& d, const RacerWorldState& state,
+                        const RacerPodState& pod, float roll,
+                        const RacerPodRig& rig, bool blended);
+
 /// A pod's model matrix: its position, heading and bank.
 glm::mat4 RacerPodMatrix(const RacerPodState& pod, float roll);
 

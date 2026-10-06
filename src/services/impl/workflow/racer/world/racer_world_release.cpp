@@ -7,8 +7,14 @@ void ReleaseRacerWorld(SDL_GPUDevice* device, RacerWorldState& state) {
         std::vector<RacerGpuModel*> models{
             &state.trackModel, &state.podModel, &state.skyModel};
         for (RacerOpponent& opponent : state.opponents) {
-            models.push_back(&opponent.model);
+            models.insert(models.end(), {&opponent.model,
+                                         &opponent.rig.cables,
+                                         &opponent.rig.binder});
         }
+        models.insert(models.end(),
+                      {&state.podRig.cables, &state.podRig.binder,
+                       &state.effects.flame, &state.effects.boostFlame,
+                       &state.effects.shadow});
         for (RacerGpuModel* model : models) {
             for (const RacerGpuBatch& batch : model->batches) {
                 SDL_ReleaseGPUBuffer(device, batch.vertices);
@@ -23,6 +29,8 @@ void ReleaseRacerWorld(SDL_GPUDevice* device, RacerWorldState& state) {
     state.trackModel = RacerGpuModel{};
     state.podModel = RacerGpuModel{};
     state.skyModel = RacerGpuModel{};
+    state.podRig = RacerPodRig{};
+    state.effects = RacerEffectShapes{};
     state.opponents.clear();
     state.textures.clear();
     state.white = RacerGpuTexture{};
