@@ -19,8 +19,9 @@ public:
     ~RacerAudioMixer();
 
     /// Opens the streams. False (and silent) without an audio device.
+    /// `musicOnly` plays just the music (the title screens use "Menu").
     bool Open(const std::filesystem::path& racerDir,
-              const std::string& planet);
+              const std::string& planet, bool musicOnly = false);
     void Update(const RacerWorldState& state);
     bool IsOpen() const { return open_; }
     int LoadedClips() const {
@@ -39,6 +40,7 @@ private:
     bool wasBlocked_ = false;
     bool wasOnFire_ = false;
     bool open_ = false;
+    bool musicOnly_ = false;
 };
 
 }  // namespace sdl3cpp::services::impl

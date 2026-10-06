@@ -13,6 +13,14 @@ bool EnvSet(const char* name) {
     return value && value[0] != 0 && std::string(value) != "0";
 }
 
+/// Headless dev runs stay silent unless SDL's dummy driver is chosen,
+/// which plays to nowhere and so checks the audio path.
+bool AudioAllowed() {
+    const char* driver = std::getenv("SDL_AUDIO_DRIVER");
+    const bool dummy = driver && std::string(driver) == "dummy";
+    return !(EnvSet("SDL3CPP_HEADLESS") && !dummy) && !EnvSet("RACER_MUTE");
+}
+
 }  // namespace
 
 WorkflowRacerAudioStep::WorkflowRacerAudioStep(
@@ -25,33 +33,31 @@ std::string WorkflowRacerAudioStep::GetPluginId() const {
 
 void WorkflowRacerAudioStep::Execute(const WorkflowStepDefinition& step,
                                      WorkflowContext&) {
-    // Sound only while racing; leaving the race (pause, the menus) stops
-    // it, and the next race opens it afresh for its planet.
+    // What should play: Anakin's theme on the title screens, the race's
+    // music and pod sounds while racing, nothing when paused.
     const RacerPhase phase = state_->flow.phase;
-    if (!state_->loaded ||
-        (phase != RacerPhase::Racing && phase != RacerPhase::Results)) {
-        mixer_.reset();
-        tried_ = false;
-        return;
+    std::string wanted;
+    if (phase == RacerPhase::Menu || phase == RacerPhase::Shop ||
+        phase == RacerPhase::Loading) {
+        wanted = "menu";
+    } else if (state_->loaded && phase != RacerPhase::Paused) {
+        wanted = "race " + std::to_string(state_->track.id);
     }
-    if (!tried_) {
-        tried_ = true;
-        // Headless dev runs stay silent unless SDL's dummy driver is
-        // chosen, which plays to nowhere and so checks the audio path.
-        const char* driver = std::getenv("SDL_AUDIO_DRIVER");
-        const bool dummy = driver && std::string(driver) == "dummy";
-        if ((EnvSet("SDL3CPP_HEADLESS") && !dummy) || EnvSet("RACER_MUTE")) {
-            return;
-        }
-        mixer_ = std::make_unique<RacerAudioMixer>();
-        const std::string dir =
-            RacerStringParam(step, "racer_dir", "RACER_DIR", "");
-        const bool open = mixer_->Open(dir, state_->track.planet);
-        if (logger_) {
-            logger_->Info("racer.audio.update: " +
-                          (open ? std::to_string(mixer_->LoadedClips()) +
-                                      " of 6 sounds loaded"
-                                : std::string("no audio device")));
+    if (wanted != playing_) {
+        playing_ = wanted;
+        mixer_.reset();
+        if (!wanted.empty() && AudioAllowed()) {
+            mixer_ = std::make_unique<RacerAudioMixer>();
+            const std::string dir =
+                RacerStringParam(step, "racer_dir", "RACER_DIR", "");
+            const bool menu = wanted == "menu";
+            const bool open = mixer_->Open(
+                dir, menu ? "Menu" : state_->track.planet, menu);
+            if (logger_) {
+                logger_->Info("racer.audio.update: " + wanted + ", " +
+                              std::to_string(mixer_->LoadedClips()) +
+                              (open ? " sounds" : " (no audio device)"));
+            }
         }
     }
     if (mixer_) mixer_->Update(*state_);

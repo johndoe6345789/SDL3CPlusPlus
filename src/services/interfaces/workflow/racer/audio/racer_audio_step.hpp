@@ -12,10 +12,10 @@ namespace sdl3cpp::services::impl {
 /**
  * Plugin ID: racer.audio.update
  *
- * Plays the race's sound through RacerAudioMixer, opening it on the
- * first frame after racer.world.load. Silent when SDL3CPP_HEADLESS or
- * RACER_MUTE is set (dev runs must not make noise), or without an audio
- * device.
+ * Plays Anakin's theme on the title screens and the race's music and pod
+ * sounds while racing, through RacerAudioMixer. Silent when paused, when
+ * SDL3CPP_HEADLESS or RACER_MUTE is set (dev runs must not make noise),
+ * or without an audio device.
  */
 class WorkflowRacerAudioStep final : public IWorkflowStep {
 public:
@@ -29,7 +29,7 @@ private:
     std::shared_ptr<ILogger> logger_;
     std::shared_ptr<RacerWorldState> state_;
     std::unique_ptr<RacerAudioMixer> mixer_;
-    bool tried_ = false;
+    std::string playing_;   ///< "menu", "race <track>", or "" (silent)
 };
 
 }  // namespace sdl3cpp::services::impl

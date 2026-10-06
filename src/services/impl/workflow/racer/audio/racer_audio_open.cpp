@@ -5,8 +5,10 @@
 namespace sdl3cpp::services::impl {
 namespace {
 
-/// Music for each planet, from data/wavs/Music; PodLoop1 elsewhere.
+/// Music for each planet, from data/wavs/Music; PodLoop1 elsewhere, and
+/// Anakin's theme on the title screens ("Menu").
 const char* MusicFor(const std::string& planet) {
+    if (planet == "Menu") return "AnakinLoop.wav";
     if (planet == "Tatooine") return "mt01desert.wav";
     if (planet == "Aquilaris") return "mb00aquilarisintro.wav";
     if (planet == "Mon Gazza") return "me00spiceintro.wav";
@@ -24,9 +26,10 @@ RacerAudioMixer::~RacerAudioMixer() {
 }
 
 bool RacerAudioMixer::Open(const std::filesystem::path& racerDir,
-                           const std::string& planet) {
+                           const std::string& planet, bool musicOnly) {
     if (!SDL_InitSubSystem(SDL_INIT_AUDIO)) return false;
     open_ = true;
+    musicOnly_ = musicOnly;
     const auto wavs = racerDir / "data" / "wavs";
     const std::filesystem::path files[kVoices] = {
         wavs / "Music" / MusicFor(planet),
@@ -36,7 +39,7 @@ bool RacerAudioMixer::Open(const std::filesystem::path& racerDir,
         wavs / "11K" / "sfx_crash_metal_scrape.wav",
         wavs / "11K" / "sfx_explo_muffled_01.wav"};
     const float gains[kVoices] = {0.45f, 0.6f, 0.8f, 0.9f, 0.7f, 0.9f};
-    for (int v = 0; v < kVoices; ++v) {
+    for (int v = 0; v < (musicOnly ? 1 : kVoices); ++v) {
         clips_[v] = LoadRacerAudioClip(files[v]);
         streams_[v] = OpenRacerAudioStream(clips_[v]);
         if (streams_[v]) SDL_SetAudioStreamGain(streams_[v], gains[v]);

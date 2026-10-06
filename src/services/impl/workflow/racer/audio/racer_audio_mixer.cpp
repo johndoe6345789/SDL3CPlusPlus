@@ -9,6 +9,7 @@ void RacerAudioMixer::Update(const RacerWorldState& state) {
     const RacerRaceState& race = state.race;
     const RacerPodState& pod = state.pod;
     FeedRacerAudioLoop(streams_[kMusic], clips_[kMusic]);
+    if (musicOnly_) return;
     FeedRacerAudioLoop(streams_[kEngine], clips_[kEngine]);
     if (streams_[kEngine]) {
         // The engine note rises with speed, and again under boost.
