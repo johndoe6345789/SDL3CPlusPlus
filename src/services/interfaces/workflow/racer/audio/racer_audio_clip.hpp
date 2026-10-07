@@ -15,6 +15,11 @@ struct RacerAudioClip {
     bool Loaded() const { return !bytes.empty(); }
 };
 
+/// Whether the game may make sound: not in headless dev runs (unless
+/// SDL's dummy driver is chosen, which plays to nowhere) nor with
+/// RACER_MUTE set.
+bool RacerAudioAllowed();
+
 /// Reads a 16-bit PCM WAV. Empty when missing or in another format.
 RacerAudioClip LoadRacerAudioClip(const std::filesystem::path& path);
 

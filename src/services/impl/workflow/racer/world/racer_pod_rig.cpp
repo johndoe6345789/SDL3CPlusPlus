@@ -46,9 +46,15 @@ RacerPodRig BuildRacerPodRig(SDL_GPUDevice* device, const RacerModel& pod,
     for (const RacerModelBatch& batch : pod.batches) {
         for (const RacerModelVertex& v : batch.vertices) {
             rig.reach = std::max(rig.reach, std::hypot(v.x, v.y));
+            rig.front = std::max(rig.front, -v.y);  // engines lead on -y
+            rig.back = std::max(rig.back, v.y);
         }
     }
     rig.reach *= kRacerWorldScale;
+    rig.front *= kRacerWorldScale;
+    rig.back *= kRacerWorldScale;
+    rig.halfWidth = 0.5f * pod.footprintWidth * kRacerWorldScale;
+    rig.length = rig.front + rig.back;
     rig.cables = UploadRacerShape(device, white, cables, false);
     if (rig.exhausts.size() >= 2) {
         // The binder arcs between the engines' inner faces, a little

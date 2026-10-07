@@ -39,8 +39,8 @@ void WorkflowRacerSceneDrawStep::Execute(const WorkflowStepDefinition& step,
         context.Get<glm::vec3>("render.camera_pos", glm::vec3(0.f));
     const glm::vec3 fog = state_->fogColour;
     const RacerFragmentUniforms fragment{
-        {fog.r, fog.g, fog.b, RacerFloatParam(step, "fog_start", 350.f)},
-        {RacerFloatParam(step, "fog_end", 2200.f), 0.5f, 0.f, 0.f},
+        {fog.r, fog.g, fog.b, RacerFloatParam(step, "fog_start", 700.f)},
+        {RacerFloatParam(step, "fog_end", 4400.f), 0.5f, 0.f, 0.f},
         {eye, 1.f}};
     const glm::mat4 pod = RacerPodMatrix(state_->pod, state_->podRoll);
     int drawn = DrawRacerSky(d, *state_, blend, eye);

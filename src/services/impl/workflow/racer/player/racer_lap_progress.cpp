@@ -37,7 +37,11 @@ void AdvanceRacerRace(RacerRaceState& race, int point, int pointCount,
         race.countdown -= dt;
         return;
     }
-    if (race.finished) return;
+    if (race.finished) {
+        // Past the line the pod cruises on; keep tracking where it is.
+        race.segment = point;
+        return;
+    }
     race.raceTime += dt;
     race.lapTime += dt;
     const int quarter = pointCount / 4;

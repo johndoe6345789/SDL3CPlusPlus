@@ -4,6 +4,7 @@
 #include "services/interfaces/workflow/racer/world/racer_world_state.hpp"
 
 #include <memory>
+#include <optional>
 #include <string>
 
 namespace sdl3cpp::services::impl {
@@ -27,9 +28,24 @@ bool BuildRacerCollisionGround(RacerWorldState& state,
                                const RacerModel& track,
                                const std::shared_ptr<ILogger>& logger);
 
+/// The colour along the bottom of the sky band (its textures and vertex
+/// colours averaged), so distance fog and the horizon match the sky.
+/// Empty when the track has no sky.
+std::optional<glm::vec3> RacerSkyHorizonColour(
+    const RacerAssetLibrary& library, const RacerModel& sky);
+
+/// Trace: how wide the rideable floor is across the lap (median and
+/// narrowest, in metres), for checking pods against the track's scale.
+void TraceRacerTrackWidth(const std::shared_ptr<ILogger>& logger,
+                          const RacerWorldState& state);
+
 /// Trace: a model's extent in engine units, for checking scale.
 void TraceModelExtent(const std::shared_ptr<ILogger>& logger,
                       const std::string& what, const RacerModel& model);
+
+/// Gives a pod its body for contact (from its rig) and its bump mass.
+void SetRacerPodBody(RacerPodState& pod, const RacerPodRig& rig,
+                     const RacerPodSpec& spec);
 
 /// Puts `pod` on lap point `index` facing the next one, `lateral`
 /// metres to its right, at rest height above the surface there.

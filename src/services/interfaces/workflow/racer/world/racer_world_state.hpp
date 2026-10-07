@@ -20,9 +20,10 @@ namespace sdl3cpp::services::impl {
 /// Points sampled along each lap segment's Bezier curve.
 constexpr int kRacerLapSamples = 8;
 
-/// Game units to engine units. The game is z-up in units of about 5 cm
-/// (a pod is ~120 units long), the engine y-up in metres-ish.
-constexpr float kRacerWorldScale = 0.05f;
+/// Game units to engine units. The game is z-up in units of about 10 cm
+/// (tracks ~25 m wide, Boonta Classic ~8.7 km a lap, Anakin's engines
+/// ~7 m), the engine y-up in metres.
+constexpr float kRacerWorldScale = 0.1f;
 
 /// A game-space point in engine space: (x, z, -y), scaled.
 inline glm::vec3 RacerToEngine(float x, float y, float z) {

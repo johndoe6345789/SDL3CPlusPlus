@@ -8,15 +8,15 @@
 namespace sdl3cpp::services::impl {
 namespace {
 
-// Aim this far ahead along the lap, a little further at speed.
-constexpr float kLookAheadMetres = 18.f;
-constexpr float kLookAheadSeconds = 0.25f;
-constexpr float kBrakeLookAhead = 45.f;
+// Follow the line's direction this far ahead, a little further at
+// speed, and steer back onto it in proportion to the sideways error.
+constexpr float kLookAheadMetres = 6.f;
+constexpr float kLookAheadSeconds = 0.12f;
+constexpr float kCrossTrackGain = 4.f;
+constexpr float kPlanHorizon = 450.f;   // metres of lap the plan covers
 
-/// Signed turn from the pod's heading to the lap point `distance` metres
-/// ahead of `from` along the lap.
-float TurnTo(const RacerPodState& pod, const std::vector<glm::vec3>& lap,
-             int from, float distance) {
+/// The lap point `distance` metres on from `from`.
+int PointAhead(const std::vector<glm::vec3>& lap, int from, float distance) {
     const int count = static_cast<int>(lap.size());
     int index = from;
     float run = 0.f;
@@ -25,29 +25,44 @@ float TurnTo(const RacerPodState& pod, const std::vector<glm::vec3>& lap,
         run += glm::length(lap[next] - lap[index]);
         index = next;
     }
-    const glm::vec3 to = lap[index] - pod.position;
-    return RacerAngleDelta(pod.heading, std::atan2(to.x, -to.z));
+    return index;
+}
+
+/// The line's direction at `i`, over a few metres: neighbouring
+/// samples can coincide, and their direction would be meaningless.
+float LineHeading(const std::vector<glm::vec3>& lap, int i) {
+    const glm::vec3 d = lap[PointAhead(lap, i, 4.f)] - lap[i];
+    return std::atan2(d.x, -d.z);
 }
 
 }  // namespace
 
 RacerPodInput RacerAutopilot(const RacerPodState& pod,
                              const std::vector<glm::vec3>& lapPoints,
-                             int nearestPoint) {
+                             int nearestPoint, const RacerPodSpec& spec) {
     RacerPodInput input;
     const int count = static_cast<int>(lapPoints.size());
     if (count < 2 || nearestPoint < 0) return input;
     const float aim =
         kLookAheadMetres + kLookAheadSeconds * std::max(0.f, pod.speed);
-    const float turn = TurnTo(pod, lapPoints, nearestPoint, aim);
-    // How sharply the lap bends further on decides the speed to carry.
-    const float bend = std::fabs(
-        TurnTo(pod, lapPoints, nearestPoint, aim + kBrakeLookAhead));
-    input.steer = std::clamp(turn * 2.5f, -1.f, 1.f);
-    const float wantedSpeed =
-        145.f * std::clamp(1.25f - 1.4f * bend, 0.25f, 1.f);
-    input.throttle = pod.speed > wantedSpeed + 8.f ? -0.6f : 1.f;
-    input.boost = bend < 0.15f && pod.heat < 0.6f;
+    // Stanley steering: the line's heading ahead, corrected by how far
+    // to its side the pod is (right of the line is positive).
+    const float here = LineHeading(lapPoints, nearestPoint);
+    const glm::vec3 right(std::cos(here), 0.f, std::sin(here));
+    const float lateral =
+        glm::dot(pod.position - lapPoints[nearestPoint], right);
+    const float wanted =
+        LineHeading(lapPoints, PointAhead(lapPoints, nearestPoint, aim)) -
+        std::atan(kCrossTrackGain * lateral /
+                  (std::max(0.f, pod.speed) + 10.f));
+    const float turn = RacerAngleDelta(pod.heading, wanted);
+    input.steer = std::clamp(turn * 6.f, -1.f, 1.f);
+    const float planned =
+        RacerPlannedSpeed(lapPoints, nearestPoint, spec, kPlanHorizon);
+    const float over = pod.speed - planned;
+    input.throttle = over > 12.f ? -1.f : (over > 2.f ? 0.f : 1.f);
+    input.boost = planned > 0.97f * spec.boostSpeed && pod.heat < 0.6f &&
+                  std::fabs(turn) < 0.1f;
     input.repair = RacerPodDamage(pod) > 0.5f && pod.heat < 0.2f;
     return input;
 }

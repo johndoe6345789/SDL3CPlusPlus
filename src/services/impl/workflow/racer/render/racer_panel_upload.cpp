@@ -20,9 +20,15 @@ void UploadRacerPanelText(RacerPanel& panel, SDL_GPUCommandBuffer* cmd,
         SDL_RenderDebugText(panel.renderer, line.x, line.y, line.text.c_str());
     }
     SDL_RenderPresent(panel.renderer);
+    UploadRacerPanelPixels(panel, cmd, panel.surface->pixels);
+}
+
+void UploadRacerPanelPixels(RacerPanel& panel, SDL_GPUCommandBuffer* cmd,
+                            const void* rgba) {
+    if (!cmd || !panel.transfer || !rgba) return;
     void* mapped = SDL_MapGPUTransferBuffer(panel.device, panel.transfer, true);
     if (!mapped) return;
-    std::memcpy(mapped, panel.surface->pixels,
+    std::memcpy(mapped, rgba,
                 static_cast<std::size_t>(panel.width * panel.height * 4));
     SDL_UnmapGPUTransferBuffer(panel.device, panel.transfer);
     SDL_GPUCopyPass* copy = SDL_BeginGPUCopyPass(cmd);
@@ -38,6 +44,19 @@ void UploadRacerPanelText(RacerPanel& panel, SDL_GPUCommandBuffer* cmd,
     dst.d = 1;
     SDL_UploadToGPUTexture(copy, &src, &dst, true);
     SDL_EndGPUCopyPass(copy);
+}
+
+bool AddRacerPanelSmoothSampler(RacerPanel& panel) {
+    if (!panel.device || panel.sampler) return panel.sampler != nullptr;
+    SDL_GPUSamplerCreateInfo info = {};
+    info.min_filter = SDL_GPU_FILTER_LINEAR;
+    info.mag_filter = SDL_GPU_FILTER_LINEAR;
+    info.mipmap_mode = SDL_GPU_SAMPLERMIPMAPMODE_NEAREST;
+    info.address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+    info.address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+    info.address_mode_w = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+    panel.sampler = SDL_CreateGPUSampler(panel.device, &info);
+    return panel.sampler != nullptr;
 }
 
 }  // namespace sdl3cpp::services::impl

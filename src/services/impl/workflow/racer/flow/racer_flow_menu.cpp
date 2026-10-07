@@ -1,11 +1,11 @@
 #include "services/interfaces/workflow/racer/flow/racer_flow_rules.hpp"
 
-#include <algorithm>
+#include "services/interfaces/workflow/racer/flow/racer_tournament.hpp"
 
 namespace sdl3cpp::services::impl {
 namespace {
 
-enum MenuRow { kTrack, kRacer, kLaps, kRivals, kShop, kStart, kQuit, kRows };
+enum TitleRow { kTournament, kFreeRace, kShop, kJunk, kDroids, kQuit, kRows };
 
 int Wrap(int value, int count) {
     return count > 0 ? ((value % count) + count) % count : 0;
@@ -13,61 +13,48 @@ int Wrap(int value, int count) {
 
 }  // namespace
 
-void UpdateRacerMenu(RacerFlow& flow, const RacerNav& nav,
-                     const RacerTrackTable& table) {
-    if (nav.up) flow.menuRow = Wrap(flow.menuRow - 1, kRows);
-    if (nav.down) flow.menuRow = Wrap(flow.menuRow + 1, kRows);
-    const int step = (nav.right ? 1 : 0) - (nav.left ? 1 : 0);
-    const int tracks = static_cast<int>(table.tracks.size());
-    const int racers = static_cast<int>(table.racers.size());
-    switch (flow.menuRow) {
-    case kTrack: flow.trackIndex = Wrap(flow.trackIndex + step, tracks); break;
-    case kRacer: flow.racerIndex = Wrap(flow.racerIndex + step, racers); break;
-    case kLaps: flow.laps = std::clamp(flow.laps + step, 1, 5); break;
-    case kRivals:
-        flow.opponents = std::clamp(flow.opponents + step, 0, 11);
-        break;
-    default: break;
+int RacerStepOpen(int index, int step, int count,
+                  const std::vector<bool>& open) {
+    for (int tries = 0; tries < count; ++tries) {
+        index = Wrap(index + (step == 0 ? 1 : step), count);
+        if (index < static_cast<int>(open.size()) && open[index]) break;
     }
-    if (nav.back) flow.quit = true;
-    if (!nav.select) return;
-    if (flow.menuRow == kShop) {
-        flow.phase = RacerPhase::Shop;
-        flow.shopRow = 0;
-        flow.notice.clear();
-    } else if (flow.menuRow == kStart || flow.menuRow < kShop) {
-        flow.phase = RacerPhase::Loading;
-        flow.requestLoad = true;
-        flow.loadingFrames = 0;
-    } else if (flow.menuRow == kQuit) {
-        flow.quit = true;
-    }
+    return index;
 }
 
-void UpdateRacerShop(RacerFlow& flow, const RacerNav& nav) {
-    const int rows = kRacerUpgradeCount + 1;  // the parts, then BACK
-    if (nav.up) flow.shopRow = Wrap(flow.shopRow - 1, rows);
-    if (nav.down) flow.shopRow = Wrap(flow.shopRow + 1, rows);
-    const bool leave = nav.back || (nav.select && flow.shopRow == rows - 1);
-    if (leave) {
-        flow.phase = RacerPhase::Menu;
-        flow.notice.clear();
-        return;
+bool RacerTrackOpen(const RacerFlow& flow, const RacerTrackTable& table,
+                    int index) {
+    if (flow.unlockAll) return true;
+    const RacerProfile& profile = flow.profile;
+    for (int c = 0; c < profile.circuitsOpen && c < kRacerCircuits; ++c) {
+        for (int slot = 0; slot < profile.tracksOpen[c]; ++slot) {
+            if (RacerCircuitTrackIndex(table, c, slot) == index) return true;
+        }
     }
+    return false;
+}
+
+bool RacerRacerOpen(const RacerFlow& flow, int index) {
+    return flow.unlockAll ||
+           (index >= 0 && index < 32 && (flow.profile.racers >> index) & 1u);
+}
+
+void UpdateRacerMenu(RacerFlow& flow, const RacerNav& nav,
+                     const RacerTrackTable&) {
+    if (nav.up) flow.menuRow = Wrap(flow.menuRow - 1, kRows);
+    if (nav.down) flow.menuRow = Wrap(flow.menuRow + 1, kRows);
+    if (nav.back) flow.quit = true;
     if (!nav.select) return;
-    int& level = flow.profile.upgrades[flow.shopRow];
-    const int cost = RacerUpgradeCost(level);
-    if (level >= kRacerUpgradeMax) {
-        flow.notice = "THAT PART IS FULLY UPGRADED";
-    } else if (flow.profile.truguts < cost) {
-        flow.notice = "NOT ENOUGH TRUGUTS - WIN SOME RACES";
-    } else {
-        flow.profile.truguts -= cost;
-        ++level;
-        flow.notice = std::string("BOUGHT ") +
-                      RacerUpgradeName(flow.shopRow) + " LEVEL " +
-                      std::to_string(level);
-        SaveRacerProfile(flow.profile, RacerProfilePath());
+    flow.notice.clear();
+    flow.setupRow = 0;
+    flow.shopRow = 0;
+    switch (flow.menuRow) {
+    case kTournament: flow.phase = RacerPhase::Tournament; break;
+    case kFreeRace: flow.phase = RacerPhase::FreeRace; break;
+    case kShop: flow.phase = RacerPhase::Shop; break;
+    case kJunk: flow.phase = RacerPhase::Junkyard; break;
+    case kDroids: flow.phase = RacerPhase::PitDroids; break;
+    default: flow.quit = true; break;
     }
 }
 

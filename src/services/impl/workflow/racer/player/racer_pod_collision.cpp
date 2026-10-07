@@ -44,7 +44,8 @@ bool MoveRacerPodAlongSurface(RacerPodState& pod, const RacerPodSpec& spec,
             pod.speed *= 1.f - 0.08f * std::fabs(angle);
             pod.heading += 0.5f * angle;
             const int side = angle > 0.f ? 0 : 1;
-            const float hit = kScrapeDamage * std::fabs(pod.speed) / 100.f;
+            const float hit = kScrapeDamage * std::fabs(pod.speed) / 100.f *
+                              (1.5f - spec.damageImmunity);
             pod.engineDamage[side] =
                 std::min(1.f, pod.engineDamage[side] + hit * dt);
         }

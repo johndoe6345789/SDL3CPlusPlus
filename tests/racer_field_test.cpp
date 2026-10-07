@@ -38,7 +38,8 @@ TEST(RacerField, OverlappingPodsArePushedApart) {
     RacerPodState b;
     b.position = {1.f, 0.f, 0.f};
     for (int frame = 0; frame < 30; ++frame) SeparateRacerPods({&a, &b});
-    EXPECT_GE(b.position.x - a.position.x, 5.5f);  // two pod radii
+    EXPECT_GE(b.position.x - a.position.x,
+              a.bodyHalfWidth + b.bodyHalfWidth - 0.1f);
 }
 
 TEST(RacerField, AiSteersRoundAPodAheadAndLiftsOff) {

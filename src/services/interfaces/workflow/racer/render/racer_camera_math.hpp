@@ -2,11 +2,17 @@
 
 #include "services/interfaces/workflow/racer/world/racer_world_state.hpp"
 
+#include <nlohmann/json.hpp>
+
 namespace sdl3cpp::services::impl {
 
 /// Shortest signed turn from heading `from` to `to`, in -pi..pi, so an
 /// eased heading never unwinds the long way round.
 float RacerAngleDelta(float from, float to);
+
+/// A matrix as a 16-number JSON array (column-major), as camera.state
+/// expects it.
+nlohmann::json RacerMatrixJson(const glm::mat4& matrix);
 
 /// The lowest a camera eye may sit: 1.5 m above any ground on the way
 /// from the pod back to it, so hills never come between the camera and

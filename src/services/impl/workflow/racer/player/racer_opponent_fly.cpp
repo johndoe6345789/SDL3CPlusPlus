@@ -2,6 +2,7 @@
 
 #include "services/interfaces/workflow/racer/player/racer_autopilot.hpp"
 #include "services/interfaces/workflow/racer/player/racer_lap_progress.hpp"
+#include "services/interfaces/workflow/racer/player/racer_line_guide.hpp"
 #include "services/interfaces/workflow/racer/player/racer_pod_recovery.hpp"
 #include "services/interfaces/workflow/racer/player/racer_pod_report.hpp"
 #include "services/interfaces/workflow/racer/player/racer_traffic.hpp"
@@ -21,10 +22,8 @@ void FlyRacerOpponent(RacerWorldState& state, RacerOpponent& opponent,
     AdvanceRacerRace(race, point, count, dt);
     RacerPodInput input;
     if (race.countdown <= 0.f && !race.finished) {
-        input = RacerAutopilot(opponent.pod, state.lapPoints, race.segment);
-        // The autopilot plans for a stock pod; a slower pod eases off.
-        input.throttle *= std::min(1.f, opponent.spec.topSpeed /
-                                            state.podSpec.topSpeed + 0.05f);
+        input = RacerAutopilot(opponent.pod, state.lapPoints, race.segment,
+                               opponent.spec);
         std::vector<const RacerPodState*> others{&state.pod};
         for (const RacerOpponent& rival : state.opponents) {
             others.push_back(&rival.pod);
@@ -33,14 +32,16 @@ void FlyRacerOpponent(RacerWorldState& state, RacerOpponent& opponent,
     }
     StepRacerPod(opponent.pod, input, opponent.spec, dt,
                  RacerGroundSurface(state.ground));
+    GuideRacerPodToLine(opponent.pod, state.lapPoints, race.segment,
+                        kRacerAiLineOffset, kRacerAiLinePull, dt);
     opponent.roll +=
         (input.steer * 0.45f - opponent.roll) * std::min(1.f, 6.f * dt);
     RacerPodState& pod = opponent.pod;
     const bool crawling = input.throttle > 0.5f && pod.speed < 3.f;
     pod.stuckTime = (pod.blocked || crawling) ? pod.stuckTime + dt : 0.f;
     const RacerRecoveryReason reason = UpdateRacerRecovery(
-        opponent.recovery, pod, race, state.ground, count, input.throttle,
-        dt);
+        opponent.recovery, pod, race, state.ground, state.lapPoints,
+        input.throttle, dt);
     if (reason == RacerRecoveryReason::None) return;
     const int ahead =
         reason == RacerRecoveryReason::NoProgress ? 2 * kRacerLapSamples : 0;

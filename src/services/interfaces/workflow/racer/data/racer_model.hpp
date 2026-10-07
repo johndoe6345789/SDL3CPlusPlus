@@ -56,6 +56,10 @@ struct RacerModel {
     std::vector<std::array<float, 3>> engineExhausts;
     std::array<float, 3> cockpitFront{};
     float engineRadius = 0.f;
+    /// Pods only: the whole pod's ground footprint (its own shadow quad:
+    /// engines' spread by engines to cockpit), after layout and scale.
+    float footprintWidth = 0.f;
+    float footprintLength = 0.f;
 };
 
 /// Parses the data part of a model block item (see the racer README for

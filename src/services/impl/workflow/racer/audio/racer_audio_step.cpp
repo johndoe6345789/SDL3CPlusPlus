@@ -6,23 +6,6 @@
 #include <utility>
 
 namespace sdl3cpp::services::impl {
-namespace {
-
-bool EnvSet(const char* name) {
-    const char* value = std::getenv(name);
-    return value && value[0] != 0 && std::string(value) != "0";
-}
-
-/// Headless dev runs stay silent unless SDL's dummy driver is chosen,
-/// which plays to nowhere and so checks the audio path.
-bool AudioAllowed() {
-    const char* driver = std::getenv("SDL_AUDIO_DRIVER");
-    const bool dummy = driver && std::string(driver) == "dummy";
-    return !(EnvSet("SDL3CPP_HEADLESS") && !dummy) && !EnvSet("RACER_MUTE");
-}
-
-}  // namespace
-
 WorkflowRacerAudioStep::WorkflowRacerAudioStep(
     std::shared_ptr<ILogger> logger, std::shared_ptr<RacerWorldState> state)
     : logger_(std::move(logger)), state_(std::move(state)) {}
@@ -37,8 +20,12 @@ void WorkflowRacerAudioStep::Execute(const WorkflowStepDefinition& step,
     // music and pod sounds while racing (frozen while paused).
     const RacerPhase phase = state_->flow.phase;
     std::string wanted;
-    if (phase == RacerPhase::Menu || phase == RacerPhase::Shop ||
-        phase == RacerPhase::Loading) {
+    const bool inRace = phase == RacerPhase::Racing ||
+                        phase == RacerPhase::Paused ||
+                        phase == RacerPhase::Results;
+    if (phase == RacerPhase::Cutscene) {
+        wanted = "";  // the cutscene plays its own sound
+    } else if (!inRace) {
         wanted = "menu";
     } else if (state_->loaded) {
         wanted = "race " + std::to_string(state_->track.id);
@@ -46,7 +33,7 @@ void WorkflowRacerAudioStep::Execute(const WorkflowStepDefinition& step,
     if (wanted != playing_) {
         playing_ = wanted;
         mixer_.reset();
-        if (!wanted.empty() && AudioAllowed()) {
+        if (!wanted.empty() && RacerAudioAllowed()) {
             mixer_ = std::make_unique<RacerAudioMixer>();
             const std::string dir =
                 RacerStringParam(step, "racer_dir", "RACER_DIR", "");

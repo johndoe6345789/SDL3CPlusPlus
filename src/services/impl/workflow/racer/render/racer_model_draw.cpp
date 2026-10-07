@@ -26,16 +26,27 @@ int DrawRacerModel(RacerDrawPass& d, const RacerGpuModel& model,
 
 int DrawRacerSky(RacerDrawPass& d, const RacerWorldState& state,
                  SDL_GPUGraphicsPipeline* blend, const glm::vec3& eye) {
-    if (!blend || state.skyModel.batches.empty()) return 0;
+    if (!blend) return 0;
     SDL_BindGPUGraphicsPipeline(d.pass, blend);
-    // No fog on the sky: its fog distances are pushed out of reach.
-    const RacerFragmentUniforms sky{{0.f, 0.f, 0.f, 1e6f},
-                                    {2e6f, 0.5f, 0.f, 0.f},
+    // No distance fog on the sky (its fog distances are out of reach),
+    // but it fades into the fog colour toward the horizon.
+    const glm::vec3 fog = state.fogColour;
+    const RacerFragmentUniforms sky{{fog.r, fog.g, fog.b, 1e6f},
+                                    {2e6f, 0.5f, 1.f, 0.f},
                                     {eye, 1.f}};
     SDL_PushGPUFragmentUniformData(d.cmd, 0, &sky, sizeof(sky));
-    const glm::mat4 at = glm::translate(glm::mat4(1.f), eye);
-    int drawn = DrawRacerModel(d, state.skyModel, at, false);
-    return drawn + DrawRacerModel(d, state.skyModel, at, true);
+    // The band drawn again upside down fills the lower half, where the
+    // horizon fade turns it wholly fog: nothing below the band shows the
+    // frame's fixed clear colour.
+    int drawn = 0;
+    for (const float flip : {-1.f, 1.f}) {
+        const glm::mat4 at =
+            glm::scale(glm::translate(glm::mat4(1.f), eye),
+                       glm::vec3(1.f, flip, 1.f));
+        drawn += DrawRacerModel(d, state.skyModel, at, false);
+        drawn += DrawRacerModel(d, state.skyModel, at, true);
+    }
+    return drawn;
 }
 
 glm::mat4 RacerPodMatrix(const RacerPodState& pod, float roll) {

@@ -34,4 +34,17 @@ SDL_Color RacerRowColour(bool selected) {
                     : SDL_Color{170, 175, 190, 255};
 }
 
+std::string RacerPlaceText(int place) {
+    static const char* const kSuffix[] = {"TH", "ST", "ND", "RD"};
+    const bool special = place >= 1 && place <= 3;
+    return std::to_string(place) + kSuffix[special ? place : 0];
+}
+
+std::string RacerChosenRacer(const RacerFlow& flow,
+                             const RacerTrackTable& table) {
+    return flow.racerIndex < static_cast<int>(table.racers.size())
+               ? RacerUpper(table.racers[flow.racerIndex].name)
+               : "-";
+}
+
 }  // namespace sdl3cpp::services::impl

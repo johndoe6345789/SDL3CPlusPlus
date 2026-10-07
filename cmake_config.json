@@ -105,6 +105,7 @@
         "src/services/impl/workflow/racer/player/*.cpp",
         "src/services/impl/workflow/racer/render/*.cpp",
         "src/services/impl/workflow/racer/audio/*.cpp",
+        "src/services/impl/workflow/racer/video/*.cpp",
         "src/services/impl/workflow/racer/flow/*.cpp",
         "src/services/impl/workflow/fs2024/*.cpp",
         "src/services/impl/workflow/fs2024/tiles/*.cpp",
@@ -1183,7 +1184,9 @@
         "src/services/impl/workflow/racer/data/racer_model_material.cpp",
         "src/services/impl/workflow/racer/data/racer_model_collision.cpp",
         "src/services/impl/workflow/racer/data/racer_pod_layout.cpp",
-        "src/services/impl/workflow/racer/data/racer_model_transform.cpp"
+        "src/services/impl/workflow/racer/data/racer_model_transform.cpp",
+        "src/services/impl/workflow/racer/data/racer_pod_shadow.cpp",
+        "src/services/impl/workflow/racer/data/racer_pod_merge.cpp"
       ],
       "include_directories": [
         "src"
@@ -1257,7 +1260,9 @@
         "src/services/impl/workflow/racer/player/racer_pod_physics.cpp",
         "src/services/impl/workflow/racer/player/racer_pod_engines.cpp",
         "src/services/impl/workflow/racer/player/racer_pod_collision.cpp",
-        "src/services/impl/workflow/racer/player/racer_surface_effects.cpp"
+        "src/services/impl/workflow/racer/player/racer_surface_effects.cpp",
+        "tests/racer_pod_handling_test.cpp",
+        "src/services/impl/workflow/racer/player/racer_pod_handling.cpp"
       ],
       "include_directories": [
         "src"
@@ -1290,7 +1295,9 @@
         "tests/racer_banner_test.cpp",
         "src/services/impl/workflow/racer/player/racer_lap_progress.cpp",
         "src/services/impl/workflow/racer/render/racer_hud_format.cpp",
-        "src/services/impl/workflow/racer/render/racer_hud_banner.cpp"
+        "src/services/impl/workflow/racer/render/racer_hud_banner.cpp",
+        "tests/racer_track_table_test.cpp",
+        "src/services/impl/workflow/racer/data/racer_track_table.cpp"
       ],
       "include_directories": [
         "src"
@@ -1298,7 +1305,8 @@
       "link_libraries": [
         "GTest::gtest_main",
         "glm::glm",
-        "${SDL_TARGET}"
+        "${SDL_TARGET}",
+        "nlohmann_json::nlohmann_json"
       ]
     },
     {
@@ -1310,7 +1318,9 @@
         "src/services/impl/workflow/racer/player/racer_pod_engines.cpp",
         "src/services/impl/workflow/racer/player/racer_pod_collision.cpp",
         "src/services/impl/workflow/racer/player/racer_surface_effects.cpp",
-        "src/services/impl/workflow/racer/player/racer_traffic.cpp"
+        "src/services/impl/workflow/racer/player/racer_traffic.cpp",
+        "src/services/impl/workflow/racer/player/racer_line_guide.cpp",
+        "tests/racer_contact_test.cpp"
       ],
       "include_directories": [
         "src"
@@ -1328,7 +1338,20 @@
         "src/services/impl/workflow/racer/flow/racer_flow_menu.cpp",
         "src/services/impl/workflow/racer/flow/racer_flow_race.cpp",
         "src/services/impl/workflow/racer/flow/racer_upgrades.cpp",
-        "src/services/impl/workflow/racer/flow/racer_profile.cpp"
+        "src/services/impl/workflow/racer/flow/racer_profile.cpp",
+        "tests/racer_tournament_test.cpp",
+        "src/services/impl/workflow/racer/flow/racer_flow_award.cpp",
+        "src/services/impl/workflow/racer/flow/racer_flow_free.cpp",
+        "src/services/impl/workflow/racer/flow/racer_flow_cup.cpp",
+        "src/services/impl/workflow/racer/flow/racer_flow_shop.cpp",
+        "src/services/impl/workflow/racer/flow/racer_flow_junk.cpp",
+        "src/services/impl/workflow/racer/flow/racer_parts.cpp",
+        "src/services/impl/workflow/racer/flow/racer_junkyard.cpp",
+        "src/services/impl/workflow/racer/flow/racer_circuits.cpp",
+        "src/services/impl/workflow/racer/flow/racer_tournament.cpp",
+        "src/services/impl/workflow/racer/flow/racer_profile_path.cpp",
+        "src/services/impl/workflow/racer/flow/racer_flow_text_common.cpp",
+        "src/services/impl/workflow/racer/flow/racer_flow_videos.cpp"
       ],
       "include_directories": [
         "src"

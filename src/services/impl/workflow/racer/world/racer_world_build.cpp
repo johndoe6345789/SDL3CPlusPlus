@@ -27,6 +27,16 @@ bool BuildRacerWorld(SDL_GPUDevice* device, RacerWorldState& state,
         return false;
     }
     BuildRacerLapPoints(state);
+    // The planet's fog colour gives way to the track's own sky.
+    if (const auto horizon = RacerSkyHorizonColour(state.library, sky)) {
+        state.fogColour = *horizon;
+        if (logger) {
+            logger->Trace("racer.world.load: fog from the sky's horizon " +
+                          std::to_string(horizon->r) + " " +
+                          std::to_string(horizon->g) + " " +
+                          std::to_string(horizon->b));
+        }
+    }
     RacerTexture white;
     white.width = white.height = 4;
     white.rgba.assign(4 * 4 * 4, 255);
@@ -40,8 +50,10 @@ bool BuildRacerWorld(SDL_GPUDevice* device, RacerWorldState& state,
     state.effects = BuildRacerEffectShapes(device, state.white);
     state.podRig = BuildRacerPodRig(device, pod, state.white,
                                     RacerBinderColour(state.racer.name));
+    SetRacerPodBody(state.pod, state.podRig, state.podSpec);
     PlaceRacerPodOnLap(state, 0, 0.f);
     TraceModelExtent(logger, "pod", pod);
+    TraceRacerTrackWidth(logger, state);
     if (logger) {
         logger->Info("racer.world.load: " + state.track.name + ", " +
                      std::to_string(track.triangleCount) + " triangles in " +

@@ -13,6 +13,15 @@ namespace sdl3cpp::services::impl {
 /// input.move_right, racer.boost_pressed, racer.repair_pressed), the
 /// autopilot's when the step's `autopilot` parameter is set and not "0",
 /// or none during the countdown and after the finish.
+/// Trace: why and where the pod was put back on the lap.
+void TraceRacerRespawn(const std::shared_ptr<ILogger>& logger,
+                       const RacerWorldState& state, const char* reason);
+
+/// True while the pod drives itself: past the finish, or with the
+/// `autopilot` parameter (RACER_AUTOPILOT) set.
+bool RacerPodOnAutopilot(const WorkflowStepDefinition& step,
+                         const RacerWorldState& state);
+
 RacerPodInput ReadRacerPodInput(const WorkflowStepDefinition& step,
                                 const WorkflowContext& context,
                                 const RacerWorldState& state);

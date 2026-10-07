@@ -53,6 +53,15 @@ void UploadRacerPanelText(RacerPanel& panel, SDL_GPUCommandBuffer* cmd,
                           const std::vector<RacerPanelLine>& lines,
                           Uint8 shade);
 
+/// Replaces a panel's whole texture with `rgba` (width x height x 4
+/// bytes), e.g. a video frame. Outside any render pass.
+void UploadRacerPanelPixels(RacerPanel& panel, SDL_GPUCommandBuffer* cmd,
+                            const void* rgba);
+
+/// A smooth (linear, clamped) sampler of the panel's own, for pictures
+/// shown larger than they are.
+bool AddRacerPanelSmoothSampler(RacerPanel& panel);
+
 /// Places the panel on screen. Outside any render pass.
 void UploadRacerPanelRect(RacerPanel& panel, SDL_GPUCommandBuffer* cmd,
                           const RacerScreenRect& rect);

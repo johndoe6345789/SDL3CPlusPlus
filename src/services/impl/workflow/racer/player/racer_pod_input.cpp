@@ -7,13 +7,22 @@
 
 namespace sdl3cpp::services::impl {
 
+bool RacerPodOnAutopilot(const WorkflowStepDefinition& step,
+                         const RacerWorldState& state) {
+    if (state.race.finished) return true;
+    const std::string autopilot =
+        RacerStringParam(step, "autopilot", nullptr, "");
+    return !autopilot.empty() && autopilot != "0";
+}
+
 RacerPodInput ReadRacerPodInput(const WorkflowStepDefinition& step,
                                 const WorkflowContext& context,
                                 const RacerWorldState& state) {
     RacerPodInput input;
     if (state.race.finished) {
         // Past the line the pod cruises round on its own, as in the game.
-        input = RacerAutopilot(state.pod, state.lapPoints, state.race.segment);
+        input = RacerAutopilot(state.pod, state.lapPoints, state.race.segment,
+                               state.podSpec);
         input.boost = false;
         input.throttle = std::min(input.throttle, 0.6f);
         return input;
@@ -25,11 +34,9 @@ RacerPodInput ReadRacerPodInput(const WorkflowStepDefinition& step,
         input.repair = context.GetBool("racer.repair_pressed", false);
         // `autopilot` is "${env:RACER_AUTOPILOT}": any value but empty
         // or 0 lets the pod drive itself.
-        const std::string autopilot =
-            RacerStringParam(step, "autopilot", nullptr, "");
-        if (!autopilot.empty() && autopilot != "0") {
+        if (RacerPodOnAutopilot(step, state)) {
             input = RacerAutopilot(state.pod, state.lapPoints,
-                                   state.race.segment);
+                                   state.race.segment, state.podSpec);
         }
     }
     return input;

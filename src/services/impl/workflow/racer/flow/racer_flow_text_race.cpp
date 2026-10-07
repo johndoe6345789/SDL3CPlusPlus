@@ -51,8 +51,8 @@ std::vector<RacerPanelLine> RacerResultsLines(const RacerFlow& flow,
         return a.position < b.position;
     });
     std::vector<RacerPanelLine> lines;
-    lines.push_back(RacerCentred("RESULTS", 24.f, kGold));
-    float y = 54.f;
+    lines.push_back(RacerCentred("RESULTS", 22.f, kGold));
+    float y = 40.f;
     for (const Row& row : rows) {
         const bool me = row.race == &state.race;
         char text[64];
@@ -61,13 +61,19 @@ std::vector<RacerPanelLine> RacerResultsLines(const RacerFlow& flow,
                       row.race->finished ? Clock(row.race->raceTime).c_str()
                                          : "RACING");
         lines.push_back(RacerCentred(text, y, RacerRowColour(me)));
-        y += 14.f;
+        y += 11.f;
     }
     lines.push_back(RacerCentred("BEST LAP " + Clock(state.race.bestLap),
-                                 y + 10.f, kGrey));
-    lines.push_back(RacerCentred("PRIZE  " + std::to_string(flow.prize) +
-                                     " TRUGUTS", y + 28.f, kGold));
-    lines.push_back(RacerCentred("ENTER TO CONTINUE", 248.f, kGrey));
+                                 y + 6.f, kGrey));
+    const std::string prize =
+        flow.tournament ? "PRIZE " + std::to_string(flow.prize) +
+                              " TRUGUTS   POINTS " +
+                              std::to_string(flow.pointsWon)
+                        : "FREE RACE - NO PURSE";
+    lines.push_back(RacerCentred(prize, y + 20.f, kGold));
+    lines.push_back(RacerCentred(flow.unlocked, y + 34.f, kGold));
+    lines.push_back(RacerCentred(flow.repairs, y + 48.f, kGrey));
+    lines.push_back(RacerCentred("ENTER TO CONTINUE", 250.f, kGrey));
     return lines;
 }
 

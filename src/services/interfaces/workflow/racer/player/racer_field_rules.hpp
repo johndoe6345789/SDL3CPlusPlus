@@ -2,6 +2,7 @@
 
 #include "services/interfaces/workflow/racer/world/racer_world_state.hpp"
 
+#include <array>
 #include <vector>
 
 namespace sdl3cpp::services::impl {
@@ -14,8 +15,13 @@ float RacerRaceProgress(const RacerRaceState& race, int lapPointCount);
 /// pod's race state.
 void RankRacerField(RacerWorldState& state);
 
-/// Pushes overlapping pods apart (they are about 5 m wide) and trades a
-/// little speed between them, so pods jostle rather than pass through.
+/// Pushes overlapping pods apart, the lighter one (by the game's bump
+/// mass) further, and trades a little speed between them, so pods
+/// jostle rather than pass through.
 void SeparateRacerPods(const std::vector<RacerPodState*>& pods);
+
+/// Three contact circles down a pod's body (engines, cables, cockpit),
+/// each `bodyHalfWidth` across.
+std::array<glm::vec3, 3> RacerBodyCircles(const RacerPodState& pod);
 
 }  // namespace sdl3cpp::services::impl

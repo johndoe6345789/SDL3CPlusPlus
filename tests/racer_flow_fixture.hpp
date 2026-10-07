@@ -20,6 +20,8 @@ protected:
         SDL_setenv_unsafe("RACER_PROFILE", path_.string().c_str(), 1);
         table_.tracks.resize(25);
         table_.racers.resize(23);
+        table_.tracks[0].name = "The Boonta Training Course";
+        table_.tracks[16].name = "Mon Gazza Speedway";
     }
     void TearDown() override { std::filesystem::remove(path_); }
 

@@ -1205,6 +1205,8 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/racer/data/racer_obj_export.cpp
         src/services/impl/workflow/racer/data/racer_palette.cpp
         src/services/impl/workflow/racer/data/racer_pod_layout.cpp
+        src/services/impl/workflow/racer/data/racer_pod_merge.cpp
+        src/services/impl/workflow/racer/data/racer_pod_shadow.cpp
         src/services/impl/workflow/racer/data/racer_spline.cpp
         src/services/impl/workflow/racer/data/racer_texel.cpp
         src/services/impl/workflow/racer/data/racer_texture.cpp
@@ -1227,6 +1229,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/racer/world/racer_pod_rig.cpp
         src/services/impl/workflow/racer/world/racer_race_load.cpp
         src/services/impl/workflow/racer/world/racer_race_setup.cpp
+        src/services/impl/workflow/racer/world/racer_sky_colour.cpp
         src/services/impl/workflow/racer/world/racer_texture_cache.cpp
         src/services/impl/workflow/racer/world/racer_vertex_buffer.cpp
         src/services/impl/workflow/racer/world/racer_walls.cpp
@@ -1235,20 +1238,24 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/racer/world/racer_world_load_step.cpp
         src/services/impl/workflow/racer/world/racer_world_place.cpp
         src/services/impl/workflow/racer/world/racer_world_release.cpp
+        src/services/impl/workflow/racer/world/racer_world_width.cpp
         src/services/impl/workflow/racer/player/racer_autopilot.cpp
         src/services/impl/workflow/racer/player/racer_field_rules.cpp
         src/services/impl/workflow/racer/player/racer_ground_surface.cpp
         src/services/impl/workflow/racer/player/racer_lap_progress.cpp
         src/services/impl/workflow/racer/player/racer_lap_timer_step.cpp
+        src/services/impl/workflow/racer/player/racer_line_guide.cpp
         src/services/impl/workflow/racer/player/racer_opponent_fly.cpp
         src/services/impl/workflow/racer/player/racer_opponents_step.cpp
         src/services/impl/workflow/racer/player/racer_pod_collision.cpp
         src/services/impl/workflow/racer/player/racer_pod_drive_step.cpp
         src/services/impl/workflow/racer/player/racer_pod_engines.cpp
+        src/services/impl/workflow/racer/player/racer_pod_handling.cpp
         src/services/impl/workflow/racer/player/racer_pod_input.cpp
         src/services/impl/workflow/racer/player/racer_pod_physics.cpp
         src/services/impl/workflow/racer/player/racer_pod_recovery.cpp
         src/services/impl/workflow/racer/player/racer_pod_report.cpp
+        src/services/impl/workflow/racer/player/racer_speed_plan.cpp
         src/services/impl/workflow/racer/player/racer_surface_effects.cpp
         src/services/impl/workflow/racer/player/racer_traffic.cpp
         src/services/impl/workflow/racer/render/racer_camera_math.cpp
@@ -1264,21 +1271,43 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/racer/render/racer_panel_upload.cpp
         src/services/impl/workflow/racer/render/racer_pod_effects_draw.cpp
         src/services/impl/workflow/racer/render/racer_scene_draw_step.cpp
+        src/services/impl/workflow/racer/render/racer_screen_content.cpp
         src/services/impl/workflow/racer/render/racer_screen_prepare.cpp
         src/services/impl/workflow/racer/render/racer_screen_step.cpp
+        src/services/impl/workflow/racer/audio/racer_audio_allowed.cpp
         src/services/impl/workflow/racer/audio/racer_audio_clip.cpp
         src/services/impl/workflow/racer/audio/racer_audio_menu.cpp
         src/services/impl/workflow/racer/audio/racer_audio_mixer.cpp
         src/services/impl/workflow/racer/audio/racer_audio_open.cpp
         src/services/impl/workflow/racer/audio/racer_audio_step.cpp
+        src/services/impl/workflow/racer/video/racer_anim_file.cpp
+        src/services/impl/workflow/racer/video/racer_video_decode.cpp
+        src/services/impl/workflow/racer/video/racer_video_decoder.cpp
+        src/services/impl/workflow/racer/video/racer_video_io.cpp
+        src/services/impl/workflow/racer/video/racer_video_start.cpp
+        src/services/impl/workflow/racer/video/racer_video_step.cpp
+        src/services/impl/workflow/racer/flow/racer_circuits.cpp
+        src/services/impl/workflow/racer/flow/racer_flow_award.cpp
+        src/services/impl/workflow/racer/flow/racer_flow_cup.cpp
+        src/services/impl/workflow/racer/flow/racer_flow_free.cpp
+        src/services/impl/workflow/racer/flow/racer_flow_junk.cpp
         src/services/impl/workflow/racer/flow/racer_flow_menu.cpp
         src/services/impl/workflow/racer/flow/racer_flow_race.cpp
+        src/services/impl/workflow/racer/flow/racer_flow_shop.cpp
         src/services/impl/workflow/racer/flow/racer_flow_step.cpp
         src/services/impl/workflow/racer/flow/racer_flow_text_common.cpp
+        src/services/impl/workflow/racer/flow/racer_flow_text_free.cpp
+        src/services/impl/workflow/racer/flow/racer_flow_text_junk.cpp
         src/services/impl/workflow/racer/flow/racer_flow_text_menu.cpp
         src/services/impl/workflow/racer/flow/racer_flow_text_race.cpp
+        src/services/impl/workflow/racer/flow/racer_flow_text_setup.cpp
         src/services/impl/workflow/racer/flow/racer_flow_text_shop.cpp
+        src/services/impl/workflow/racer/flow/racer_flow_videos.cpp
+        src/services/impl/workflow/racer/flow/racer_junkyard.cpp
+        src/services/impl/workflow/racer/flow/racer_parts.cpp
         src/services/impl/workflow/racer/flow/racer_profile.cpp
+        src/services/impl/workflow/racer/flow/racer_profile_path.cpp
+        src/services/impl/workflow/racer/flow/racer_tournament.cpp
         src/services/impl/workflow/racer/flow/racer_upgrades.cpp
         src/services/impl/workflow/fs2024/fs2024_step_params.cpp
         src/services/impl/workflow/fs2024/tiles/fs2024_load_pool.cpp
@@ -2529,6 +2558,8 @@ target_sources(racer_model_test PRIVATE src/services/impl/workflow/racer/data/ra
 target_sources(racer_model_test PRIVATE src/services/impl/workflow/racer/data/racer_model_collision.cpp)
 target_sources(racer_model_test PRIVATE src/services/impl/workflow/racer/data/racer_pod_layout.cpp)
 target_sources(racer_model_test PRIVATE src/services/impl/workflow/racer/data/racer_model_transform.cpp)
+target_sources(racer_model_test PRIVATE src/services/impl/workflow/racer/data/racer_pod_shadow.cpp)
+target_sources(racer_model_test PRIVATE src/services/impl/workflow/racer/data/racer_pod_merge.cpp)
 target_include_directories(racer_model_test PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )
@@ -2593,6 +2624,8 @@ target_sources(racer_pod_physics_test PRIVATE src/services/impl/workflow/racer/p
 target_sources(racer_pod_physics_test PRIVATE src/services/impl/workflow/racer/player/racer_pod_engines.cpp)
 target_sources(racer_pod_physics_test PRIVATE src/services/impl/workflow/racer/player/racer_pod_collision.cpp)
 target_sources(racer_pod_physics_test PRIVATE src/services/impl/workflow/racer/player/racer_surface_effects.cpp)
+target_sources(racer_pod_physics_test PRIVATE tests/racer_pod_handling_test.cpp)
+target_sources(racer_pod_physics_test PRIVATE src/services/impl/workflow/racer/player/racer_pod_handling.cpp)
 target_include_directories(racer_pod_physics_test PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )
@@ -2622,6 +2655,8 @@ target_sources(racer_lap_test PRIVATE tests/racer_banner_test.cpp)
 target_sources(racer_lap_test PRIVATE src/services/impl/workflow/racer/player/racer_lap_progress.cpp)
 target_sources(racer_lap_test PRIVATE src/services/impl/workflow/racer/render/racer_hud_format.cpp)
 target_sources(racer_lap_test PRIVATE src/services/impl/workflow/racer/render/racer_hud_banner.cpp)
+target_sources(racer_lap_test PRIVATE tests/racer_track_table_test.cpp)
+target_sources(racer_lap_test PRIVATE src/services/impl/workflow/racer/data/racer_track_table.cpp)
 target_include_directories(racer_lap_test PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )
@@ -2629,6 +2664,7 @@ target_link_libraries(racer_lap_test PRIVATE
     GTest::gtest_main
     glm::glm
     ${SDL_TARGET}
+    nlohmann_json::nlohmann_json
 )
 add_test(NAME racer_lap_test COMMAND racer_lap_test)
 
@@ -2640,6 +2676,8 @@ target_sources(racer_field_test PRIVATE src/services/impl/workflow/racer/player/
 target_sources(racer_field_test PRIVATE src/services/impl/workflow/racer/player/racer_pod_collision.cpp)
 target_sources(racer_field_test PRIVATE src/services/impl/workflow/racer/player/racer_surface_effects.cpp)
 target_sources(racer_field_test PRIVATE src/services/impl/workflow/racer/player/racer_traffic.cpp)
+target_sources(racer_field_test PRIVATE src/services/impl/workflow/racer/player/racer_line_guide.cpp)
+target_sources(racer_field_test PRIVATE tests/racer_contact_test.cpp)
 target_include_directories(racer_field_test PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )
@@ -2656,6 +2694,19 @@ target_sources(racer_flow_test PRIVATE src/services/impl/workflow/racer/flow/rac
 target_sources(racer_flow_test PRIVATE src/services/impl/workflow/racer/flow/racer_flow_race.cpp)
 target_sources(racer_flow_test PRIVATE src/services/impl/workflow/racer/flow/racer_upgrades.cpp)
 target_sources(racer_flow_test PRIVATE src/services/impl/workflow/racer/flow/racer_profile.cpp)
+target_sources(racer_flow_test PRIVATE tests/racer_tournament_test.cpp)
+target_sources(racer_flow_test PRIVATE src/services/impl/workflow/racer/flow/racer_flow_award.cpp)
+target_sources(racer_flow_test PRIVATE src/services/impl/workflow/racer/flow/racer_flow_free.cpp)
+target_sources(racer_flow_test PRIVATE src/services/impl/workflow/racer/flow/racer_flow_cup.cpp)
+target_sources(racer_flow_test PRIVATE src/services/impl/workflow/racer/flow/racer_flow_shop.cpp)
+target_sources(racer_flow_test PRIVATE src/services/impl/workflow/racer/flow/racer_flow_junk.cpp)
+target_sources(racer_flow_test PRIVATE src/services/impl/workflow/racer/flow/racer_parts.cpp)
+target_sources(racer_flow_test PRIVATE src/services/impl/workflow/racer/flow/racer_junkyard.cpp)
+target_sources(racer_flow_test PRIVATE src/services/impl/workflow/racer/flow/racer_circuits.cpp)
+target_sources(racer_flow_test PRIVATE src/services/impl/workflow/racer/flow/racer_tournament.cpp)
+target_sources(racer_flow_test PRIVATE src/services/impl/workflow/racer/flow/racer_profile_path.cpp)
+target_sources(racer_flow_test PRIVATE src/services/impl/workflow/racer/flow/racer_flow_text_common.cpp)
+target_sources(racer_flow_test PRIVATE src/services/impl/workflow/racer/flow/racer_flow_videos.cpp)
 target_include_directories(racer_flow_test PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )

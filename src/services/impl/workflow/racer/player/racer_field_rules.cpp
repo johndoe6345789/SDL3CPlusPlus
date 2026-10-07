@@ -7,8 +7,6 @@
 namespace sdl3cpp::services::impl {
 namespace {
 
-constexpr float kPodRadius = 2.8f;  // half a pod's width
-constexpr float kPodReach = 6.f;    // circle offsets along the pod
 constexpr float kMaxPush = 0.25f;   // metres per contact per frame
 // Above any racing progress (laps x points), small enough that a float
 // still resolves hundredths of a second when the race time is taken off.
@@ -44,36 +42,39 @@ void RankRacerField(RacerWorldState& state) {
 
 void SeparateRacerPods(const std::vector<RacerPodState*>& pods) {
     // A pod is long (engines, cables, cockpit): three circles down its
-    // length stand in for its outline.
-    static const float kOffsets[] = {-kPodReach, 0.f, kPodReach};
+    // length stand in for its outline. The lighter pod gives way more.
     for (std::size_t i = 0; i < pods.size(); ++i) {
         for (std::size_t j = i + 1; j < pods.size(); ++j) {
-            const glm::vec3 fi = RacerPodForward(pods[i]->heading);
-            const glm::vec3 fj = RacerPodForward(pods[j]->heading);
-            for (float a : kOffsets) {
-                for (float b : kOffsets) {
-                    glm::vec3 d = (pods[j]->position + fj * b) -
-                                  (pods[i]->position + fi * a);
+            RacerPodState& a = *pods[i];
+            RacerPodState& b = *pods[j];
+            const float reach = a.bodyHalfWidth + b.bodyHalfWidth;
+            const float share = b.mass / std::max(1.f, a.mass + b.mass);
+            for (const glm::vec3& ca : RacerBodyCircles(a)) {
+                for (const glm::vec3& cb : RacerBodyCircles(b)) {
+                    glm::vec3 d = cb - ca;
                     d.y = 0.f;
                     const float distance = glm::length(d);
-                    if (distance >= 2.f * kPodRadius || distance < 1e-4f) {
-                        continue;
-                    }
-                    // Nudge rather than launch: deep overlaps resolve
-                    // over a few frames.
-                    const float depth = std::min(
-                        kMaxPush, 0.5f * (2.f * kPodRadius - distance));
-                    const glm::vec3 push = d / distance * depth;
-                    pods[i]->position -= push;
-                    pods[j]->position += push;
-                    const float shared =
-                        0.5f * (pods[i]->speed + pods[j]->speed);
-                    pods[i]->speed = 0.9f * pods[i]->speed + 0.1f * shared;
-                    pods[j]->speed = 0.9f * pods[j]->speed + 0.1f * shared;
+                    if (distance >= reach || distance < 1e-4f) continue;
+                    // Nudge: deep overlaps resolve over a few frames.
+                    const float depth =
+                        std::min(kMaxPush, 0.5f * (reach - distance));
+                    const glm::vec3 push = d / distance * (2.f * depth);
+                    a.position -= push * share;
+                    b.position += push * (1.f - share);
+                    const float shared = 0.5f * (a.speed + b.speed);
+                    a.speed = 0.9f * a.speed + 0.1f * shared;
+                    b.speed = 0.9f * b.speed + 0.1f * shared;
                 }
             }
         }
     }
+}
+
+std::array<glm::vec3, 3> RacerBodyCircles(const RacerPodState& pod) {
+    const glm::vec3 f = RacerPodForward(pod.heading);
+    return {pod.position + f * (0.5f * pod.bodyFront),
+            pod.position - f * (0.4f * pod.bodyBack),
+            pod.position - f * (0.85f * pod.bodyBack)};
 }
 
 }  // namespace sdl3cpp::services::impl

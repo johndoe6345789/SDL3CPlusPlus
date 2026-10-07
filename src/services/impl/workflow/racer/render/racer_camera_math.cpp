@@ -1,9 +1,18 @@
 #include "services/interfaces/workflow/racer/render/racer_camera_math.hpp"
 
+#include <glm/gtc/type_ptr.hpp>
+
 #include <algorithm>
 #include <cmath>
 
 namespace sdl3cpp::services::impl {
+
+nlohmann::json RacerMatrixJson(const glm::mat4& matrix) {
+    nlohmann::json out = nlohmann::json::array();
+    const float* values = glm::value_ptr(matrix);
+    for (int i = 0; i < 16; ++i) out.push_back(values[i]);
+    return out;
+}
 
 float RacerAngleDelta(float from, float to) {
     constexpr float kPi = 3.14159265f;

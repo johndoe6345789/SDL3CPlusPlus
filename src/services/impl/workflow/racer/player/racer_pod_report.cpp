@@ -18,6 +18,21 @@ void PublishRacerPod(WorkflowContext& context,
     context.Set("racer.boosting", pod.boosting);
 }
 
+namespace {
+
+/// Metres to the pod's point on the line: across, then up ("12 / 3").
+std::string OffLine(const RacerWorldState& state) {
+    if (state.lapPoints.empty() || state.race.segment < 0) return "-";
+    const auto& line =
+        state.lapPoints[state.race.segment % state.lapPoints.size()];
+    glm::vec3 d = line - state.pod.position;
+    const float up = d.y;
+    d.y = 0.f;
+    return std::to_string(glm::length(d)) + " / " + std::to_string(up);
+}
+
+}  // namespace
+
 void TraceRacerPod(const std::shared_ptr<ILogger>& logger,
                    const RacerWorldState& state) {
     if (!logger) return;
@@ -47,7 +62,19 @@ void TraceRacerPod(const std::shared_ptr<ILogger>& logger,
                   std::to_string(state.race.segment) + " heading " +
                   std::to_string(pod.heading) + " speed " +
                   std::to_string(pod.speed) +
-                  (pod.grounded ? " grounded" : " airborne"));
+                  (pod.grounded ? " grounded" : " airborne") + ", line " +
+                  OffLine(state) + " m away");
+}
+
+void TraceRacerRespawn(const std::shared_ptr<ILogger>& logger,
+                       const RacerWorldState& state, const char* reason) {
+    if (!logger) return;
+    logger->Trace(std::string("racer.pod.drive: ") + reason +
+                  ", respawn at point " +
+                  std::to_string(std::max(0, state.race.segment)) + ", " +
+                  OffLine(state) + " m off the line, air " +
+                  std::to_string(state.pod.airTime) + " s, surface " +
+                  std::to_string(state.pod.surface));
 }
 
 }  // namespace sdl3cpp::services::impl

@@ -97,7 +97,7 @@
         "height": 4.5,
         "lead": 15.0,
         "fov": 70.0,
-        "far": 6000.0
+        "far": 12000.0
       }
     },
     {
@@ -132,6 +132,14 @@
     {
       "id": "screen",
       "plugin": "racer.screen.draw",
+      "parameters": {
+        "racer_dir": "${env:RACER_DIR}"
+      }
+    },
+    {
+      "id": "video",
+      "plugin": "racer.video.play",
+      "comment": "The install's cutscenes (data/anims/*.znm, LucasArts SMUSH) decoded with FFmpeg, while the flow is in its Cutscene phase.",
       "parameters": {
         "racer_dir": "${env:RACER_DIR}"
       }

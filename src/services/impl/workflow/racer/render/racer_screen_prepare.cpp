@@ -14,6 +14,7 @@ WorkflowRacerScreenStep::WorkflowRacerScreenStep(
 WorkflowRacerScreenStep::~WorkflowRacerScreenStep() {
     DestroyRacerPanel(title_);
     DestroyRacerPanel(hangar_);
+    DestroyRacerPanel(junkyard_);
     DestroyRacerPanel(text_);
 }
 
@@ -30,8 +31,10 @@ void WorkflowRacerScreenStep::Prepare(const WorkflowStepDefinition& step,
         std::filesystem::path(
             RacerStringParam(step, "racer_dir", "RACER_DIR", "")) /
         "data" / "images";
-    for (auto [panel, file] : {std::pair{&title_, "splash.TGA"},
-                               std::pair{&hangar_, "podhangar_backdrop.TGA"}}) {
+    for (auto [panel, file] :
+         {std::pair{&title_, "splash.TGA"},
+          std::pair{&hangar_, "podhangar_backdrop.TGA"},
+          std::pair{&junkyard_, "podhangar_backdrop2.TGA"}}) {
         if (!CreateRacerImagePanel(device, images / file, *panel)) continue;
         const float imageAspect =
             static_cast<float>(panel->width) / panel->height;

@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/racer/player/racer_pod_drive_step.hpp"
 
+#include "services/interfaces/workflow/racer/player/racer_line_guide.hpp"
 #include "services/interfaces/workflow/racer/player/racer_pod_recovery.hpp"
 #include "services/interfaces/workflow/racer/player/racer_pod_report.hpp"
 #include "services/interfaces/workflow/racer/world/racer_world_build.hpp"
@@ -36,6 +37,11 @@ void WorkflowRacerPodDriveStep::Execute(const WorkflowStepDefinition& step,
     const RacerPodInput input = ReadRacerPodInput(step, context, *state_);
     StepRacerPod(state_->pod, input, state_->podSpec, dt,
                  RacerGroundSurface(state_->ground));
+    if (RacerPodOnAutopilot(step, *state_)) {
+        GuideRacerPodToLine(state_->pod, state_->lapPoints,
+                            state_->race.segment, kRacerAiLineOffset,
+                            kRacerAiLinePull, dt);
+    }
     // Bank into the turn, easing so the pod does not snap.
     state_->podRoll +=
         (input.steer * 0.45f - state_->podRoll) * std::min(1.f, 6.f * dt);
@@ -44,13 +50,9 @@ void WorkflowRacerPodDriveStep::Execute(const WorkflowStepDefinition& step,
     pod.stuckTime = (pod.blocked || crawling) ? pod.stuckTime + dt : 0.f;
     const RacerRecoveryReason reason =
         UpdateRacerRecovery(recovery_, pod, state_->race, state_->ground,
-                            static_cast<int>(state_->lapPoints.size()),
-                            input.throttle, dt);
+                            state_->lapPoints, input.throttle, dt);
     if (reason != RacerRecoveryReason::None) {
-        if (logger_) {
-            logger_->Trace(std::string("racer.pod.drive: ") +
-                           RacerRecoveryName(reason) + ", respawn");
-        }
+        TraceRacerRespawn(logger_, *state_, RacerRecoveryName(reason));
         // Lost for want of progress: put back a little further on.
         const int ahead = reason == RacerRecoveryReason::NoProgress
                               ? 2 * kRacerLapSamples
@@ -59,7 +61,7 @@ void WorkflowRacerPodDriveStep::Execute(const WorkflowStepDefinition& step,
                            kRespawnSpeedShare * state_->podSpec.topSpeed);
     }
     traceClock_ += dt;
-    if (traceClock_ >= 1.f) {
+    if (traceClock_ >= 0.25f) {
         traceClock_ = 0.f;
         TraceRacerPod(logger_, *state_);
     }

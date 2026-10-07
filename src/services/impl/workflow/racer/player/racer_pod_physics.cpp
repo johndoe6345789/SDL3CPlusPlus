@@ -9,6 +9,8 @@ namespace sdl3cpp::services::impl {
 namespace {
 
 constexpr float kDamagePull = 0.6f;  // rad/s at full pace
+constexpr float kHugDepth = 8.f;     // metres of ground below that pull
+constexpr float kHugPull = 4.f;      // times gravity while hugging
 
 }  // namespace
 
@@ -38,8 +40,10 @@ void StepRacerPod(RacerPodState& pod, const RacerPodInput& in,
     }
     // Pods turn tighter when slow, keeping a share of it at top speed.
     const float pace = std::min(1.f, std::fabs(pod.speed) / spec.topSpeed);
-    const float grip = (1.f - (1.f - spec.turnAtTopSpeed) * pace) *
-                       RacerSurfaceEffectFor(pod.surface).grip;
+    // Anti-skid keeps some of the grip slippery ground takes away.
+    const float ground = RacerSurfaceEffectFor(pod.surface).grip;
+    const float held = ground + (1.f - ground) * 0.6f * spec.antiSkid;
+    const float grip = (1.f - (1.f - spec.turnAtTopSpeed) * pace) * held;
     pod.heading += in.steer * spec.turnRate * grip * dt;
     // A weaker left engine pulls the nose left, and the other way round.
     const float pull = pod.engineDamage[1] - pod.engineDamage[0];
@@ -49,7 +53,12 @@ void StepRacerPod(RacerPodState& pod, const RacerPodInput& in,
     const float ceiling = pod.position.y + spec.stepHeight;
     pod.blocked =
         !MoveRacerPodAlongSurface(pod, spec, dt, surface, next);
-    pod.verticalSpeed -= spec.gravity * dt;
+    // Repulsors pull a pod onto ground just below; over a gap it floats.
+    const auto below = surface.height(surface.context, pod.position.x,
+                                      pod.position.z, pod.position.y);
+    const bool hugging =
+        below && pod.position.y - *below < spec.hoverHeight + kHugDepth;
+    pod.verticalSpeed -= spec.gravity * (hugging ? kHugPull : 1.f) * dt;
     next.y = pod.position.y + pod.verticalSpeed * dt;
     const auto floor =
         surface.height(surface.context, next.x, next.z, ceiling);

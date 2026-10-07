@@ -7,16 +7,6 @@
 #include <utility>
 
 namespace sdl3cpp::services::impl {
-namespace {
-
-struct Screen {
-    const RacerPanel* background = nullptr;
-    std::vector<RacerPanelLine> lines;
-    Uint8 shade = 0;
-};
-
-}  // namespace
-
 void WorkflowRacerScreenStep::Execute(const WorkflowStepDefinition& step,
                                       WorkflowContext& context) {
     const RacerFlow& flow = state_->flow;
@@ -38,24 +28,7 @@ void WorkflowRacerScreenStep::Execute(const WorkflowStepDefinition& step,
             context.Get<uint32_t>("frame_height", 1080u));
         Prepare(step, res->device, cmd, w / h);
     }
-    Screen screen;
-    switch (flow.phase) {
-    case RacerPhase::Menu:
-        screen = {&title_, RacerMenuLines(flow, state_->table), 110};
-        break;
-    case RacerPhase::Loading:
-        screen = {&title_, RacerLoadingLines(flow, state_->table), 150};
-        break;
-    case RacerPhase::Shop:
-        screen = {&hangar_, RacerShopLines(flow), 130};
-        break;
-    case RacerPhase::Paused:
-        screen = {nullptr, RacerPauseLines(flow), 150};
-        break;
-    default:
-        screen = {nullptr, RacerResultsLines(flow, *state_), 170};
-        break;
-    }
+    const RacerScreenContent screen = Content();
     std::string key = std::to_string(static_cast<int>(flow.phase));
     for (const auto& line : screen.lines) key += line.text + "|";
     if (key != shown_) {

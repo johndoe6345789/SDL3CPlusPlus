@@ -49,8 +49,18 @@ void WorkflowRacerFlowStep::Execute(const WorkflowStepDefinition&,
     if (flow.initialised) {
         switch (flow.phase) {
         case RacerPhase::Menu: UpdateRacerMenu(flow, nav, state_->table); break;
+        case RacerPhase::Tournament:
+            UpdateRacerTournament(flow, nav, state_->table);
+            break;
+        case RacerPhase::FreeRace:
+            UpdateRacerFreeRace(flow, nav, state_->table);
+            break;
         case RacerPhase::Shop: UpdateRacerShop(flow, nav); break;
+        case RacerPhase::Junkyard: UpdateRacerJunkyard(flow, nav); break;
+        case RacerPhase::PitDroids: UpdateRacerPitDroids(flow, nav); break;
         case RacerPhase::Loading: break;
+        case RacerPhase::Cutscene: flow.skipVideo = nav.select || nav.back;
+            break;
         default: UpdateRacerRaceFlow(flow, *state_, nav, dt); break;
         }
     }

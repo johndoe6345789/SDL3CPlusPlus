@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/racer/world/racer_field_build.hpp"
 
+#include "services/interfaces/workflow/racer/player/racer_pod_handling.hpp"
 #include "services/interfaces/workflow/racer/world/racer_gpu_upload.hpp"
 #include "services/interfaces/workflow/racer/world/racer_world_build.hpp"
 
@@ -9,14 +10,14 @@
 namespace sdl3cpp::services::impl {
 namespace {
 
-constexpr float kGridSpacing = 7.f;    // metres either side of the line
-constexpr int kRowPoints = 9;         // lap points (~36 m) between rows
+constexpr float kGridSpacing = 6.f;    // metres either side of the line
+constexpr int kRowPoints = 5;         // lap points (~40 m) between rows
 constexpr int kPlayerSlot = 3;        // second row, right
 
-/// Pace from 1.0 down to 0.9 across the field, varied but repeatable.
+/// Pace from 1.0 down to 0.95 across the field, varied but repeatable.
 float PaceFor(int index) {
-    static const float kPaces[] = {1.0f, 0.97f, 0.95f, 0.99f, 0.93f,
-                                   0.96f, 0.91f, 0.94f, 0.92f};
+    static const float kPaces[] = {1.0f, 0.98f, 0.97f, 0.99f, 0.96f,
+                                   0.97f, 0.95f, 0.96f, 0.95f};
     return kPaces[index % 9];
 }
 
@@ -39,8 +40,9 @@ void BuildRacerField(SDL_GPUDevice* device, RacerWorldState& state,
         RacerOpponent opponent;
         opponent.racer = racer;
         const float pace = PaceFor(static_cast<int>(state.opponents.size()));
-        // Stock pods: the shop's upgrades are the player's alone.
-        opponent.spec = RacerPodSpec{};
+        // Each rival flies their own pod's stock handling; the shop's
+        // upgrades are the player's alone.
+        opponent.spec = RacerSpecFromHandling(racer.handling);
         opponent.spec.topSpeed *= pace;
         opponent.spec.boostSpeed *= pace;
         opponent.race = state.race;
@@ -50,6 +52,7 @@ void BuildRacerField(SDL_GPUDevice* device, RacerWorldState& state,
                                           RacerVertexShading::Normal);
         opponent.rig = BuildRacerPodRig(device, model, state.white,
                                         RacerBinderColour(racer.name));
+        SetRacerPodBody(opponent.pod, opponent.rig, opponent.spec);
         if (logger) {
             logger->Trace("racer.world.load: opponent " + racer.name + ", " +
                           std::to_string(model.triangleCount) + " triangles");

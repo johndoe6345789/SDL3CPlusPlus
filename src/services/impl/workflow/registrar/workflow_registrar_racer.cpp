@@ -10,6 +10,7 @@
 #include "services/interfaces/workflow/racer/render/racer_hud_step.hpp"
 #include "services/interfaces/workflow/racer/render/racer_scene_draw_step.hpp"
 #include "services/interfaces/workflow/racer/render/racer_screen_step.hpp"
+#include "services/interfaces/workflow/racer/video/racer_video_step.hpp"
 #include "services/interfaces/workflow/racer/world/racer_world_load_step.hpp"
 
 #include <memory>
@@ -43,7 +44,9 @@ int RegisterRacerSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
         std::make_shared<WorkflowRacerFlowStep>(logger, state));
     registry->RegisterStep(
         std::make_shared<WorkflowRacerScreenStep>(logger, state));
-    return 11;
+    registry->RegisterStep(
+        std::make_shared<WorkflowRacerVideoStep>(logger, state));
+    return 12;
 }
 
 }  // namespace sdl3cpp::services::impl::registrar_detail

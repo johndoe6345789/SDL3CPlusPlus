@@ -8,8 +8,6 @@
 namespace sdl3cpp::services::impl {
 namespace {
 
-constexpr float kShadowWidth = 6.f;
-constexpr float kShadowLength = 16.f;
 
 int DrawFlames(RacerDrawPass& d, const RacerWorldState& state,
                const RacerPodState& pod, const glm::mat4& at,
@@ -35,15 +33,17 @@ int DrawFlames(RacerDrawPass& d, const RacerWorldState& state,
 }
 
 int DrawShadow(RacerDrawPass& d, const RacerWorldState& state,
-               const RacerPodState& pod) {
+               const RacerPodState& pod, const RacerPodRig& rig) {
     const auto ground = RacerGroundHeight(state.ground, pod.position.x,
                                           pod.position.z, pod.position.y);
     if (!ground || pod.position.y - *ground > 25.f) return 0;
     glm::mat4 m = glm::translate(
         glm::mat4(1.f), glm::vec3(pod.position.x, *ground + 0.08f,
                                   pod.position.z));
+    // The pod's own footprint, centred between engine tips and cockpit.
     m = glm::rotate(m, -pod.heading, glm::vec3(0.f, 1.f, 0.f));
-    m = glm::scale(m, glm::vec3(kShadowWidth, 1.f, kShadowLength));
+    m = glm::translate(m, glm::vec3(0.f, 0.f, 0.5f * (rig.back - rig.front)));
+    m = glm::scale(m, glm::vec3(2.f * rig.halfWidth, 1.f, rig.length));
     return DrawRacerModel(d, state.effects.shadow, m, true);
 }
 
@@ -54,7 +54,7 @@ int DrawRacerPodEffects(RacerDrawPass& d, const RacerWorldState& state,
                         const RacerPodRig& rig, bool blended) {
     const glm::mat4 at = RacerPodMatrix(pod, roll);
     if (!blended) return DrawRacerModel(d, rig.cables, at, false);
-    int drawn = DrawShadow(d, state, pod);
+    int drawn = DrawShadow(d, state, pod, rig);
     drawn += DrawRacerModel(d, rig.binder, at, true);
     return drawn + DrawFlames(d, state, pod, at, rig);
 }

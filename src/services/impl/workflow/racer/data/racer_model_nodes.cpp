@@ -51,6 +51,7 @@ void WalkNode(ModelWalk& walk, std::uint32_t offset,
         if (child == 0 || !VisitNodeChild(r, offset, flags, i)) continue;
         if (flags == kMeshGroup) {
             if (!podParts) AppendMesh(walk, child, transform);
+            if (podParts && !walk.insidePart) NotePodShadow(walk, child);
             if (podParts && walk.insidePart) {
                 std::swap(walk.model, walk.parts.back());
                 AppendMesh(walk, child, transform);

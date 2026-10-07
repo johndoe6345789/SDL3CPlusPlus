@@ -34,10 +34,19 @@ RacerTrackTable LoadRacerTrackTable(const std::string& path) {
                                 t.value("spline", -1)});
     }
     for (const auto& r : doc.value("racers", nlohmann::json::array())) {
-        table.racers.push_back({r.value("name", ""), r.value("podd", -1)});
+        RacerPodInfo racer{r.value("name", ""), r.value("podd", -1), {}};
+        const auto handling = r.value("handling", nlohmann::json::array());
+        for (std::size_t i = 0;
+             i < racer.handling.size() && i < handling.size(); ++i) {
+            racer.handling[i] = handling[i].get<float>();
+        }
+        table.racers.push_back(racer);
     }
-    for (const auto& [planet, rgb] :
-         doc.value("planets", nlohmann::json::object()).items()) {
+    // Held by name: iterating items() of the temporary value() returns
+    // would read a destroyed object (and found no planets at all).
+    const nlohmann::json planets =
+        doc.value("planets", nlohmann::json::object());
+    for (const auto& [planet, rgb] : planets.items()) {
         if (rgb.is_array() && rgb.size() == 3) {
             table.fog[planet] = {rgb[0].get<float>(), rgb[1].get<float>(),
                                  rgb[2].get<float>()};

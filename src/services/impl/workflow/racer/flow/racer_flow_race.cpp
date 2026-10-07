@@ -1,5 +1,6 @@
 #include "services/interfaces/workflow/racer/flow/racer_flow_rules.hpp"
 
+
 namespace sdl3cpp::services::impl {
 namespace {
 
@@ -16,16 +17,7 @@ void Restart(RacerFlow& flow) {
 
 void ToMenu(RacerFlow& flow) {
     flow.requestRelease = true;
-    flow.phase = RacerPhase::Menu;
-}
-
-/// Prize money once, when the results first show.
-void Award(RacerFlow& flow, const RacerWorldState& state) {
-    if (flow.prizeAwarded) return;
-    flow.prizeAwarded = true;
-    flow.prize = RacerPrizeFor(state.race.position);
-    flow.profile.truguts += flow.prize;
-    SaveRacerProfile(flow.profile, RacerProfilePath());
+    flow.phase = flow.tournament ? RacerPhase::Tournament : RacerPhase::Menu;
 }
 
 }  // namespace
@@ -39,7 +31,7 @@ void UpdateRacerRaceFlow(RacerFlow& flow, RacerWorldState& state,
         } else if (state.race.finished) {
             flow.resultsDelay += dt;
             if (flow.resultsDelay > kResultsDelay) {
-                Award(flow, state);
+                BookRacerRace(flow, state);
                 flow.phase = RacerPhase::Results;
             }
         }

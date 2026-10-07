@@ -9,7 +9,9 @@ layout(set = 2, binding = 0) uniform sampler2D u_texture;
 
 layout(set = 3, binding = 0) uniform FragmentUniforms {
     vec4 u_fogColour;   // rgb, a = fog start distance
-    vec4 u_fogParams;   // x = full-fog distance, y = alpha cutoff
+    vec4 u_fogParams;   // x = full-fog distance, y = alpha cutoff,
+                        // z = 1 for the sky: fade it into the fog colour
+                        //     toward and below the horizon
     vec4 u_cameraPos;
 };
 
@@ -25,5 +27,11 @@ void main() {
     float distance = length(v_worldPos - u_cameraPos.xyz);
     float fog = clamp((distance - u_fogColour.a) /
                       max(u_fogParams.x - u_fogColour.a, 1.0), 0.0, 1.0);
+    // The skybox is a band; its lower edge would show as a hard line
+    // against the clear colour, so the sky melts into the fog (which is
+    // also the clear colour) as the view drops to the horizon.
+    vec3 view = normalize(v_worldPos - u_cameraPos.xyz);
+    float horizon = 1.0 - smoothstep(0.0, 0.35, view.y);
+    fog = max(fog, u_fogParams.z * horizon);
     o_colour = vec4(mix(colour.rgb, u_fogColour.rgb, fog * fog), colour.a);
 }

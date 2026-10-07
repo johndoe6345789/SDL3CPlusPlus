@@ -21,6 +21,10 @@ struct ModelWalk {
     RacerModelScope scope = RacerModelScope::Everything;
     bool insidePart = false;          ///< below a pod part's scale node
     std::vector<RacerModel> parts;    ///< pod parts, in walk order
+    /// A pod's shadow quad (raw part units): width and length; zero
+    /// until one is seen. The longest flat quad outside the parts.
+    float shadowWidth = 0.f;
+    float shadowLength = 0.f;
 
     /// Nodes may be shared (instanced) under several parents, so they
     /// are not de-duplicated; this budget stops a malformed cycle.
@@ -62,9 +66,14 @@ void AppendMesh(ModelWalk& walk, std::uint32_t offset,
 void AppendCollision(ModelWalk& walk, std::uint32_t mesh,
                      const glm::mat4& transform);
 
-/// Places pod parts (engines side by side, cockpit behind) and merges
-/// them into `model`.
-void LayoutPodParts(std::vector<RacerModel>& parts, RacerModel& model);
+/// Notes a pod mesh outside the parts if it is a flat four-corner quad
+/// (a shadow), keeping the longest one's size in `walk`.
+void NotePodShadow(ModelWalk& walk, std::uint32_t mesh);
+
+/// Places pod parts (engines side by side, cockpit behind, spread to
+/// fill the shadow's footprint when there is one) and merges them into
+/// `walk.model`.
+void LayoutPodParts(ModelWalk& walk);
 
 RacerMaterialRef ReadMaterial(const ModelWalk& walk, std::uint32_t offset);
 

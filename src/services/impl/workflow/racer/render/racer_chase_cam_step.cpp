@@ -5,25 +5,12 @@
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <nlohmann/json.hpp>
 
 #include <algorithm>
 #include <cmath>
 #include <utility>
 
 namespace sdl3cpp::services::impl {
-namespace {
-
-nlohmann::json ToArray(const glm::mat4& matrix) {
-    nlohmann::json out = nlohmann::json::array();
-    const float* values = glm::value_ptr(matrix);
-    for (int i = 0; i < 16; ++i) out.push_back(values[i]);
-    return out;
-}
-
-}  // namespace
-
 WorkflowRacerChaseCameraStep::WorkflowRacerChaseCameraStep(
     std::shared_ptr<ILogger> logger, std::shared_ptr<RacerWorldState> state)
     : logger_(std::move(logger)), state_(std::move(state)) {}
@@ -76,11 +63,12 @@ void WorkflowRacerChaseCameraStep::Execute(const WorkflowStepDefinition& step,
     // A touch more field of view at speed sells the sense of pace.
     const float fov = RacerFloatParam(step, "fov", 70.f) + 12.f * pace;
     nlohmann::json state = nlohmann::json::object();
-    state["view"] = ToArray(glm::lookAt(eye_, look, glm::vec3(0, 1, 0)));
-    state["projection"] = ToArray(glm::perspective(
+    const glm::vec3 up(0.f, 1.f, 0.f);
+    state["view"] = RacerMatrixJson(glm::lookAt(eye_, look, up));
+    state["projection"] = RacerMatrixJson(glm::perspective(
         glm::radians(fov), RacerFloatParam(step, "aspect", 16.f / 9.f),
         RacerFloatParam(step, "near", 0.3f),
-        RacerFloatParam(step, "far", 6000.f)));
+        RacerFloatParam(step, "far", 12000.f)));
     context.Set("camera.state", state);
     context.Set("render.camera_pos", eye_);
 }

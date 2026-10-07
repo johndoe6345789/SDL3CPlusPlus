@@ -16,6 +16,10 @@ struct RacerPodRig {
     std::vector<glm::vec3> exhausts;
     float exhaustRadius = 0.5f;
     float reach = 0.f;   ///< metres from the pod's origin to its far end
+    float front = 0.f;   ///< metres the engines reach ahead of the origin
+    float back = 0.f;    ///< metres the cockpit trails behind it
+    float halfWidth = 0.f;
+    float length = 0.f;  ///< the footprint, front to back
 };
 
 /// Shared effect shapes, built once: a unit flame cone pointing along

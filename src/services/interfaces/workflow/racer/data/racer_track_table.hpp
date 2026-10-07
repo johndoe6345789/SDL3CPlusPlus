@@ -20,6 +20,8 @@ struct RacerTrackInfo {
 struct RacerPodInfo {
     std::string name;
     int podd = -1;
+    /// The game's handling record (see RacerHandling); zeros if absent.
+    std::array<float, 15> handling{};
 };
 
 struct RacerTrackTable {

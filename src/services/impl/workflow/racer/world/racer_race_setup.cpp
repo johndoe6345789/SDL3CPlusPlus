@@ -30,6 +30,10 @@ void InitRacerFlow(RacerWorldState& state, const RacerSetupPaths& paths,
     state.library = OpenRacerAssetLibrary(paths.racerDir);
     state.table = LoadRacerTrackTable(paths.trackTable);
     flow.profile = LoadRacerProfile(RacerProfilePath());
+    // RACER_UNLOCK_ALL opens every track, circuit and racer (testing,
+    // or for players who have beaten the original already).
+    flow.unlockAll = !Env("RACER_UNLOCK_ALL").empty() &&
+                     Env("RACER_UNLOCK_ALL") != "0";
     if (!state.library.valid && logger) {
         logger->Error("racer: RACER_DIR '" + paths.racerDir +
                       "' is not an Episode I Racer install");
@@ -41,6 +45,15 @@ void InitRacerFlow(RacerWorldState& state, const RacerSetupPaths& paths,
     const std::string track = Env("RACER_TRACK");
     const std::string pod = Env("RACER_POD");
     if (track.empty() && pod.empty() && Env("RACER_AUTOPILOT").empty()) {
+        // The opening cutscenes on the first run: the LucasArts logo, the
+        // crawl and the Boonta Eve intro (each skippable).
+        if (!flow.profile.introSeen && RacerVideosWanted()) {
+            flow.profile.introSeen = true;
+            SaveRacerProfile(flow.profile, RacerProfilePath());
+            PlayRacerVideosThen(flow, {"Goldie", "TextCrawl", "IntroScene"},
+                                RacerPhase::Menu);
+            return;
+        }
         flow.phase = RacerPhase::Menu;
         return;
     }

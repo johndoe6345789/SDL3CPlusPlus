@@ -33,6 +33,12 @@ struct RacerPodState {
     float airTime = 0.f;
     float stuckTime = 0.f;  ///< seconds blocked or crawling
     std::uint32_t surface = 0;  ///< RacerSurfaceFlag bits under the pod
+    /// The pod's body for contact with other pods: metres ahead of and
+    /// behind its origin, half its width, and its mass.
+    float bodyFront = 7.f;
+    float bodyBack = 19.f;
+    float bodyHalfWidth = 2.2f;
+    float mass = 50.f;
 };
 
 /// Boost, heat, overheating and repair for one tick.

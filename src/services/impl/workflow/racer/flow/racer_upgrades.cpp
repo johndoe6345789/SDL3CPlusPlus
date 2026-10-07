@@ -1,5 +1,7 @@
 #include "services/interfaces/workflow/racer/flow/racer_flow_rules.hpp"
 
+#include "services/interfaces/workflow/racer/flow/racer_parts.hpp"
+
 #include <algorithm>
 
 namespace sdl3cpp::services::impl {
@@ -9,30 +11,17 @@ constexpr float kPerLevel = 0.05f;
 
 }  // namespace
 
-const char* RacerUpgradeName(int index) {
-    static const char* const kNames[kRacerUpgradeCount] = {
-        "TRACTION", "TURNING", "ACCELERATION", "TOP SPEED",
-        "AIR BRAKE", "COOLING", "REPAIR"};
-    return index >= 0 && index < kRacerUpgradeCount ? kNames[index] : "";
-}
-
-int RacerUpgradeCost(int level) {
-    return 250 * (level + 1);
-}
-
-int RacerPrizeFor(int position) {
-    static const int kPrizes[] = {1500, 900, 600, 350, 200, 120, 80, 50};
-    if (position < 1) return 0;
-    return position <= 8 ? kPrizes[position - 1] : 30;
-}
-
 RacerPodSpec ApplyRacerUpgrades(RacerPodSpec spec,
                                 const RacerProfile& profile) {
+    // A worn part gives only part of its improvement; a broken one none.
     auto gain = [&profile](int part) {
-        return 1.f + kPerLevel * static_cast<float>(profile.upgrades[part]);
+        const float level = static_cast<float>(profile.upgrades[part]) *
+                            std::clamp(profile.health[part], 0.f, 1.f);
+        return 1.f + kPerLevel * level;
     };
-    // Traction keeps more of the turn rate at speed.
+    // Traction keeps more of the turn rate at speed, and grip on ice.
     spec.turnAtTopSpeed = std::min(0.95f, spec.turnAtTopSpeed * gain(0));
+    spec.antiSkid = std::min(1.f, spec.antiSkid * gain(0));
     spec.turnRate *= gain(1);
     spec.acceleration *= gain(2);
     spec.topSpeed *= gain(3);
@@ -42,6 +31,26 @@ RacerPodSpec ApplyRacerUpgrades(RacerPodSpec spec,
     spec.heatRate /= gain(5);
     spec.repairRate *= gain(6);
     return spec;
+}
+
+bool FitRacerPart(RacerFlow& flow, int type, int level, float health,
+                  int price) {
+    RacerProfile& profile = flow.profile;
+    const int tradeIn = RacerTradeInValue(type, profile.upgrades[type],
+                                          profile.health[type]);
+    if (profile.truguts + tradeIn < price) {
+        flow.notice = "NOT ENOUGH TRUGUTS - WIN SOME RACES";
+        return false;
+    }
+    profile.truguts += tradeIn - price;
+    profile.upgrades[type] = level;
+    profile.health[type] = health;
+    flow.notice = std::string("FITTED ") + RacerPart(type, level).name +
+                  (tradeIn > 0 ? " (TRADE-IN " + std::to_string(tradeIn) +
+                                     ")"
+                               : "");
+    SaveRacerProfile(profile, RacerProfilePath());
+    return true;
 }
 
 }  // namespace sdl3cpp::services::impl
