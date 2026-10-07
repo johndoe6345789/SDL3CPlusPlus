@@ -14,9 +14,9 @@ float RacerAngleDelta(float from, float to);
 /// expects it.
 nlohmann::json RacerMatrixJson(const glm::mat4& matrix);
 
-/// The lowest a camera eye may sit: 1.5 m above any ground on the way
-/// from the pod back to it, so hills never come between the camera and
-/// the pod, nor swallow the camera.
+/// The lowest a camera eye may sit so its sight line to the pod clears
+/// the ground by 1.5 m all the way: hills never come between the camera
+/// and the pod, nor swallow the camera.
 float RacerCameraClearance(const RacerWorldState& state,
                            const glm::vec3& pod, const glm::vec3& eye);
 

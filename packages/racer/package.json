@@ -1,10 +1,10 @@
 {
   "name": "Star Wars Episode I Racer",
-  "version": "0.4.0",
+  "version": "0.6.0",
   "id": "racer",
   "type": "game",
   "category": "demo",
-  "description": "Episode I Racer rebuilt on the engine: every track and pod decoded from the game's own data, textures upscaled 4x, raced with new pod physics",
+  "description": "Episode I Racer rebuilt on the engine: every track and pod decoded from the game's own data at true scale, textures upscaled 4x, the original's tournament, Watto's shop, junkyard and pit droids, cutscenes and voices from the install",
   "status": "playable",
   "launch_options": [
     {
@@ -24,6 +24,18 @@
       "label": "Racer",
       "kind": "text",
       "help": "Part of a racer's name, e.g. 'Sebulba'. Leave empty to choose in the menu."
+    },
+    {
+      "env": "RACER_UNLOCK_ALL",
+      "label": "Unlock everything",
+      "kind": "text",
+      "help": "1 opens every circuit, track and racer."
+    },
+    {
+      "env": "RACER_SKIP_VIDEOS",
+      "label": "Skip cutscenes",
+      "kind": "text",
+      "help": "1 never plays the install's cutscenes."
     }
   ],
   "defaultWorkflow": "workflows/racer_game.json",

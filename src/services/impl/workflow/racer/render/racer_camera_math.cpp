@@ -6,6 +6,11 @@
 #include <cmath>
 
 namespace sdl3cpp::services::impl {
+namespace {
+
+constexpr float kMaxRise = 25.f;  // metres over the pod, at most
+
+}  // namespace
 
 nlohmann::json RacerMatrixJson(const glm::mat4& matrix) {
     nlohmann::json out = nlohmann::json::array();
@@ -23,12 +28,19 @@ float RacerAngleDelta(float from, float to) {
 
 float RacerCameraClearance(const RacerWorldState& state,
                            const glm::vec3& pod, const glm::vec3& eye) {
+    // The sight line from the pod back to the eye must clear the ground
+    // everywhere on the way: at a share t of the way, the eye must sit
+    // high enough that the line there is 1.5 m above it. Capped, so a
+    // pod in a deep dip is followed from above rather than from orbit.
     float lowest = -1e9f;
     for (int k = 1; k <= 8; ++k) {
-        const glm::vec3 p = pod + (eye - pod) * (k / 8.f);
+        const float t = k / 8.f;
+        const glm::vec3 p = pod + (eye - pod) * t;
         const auto ground =
             RacerGroundHeight(state.ground, p.x, p.z, p.y + 30.f);
-        if (ground) lowest = std::max(lowest, *ground + 1.5f);
+        if (!ground) continue;
+        const float need = pod.y + (*ground + 1.5f - pod.y) / t;
+        lowest = std::max(lowest, std::min(need, pod.y + kMaxRise));
     }
     return lowest;
 }
