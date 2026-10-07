@@ -27,6 +27,12 @@ RacerRecoveryReason UpdateRacerRecovery(RacerRecovery& recovery,
                                         const std::vector<glm::vec3>& lap,
                                         float throttle, float dt);
 
+/// The lap point to put a lost pod back on: where it was, further on
+/// for want of progress, and further each time the same place catches
+/// it again. Remembers the choice in `recovery`.
+int RacerRespawnPoint(RacerRecovery& recovery, int segment,
+                      RacerRecoveryReason reason, int samplesPerKnot);
+
 /// A short name for logs.
 const char* RacerRecoveryName(RacerRecoveryReason reason);
 

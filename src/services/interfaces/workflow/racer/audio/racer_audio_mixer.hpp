@@ -34,7 +34,10 @@ public:
     }
 
 private:
-    enum Voice { kMusic, kEngine, kBeep, kGo, kScrape, kFire, kVoices };
+    enum Voice {
+        kMusic, kEngine, kBeep, kGo, kScrape, kFire,
+        kBlaster, kGeyser, kRock, kVoices
+    };
     // Menu mode reuses the one-shot voices for its own sounds.
     static constexpr int kMove = kBeep;
     static constexpr int kSelect = kGo;

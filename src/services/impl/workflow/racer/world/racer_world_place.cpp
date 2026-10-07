@@ -6,6 +6,9 @@ namespace sdl3cpp::services::impl {
 namespace {
 
 constexpr float kFloorBelowLine = 6.f;  // metres; deeper is a gap
+// Higher than this is another level (Malastare's crossover), not ours.
+constexpr float kFloorAboveLine = 2.f;
+constexpr int kFloorSearch = 48;        // lap points (about 400 m)
 
 }  // namespace
 
@@ -15,13 +18,15 @@ void PlaceRacerPod(const RacerWorldState& state, RacerPodState& pod,
     if (count < 2) return;
     index = ((index % count) + count) % count;
     // Never over a jump's gap: on to the first point with floor close
-    // under the line.
-    for (int tries = 0; tries < count; ++tries) {
+    // to the line (which can run a little under the ground), within a
+    // short way; failing that, the point asked for.
+    const int asked = index;
+    for (int tries = 0; tries <= kFloorSearch; ++tries) {
         const glm::vec3& p = state.lapPoints[index];
         const auto floor = RacerGroundHeight(state.ground, p.x, p.z,
-                                             p.y + state.podSpec.stepHeight);
+                                             p.y + kFloorAboveLine);
         if (floor && *floor > p.y - kFloorBelowLine) break;
-        index = (index + 1) % count;
+        index = tries == kFloorSearch ? asked : (index + 1) % count;
     }
     const glm::vec3 to =
         state.lapPoints[(index + 1) % count] - state.lapPoints[index];

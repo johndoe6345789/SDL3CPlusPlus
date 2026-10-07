@@ -43,10 +43,9 @@ void FlyRacerOpponent(RacerWorldState& state, RacerOpponent& opponent,
         opponent.recovery, pod, race, state.ground, state.lapPoints,
         input.throttle, dt);
     if (reason == RacerRecoveryReason::None) return;
-    const int ahead =
-        reason == RacerRecoveryReason::NoProgress ? 2 * kRacerLapSamples : 0;
-    PlaceRacerPod(state, pod, std::max(0, race.segment) + ahead,
-                  0.3f * opponent.spec.topSpeed, 0.f);
+    const int respawnAt = RacerRespawnPoint(opponent.recovery, race.segment,
+                                            reason, kRacerLapSamples);
+    PlaceRacerPod(state, pod, respawnAt, 0.3f * opponent.spec.topSpeed, 0.f);
 }
 
 }  // namespace sdl3cpp::services::impl

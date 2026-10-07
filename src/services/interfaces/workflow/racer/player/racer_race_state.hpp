@@ -7,6 +7,8 @@ struct RacerRaceState {
     int lapsTotal = 3;
     int lap = 1;                 ///< 1-based; lapsTotal + 1 once finished
     int segment = -1;            ///< nearest lap point, -1 before start
+    /// Started behind the line: the first crossing starts lap 1.
+    bool behindLine = false;
     float raceTime = 0.f;
     float lapTime = 0.f;
     float bestLap = 0.f;         ///< 0 until a lap is completed
@@ -21,6 +23,8 @@ struct RacerRecovery {
     float voidTime = 0.f;
     float stallTime = 0.f;
     int bestPoint = -1;
+    int lastRespawn = -1;   ///< lap point of the last put-back
+    int streak = 0;         ///< put back at the same place again and again
 };
 
 }  // namespace sdl3cpp::services::impl

@@ -44,6 +44,8 @@ bool LoadRacerRace(SDL_GPUDevice* device, RacerWorldState& state,
         return false;
     }
     BuildRacerField(device, state, table, flow.opponents, logger);
+    state.hazards = PlaceRacerHazards(state.track.planet, state.lapPoints);
+    state.hazardSounds = 0;
     flow.phase = RacerPhase::Racing;
     flow.resultsDelay = 0.f;
     flow.prizeAwarded = false;

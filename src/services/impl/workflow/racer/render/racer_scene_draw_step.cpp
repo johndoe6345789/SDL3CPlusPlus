@@ -6,11 +6,6 @@
 #include <utility>
 
 namespace sdl3cpp::services::impl {
-namespace {
-
-constexpr float kHideNearEye = 8.f;
-
-}  // namespace
 WorkflowRacerSceneDrawStep::WorkflowRacerSceneDrawStep(
     std::shared_ptr<ILogger> logger, std::shared_ptr<RacerWorldState> state)
     : logger_(std::move(logger)), state_(std::move(state)) {}
@@ -54,19 +49,8 @@ void WorkflowRacerSceneDrawStep::Execute(const WorkflowStepDefinition& step,
         drawn += DrawRacerPodEffects(d, *state_, state_->pod,
                                      state_->podRoll, state_->podRig,
                                      blended);
-        for (const RacerOpponent& opponent : state_->opponents) {
-            // A rival on top of the camera would fill the screen with
-            // the inside of its engines; it is left out until clear.
-            if (glm::distance(opponent.pod.position, eye) < kHideNearEye) {
-                continue;
-            }
-            drawn += DrawRacerModel(
-                d, opponent.model, RacerPodMatrix(opponent.pod, opponent.roll),
-                blended);
-            drawn += DrawRacerPodEffects(d, *state_, opponent.pod,
-                                         opponent.roll, opponent.rig,
-                                         blended);
-        }
+        if (blended) drawn += DrawRacerHazards(d, *state_);
+        drawn += DrawRacerRivals(d, *state_, eye, blended);
     }
     if (!traced_ && logger_) {
         traced_ = true;

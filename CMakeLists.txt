@@ -1231,6 +1231,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/racer/world/racer_race_setup.cpp
         src/services/impl/workflow/racer/world/racer_sky_colour.cpp
         src/services/impl/workflow/racer/world/racer_texture_cache.cpp
+        src/services/impl/workflow/racer/world/racer_texture_solid.cpp
         src/services/impl/workflow/racer/world/racer_vertex_buffer.cpp
         src/services/impl/workflow/racer/world/racer_walls.cpp
         src/services/impl/workflow/racer/world/racer_world_build.cpp
@@ -1242,6 +1243,9 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/racer/player/racer_autopilot.cpp
         src/services/impl/workflow/racer/player/racer_field_rules.cpp
         src/services/impl/workflow/racer/player/racer_ground_surface.cpp
+        src/services/impl/workflow/racer/player/racer_hazard_place.cpp
+        src/services/impl/workflow/racer/player/racer_hazard_rules.cpp
+        src/services/impl/workflow/racer/player/racer_hazard_update.cpp
         src/services/impl/workflow/racer/player/racer_lap_progress.cpp
         src/services/impl/workflow/racer/player/racer_lap_timer_step.cpp
         src/services/impl/workflow/racer/player/racer_line_guide.cpp
@@ -1255,11 +1259,13 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/racer/player/racer_pod_physics.cpp
         src/services/impl/workflow/racer/player/racer_pod_recovery.cpp
         src/services/impl/workflow/racer/player/racer_pod_report.cpp
+        src/services/impl/workflow/racer/player/racer_pod_respawn.cpp
         src/services/impl/workflow/racer/player/racer_speed_plan.cpp
         src/services/impl/workflow/racer/player/racer_surface_effects.cpp
         src/services/impl/workflow/racer/player/racer_traffic.cpp
         src/services/impl/workflow/racer/render/racer_camera_math.cpp
         src/services/impl/workflow/racer/render/racer_chase_cam_step.cpp
+        src/services/impl/workflow/racer/render/racer_hazard_draw.cpp
         src/services/impl/workflow/racer/render/racer_hud_banner.cpp
         src/services/impl/workflow/racer/render/racer_hud_format.cpp
         src/services/impl/workflow/racer/render/racer_hud_layout.cpp
@@ -1270,6 +1276,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/racer/render/racer_panel_rect.cpp
         src/services/impl/workflow/racer/render/racer_panel_upload.cpp
         src/services/impl/workflow/racer/render/racer_pod_effects_draw.cpp
+        src/services/impl/workflow/racer/render/racer_rivals_draw.cpp
         src/services/impl/workflow/racer/render/racer_scene_draw_step.cpp
         src/services/impl/workflow/racer/render/racer_screen_content.cpp
         src/services/impl/workflow/racer/render/racer_screen_prepare.cpp
@@ -2678,6 +2685,10 @@ target_sources(racer_field_test PRIVATE src/services/impl/workflow/racer/player/
 target_sources(racer_field_test PRIVATE src/services/impl/workflow/racer/player/racer_traffic.cpp)
 target_sources(racer_field_test PRIVATE src/services/impl/workflow/racer/player/racer_line_guide.cpp)
 target_sources(racer_field_test PRIVATE tests/racer_contact_test.cpp)
+target_sources(racer_field_test PRIVATE tests/racer_hazard_test.cpp)
+target_sources(racer_field_test PRIVATE src/services/impl/workflow/racer/player/racer_hazard_place.cpp)
+target_sources(racer_field_test PRIVATE src/services/impl/workflow/racer/player/racer_hazard_update.cpp)
+target_sources(racer_field_test PRIVATE src/services/impl/workflow/racer/player/racer_hazard_rules.cpp)
 target_include_directories(racer_field_test PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )

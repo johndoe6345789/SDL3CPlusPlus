@@ -47,9 +47,11 @@ void WorkflowRacerAudioStep::Execute(const WorkflowStepDefinition& step,
             }
         }
     }
-    if (!mixer_) return;
-    mixer_->SetPaused(phase == RacerPhase::Paused);
-    mixer_->Update(*state_);
+    if (mixer_) {
+        mixer_->SetPaused(phase == RacerPhase::Paused);
+        mixer_->Update(*state_);
+    }
+    state_->hazardSounds = 0;  // heard, or dropped when silent
 }
 
 }  // namespace sdl3cpp::services::impl

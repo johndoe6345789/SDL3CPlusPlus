@@ -39,6 +39,12 @@ void RacerAudioMixer::Update(const RacerWorldState& state) {
         PlayRacerAudioOnce(streams_[kFire], clips_[kFire]);
     }
     wasOnFire_ = onFire;
+    const Voice hazards[] = {kBlaster, kGeyser, kRock};
+    for (int i = 0; i < 3; ++i) {
+        if (state.hazardSounds & (1u << i)) {
+            PlayRacerAudioOnce(streams_[hazards[i]], clips_[hazards[i]]);
+        }
+    }
 }
 
 }  // namespace sdl3cpp::services::impl

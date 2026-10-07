@@ -32,6 +32,7 @@ RacerGpuTexture AcquireRacerTexture(SDL_GPUDevice* device,
     RacerGpuTexture& entry = state.textures[key];
     RacerTexture t = DecodeRacerMaterialTexture(state.library, material);
     if (t.rgba.empty() || !device) return entry;
+    SolidifyRacerTexture(t);
     entry = UploadRacerTexture(device, t, state.textureScale);
     return entry;
 }

@@ -1320,7 +1320,11 @@
         "src/services/impl/workflow/racer/player/racer_surface_effects.cpp",
         "src/services/impl/workflow/racer/player/racer_traffic.cpp",
         "src/services/impl/workflow/racer/player/racer_line_guide.cpp",
-        "tests/racer_contact_test.cpp"
+        "tests/racer_contact_test.cpp",
+        "tests/racer_hazard_test.cpp",
+        "src/services/impl/workflow/racer/player/racer_hazard_place.cpp",
+        "src/services/impl/workflow/racer/player/racer_hazard_update.cpp",
+        "src/services/impl/workflow/racer/player/racer_hazard_rules.cpp"
       ],
       "include_directories": [
         "src"

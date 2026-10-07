@@ -45,9 +45,14 @@ void AdvanceRacerRace(RacerRaceState& race, int point, int pointCount,
     race.raceTime += dt;
     race.lapTime += dt;
     const int quarter = pointCount / 4;
+    if (race.segment < 0 && point >= pointCount - quarter) {
+        race.behindLine = true;  // the grid sits behind the line
+    }
     const bool wrapped = race.segment >= pointCount - quarter &&
                          point >= 0 && point < quarter;
-    if (wrapped) {
+    if (wrapped && race.behindLine) {
+        race.behindLine = false;
+    } else if (wrapped) {
         if (race.bestLap <= 0.f || race.lapTime < race.bestLap) {
             race.bestLap = race.lapTime;
         }

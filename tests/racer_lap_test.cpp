@@ -35,6 +35,14 @@ TEST(RacerLap, FinishesAfterTheLastLap) {
     EXPECT_FALSE(Lapped(2).finished);
 }
 
+TEST(RacerLap, StartingBehindTheLineCrossesIntoLapOne) {
+    RacerRaceState race;
+    race.countdown = 0.f;
+    AdvanceRacerRace(race, 7, 8, 1.f);  // the grid, just behind the line
+    AdvanceRacerRace(race, 0, 8, 1.f);
+    EXPECT_EQ(race.lap, 1);
+}
+
 TEST(RacerLap, CountdownHoldsTheClock) {
     RacerRaceState race;
     AdvanceRacerRace(race, 0, 8, 1.f);

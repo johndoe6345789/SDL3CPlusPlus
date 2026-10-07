@@ -28,6 +28,8 @@ struct RacerEffectShapes {
     RacerGpuModel flame;
     RacerGpuModel boostFlame;
     RacerGpuModel shadow;
+    RacerGpuModel bolt;   ///< a blaster bolt: unit length along +z
+    RacerGpuModel rock;   ///< half a rough rock: a squat cone along +z
 };
 
 /// Builds a pod's cables and binder from where its parts were laid out.

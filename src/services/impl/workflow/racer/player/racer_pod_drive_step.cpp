@@ -53,11 +53,9 @@ void WorkflowRacerPodDriveStep::Execute(const WorkflowStepDefinition& step,
                             state_->lapPoints, input.throttle, dt);
     if (reason != RacerRecoveryReason::None) {
         TraceRacerRespawn(logger_, *state_, RacerRecoveryName(reason));
-        // Lost for want of progress: put back a little further on.
-        const int ahead = reason == RacerRecoveryReason::NoProgress
-                              ? 2 * kRacerLapSamples
-                              : 0;
-        PlaceRacerPodOnLap(*state_, std::max(0, state_->race.segment) + ahead,
+        const int point = RacerRespawnPoint(
+            recovery_, state_->race.segment, reason, kRacerLapSamples);
+        PlaceRacerPodOnLap(*state_, point,
                            kRespawnSpeedShare * state_->podSpec.topSpeed);
     }
     traceClock_ += dt;

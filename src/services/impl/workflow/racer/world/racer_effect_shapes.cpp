@@ -5,6 +5,16 @@ namespace sdl3cpp::services::impl {
 RacerEffectShapes BuildRacerEffectShapes(SDL_GPUDevice* device,
                                          const RacerGpuTexture& white) {
     RacerEffectShapes shapes;
+    shapes.bolt = UploadRacerShape(
+        device, white,
+        RacerBeamVertices({0.f, 0.f, 0.f}, {0.f, 0.f, 1.f}, 0.35f,
+                          {1.f, 0.25f, 0.2f, 0.95f}),
+        true);
+    shapes.rock = UploadRacerShape(
+        device, white,
+        RacerConeVertices(6, {0.45f, 0.4f, 0.35f, 1.f},
+                          {0.3f, 0.27f, 0.24f, 1.f}),
+        true);
     shapes.flame = UploadRacerShape(device, white,
                        RacerConeVertices(12, {1.f, 0.85f, 0.55f, 0.55f},
                                          {1.f, 0.3f, 0.05f, 0.f}),

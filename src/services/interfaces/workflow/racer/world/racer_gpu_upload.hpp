@@ -8,6 +8,11 @@ namespace sdl3cpp::services::impl {
 SDL_GPUBuffer* UploadRacerVertexBuffer(SDL_GPUDevice* device,
                                        const std::vector<RacerGpuVertex>& v);
 
+/// Clears the alpha of a texture whose transparent texels are only a
+/// stray few (under 1 in 16): opaque art the cut-out test would
+/// otherwise pierce. True when it did.
+bool SolidifyRacerTexture(RacerTexture& texture);
+
 /// The texture for a material: decoded, upscaled by the state's
 /// `textureScale` (Scale2x passes), mipmapped, and cached by material.
 RacerGpuTexture AcquireRacerTexture(SDL_GPUDevice* device,

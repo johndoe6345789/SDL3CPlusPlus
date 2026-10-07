@@ -38,15 +38,19 @@ bool RacerAudioMixer::Open(const std::filesystem::path& racerDir,
         sfx / "sfx_start_beep.wav",
         sfx / "sfx_start_game.wav",
         sfx / "sfx_crash_metal_scrape.wav",
-        sfx / "sfx_explo_muffled_01.wav"};
+        sfx / "sfx_explo_muffled_01.wav",
+        wavs / "22K" / "sfx_weapon_tusken_gun.wav",
+        wavs / "22K" / "sfx_geyser_vent.wav",
+        wavs / "22K" / "sfx_crash_rock.wav"};
     // The title screens: music, no engine, then cursor, select and coin.
     const std::filesystem::path titles[kVoices] = {
         wavs / "Music" / MusicFor(planet), {},
         sfx / "sfx_select_softswitch1.wav",
         sfx / "sfx_select_pulse1.wav",
-        sfx / "sfx_coin_roll_short.wav", {}};
+        sfx / "sfx_coin_roll_short.wav", {}, {}, {}, {}};
     const auto& files = menu ? titles : race;
-    const float gains[kVoices] = {0.45f, 0.6f, 0.8f, 0.9f, 0.7f, 0.9f};
+    const float gains[kVoices] = {0.45f, 0.6f, 0.8f, 0.9f, 0.7f,
+                                  0.9f, 0.7f, 0.8f, 0.9f};
     for (int v = 0; v < kVoices; ++v) {
         if (files[v].empty()) continue;
         clips_[v] = LoadRacerAudioClip(files[v]);

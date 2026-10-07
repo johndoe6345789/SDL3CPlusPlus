@@ -57,18 +57,13 @@ RacerRecoveryReason UpdateRacerRecovery(RacerRecovery& recovery,
     } else if (recovery.stallTime > kStallSeconds) {
         reason = RacerRecoveryReason::NoProgress;
     }
-    if (reason != RacerRecoveryReason::None) recovery = RacerRecovery{};
-    return reason;
-}
-
-const char* RacerRecoveryName(RacerRecoveryReason reason) {
-    switch (reason) {
-    case RacerRecoveryReason::OffCourse: return "off course";
-    case RacerRecoveryReason::Stuck: return "stuck";
-    case RacerRecoveryReason::NoProgress: return "no progress";
-    case RacerRecoveryReason::None: break;
+    if (reason != RacerRecoveryReason::None) {
+        RacerRecovery fresh;  // the timers restart; the streak carries on
+        fresh.lastRespawn = recovery.lastRespawn;
+        fresh.streak = recovery.streak;
+        recovery = fresh;
     }
-    return "none";
+    return reason;
 }
 
 }  // namespace sdl3cpp::services::impl

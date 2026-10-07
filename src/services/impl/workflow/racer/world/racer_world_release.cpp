@@ -14,7 +14,8 @@ void ReleaseRacerWorld(SDL_GPUDevice* device, RacerWorldState& state) {
         models.insert(models.end(),
                       {&state.podRig.cables, &state.podRig.binder,
                        &state.effects.flame, &state.effects.boostFlame,
-                       &state.effects.shadow});
+                       &state.effects.shadow, &state.effects.bolt,
+                       &state.effects.rock});
         for (RacerGpuModel* model : models) {
             for (const RacerGpuBatch& batch : model->batches) {
                 SDL_ReleaseGPUBuffer(device, batch.vertices);
@@ -32,6 +33,7 @@ void ReleaseRacerWorld(SDL_GPUDevice* device, RacerWorldState& state) {
     state.podRig = RacerPodRig{};
     state.effects = RacerEffectShapes{};
     state.opponents.clear();
+    state.hazards.clear();
     state.ground = RacerGround{};
     state.lapPoints.clear();
     state.race = RacerRaceState{};

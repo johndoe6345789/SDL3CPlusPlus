@@ -23,6 +23,15 @@ int DrawRacerSky(RacerDrawPass& d, const RacerWorldState& state,
 
 /// A pod's cables (opaque pass) or binder, flames and ground shadow
 /// (blended pass).
+/// The rivals' pods and their effects, leaving out any close enough
+/// to the camera eye to fill the screen.
+int DrawRacerRivals(RacerDrawPass& d, const RacerWorldState& state,
+                    const glm::vec3& eye, bool blended);
+
+/// The track's hazards: blaster bolts, vents' plumes, falling rocks.
+/// Blended pass only.
+int DrawRacerHazards(RacerDrawPass& d, const RacerWorldState& state);
+
 int DrawRacerPodEffects(RacerDrawPass& d, const RacerWorldState& state,
                         const RacerPodState& pod, float roll,
                         const RacerPodRig& rig, bool blended);

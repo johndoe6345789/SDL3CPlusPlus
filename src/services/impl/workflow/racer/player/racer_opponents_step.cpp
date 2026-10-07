@@ -31,6 +31,9 @@ void WorkflowRacerOpponentsStep::Execute(const WorkflowStepDefinition&,
         pods.push_back(&opponent.pod);
     }
     SeparateRacerPods(pods);
+    if (state_->race.countdown <= 0.f) {
+        state_->hazardSounds |= UpdateRacerHazards(state_->hazards, pods, dt);
+    }
     RankRacerField(*state_);
     context.Set("racer.position", state_->race.position);
     context.Set("racer.entrants", state_->race.entrants);
