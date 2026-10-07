@@ -1229,7 +1229,8 @@
         "tests/racer_wav_test.cpp",
         "src/services/impl/workflow/racer/data/racer_wav.cpp",
         "src/services/impl/workflow/racer/data/racer_wav_write.cpp",
-        "src/services/impl/workflow/racer/data/racer_wav_resample.cpp"
+        "src/services/impl/workflow/racer/data/racer_wav_resample.cpp",
+        "src/services/impl/workflow/racer/audio/racer_voice_lines.cpp"
       ],
       "include_directories": [
         "src"

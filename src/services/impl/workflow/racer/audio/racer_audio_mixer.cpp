@@ -10,7 +10,7 @@ void RacerAudioMixer::Update(const RacerWorldState& state) {
     const RacerPodState& pod = state.pod;
     FeedRacerAudioLoop(streams_[kMusic], clips_[kMusic]);
     if (menu_) {
-        UpdateMenu(state.flow);
+        UpdateMenu(state);
         return;
     }
     FeedRacerAudioLoop(streams_[kEngine], clips_[kEngine]);

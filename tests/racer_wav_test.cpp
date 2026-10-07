@@ -1,3 +1,4 @@
+#include "services/interfaces/workflow/racer/audio/racer_voice_lines.hpp"
 #include "services/interfaces/workflow/racer/data/racer_wav.hpp"
 
 #include <gtest/gtest.h>
@@ -37,4 +38,19 @@ TEST(RacerWav, DoublesRateWithInterpolation) {
     EXPECT_EQ(out.samples[0], 0);
     EXPECT_EQ(out.samples[1], 500);   // halfway between 0 and 1000
     EXPECT_EQ(out.samples[2], 1000);
+}
+
+TEST(RacerVoice, LinesFollowEachRacersNumbering) {
+    using sdl3cpp::services::impl::RacerVoiceEvent;
+    using sdl3cpp::services::impl::RacerVoiceLineFile;
+    EXPECT_EQ(RacerVoiceLineFile("sb", RacerVoiceEvent::Win, 0),
+              "sbsp014.wav");
+    EXPECT_EQ(RacerVoiceLineFile("as", RacerVoiceEvent::Win, 0),
+              "assp015.wav");  // Anakin's sit one later
+    EXPECT_EQ(RacerVoiceLineFile("as", RacerVoiceEvent::Taunt, 0),
+              "assp017.wav");
+    EXPECT_EQ(RacerVoiceLineFile("bq", RacerVoiceEvent::Taunt, 9),
+              "bqsp025.wav");
+    EXPECT_EQ(RacerVoiceLineFile("as", RacerVoiceEvent::Taunt, 8),
+              "assp025.wav");
 }

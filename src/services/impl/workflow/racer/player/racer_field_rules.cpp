@@ -1,7 +1,5 @@
 #include "services/interfaces/workflow/racer/player/racer_field_rules.hpp"
 
-#include <glm/glm.hpp>
-
 #include <algorithm>
 
 namespace sdl3cpp::services::impl {
@@ -42,7 +40,8 @@ void RankRacerField(RacerWorldState& state) {
 
 void SeparateRacerPods(const std::vector<RacerPodState*>& pods) {
     // A pod is long (engines, cables, cockpit): three circles down its
-    // length stand in for its outline. The lighter pod gives way more.
+    // length stand in for its outline. The lighter pod gives way more;
+    // deep overlaps resolve over a few frames.
     for (std::size_t i = 0; i < pods.size(); ++i) {
         for (std::size_t j = i + 1; j < pods.size(); ++j) {
             RacerPodState& a = *pods[i];
@@ -55,10 +54,10 @@ void SeparateRacerPods(const std::vector<RacerPodState*>& pods) {
                     d.y = 0.f;
                     const float distance = glm::length(d);
                     if (distance >= reach || distance < 1e-4f) continue;
-                    // Nudge: deep overlaps resolve over a few frames.
                     const float depth =
                         std::min(kMaxPush, 0.5f * (reach - distance));
                     const glm::vec3 push = d / distance * (2.f * depth);
+                    a.bumped = b.bumped = true;
                     a.position -= push * share;
                     b.position += push * (1.f - share);
                     const float shared = 0.5f * (a.speed + b.speed);

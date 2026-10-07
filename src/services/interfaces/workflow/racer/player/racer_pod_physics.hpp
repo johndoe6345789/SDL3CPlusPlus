@@ -39,6 +39,7 @@ struct RacerPodState {
     float bodyBack = 19.f;
     float bodyHalfWidth = 2.2f;
     float mass = 50.f;
+    bool bumped = false;    ///< touched another pod this tick
 };
 
 /// Boost, heat, overheating and repair for one tick.

@@ -2,7 +2,9 @@
 
 namespace sdl3cpp::services::impl {
 
-void RacerAudioMixer::UpdateMenu(const RacerFlow& flow) {
+void RacerAudioMixer::UpdateMenu(const RacerWorldState& state) {
+    const RacerFlow& flow = state.flow;
+    UpdateSpeech(state);
     const std::array<int, 7> cursor = {
         static_cast<int>(flow.phase), flow.menuRow, flow.shopRow,
         flow.trackIndex, flow.racerIndex, flow.laps, flow.opponents};

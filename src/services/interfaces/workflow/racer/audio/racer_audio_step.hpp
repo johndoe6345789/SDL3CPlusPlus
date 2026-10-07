@@ -3,6 +3,7 @@
 #include "services/interfaces/i_logger.hpp"
 #include "services/interfaces/i_workflow_step.hpp"
 #include "services/interfaces/workflow/racer/audio/racer_audio_mixer.hpp"
+#include "services/interfaces/workflow/racer/audio/racer_voice.hpp"
 
 #include <memory>
 #include <string>
@@ -26,9 +27,13 @@ public:
                  WorkflowContext& context) override;
 
 private:
+    /// Opens what should play now ("menu", "race <track>", or nothing).
+    void Start(const WorkflowStepDefinition& step, const std::string& wanted);
+
     std::shared_ptr<ILogger> logger_;
     std::shared_ptr<RacerWorldState> state_;
     std::unique_ptr<RacerAudioMixer> mixer_;
+    std::unique_ptr<RacerVoice> voice_;
     std::string playing_;   ///< "menu", "race <track>", or "" (silent)
 };
 

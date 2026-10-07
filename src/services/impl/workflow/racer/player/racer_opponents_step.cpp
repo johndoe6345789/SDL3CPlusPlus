@@ -30,6 +30,7 @@ void WorkflowRacerOpponentsStep::Execute(const WorkflowStepDefinition&,
         FlyRacerOpponent(*state_, opponent, dt);
         pods.push_back(&opponent.pod);
     }
+    for (RacerPodState* pod : pods) pod->bumped = false;
     SeparateRacerPods(pods);
     if (state_->race.countdown <= 0.f) {
         state_->hazardSounds |= UpdateRacerHazards(state_->hazards, pods, dt);

@@ -31,6 +31,7 @@ bool RacerAudioMixer::Open(const std::filesystem::path& racerDir,
     open_ = true;
     menu_ = menu;
     const auto wavs = racerDir / "data" / "wavs";
+    wavs_ = wavs;
     const auto sfx = wavs / "11K";
     const std::filesystem::path race[kVoices] = {
         wavs / "Music" / MusicFor(planet),
@@ -41,16 +42,16 @@ bool RacerAudioMixer::Open(const std::filesystem::path& racerDir,
         sfx / "sfx_explo_muffled_01.wav",
         wavs / "22K" / "sfx_weapon_tusken_gun.wav",
         wavs / "22K" / "sfx_geyser_vent.wav",
-        wavs / "22K" / "sfx_crash_rock.wav"};
+        wavs / "22K" / "sfx_crash_rock.wav", {}};
     // The title screens: music, no engine, then cursor, select and coin.
     const std::filesystem::path titles[kVoices] = {
         wavs / "Music" / MusicFor(planet), {},
         sfx / "sfx_select_softswitch1.wav",
         sfx / "sfx_select_pulse1.wav",
-        sfx / "sfx_coin_roll_short.wav", {}, {}, {}, {}};
+        sfx / "sfx_coin_roll_short.wav", {}, {}, {}, {}, {}};
     const auto& files = menu ? titles : race;
     const float gains[kVoices] = {0.45f, 0.6f, 0.8f, 0.9f, 0.7f,
-                                  0.9f, 0.7f, 0.8f, 0.9f};
+                                  0.9f, 0.7f, 0.8f, 0.9f, 1.f};
     for (int v = 0; v < kVoices; ++v) {
         if (files[v].empty()) continue;
         clips_[v] = LoadRacerAudioClip(files[v]);

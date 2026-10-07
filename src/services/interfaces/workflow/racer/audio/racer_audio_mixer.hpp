@@ -36,14 +36,18 @@ public:
 private:
     enum Voice {
         kMusic, kEngine, kBeep, kGo, kScrape, kFire,
-        kBlaster, kGeyser, kRock, kVoices
+        kBlaster, kGeyser, kRock, kSpeech, kVoices
     };
     // Menu mode reuses the one-shot voices for its own sounds.
     static constexpr int kMove = kBeep;
     static constexpr int kSelect = kGo;
     static constexpr int kCoin = kScrape;
 
-    void UpdateMenu(const RacerFlow& flow);
+    void UpdateMenu(const RacerWorldState& state);
+    /// Watto in his shop, and a racer's line when picked.
+    void UpdateSpeech(const RacerWorldState& state);
+    /// Plays a line from data/wavs/22K/Voice on the speech voice.
+    void Speak(const std::string& file);
 
     std::array<RacerAudioClip, kVoices> clips_{};
     std::array<SDL_AudioStream*, kVoices> streams_{};
@@ -56,6 +60,12 @@ private:
     bool paused_ = false;
     std::array<int, 7> menuCursor_{};   ///< phase, rows and choices
     int menuTruguts_ = -1;
+    std::filesystem::path wavs_;
+    RacerPhase lastPhase_ = RacerPhase::Menu;
+    std::string lastNotice_;
+    int lastRacer_ = -1;
+    int wattoVisits_ = 0;
+    int refusals_ = 0;
 };
 
 }  // namespace sdl3cpp::services::impl

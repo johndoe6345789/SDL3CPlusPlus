@@ -1,5 +1,5 @@
 {
- "description": "Each track's model-block and spline-block index in the PC release. Model ids from swe1r-assets (MIT) Track.csv; spline ids matched by name from its SplineBlockItem.csv. Every main loop was checked to close. Racer pod models (Podd) from its Racer.csv. Planet fog colours are chosen to match each world's sky (new, not from the game). Each racer's handling is the game's own pod table (character order; Cy Yunga's is estimated, his row is empty), fields named in handling_fields.",
+ "description": "Each track's model-block and spline-block index in the PC release. Model ids from swe1r-assets (MIT) Track.csv; spline ids matched by name from its SplineBlockItem.csv. Every main loop was checked to close. Racer pod models (Podd) from its Racer.csv. Planet fog colours are chosen to match each world's sky (new, not from the game). Each racer's handling is the game's own pod table (character order; Cy Yunga's is estimated, his row is empty), fields named in handling_fields. Each racer's voice is the prefix of their lines in data/wavs/22K/Voice (Jinn Reeso and Cy Yunga have none).",
  "tracks": [
   {
    "id": 0,
@@ -197,7 +197,8 @@
     50.0,
     0.6,
     5.0
-   ]
+   ],
+   "voice": "as"
   },
   {
    "name": "Teemto Pagalies",
@@ -218,7 +219,8 @@
     50.0,
     0.5,
     8.0
-   ]
+   ],
+   "voice": "tp"
   },
   {
    "name": "Sebulba",
@@ -239,7 +241,8 @@
     80.0,
     0.3,
     7.0
-   ]
+   ],
+   "voice": "sb"
   },
   {
    "name": "Ratts Tyerell",
@@ -260,7 +263,8 @@
     55.0,
     0.45,
     7.0
-   ]
+   ],
+   "voice": "rt"
   },
   {
    "name": "Aldar Beedo",
@@ -281,7 +285,8 @@
     68.0,
     0.4,
     7.0
-   ]
+   ],
+   "voice": "ab"
   },
   {
    "name": "Mawhonic",
@@ -302,7 +307,8 @@
     60.0,
     0.48,
     7.0
-   ]
+   ],
+   "voice": "mh"
   },
   {
    "name": "Ark \"Bumpy\" Roose",
@@ -323,7 +329,8 @@
     70.0,
     0.25,
     6.0
-   ]
+   ],
+   "voice": "ar"
   },
   {
    "name": "Mars Guo",
@@ -344,7 +351,8 @@
     70.0,
     0.5,
     10.0
-   ]
+   ],
+   "voice": "mg"
   },
   {
    "name": "Wan Sandage",
@@ -365,7 +373,8 @@
     60.0,
     0.5,
     7.0
-   ]
+   ],
+   "voice": "ws"
   },
   {
    "name": "Ebe E. Endocott",
@@ -386,7 +395,8 @@
     45.0,
     0.7,
     4.8
-   ]
+   ],
+   "voice": "ee"
   },
   {
    "name": "Dud Bolt",
@@ -407,7 +417,8 @@
     70.0,
     0.35,
     5.5
-   ]
+   ],
+   "voice": "db"
   },
   {
    "name": "Gasgano",
@@ -428,7 +439,8 @@
     63.0,
     0.43,
     4.2
-   ]
+   ],
+   "voice": "gg"
   },
   {
    "name": "Clegg Holdfast",
@@ -449,7 +461,8 @@
     55.0,
     0.43,
     7.0
-   ]
+   ],
+   "voice": "ch"
   },
   {
    "name": "Elan Mak",
@@ -470,7 +483,8 @@
     53.0,
     0.5,
     6.0
-   ]
+   ],
+   "voice": "em"
   },
   {
    "name": "Neva Kee",
@@ -491,7 +505,8 @@
     55.0,
     0.6,
     7.0
-   ]
+   ],
+   "voice": "nk"
   },
   {
    "name": "Bozziee Baranta",
@@ -512,7 +527,8 @@
     60.0,
     0.55,
     7.0
-   ]
+   ],
+   "voice": "bb"
   },
   {
    "name": "Boles Roor",
@@ -533,7 +549,8 @@
     62.0,
     0.3,
     7.0
-   ]
+   ],
+   "voice": "br"
   },
   {
    "name": "Ody Mandrell",
@@ -554,7 +571,8 @@
     57.0,
     0.6,
     5.2
-   ]
+   ],
+   "voice": "om"
   },
   {
    "name": "Fud Sang",
@@ -575,7 +593,8 @@
     53.0,
     0.55,
     7.0
-   ]
+   ],
+   "voice": "fs"
   },
   {
    "name": "Ben Quadinaros",
@@ -596,7 +615,8 @@
     73.0,
     0.45,
     7.0
-   ]
+   ],
+   "voice": "bq"
   },
   {
    "name": "Slide Paramita",
@@ -617,7 +637,8 @@
     40.0,
     0.8,
     7.0
-   ]
+   ],
+   "voice": "sp"
   },
   {
    "name": "Toy Dampner",
@@ -638,7 +659,8 @@
     40.0,
     0.65,
     7.0
-   ]
+   ],
+   "voice": "td"
   },
   {
    "name": "Bullseye Navior",
@@ -659,7 +681,8 @@
     45.0,
     0.77,
     7.0
-   ]
+   ],
+   "voice": "bn"
   },
   {
    "name": "Jinn Reeso",

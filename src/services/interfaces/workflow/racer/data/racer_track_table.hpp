@@ -22,6 +22,9 @@ struct RacerPodInfo {
     int podd = -1;
     /// The game's handling record (see RacerHandling); zeros if absent.
     std::array<float, 15> handling{};
+    /// Prefix of the racer's lines in data/wavs/22K/Voice ("as" is
+    /// Anakin's assp001.wav ...); empty for a racer with none.
+    std::string voice;
 };
 
 struct RacerTrackTable {

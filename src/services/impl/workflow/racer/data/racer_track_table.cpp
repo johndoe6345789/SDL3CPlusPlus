@@ -34,7 +34,8 @@ RacerTrackTable LoadRacerTrackTable(const std::string& path) {
                                 t.value("spline", -1)});
     }
     for (const auto& r : doc.value("racers", nlohmann::json::array())) {
-        RacerPodInfo racer{r.value("name", ""), r.value("podd", -1), {}};
+        RacerPodInfo racer{r.value("name", ""), r.value("podd", -1), {},
+                           r.value("voice", "")};
         const auto handling = r.value("handling", nlohmann::json::array());
         for (std::size_t i = 0;
              i < racer.handling.size() && i < handling.size(); ++i) {

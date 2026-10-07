@@ -1286,7 +1286,12 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/racer/audio/racer_audio_menu.cpp
         src/services/impl/workflow/racer/audio/racer_audio_mixer.cpp
         src/services/impl/workflow/racer/audio/racer_audio_open.cpp
+        src/services/impl/workflow/racer/audio/racer_audio_speech.cpp
+        src/services/impl/workflow/racer/audio/racer_audio_start.cpp
         src/services/impl/workflow/racer/audio/racer_audio_step.cpp
+        src/services/impl/workflow/racer/audio/racer_voice.cpp
+        src/services/impl/workflow/racer/audio/racer_voice_lines.cpp
+        src/services/impl/workflow/racer/audio/racer_voice_update.cpp
         src/services/impl/workflow/racer/video/racer_anim_file.cpp
         src/services/impl/workflow/racer/video/racer_video_decode.cpp
         src/services/impl/workflow/racer/video/racer_video_decoder.cpp
@@ -2604,6 +2609,7 @@ target_sources(racer_wav_test PRIVATE tests/racer_wav_test.cpp)
 target_sources(racer_wav_test PRIVATE src/services/impl/workflow/racer/data/racer_wav.cpp)
 target_sources(racer_wav_test PRIVATE src/services/impl/workflow/racer/data/racer_wav_write.cpp)
 target_sources(racer_wav_test PRIVATE src/services/impl/workflow/racer/data/racer_wav_resample.cpp)
+target_sources(racer_wav_test PRIVATE src/services/impl/workflow/racer/audio/racer_voice_lines.cpp)
 target_include_directories(racer_wav_test PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )

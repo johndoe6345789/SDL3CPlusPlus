@@ -15,7 +15,7 @@ std::string WorkflowRacerAudioStep::GetPluginId() const {
 }
 
 void WorkflowRacerAudioStep::Execute(const WorkflowStepDefinition& step,
-                                     WorkflowContext&) {
+                                     WorkflowContext& context) {
     // What should play: Anakin's theme on the title screens, the race's
     // music and pod sounds while racing (frozen while paused).
     const RacerPhase phase = state_->flow.phase;
@@ -30,26 +30,16 @@ void WorkflowRacerAudioStep::Execute(const WorkflowStepDefinition& step,
     } else if (state_->loaded) {
         wanted = "race " + std::to_string(state_->track.id);
     }
-    if (wanted != playing_) {
-        playing_ = wanted;
-        mixer_.reset();
-        if (!wanted.empty() && RacerAudioAllowed()) {
-            mixer_ = std::make_unique<RacerAudioMixer>();
-            const std::string dir =
-                RacerStringParam(step, "racer_dir", "RACER_DIR", "");
-            const bool menu = wanted == "menu";
-            const bool open = mixer_->Open(
-                dir, menu ? "Menu" : state_->track.planet, menu);
-            if (logger_) {
-                logger_->Info("racer.audio.update: " + wanted + ", " +
-                              std::to_string(mixer_->LoadedClips()) +
-                              (open ? " sounds" : " (no audio device)"));
-            }
-        }
-    }
+    if (wanted != playing_) Start(step, wanted);
+    const float dt =
+        static_cast<float>(context.Get<double>("frame.delta_time", 0.0));
     if (mixer_) {
         mixer_->SetPaused(phase == RacerPhase::Paused);
         mixer_->Update(*state_);
+    }
+    if (voice_) {
+        voice_->SetPaused(phase == RacerPhase::Paused);
+        if (phase != RacerPhase::Paused) voice_->Update(*state_, dt);
     }
     state_->hazardSounds = 0;  // heard, or dropped when silent
 }
