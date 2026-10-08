@@ -1,0 +1,33 @@
+{
+  "name": "Switchback",
+  "version": "0.1.0",
+  "id": "switchback",
+  "type": "game",
+  "category": "demo",
+  "description": "Off-road 4x4 on the SDL3CPlusPlus engine. Vehicles are read from the player's own GTA V extract through the gta5 package.",
+  "status": "in_development",
+
+  "launch_options": [
+    {"env": "GTA5_DATA_DIR", "label": "GTA V extract folder",
+     "kind": "directory", "required": true,
+     "default": "D:/gtautil-2.2.13",
+     "help": "Your own GTAUtil extract. Holds levels/, models/, data/, textures/. Nothing from it is copied into this package."}
+  ],
+
+  "defaultWorkflow": "workflows/switchback_game.json",
+
+  "workflows": [
+    "workflows/switchback_game.json",
+    "workflows/switchback_frame.json"
+  ],
+
+  "dependencies": [
+    {
+      "name": "gta5",
+      "version": ">=1.0.0",
+      "usage": "vehicle_models_textures_and_steps"
+    }
+  ],
+
+  "bundled": false
+}

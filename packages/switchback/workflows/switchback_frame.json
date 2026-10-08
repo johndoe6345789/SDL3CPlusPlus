@@ -1,0 +1,63 @@
+{
+  "name": "Switchback Frame",
+  "description": "One frame of Switchback: the physics step, then the GTA V vehicle drops and syncs.",
+  "steps": [
+    {
+      "id": "physics_step",
+      "plugin": "physics.step",
+      "parameters": {
+        "max_delta_time": 0.15,
+        "max_sub_steps": 10
+      }
+    },
+    {
+      "id": "frame_begin",
+      "plugin": "frame.gpu.begin_offscreen",
+      "parameters": {
+        "render_scale": 1.0
+      }
+    },
+    {
+      "id": "vehicle_drop",
+      "plugin": "gta5.vehicle.drop",
+      "parameters": {
+        "model": "taxi_hi",
+        "wheel_model": "wheel_spt_01",
+        "paint_r": 1.0,
+        "paint_g": 0.72,
+        "paint_b": 0.05,
+        "wheel_radius": 0.36,
+        "wheel_width": 0.25,
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "mass": 1300,
+        "drop_height": 1.5,
+        "heading": 0.0,
+        "ride_height": 0.1
+      },
+      "comment": "Lands on the flat ground body, which the game workflow adds at y=0. The drop starts 1.5 m above it."
+    },
+    {
+      "id": "vehicles_sync",
+      "plugin": "gta5.vehicles.sync"
+    },
+    {
+      "id": "frame_end",
+      "plugin": "frame.gpu.end_scene"
+    },
+    {
+      "id": "composite_draw",
+      "plugin": "postfx.composite_draw",
+      "comment": "Without this and the submit below, the draws land in a texture nobody presents and the window stays black."
+    },
+    {
+      "id": "command_buffer_submit",
+      "plugin": "gpu.command_buffer_submit"
+    },
+    {
+      "id": "composite_finish",
+      "plugin": "postfx.composite_finish"
+    }
+  ]
+}
