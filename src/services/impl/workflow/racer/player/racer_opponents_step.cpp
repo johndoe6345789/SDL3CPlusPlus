@@ -31,8 +31,10 @@ void WorkflowRacerOpponentsStep::Execute(const WorkflowStepDefinition&,
         pods.push_back(&opponent.pod);
     }
     for (RacerPodState* pod : pods) pod->bumped = false;
-    SeparateRacerPods(pods);
+    // Held on the grid until GO: pushing apart there could shove a pod
+    // off a narrow start (Grabvine Gateway's).
     if (state_->race.countdown <= 0.f) {
+        SeparateRacerPods(pods);
         state_->hazardSounds |= UpdateRacerHazards(state_->hazards, pods, dt);
     }
     RankRacerField(*state_);
