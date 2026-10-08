@@ -16,7 +16,8 @@ public:
     int Gear() const { return gear_; }
     /// Engine revs, 0 at idle to 1 at the redline.
     float Revs() const { return revs_; }
-    /// Share of the engine's power allowed through: 0 at the rev limiter.
+    /// Share of the engine's power allowed through: fades to 0 at the rev
+    /// limiter.
     float PowerScale() const { return powerScale_; }
 
 private:

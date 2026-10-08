@@ -105,6 +105,7 @@ void WorkflowSwitchbackCarControlStep::Execute(
     DampSwitchbackWheels(car);
     gearbox_.Update(std::abs(speed), throttle, dt);
     context.Set<float>("gta5.car.revs", gearbox_.Revs());
+    context.Set<float>("engine.revs", gearbox_.Revs());
     context.Set<int>("gta5.car.gear", gearbox_.Gear());
     context.Set("gta5.vehicle.seated", vehicles_->seated);
     TraceDrive(speed, gearbox_.Revs(), traction);

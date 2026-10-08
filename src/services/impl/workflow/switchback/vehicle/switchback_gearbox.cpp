@@ -22,6 +22,9 @@ constexpr float kClutchLockRevs = 0.35f;
 // Revs per second the engine climbs under full throttle, and falls off it.
 constexpr float kRiseRate = 1.2f;
 constexpr float kFallRate = 1.5f;
+// Power fades out over the top 3% of revs. A hard cut at the redline makes
+// the revs chatter on and off the limiter; the fade lets them settle.
+constexpr float kLimiterBand = 0.03f;
 
 // The engine's revs: the wheels' revs, or the engine's own revs where the
 // clutch slips.
@@ -59,7 +62,9 @@ void SwitchbackGearbox::Update(float speed, float throttle, float dt) {
     }
     revs_ = BlendRevs(wheelRevs, freeRevs_);
     const bool clutchLocked = wheelRevs >= kClutchLockRevs;
-    powerScale_ = (clutchLocked && revs_ >= 1.f) ? 0.f : 1.f;
+    powerScale_ = clutchLocked
+                      ? std::clamp((1.f - revs_) / kLimiterBand, 0.f, 1.f)
+                      : 1.f;
 }
 
 }  // namespace sdl3cpp::services::impl

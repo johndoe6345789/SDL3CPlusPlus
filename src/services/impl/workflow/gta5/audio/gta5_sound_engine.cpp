@@ -38,14 +38,20 @@ void WorkflowGta5SoundStep::Engine(WorkflowContext& context, float dt) {
     const auto* keys = context.TryGet<nlohmann::json>("input.keyboard.state");
     const bool throttle = seated >= 0 && (Gta5KeyDown(keys, "W") ||
                                           Gta5KeyDown(keys, "S"));
-    // Idle at rest; the throttle pulls the revs ahead of the speed, and
-    // they ease rather than jump.
-    int gear = 0;
-    const float wanted =
-        std::min(1.f, 0.85f * Revs(speed, gear) + (throttle ? 0.15f : 0.f));
-    revs_ += (wanted - revs_) * std::min(1.f, dt * 6.f);
-    context.Set<float>("gta5.car.revs", revs_);  // for the tachometer
-    context.Set<int>("gta5.car.gear", gear + 1);
+    // A vehicle drive that has its own gearbox publishes its revs; the
+    // gearbox already eases them, so they are heard as they are.
+    if (const float* driven = context.TryGet<float>("engine.revs")) {
+        revs_ = *driven;
+    } else {
+        // Idle at rest; the throttle pulls the revs ahead of the speed, and
+        // they ease rather than jump.
+        int gear = 0;
+        const float wanted = std::min(
+            1.f, 0.85f * Revs(speed, gear) + (throttle ? 0.15f : 0.f));
+        revs_ += (wanted - revs_) * std::min(1.f, dt * 6.f);
+        context.Set<float>("gta5.car.revs", revs_);  // for the tachometer
+        context.Set<int>("gta5.car.gear", gear + 1);
+    }
     // Heard from the player: full in the seat, fading 10 m out of it.
     const auto ps = context.Get<Q3PlayerState>("q3.ps", Q3PlayerState{});
     const btVector3 at = chassis->getCenterOfMassPosition();
