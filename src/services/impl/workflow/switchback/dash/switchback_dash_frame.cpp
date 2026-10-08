@@ -46,6 +46,10 @@ void AddCheckpointReadout(Gta5MapFrame& frame, const Gta5MapLayout& layout,
     AddGta5MapText(frame, layout, hud.overlay,
                    glm::vec2(kCheckpointAt.x, below), kFinishScale,
                    "FINISHED");
+    const float hint = below + kGlyphRows * kFinishScale + kGearGap;
+    AddGta5MapText(frame, layout, hud.overlay,
+                   glm::vec2(kCheckpointAt.x, hint), kCheckpointScale,
+                   "R TO RESTART");
 }
 
 }  // namespace

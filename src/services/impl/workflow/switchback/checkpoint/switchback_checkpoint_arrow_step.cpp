@@ -24,6 +24,7 @@ void WorkflowSwitchbackCheckpointArrowStep::Execute(
     if (context.GetBool("frame_skip", false)) return;
     if (!loaded_) LoadOnce(step, context);
     if (!loaded_) return;
+    if (context.GetBool("switchback.race.restarted", false)) route_.Reset();
     DrawMarquees(step, context);
     PublishProgress(context);
 

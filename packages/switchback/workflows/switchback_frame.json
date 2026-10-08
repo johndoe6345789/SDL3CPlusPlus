@@ -49,6 +49,10 @@
       }
     },
     {
+      "id": "race_restart",
+      "plugin": "switchback.race.restart"
+    },
+    {
       "id": "car_sound",
       "plugin": "gta5.sound",
       "parameters": {

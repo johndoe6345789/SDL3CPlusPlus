@@ -96,6 +96,9 @@ void WorkflowSwitchbackCarControlStep::Execute(
     const WorkflowStepDefinition&, WorkflowContext& context) {
     if (!vehicles_ || vehicles_->vehicles.empty()) return;
     if (vehicles_->seated < 0) vehicles_->seated = 0;
+    if (context.GetBool("switchback.race.restarted", false)) {
+        gearbox_ = SwitchbackGearbox();
+    }
     const float dt = context.Get<float>("physics_dt", 1.f / 60.f);
     Gta5Vehicle& car = vehicles_->vehicles[0];
     const float throttle = DriverThrottle(context);

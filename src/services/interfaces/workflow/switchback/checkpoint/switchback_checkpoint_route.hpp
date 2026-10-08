@@ -20,6 +20,9 @@ public:
     /// ground. Returns true when a checkpoint was passed.
     bool Update(const glm::vec3& car, float radius);
 
+    /// Starts the race again from the start line.
+    void Reset();
+
     bool Finished() const;
     /// Checkpoints to pass after the start line.
     std::size_t GateCount() const;

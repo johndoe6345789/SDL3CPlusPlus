@@ -42,6 +42,8 @@ bool SwitchbackCheckpointRoute::Update(const glm::vec3& car, float radius) {
     return true;
 }
 
+void SwitchbackCheckpointRoute::Reset() { passed_ = 0; }
+
 bool SwitchbackCheckpointRoute::Finished() const {
     return points_.empty() || passed_ >= GateCount();
 }

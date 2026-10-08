@@ -1167,6 +1167,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/switchback/checkpoint/switchback_mesh_primitives.cpp
         src/services/impl/workflow/switchback/dash/switchback_dash_frame.cpp
         src/services/impl/workflow/switchback/dash/switchback_dash_step.cpp
+        src/services/impl/workflow/switchback/race/switchback_race_restart_step.cpp
         src/services/impl/workflow/switchback/terrain/switchback_heightmap.cpp
         src/services/impl/workflow/switchback/terrain/switchback_terrain_collision.cpp
         src/services/impl/workflow/switchback/terrain/switchback_terrain_draw_step.cpp
