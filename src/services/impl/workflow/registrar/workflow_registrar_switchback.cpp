@@ -1,5 +1,7 @@
 #include "services/impl/workflow/registrar/workflow_registrar_switchback.hpp"
 
+#include "services/interfaces/workflow/switchback/checkpoint/switchback_checkpoint_arrow_step.hpp"
+#include "services/interfaces/workflow/switchback/dash/switchback_dash_step.hpp"
 #include "services/interfaces/workflow/switchback/terrain/switchback_terrain_draw_step.hpp"
 #include "services/interfaces/workflow/switchback/terrain/switchback_terrain_load_step.hpp"
 #include "services/interfaces/workflow/switchback/terrain/switchback_terrain_state.hpp"
@@ -18,7 +20,12 @@ int RegisterSwitchbackSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
         std::make_shared<WorkflowSwitchbackTerrainDrawStep>(logger, terrain));
     registry->RegisterStep(
         std::make_shared<WorkflowSwitchbackCarControlStep>(logger, vehicles));
-    return 3;
+    registry->RegisterStep(
+        std::make_shared<WorkflowSwitchbackCheckpointArrowStep>(logger,
+                                                                vehicles));
+    registry->RegisterStep(
+        std::make_shared<WorkflowSwitchbackDashStep>(logger, vehicles));
+    return 5;
 }
 
 }  // namespace sdl3cpp::services::impl::registrar_detail

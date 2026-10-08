@@ -42,10 +42,19 @@
         "x": -718.9,
         "y": 40.0,
         "z": -261.6,
-        "heading": -1.2217,
+        "heading": 152.4,
         "mass": 1300,
         "drop_height": 1.5,
         "ride_height": 0.1
+      }
+    },
+    {
+      "id": "car_sound",
+      "plugin": "gta5.sound",
+      "parameters": {
+        "dir": "${env:GTA5_DATA_DIR}/extract_audio/wav",
+        "water_file": "${env:GTA5_DATA_DIR}/extract_common/data/levels/gta5/water.xml",
+        "volume": 1.0
       }
     },
     {
@@ -78,6 +87,22 @@
       }
     },
     {
+      "id": "water_map",
+      "plugin": "gta5.water.map",
+      "parameters": {
+        "water_file": "${env:GTA5_DATA_DIR}/extract_common/data/levels/gta5/water.xml"
+      }
+    },
+    {
+      "id": "shadow_draw",
+      "plugin": "gta5.shadow.draw",
+      "parameters": {
+        "radius": 150.0,
+        "size": 4096,
+        "cull_size_ratio": 0.01
+      }
+    },
+    {
       "id": "frame_begin",
       "plugin": "frame.gpu.begin_offscreen",
       "parameters": {
@@ -102,12 +127,25 @@
       }
     },
     {
+      "id": "checkpoint_arrow",
+      "plugin": "switchback.checkpoint.arrow",
+      "parameters": {
+        "map": "packages/switchback/assets/spiral_pass_map.json",
+        "radius": 14.0,
+        "pipeline_key": "gpu_pipeline_arrow"
+      }
+    },
+    {
       "id": "frame_end",
       "plugin": "frame.gpu.end_scene"
     },
     {
       "id": "composite_draw",
       "plugin": "postfx.composite_draw"
+    },
+    {
+      "id": "dash",
+      "plugin": "switchback.dash"
     },
     {
       "id": "command_buffer_submit",
