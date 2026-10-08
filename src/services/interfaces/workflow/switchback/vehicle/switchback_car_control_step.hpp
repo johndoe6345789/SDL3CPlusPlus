@@ -16,9 +16,10 @@ namespace sdl3cpp::services::impl {
  * Keeps the player in the car: the first vehicle is always seated and
  * driven from the keyboard. There is no getting out and no on-foot body.
  *
- * Drives all four wheels so the car can reach about 300 mph, damps the
- * suspension, and runs a six speed gearbox that publishes gta5.car.revs and
- * gta5.car.gear for the dials.
+ * Drives all four wheels so the car can reach about 300 mph, with traction
+ * control and the gearbox's rev limiter, damps the suspension, and runs an
+ * eight speed gearbox that publishes gta5.car.revs and gta5.car.gear for the
+ * dials.
  *
  * Reads:  input.keyboard.state, physics_dt
  * Writes: gta5.vehicle.seated, gta5.car.revs, gta5.car.gear
@@ -34,7 +35,7 @@ public:
                  WorkflowContext& context) override;
 
 private:
-    void TraceDrive(float speed, float revs);
+    void TraceDrive(float speed, float revs, float traction);
 
     std::shared_ptr<ILogger> logger_;
     std::shared_ptr<Gta5StreamState> vehicles_;
