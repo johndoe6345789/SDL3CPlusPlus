@@ -1,0 +1,36 @@
+{
+  "id": "spiral_pass",
+  "name": "Spiral Pass",
+  "units": "metres",
+  "mountain": {
+    "baseRadius": 900.0,
+    "peakHeight": 420.0,
+    "centre": [0.0, 0.0],
+    "roughness": 0.35,
+    "seed": 4242
+  },
+  "road": {
+    "width": 9.0,
+    "shoulderWidth": 3.0,
+    "startAngleDegrees": 200.0,
+    "turns": 2.75,
+    "startHeight": 12.0,
+    "endHeight": 380.0,
+    "maxGradePercent": 16.0
+  },
+  "checkpoints": {
+    "count": 18,
+    "radius": 14.0,
+    "firstIsStart": true
+  },
+  "hazards": [
+    { "type": "rockfall", "atCheckpoint": 4, "offset": 0.4 },
+    { "type": "ruts", "atCheckpoint": 9, "length": 60.0 },
+    { "type": "washout", "atCheckpoint": 13, "length": 25.0, "depth": 0.6 }
+  ],
+  "spawn": {
+    "checkpoint": 0,
+    "heightOffset": 1.5
+  },
+  "lapCount": 1
+}
