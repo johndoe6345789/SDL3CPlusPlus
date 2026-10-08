@@ -1156,6 +1156,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/world/gta5_water_step.cpp
         src/services/impl/workflow/gta5/world/gta5_water_uniforms.cpp
         src/services/impl/workflow/gta5/world/gta5_water_upload.cpp
+        src/services/impl/workflow/switchback/camera/switchback_camera_lens_step.cpp
         src/services/impl/workflow/switchback/checkpoint/switchback_arrow_mesh.cpp
         src/services/impl/workflow/switchback/checkpoint/switchback_arrow_transform.cpp
         src/services/impl/workflow/switchback/checkpoint/switchback_checkpoint_arrow_draw.cpp

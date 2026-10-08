@@ -1,0 +1,46 @@
+{
+  "name": "Switchback Input",
+  "description": "GTA V's input group without the Quake III menu. Switchback has its own menu, so Escape and Enter here never open the hidden Quake menu or end the loop.",
+  "steps": [
+    {
+      "id": "frame_delta",
+      "plugin": "time.frame_delta"
+    },
+    {
+      "id": "input_poll",
+      "plugin": "input.poll"
+    },
+    {
+      "id": "keyboard_poll",
+      "plugin": "input.keyboard.poll"
+    },
+    {
+      "id": "gamepad",
+      "plugin": "gta5.gamepad",
+      "parameters": {
+        "look_speed": 1100.0
+      }
+    },
+    {
+      "id": "move_axes",
+      "plugin": "input.axis.combine",
+      "parameters": {
+        "config_path": "packages/quake3/config/input_aggregation.json"
+      }
+    },
+    {
+      "id": "move_buttons",
+      "plugin": "input.button.combine",
+      "parameters": {
+        "config_path": "packages/quake3/config/input_aggregation.json"
+      }
+    },
+    {
+      "id": "update_mouse_grab",
+      "plugin": "input.mouse.grab",
+      "inputs": {
+        "enabled": "gta5.mouse_look"
+      }
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 #include "services/impl/workflow/registrar/workflow_registrar_switchback.hpp"
 
+#include "services/interfaces/workflow/switchback/camera/switchback_camera_lens_step.hpp"
 #include "services/interfaces/workflow/switchback/checkpoint/switchback_checkpoint_arrow_step.hpp"
 #include "services/interfaces/workflow/switchback/dash/switchback_dash_step.hpp"
 #include "services/interfaces/workflow/switchback/race/switchback_race_restart_step.hpp"
@@ -28,7 +29,9 @@ int RegisterSwitchbackSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
                                                                 vehicles));
     registry->RegisterStep(
         std::make_shared<WorkflowSwitchbackDashStep>(logger, vehicles));
-    return 6;
+    registry->RegisterStep(
+        std::make_shared<WorkflowSwitchbackCameraLensStep>(logger));
+    return 7;
 }
 
 }  // namespace sdl3cpp::services::impl::registrar_detail

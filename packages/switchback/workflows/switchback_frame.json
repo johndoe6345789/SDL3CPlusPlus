@@ -6,7 +6,7 @@
       "id": "input_group",
       "plugin": "workflow.include",
       "parameters": {
-        "path": "packages/gta5/workflows/gta5_input.json"
+        "path": "packages/switchback/workflows/switchback_input.json"
       }
     },
     {
@@ -79,6 +79,15 @@
       }
     },
     {
+      "id": "camera_lens",
+      "plugin": "switchback.camera.lens",
+      "parameters": {
+        "fov": 60.0,
+        "near": 0.5,
+        "far": 4000.0
+      }
+    },
+    {
       "id": "render_prepare",
       "plugin": "render.prepare"
     },
@@ -86,8 +95,8 @@
       "id": "tiles_cull",
       "plugin": "gta5.tiles.cull",
       "parameters": {
-        "cull_size_ratio": 0.003,
-        "lod_scale": 1.25
+        "cull_size_ratio": 0.0015,
+        "lod_scale": 2.0
       }
     },
     {
@@ -101,9 +110,9 @@
       "id": "shadow_draw",
       "plugin": "gta5.shadow.draw",
       "parameters": {
-        "radius": 150.0,
+        "radius": 250.0,
         "size": 4096,
-        "cull_size_ratio": 0.01
+        "cull_size_ratio": 0.005
       }
     },
     {
