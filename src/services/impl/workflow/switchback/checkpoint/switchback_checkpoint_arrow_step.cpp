@@ -12,8 +12,11 @@ namespace sdl3cpp::services::impl {
 
 WorkflowSwitchbackCheckpointArrowStep::WorkflowSwitchbackCheckpointArrowStep(
     std::shared_ptr<ILogger> logger,
-    std::shared_ptr<Gta5StreamState> vehicles)
-    : logger_(std::move(logger)), vehicles_(std::move(vehicles)) {}
+    std::shared_ptr<Gta5StreamState> vehicles,
+    std::shared_ptr<SwitchbackTerrainState> terrain)
+    : logger_(std::move(logger)),
+      vehicles_(std::move(vehicles)),
+      terrain_(std::move(terrain)) {}
 
 std::string WorkflowSwitchbackCheckpointArrowStep::GetPluginId() const {
     return "switchback.checkpoint.arrow";

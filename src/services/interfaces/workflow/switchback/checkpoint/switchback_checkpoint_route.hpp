@@ -3,7 +3,6 @@
 #include <glm/glm.hpp>
 
 #include <cstddef>
-#include <string>
 #include <vector>
 
 namespace sdl3cpp::services::impl {
@@ -12,9 +11,8 @@ namespace sdl3cpp::services::impl {
 /// race is over once the last checkpoint is passed.
 class SwitchbackCheckpointRoute {
 public:
-    /// Reads the "checkpoints" array of a map file, each with x, y and z in
-    /// metres. Returns false when the file is missing or has no points.
-    bool Load(const std::string& path);
+    /// Replaces the course and starts the race from the first point.
+    void SetPoints(std::vector<glm::vec3> points);
 
     /// Passes the target when the car is within `radius` of it on the
     /// ground. Returns true when a checkpoint was passed.

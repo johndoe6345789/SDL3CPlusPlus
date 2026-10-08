@@ -4,6 +4,8 @@
 
 #include <SDL3/SDL_gpu.h>
 
+#include <glm/glm.hpp>
+
 #include <cstdint>
 #include <vector>
 
@@ -28,6 +30,8 @@ struct SwitchbackTerrainState {
     std::vector<float> collisionHeights;
     btHeightfieldTerrainShape* shape = nullptr;
     btRigidBody* body = nullptr;
+    /// The race gates of the loaded track, start line first.
+    std::vector<glm::vec3> checkpoints;
 };
 
 /// Adds the static heightfield body to `world`, with samples `stepM` apart

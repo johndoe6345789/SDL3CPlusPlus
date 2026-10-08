@@ -12,10 +12,12 @@ namespace sdl3cpp::services::impl {
 /**
  * Plugin ID: switchback.terrain.load
  *
- * Reads the Switchback heightmap once, uploads it as draw chunks, and adds
- * the matching Bullet heightfield to the physics world.
+ * Generates the track named by its spec once, uploads the terrain as draw
+ * chunks, adds the matching Bullet heightfield to the physics world, and
+ * keeps the track's checkpoints in the terrain state.
  *
- * Parameters: heightmap, height_max_m, step_m, chunk_cells, uv_metres
+ * Parameters: track (default packages/switchback/tracks/spiral_pass.json),
+ *             chunk_cells, uv_metres
  * Reads:      gpu_device, physics_world
  */
 class WorkflowSwitchbackTerrainLoadStep final : public IWorkflowStep {
@@ -29,6 +31,8 @@ public:
                  WorkflowContext& context) override;
 
 private:
+    void LogError(const std::string& message);
+
     std::shared_ptr<ILogger> logger_;
     std::shared_ptr<SwitchbackTerrainState> state_;
 };

@@ -15,13 +15,12 @@ void WorkflowSwitchbackCheckpointArrowStep::LoadOnce(
     if (!device) return;
     loaded_ = true;
     radius_ = Gta5NumberOr(step, "radius", 14.f);
-    const std::string path = Gta5ResolvePath(
-        step, context, "map",
-        "packages/switchback/assets/spiral_pass_map.json");
-    if (!route_.Load(path)) {
+    route_.SetPoints(terrain_ ? terrain_->checkpoints
+                              : std::vector<glm::vec3>{});
+    if (route_.Points().size() < 2) {
         if (logger_) {
-            logger_->Error("switchback.checkpoint.arrow: no checkpoints in " +
-                           path);
+            logger_->Error(
+                "switchback.checkpoint.arrow: the track has no checkpoints");
         }
         return;
     }

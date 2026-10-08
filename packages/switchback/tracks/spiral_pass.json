@@ -2,10 +2,18 @@
   "id": "spiral_pass",
   "name": "Spiral Pass",
   "units": "metres",
+  "terrain": {
+    "gridSize": 1025,
+    "heightMaxM": 512.0,
+    "noiseAmplitudeM": 60.0,
+    "bankM": 30.0,
+    "roadOuterM": 765.0,
+    "roadInnerM": 150.0,
+    "roadSamples": 2000
+  },
   "mountain": {
     "baseRadius": 900.0,
     "peakHeight": 420.0,
-    "centre": [0.0, 0.0],
     "roughness": 0.35,
     "seed": 4242
   },
@@ -20,7 +28,6 @@
   },
   "checkpoints": {
     "count": 18,
-    "radius": 14.0,
     "firstIsStart": true
   },
   "hazards": [

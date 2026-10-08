@@ -1,9 +1,7 @@
 #include "services/interfaces/workflow/switchback/checkpoint/switchback_checkpoint_route.hpp"
 
-#include <nlohmann/json.hpp>
-
 #include <cmath>
-#include <fstream>
+#include <utility>
 
 namespace sdl3cpp::services::impl {
 namespace {
@@ -14,25 +12,9 @@ float HorizontalDistance(const glm::vec3& a, const glm::vec3& b) {
 
 }  // namespace
 
-bool SwitchbackCheckpointRoute::Load(const std::string& path) {
-    points_.clear();
+void SwitchbackCheckpointRoute::SetPoints(std::vector<glm::vec3> points) {
+    points_ = std::move(points);
     passed_ = 0;
-    std::ifstream file(path);
-    if (!file) return false;
-    nlohmann::json doc;
-    try {
-        doc = nlohmann::json::parse(file);
-    } catch (const nlohmann::json::exception&) {
-        return false;
-    }
-    if (!doc.contains("checkpoints") || !doc["checkpoints"].is_array()) {
-        return false;
-    }
-    for (const nlohmann::json& entry : doc["checkpoints"]) {
-        points_.emplace_back(entry.value("x", 0.f), entry.value("y", 0.f),
-                             entry.value("z", 0.f));
-    }
-    return points_.size() >= 2;
 }
 
 bool SwitchbackCheckpointRoute::Update(const glm::vec3& car, float radius) {

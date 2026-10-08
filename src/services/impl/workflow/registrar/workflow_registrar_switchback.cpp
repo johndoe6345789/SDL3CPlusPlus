@@ -26,7 +26,8 @@ int RegisterSwitchbackSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
         std::make_shared<WorkflowSwitchbackCarControlStep>(logger, vehicles));
     registry->RegisterStep(
         std::make_shared<WorkflowSwitchbackCheckpointArrowStep>(logger,
-                                                                vehicles));
+                                                                vehicles,
+                                                                terrain));
     registry->RegisterStep(
         std::make_shared<WorkflowSwitchbackDashStep>(logger, vehicles));
     registry->RegisterStep(

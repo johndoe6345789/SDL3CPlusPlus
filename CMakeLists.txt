@@ -1169,11 +1169,17 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/switchback/dash/switchback_dash_frame.cpp
         src/services/impl/workflow/switchback/dash/switchback_dash_step.cpp
         src/services/impl/workflow/switchback/race/switchback_race_restart_step.cpp
-        src/services/impl/workflow/switchback/terrain/switchback_heightmap.cpp
         src/services/impl/workflow/switchback/terrain/switchback_terrain_collision.cpp
         src/services/impl/workflow/switchback/terrain/switchback_terrain_draw_step.cpp
         src/services/impl/workflow/switchback/terrain/switchback_terrain_load_step.cpp
         src/services/impl/workflow/switchback/terrain/switchback_terrain_mesh.cpp
+        src/services/impl/workflow/switchback/terrain/switchback_terrain_noise.cpp
+        src/services/impl/workflow/switchback/terrain/switchback_terrain_upload.cpp
+        src/services/impl/workflow/switchback/track/switchback_track_carve.cpp
+        src/services/impl/workflow/switchback/track/switchback_track_checkpoints.cpp
+        src/services/impl/workflow/switchback/track/switchback_track_generate.cpp
+        src/services/impl/workflow/switchback/track/switchback_track_road.cpp
+        src/services/impl/workflow/switchback/track/switchback_track_spec.cpp
         src/services/impl/workflow/switchback/vehicle/switchback_car_control_step.cpp
         src/services/impl/workflow/switchback/vehicle/switchback_gearbox.cpp
         src/services/impl/workflow/switchback/vehicle/switchback_wheel_damping.cpp

@@ -21,9 +21,7 @@
       "id": "terrain_load",
       "plugin": "switchback.terrain.load",
       "parameters": {
-        "heightmap": "packages/switchback/assets/spiral_pass_heightmap.r16",
-        "height_max_m": 512.0,
-        "step_m": 1.7578125,
+        "track": "packages/switchback/tracks/spiral_pass.json",
         "chunk_cells": 128,
         "uv_metres": 20.0
       }
@@ -143,7 +141,6 @@
       "id": "checkpoint_arrow",
       "plugin": "switchback.checkpoint.arrow",
       "parameters": {
-        "map": "packages/switchback/assets/spiral_pass_map.json",
         "radius": 14.0,
         "pipeline_key": "gpu_pipeline_arrow"
       }
