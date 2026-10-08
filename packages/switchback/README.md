@@ -10,6 +10,28 @@ In development. Milestone 1 is one playable level with a driving prototype.
 - **Spiral Pass** (milestone 1). A switchback track with checkpoints that winds up a mountain. The spec is in `assets/spiral_pass.json`.
 - **Rock Garden** (planned). Rock-crawling terrain with rockfalls, ruts and water crossings.
 
+Planned levels, in no particular order:
+
+- Arctic Wasteland
+- Arizona
+- Autumn Leaves
+- Baja Beach
+- Bayou Flats
+- Black Gold
+- Castle Rock
+- Costa Rica Rally
+- Deadman's Gulch
+- Egypt
+- Final Destination
+- Mediterranean
+- Obstacle Park
+- Quarry Lake
+- River Side
+- Silverton Pass
+- Tibet Cliffside
+- Tri Baja 250
+- Vulture Canyon
+
 ## Engine use
 
 - Physics: Bullet 3.25, the raycast vehicle with suspension and wheel friction.
