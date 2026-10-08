@@ -7,33 +7,57 @@ point `RACER_DIR` at your own install.
 
     RACER_DIR="D:/SteamLibrary/steamapps/common/Star Wars Episode I Racer"       ./sdl3_app --bootstrap bootstrap_windows --game racer
 
-| variable          | meaning                                                     |
-|-------------------|-------------------------------------------------------------|
-| `RACER_DIR`       | the install (holds `SWEP1RCR.EXE` and `data/`)               |
-| `RACER_TRACK`     | `0`-`24` or part of a name (`Inferno`): preselects the track |
-| `RACER_POD`       | part of a racer's name (`Sebulba`): preselects the racer     |
-| `RACER_LAPS`      | `1`-`5`: preselects the lap count                            |
-| `RACER_AUTOPILOT` | `1`: skip the menu and let the pod drive itself (demo, tests)|
-| `RACER_PROFILE`   | a file to keep truguts and upgrades in, instead of the user's |
-| `RACER_EXPORT`    | a folder: also export textures, OBJ models, UI art, audio    |
-| `RACER_SHOT`      | a file: save a screenshot about twelve seconds in            |
-| `RACER_MUTE`      | `1`: no sound                                                |
+| variable            | meaning                                                   |
+|---------------------|-----------------------------------------------------------|
+| `RACER_DIR`         | the install (holds `SWEP1RCR.EXE` and `data/`)             |
+| `RACER_TRACK`       | `0`-`24` or part of a name (`Inferno`): race it at once    |
+| `RACER_POD`         | part of a racer's name (`Sebulba`): race as them at once   |
+| `RACER_LAPS`        | `1`-`5`: the lap count for such a race                     |
+| `RACER_AUTOPILOT`   | `1`: skip the menus and let the pod drive itself           |
+| `RACER_UNLOCK_ALL`  | `1`: every circuit, track and racer open                   |
+| `RACER_PROFILE`     | a file to keep the career in, instead of the user's        |
+| `RACER_VIDEOS`      | `1`: play cutscenes even headless or on autopilot          |
+| `RACER_SKIP_VIDEOS` | `1`: never play cutscenes                                  |
+| `RACER_EXPORT`      | a folder: also export textures, OBJ models, UI art, audio  |
+| `RACER_SHOT`        | a file: save a screenshot about twelve seconds in          |
+| `RACER_MUTE`        | `1`: no sound                                              |
 
-Runs with `SDL3CPP_HEADLESS=1` are silent too, unless
-`SDL_AUDIO_DRIVER=dummy` is set (which plays to nowhere, to test audio).
+Runs with `SDL3CPP_HEADLESS=1` are silent and skip cutscenes, unless
+`SDL_AUDIO_DRIVER=dummy` (sound that plays to nowhere) or `RACER_VIDEOS`
+is set.
 
 ## Playing
 
-The game opens on the title screen (the original splash art) with
-Anakin's theme. Choose the track (all 25), the racer (all 23 pods), laps
-(1-5) and rivals (0-11), visit the pod shop, then start. Each race has a
-loading screen, a countdown, and big banners for GO!, FINAL LAP and
-FINISHED; the results table pays truguts by place (1,500 for a win down
-to 50 for eighth). In the pod shop (the hangar backdrop) truguts buy five
-levels each of traction, turning, acceleration, top speed, air brake,
-cooling and repair, at 250 truguts times the next level. Truguts and
-upgrades are saved in `profile.json` in the user's SDL pref folder
-(`SDL3CPlusPlus/EpisodeIRacer`).
+The first run plays the install's opening cutscenes (the LucasArts logo,
+the crawl and the Boonta Eve intro; Enter or Escape skips). The title
+screen (the original splash art, Anakin's theme) offers:
+
+- **Tournament**: the original's four circuits (Amateur, Semi-Pro,
+  Galactic, Invitational) and their 25 tracks in order. Choose the
+  track, the racer and how the purse is shared: Fair (top four paid),
+  Skilled (top three, a bigger purse) or Winner Takes All. A podium
+  opens the circuit's next track, podiums on every track open the next
+  circuit, and a first win on a track opens another racer (seven to
+  start). Points add up per circuit. The first race on each planet
+  starts with its flyover cutscene.
+- **Free race**: any open track and racer, 1-5 laps, 0-11 rivals. It
+  runs the racer's stock pod and pays nothing, as in the original.
+- **Watto's shop**: the game's own 42 parts, six per type (R-20 to R-600
+  Repulsorgrip, Control Linkage to Control Stabilizer, Dual 20PcX to
+  Mag-6 Injector, Plug2 to Block6 Thrust Coil, Mark II to Quadrijet Air
+  Brake, Coolant Radiator to Turbo Coolant Pump, Single Power Cell to
+  Cluster2 Power Plug) at the game's own prices. Watto stocks better
+  parts as podiums mount up, allows a trade-in for the part replaced,
+  and talks in his own voice.
+- **Junkyard**: used parts, cheaper and worn, a new pile after each
+  tournament race.
+- **Pit droids**: a crew of up to four (2,000 truguts each). Tournament
+  races wear every part (more for a battered pod, and the coolers and
+  injectors when run hot); after each race every droid mends 6% of each
+  part. A worn part gives only part of its improvement.
+
+Truguts, parts, droids and progress are saved in `profile.json` in the
+user's SDL pref folder (`SDL3CPlusPlus/EpisodeIRacer`).
 
 | action         | keyboard                | pad                    |
 |----------------|-------------------------|------------------------|
@@ -46,48 +70,59 @@ upgrades are saved in `profile.json` in the user's SDL pref folder
 | select         | Enter                   | (A)                    |
 | back / pause   | Escape, P               | (B), Start             |
 
-Pause offers resume, restart and quit to the title. Boost needs
-near-top speed and heats the engines; at full heat they catch fire, cut
-out for three seconds and take damage. Each engine is damaged on its own
-(walls hurt the side that hits them), and a hurt engine both lowers top
-speed and pulls the pod toward its side until repaired; repairing costs
-speed.
+Each race has a loading screen, a countdown, and banners for GO!, FINAL
+LAP and FINISHED; pause offers resume, restart and quit. Every racer
+flies the game's own handling figures (Sebulba tops out at 600 km/h,
+Anakin at 490 before parts). Boost heats the engines; at full heat they
+catch fire, cut out and take damage. Each engine is damaged on its own,
+and a hurt engine lowers top speed and pulls the pod toward its side
+until repaired. Hazards wait on some planets: Tusken Raiders fire from
+Tatooine's canyon sides, lava and methane vents erupt on Baroonda and
+Malastare, rocks fall on Ando Prime, Ord Ibanna and Mon Gazza. The
+player's racer reacts out loud in their own voice: contact, walls, big
+jumps, fire, repairs, passing someone, winning and losing.
+
+## Scale
+
+Everything is sized from the game's own data. Each pod is laid out from
+its shadow quad (its engines' spread and cable length) at an eighth of
+the parts' raw size: the game's handling table gives every pod a contact
+radius of 5-10 units and a hover height of 5, which only fit that size.
+Real-world sizes then put a game unit at about 10 cm: tracks are about
+25 m wide, Anakin's engines about 7 m long and his whole pod 26 m with
+its cables, Sebulba's 13 m wide, and The Boonta Classic about 8.7 km a
+lap. Speeds read the game's figures as km/h.
 
 ## Status
 
-Working: all 25 tracks and 23 racers' pods decode; the track draws with
-textures upscaled 4x (Scale2x) and mipmapped, baked N64 vertex colours,
-the planet's skybox and per-planet distance fog at 1920x1080. Pods are
-lit, draw with engine flames that grow under boost, the energy binder and
-control cables between their parts, and a ground shadow. Pods hover on
-the game's own collision surface, ride banks up to ~75 degrees, scrape
-along walls and fall into gaps (and are put back on the lap). The track's
-surface flags act: boost strips, slow ground, rough ground, slippery ice
-and water, swamp, lava (heats the engines) and death drops.
+Working: all 25 tracks and 25 racers decode and race; the track draws
+with textures upscaled 4x (Scale2x) and mipmapped, baked N64 vertex
+colours, and the track's skybox fading into a fog taken from its own
+horizon, at 1920x1080. Pods are lit and draw with engine flames,
+binders, cables and a shadow. Pods hover on the game's own collision
+surface and its surface flags act (boost strips, slow and rough ground,
+ice, swamp, lava, death drops). Up to eleven rivals fly their own pods'
+handling round the line on the autopilot (speed planned from the turns
+ahead, steering by a cross-track controller, within a lane of the line
+as the original's AI pods are), jostle by mass and are ranked.
+Cutscenes (`data/anims/*.znm`: gzip around LucasArts SMUSH, Blocky16
+video and VIMA audio) are decoded with FFmpeg and played letterboxed
+across the screen with sound. Audio is the install's: menu and planet
+music, engine, countdown, hazards, and the racers' and Watto's voices
+(the numbered lines were transcribed to learn which line is which).
 
-A field of up to twelve races: rivals with their own pods fly the lap on
-the autopilot at varied pace, steer round slower pods, jostle the player,
-and are ranked. The HUD shows position, lap, time, best lap, speed,
-engine heat and each engine's health. Audio comes from the install:
-Anakin's theme and select sounds on the menus, planet music in races
-(frozen while paused), an engine note pitched by speed and boost,
-countdown beeps, the start, wall scrapes and engine fires.
+New rather than decoded, flagged in the code: the hazards (the
+original's triggers are not decoded), purse sizes, points, the pit
+droids' price and repair rate, how much a part improves (5% a level),
+the wear rule, and the autopilot. Approximations: pods are lit once at
+load; walls are tested along the pod's centre line; pods collide as
+three circles; the physics reads the track as a height field, so
+near-vertical banks act as walls. In a one-lap autopilot run of every
+track, six need no recovery, ten need one or two, and the rest three or
+four (falls from narrow ledges, such as Grabvine Gateway's 8 m paths).
 
-Approximations, flagged in the code: pod parts (engines and cockpit) are
-laid out by a rule, not by the per-racer spacing and cable length the
-game uses, and drawn at a quarter of their raw size (the scale the game
-places them at is not decoded; this gives Anakin's engines about 7 m); pods are lit once at load rather than per frame; walls are
-tested along the pod's centre line, not its whole width; pods collide as
-three circles along their length; the physics reads the track as a height
-field, so near-vertical banks act as walls; the shadow is cut off beyond
-25 m rather than faded. In a full field the autopilot is still pushed off
-course more often than alone (about 15-18 recoveries in 200 s on Boonta
-Classic, against 8 racing alone). The upgrade economy (prices, prizes,
-5% per level) is new, not the original's parts dealers and junkyard.
-
-Not done: the original's tournament (circuits and unlocking), Watto's
-shop and the junkyard, track animations and hazards beyond the surface
-flags, the pit droids, voice lines, and the cutscene videos.
+Not done: the original's animated track scenery, the race announcer,
+split screen and multiplayer.
 
 ## Data formats
 
@@ -151,7 +186,39 @@ under a uniform 0.02 scale the game replaces when it places the part. The
 parts are taken from that scale node down, using the most detailed LOD
 child present (child 0 is empty on some pods), and laid out engines side
 by side ahead of the cockpit. Parts face game -y (the engines' intakes
-point that way), so the engines go on the -y side.
+point that way), so the engines go on the -y side. The flat four-corner
+quads are the pod's shadows, in the parts' raw units: the longest spans
+the whole pod (its width is the engines' spread, its length engines to
+cockpit; a mirrored twin leans the other way), the other the cockpit
+alone. The layout spreads the parts to fill the longest.
+
+### Tables in the executable
+
+Read from the unpacked image (see below) and kept as facts, not code:
+the pod handling table (0x4C2BB0, 24 records of 15 floats in character
+order: anti-skid, turn response, max turn rate, acceleration, max
+speed, air brake, deceleration, boost thrust, heat rate, cool rate,
+hover height, repair rate, bump mass, damage immunity, contact radius;
+copied into `racer_tracks.json`), and the parts table (0x4C1CB8, 42
+records of 16 bytes: id, level, podiums needed, type, price, sprite,
+name pointer).
+
+### Cutscenes and voices
+
+`data/anims/*.znm` are gzip files holding LucasArts SMUSH (`SANM`)
+streams: Blocky16 video at 640 x 272, 15 fps, and VIMA ADPCM audio at
+22.05 kHz; FFmpeg's `smush` demuxer reads them once unzipped. `Goldie` is
+the LucasArts logo, `TextCrawl` the crawl, `IntroScene` the Boonta Eve
+intro; `PlanetTAT`, `A`, `B`, `C`, `D`, `E`, `F` and `J` fly over
+Tatooine, Ando Prime, Aquilaris, Ord Ibanna, Baroonda, Mon Gazza, Oovo
+IV and Malastare (`G` repeats `D`).
+
+`data/wavs/22K/Voice` holds 956 numbered lines: 25 race lines (`sp`)
+and 13 selection lines (`ui`) per racer, under a two-letter prefix (`as`
+Anakin, `sb` Sebulba, ...), and Watto's 53 (`wtui`). Transcribing them
+showed one scheme for every racer: 001 contact, 002 a whoop, 004
+damage, 005-006 hits, 007 airborne, 009 a scream, 010 fixed, 014 the
+win, 015 the loss, 016-025 taunts; Anakin's later lines sit one on.
 
 ### Textures
 
@@ -173,8 +240,8 @@ the fork. Following first successors from segment 0 gives the lap, and it
 closes on all 25 tracks (Boonta Classic: 135 of 180 segments, 86,612
 units round).
 
-Units: a game unit is about 5 cm (`kRacerWorldScale` = 0.05); the engine
-is y-up, so a game point (x, y, z) maps to (x, z, -y) x 0.05.
+Units: a game unit is about 10 cm (`kRacerWorldScale` = 0.1; see Scale);
+the engine is y-up, so a game point (x, y, z) maps to (x, z, -y) x 0.1.
 
 ### Other data
 
@@ -252,11 +319,14 @@ little-endian. Its buffer layout confirms the 16-byte header and the
 - `player/`: pod physics (pure, unit-tested), surfaces, `racer.pod.drive`,
   the autopilot and traffic avoidance, rivals (`racer.opponents.fly`),
   field rules (contact, ranking), lap progress and `racer.lap.timer`.
-- `flow/`: the title menu, pod shop, loading, pause and results
-  (`racer.flow`), upgrades and the saved profile.
+- `flow/`: the title menu, tournament, free race, Watto's shop, the
+  junkyard, pit droids, loading, pause and results (`racer.flow`), the
+  parts table, circuits and purses, and the saved profile.
 - `render/`: `racer.camera.chase`, `racer.scene.draw`, `racer.hud.text`
   (HUD and banners) and `racer.screen.draw` (menu screens).
-- `audio/`: `racer.audio.update` and its mixer.
+- `audio/`: `racer.audio.update`, its mixer, and the racers' and
+  Watto's voices.
+- `video/`: `racer.video.play`, the cutscene player (FFmpeg).
 
 Shaders are in `shaders/spirv/` (GLSL source next to the SPIR-V; rebuild
 with `glslc`). Unit tests: `racer_*_test`.
