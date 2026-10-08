@@ -35,7 +35,7 @@ public:
                  WorkflowContext& context) override;
 
 private:
-    void TraceDrive(float speed, float revs, float traction);
+    void TraceDrive(const Gta5Vehicle& car, float speed, float traction);
 
     std::shared_ptr<ILogger> logger_;
     std::shared_ptr<Gta5StreamState> vehicles_;

@@ -108,10 +108,11 @@ void WorkflowSwitchbackCarControlStep::Execute(
     context.Set<float>("engine.revs", gearbox_.Revs());
     context.Set<int>("gta5.car.gear", gearbox_.Gear());
     context.Set("gta5.vehicle.seated", vehicles_->seated);
-    TraceDrive(speed, gearbox_.Revs(), traction);
+    TraceDrive(car, speed, traction);
 }
 
-void WorkflowSwitchbackCarControlStep::TraceDrive(float speed, float revs,
+void WorkflowSwitchbackCarControlStep::TraceDrive(const Gta5Vehicle& car,
+                                                  float speed,
                                                   float traction) {
     if (!logger_ || ++framesSinceTrace_ < kTraceEveryFrames) return;
     framesSinceTrace_ = 0;
@@ -119,8 +120,9 @@ void WorkflowSwitchbackCarControlStep::TraceDrive(float speed, float revs,
         "WorkflowSwitchbackCarControlStep", "TraceDrive",
         "mph=" + std::to_string(int(speed * kMphPerMetrePerSecond)) +
             " gear=" + std::to_string(gearbox_.Gear()),
-        "revs=" + std::to_string(revs) +
-            " traction=" + std::to_string(traction));
+        "revs=" + std::to_string(gearbox_.Revs()) +
+            " traction=" + std::to_string(traction) + " " +
+            DescribeSwitchbackSuspension(car));
 }
 
 }  // namespace sdl3cpp::services::impl
