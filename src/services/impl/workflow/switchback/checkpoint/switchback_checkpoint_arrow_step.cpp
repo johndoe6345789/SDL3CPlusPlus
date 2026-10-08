@@ -13,10 +13,12 @@ namespace sdl3cpp::services::impl {
 WorkflowSwitchbackCheckpointArrowStep::WorkflowSwitchbackCheckpointArrowStep(
     std::shared_ptr<ILogger> logger,
     std::shared_ptr<Gta5StreamState> vehicles,
-    std::shared_ptr<SwitchbackTerrainState> terrain)
+    std::shared_ptr<SwitchbackTerrainState> terrain,
+    std::shared_ptr<SwitchbackSession> session)
     : logger_(std::move(logger)),
       vehicles_(std::move(vehicles)),
-      terrain_(std::move(terrain)) {}
+      terrain_(std::move(terrain)),
+      session_(std::move(session)) {}
 
 std::string WorkflowSwitchbackCheckpointArrowStep::GetPluginId() const {
     return "switchback.checkpoint.arrow";
@@ -28,6 +30,9 @@ void WorkflowSwitchbackCheckpointArrowStep::Execute(
     if (!loaded_) LoadOnce(step, context);
     if (!loaded_) return;
     if (context.GetBool("switchback.race.restarted", false)) route_.Reset();
+    const bool onRoute = session_->OnRoute();
+    context.Set<bool>("switchback.route.active", onRoute);
+    if (!onRoute) return;
     DrawMarquees(step, context);
     PublishProgress(context);
 
@@ -52,7 +57,7 @@ void WorkflowSwitchbackCheckpointArrowStep::Execute(
                                          : "Checkpoint reached");
     }
     PublishProgress(context);
-    if (route_.Finished()) return;
+    if (route_.Finished() || !session_->showArrow) return;
 
     DrawArrow(step, context, car);
 }

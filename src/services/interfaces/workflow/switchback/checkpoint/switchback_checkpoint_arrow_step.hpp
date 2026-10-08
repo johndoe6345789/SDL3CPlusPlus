@@ -5,6 +5,7 @@
 #include "services/interfaces/workflow/geometry/geometry_plane_helpers.hpp"
 #include "services/interfaces/workflow/gta5/stream/gta5_stream_state.hpp"
 #include "services/interfaces/workflow/switchback/checkpoint/switchback_checkpoint_route.hpp"
+#include "services/interfaces/workflow/switchback/session/switchback_session.hpp"
 #include "services/interfaces/workflow/switchback/terrain/switchback_terrain_state.hpp"
 
 #include <glm/glm.hpp>
@@ -22,6 +23,7 @@ namespace sdl3cpp::services::impl {
  * Passes checkpoints as the seated car reaches them, draws a race gantry at
  * every checkpoint, and draws a 3D arrow above the car pointing at the next
  * one. The gantries stay up after the race; the arrow stops at the finish.
+ * Off the route (menu or free roam) nothing is drawn.
  *
  * The checkpoints come from the loaded track (switchback.terrain.load).
  * Parameters: radius (default 14),
@@ -36,7 +38,8 @@ public:
     WorkflowSwitchbackCheckpointArrowStep(
         std::shared_ptr<ILogger> logger,
         std::shared_ptr<Gta5StreamState> vehicles,
-        std::shared_ptr<SwitchbackTerrainState> terrain);
+        std::shared_ptr<SwitchbackTerrainState> terrain,
+        std::shared_ptr<SwitchbackSession> session);
 
     std::string GetPluginId() const override;
     void Execute(const WorkflowStepDefinition& step,
@@ -56,6 +59,7 @@ private:
     std::shared_ptr<ILogger> logger_;
     std::shared_ptr<Gta5StreamState> vehicles_;
     std::shared_ptr<SwitchbackTerrainState> terrain_;
+    std::shared_ptr<SwitchbackSession> session_;
     SwitchbackCheckpointRoute route_;
     GeometryPlaneBuffers arrow_;
     std::uint32_t arrowIndexCount_ = 0;

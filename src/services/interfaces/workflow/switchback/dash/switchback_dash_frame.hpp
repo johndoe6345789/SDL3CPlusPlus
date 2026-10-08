@@ -9,6 +9,8 @@ struct SwitchbackRaceProgress {
     int passed{0};
     int total{0};
     bool finished{false};
+    /// The checkpoint route is running; the count shows only then.
+    bool onRoute{false};
 };
 
 /// Switchback's dashboard: an MPH dial and an RPM dial, bottom right, the

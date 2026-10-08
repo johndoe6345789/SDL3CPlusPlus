@@ -16,8 +16,9 @@
 namespace sdl3cpp::services::impl {
 
 WorkflowSwitchbackCameraLensStep::WorkflowSwitchbackCameraLensStep(
-    std::shared_ptr<ILogger> logger)
-    : logger_(std::move(logger)) {}
+    std::shared_ptr<ILogger> logger,
+    std::shared_ptr<SwitchbackSession> session)
+    : logger_(std::move(logger)), session_(std::move(session)) {}
 
 std::string WorkflowSwitchbackCameraLensStep::GetPluginId() const {
     return "switchback.camera.lens";
@@ -29,7 +30,7 @@ void WorkflowSwitchbackCameraLensStep::Execute(
         context.Get<nlohmann::json>("camera.state", nlohmann::json::object());
     const float fov = Gta5NumberOr(step, "fov", 60.f);
     const float nearPlane = Gta5NumberOr(step, "near", 0.5f);
-    const float farPlane = Gta5NumberOr(step, "far", 4000.f);
+    const float farPlane = session_->DrawDistanceM();
     const float aspect = camera.value("aspect_ratio", 1.777f);
     const glm::mat4 proj = glm::perspective(glm::radians(fov), aspect,
                                             nearPlane, farPlane);

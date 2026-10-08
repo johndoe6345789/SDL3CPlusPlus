@@ -5,6 +5,7 @@
 #include "services/interfaces/workflow/gta5/vehicle/gta5_vehicle_seat.hpp"
 #include "services/interfaces/workflow/switchback/vehicle/switchback_drive.hpp"
 #include "services/interfaces/workflow/switchback/vehicle/switchback_gearbox.hpp"
+#include "services/interfaces/workflow/switchback/vehicle/switchback_hold.hpp"
 #include "services/interfaces/workflow/switchback/vehicle/switchback_wheel_damping.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
@@ -22,8 +23,11 @@ constexpr int kTraceEveryFrames = 120;
 
 WorkflowSwitchbackCarControlStep::WorkflowSwitchbackCarControlStep(
     std::shared_ptr<ILogger> logger,
-    std::shared_ptr<Gta5StreamState> vehicles)
-    : logger_(std::move(logger)), vehicles_(std::move(vehicles)) {}
+    std::shared_ptr<Gta5StreamState> vehicles,
+    std::shared_ptr<SwitchbackSession> session)
+    : logger_(std::move(logger)),
+      vehicles_(std::move(vehicles)),
+      session_(std::move(session)) {}
 
 std::string WorkflowSwitchbackCarControlStep::GetPluginId() const {
     return "switchback.car.control";
@@ -33,6 +37,10 @@ void WorkflowSwitchbackCarControlStep::Execute(
     const WorkflowStepDefinition&, WorkflowContext& context) {
     if (!vehicles_ || vehicles_->vehicles.empty()) return;
     if (vehicles_->seated < 0) vehicles_->seated = 0;
+    if (!session_->Racing()) {
+        HoldSwitchbackCar(vehicles_->vehicles[0]);
+        return;
+    }
     if (context.GetBool("switchback.race.restarted", false)) {
         gearbox_ = SwitchbackGearbox();
     }

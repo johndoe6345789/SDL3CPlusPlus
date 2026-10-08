@@ -4,6 +4,7 @@
 #include "services/interfaces/workflow/gta5/hud/gta5_map_build.hpp"
 #include "services/interfaces/workflow/rendering/workflow_postfx_composite_state.hpp"
 #include "services/interfaces/workflow/switchback/dash/switchback_dash_frame.hpp"
+#include "services/interfaces/workflow/switchback/dash/switchback_menu_frame.hpp"
 #include "services/interfaces/workflow_context.hpp"
 
 #include <SDL3/SDL_gpu.h>
@@ -13,8 +14,11 @@
 namespace sdl3cpp::services::impl {
 
 WorkflowSwitchbackDashStep::WorkflowSwitchbackDashStep(
-    std::shared_ptr<ILogger> logger, std::shared_ptr<Gta5StreamState> state)
-    : logger_(std::move(logger)), state_(std::move(state)) {}
+    std::shared_ptr<ILogger> logger, std::shared_ptr<Gta5StreamState> state,
+    std::shared_ptr<SwitchbackSession> session)
+    : logger_(std::move(logger)),
+      state_(std::move(state)),
+      session_(std::move(session)) {}
 
 std::string WorkflowSwitchbackDashStep::GetPluginId() const {
     return "switchback.dash";
@@ -42,15 +46,26 @@ void WorkflowSwitchbackDashStep::Execute(const WorkflowStepDefinition& step,
     }
     if (!hud_.ready) return;
 
+    const auto width = static_cast<int>(
+        context.Get<uint32_t>("frame_width", 1280u));
+    const auto height = static_cast<int>(
+        context.Get<uint32_t>("frame_height", 960u));
+    if (session_->screen == SwitchbackScreen::Menu) {
+        const Gta5MapFrame menu =
+            BuildSwitchbackMenuFrame(hud_, width, height, *session_);
+        DrawGta5MapOverlay(hud_.overlay, device, cmd, swapchain, menu);
+        return;
+    }
+    if (!session_->showDash) return;
+
     const Gta5HudState s = ReadGta5HudState(context, *state_);
     SwitchbackRaceProgress race;
+    race.onRoute = context.GetBool("switchback.route.active", false);
     race.passed = context.Get<int>("switchback.checkpoint.passed", 0);
     race.total = context.Get<int>("switchback.checkpoint.total", 0);
     race.finished = context.GetBool("switchback.race.finished", false);
-    const Gta5MapFrame frame = BuildSwitchbackDashFrame(
-        hud_, static_cast<int>(context.Get<uint32_t>("frame_width", 1280u)),
-        static_cast<int>(context.Get<uint32_t>("frame_height", 960u)), s,
-        race);
+    const Gta5MapFrame frame =
+        BuildSwitchbackDashFrame(hud_, width, height, s, race);
     DrawGta5MapOverlay(hud_.overlay, device, cmd, swapchain, frame);
 }
 

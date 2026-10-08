@@ -3,6 +3,7 @@
 #include "services/interfaces/i_logger.hpp"
 #include "services/interfaces/i_workflow_step.hpp"
 #include "services/interfaces/workflow/gta5/stream/gta5_stream_state.hpp"
+#include "services/interfaces/workflow/switchback/session/switchback_session.hpp"
 #include "services/interfaces/workflow/switchback/vehicle/switchback_gearbox.hpp"
 
 #include <memory>
@@ -15,6 +16,7 @@ namespace sdl3cpp::services::impl {
  *
  * Keeps the player in the car: the first vehicle is always seated and
  * driven from the keyboard. There is no getting out and no on-foot body.
+ * Off the race (menu, finish) the car is braked and held still.
  *
  * Drives all four wheels so the car can reach about 300 mph, with traction
  * control and the gearbox's rev limiter, damps the suspension, and runs an
@@ -28,7 +30,8 @@ class WorkflowSwitchbackCarControlStep final : public IWorkflowStep {
 public:
     WorkflowSwitchbackCarControlStep(
         std::shared_ptr<ILogger> logger,
-        std::shared_ptr<Gta5StreamState> vehicles);
+        std::shared_ptr<Gta5StreamState> vehicles,
+        std::shared_ptr<SwitchbackSession> session);
 
     std::string GetPluginId() const override;
     void Execute(const WorkflowStepDefinition& step,
@@ -39,6 +42,7 @@ private:
 
     std::shared_ptr<ILogger> logger_;
     std::shared_ptr<Gta5StreamState> vehicles_;
+    std::shared_ptr<SwitchbackSession> session_;
     SwitchbackGearbox gearbox_;
     int framesSinceTrace_ = 0;
 };

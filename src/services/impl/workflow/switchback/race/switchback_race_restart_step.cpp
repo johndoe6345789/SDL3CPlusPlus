@@ -13,8 +13,11 @@ namespace sdl3cpp::services::impl {
 
 WorkflowSwitchbackRaceRestartStep::WorkflowSwitchbackRaceRestartStep(
     std::shared_ptr<ILogger> logger,
-    std::shared_ptr<Gta5StreamState> vehicles)
-    : logger_(std::move(logger)), vehicles_(std::move(vehicles)) {}
+    std::shared_ptr<Gta5StreamState> vehicles,
+    std::shared_ptr<SwitchbackSession> session)
+    : logger_(std::move(logger)),
+      vehicles_(std::move(vehicles)),
+      session_(std::move(session)) {}
 
 std::string WorkflowSwitchbackRaceRestartStep::GetPluginId() const {
     return "switchback.race.restart";
@@ -34,7 +37,11 @@ void WorkflowSwitchbackRaceRestartStep::Execute(
     const bool down = Gta5KeyDown(keys, "R");
     const bool pressed = down && !keyWasDown_;
     keyWasDown_ = down;
-    if (!pressed) return;
+    const bool requested = session_->restartRequested;
+    session_->restartRequested = false;
+    const bool keyed = pressed && session_->screen != SwitchbackScreen::Menu;
+    if (!requested && !keyed) return;
+    session_->screen = SwitchbackScreen::Race;
     Reset(car);
     context.Set<bool>("switchback.race.restarted", true);
 }

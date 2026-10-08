@@ -1,6 +1,7 @@
 #include "services/interfaces/workflow/switchback/dash/switchback_dash_frame.hpp"
 
 #include "services/interfaces/workflow/gta5/hud/gta5_map_frame.hpp"
+#include "services/interfaces/workflow/switchback/dash/switchback_dash_readouts.hpp"
 
 #include <algorithm>
 #include <string>
@@ -14,13 +15,7 @@ constexpr float kMphStep = 20.f;
 constexpr float kRpmTop = 8.f;
 constexpr float kRpmStep = 1.f;
 constexpr float kGearScale = 10.f;
-constexpr float kGearGap = 12.f;
-constexpr float kGlyphRows = 7.f;
 constexpr float kGlyphColumns = 5.f;
-constexpr float kGlyphAdvance = 6.f;
-constexpr float kCheckpointScale = 3.f;
-constexpr float kFinishScale = 5.f;
-constexpr glm::vec2 kCheckpointAt(24.f, 24.f);
 
 void AddGearReadout(Gta5MapFrame& frame, const Gta5MapLayout& layout,
                     const Gta5Hud& hud, glm::vec2 speedo, float radius,
@@ -31,25 +26,6 @@ void AddGearReadout(Gta5MapFrame& frame, const Gta5MapLayout& layout,
     AddGta5MapText(frame, layout, hud.overlay,
                    glm::vec2(centre_x - text_width * 0.5f, top), kGearScale,
                    std::to_string(gear));
-}
-
-void AddCheckpointReadout(Gta5MapFrame& frame, const Gta5MapLayout& layout,
-                          const Gta5Hud& hud,
-                          const SwitchbackRaceProgress& race) {
-    const std::string count = std::to_string(race.passed) + " OF " +
-                              std::to_string(race.total);
-    AddGta5MapText(frame, layout, hud.overlay, kCheckpointAt,
-                   kCheckpointScale, "CHECKPOINT " + count);
-    if (!race.finished) return;
-    const float below =
-        kCheckpointAt.y + kGlyphRows * kCheckpointScale + kGearGap;
-    AddGta5MapText(frame, layout, hud.overlay,
-                   glm::vec2(kCheckpointAt.x, below), kFinishScale,
-                   "FINISHED");
-    const float hint = below + kGlyphRows * kFinishScale + kGearGap;
-    AddGta5MapText(frame, layout, hud.overlay,
-                   glm::vec2(kCheckpointAt.x, hint), kCheckpointScale,
-                   "R TO RESTART");
 }
 
 }  // namespace
@@ -74,6 +50,7 @@ Gta5MapFrame BuildSwitchbackDashFrame(const Gta5Hud& hud, int width,
                     thousands, kRpmTop, kRpmStep, "RPM x1000");
     AddGearReadout(frame, layout, hud, speedo, radius, state.gear);
     AddCheckpointReadout(frame, layout, hud, race);
+    AddEscHint(frame, layout, hud, h);
     return frame;
 }
 

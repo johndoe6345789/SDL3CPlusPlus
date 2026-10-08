@@ -1167,8 +1167,14 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/switchback/checkpoint/switchback_marquee_mesh.cpp
         src/services/impl/workflow/switchback/checkpoint/switchback_mesh_primitives.cpp
         src/services/impl/workflow/switchback/dash/switchback_dash_frame.cpp
+        src/services/impl/workflow/switchback/dash/switchback_dash_readouts.cpp
         src/services/impl/workflow/switchback/dash/switchback_dash_step.cpp
+        src/services/impl/workflow/switchback/dash/switchback_menu_frame.cpp
+        src/services/impl/workflow/switchback/menu/switchback_menu_logic.cpp
+        src/services/impl/workflow/switchback/menu/switchback_menu_settings.cpp
+        src/services/impl/workflow/switchback/menu/switchback_menu_step.cpp
         src/services/impl/workflow/switchback/race/switchback_race_restart_step.cpp
+        src/services/impl/workflow/switchback/session/switchback_session.cpp
         src/services/impl/workflow/switchback/terrain/switchback_terrain_collision.cpp
         src/services/impl/workflow/switchback/terrain/switchback_terrain_draw_step.cpp
         src/services/impl/workflow/switchback/terrain/switchback_terrain_load_step.cpp
@@ -1183,6 +1189,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/switchback/vehicle/switchback_car_control_step.cpp
         src/services/impl/workflow/switchback/vehicle/switchback_drive.cpp
         src/services/impl/workflow/switchback/vehicle/switchback_gearbox.cpp
+        src/services/impl/workflow/switchback/vehicle/switchback_hold.cpp
         src/services/impl/workflow/switchback/vehicle/switchback_wheel_damping.cpp
         src/services/impl/workflow/stunts/stunts_step_params.cpp
         src/services/impl/workflow/stunts/data/stunts_car.cpp

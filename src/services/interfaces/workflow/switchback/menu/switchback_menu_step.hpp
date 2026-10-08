@@ -10,21 +10,18 @@
 namespace sdl3cpp::services::impl {
 
 /**
- * Plugin ID: switchback.camera.lens
+ * Plugin ID: switchback.menu
  *
- * Rebuilds the projection in camera.state with the clip range the race needs.
- * camera.setup only offers a 100 m far plane, which cuts the track short.
- * The far plane follows the session's draw distance setting.
+ * Moves the session between the main menu, the race and the finish screen
+ * from the keys: Up and Down move the cursor, Enter picks, Escape goes back.
  *
- * Parameters: fov (default 60, degrees),
- *             near (default 0.5, metres)
- * Reads/writes: camera.state
+ * Reads:  input_key_{up,down,enter,escape}_pressed, switchback.race.finished
+ * Writes: the shared SwitchbackSession
  */
-class WorkflowSwitchbackCameraLensStep final : public IWorkflowStep {
+class WorkflowSwitchbackMenuStep final : public IWorkflowStep {
 public:
-    WorkflowSwitchbackCameraLensStep(
-        std::shared_ptr<ILogger> logger,
-        std::shared_ptr<SwitchbackSession> session);
+    WorkflowSwitchbackMenuStep(std::shared_ptr<ILogger> logger,
+                               std::shared_ptr<SwitchbackSession> session);
 
     std::string GetPluginId() const override;
     void Execute(const WorkflowStepDefinition& step,

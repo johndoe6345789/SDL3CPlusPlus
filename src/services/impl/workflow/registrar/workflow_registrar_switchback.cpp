@@ -3,7 +3,9 @@
 #include "services/interfaces/workflow/switchback/camera/switchback_camera_lens_step.hpp"
 #include "services/interfaces/workflow/switchback/checkpoint/switchback_checkpoint_arrow_step.hpp"
 #include "services/interfaces/workflow/switchback/dash/switchback_dash_step.hpp"
+#include "services/interfaces/workflow/switchback/menu/switchback_menu_step.hpp"
 #include "services/interfaces/workflow/switchback/race/switchback_race_restart_step.hpp"
+#include "services/interfaces/workflow/switchback/session/switchback_session.hpp"
 #include "services/interfaces/workflow/switchback/terrain/switchback_terrain_draw_step.hpp"
 #include "services/interfaces/workflow/switchback/terrain/switchback_terrain_load_step.hpp"
 #include "services/interfaces/workflow/switchback/terrain/switchback_terrain_state.hpp"
@@ -16,23 +18,28 @@ int RegisterSwitchbackSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
                             std::shared_ptr<Gta5StreamState> vehicles) {
     if (!registry) return 0;
     auto terrain = std::make_shared<SwitchbackTerrainState>();
+    auto session = std::make_shared<SwitchbackSession>();
+    registry->RegisterStep(
+        std::make_shared<WorkflowSwitchbackMenuStep>(logger, session));
     registry->RegisterStep(
         std::make_shared<WorkflowSwitchbackTerrainLoadStep>(logger, terrain));
     registry->RegisterStep(
         std::make_shared<WorkflowSwitchbackTerrainDrawStep>(logger, terrain));
     registry->RegisterStep(
-        std::make_shared<WorkflowSwitchbackRaceRestartStep>(logger, vehicles));
+        std::make_shared<WorkflowSwitchbackRaceRestartStep>(logger, vehicles,
+                                                            session));
     registry->RegisterStep(
-        std::make_shared<WorkflowSwitchbackCarControlStep>(logger, vehicles));
+        std::make_shared<WorkflowSwitchbackCarControlStep>(logger, vehicles,
+                                                           session));
     registry->RegisterStep(
-        std::make_shared<WorkflowSwitchbackCheckpointArrowStep>(logger,
-                                                                vehicles,
-                                                                terrain));
+        std::make_shared<WorkflowSwitchbackCheckpointArrowStep>(
+            logger, vehicles, terrain, session));
     registry->RegisterStep(
-        std::make_shared<WorkflowSwitchbackDashStep>(logger, vehicles));
+        std::make_shared<WorkflowSwitchbackDashStep>(logger, vehicles,
+                                                     session));
     registry->RegisterStep(
-        std::make_shared<WorkflowSwitchbackCameraLensStep>(logger));
-    return 7;
+        std::make_shared<WorkflowSwitchbackCameraLensStep>(logger, session));
+    return 8;
 }
 
 }  // namespace sdl3cpp::services::impl::registrar_detail
