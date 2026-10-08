@@ -1264,6 +1264,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/racer/player/racer_surface_effects.cpp
         src/services/impl/workflow/racer/player/racer_traffic.cpp
         src/services/impl/workflow/racer/render/racer_camera_math.cpp
+        src/services/impl/workflow/racer/render/racer_camera_util.cpp
         src/services/impl/workflow/racer/render/racer_chase_cam_step.cpp
         src/services/impl/workflow/racer/render/racer_hazard_draw.cpp
         src/services/impl/workflow/racer/render/racer_hud_banner.cpp
