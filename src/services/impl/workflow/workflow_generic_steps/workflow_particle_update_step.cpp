@@ -1,12 +1,43 @@
 #include "services/interfaces/workflow/workflow_generic_steps/workflow_particle_update_step.hpp"
 
-#include "services/interfaces/workflow/workflow_generic_steps/particle_update_helpers.hpp"
+#include "services/interfaces/workflow/executor/workflow_step_parameter_resolver.hpp"
+#include "services/interfaces/workflow/particles/particle_pool.hpp"
+
+#include <glm/glm.hpp>
 
 #include <string>
 #include <utility>
-#include <vector>
 
 namespace sdl3cpp::services::impl {
+
+namespace {
+
+float ReadDeltaTime(const WorkflowStepDefinition& step,
+                    const WorkflowContext& context) {
+    WorkflowStepParameterResolver parameterResolver;
+    if (const auto* param =
+            parameterResolver.FindParameter(step, "delta_time")) {
+        if (param->type == WorkflowParameterValue::Type::Number) {
+            return static_cast<float>(param->numberValue);
+        }
+    }
+    if (const auto* elapsed = context.TryGet<float>("frame.elapsed")) {
+        return *elapsed;
+    }
+    return 0.016f;
+}
+
+float ReadGravity(const WorkflowStepDefinition& step) {
+    WorkflowStepParameterResolver parameterResolver;
+    if (const auto* param = parameterResolver.FindParameter(step, "gravity")) {
+        if (param->type == WorkflowParameterValue::Type::Number) {
+            return static_cast<float>(param->numberValue);
+        }
+    }
+    return 9.81f;
+}
+
+}  // namespace
 
 WorkflowParticleUpdateStep::WorkflowParticleUpdateStep(
     std::shared_ptr<ILogger> logger)
@@ -18,51 +49,24 @@ std::string WorkflowParticleUpdateStep::GetPluginId() const {
 
 void WorkflowParticleUpdateStep::Execute(const WorkflowStepDefinition& step,
                                          WorkflowContext& context) {
-    const ParticleUpdateParams params = ReadParticleUpdateParams(step, context);
-
-    const auto* particlesPtr =
-        context.TryGet<std::vector<std::string>>("particles.active");
-    if (!particlesPtr || particlesPtr->empty()) {
+    const auto* existing = context.TryGet<ParticlePool>("particles.pool");
+    if (!existing) {
         if (logger_) {
             logger_->Trace("WorkflowParticleUpdateStep", "Execute",
-                           "No active particles", "Particle update complete");
+                           "No particle pool", "Particle update complete");
         }
         return;
     }
-    const std::vector<std::string> particles = *particlesPtr;
 
-    std::vector<float> ages;
-    if (const auto* existing =
-            context.TryGet<std::vector<float>>("particles.ages")) {
-        ages = *existing;
-    } else {
-        ages.resize(particles.size(), 0.0f);
-    }
-
-    std::vector<float> lifetimes;
-    if (const auto* existing =
-            context.TryGet<std::vector<float>>("particles.lifetimes")) {
-        lifetimes = *existing;
-    } else {
-        lifetimes.resize(particles.size(), 2.0f);
-    }
-
-    if (ages.size() == particles.size() &&
-        lifetimes.size() == particles.size()) {
-        const PrunedParticles pruned = AgeAndPruneParticles(
-            particles, std::move(ages), std::move(lifetimes), params.deltaTime);
-        context.Set("particles.active", pruned.particles);
-        context.Set("particles.ages", pruned.ages);
-        context.Set("particles.lifetimes", pruned.lifetimes);
-    }
+    const float deltaTime = ReadDeltaTime(step, context);
+    ParticlePool pool = *existing;
+    pool.Step(deltaTime, glm::vec3(0.0f, -ReadGravity(step), 0.0f));
+    context.Set("particles.pool", pool);
 
     if (logger_) {
-        auto* finalParticles =
-            context.TryGet<std::vector<std::string>>("particles.active");
-        const size_t count = finalParticles ? finalParticles->size() : 0;
         logger_->Trace("WorkflowParticleUpdateStep", "Execute",
-                       "delta=" + std::to_string(params.deltaTime) +
-                           ", count=" + std::to_string(count),
+                       "delta=" + std::to_string(deltaTime) +
+                           ", count=" + std::to_string(pool.Count()),
                        "Particle update complete");
     }
 }

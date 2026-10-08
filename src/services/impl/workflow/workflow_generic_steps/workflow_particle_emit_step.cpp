@@ -1,13 +1,50 @@
 #include "services/interfaces/workflow/workflow_generic_steps/workflow_particle_emit_step.hpp"
 
 #include "services/interfaces/workflow/executor/workflow_step_parameter_resolver.hpp"
-#include "services/interfaces/workflow/executor/workflow_step_io_resolver.hpp"
+#include "services/interfaces/workflow/particles/particle_pool.hpp"
 
-#include <utility>
 #include <string>
-#include <vector>
+#include <utility>
 
 namespace sdl3cpp::services::impl {
+
+namespace {
+
+float ReadNumber(const WorkflowStepDefinition& step, const std::string& key,
+                 float fallback) {
+    WorkflowStepParameterResolver parameterResolver;
+    if (const auto* param = parameterResolver.FindParameter(step, key)) {
+        if (param->type == WorkflowParameterValue::Type::Number) {
+            return static_cast<float>(param->numberValue);
+        }
+    }
+    return fallback;
+}
+
+glm::vec3 ReadVector(const WorkflowStepDefinition& step,
+                     const std::string& prefix) {
+    return glm::vec3(ReadNumber(step, prefix + "_x", 0.0f),
+                     ReadNumber(step, prefix + "_y", 0.0f),
+                     ReadNumber(step, prefix + "_z", 0.0f));
+}
+
+ParticleEmitSpec ReadEmitSpec(const WorkflowStepDefinition& step) {
+    ParticleEmitSpec spec;
+    spec.origin = ReadVector(step, "origin");
+    spec.velocity = ReadVector(step, "velocity");
+    spec.spread = ReadNumber(step, "spread", 0.0f);
+    spec.minLifetime = ReadNumber(step, "lifetime_min", 1.0f);
+    spec.maxLifetime = ReadNumber(step, "lifetime_max", spec.minLifetime);
+    spec.size = ReadNumber(step, "size", 0.5f);
+    spec.sizeGrowth = ReadNumber(step, "size_growth", 0.0f);
+    spec.drag = ReadNumber(step, "drag", 0.0f);
+    spec.gravityScale = ReadNumber(step, "gravity_scale", 1.0f);
+    const float count = ReadNumber(step, "count", 10.0f);
+    spec.count = count > 0.0f ? static_cast<std::uint32_t>(count) : 0u;
+    return spec;
+}
+
+}  // namespace
 
 WorkflowParticleEmitStep::WorkflowParticleEmitStep(std::shared_ptr<ILogger> logger)
     : logger_(std::move(logger)) {}
@@ -16,47 +53,24 @@ std::string WorkflowParticleEmitStep::GetPluginId() const {
     return "particle.emit";
 }
 
-void WorkflowParticleEmitStep::Execute(const WorkflowStepDefinition& step, WorkflowContext& context) {
-    WorkflowStepParameterResolver parameterResolver;
-    WorkflowStepIoResolver ioResolver;
+void WorkflowParticleEmitStep::Execute(const WorkflowStepDefinition& step,
+                                       WorkflowContext& context) {
+    const ParticleEmitSpec spec = ReadEmitSpec(step);
 
-    // Get emitter_id (optional)
-    std::string emitterId = "emitter_default";
-    if (const auto* param = parameterResolver.FindParameter(step, "emitter_id")) {
-        if (param->type == WorkflowParameterValue::Type::String) {
-            emitterId = param->stringValue;
-        }
+    ParticlePool pool;
+    const auto* existing = context.TryGet<ParticlePool>("particles.pool");
+    if (existing) {
+        pool = *existing;
     }
+    pool.Emit(spec);
+    context.Set("particles.pool", pool);
 
-    // Get particle count
-    int count = 10;
-    if (const auto* param = parameterResolver.FindParameter(step, "count")) {
-        if (param->type == WorkflowParameterValue::Type::Number) {
-            count = static_cast<int>(param->numberValue);
-            if (count < 0) count = 0;
-        }
-    }
-
-    // Log particle emission
     if (logger_) {
         logger_->Trace("WorkflowParticleEmitStep", "Execute",
-                       "emitter=" + emitterId + ", count=" + std::to_string(count),
-                       "Emitting particles");
+                       "count=" + std::to_string(spec.count) +
+                           ", live=" + std::to_string(pool.Count()),
+                       "Emitted particles");
     }
-
-    // Initialize or get particles vector
-    std::vector<std::string> particles;
-    if (const auto* existingParticles = context.TryGet<std::vector<std::string>>("particles.active")) {
-        particles = *existingParticles;
-    }
-
-    // Add particles
-    for (int i = 0; i < count; ++i) {
-        particles.push_back(emitterId + "_p" + std::to_string(particles.size()));
-    }
-
-    // Store back in context
-    context.Set("particles.active", particles);
 }
 
 }  // namespace sdl3cpp::services::impl

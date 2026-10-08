@@ -209,6 +209,8 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/executor/workflow_step_parameter_resolver_scalars.cpp
         src/services/impl/workflow/executor/workflow_step_registry.cpp
         src/services/impl/workflow/executor/workflow_template_resolver.cpp
+        src/services/impl/workflow/particles/particle_billboards.cpp
+        src/services/impl/workflow/particles/particle_pool.cpp
         src/services/impl/workflow/media/media_catalog_builder.cpp
         src/services/impl/workflow/media/media_catalog_count.cpp
         src/services/impl/workflow/media/media_catalog_items.cpp
@@ -309,7 +311,6 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/workflow_generic_steps/metric_store.cpp
         src/services/impl/workflow/workflow_generic_steps/model_input_helpers.cpp
         src/services/impl/workflow/workflow_generic_steps/model_spawn_input_helpers.cpp
-        src/services/impl/workflow/workflow_generic_steps/particle_update_helpers.cpp
         src/services/impl/workflow/workflow_generic_steps/physics_body_builder.cpp
         src/services/impl/workflow/workflow_generic_steps/physics_body_params.cpp
         src/services/impl/workflow/workflow_generic_steps/physics_fps_input.cpp
@@ -1957,6 +1958,31 @@ target_link_libraries(q3_pickup_rules_test PRIVATE
     nlohmann_json::nlohmann_json
 )
 add_test(NAME q3_pickup_rules_test COMMAND q3_pickup_rules_test)
+
+add_executable(particle_pool_test)
+target_sources(particle_pool_test PRIVATE tests/particle_pool_test.cpp)
+target_sources(particle_pool_test PRIVATE src/services/impl/workflow/particles/particle_pool.cpp)
+target_include_directories(particle_pool_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(particle_pool_test PRIVATE
+    GTest::gtest_main
+    glm::glm
+)
+add_test(NAME particle_pool_test COMMAND particle_pool_test)
+
+add_executable(particle_billboards_test)
+target_sources(particle_billboards_test PRIVATE tests/particle_billboards_test.cpp)
+target_sources(particle_billboards_test PRIVATE src/services/impl/workflow/particles/particle_pool.cpp)
+target_sources(particle_billboards_test PRIVATE src/services/impl/workflow/particles/particle_billboards.cpp)
+target_include_directories(particle_billboards_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(particle_billboards_test PRIVATE
+    GTest::gtest_main
+    glm::glm
+)
+add_test(NAME particle_billboards_test COMMAND particle_billboards_test)
 
 add_executable(q3_axes_test)
 target_sources(q3_axes_test PRIVATE tests/q3_axes_test.cpp)

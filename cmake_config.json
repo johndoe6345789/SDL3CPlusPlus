@@ -78,6 +78,7 @@
         "src/services/impl/app/*.cpp",
         "src/services/impl/workflow/bootstrap/*.cpp",
         "src/services/impl/workflow/executor/*.cpp",
+        "src/services/impl/workflow/particles/*.cpp",
         "src/services/impl/workflow/media/*.cpp",
         "src/services/impl/workflow/network/*.cpp",
         "src/services/impl/workflow/parser/*.cpp",
@@ -577,6 +578,35 @@
         "GTest::gtest_main",
         "glm::glm",
         "nlohmann_json::nlohmann_json"
+      ]
+    },
+    {
+      "name": "particle_pool_test",
+      "sources": [
+        "tests/particle_pool_test.cpp",
+        "src/services/impl/workflow/particles/particle_pool.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main",
+        "glm::glm"
+      ]
+    },
+    {
+      "name": "particle_billboards_test",
+      "sources": [
+        "tests/particle_billboards_test.cpp",
+        "src/services/impl/workflow/particles/particle_pool.cpp",
+        "src/services/impl/workflow/particles/particle_billboards.cpp"
+      ],
+      "include_directories": [
+        "src"
+      ],
+      "link_libraries": [
+        "GTest::gtest_main",
+        "glm::glm"
       ]
     },
     {
