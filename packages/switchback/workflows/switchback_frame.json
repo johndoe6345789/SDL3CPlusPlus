@@ -1,7 +1,14 @@
 {
-  "name": "Switchback Frame",
-  "description": "One frame of Switchback: the physics step, then the GTA V vehicle drops and syncs.",
+  "name": "Switchback Frame Tick",
+  "description": "Per-frame composition: input, physics, the terrain and the car, then the draw.",
   "steps": [
+    {
+      "id": "input_group",
+      "plugin": "workflow.include",
+      "parameters": {
+        "path": "packages/gta5/workflows/gta5_input.json"
+      }
+    },
     {
       "id": "physics_step",
       "plugin": "physics.step",
@@ -11,10 +18,14 @@
       }
     },
     {
-      "id": "frame_begin",
-      "plugin": "frame.gpu.begin_offscreen",
+      "id": "terrain_load",
+      "plugin": "switchback.terrain.load",
       "parameters": {
-        "render_scale": 1.0
+        "heightmap": "packages/switchback/assets/spiral_pass_heightmap.r16",
+        "height_max_m": 512.0,
+        "step_m": 1.7578125,
+        "chunk_cells": 128,
+        "uv_metres": 20.0
       }
     },
     {
@@ -28,19 +39,67 @@
         "paint_b": 0.05,
         "wheel_radius": 0.36,
         "wheel_width": 0.25,
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0,
+        "x": -718.9,
+        "y": 40.0,
+        "z": -261.6,
+        "heading": -1.2217,
         "mass": 1300,
         "drop_height": 1.5,
-        "heading": 0.0,
         "ride_height": 0.1
-      },
-      "comment": "Lands on the flat ground body, which the game workflow adds at y=0. The drop starts 1.5 m above it."
+      }
+    },
+    {
+      "id": "car_control",
+      "plugin": "switchback.car.control"
     },
     {
       "id": "vehicles_sync",
       "plugin": "gta5.vehicles.sync"
+    },
+    {
+      "id": "vehicle_camera",
+      "plugin": "gta5.vehicle.camera",
+      "parameters": {
+        "distance": 6.5,
+        "height": 2.2,
+        "ease": 0.18
+      }
+    },
+    {
+      "id": "render_prepare",
+      "plugin": "render.prepare"
+    },
+    {
+      "id": "tiles_cull",
+      "plugin": "gta5.tiles.cull",
+      "parameters": {
+        "cull_size_ratio": 0.003,
+        "lod_scale": 1.25
+      }
+    },
+    {
+      "id": "frame_begin",
+      "plugin": "frame.gpu.begin_offscreen",
+      "parameters": {
+        "render_scale": 1.0
+      }
+    },
+    {
+      "id": "terrain_draw",
+      "plugin": "switchback.terrain.draw",
+      "parameters": {
+        "pipeline_key": "gpu_pipeline_textured",
+        "texture_key": "switchback_ground"
+      }
+    },
+    {
+      "id": "tiles_draw",
+      "plugin": "gta5.tiles.draw",
+      "parameters": {
+        "pipeline_key": "gpu_pipeline_gta5",
+        "texture_key": "walls_texture_gpu",
+        "sampler_key": "walls_texture_sampler"
+      }
     },
     {
       "id": "frame_end",
@@ -48,8 +107,7 @@
     },
     {
       "id": "composite_draw",
-      "plugin": "postfx.composite_draw",
-      "comment": "Without this and the submit below, the draws land in a texture nobody presents and the window stays black."
+      "plugin": "postfx.composite_draw"
     },
     {
       "id": "command_buffer_submit",

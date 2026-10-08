@@ -1,5 +1,6 @@
 #include "services/impl/workflow/registrar/workflow_registrar_categories.hpp"
 #include "services/impl/workflow/registrar/workflow_registrar_gta5_player.hpp"
+#include "services/impl/workflow/registrar/workflow_registrar_switchback.hpp"
 
 #include "services/interfaces/workflow/gta5/stream/gta5_stream_state.hpp"
 #include "services/interfaces/workflow/gta5/resource/gta5_assets_index_step.hpp"
@@ -69,11 +70,12 @@ int RegisterGta5StreamingSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
     registry->RegisterStep(
         std::make_shared<WorkflowGta5MapDrawStep>(logger, state));
     const int player = RegisterGta5PlayerSteps(registry, logger, state);
+    const int switchback = RegisterSwitchbackSteps(registry, logger, state);
     // The sky and the clock need no streaming state.
     registry->RegisterStep(std::make_shared<WorkflowGta5SkyDrawStep>(logger));
     registry->RegisterStep(std::make_shared<WorkflowGta5TimeStep>(logger));
 
-    return 18 + player;
+    return 18 + player + switchback;
 }
 
 }  // namespace sdl3cpp::services::impl::registrar_detail

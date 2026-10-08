@@ -95,6 +95,7 @@
         "src/services/impl/workflow/compute/*.cpp",
         "src/services/impl/workflow/quake3/**/*.cpp",
         "src/services/impl/workflow/gta5/**/*.cpp",
+        "src/services/impl/workflow/switchback/**/*.cpp",
         "src/services/impl/workflow/stunts/*.cpp",
         "src/services/impl/workflow/stunts/data/*.cpp",
         "src/services/impl/workflow/stunts/world/*.cpp",

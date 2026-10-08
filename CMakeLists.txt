@@ -274,6 +274,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/registrar/workflow_registrar_scene.cpp
         src/services/impl/workflow/registrar/workflow_registrar_shader.cpp
         src/services/impl/workflow/registrar/workflow_registrar_stunts.cpp
+        src/services/impl/workflow/registrar/workflow_registrar_switchback.cpp
         src/services/impl/workflow/registrar/workflow_registrar_system_data.cpp
         src/services/impl/workflow/shader/shader_compile_build_map.cpp
         src/services/impl/workflow/shader/shader_compile_debug_marker.cpp
@@ -1155,6 +1156,12 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/world/gta5_water_step.cpp
         src/services/impl/workflow/gta5/world/gta5_water_uniforms.cpp
         src/services/impl/workflow/gta5/world/gta5_water_upload.cpp
+        src/services/impl/workflow/switchback/terrain/switchback_heightmap.cpp
+        src/services/impl/workflow/switchback/terrain/switchback_terrain_collision.cpp
+        src/services/impl/workflow/switchback/terrain/switchback_terrain_draw_step.cpp
+        src/services/impl/workflow/switchback/terrain/switchback_terrain_load_step.cpp
+        src/services/impl/workflow/switchback/terrain/switchback_terrain_mesh.cpp
+        src/services/impl/workflow/switchback/vehicle/switchback_car_control_step.cpp
         src/services/impl/workflow/stunts/stunts_step_params.cpp
         src/services/impl/workflow/stunts/data/stunts_car.cpp
         src/services/impl/workflow/stunts/data/stunts_car_body.cpp

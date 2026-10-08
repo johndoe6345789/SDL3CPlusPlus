@@ -1,0 +1,24 @@
+#include "services/impl/workflow/registrar/workflow_registrar_switchback.hpp"
+
+#include "services/interfaces/workflow/switchback/terrain/switchback_terrain_draw_step.hpp"
+#include "services/interfaces/workflow/switchback/terrain/switchback_terrain_load_step.hpp"
+#include "services/interfaces/workflow/switchback/terrain/switchback_terrain_state.hpp"
+#include "services/interfaces/workflow/switchback/vehicle/switchback_car_control_step.hpp"
+
+namespace sdl3cpp::services::impl::registrar_detail {
+
+int RegisterSwitchbackSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
+                            std::shared_ptr<ILogger> logger,
+                            std::shared_ptr<Gta5StreamState> vehicles) {
+    if (!registry) return 0;
+    auto terrain = std::make_shared<SwitchbackTerrainState>();
+    registry->RegisterStep(
+        std::make_shared<WorkflowSwitchbackTerrainLoadStep>(logger, terrain));
+    registry->RegisterStep(
+        std::make_shared<WorkflowSwitchbackTerrainDrawStep>(logger, terrain));
+    registry->RegisterStep(
+        std::make_shared<WorkflowSwitchbackCarControlStep>(logger, vehicles));
+    return 3;
+}
+
+}  // namespace sdl3cpp::services::impl::registrar_detail
