@@ -1,7 +1,6 @@
 #include "services/interfaces/workflow/switchback/terrain/switchback_terrain_load_step.hpp"
 
 #include "services/interfaces/workflow/gta5/core/gta5_step_params.hpp"
-#include "services/interfaces/workflow/switchback/terrain/switchback_terrain_mesh.hpp"
 #include "services/interfaces/workflow/switchback/terrain/switchback_terrain_upload.hpp"
 #include "services/interfaces/workflow/switchback/track/switchback_track_generate.hpp"
 #include "services/interfaces/workflow/switchback/track/switchback_track_spec.hpp"
@@ -9,7 +8,6 @@
 
 #include <btBulletDynamicsCommon.h>
 
-#include <stdexcept>
 #include <utility>
 
 namespace sdl3cpp::services::impl {
@@ -44,25 +42,13 @@ void WorkflowSwitchbackTerrainLoadStep::Execute(
         LogError("track has no route: " + path);
         return;
     }
-    const int cells = Gta5ParameterOrInt(step, "chunk_cells", 128);
-    if (cells <= 0 || (layout.heightmap.size - 1) % cells != 0) {
-        LogError("chunk_cells " + std::to_string(cells) + " does not divide " +
-                 std::to_string(layout.heightmap.size - 1));
+    const std::string error = InstallSwitchbackTerrain(
+        device, *world, layout, Gta5ParameterOrInt(step, "chunk_cells", 128),
+        Gta5NumberOr(step, "uv_metres", 20.f), *state_);
+    if (!error.empty()) {
+        LogError(error);
         return;
     }
-    SwitchbackChunkSpec base;
-    base.cells = cells;
-    base.stepM = layout.stepM;
-    base.uvMetres = Gta5NumberOr(step, "uv_metres", 20.f);
-    try {
-        UploadSwitchbackChunks(device, layout.heightmap, base, *state_);
-    } catch (const std::runtime_error& error) {
-        ReleaseSwitchbackChunks(device, *state_);
-        LogError(error.what());
-        return;
-    }
-    BuildSwitchbackCollision(*world, layout.heightmap, layout.stepM,
-                             layout.heightMaxM, *state_);
     state_->checkpoints = std::move(layout.checkpoints);
     if (logger_) {
         logger_->Trace(

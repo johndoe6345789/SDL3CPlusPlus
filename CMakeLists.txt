@@ -1181,6 +1181,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/switchback/track/switchback_track_road.cpp
         src/services/impl/workflow/switchback/track/switchback_track_spec.cpp
         src/services/impl/workflow/switchback/vehicle/switchback_car_control_step.cpp
+        src/services/impl/workflow/switchback/vehicle/switchback_drive.cpp
         src/services/impl/workflow/switchback/vehicle/switchback_gearbox.cpp
         src/services/impl/workflow/switchback/vehicle/switchback_wheel_damping.cpp
         src/services/impl/workflow/stunts/stunts_step_params.cpp
