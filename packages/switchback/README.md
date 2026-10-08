@@ -7,7 +7,9 @@ In development. Milestone 1 is one playable level with a driving prototype.
 
 ## Levels
 
-- **Spiral Pass** (milestone 1). A switchback track with checkpoints that winds up a mountain. The spec is in `assets/spiral_pass.json`.
+Each level is one map of about 20 square miles (about 7.2 km square). A level has one track and open terrain around it to explore off the road.
+
+- **Spiral Pass** (milestone 1). A switchback track with checkpoints that winds up a mountain. The track is about 7.9 km long and sits in the middle of the map. The spec is in `assets/spiral_pass.json`.
 - **Rock Garden** (planned). Rock-crawling terrain with rockfalls, ruts and water crossings.
 
 Planned levels, in no particular order:
