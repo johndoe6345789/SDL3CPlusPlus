@@ -21,7 +21,8 @@ float RacerCameraClearance(const RacerWorldState& state,
                            const glm::vec3& pod, const glm::vec3& eye);
 
 /// The eye moved in toward `focus` to just short of the first wall
-/// between them, so canyon walls rarely hide the pod; `eye` when clear.
+/// between them, or of a hill the sight line could only clear from far
+/// above, so neither hides the pod; `eye` when clear.
 /// Never closer than `nearest`, which keeps it out of the pod itself.
 glm::vec3 RacerCameraPullIn(const RacerWorldState& state,
                             const glm::vec3& focus, const glm::vec3& eye,

@@ -54,7 +54,9 @@ void WorkflowRacerChaseCameraStep::Execute(const WorkflowStepDefinition& step,
     if (logger_ && ++traceFrame_ % 120 == 0) {
         logger_->Trace("racer.camera.chase: eye " +
                        std::to_string(glm::distance(eye_, pod.position)) +
-                       " m from the pod, wanted " + std::to_string(distance));
+                       " m from the pod, wanted " + std::to_string(distance) +
+                       ", " + std::to_string(eye_.y - pod.position.y) +
+                       " m above it");
     }
     started_ = true;
     const glm::vec3 look = pod.position +
