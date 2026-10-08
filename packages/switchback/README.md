@@ -1,7 +1,6 @@
 # Switchback
 
-An off-road 4x4 game on the SDL3CPlusPlus engine. Climb mountain tracks, crawl over rock, and stay out of the hazards. Written from scratch; no code or data from any existing 4x4 game is used.
-
+An off-road 4x4 game on the SDL3CPlusPlus engine. Climb mountain tracks, crawl over rock, and stay out of the hazards.
 ## Status
 
 In development. Milestone 1 is one playable level with a driving prototype.
@@ -19,7 +18,12 @@ In development. Milestone 1 is one playable level with a driving prototype.
 
 ## Assets
 
-Only free, libre assets are used, with the licence recorded next to each asset. Accepted sources include CC0 (Poly Haven, ambientCG) and other permissive licences. Anything that needs attribution is listed in this README when it is added.
+Two sources are used.
+
+- **Free and libre assets** (CC0 from Poly Haven and ambientCG, or other permissive licences). The licence is recorded next to each asset, and anything that needs attribution is listed in this README.
+- **GTA V assets, read at runtime.** Vehicle models, textures and code are borrowed from the `gta5` package. The player must own GTA V. The game reads the player's own extracted files from `GTA5_DATA_DIR`, as `packages/gta5` does. Nothing from the game is committed, converted or redistributed with Switchback. The map is not used; Switchback has its own map.
+
+Rule: no GTA V file ever goes into this repository or into a build output. Only code and the path to the player's extract are shared.
 
 ## Track spec
 
