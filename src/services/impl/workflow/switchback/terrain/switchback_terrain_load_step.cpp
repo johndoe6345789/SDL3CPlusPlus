@@ -103,10 +103,15 @@ void WorkflowSwitchbackTerrainLoadStep::Execute(
     }
     BuildSwitchbackCollision(*world, map, stepM, heightMaxM, *state_);
     if (logger_) {
-        logger_->Trace("WorkflowSwitchbackTerrainLoadStep", "Execute",
-                       "samples=" + std::to_string(map.size) + ", chunks=" +
-                           std::to_string(state_->chunks.size()),
-                       "Terrain loaded");
+        logger_->Trace(
+            "WorkflowSwitchbackTerrainLoadStep", "Execute",
+            "samples=" + std::to_string(map.size) + ", chunks=" +
+                std::to_string(state_->chunks.size()) +
+                ", collision_origin_y=" +
+                std::to_string(state_->body->getWorldTransform()
+                                   .getOrigin()
+                                   .getY()),
+            "Terrain loaded");
     }
 }
 
