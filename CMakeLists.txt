@@ -1109,6 +1109,7 @@ if(BUILD_SDL3_APP)
         src/services/impl/workflow/gta5/vehicle/gta5_vehicle_camera_step.cpp
         src/services/impl/workflow/gta5/vehicle/gta5_vehicle_control_step.cpp
         src/services/impl/workflow/gta5/vehicle/gta5_vehicle_drive.cpp
+        src/services/impl/workflow/gta5/vehicle/gta5_vehicle_drop_step.cpp
         src/services/impl/workflow/gta5/vehicle/gta5_vehicle_hold.cpp
         src/services/impl/workflow/gta5/vehicle/gta5_vehicle_input.cpp
         src/services/impl/workflow/gta5/vehicle/gta5_vehicle_load.cpp

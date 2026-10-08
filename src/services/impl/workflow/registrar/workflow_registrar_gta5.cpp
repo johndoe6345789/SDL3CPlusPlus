@@ -15,6 +15,7 @@
 #include "services/interfaces/workflow/gta5/stream/gta5_tiles_draw_step.hpp"
 #include "services/interfaces/workflow/gta5/vehicle/gta5_vehicle_camera_step.hpp"
 #include "services/interfaces/workflow/gta5/vehicle/gta5_vehicle_control_step.hpp"
+#include "services/interfaces/workflow/gta5/vehicle/gta5_vehicle_drop_step.hpp"
 #include "services/interfaces/workflow/gta5/vehicle/gta5_vehicle_spawn_step.hpp"
 #include "services/interfaces/workflow/gta5/vehicle/gta5_vehicles_sync_step.hpp"
 #include "services/interfaces/workflow/gta5/vehicle/gta5_vehicles_free_step.hpp"
@@ -45,6 +46,8 @@ int RegisterGta5StreamingSteps(std::shared_ptr<IWorkflowStepRegistry> registry,
         std::make_shared<WorkflowGta5TilesDrawStep>(logger, state));
     registry->RegisterStep(
         std::make_shared<WorkflowGta5VehicleSpawnStep>(logger, state));
+    registry->RegisterStep(
+        std::make_shared<WorkflowGta5VehicleDropStep>(logger, state));
     registry->RegisterStep(
         std::make_shared<WorkflowGta5VehiclesSyncStep>(logger, state));
     registry->RegisterStep(
